@@ -106,7 +106,7 @@ export class SessionService {
   ): Promise<Session> {
     if (token) {
       const existing = await this.sessionRepo.findOne({ where: { sessionToken: token } });
-      if (existing) {
+      if (existing && (await this.belongsToShop(existing, shopDomain))) {
         // Re-pin when the PAGE declares a different agent (FIX-260825): the
         // widget persists its session token, so a visitor walking from the
         // main page (default pin) to /partner (hotel-partner embed) reused the
@@ -232,6 +232,28 @@ export class SessionService {
    * It is a misconfiguration guard, not authentication: `parentOrigin` comes from
    * the browser. Identity is proved by the signed handshake (S2).
    */
+  /**
+   * May a stored token be resumed for the shop the page declares? (FIX-260916)
+   *
+   * The widget origin is shared by every tenant on a deployment, so a token one
+   * tenant's widget persisted was presented, verbatim, by another tenant's
+   * standalone or app-mode load — and resumed, because nothing here compared
+   * the token's tenant with the shop. A page naming a shop that belongs to a
+   * different tenant now gets a fresh session. No shop, an unknown shop and a
+   * tenant-less legacy session keep resuming exactly as before: this guard adds
+   * no new failure, only a new session where the old one was the wrong one.
+   */
+  private async belongsToShop(existing: Session, shopDomain?: string): Promise<boolean> {
+    if (!shopDomain || existing.tenantId == null) return true;
+    const target = await this.tenantRepo.findOne({ where: { shopDomain } });
+    if (!target || Number(target.id) === Number(existing.tenantId)) return true;
+    this.logger.warn(
+      `session token of tenant ${existing.tenantId} presented for shop ${shopDomain} ` +
+        `(tenant ${target.id}) — not resumed, minting a new session`,
+    );
+    return false;
+  }
+
   private assertEmbedOriginAllowed(tenant: Tenant, parentOrigin?: string): void {
     if (!parentOrigin) return;
     if (isOriginAllowed(parentOrigin, tenant.embedOrigins, tenant)) return;
