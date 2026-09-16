@@ -58,6 +58,10 @@ export class Notification {
   @Column({ name: 'read_at', type: 'datetime', nullable: true })
   readAt: Date | null;
 
+  /** Shopper deleted it from the widget (PLN-260916 P3). Hidden from the feed and the unread count. */
+  @Column({ name: 'deleted_at', type: 'datetime', nullable: true })
+  deletedAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

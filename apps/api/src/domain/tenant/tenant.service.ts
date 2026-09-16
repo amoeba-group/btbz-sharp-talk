@@ -688,6 +688,7 @@ export class TenantService {
       radius: d.radius ?? null,
       panel: d.panel ?? null,
       launcherIcon: await ref(d.launcher_icon_uuid, 'icon'),
+      quickReplyStyle: d.quick_reply_style === 'card' ? 'card' : null,
       customCss,
     };
   }

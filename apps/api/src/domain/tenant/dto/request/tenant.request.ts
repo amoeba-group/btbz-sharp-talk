@@ -246,6 +246,8 @@ export class UpdateWidgetThemeRequest {
     radius?: string | null;
     panel?: { width?: number; height?: number } | null;
     launcher_icon_uuid?: string | null;
+    /** 'chip' (default) | 'card' — opening scenario menu style (PLN-260916 P4). */
+    quick_reply_style?: string | null;
     /** Raw custom CSS; the service sanitizes it and drops it when the add-on is off (P5). */
     custom_css?: string | null;
   } | null;

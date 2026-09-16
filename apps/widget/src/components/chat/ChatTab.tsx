@@ -73,6 +73,7 @@ export function ChatTab() {
         ? 'queued'
         : null;
   const scenarioButtons = useScenario(sessionToken);
+  const quickReplyStyle = useWidgetStore((s) => s.widgetTheme?.design?.quickReplyStyle) ?? 'chip';
   // Recent orders for the in-thread "My orders" answer. Only fetched once the
   // shopper actually asks — `enabled` follows the inline card being shown.
   const activeTab = useWidgetStore((s) => s.activeTab);
@@ -397,6 +398,7 @@ export function ChatTab() {
             buttons={scenarioButtons}
             onScenario={handleScenario}
             onSubAction={handleSubAction}
+            style={quickReplyStyle}
           />
         )}
 

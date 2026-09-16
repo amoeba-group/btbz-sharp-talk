@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useWidgetStore, type TabKey } from '../../store/widgetStore';
 import { isAppMode, postToHost } from '../../lib/host-bridge';
 import { logoUrl } from '../../lib/branding';
+import { resolveLauncher } from '../../lib/launcher';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { TopTabs } from './TopTabs';
 import { BottomTabs } from './BottomTabs';
@@ -43,6 +44,13 @@ export function WidgetPanel() {
   const displayName = useWidgetStore((s) => s.widgetCopy?.displayName);
   const customerName = useWidgetStore((s) => s.customerName);
   const theme = useWidgetStore((s) => s.widgetTheme);
+  // Trigger mode (PLN-260916 P2): the storefront's own header element opens the
+  // panel, which docks under that header. The design drops the language pill
+  // and the X from the header; the loader closes on outside click / Esc, and on
+  // a phone (loader adds ?compact=1) the X stays because there is no "outside".
+  const triggerMode = resolveLauncher(theme).mode === 'trigger' && !isAppMode();
+  const compact = new URLSearchParams(window.location.search).get('compact') === '1';
+  const showClose = !triggerMode || compact;
   // A greeting names the customer, so it wins over the brand mark: the shopper
   // being addressed matters more than the logo at that moment.
   const logo = theme?.logo && !customerName ? logoUrl(theme.logo) : null;
@@ -86,7 +94,9 @@ export function WidgetPanel() {
           ? []
           // Size and corners come from the design tokens (ivy-panel-desktop in
           // index.css) so a tenant's panel size reaches the panel and the loader alike.
-          : ['sm:inset-auto sm:bottom-24 sm:right-5 sm:top-auto ivy-panel-desktop']),
+          : triggerMode
+            ? ['sm:inset-auto sm:top-0 sm:right-5 sm:bottom-auto ivy-panel-desktop']
+            : ['sm:inset-auto sm:bottom-24 sm:right-5 sm:top-auto ivy-panel-desktop']),
       ].join(' ')}
       role="dialog"
       aria-modal="true"
@@ -121,7 +131,7 @@ export function WidgetPanel() {
         </span>
         )}
         <div className="flex flex-shrink-0 items-center gap-0.5">
-          <LanguageSwitcher />
+          {!triggerMode && <LanguageSwitcher />}
           <button
             onClick={() => setShowSettings(!showSettings)}
             aria-label={t('settings')}
@@ -131,13 +141,15 @@ export function WidgetPanel() {
           >
             <Settings className="h-5 w-5" />
           </button>
-          <button
-            onClick={dismiss}
-            aria-label={t('a11y.close')}
-            className="rounded-lg p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          {showClose && (
+            <button
+              onClick={dismiss}
+              aria-label={t('a11y.close')}
+              className="rounded-lg p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
         </div>
       </header>
 

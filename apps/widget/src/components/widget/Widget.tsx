@@ -14,7 +14,7 @@ import { WidgetPanel } from './WidgetPanel';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { LAUNCHER_CLASSES, resolveLauncher } from '../../lib/launcher';
 import { assetUrl, logoUrl } from '../../lib/branding';
-import { isAppMode } from '../../lib/host-bridge';
+import { hostKind, isAppMode, postToHost } from '../../lib/host-bridge';
 
 export function Widget() {
   const { t } = useTranslation();
@@ -121,6 +121,13 @@ export function Widget() {
     }
   }, [panelOpen, analytics]);
 
+  // Unread count for a storefront-side badge (trigger mode, PLN-260916 P2). The
+  // loader writes it into `[data-sharptalk-badge]`; harmless when nothing listens.
+  useEffect(() => {
+    if (hostKind() !== 'frame') return;
+    postToHost({ type: 'ivy:unread', count: unread });
+  }, [unread]);
+
   return (
     <>
       {/* The launcher lives OUTSIDE this boundary on purpose: whatever happens to
@@ -134,7 +141,7 @@ export function Widget() {
       {/* Floating launcher — closed state only. While the panel is open the
           bottom-right X would duplicate the panel header's close button (and
           sit right under it on mobile), so closing is the header X / Esc. */}
-      {!panelOpen && !appMode && (
+      {!panelOpen && !appMode && launcher.mode !== 'trigger' && (
         <button
           onClick={togglePanel}
           aria-label={t('a11y.openSupport')}

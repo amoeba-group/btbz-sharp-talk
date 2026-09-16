@@ -104,6 +104,14 @@
     // Old installs keep working forever — this is a nudge, not a countdown.
     console.info('[SharpTalk] IVY_WIDGET_CONFIG still works, but new installs should use SHARPTALK_WIDGET_CONFIG.');
   }
+  // Trigger mode (PLN-260916 P2): `cfg.trigger` is a CSS selector for the page's
+  // own opener (a header bell). Present = no floating launcher, panel docked under
+  // the header, unread count written into `cfg.badge` (default
+  // `[data-sharptalk-badge]`). The tenant's theme can also switch this on.
+  var triggerMode = !!cfg.trigger;
+  var triggerOffset = 0;
+  var isOpen = false;
+  var openedAt = 0;
   var pageHost = (window.location.hostname || '').toLowerCase();
   var isCafe24Host = /(^|\.)cafe24\.com$/.test(pageHost);
 
@@ -256,8 +264,13 @@
     if (!next) return;
     launcher = next;
     applyFrame(next.frame);
+    triggerMode = next.mode === 'trigger' || !!cfg.trigger;
+    triggerOffset = Math.max(0, Math.min(240, Number(next.offsetTop) || 0));
     var px = Math.max(64, Math.min(160, Number(next.size) || 96)) + 'px';
-    CLOSED = { w: px, h: px };
+    // Trigger mode: nothing to draw while closed, so the frame takes no room and
+    // cannot intercept clicks on the page beneath it.
+    CLOSED = triggerMode ? { w: '0px', h: '0px' } : { w: px, h: px };
+    placeFrame();
     if (next.position === 'left') {
       frame.style.left = '0';
       frame.style.right = 'auto';
@@ -286,7 +299,7 @@
   function applyFrame(f) {
     if (!f) return;
     var w = Math.max(400, Math.min(520, Number(f.w) || 444));
-    var h = Math.max(560, Math.min(800, Number(f.h) || 680));
+    var h = Math.max(560, Math.min(840, Number(f.h) || 680));
     OPEN = { w: 'min(' + w + 'px, 100vw)', h: 'min(' + h + 'px, 100vh)' };
   }
   if (launcher && launcher.frame) applyFrame(launcher.frame);
@@ -354,6 +367,9 @@
       // The widget reports this to the API's embed allowlist. Browsers that expose
       // ancestorOrigins prefer their own answer over this one (PLN-260819 S1).
       '&parent=' + encodeURIComponent(window.location.origin) +
+      // Phone-sized viewport: the widget keeps its close button even in trigger
+      // mode, because a full-screen panel has no "outside" to click.
+      (window.innerWidth < 640 ? '&compact=1' : '') +
       (attribution ? '&' + attribution : '')
     );
   }
@@ -364,6 +380,24 @@
   s.right = '0';
   s.width = CLOSED.w;
   s.height = CLOSED.h;
+  // Where the frame sits: bottom corner for the floating launcher, top-right
+  // under the storefront header in trigger mode.
+  function placeFrame() {
+    if (triggerMode) {
+      frame.style.top = triggerOffset + 'px';
+      frame.style.bottom = 'auto';
+    } else {
+      frame.style.top = 'auto';
+      frame.style.bottom = '0';
+    }
+    if (!isOpen) {
+      frame.style.width = CLOSED.w;
+      frame.style.height = CLOSED.h;
+      frame.style.visibility = triggerMode ? 'hidden' : 'visible';
+    }
+  }
+  if (triggerMode) CLOSED = { w: '0px', h: '0px' };
+  placeFrame();
   s.border = '0';
   s.background = 'transparent';
   s.colorScheme = 'normal';
@@ -673,10 +707,23 @@
     // Everything else must come from our widget iframe origin.
     if (e.origin !== baseOrigin) return;
     if (d.type === 'ivy:resize') {
+      isOpen = !!d.open;
+      if (isOpen) openedAt = Date.now();
       frame.style.width = d.open ? OPEN.w : CLOSED.w;
       frame.style.height = d.open ? OPEN.h : CLOSED.h;
+      frame.style.visibility = !d.open && triggerMode ? 'hidden' : 'visible';
+      emit(d.open ? 'open' : 'close', {});
     } else if (d.type === 'ivy:launcher') {
-      applyLauncher({ position: d.position, size: d.size, frame: d.frame });
+      applyLauncher({
+        position: d.position,
+        size: d.size,
+        frame: d.frame,
+        mode: d.mode,
+        offsetTop: d.offsetTop,
+      });
+    } else if (d.type === 'ivy:unread') {
+      setBadge(d.count);
+      emit('unread', { count: Number(d.count) || 0 });
     } else if (d.type === 'ivy:ready') {
       widgetReady = true;
       maybeSendIdentity();
@@ -731,6 +778,54 @@
   //
   // Skipped on a sign-in screen: there is no widget to answer, and asking would
   // spend a one-time sign-in ticket on a page that cannot use it.
+  // Storefront-side unread badge (trigger mode). Any element matching cfg.badge
+  // (default `[data-sharptalk-badge]`) shows the count and hides at zero.
+  function setBadge(count) {
+    var n = Number(count) || 0;
+    var sel = String(cfg.badge || '[data-sharptalk-badge]');
+    var els;
+    try {
+      els = document.querySelectorAll(sel);
+    } catch (_) {
+      return;
+    }
+    for (var i = 0; i < els.length; i++) {
+      els[i].textContent = n > 99 ? '99+' : String(n);
+      els[i].style.display = n > 0 ? '' : 'none';
+    }
+  }
+  // Page-side opener: delegated, so a header rendered after this script still works.
+  document.addEventListener('click', function (e) {
+    if (!cfg.trigger || !e.target || !e.target.closest) return;
+    var el;
+    try {
+      el = e.target.closest(String(cfg.trigger));
+    } catch (_) {
+      return;
+    }
+    if (!el) return;
+    e.preventDefault();
+    boot();
+    // Explicit open/close rather than toggle: the loader already knows whether
+    // the panel is open (it sizes the frame), and a toggle that is delivered
+    // twice — a duplicated listener, a double-tap — lands on the wrong state.
+    command({ type: 'ivy:command', action: isOpen ? 'close' : 'open' });
+  });
+  // Docked panel closes on a click outside it (the iframe swallows its own
+  // clicks, so anything reaching the page is outside). Ignore the opener itself
+  // and the first 300ms after opening so the opening click cannot also close it.
+  document.addEventListener('pointerdown', function (e) {
+    if (!triggerMode || !isOpen || Date.now() - openedAt < 300) return;
+    if (cfg.trigger && e.target && e.target.closest) {
+      try {
+        if (e.target.closest(String(cfg.trigger))) return;
+      } catch (_) {
+        /* bad selector — treat as outside */
+      }
+    }
+    command({ type: 'ivy:command', action: 'close' });
+  });
+
   if (signInScreen) {
     /* nothing to resolve — nothing mounted */
   } else if (isCafe24Host) {

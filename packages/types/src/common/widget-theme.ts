@@ -24,6 +24,17 @@ export type LauncherPosition = (typeof LAUNCHER_POSITION)[keyof typeof LAUNCHER_
 export const LAUNCHER_SIZE = { SM: 'sm', MD: 'md', LG: 'lg' } as const;
 export type LauncherSize = (typeof LAUNCHER_SIZE)[keyof typeof LAUNCHER_SIZE];
 
+/**
+ * How the widget is opened (PLN-260916 P2). `floating` draws the round button
+ * the loader has always shown; `trigger` draws nothing and the storefront's own
+ * element (a header bell) opens the panel, which docks under the header.
+ */
+export const LAUNCHER_MODE = { FLOATING: 'floating', TRIGGER: 'trigger' } as const;
+export type LauncherMode = (typeof LAUNCHER_MODE)[keyof typeof LAUNCHER_MODE];
+/** Trigger-mode docking: how far below the viewport top the panel's frame starts. */
+export const TRIGGER_OFFSET = { min: 0, max: 240, default: 72 } as const;
+const TRIGGER_SELECTOR_RE = /^[-_a-zA-Z0-9#.\[\]="':>\s,]{1,80}$/;
+
 export const LAUNCHER_ICON = {
   CHAT: 'chat',
   QUESTION: 'question',
@@ -69,6 +80,12 @@ export interface WidgetLauncher {
   position: LauncherPosition;
   size: LauncherSize;
   icon: LauncherIcon;
+  /** Absent = floating (every tenant before PLN-260916). */
+  mode?: LauncherMode;
+  /** Trigger mode only: px below the viewport top where the docked panel starts. */
+  offsetTop?: number;
+  /** Trigger mode only: CSS selector of the storefront element that opens the widget (snippet hint). */
+  triggerSelector?: string | null;
 }
 
 // ---- Design profile (PLN-260910 P2) ------------------------------------------
@@ -84,6 +101,8 @@ export const FONT_PRESET = {
 export type FontPreset = (typeof FONT_PRESET)[keyof typeof FONT_PRESET];
 
 export const WIDGET_RADIUS = { SM: 'sm', MD: 'md', LG: 'lg' } as const;
+export const QUICK_REPLY_STYLE = { CHIP: 'chip', CARD: 'card' } as const;
+export type QuickReplyStyle = (typeof QUICK_REPLY_STYLE)[keyof typeof QUICK_REPLY_STYLE];
 export type WidgetRadius = (typeof WIDGET_RADIUS)[keyof typeof WIDGET_RADIUS];
 
 /** A tenant design asset the widget fetches publicly; `version` is the cache key. */
@@ -111,6 +130,8 @@ export interface WidgetDesign {
   panel?: WidgetPanelSize | null;
   /** Drawn when launcher.icon is 'custom'. */
   launcherIcon?: WidgetAssetRef | null;
+  /** Opening scenario menu: filled chips (default) or outlined cards with an icon (PLN-260916 P4). */
+  quickReplyStyle?: QuickReplyStyle | null;
   /**
    * Tenant custom CSS (P5) — ALREADY sanitized by the API's allowlist; stored
    * and delivered only while the platform add-on is on. Never raw input.
@@ -122,7 +143,7 @@ export const CUSTOM_CSS_MAX_CHARS = 32 * 1024;
 
 export const DESIGN_LIMITS = {
   baseSize: { min: 13, max: 16, default: 14 },
-  panel: { width: { min: 360, max: 480, default: 404 }, height: { min: 480, max: 720, default: 600 } },
+  panel: { width: { min: 360, max: 480, default: 404 }, height: { min: 480, max: 760, default: 600 } },
 } as const;
 
 /** Frame the loader reserves around the open panel: 20px gutters + the launcher row. */
@@ -413,6 +434,7 @@ export function normalizeDesign(input: unknown): WidgetDesign | null {
   }
   const icon = normalizeAssetRef(raw.launcherIcon);
   if (icon) out.launcherIcon = icon;
+  if (raw.quickReplyStyle === QUICK_REPLY_STYLE.CARD) out.quickReplyStyle = QUICK_REPLY_STYLE.CARD;
   if (typeof raw.customCss === 'string' && raw.customCss.trim()) {
     out.customCss = raw.customCss.trim().slice(0, CUSTOM_CSS_MAX_CHARS);
   }
@@ -514,7 +536,20 @@ export function normalizeLauncher(input: unknown): WidgetLauncher | null {
   const icon = Object.values(LAUNCHER_ICON).includes(raw.icon as LauncherIcon)
     ? (raw.icon as LauncherIcon)
     : LAUNCHER_DEFAULTS.icon;
-  return { position, size, icon };
+  const out: WidgetLauncher = { position, size, icon };
+  // Trigger mode (PLN-260916 P2). Accepts the console's camelCase and the API's
+  // snake_case so a request DTO can pass the object through untouched.
+  const loose = raw as Record<string, unknown>;
+  if (raw.mode === LAUNCHER_MODE.TRIGGER) {
+    out.mode = LAUNCHER_MODE.TRIGGER;
+    const off = Number(loose.offsetTop ?? loose.offset_top);
+    out.offsetTop = Number.isFinite(off)
+      ? Math.min(TRIGGER_OFFSET.max, Math.max(TRIGGER_OFFSET.min, Math.round(off)))
+      : TRIGGER_OFFSET.default;
+    const sel = String(loose.triggerSelector ?? loose.trigger_selector ?? '').trim();
+    out.triggerSelector = sel && TRIGGER_SELECTOR_RE.test(sel) ? sel : null;
+  }
+  return out;
 }
 
 /** Geometry a reader can rely on, defaults included. */

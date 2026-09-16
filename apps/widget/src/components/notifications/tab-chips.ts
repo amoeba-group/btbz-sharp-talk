@@ -44,7 +44,9 @@ const ORDER_CHIPS: ChipDef[] = [
 export function chipsFor(tab: TabKey, visibleTabs: TabKey[]): ChipDef[] {
   const bothPresent =
     visibleTabs.includes('notifications') && visibleTabs.includes('orders');
-  if (!bothPresent) return [...NOTICE_CHIPS, ...ORDER_CHIPS];
+  // One list tab absorbs the other's chips. Order follows the design's single
+  // bar (PLN-260916 P3): All · Orders · Shipping · Event · Review · Inquiries.
+  if (!bothPresent) return [NOTICE_CHIPS[0], ORDER_CHIPS[0], ORDER_CHIPS[1], NOTICE_CHIPS[1], ORDER_CHIPS[2], ORDER_CHIPS[3]];
   return tab === 'orders' ? ORDER_CHIPS : NOTICE_CHIPS;
 }
 

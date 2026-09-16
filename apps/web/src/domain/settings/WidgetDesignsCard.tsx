@@ -29,6 +29,7 @@ const EMPTY: WidgetDesignDraft = {
   panelWidth: DESIGN_LIMITS.panel.width.default,
   panelHeight: DESIGN_LIMITS.panel.height.default,
   launcherIconUuid: null,
+  quickReplyStyle: 'chip',
   customCss: '',
 };
 
@@ -41,6 +42,7 @@ function toDraft(d: WidgetDesignItem['design']): WidgetDesignDraft {
     panelWidth: d.panel?.width ?? EMPTY.panelWidth,
     panelHeight: d.panel?.height ?? EMPTY.panelHeight,
     launcherIconUuid: d.launcherIcon?.uuid ?? null,
+    quickReplyStyle: d.quickReplyStyle === 'card' ? 'card' : 'chip',
     customCss: d.customCss ?? '',
   };
 }
@@ -336,6 +338,12 @@ export function WidgetDesignsCard() {
                   <option value="sm">{t('widgetTheme.radiusSm')}</option>
                   <option value="md">{t('widgetTheme.radiusMd')}</option>
                   <option value="lg">{t('widgetTheme.radiusLg')}</option>
+                </Select>
+              </FormRow>
+              <FormRow label={t('widgetDesigns.quickReplyStyle')}>
+                <Select value={ed.draft.quickReplyStyle ?? 'chip'} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, quickReplyStyle: e.target.value as 'chip' | 'card' } })} className="w-44">
+                  <option value="chip">{t('widgetDesigns.quickReplyChip')}</option>
+                  <option value="card">{t('widgetDesigns.quickReplyCard')}</option>
                 </Select>
               </FormRow>
               <FormRow label={t('widgetTheme.panel')}>

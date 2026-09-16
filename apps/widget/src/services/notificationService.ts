@@ -29,6 +29,17 @@ export function markRead(
   });
 }
 
+/** Shopper-side delete: selected ids, or everything (PLN-260916 P3). */
+export function deleteNotifications(
+  input: { ids?: string[]; all?: boolean },
+  sessionToken: string,
+): Promise<{ deleted: number }> {
+  return apiClient.delete<{ deleted: number }>('/notifications', {
+    session_token: sessionToken,
+    ...(input.all ? { all: true } : { ids: (input.ids ?? []).map(Number) }),
+  });
+}
+
 export function unreadCount(sessionToken: string, scope?: string): Promise<{ count: number }> {
   return apiClient.get<{ count: number }>('/notifications/unread-count', {
     session_token: sessionToken,

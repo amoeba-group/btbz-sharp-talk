@@ -25,6 +25,11 @@ export function useLauncherReport(): void {
       type: 'ivy:launcher',
       position: launcher.position,
       size: launcherFrameSize(theme),
+      // Trigger mode (PLN-260916 P2): the loader draws no launcher box, docks
+      // the frame under the storefront header and wires the page's own trigger.
+      mode: launcher.mode ?? 'floating',
+      offsetTop: launcher.offsetTop ?? 0,
+      trigger: launcher.triggerSelector ?? null,
       // Open-panel frame (P2): the panel size is a tenant setting now, so the
       // loader can no longer hard-code 444×680.
       frame: panelFrame(theme),
