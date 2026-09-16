@@ -101,4 +101,30 @@ describe('ChatService.syncSessionLanguage', () => {
     await sync(session({ languageLocked: 1 }), '배송 언제 오나요?');
     expect(find).not.toHaveBeenCalled();
   });
+
+  // FIX-260916 — Vietnamese used to detect as Spanish, so a Go2Joy session
+  // that started in Vietnamese was moved to Spanish by its own shopper.
+  it('keeps a Vietnamese session Vietnamese across Vietnamese turns (the Go2Joy regression)', async () => {
+    previousBody = 'Cho tôi hỏi giá phòng qua đêm';
+    await sync(session({ language: 'VI' }), 'Khách sạn còn phòng không?');
+    expect(applied).toEqual([]);
+  });
+
+  it('keeps a Vietnamese session Vietnamese on acute-only turns that look Spanish out of context', async () => {
+    previousBody = 'có xe máy';
+    await sync(session({ language: 'VI' }), 'có bán cá');
+    expect(applied).toEqual([]);
+  });
+
+  it('switches an English session to Vietnamese after two Vietnamese turns', async () => {
+    previousBody = 'Tôi muốn đặt phòng theo giờ';
+    await sync(session({ language: 'EN' }), 'Còn phòng trống tối nay không ạ?');
+    expect(applied).toEqual(['VI']);
+  });
+
+  it('still switches a Vietnamese session to English on two plain-ASCII turns', async () => {
+    previousBody = 'How long does check-in take?';
+    await sync(session({ language: 'VI' }), 'Can I talk to a real person?');
+    expect(applied).toEqual(['EN']);
+  });
 });

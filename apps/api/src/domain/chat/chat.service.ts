@@ -1055,7 +1055,9 @@ export class ChatService {
     // The shopper chose this language by hand. Detection does not get a vote.
     if (session.languageLocked) return;
 
-    const detected = detectLanguage(text);
+    // The session's current language breaks ties on marks that Vietnamese
+    // shares with Spanish (FIX-260916); a locked session never reaches here.
+    const detected = detectLanguage(text, session.language);
     if (!detected || detected === session.language) return;
 
     // The current turn is already persisted, so the previous customer turn is
@@ -1067,7 +1069,7 @@ export class ChatService {
       select: ['id', 'body'],
     });
     const previous = recent[1];
-    if (!previous || detectLanguage(previous.body) !== detected) return;
+    if (!previous || detectLanguage(previous.body, session.language) !== detected) return;
 
     await this.sessionService.applyDetectedLanguage(session, detected);
   }
