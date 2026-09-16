@@ -31,11 +31,43 @@ export function apiOrigin(): string {
   return BASE_URL;
 }
 
-export const SESSION_STORAGE_KEY = 'ivy_session';
+/**
+ * The shop domain the embed loader (or the app-mode host) passes in the iframe
+ * URL (`?shop=`). Binds the session to the right tenant; absent in local /
+ * standalone dev. Lives here, not in useSession, because the storage key
+ * below needs it and useSession imports this module.
+ */
+export function getShopDomain(): string | undefined {
+  try {
+    return new URLSearchParams(window.location.search).get('shop') ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Where the widget keeps its session token between loads.
+ *
+ * Keyed by shop (FIX-260916): the widget origin is shared by every tenant on a
+ * deployment, so one key for all of them meant a standalone or app-mode load
+ * for shop B picked up the token shop A's widget had left behind — and the API
+ * resumed it. The bare pre-fix key is still read as a fallback so a visitor
+ * mid-conversation on deploy day keeps their thread (the API now refuses to
+ * resume it for the wrong tenant), and it is cleared the moment a namespaced
+ * token is written.
+ */
+const LEGACY_SESSION_STORAGE_KEY = 'ivy_session';
+
+export function sessionStorageKey(shop: string | undefined = getShopDomain()): string {
+  const normalized = shop?.trim().toLowerCase();
+  return normalized ? `${LEGACY_SESSION_STORAGE_KEY}:${normalized}` : LEGACY_SESSION_STORAGE_KEY;
+}
 
 export function getStoredSessionToken(): string | null {
   try {
-    return localStorage.getItem(SESSION_STORAGE_KEY);
+    return (
+      localStorage.getItem(sessionStorageKey()) ?? localStorage.getItem(LEGACY_SESSION_STORAGE_KEY)
+    );
   } catch {
     return null;
   }
@@ -43,8 +75,10 @@ export function getStoredSessionToken(): string | null {
 
 export function setStoredSessionToken(token: string | null): void {
   try {
-    if (token) localStorage.setItem(SESSION_STORAGE_KEY, token);
-    else localStorage.removeItem(SESSION_STORAGE_KEY);
+    const key = sessionStorageKey();
+    if (token) localStorage.setItem(key, token);
+    else localStorage.removeItem(key);
+    if (key !== LEGACY_SESSION_STORAGE_KEY) localStorage.removeItem(LEGACY_SESSION_STORAGE_KEY);
   } catch {
     /* ignore storage failures */
   }
