@@ -68,11 +68,16 @@ POST  /api/v1/session/ensure        → launcher 확인(트리거 키 없음)
 | `apps/widget/public/trigger-test.html` | `?notrigger=1` — 여는 요소가 없는 스토어 재현 |
 | `apps/web/src/i18n/locales/*/settings.json` | 트리거 안내 문구에 폴백 설명 추가(6언어) |
 
-## 6. 검증
-- `?notrigger=1` 하네스(테마는 트리거 모드): 약 3.6초 후 플로팅 버튼 복귀, 클릭으로 패널 열림,
-  헤더 X로 닫힘, 콘솔에 경고 1회.
-- 기본 하네스(`#st-bell` 존재): 종 클릭으로 열고 닫힘, 폴백 없음, 경고 없음 — 기존 동작 무변경.
-- 트리거 모드를 쓰지 않는 테넌트: 코드 경로 진입 없음.
+## 6. 검증 (스테이징 실측, 2026-09-16)
+배포: PR #536 → main `c46021e` → 스테이징 재배포(api/web/widget/nginx). 스키마 변경 없음.
+
+| 경우 | 결과 |
+|---|---|
+| 테마=트리거, 스토어에 여는 요소 없음 (`trigger-test.html?shop=ambshop-dev.myshopify.com&notrigger=1`) | 플로팅 버튼 복귀(프레임 96×96 visible), 클릭 시 패널 420×798 열림, 헤더 X 표시 |
+| 테마=트리거, 종 아이콘 존재 (같은 하네스, 기본) | 폴백 없음(닫힘 0×0 hidden), 종 클릭으로 헤더 아래 도킹 420×798, 헤더 X 없음 — 기존 동작 무변경 |
+| 실 스토어 테마 | `session/ensure`가 `launcher {position:right,size:md,icon:chat}` 반환 — 플로팅 확정 |
+
+배포된 로더에 `trigger-missing` 경로 포함 확인(`curl https://shoptalk.amoeba.site/widget/embed.js | grep trigger-missing`).
 
 ## 7. 예방 패턴 (일반화)
 **"호스트 페이지가 제공해야 하는 요소"에 기능을 의존시킬 때는, 그 요소가 없을 때의
