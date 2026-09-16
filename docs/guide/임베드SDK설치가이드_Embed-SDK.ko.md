@@ -133,3 +133,28 @@ $hash = hash_hmac('sha256', (string)$user->id, getenv('SHOPTALK_EMBED_SECRET'));
 - 허용 도메인은 **오설치·무단 임베드를 막는 장치**이지 위조 방지가 아닙니다. 사용자가 누구인지는
   서명이 증명합니다.
 - 시크릿 재발급 시 **기존 서명은 즉시 무효**입니다. 서버 값을 먼저 준비한 뒤 재발급하세요.
+
+## 스토어 헤더로 열기 (트리거 모드)
+
+떠 있는 런처 대신 **스토어가 가진 요소**로 위젯을 열 수 있습니다(PLN-260916). 콘솔에서 *설정 > 위젯 설정 > 위젯 테마 > 런처 모드*를 "스토어 헤더 트리거"로 바꾸고, 스니펫에 `trigger`(여는 요소의 CSS 선택자)를 넣습니다.
+
+```html
+<button id="st-bell" type="button" aria-label="Notifications">🔔
+  <span data-sharptalk-badge style="display:none"></span>
+</button>
+<script>
+  window.SHARPTALK_WIDGET_CONFIG = {
+    shop: "<your-shop>",
+    widgetUrl: "https://<host>/widget",
+    trigger: "#st-bell",     // 이 요소를 누르면 열립니다
+    badge: "[data-sharptalk-badge]"  // 선택: 기본값이 이 선택자입니다
+  };
+</script>
+<script src="https://<host>/widget/embed.js" defer></script>
+```
+
+- 패널은 **헤더 아래 우측에 도킹**되고(상단 오프셋은 콘솔에서 지정), 패널 **바깥을 클릭하면 닫힙니다**.
+- `data-sharptalk-badge` 요소에 **읽지 않은 알림 수**가 자동으로 들어가고 0이면 숨겨집니다.
+- 스크립트 API(`SharpTalk.open()` / `close()` / `toggle()`)는 두 모드 모두에서 그대로 동작합니다.
+- 닫혀 있는 동안 iframe은 0×0으로 접히므로 페이지 클릭을 가로채지 않습니다.
+
