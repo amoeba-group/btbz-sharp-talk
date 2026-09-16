@@ -1,10 +1,17 @@
-import { IsBoolean, IsIn, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsIn, IsOptional, IsString, IsArray, ArrayMaxSize } from 'class-validator';
 
 /** Channels notifications can be delivered on. in_app is always-on/transactional. */
 export const NOTIFICATION_CHANNELS = ['in_app', 'email', 'sms', 'web_push'] as const;
 
 export class ReadNotificationRequest {
   @IsString() session_token: string;
+}
+
+/** Widget bulk delete (PLN-260916 P3): explicit ids, or everything the shopper has. */
+export class DeleteNotificationsRequest {
+  @IsString() session_token: string;
+  @IsOptional() @IsArray() @ArrayMaxSize(200) ids?: number[];
+  @IsOptional() @IsBoolean() all?: boolean;
 }
 
 export class UpdatePrefRequest {

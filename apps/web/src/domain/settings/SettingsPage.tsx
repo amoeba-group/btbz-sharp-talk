@@ -888,7 +888,22 @@ export function WidgetThemeCard() {
       headerStyle !== storedHeader ||
       launcher.position !== storedLauncher.position ||
       launcher.size !== storedLauncher.size ||
-      launcher.icon !== storedLauncher.icon);
+      launcher.icon !== storedLauncher.icon ||
+      (launcher.mode ?? 'floating') !== (storedLauncher.mode ?? 'floating') ||
+      (launcher.offsetTop ?? 72) !== (storedLauncher.offsetTop ?? 72) ||
+      (launcher.triggerSelector ?? '') !== (storedLauncher.triggerSelector ?? ''));
+  const triggerMode = (launcher.mode ?? 'floating') === 'trigger';
+  const triggerSnippet =
+    `<!-- storefront header: the element that opens SharpTalk (any selector works) -->\n` +
+    `<button id="st-bell" type="button" aria-label="Notifications">🔔 <span data-sharptalk-badge style="display:none"></span></button>\n` +
+    `<script>\n` +
+    `  window.SHARPTALK_WIDGET_CONFIG = {\n` +
+    `    shop: ${JSON.stringify(data?.shopDomain ?? '')},\n` +
+    `    widgetUrl: ${JSON.stringify(WIDGET_URL)},\n` +
+    `    trigger: ${JSON.stringify(launcher.triggerSelector || '#st-bell')}\n` +
+    `  };\n` +
+    `</script>\n` +
+    `<script src="${WIDGET_URL}/embed.js" defer></script>`;
 
   // Same computation the widget runs, so this preview cannot promise a colour
   // the widget would not paint.
@@ -1028,6 +1043,66 @@ export function WidgetThemeCard() {
             </Select>
           </FormRow>
           <p className="mb-4 text-xs text-gray-400">{t('widgetTheme.launcherHint')}</p>
+
+          {/* Launcher mode (PLN-260916 P2): floating button vs the storefront's own header trigger. */}
+          <FormRow label={t('widgetTheme.launcherMode')}>
+            <div className="flex flex-col gap-1.5 text-sm text-gray-700">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="launcher-mode"
+                  checked={!triggerMode}
+                  disabled={isLoading}
+                  onChange={() => setLauncherPicked({ ...launcher, mode: 'floating' })}
+                />
+                {t('widgetTheme.launcherModeFloating')}
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="launcher-mode"
+                  checked={triggerMode}
+                  disabled={isLoading}
+                  onChange={() =>
+                    setLauncherPicked({
+                      ...launcher,
+                      mode: 'trigger',
+                      offsetTop: launcher.offsetTop ?? 72,
+                      triggerSelector: launcher.triggerSelector ?? '#st-bell',
+                    })
+                  }
+                />
+                {t('widgetTheme.launcherModeTrigger')}
+              </label>
+            </div>
+          </FormRow>
+          {triggerMode && (
+            <>
+              <FormRow label={t('widgetTheme.triggerSelector')}>
+                <Input
+                  value={launcher.triggerSelector ?? ''}
+                  disabled={isLoading}
+                  maxLength={80}
+                  placeholder="#st-bell"
+                  onChange={(e) => setLauncherPicked({ ...launcher, triggerSelector: e.target.value })}
+                />
+              </FormRow>
+              <FormRow label={t('widgetTheme.triggerOffset')}>
+                <Input
+                  type="number"
+                  min={0}
+                  max={240}
+                  value={launcher.offsetTop ?? 72}
+                  disabled={isLoading}
+                  onChange={(e) => setLauncherPicked({ ...launcher, offsetTop: Number(e.target.value) })}
+                />
+              </FormRow>
+              <p className="mb-2 text-xs text-gray-400">{t('widgetTheme.triggerHint')}</p>
+              <pre className="mb-4 overflow-x-auto rounded-md bg-gray-50 p-3 text-[11px] leading-relaxed text-gray-700">
+                {triggerSnippet}
+              </pre>
+            </>
+          )}
 
           <Button
             onClick={() =>

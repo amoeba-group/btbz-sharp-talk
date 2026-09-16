@@ -1323,6 +1323,7 @@ CREATE TABLE `notifications` (
   `ref_id` bigint DEFAULT NULL,
   `channel` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'in_app',
   `read_at` datetime DEFAULT NULL,
+  `deleted_at` datetime DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   PRIMARY KEY (`id`),
   KEY `idx_notif_tenant` (`tenant_id`),

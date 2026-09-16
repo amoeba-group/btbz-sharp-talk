@@ -1,11 +1,11 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query, Delete } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { buildPagination, normalizePage } from '@sharptalk/common';
 import { NOTIFICATION_SCOPE, type NotificationScope } from '@sharptalk/types';
 import { NotificationService } from './notification.service';
 import {
-  ReadNotificationRequest,
+  DeleteNotificationsRequest, ReadNotificationRequest,
   SetMarketingOptOutRequest,
   UpdatePrefRequest,
 } from './dto/request/notification.request';
@@ -106,6 +106,14 @@ export class NotificationController {
       body.enabled,
     );
     return toPrefResponse(pref);
+  }
+
+  @Delete()
+  @Public()
+  @ApiOperation({ summary: 'Delete notifications (selected ids or all) — shopper-side soft delete (PLN-260916 P3)' })
+  async remove(@Body() body: DeleteNotificationsRequest) {
+    const deleted = await this.notificationService.remove(body.session_token, { ids: body.ids, all: body.all });
+    return { deleted };
   }
 
   @Post(':id/read')

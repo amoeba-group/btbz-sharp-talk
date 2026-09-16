@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { BellOff, ExternalLink, Lock, Star } from 'lucide-react';
+import { BellOff, Check, ExternalLink, Lock, Star } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore, type TabKey } from '../../store/widgetStore';
 import { AuthGate } from '../chat/AuthGate';
 import { isAuthError } from '../../lib/errors';
-import { useMarkRead, useNotifications } from '../../hooks/useNotifications';
+import { useDeleteNotifications, useMarkRead, useNotifications } from '../../hooks/useNotifications';
 import { listIssues, type IssueFeedItem } from '../../services/orderService';
 import { myPageOrdersUrl } from '../../lib/platform';
 import { Badge, toneForStatus } from '../ui/Badge';
@@ -26,11 +26,18 @@ function Row({
   highlighted,
   onRead,
   onReview,
+  selecting = false,
+  selected = false,
+  onToggle,
 }: {
   n: NotificationItem;
   highlighted: boolean;
   onRead: (id: string) => void;
   onReview: (orderItemId: string) => void;
+  /** Selection mode (PLN-260916 P3): rows show a check circle instead of the unread dot. */
+  selecting?: boolean;
+  selected?: boolean;
+  onToggle?: (id: string) => void;
 }) {
   const { t, i18n } = useTranslation();
   const unread = !n.readAt;
@@ -78,10 +85,25 @@ function Row({
         )}
         <p className="mt-1 text-xs text-gray-400">{relativeTime(n.createdAt, i18n.language)}</p>
       </div>
-      {unread && (
-        <span className="mt-1.5 flex-shrink-0" aria-label={t('notifications.unread')}>
-          <span className="block h-2 w-2 rounded-full bg-error" />
-        </span>
+      {selecting ? (
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={selected}
+          aria-label={t('notifications.select')}
+          onClick={() => onToggle?.(n.id)}
+          className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border ${
+            selected ? 'border-primary-500 bg-primary-500 text-on-primary' : 'border-gray-300 bg-white text-transparent'
+          }`}
+        >
+          <Check className="h-3 w-3" />
+        </button>
+      ) : (
+        unread && (
+          <span className="mt-1.5 flex-shrink-0" aria-label={t('notifications.unread')}>
+            <span className="block h-2 w-2 rounded-full bg-error" />
+          </span>
+        )
       )}
     </div>
   );
@@ -188,6 +210,24 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
     scope,
   );
   const markRead = useMarkRead(sessionToken);
+  // Selection mode (PLN-260916 P3): pick rows → delete selected / delete all.
+  const removeNotifications = useDeleteNotifications(sessionToken);
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const toggleSelected = (id: string) =>
+    setSelectedIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+  const exitSelecting = () => {
+    setSelecting(false);
+    setSelectedIds([]);
+  };
+  const deleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    removeNotifications.mutate({ ids: selectedIds }, { onSuccess: exitSelecting });
+  };
+  const deleteAll = () => {
+    if (!window.confirm(t('notifications.deleteAllConfirm'))) return;
+    removeNotifications.mutate({ all: true }, { onSuccess: exitSelecting });
+  };
 
   const {
     data: issueFeed,
@@ -257,7 +297,7 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
   return (
     <div className="flex h-full flex-col">
       {/* Filter chips */}
-      <div className="scroll-thin flex gap-2 overflow-x-auto border-b border-gray-100 px-4 py-3">
+      <div className="scroll-thin flex items-center gap-2 overflow-x-auto border-b border-gray-100 px-4 py-3">
         {chips.map((f) => (
           <button
             key={f.key}
@@ -271,6 +311,16 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
             {t(f.labelKey)}
           </button>
         ))}
+        {/* Selection mode toggle — only where the plain notification list renders. */}
+        {!isOrderList && !isShipping && !isInquiries && (data?.length ?? 0) > 0 && (
+          <button
+            type="button"
+            onClick={() => (selecting ? exitSelecting() : setSelecting(true))}
+            className="ml-auto flex-shrink-0 text-xs font-medium text-gray-500 hover:text-gray-800"
+          >
+            {selecting ? t('notifications.cancelSelect') : t('notifications.select')}
+          </button>
+        )}
       </div>
 
       <div className="scroll-thin flex-1 overflow-y-auto">
@@ -308,6 +358,9 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
                     highlighted={n.id === newestUnreadId}
                     onRead={(id) => markRead.mutate(id)}
                     onReview={setReviewItem}
+                    selecting={selecting}
+                    selected={selectedIds.includes(n.id)}
+                    onToggle={toggleSelected}
                   />
                 ))}
               </div>
@@ -322,7 +375,29 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
           once its window is actually full, and two links to the same place —
           one of them promising "more" to someone already seeing everything —
           is worse than either alone. */}
-      <div className={`border-t border-gray-100 ${isOrderList ? 'hidden' : ''}`}>
+      {/* Selection-mode actions (design: filled "delete selected", outlined "delete all"). */}
+      {selecting && (
+        <div className="space-y-2 border-t border-gray-100 px-4 py-3">
+          <button
+            type="button"
+            onClick={deleteSelected}
+            disabled={selectedIds.length === 0 || removeNotifications.isPending}
+            className="w-full rounded-lg bg-primary-500 py-2.5 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-40"
+          >
+            {t('notifications.deleteSelected', { count: selectedIds.length })}
+          </button>
+          <button
+            type="button"
+            onClick={deleteAll}
+            disabled={removeNotifications.isPending}
+            className="w-full rounded-lg border border-primary-500 py-2.5 text-sm font-medium text-primary-600 hover:bg-primary-50 disabled:opacity-40"
+          >
+            {t('notifications.deleteAll')}
+          </button>
+        </div>
+      )}
+
+      <div className={`border-t border-gray-100 ${isOrderList || selecting ? 'hidden' : ''}`}>
         {!moreOpen ? (
           <button
             onClick={() => setMoreOpen(true)}

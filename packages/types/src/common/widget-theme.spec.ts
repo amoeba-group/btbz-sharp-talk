@@ -7,8 +7,7 @@ import {
   readableForeground,
   RAMP_STOPS,
   panelFrame,
-  stripCustomCss,
-} from './widget-theme';
+  stripCustomCss,, normalizeLauncher } from './widget-theme';
 
 /**
  * A tenant picks one colour; everything a shopper actually reads is computed
@@ -231,5 +230,21 @@ describe('custom CSS delivery (PLN-260910 P5)', () => {
     const off = stripCustomCss(theme, false);
     expect(off?.design).toEqual({ radius: 'sm' });
     expect(stripCustomCss(normalizeWidgetTheme({ brand: '#2B7FFF', design: { customCss: 'x' } }), false)?.design).toBeNull();
+  });
+});
+
+describe('normalizeLauncher trigger mode (PLN-260916 P2)', () => {
+  it('keeps floating launchers exactly as before', () => {
+    expect(normalizeLauncher({ position: 'left', size: 'lg', icon: 'chat' })).toEqual({ position: 'left', size: 'lg', icon: 'chat' });
+  });
+  it('accepts trigger mode with a clamped offset and a sanitized selector, camel or snake', () => {
+    expect(normalizeLauncher({ position: 'right', size: 'md', icon: 'chat', mode: 'trigger', offsetTop: 999, triggerSelector: '#st-bell' })).toEqual({
+      position: 'right', size: 'md', icon: 'chat', mode: 'trigger', offsetTop: 240, triggerSelector: '#st-bell',
+    });
+    expect(normalizeLauncher({ mode: 'trigger', offset_top: -5, trigger_selector: '<script>' })).toMatchObject({ mode: 'trigger', offsetTop: 0, triggerSelector: null });
+    expect(normalizeLauncher({ mode: 'trigger' })).toMatchObject({ mode: 'trigger', offsetTop: 72 });
+  });
+  it('drops an unknown mode', () => {
+    expect(normalizeLauncher({ mode: 'sidebar' })).not.toHaveProperty('mode');
   });
 });

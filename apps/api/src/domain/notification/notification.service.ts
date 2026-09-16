@@ -59,7 +59,8 @@ function scopedWhere(
   category: string | undefined,
   scope: NotificationScope | undefined,
 ): Record<string, unknown> {
-  const where: Record<string, unknown> = { customerId };
+  // Shopper-deleted rows never surface again (PLN-260916 P3).
+  const where: Record<string, unknown> = { customerId, deletedAt: IsNull() };
   if (category && category !== 'all') {
     where.category = category;
     return where;
@@ -324,9 +325,26 @@ export class NotificationService implements OnModuleInit {
     });
   }
 
+  /**
+   * Shopper-side delete (PLN-260916 P3): soft, ownership-checked, and bulk so
+   * the widget's "delete selected / delete all" is one round trip. Returns how
+   * many rows changed; ids that are not the caller's are silently skipped
+   * rather than leaking whether they exist.
+   */
+  async remove(token: string, input: { ids?: number[]; all?: boolean }): Promise<number> {
+    const customerId = await this.requireCustomerId(token);
+    const ids = (input.ids ?? []).map(Number).filter((n) => Number.isFinite(n) && n > 0);
+    if (!input.all && ids.length === 0) return 0;
+    const where: Record<string, unknown> = { customerId, deletedAt: IsNull() };
+    if (!input.all) where.id = In(ids);
+    const result = await this.notifRepo.update(where, { deletedAt: new Date() });
+    await Promise.all(unreadCacheKeys(customerId).map((k) => this.redis.del(k)));
+    return result.affected ?? 0;
+  }
+
   async markRead(token: string, id: number): Promise<Notification> {
     const customerId = await this.requireCustomerId(token);
-    const notif = await this.notifRepo.findOne({ where: { id } });
+    const notif = await this.notifRepo.findOne({ where: { id, deletedAt: IsNull() } });
     if (!notif || notif.customerId !== customerId) {
       throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }

@@ -119,6 +119,10 @@ export const apiClient = {
   put<T>(url: string, body?: unknown): Promise<T> {
     return unwrap<T>(raw.put(url, body));
   },
+  /** DELETE with a JSON body (session token + ids) — axios carries it via `data`. */
+  delete<T>(url: string, body?: unknown): Promise<T> {
+    return unwrap<T>(raw.delete(url, { data: body }));
+  },
   /**
    * Multipart upload with progress (PLN-260814). Content-Type is deleted, not
    * set: the browser has to add the multipart boundary itself, and the client

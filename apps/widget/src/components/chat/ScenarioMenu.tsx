@@ -1,6 +1,17 @@
-import { useState } from 'react';
+import { useState, type ComponentType } from 'react';
 import { useTranslation } from 'react-i18next';
+import { HelpCircle, Headphones, MessageCircle, Package, RotateCcw, Truck, UserPlus } from 'lucide-react';
 import type { ScenarioButton } from '../../lib/types';
+
+/** Card style (PLN-260916 P4): a lucide icon per scenario action; unknown actions get the chat bubble. */
+const ACTION_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  my_orders: Package,
+  delivery_status: Truck,
+  cancel_refund: RotateCcw,
+  product_help: HelpCircle,
+  contact_support: Headphones,
+  affiliate: UserPlus,
+};
 
 /** Product Help submenu actions (client-only, not server-driven). */
 export type SubAction = 'usage' | 'ingredients' | 'exchange' | 'restock';
@@ -17,11 +28,25 @@ function MenuChip({
   label,
   onClick,
   variant,
+  icon: Icon,
 }: {
   label: string;
   onClick: () => void;
-  variant: 'primary' | 'quiet';
+  variant: 'primary' | 'quiet' | 'card';
+  icon?: ComponentType<{ className?: string }>;
 }) {
+  if (variant === 'card') {
+    // Outlined card with a leading icon (the IVY design, PLN-260916 P4).
+    return (
+      <button
+        onClick={onClick}
+        className="st-quick-reply flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-left text-sm font-medium text-gray-800 transition-colors hover:border-primary-300 hover:bg-primary-50"
+      >
+        {Icon && <Icon className="h-4 w-4 flex-shrink-0 text-primary-600" />}
+        <span className="min-w-0 truncate">{label}</span>
+      </button>
+    );
+  }
   return (
     <button
       onClick={onClick}
@@ -40,8 +65,11 @@ export function ScenarioMenu({
   buttons,
   onScenario,
   onSubAction,
+  style = 'chip',
 }: {
   buttons: ScenarioButton[];
+  /** Tenant design option (PLN-260916 P4). */
+  style?: 'chip' | 'card';
   /** Fired for a top-level config button (Product Help is handled internally). */
   onScenario: (button: ScenarioButton) => void;
   /** Fired for a Product Help submenu button. */
@@ -65,11 +93,12 @@ export function ScenarioMenu({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className={style === 'card' ? 'flex flex-wrap gap-2' : 'grid grid-cols-2 gap-2'}>
       {buttons.map((b) => (
         <MenuChip
           key={b.id}
-          variant="primary"
+          variant={style === 'card' ? 'card' : 'primary'}
+          icon={style === 'card' ? ACTION_ICONS[b.action] ?? MessageCircle : undefined}
           label={b.label}
           onClick={() => (b.action === 'product_help' ? setSub(true) : onScenario(b))}
         />

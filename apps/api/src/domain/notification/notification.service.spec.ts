@@ -1,4 +1,5 @@
 import { Repository } from 'typeorm';
+import { SessionService } from '../session/session.service';
 import { NotificationService } from './notification.service';
 import { Notification } from './entity/notification.entity';
 import { NotificationPref } from './entity/notification-pref.entity';
@@ -316,13 +317,13 @@ describe('NotificationService scoping — order vs notice half', () => {
 
   it('no scope means the whole feed — the single-list-tab configuration', async () => {
     await svc.list('tok', 'all', 1, 20);
-    expect(lastWhere).toEqual({ customerId: 42 });
+    expect(lastWhere).toEqual({ customerId: 42, deletedAt: expect.anything() });
   });
 
   it('an explicit chip wins over the scope', async () => {
     // A chip asks for exactly one category; the scope only decides what "all" means.
     await svc.list('tok', 'event', 1, 20, 'order');
-    expect(lastWhere).toEqual({ customerId: 42, category: 'event' });
+    expect(lastWhere).toEqual({ customerId: 42, category: 'event', deletedAt: expect.anything() });
   });
 
   it('unreadCount applies the same scope, so two badges cannot double-count', async () => {
@@ -455,5 +456,43 @@ describe('NotificationService — tenant ceiling and marketing opt-out', () => {
   it('a transactional preference does not make the shopper look opted in', async () => {
     prefRows.set(key('email', 'shipping'), 1);
     await expect(svc.marketingOptOut('tok')).resolves.toBe(true);
+  });
+});
+
+/** PLN-260916 P3 — shopper-side soft delete. */
+describe('NotificationService.remove', () => {
+  function build() {
+    const update = jest.fn().mockResolvedValue({ affected: 2 });
+    const notifRepo = { update } as unknown as Repository<Notification>;
+    const redis = { del: jest.fn(), get: jest.fn(), set: jest.fn(), available: () => false } as unknown as RedisService;
+    const svc = new NotificationService(
+      notifRepo,
+      {} as unknown as Repository<NotificationPref>,
+      {} as unknown as Repository<Session>,
+      { findOne: jest.fn(async () => null) } as unknown as Repository<Tenant>,
+      { requireCustomerId: jest.fn(async () => 42) } as unknown as SessionService,
+      { subscribe: jest.fn(), publish: jest.fn() } as unknown as EventBusService,
+      redis,
+    );
+    return { svc, update, redis };
+  }
+
+  it("soft-deletes only the caller's selected rows and busts the unread cache", async () => {
+    const { svc, update, redis } = build();
+    await expect(svc.remove('tok', { ids: [7, 8, -1, NaN] })).resolves.toBe(2);
+    const [where, patch] = update.mock.calls[0];
+    expect(where).toMatchObject({ customerId: 42 });
+    expect(where.id).toBeDefined();
+    expect(patch.deletedAt).toBeInstanceOf(Date);
+    expect(redis.del).toHaveBeenCalled();
+  });
+
+  it('all=true deletes everything the caller has; nothing selected and not all is a no-op', async () => {
+    const { svc, update } = build();
+    await svc.remove('tok', { all: true });
+    expect(update.mock.calls[0][0]).not.toHaveProperty('id');
+    update.mockClear();
+    await expect(svc.remove('tok', {})).resolves.toBe(0);
+    expect(update).not.toHaveBeenCalled();
   });
 });
