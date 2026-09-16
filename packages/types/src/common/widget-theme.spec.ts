@@ -7,7 +7,9 @@ import {
   readableForeground,
   RAMP_STOPS,
   panelFrame,
-  stripCustomCss,, normalizeLauncher } from './widget-theme';
+  stripCustomCss,
+  normalizeLauncher,
+} from './widget-theme';
 
 /**
  * A tenant picks one colour; everything a shopper actually reads is computed
