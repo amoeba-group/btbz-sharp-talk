@@ -36,6 +36,10 @@ export function Widget() {
   const prevOpen = useRef(panelOpen);
   const theme = useWidgetStore((s) => s.widgetTheme);
   const launcher = resolveLauncher(theme);
+  // Trigger mode only hides the button when the storefront actually has an opener;
+  // the loader tells us when it does not (FIX-260916).
+  const triggerUnavailable = useWidgetStore((s) => s.triggerUnavailable);
+  const triggerHidesLauncher = launcher.mode === 'trigger' && !triggerUnavailable;
   const sizeClasses = LAUNCHER_CLASSES[launcher.size] ?? LAUNCHER_CLASSES.md;
   const brandMark = theme?.logo ? logoUrl(theme.logo) : null;
   const customIcon = theme?.design?.launcherIcon ? assetUrl(theme.design.launcherIcon) : null;
@@ -141,7 +145,7 @@ export function Widget() {
       {/* Floating launcher — closed state only. While the panel is open the
           bottom-right X would duplicate the panel header's close button (and
           sit right under it on mobile), so closing is the header X / Esc. */}
-      {!panelOpen && !appMode && launcher.mode !== 'trigger' && (
+      {!panelOpen && !appMode && !triggerHidesLauncher && (
         <button
           onClick={togglePanel}
           aria-label={t('a11y.openSupport')}

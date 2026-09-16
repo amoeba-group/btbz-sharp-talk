@@ -51,6 +51,8 @@ interface WidgetState {
   language: string;
   /** Region named in the AI disclosure (from session ensure; default US). */
   aiProcessingRegion: string;
+  /** Loader could not find the configured trigger element, so the floating launcher stands in (FIX-260916). */
+  triggerUnavailable: boolean;
   /**
    * Privacy consent — gates chat persistence AND GA4 (Consent Mode).
    * Null until session/ensure has reported the server-side state (server is
@@ -102,6 +104,7 @@ interface WidgetState {
   setEmbedIdentity: (v: 'pending' | 'verified' | 'anonymous') => void;
   setLanguage: (l: string) => void;
   setAiProcessingRegion: (r: string) => void;
+  setTriggerUnavailable: (v: boolean) => void;
   setConsentInfo: (c: ConsentInfo | null) => void;
   /** Record a fresh, server-acknowledged consent choice (clears outdated flag). */
   updateConsentState: (
@@ -138,6 +141,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   // 'en' (PLN-260813 P4).
   language: initialLanguage(),
   aiProcessingRegion: 'US',
+  triggerUnavailable: false,
   consent: null,
   pendingChatMessage: null,
   notificationFilter: 'all',
@@ -163,6 +167,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setEmbedIdentity: (v) => set({ embedIdentity: v }),
   setLanguage: (l) => set({ language: l }),
   setAiProcessingRegion: (r) => set({ aiProcessingRegion: r }),
+  setTriggerUnavailable: (v) => set({ triggerUnavailable: v }),
   setConsentInfo: (c) => set({ consent: c }),
   setNotificationFilter: (f) => set({ notificationFilter: f }),
   /**

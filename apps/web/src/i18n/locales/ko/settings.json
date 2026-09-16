@@ -491,7 +491,7 @@
     "launcherModeTrigger": "스토어 헤더 트리거 — 사이트의 요소(예: 종 아이콘)로 열고 헤더 아래에 도킹",
     "triggerSelector": "트리거 선택자",
     "triggerOffset": "상단 오프셋 (px)",
-    "triggerHint": "아래 예시처럼 스토어 헤더에 여는 요소를 넣고, 스니펫의 trigger에 그 선택자를 적으세요. 미읽음 수는 data-sharptalk-badge 요소에 표시되고, 패널은 헤더 아래 우측에 열리며 바깥을 클릭하면 닫힙니다.",
+    "triggerHint": "아래 예시처럼 스토어 헤더에 여는 요소를 넣고, 스니펫의 trigger에 그 선택자를 적으세요. 미읽음 수는 data-sharptalk-badge 요소에 표시되고, 패널은 헤더 아래 우측에 열리며 바깥을 클릭하면 닫힙니다. 스토어에 그 요소가 없으면 위젯이 자동으로 떠 있는 버튼으로 돌아갑니다.",
     "logoAlt": "현재 로고",
     "iconCustom": "업로드한 아이콘",
     "iconFile": "아이콘 파일",
