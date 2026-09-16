@@ -491,7 +491,7 @@
     "launcherModeTrigger": "Disparador en la cabecera de la tienda: tu propio elemento (p. ej. una campana) abre el widget, anclado bajo la cabecera",
     "triggerSelector": "Selector del disparador",
     "triggerOffset": "Desplazamiento superior (px)",
-    "triggerHint": "Añade un elemento de apertura en la cabecera como en el ejemplo y pon su selector en trigger. El contador de no leídos se muestra en data-sharptalk-badge; el panel se abre bajo la cabecera a la derecha y se cierra al hacer clic fuera.",
+    "triggerHint": "Añade un elemento de apertura en la cabecera como en el ejemplo y pon su selector en trigger. El contador de no leídos se muestra en data-sharptalk-badge; el panel se abre bajo la cabecera a la derecha y se cierra al hacer clic fuera. Si el elemento no está en la tienda, el widget vuelve automáticamente al botón flotante.",
     "logoAlt": "Logotipo actual",
     "iconCustom": "Icono subido",
     "iconFile": "Archivo de icono",

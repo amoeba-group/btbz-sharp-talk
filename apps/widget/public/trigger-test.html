@@ -19,6 +19,7 @@
     <strong>IVY beauty</strong>
     <div class="icons"><span>👤</span><span>🛒</span>
       <button id="st-bell" type="button" aria-label="Notifications">🔔<span data-sharptalk-badge style="display:none"></span></button>
+      <!-- ?notrigger=1 removes this opener: reproduces a store whose theme has not been updated yet (FIX-260916). -->
     </div>
   </header>
   <main><h1>Clean beauty, delivered.</h1><p id="outside">Page content — clicking here is "outside" the docked panel.</p></main>
@@ -30,6 +31,10 @@
       widgetUrl: location.href.split('?')[0].replace(/[^/]*$/, '').replace(/\/$/, ''),
       trigger: '#st-bell',
     };
+    if (new URLSearchParams(location.search).has('notrigger')) {
+      delete window.SHARPTALK_WIDGET_CONFIG.trigger;
+      document.getElementById('st-bell').remove();
+    }
   </script>
   <script src="./embed.js" defer></script>
 </body></html>

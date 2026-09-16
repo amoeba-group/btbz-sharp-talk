@@ -48,7 +48,8 @@ export function WidgetPanel() {
   // panel, which docks under that header. The design drops the language pill
   // and the X from the header; the loader closes on outside click / Esc, and on
   // a phone (loader adds ?compact=1) the X stays because there is no "outside".
-  const triggerMode = resolveLauncher(theme).mode === 'trigger' && !isAppMode();
+  const triggerUnavailable = useWidgetStore((s) => s.triggerUnavailable);
+  const triggerMode = resolveLauncher(theme).mode === 'trigger' && !isAppMode() && !triggerUnavailable;
   const compact = new URLSearchParams(window.location.search).get('compact') === '1';
   const showClose = !triggerMode || compact;
   // A greeting names the customer, so it wins over the brand mark: the shopper

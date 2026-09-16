@@ -491,7 +491,7 @@
     "launcherModeTrigger": "Kích hoạt từ header cửa hàng — phần tử của bạn (ví dụ biểu tượng chuông) mở widget, neo dưới header",
     "triggerSelector": "Bộ chọn kích hoạt",
     "triggerOffset": "Khoảng cách trên (px)",
-    "triggerHint": "Thêm phần tử mở vào header như ví dụ và đặt bộ chọn của nó vào trigger trong đoạn mã. Số chưa đọc hiển thị ở phần tử data-sharptalk-badge; bảng mở dưới header bên phải và đóng khi bấm ra ngoài.",
+    "triggerHint": "Thêm phần tử mở vào header như ví dụ và đặt bộ chọn của nó vào trigger trong đoạn mã. Số chưa đọc hiển thị ở phần tử data-sharptalk-badge; bảng mở dưới header bên phải và đóng khi bấm ra ngoài. Nếu cửa hàng không có phần tử đó, widget sẽ tự động quay lại nút nổi.",
     "logoAlt": "Logo hiện tại",
     "iconCustom": "Biểu tượng đã tải lên",
     "iconFile": "Tệp biểu tượng",

@@ -110,6 +110,12 @@
   // `[data-sharptalk-badge]`). The tenant's theme can also switch this on.
   var triggerMode = !!cfg.trigger;
   var triggerOffset = 0;
+  // Trigger mode hides the floating launcher, so a tenant who switches the mode
+  // on before the storefront has the opener element would leave shoppers with no
+  // way to open the widget at all (FIX-260916). The loader is the only side that
+  // can see the page, so it checks — and falls back rather than stranding anyone.
+  var triggerFellBack = false;
+  var launcherSizePx = '96px';
   var isOpen = false;
   var openedAt = 0;
   var pageHost = (window.location.hostname || '').toLowerCase();
@@ -267,10 +273,13 @@
     triggerMode = next.mode === 'trigger' || !!cfg.trigger;
     triggerOffset = Math.max(0, Math.min(240, Number(next.offsetTop) || 0));
     var px = Math.max(64, Math.min(160, Number(next.size) || 96)) + 'px';
+    launcherSizePx = px;
+    if (triggerFellBack) triggerMode = false;
     // Trigger mode: nothing to draw while closed, so the frame takes no room and
     // cannot intercept clicks on the page beneath it.
     CLOSED = triggerMode ? { w: '0px', h: '0px' } : { w: px, h: px };
     placeFrame();
+    checkTrigger();
     if (next.position === 'left') {
       frame.style.left = '0';
       frame.style.right = 'auto';
@@ -778,6 +787,63 @@
   //
   // Skipped on a sign-in screen: there is no widget to answer, and asking would
   // spend a one-time sign-in ticket on a page that cannot use it.
+  /**
+   * Is the configured opener actually on this page?
+   *
+   * Checked repeatedly for a few seconds because storefront headers are often
+   * rendered late (theme JS, a cart drawer, a framework hydration pass), and a
+   * single check at boot would call a present element missing.
+   */
+  function triggerPresent() {
+    if (!cfg.trigger) return false;
+    try {
+      return !!document.querySelector(String(cfg.trigger));
+    } catch (_) {
+      return false; // invalid selector — same outcome as a missing element
+    }
+  }
+  var triggerChecks = 0;
+  var triggerTimer = null;
+  function checkTrigger() {
+    if (!triggerMode || triggerFellBack || triggerPresent()) {
+      if (triggerTimer) {
+        clearTimeout(triggerTimer);
+        triggerTimer = null;
+      }
+      return;
+    }
+    // No selector at all (theme switched the mode on, snippet never got the
+    // `trigger` key): no element can appear later, so do not make shoppers wait.
+    if (cfg.trigger && triggerChecks < 6) {
+      triggerChecks++;
+      if (!triggerTimer) {
+        triggerTimer = setTimeout(function () {
+          triggerTimer = null;
+          checkTrigger();
+        }, 600);
+      }
+      return;
+    }
+    // Give up and put the launcher back. The widget draws the button, so it has
+    // to be told too — it cannot see the storefront from inside its iframe.
+    triggerFellBack = true;
+    triggerMode = false;
+    CLOSED = { w: launcherSizePx, h: launcherSizePx };
+    placeFrame();
+    command({ type: 'ivy:command', action: 'trigger-missing' });
+    if (window.console && console.warn) {
+      console.warn(
+        '[SharpTalk] launcher trigger ' +
+          JSON.stringify(cfg.trigger || null) +
+          ' was not found on this page — showing the floating launcher instead. ' +
+          'Add the opener element to your theme, or switch the launcher mode back in the console.',
+      );
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkTrigger);
+  }
+
   // Storefront-side unread badge (trigger mode). Any element matching cfg.badge
   // (default `[data-sharptalk-badge]`) shows the count and hides at zero.
   function setBadge(count) {

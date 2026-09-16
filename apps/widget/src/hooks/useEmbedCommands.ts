@@ -84,6 +84,11 @@ export function useEmbedCommands(): void {
           case 'toggle':
             store.setPanelOpen(!store.panelOpen);
             return;
+          case 'trigger-missing':
+            // The storefront has no element to open the widget with, so draw the
+            // floating launcher even though the tenant chose trigger mode.
+            store.setTriggerUnavailable(true);
+            return;
           case 'locale': {
             // Full language switch, exactly what the in-widget switcher does —
             // setLanguage alone changed the AI reply language but left the UI
