@@ -1,0 +1,329 @@
+﻿"category","title","content","external_key","source_url"
+"HA · Đối soát & thanh toán","Lịch đối soát và hạn hoàn tất để nhận thanh toán","Go2Joy gửi đối soát sau mỗi kỳ kinh doanh, 2 kỳ trong 1 tháng (kỳ 1 và kỳ 2, ví dụ kỳ 2 tháng 8 = 16/08–31/08), để khách sạn chốt số lượng và tổng công nợ đặt phòng của kỳ đó.
+
+Hạn hoàn tất: khách sạn hoàn tất đối soát trước 16h30 Thứ Tư sẽ nhận thanh toán công nợ trước 17:00 Thứ Năm cùng tuần. Hoàn tất sau 16h30 Thứ Tư thì đối soát được thanh toán vào Thứ Năm tuần kế tiếp. Khách sạn cần kiểm tra và báo các đặt phòng sai sót cho bộ phận hỗ trợ trước hạn đối soát; sau thời điểm đó số liệu ghi nhận sẽ không được chỉnh sửa.
+
+Quy tắc kèm theo:
+- Các booking không có khiếu nại sẽ được tự động xác nhận đúng như trên bảng đối soát.
+- Không thể hoàn tất đối soát kỳ này nếu kỳ trước vẫn đang khiếu nại đặt phòng.
+- Kỳ không phát sinh đặt phòng và không có công nợ chưa thanh toán sẽ được hệ thống tự động hoàn tất.
+- Đối soát nằm ở menu Quản lý đối soát (Đối soát & Thanh toán) trên Hotel Admin.
+
+Nguồn: màn hình Quản lý đối soát, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-01-VI","https://ha.go2joy.vn/booking-reconciliation"
+"HA · Đối soát & thanh toán","Reconciliation schedule and the deadline to get paid","Go2Joy issues a reconciliation after each business period, twice a month (period 1 and period 2, e.g. period 2 of August = 16–31 Aug), so the hotel confirms the booking count and total debt for that period.
+
+Deadline: a hotel that completes the reconciliation before 16:30 on Wednesday receives the debt payment before 17:00 on Thursday of the same week. If it is completed after 16:30 Wednesday, payment moves to Thursday of the following week. Check the bookings and report any errors to the support team before the deadline; after that the recorded figures cannot be changed.
+
+Related rules:
+- Bookings without a complaint are automatically confirmed as shown on the reconciliation.
+- A period cannot be completed while the previous period still has a booking under complaint.
+- A period with no bookings and no outstanding debt is completed automatically.
+- Menu: Booking reconciliation management (Reconciliation & Payment) in Hotel Admin.
+
+Source: Reconciliation screen, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-01-EN","https://ha.go2joy.vn/booking-reconciliation"
+"HA · Đối soát & thanh toán","Quy trình hoàn tất đối soát và khiếu nại đặt phòng trong đối soát","Trạng thái một kỳ đối soát: Chưa đối soát → (Đang khiếu nại) → Chờ xác minh → Hoàn tất. Khi khách sạn gửi khiếu nại, kỳ chuyển sang ""Gửi Go2Joy xử lý""; Go2Joy sẽ đồng ý xử lý, từ chối xử lý, hoặc gửi lại đối soát đã xử lý khiếu nại.
+
+Cách hoàn tất: mở Quản lý đối soát → chọn kỳ → kiểm tra danh sách đặt phòng (nên dùng ""Tải Excel"" để đối chiếu) → tick hai xác nhận: (1) bảng đối soát hiện tại đúng và đủ các đặt phòng trong kỳ, (2) số tiền công nợ là đúng theo số tiền trong kỳ → Xác nhận hoàn tất đối soát.
+
+Cách khiếu nại một đặt phòng: trong chi tiết đối soát chọn đặt phòng → Khiếu nại → chọn loại: ""Khiếu nại Sai thông tin đặt phòng"" hoặc ""Khiếu nại Khách không nhận phòng"" (ngoài ra có ""Khiếu nại khác"") → nhập nội dung khiếu nại (bắt buộc) → gửi. Loại khiếu nại là danh mục cố định của hệ thống, không tự thêm được. Sau khi Go2Joy xử lý, khách sạn xem tại ""Xem chi tiết xử lý khiếu nại""; nếu muốn tiếp tục khiếu nại một đặt phòng đã được xử lý, liên hệ CSKH Go2Joy.
+
+Lưu ý: khiếu nại phải gửi trước hạn đối soát; booking không khiếu nại được tự xác nhận đúng.
+
+Nguồn: Quản lý đối soát, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-02-VI","https://ha.go2joy.vn/booking-reconciliation"
+"HA · Đối soát & thanh toán","How to complete a reconciliation and file a booking complaint","Period statuses: Not reconciled → (Under complaint) → Awaiting verification → Completed. When the hotel files a complaint the period moves to ""Sent to Go2Joy for processing""; Go2Joy then accepts, rejects, or re-sends the reconciliation with the complaint processed.
+
+To complete: open Reconciliation management → pick the period → check the booking list (use ""Download Excel"" to compare) → tick both confirmations: (1) the reconciliation is correct and complete for the period, (2) the debt amount matches the period → Confirm completion.
+
+To complain about a booking: in the reconciliation detail select the booking → Complaint → choose the type: ""Wrong booking information"" or ""Guest did not check in"" (plus ""Other complaint"") → enter the complaint content (required) → send. Complaint types are fixed system categories; new ones cannot be added. After Go2Joy processes it, see ""View complaint processing detail""; to continue disputing a booking that was already processed, contact Go2Joy customer service.
+
+Note: complaints must be sent before the reconciliation deadline; bookings without a complaint are auto-confirmed.
+
+Source: Reconciliation management, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-02-EN","https://ha.go2joy.vn/booking-reconciliation"
+"HA · Đối soát & thanh toán","Công thức công nợ, phí hoa hồng, thuế GTGT/TNCN và phí dịch vụ","Các công thức hệ thống hiển thị trong đối soát và báo cáo đặt phòng (chỉ đọc số hệ thống đã tính, không tự tính lại):
+
+- Tiền phòng = Giá phòng + Sản phẩm đặt kèm + Phụ thu.
+- Tổng thanh toán = Giá phòng + Phụ thu + Sản phẩm đi kèm.
+- Doanh thu thuần của khách sạn = (Tiền phòng + Phụ thu + Sản phẩm đi kèm) − Giảm giá của khách sạn.
+- Phí hoa hồng = (Giá phòng − Khách sạn KM + Phụ thu) × Mức phí hoa hồng đặt phòng + Sản phẩm đặt kèm × 10%. Mức phí hoa hồng theo hợp đồng của từng khách sạn, hiển thị ở Thông tin khách sạn → Tình trạng (ví dụ ""Hợp đồng (15.0%)"").
+- Thuế GTGT = (Giá phòng − Khách sạn KM + Phụ thu) × 5%.
+- Thuế TNCN = (Giá phòng − Khách sạn KM + Phụ thu) × 2%.
+- Phí dịch vụ: khoản tính trên đặt phòng của mỗi người dùng; Go2Joy thu lại khoản này nếu khách thanh toán tại khách sạn. Một số đặt phòng được áp dụng ưu đãi phí dịch vụ.
+- Công nợ = Tổng thanh toán (trừ phần Online) + Go2Joy KM − Phí hoa hồng − GTGT − TNCN − Phí dịch vụ. Kết quả dương ""(+) Go2Joy trả"", âm ""(−) Go2Joy thu""; phần chênh có thể ""Bù trừ ở kỳ sau"".
+- Bảng công nợ tính trên các đặt phòng có ngày hoàn thành và các đặt phòng no-show đã trả trước trong khung thời gian ghi nhận của kỳ.
+
+Nguồn: tooltip màn hình Đối soát và Báo cáo đặt phòng, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-03-VI","https://ha.go2joy.vn/user-booking-report-detail"
+"HA · Đối soát & thanh toán","Debt, commission, VAT/PIT and service-fee formulas","Formulas shown in the reconciliation and booking report screens (read the system figures, never recompute):
+
+- Room revenue = Room price + Add-on products + Surcharge.
+- Total payment = Room price + Surcharge + Add-on products.
+- Hotel net revenue = (Room revenue + Surcharge + Add-on products) − Hotel discounts.
+- Commission fee = (Room price − Hotel promotion + Surcharge) × booking commission rate + Add-on products × 10%. The commission rate is per hotel contract and shown under Hotel information → Status (e.g. ""Contracted (15.0%)"").
+- VAT = (Room price − Hotel promotion + Surcharge) × 5%.
+- PIT = (Room price − Hotel promotion + Surcharge) × 2%.
+- Service fee: charged on each user's booking; Go2Joy collects it back when the guest pays at the hotel. Some bookings carry a service-fee discount.
+- Debt = Total payment (excluding online-paid part) + Go2Joy promotion − Commission − VAT − PIT − Service fee. Positive = ""(+) Go2Joy pays"", negative = ""(−) Go2Joy collects""; differences may be ""offset in the next period"".
+- The debt table covers bookings with a completion date plus prepaid no-show bookings inside the period's recording window.
+
+Source: tooltips on the Reconciliation and Booking report screens, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-03-EN","https://ha.go2joy.vn/user-booking-report-detail"
+"HA · Đối soát & thanh toán","Tải đối soát, báo cáo và danh sách đặt phòng qua email công nợ","File Excel đối soát, báo cáo đặt phòng và danh sách đặt phòng không tải trực tiếp mà được gửi về ""email nhận đối soát / email công nợ"" mà khách sạn đã đăng ký với Go2Joy. Sau khi bấm Tải đối soát / Tải Báo cáo / Tải danh sách, hệ thống báo ""Kiểm tra email của bạn"" và email thường đến sau 2–3 phút.
+
+Nếu hiện thông báo ""Tài khoản của bạn chưa đăng ký email nhận đối soát với Go2Joy"", làm theo 3 bước: Bước 1: đăng nhập Hotel Admin bằng tài khoản admin (chủ khách sạn). Bước 2: vào Quản lý nhân viên. Bước 3: chọn tài khoản và cập nhật ""Email công nợ"".
+
+Khi tải đối soát có thể chọn khách sạn (nếu quản lý nhiều khách sạn) và chọn nhiều kỳ. Danh sách đặt phòng tải theo khoảng thời gian nhận phòng, tối đa 3 tháng. Kỳ không có dữ liệu sẽ báo ""Kỳ đối soát không có dữ liệu"".
+
+Nguồn: Quản lý đối soát / Báo cáo đặt phòng / Quản lý đặt phòng, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-04-VI","https://ha.go2joy.vn/booking-reconciliation"
+"HA · Đối soát & thanh toán","Downloading reconciliations, reports and booking lists by debt e-mail","Reconciliation Excel files, booking reports and booking lists are not downloaded directly: they are e-mailed to the ""reconciliation / debt e-mail"" the hotel registered with Go2Joy. After clicking Download reconciliation / Download report / Download list the system shows ""Check your e-mail""; the mail usually arrives within 2–3 minutes.
+
+If you see ""Your account has not registered an e-mail to receive reconciliations with Go2Joy"": Step 1: log in to Hotel Admin with the admin (owner) account. Step 2: open Staff management. Step 3: select the account and update the ""Debt e-mail"".
+
+When downloading a reconciliation you can pick the hotel (multi-hotel accounts) and several periods at once. Booking lists are exported by check-in date range, up to 3 months. A period without data returns ""No data in this reconciliation period"".
+
+Source: Reconciliation / Booking report / Booking management screens, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-04-EN","https://ha.go2joy.vn/booking-reconciliation"
+"HA · Đối soát & thanh toán","Yêu cầu cập nhật tài khoản ngân hàng nhận thanh toán công nợ","Công nợ của khách sạn được Go2Joy thanh toán qua tài khoản ngân hàng đăng ký trong mục Tài khoản ngân hàng. Để đổi tài khoản: mở Tài khoản ngân hàng → Yêu cầu cập nhật tài khoản → nhập số tài khoản, tên người thụ hưởng, chọn ngân hàng → tick xác nhận → Gửi yêu cầu. Go2Joy tiếp nhận và liên hệ lại khách sạn để xác nhận trước khi thay đổi; kết quả (được phê duyệt / bị từ chối kèm lý do) hiển thị trong Lịch sử cập nhật tài khoản và thông báo.
+
+Quy tắc: không gửi thêm yêu cầu khi còn yêu cầu khác đang xử lý; có thể chỉnh sửa hoặc hủy yêu cầu đang xử lý (khi hủy, khách sạn tiếp tục dùng tài khoản hiện tại). Trong lúc chờ Go2Joy xác minh thông tin thanh toán mới, đối soát sẽ tự động chuyển sang Hoàn tất và được thanh toán theo lịch sau khi xác minh thành công.
+
+Điều khoản khách sạn xác nhận khi gửi: thông tin tài khoản là chính xác và dùng thống nhất trong giao dịch với Go2Joy; Go2Joy được miễn trừ trách nhiệm với tranh chấp thanh toán khi khách sạn ủy quyền bên thứ ba nhận thanh toán hộ; nội dung cập nhật là một phần không tách rời của Hợp đồng hợp tác và có hiệu lực từ ngày thay đổi.
+
+Nguồn: Tài khoản ngân hàng, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-05-VI","https://ha.go2joy.vn/bank-account"
+"HA · Đối soát & thanh toán","Requesting a change of the bank account that receives debt payments","Go2Joy pays the hotel's debt to the bank account registered under Bank account. To change it: open Bank account → Request account update → enter account number, beneficiary name, choose the bank → tick the confirmation → Send request. Go2Joy receives the request and contacts the hotel to confirm before changing anything; the result (approved / denied with a reason) appears in the account update history and notifications.
+
+Rules: no new request while another is being processed; a pending request can be edited or cancelled (on cancellation the hotel keeps using the current account). While Go2Joy verifies the new payment details, the reconciliation automatically moves to Completed and is paid on schedule once verification succeeds.
+
+Terms the hotel confirms on sending: the account information is accurate and used consistently in transactions with Go2Joy; Go2Joy is released from liability for payment disputes where the hotel authorises a third party to receive payments on its behalf; the update is an integral part of the Cooperation Contract and takes legal effect from the change date.
+
+Source: Bank account screen, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-05-EN","https://ha.go2joy.vn/bank-account"
+"HA · Đặt phòng: hủy & no-show","Trạng thái đặt phòng trên Hotel Admin và khung giờ ba loại đặt phòng","Ba loại đặt phòng: Theo giờ, Qua đêm, Theo ngày. Khung giờ nhận/trả của từng loại là thiết lập riêng của mỗi khách sạn, xem ở Thông tin khách sạn (ví dụ một khách sạn: Theo giờ 08:00–22:00, Qua đêm 22:00–12:00, Theo ngày 14:00–12:00). Đặt phòng Theo giờ vượt ""số giờ tối đa khách có thể đặt"" của loại phòng sẽ tự chuyển thành đặt phòng Theo ngày.
+
+Các tab trạng thái trong Quản lý đặt phòng: Chờ nhận phòng · Đã nhận phòng · Chờ G2J xử lý (yêu cầu hủy/điều chỉnh đang chờ Go2Joy) · Không nhận phòng (khách không đến) · Đã hủy · Hoàn thành · Chờ khách xác nhận (đã báo no-show, chờ khách phản hồi) · Chờ thanh toán. Trang chủ tóm tắt theo ngày: Chờ nhận phòng, Đã nhận phòng, Chờ Go2Joy xử lý, Hoàn thành cho từng loại đặt phòng.
+
+Mỗi thẻ đặt phòng hiển thị: mã đặt phòng, trạng thái, tên khách (có thể là ""Khách vãng lai""/""Khách ẩn danh""), loại phòng, loại đặt phòng, thời gian ở khách sạn, tình trạng thanh toán (Đã thanh toán / Trả tại khách sạn), số tiền, coupon. Nguồn đặt phòng có thể là Go2Joy, Agoda hoặc MoMo.
+
+Nguồn: Quản lý đặt phòng, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-06-VI","https://ha.go2joy.vn/user-booking-list"
+"HA · Đặt phòng: hủy & no-show","Booking statuses in Hotel Admin and the three booking types","Three booking types: Hourly, Overnight, Daily. Check-in/check-out windows for each type are configured per hotel and shown under Hotel information (one hotel, for example: Hourly 08:00–22:00, Overnight 22:00–12:00, Daily 14:00–12:00). An hourly booking that exceeds the room type's ""maximum bookable hours"" is converted into a daily booking.
+
+Status tabs in Booking management: Awaiting check-in · Checked in · Awaiting Go2Joy processing (a cancellation/adjustment request waiting for Go2Joy) · No-show · Cancelled · Completed · Awaiting guest confirmation (no-show reported, waiting for the guest) · Awaiting payment. The home page summarises today's Awaiting check-in, Checked in, Awaiting Go2Joy processing and Completed per booking type.
+
+Each booking card shows: booking ID, status, guest name (may be ""Walk-in guest""/""Anonymous guest""), room type, booking type, stay time, payment status (Paid / Pay at hotel), amount, coupon. Booking sources can be Go2Joy, Agoda or MoMo.
+
+Source: Booking management, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-06-EN","https://ha.go2joy.vn/user-booking-list"
+"HA · Đặt phòng: hủy & no-show","Hủy đặt phòng trên Hotel Admin: lý do bắt buộc, yêu cầu hủy và thời hạn sửa trạng thái","Khách sạn hủy đặt phòng tại Quản lý đặt phòng → thẻ đặt phòng → Hủy đặt phòng → chọn lý do hủy phòng (bắt buộc, chọn từ danh mục cố định của hệ thống) → xác nhận. Lý do được chọn quyết định cách đặt phòng được ghi nhận trong đối soát và đánh giá, nên phải chọn đúng thực tế.
+
+Hai trường hợp khách sạn không tự hủy được mà phải ""Yêu cầu hủy phòng"" để Go2Joy xử lý (đặt phòng chuyển sang Chờ G2J xử lý): (1) đặt phòng đã thanh toán trước; (2) đã quá thời gian nhận phòng — chỉ có thể hủy trước giờ nhận phòng. Với các trường hợp khác, liên hệ bộ phận phụ trách của Go2Joy hoặc đường dây nóng.
+
+Thời hạn chỉnh sửa trạng thái giao dịch đặt phòng: kể từ 01/10/2024 là F+10, trong đó F là ngày cuối cùng của tháng mà người dùng trả phòng (áp dụng cho đặt phòng từ tháng 09/2024). Quá hạn này khách sạn không tự sửa được trạng thái.
+
+Đặt phòng bị hủy hoặc no-show thì đánh giá của khách cho đặt phòng đó không được ghi nhận. Phía khách: có thể hủy miễn phí trong 5 phút sau khi đặt thành công nhưng không quá giờ nhận phòng; phòng Flash Sale và ưu đãi không hoàn hủy thì không hủy được.
+
+Nguồn: Quản lý đặt phòng và thông báo Go2Joy ngày 19/09/2024, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-07-VI","https://ha.go2joy.vn/user-booking-list"
+"HA · Đặt phòng: hủy & no-show","Cancelling a booking in Hotel Admin: mandatory reason, cancellation requests and the edit window","The hotel cancels a booking under Booking management → booking card → Cancel booking → choose a cancellation reason (required, from the system's fixed list) → confirm. The chosen reason decides how the booking is recorded in reconciliation and reviews, so it must match what actually happened.
+
+Two cases where the hotel cannot cancel directly and must ""Request cancellation"" for Go2Joy to handle (the booking moves to Awaiting Go2Joy processing): (1) the booking was prepaid; (2) the check-in time has passed — cancellation is only possible before check-in time. For other cases contact the Go2Joy department in charge or the hotline.
+
+Edit window for booking transaction status: from 01/10/2024 it is F+10, where F is the last day of the month in which the guest checked out (applies to bookings from September 2024). After that the hotel can no longer change the status itself.
+
+For cancelled or no-show bookings the guest's review is not recorded. Guest side: free cancellation within 5 minutes of a successful booking but never after check-in time; Flash Sale rooms and non-refundable offers cannot be cancelled.
+
+Source: Booking management and Go2Joy notice of 19/09/2024, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-07-EN","https://ha.go2joy.vn/user-booking-list"
+"HA · Đặt phòng: hủy & no-show","Báo khách không đến nhận phòng (no-show) và bước khách xác nhận","Khi khách không đến, khách sạn vào Quản lý đặt phòng → thẻ đặt phòng → Khách không đến → nhập lý do/ghi chú → gửi. Hệ thống báo ""Gửi yêu cầu Khách không đến thành công. Chờ khách xác nhận"" và đặt phòng chuyển sang tab Chờ khách xác nhận.
+
+Khách được hỏi xác nhận và có 4 kết quả: Khách xác nhận không đến; Khách xác nhận đã đến và đã nhận phòng; Khách xác nhận đã đến và không nhận phòng; Khách không xác nhận → hệ thống tự động chuyển trạng thái. Khi hoàn tất, đặt phòng nằm ở tab Không nhận phòng, ghi rõ ""Khách sạn xác nhận khách không đến"" và kết quả từ phía khách.
+
+Hệ quả: đánh giá của khách cho đặt phòng no-show không được ghi nhận; đặt phòng no-show đã trả trước được tính vào bảng công nợ của kỳ đối soát; nếu số liệu no-show trong đối soát sai, khách sạn khiếu nại theo loại ""Khách không nhận phòng"". Thông báo no-show hiển thị ở chuông thông báo (mục Khách không đến) theo từng loại đặt phòng.
+
+Nguồn: Quản lý đặt phòng, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-08-VI","https://ha.go2joy.vn/user-booking-list"
+"HA · Đặt phòng: hủy & no-show","Reporting a guest no-show and the guest confirmation step","When a guest does not arrive, open Booking management → booking card → Guest no-show → enter the reason/note → send. The system confirms ""No-show request sent successfully. Waiting for user confirmation"" and the booking moves to the Awaiting guest confirmation tab.
+
+The guest is asked to confirm, with four outcomes: Guest confirms no-show; Guest confirms arrival and received the room; Guest confirms arrival but did not receive a room; Guest did not confirm → the status is updated automatically. Once settled the booking sits in the No-show tab showing ""Hotel confirms no-show"" together with the guest's outcome.
+
+Consequences: the guest's review for a no-show booking is not recorded; prepaid no-show bookings are included in the reconciliation debt table; if a no-show figure in the reconciliation is wrong, file a complaint of type ""Guest did not check in"". No-show notifications appear in the notification bell (No-show section) per booking type.
+
+Source: Booking management, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-08-EN","https://ha.go2joy.vn/user-booking-list"
+"HA · Đặt phòng: hủy & no-show","Xác nhận khách nhận phòng và các kênh nhận thông báo đặt phòng","Xác nhận nhận phòng: Quản lý đặt phòng → thẻ đặt phòng ở trạng thái Chờ nhận phòng → Nhận phòng → xác nhận trong popup ""Xác nhận khách đến nhận phòng"". Đặt phòng chuyển sang Đã nhận phòng.
+
+Kênh nhận thông báo đặt phòng mới / hủy / no-show: từ 01/02/2024 Go2Joy không gửi SMS nữa; thông báo được gửi qua Hotel Admin (chuông thông báo và web push — cần bấm ""Bật thông báo"" trên trình duyệt), ứng dụng Go2Joy Partner trên điện thoại, và/hoặc email đã đăng ký trong hợp đồng. Khách sạn chọn kênh tại Thông tin khách sạn → ""Nhận thông báo đặt phòng"" (Tin nhắn / Email / Ứng dụng Go2Joy Partner). Tài khoản nhân viên có tùy chọn ""Nhận tin nhắn từ Go2Joy"".
+
+Để nhận thông báo trên điện thoại, tải ứng dụng Go2Joy Partner (App Store / Google Play).
+
+Nguồn: Quản lý đặt phòng, Thông tin khách sạn và thông báo Go2Joy ngày 18/01/2024, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-09-VI","https://ha.go2joy.vn/user-booking-list"
+"HA · Đặt phòng: hủy & no-show","Confirming guest check-in and booking notification channels","Confirming check-in: Booking management → a booking in Awaiting check-in → Check in → confirm in the ""Confirm guest check-in"" popup. The booking moves to Checked in.
+
+Channels for new / cancelled / no-show booking notifications: since 01/02/2024 Go2Joy no longer sends SMS; notifications go through Hotel Admin (notification bell and web push — click ""Enable notifications"" in the browser), the Go2Joy Partner mobile app, and/or the e-mail registered in the contract. The hotel picks channels under Hotel information → ""Receive booking notifications"" (Message / E-mail / Go2Joy Partner app). Staff accounts have a ""Receive messages from Go2Joy"" option.
+
+To get notifications on a phone, install the Go2Joy Partner app (App Store / Google Play).
+
+Source: Booking management, Hotel information and Go2Joy notice of 18/01/2024, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-09-EN","https://ha.go2joy.vn/user-booking-list"
+"HA · Đặt phòng: hủy & no-show","Chính sách hủy phòng do khách sạn tự thiết lập","Khách sạn có thể chủ động thiết lập chính sách hủy phòng riêng tại menu Chính sách hủy phòng (Thiết lập → Chính sách huỷ phòng) → Tạo chính sách. Một chính sách gồm: tên; loại phòng áp dụng; phương thức thanh toán áp dụng (Trả trước / Trả tại khách sạn / Cả hai); giờ nhận phòng áp dụng (Đặt phòng Theo giờ theo khung giờ, Qua đêm/Theo ngày theo thời gian kinh doanh); ngày nhận phòng áp dụng (khoảng ngày, các thứ trong tuần, hoặc Ngày đặc biệt — chính sách ngày đặc biệt luôn được ưu tiên); nội dung chính sách cho từng loại đặt phòng: ""Hủy miễn phí trước giờ nhận phòng X tiếng"" hoặc ""Không thể hủy"".
+
+Chính sách mặc định của hệ thống (ví dụ trên HA): Trả trước, hủy miễn phí trước giờ nhận phòng 1 tiếng (Theo giờ), 2 tiếng (Qua đêm), 12 tiếng (Theo ngày). Chính sách mặc định áp dụng ngoài khoảng thời gian của các chính sách tùy chỉnh. Không tạo được chính sách trùng loại phòng, thời gian và phương thức thanh toán với chính sách khác; không chọn quá 365 ngày; trạng thái: Đang hiệu lực / Sắp diễn ra / Hết hiệu lực / Đã dừng; dừng chính sách chỉ ảnh hưởng đặt phòng mới.
+
+Ghi chú hiển thị cho khách: có thể hủy miễn phí trong 5 phút sau khi đặt thành công (không quá giờ nhận phòng); không hủy được phòng Flash Sale và ưu đãi không hoàn hủy; thời gian hủy có thể thay đổi theo chính sách hủy của Go2Joy.
+
+Nguồn: Chính sách huỷ phòng, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-10-VI","https://ha.go2joy.vn/cancellation-policy"
+"HA · Đặt phòng: hủy & no-show","Hotel-defined cancellation policies","A hotel can define its own cancellation policies under the Cancellation policy menu (Settings → Cancellation policy) → Create policy. A policy has: a name; room types it applies to; payment methods (Prepaid / Pay at hotel / Both); check-in times (Hourly bookings by time window, Overnight/Daily by business hours); check-in dates (date range, weekdays, or Special days — special-day policies always take priority); and the content per booking type: ""Free cancellation up to X hours before check-in"" or ""Non-cancellable"".
+
+System default policy (as seen in HA): Prepaid, free cancellation 1 hour before check-in (Hourly), 2 hours (Overnight), 12 hours (Daily). The default applies outside the periods covered by custom policies. A policy cannot duplicate another's room type, time and payment method; ranges are limited to 365 days; statuses: Active / Upcoming / Expired / Stopped; stopping a policy only affects new bookings.
+
+Notes shown to guests: free cancellation within 5 minutes of a successful booking (but not after check-in time); Flash Sale rooms and non-refundable offers cannot be cancelled; cancellation times may vary with Go2Joy's cancellation policy.
+
+Source: Cancellation policy screen, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-10-EN","https://ha.go2joy.vn/cancellation-policy"
+"HA · Loại phòng & giá","Tạo loại phòng và giá bán lần đầu (gửi Go2Joy duyệt)","Để bắt đầu kinh doanh, khách sạn cần tạo ít nhất 1 loại phòng: Quản lý loại phòng → Tạo loại phòng. Form gồm 3 phần:
+
+1) Thông tin phòng: tên loại phòng; số lượng phòng bán; diện tích (m²); loại giường (Giường đơn / Giường đôi / Hai giường đôi / Một đơn, một đôi); hướng phòng; mô tả ngắn.
+2) Tiện ích và hình ảnh: chọn tiện ích; thêm ảnh phòng (JPG hoặc PNG, tối đa 3 MB mỗi ảnh; có thể đặt ảnh đại diện).
+3) Giá phòng theo loại đặt phòng — mỗi loại có thể chọn ""Không kinh doanh"":
+   - Theo giờ: giá giờ đầu + số giờ đầu (ví dụ giá 2 giờ đầu), giá giờ thêm + số giờ thêm (hoặc ""Không kinh doanh giờ thêm""), số giờ tối đa khách có thể đặt (tối đa 23 giờ; đặt vượt sẽ chuyển thành đặt phòng Theo ngày).
+   - Qua đêm: giá 1 đêm. - Theo ngày: giá 1 ngày.
+Không thể tạo loại phòng khi chưa thiết lập giá bán.
+
+Có thể Lưu nháp hoặc Gửi duyệt. Sau khi gửi, thông báo ""Loại phòng này đã được tạo thành công và gửi lên G2J để chờ duyệt""; trạng thái: Nháp / Chờ duyệt / Đang hoạt động / Bị từ chối / Ngừng kinh doanh. Sau khi Go2Joy duyệt, phòng bắt đầu được bán trên ứng dụng. Chỉnh sửa tên, mô tả, ảnh cũng phải chờ duyệt mới áp dụng. Nếu bị từ chối (""Thông tin loại phòng không phù hợp""), liên hệ hotline Go2Joy. Có thể Ngừng kinh doanh / Mở kinh doanh và xem Lịch sử chỉnh sửa phòng.
+
+Nguồn: Quản lý loại phòng → Tạo loại phòng, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-11-VI","https://ha.go2joy.vn/room-type-create"
+"HA · Loại phòng & giá","Creating a room type and its rates for the first time (submitted for Go2Joy approval)","To start selling, a hotel needs at least one room type: Room type management → Create room type. The form has three parts:
+
+1) Room information: room type name; number of rooms for sale; size (m²); bed type (Single / Double / Two doubles / One single + one double); room view; short description.
+2) Facilities and images: pick facilities; add room photos (JPG or PNG, max 3 MB each; one can be set as the cover image).
+3) Room rates per booking type — each type can be set to ""Not in business"":
+   - Hourly: first-hours rate + number of first hours (e.g. price for the first 2 hours), additional-hour rate + hours (or ""No additional hours""), maximum bookable hours (up to 23; a booking beyond it becomes a Daily booking).
+   - Overnight: price per night. - Daily: price per day.
+A room type cannot be created without a rate.
+
+Save as draft or Submit for review. After submitting: ""This room type was created and sent to G2J for approval""; statuses: Draft / Pending approval / Active / Rejected / Stopped selling. Once Go2Joy approves, the room goes on sale in the app. Edits to name, description and photos also wait for approval. If rejected (""Room type information is not valid""), contact the Go2Joy hotline. You can Stop selling / Resume selling and view the room edit history.
+
+Source: Room type management → Create room type, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-11-EN","https://ha.go2joy.vn/room-type-create"
+"HA · Loại phòng & giá","Số phòng còn lại, khóa phòng nhanh và thiết lập khóa phòng","Số phòng còn lại (room allotment, tính năng từ 17/06/2024): trên lịch loại phòng, khách sạn nhập số phòng còn lại để bán; hệ thống tự động khóa loại phòng khi bán hết. Cột ""Số phòng đã đặt"" và ""Số phòng còn lại"" hiển thị theo từng khung 30 phút trong ngày.
+
+Khóa nhanh (Khóa phòng ngay / Hết phòng hôm nay): khóa loại phòng cho hôm nay; phòng sẽ tự động mở lại vào 6:00 sáng ngày hôm sau. Nếu loại phòng đang chạy Giảm sốc (Flash Sale), Go2Joy sẽ dừng Giảm sốc và khóa phòng.
+
+Thiết lập khóa phòng (Quản lý loại phòng → Khóa phòng): chọn loại phòng muốn khóa (hoặc toàn bộ khách sạn), loại đặt phòng (Theo giờ / Qua đêm / Theo ngày / tất cả), ngày bắt đầu–kết thúc, giờ bắt đầu–kết thúc → Xác nhận lệnh khóa. Nếu khung thời gian trùng lệnh khóa cũ, hệ thống hỏi ghi đè; lệnh trùng hoàn toàn bị từ chối. Lịch sử khóa phòng liệt kê các lệnh và cho phép xóa lệnh khóa.
+
+Nguồn: Quản lý loại phòng, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-12-VI","https://ha.go2joy.vn/room-type"
+"HA · Loại phòng & giá","Remaining rooms, quick lock and room lock settings","Remaining rooms (room allotment, since 17/06/2024): on the room type calendar the hotel enters how many rooms are left to sell; the system auto-locks the room type when sold out. ""Rooms booked"" and ""Rooms left"" are shown per 30-minute slot of the day.
+
+Quick lock (Lock now / Sold out today): locks the room type for today; it reopens automatically at 6:00 the next morning. If the room type has a running Flash Sale, Go2Joy stops the Flash Sale and locks the room.
+
+Room lock settings (Room type management → Room lock): choose the room type (or the whole hotel), booking type (Hourly / Overnight / Daily / all), start–end dates and start–end times → Confirm lock. If the window overlaps an existing lock the system asks to overwrite; an identical lock is rejected. The lock history lists all locks and allows deleting one.
+
+Source: Room type management, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-12-EN","https://ha.go2joy.vn/room-type"
+"HA · Loại phòng & giá","Giảm sốc (Flash Sale), Giảm giá trực tiếp và Phụ thu","Ba công cụ giá trên Quản lý loại phòng:
+
+- Giảm sốc / Flash Sale: thiết lập theo loại phòng với tên, thời gian bắt đầu, số lượng, giá Flash sale và hình hiển thị; có bản Theo giờ và Qua đêm. Giá giảm sốc phải nhỏ hơn giá qua đêm gốc. Có thể Dừng bất kỳ lúc nào; báo cáo ""Xuất báo cáo Phòng Giảm Sốc"" theo ngày. Phòng Flash Sale không cho khách hủy. Khóa phòng sẽ làm dừng Flash Sale đang chạy.
+- Giảm giá trực tiếp: chương trình giảm theo loại phòng, theo ngày trong tuần hoặc ngày đặc biệt, với giá sau giảm cho giá giờ đầu / giá thêm giờ / giá qua đêm / giá một ngày. Theo Nghị định 81/2018/NĐ-CP, giá trị giảm không được vượt quá 50% giá trị đặt phòng. Khách vẫn được dùng coupon khi đặt phòng đã có giảm giá trực tiếp.
+- Phụ thu: lịch phụ thu theo loại phòng, ngày áp dụng (thứ trong tuần hoặc ngày đặc biệt), thời gian bắt đầu/kết thúc; giá sau phụ thu từ 1% đến 500% giá gốc, áp cho giá giờ đầu / thêm giờ / qua đêm / một ngày. Phụ thu tính vào Tiền phòng và cơ sở tính hoa hồng.
+
+Nguồn: Quản lý loại phòng, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-13-VI","https://ha.go2joy.vn/room-type"
+"HA · Loại phòng & giá","Flash Sale, Direct discount and Surcharges","Three pricing tools in Room type management:
+
+- Flash Sale (""Giảm sốc""): set per room type with a name, start time, quantity, Flash Sale price and display image; hourly and overnight variants. The Flash Sale price must be lower than the original overnight price. It can be stopped at any time; a ""Flash Sale room report"" can be exported by date. Flash Sale rooms cannot be cancelled by guests. Locking the room stops a running Flash Sale.
+- Direct discount: a discount programme per room type, by weekday or special date, with post-discount prices for first-hours / additional-hour / overnight / daily rates. Under Decree 81/2018/ND-CP the discount may not exceed 50% of the booking value. Guests may still use coupons on bookings with a direct discount.
+- Surcharge: a surcharge schedule per room type, applicable days (weekdays or special dates), start/end time; post-surcharge price from 1% to 500% of the base, for first-hours / additional-hour / overnight / daily rates. Surcharges count toward room revenue and the commission base.
+
+Source: Room type management, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-13-EN","https://ha.go2joy.vn/room-type"
+"HA · Khuyến mãi & chiến dịch","Coupon: Khuyến mãi tạo bởi Go2Joy và Hotel CRM (Khuyến mãi mục tiêu)","Quản lý khuyến mãi có hai tab:
+
+1) Khuyến mãi tạo bởi Go2Joy: các coupon do Go2Joy phát hành trong các chương trình; khách sạn Đăng ký / Hủy đăng ký tham gia, Tạm dừng / Tiếp tục chạy. Mỗi coupon ghi rõ mức giảm (số tiền hoặc %, giảm tối đa), thời gian khách có thể nhận, khoảng thời gian áp dụng đặt phòng, và tỉ lệ tài trợ: ""Go2Joy tài trợ x%"" và/hoặc ""Khách sạn tài trợ y%"" (nhiều coupon được Go2Joy tài trợ 100%). Bộ lọc: Chưa đăng ký / Đã đăng ký / Đã dừng / Đang chạy; có ""Doanh thu đặt phòng"" theo coupon.
+2) Hotel CRM (Khuyến mãi mục tiêu): khách sạn tự tạo coupon cho nhóm khách hàng mục tiêu; để được lên bộ sưu tập trên trang chủ Go2Joy cần mức khuyến mãi tối thiểu 10K (theo số tiền) hoặc 10% (theo %). Coupon mục tiêu phải có điều kiện phát hành, hình thức khuyến mãi và nhóm người dùng nhận.
+
+Lưu ý: khi tạm dừng coupon, khách không dùng được nữa; khi tiếp tục, khách dùng được ngay. Tính năng có thể tạm không khả dụng nếu khách sạn chưa hoàn tất thanh toán cho Go2Joy.
+
+Nguồn: Quản lý khuyến mãi, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-14-VI","https://ha.go2joy.vn/promotion"
+"HA · Khuyến mãi & chiến dịch","Coupons: Go2Joy-created promotions and Hotel CRM (targeted promotions)","Promotion management has two tabs:
+
+1) Promotions created by Go2Joy: coupons Go2Joy issues within its programmes; the hotel Registers / Cancels registration and Pauses / Resumes. Each coupon states the discount (amount or %, maximum discount), when users can claim it, the booking window it applies to, and the sponsorship split: ""Go2Joy sponsors x%"" and/or ""Hotel sponsors y%"" (many coupons are 100% sponsored by Go2Joy). Filters: Not registered / Registered / Stopped / Running; booking revenue is shown per coupon.
+2) Hotel CRM (targeted promotions): coupons the hotel creates for a target customer group; to appear in the collection on the Go2Joy home page the discount must be at least 10K VND (amount) or 10% (percentage). A targeted coupon needs an issue condition, a promotion form and a recipient user group.
+
+Notes: while paused, guests cannot use the coupon; on resume they can use it immediately. The feature may be unavailable if the hotel has not completed payment to Go2Joy.
+
+Source: Promotion management, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-14-EN","https://ha.go2joy.vn/promotion"
+"HA · Khuyến mãi & chiến dịch","Chiến dịch quảng cáo: gửi thông báo đẩy cho người dùng Go2Joy","Menu Chiến dịch quảng cáo (Quản lý thông báo) cho phép khách sạn tạo chiến dịch gửi thông báo đẩy tới thiết bị người dùng Go2Joy. Đang là ""Phiên bản thử nghiệm miễn phí"": số khách nhận còn hạn chế; muốn mở rộng độ phủ, liên hệ Go2Joy để được tư vấn gói nâng cấp.
+
+Tạo chiến dịch: tiêu đề và nội dung thông báo (phần trong dấu [...] được thay bằng thông tin khách sạn/người dùng khi gửi); liên kết tới Trang chủ khách sạn, Loại phòng cụ thể hoặc Trang chi tiết coupon; đối tượng gửi: ""Tự động lựa chọn bởi AI"" (hệ thống AI của Go2Joy chọn khách dựa trên hành vi tìm kiếm, xem khách sạn), Khách hàng mới, Nhóm người dùng lần đầu đặt và hoàn thành đặt phòng tại khách sạn, Khách hủy giữa chừng (abandoned), Nhóm đã từng đặt và hoàn thành hơn 1 lần, Nhóm từng đặt nhưng hủy hoặc không nhận phòng; ""Khách hàng trung thành"" đang Sắp mở; lịch gửi: khoảng ngày chạy chiến dịch (hệ thống tự xếp lịch tối ưu) và khung giờ gửi mỗi ngày.
+
+Trạng thái: Chờ gửi / Đang gửi / Đã dừng; theo dõi Đã gửi, Đã xem, Gửi tối đa. Dừng chiến dịch thì thông báo không gửi tới nhóm đã chọn kể từ thời điểm dừng.
+
+Nguồn: Chiến dịch quảng cáo, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-15-VI","https://ha.go2joy.vn/notification-mgt-list"
+"HA · Khuyến mãi & chiến dịch","Advertising campaigns: push notifications to Go2Joy users","The Advertising campaign menu (Notification management) lets a hotel create push-notification campaigns to Go2Joy users' devices. It is currently a ""free trial version"": the number of recipients is limited; to widen reach, contact Go2Joy for an upgrade package.
+
+Creating a campaign: title and content (text in [...] is replaced with hotel/user data on send); link to the hotel page, a specific room type or a coupon detail page; audience: ""Auto-selected by AI"" (Go2Joy's AI picks users from their search and hotel-viewing behaviour), New customers, Users who booked and completed a first stay at the hotel, Abandoned/drop-off users, Users who booked and completed more than once, Users who booked but cancelled or did not check in; ""Loyal customers"" is Coming soon; schedule: campaign date range (the system optimises the send schedule) and a daily send window.
+
+Statuses: Pending / Sending / Stopped; track Sent, Viewed, Max sends. Stopping a campaign halts sends to the selected group from that moment.
+
+Source: Advertising campaign screen, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-15-EN","https://ha.go2joy.vn/notification-mgt-list"
+"HA · Khuyến mãi & chiến dịch","Tem (stamp) tích lũy cho khách đặt phòng","Quản lý tem: người dùng nhận được tem khi đặt phòng thành công trên ứng dụng Go2Joy; khi đủ số tem quy định, người dùng nhận 1 coupon với giá trị do khách sạn thiết lập. Khách sạn thiết lập chương trình tem trong menu Quản lý tem; việc khách ""Sử dụng tem"" (redeem) xuất hiện như một khoản giảm trong chi tiết báo cáo đặt phòng và đối soát (""Sử dụng tem"", nhóm Khách sạn điều chỉnh giá).
+
+Nguồn: Quản lý tem và Báo cáo đặt phòng, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-16-VI","https://ha.go2joy.vn/stamp"
+"HA · Khuyến mãi & chiến dịch","Stamps (loyalty stamps) for booking guests","Stamp management: users earn a stamp each time they complete a booking in the Go2Joy app; once they collect the required number they receive a coupon whose value the hotel sets. The hotel configures its stamp programme in the Stamp management menu; a guest redeeming stamps appears as a discount line (""Redeem stamp"", under hotel price adjustments) in the booking report and reconciliation detail.
+
+Source: Stamp management and Booking report, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-16-EN","https://ha.go2joy.vn/stamp"
+"HA · Tài khoản & nhân viên","Tài khoản nhân viên và phân quyền trên Hotel Admin","Mỗi nhân viên khách sạn nên có một tài khoản cá nhân được phân quyền tương ứng. Tạo tại Quản lý nhân viên → Thêm nhân viên: Thông tin đăng nhập (tên đăng nhập, mật khẩu, nhập lại mật khẩu); Phân quyền — hai vai cho nhân viên khách sạn: Quản lý và Lễ tân; Thông tin nhân viên (họ tên, số điện thoại, email, Email công nợ, địa chỉ, mô tả, tùy chọn Nhận tin nhắn từ Go2Joy); Quyền truy cập: chọn khách sạn được truy cập (với tài khoản quản lý nhiều khách sạn / nhóm khách sạn). Có thể sửa, vô hiệu hóa (Hoạt động / Không hoạt động) hoặc xóa tài khoản.
+
+Menu Phân quyền hiển thị ma trận theo nhóm chức năng (Trang chủ, Quản lý đánh giá, Quản lý loại phòng, Tin nhắn từ Go2Joy, Quản lý đặt phòng, Báo cáo đặt phòng, Khuyến mãi, Quản lý nhân viên, Thiết lập, Thông tin khách sạn, Phương thức thanh toán, Phân quyền, Hồ sơ, Quản lý tem, Quản lý sản phẩm, Giảm giá trực tiếp, Quản lý đối soát, Tài khoản ngân hàng, Chính sách hủy phòng, Quản lý kênh đối tác, Quản lý thông báo, Chat với khách) × thao tác (Xem / Tạo / Sửa / Xóa / Xuất file / Đặc quyền) và hạn chế khu vực. Tài khoản chưa được phân quyền sử dụng hệ thống cần liên hệ chủ khách sạn hoặc Bộ phận hỗ trợ Go2Joy. Email công nợ của tài khoản là nơi nhận file đối soát/báo cáo.
+
+Nguồn: Quản lý nhân viên và Phân quyền, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-17-VI","https://ha.go2joy.vn/staff-mgt"
+"HA · Tài khoản & nhân viên","Staff accounts and permissions in Hotel Admin","Every hotel staff member should have a personal account with matching permissions. Create one under Staff management → Add staff: Login information (username, password, confirm password); Permission — two roles for hotel staff: Manager and Receptionist; Staff information (full name, phone, e-mail, Debt e-mail, address, description, ""Receive messages from Go2Joy"" option); Access privileges: choose the hotels the account may access (for multi-hotel / hotel-group accounts). Accounts can be edited, disabled (Active / Inactive) or deleted.
+
+The Permission menu shows a matrix of function groups (Home, Review management, Room type management, Messages from Go2Joy, Booking management, Booking report, Promotions, Staff management, Settings, Hotel information, Payment methods, Permission, Profile, Stamp management, Product management, Direct discount, Reconciliation management, Bank account, Cancellation policy, Partner channel management, Notification management, Chat with guests) × actions (View / Create / Modify / Delete / Export / Special) plus area restriction. An account without system permissions must contact the hotel owner or Go2Joy support. The account's Debt e-mail is where reconciliation/report files are sent.
+
+Source: Staff management and Permission screens, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-17-EN","https://ha.go2joy.vn/staff-mgt"
+"HA · Tài khoản & nhân viên","Chat với khách trên Hotel Admin: điều kiện sử dụng, tạm dừng và nội dung vi phạm","""Chat với khách"" (Quản lý tin nhắn → Chat với khách) là hộp thư để khách sạn trả lời trực tiếp khách đặt phòng nhắn từ ứng dụng Go2Joy (nút ""Chat với khách sạn"" trên trang khách sạn). Bộ lọc Tất cả / Chưa đọc / Đã đọc, tìm theo tên khách; có thể mở chat từ chi tiết đặt phòng hoặc từ thông báo đẩy.
+
+Điều kiện: khách sạn phải đăng ký tính năng với Go2Joy (""Khách sạn chưa đăng ký sử dụng tính năng... Vui lòng liên hệ Go2Joy để được hỗ trợ đăng ký""). Go2Joy có thể tạm dừng chat của một khách sạn kèm lý do (""Tính năng này bị tạm dừng vào lúc... Xem lý do""); để mở lại, liên hệ Go2Joy. Tin nhắn chứa nội dung vi phạm Điều khoản và chính sách của Go2Joy sẽ bị hệ thống chặn kèm thông báo.
+
+Thông báo tin nhắn mới hiển thị ở chuông và web push của Hotel Admin. Ứng dụng Go2Joy Partner hiện chỉ có thông báo đặt phòng; để trả lời chat, mở Hotel Admin trên trình duyệt.
+
+Nguồn: Chat với khách, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-18-VI","https://ha.go2joy.vn/chat-with-customers"
+"HA · Tài khoản & nhân viên","Chat with guests in Hotel Admin: eligibility, suspension and policy-violating content","""Chat with guests"" (Message management → Chat with guests) is the inbox where the hotel replies directly to guests who message from the Go2Joy app (the ""Chat with hotel"" button on the hotel page). Filters All / Unread / Read, search by guest name; a chat can be opened from a booking detail or from a push notification.
+
+Eligibility: the hotel must register the feature with Go2Joy (""The hotel has not registered to use this feature... please contact Go2Joy to register""). Go2Joy may suspend a hotel's chat with a stated reason (""This feature was temporarily disabled at... View reason""); to re-enable it, contact Go2Joy. Messages that violate Go2Joy's terms and policies are blocked by the system with a notice.
+
+New-message alerts appear in the Hotel Admin bell and web push. The Go2Joy Partner app currently carries booking notifications only; to answer chats, open Hotel Admin in a browser.
+
+Source: Chat with guests screen, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-18-EN","https://ha.go2joy.vn/chat-with-customers"
+"HA · Liên hệ & thông báo Go2Joy","Kênh liên hệ Go2Joy dành cho khách sạn đối tác và mục Tin nhắn từ G2J","Kênh liên hệ Go2Joy cho khách sạn (theo Hotel Admin và các thông báo Go2Joy gửi khách sạn):
+- Đường dây nóng (hotline) hỗ trợ: 1900 638 838.
+- Bộ phận Chăm sóc Khách hàng / Chuyên viên kinh doanh: 0931 836 836 (miền Nam), 0777 892 399 (miền Bắc) — số nêu trong các thông báo năm 2024.
+- Email: support@go2joy.vn.
+- Trong Hotel Admin: Quản lý tin nhắn → Tin nhắn từ G2J → ""Tin nhắn mới"": nhập Chủ đề và Chi tiết (ví dụ ""Chào Go2Joy, tôi muốn thêm mới loại sản phẩm..."") để gửi yêu cầu tính năng hoặc câu hỏi; Go2Joy trả lời trong cùng mục (Nội dung Q&A). Có thể ""Trả lời"" các thông báo Go2Joy đã gửi.
+- Kênh khác được Go2Joy nhắc tới: Zalo, ứng dụng Go2Joy Partner.
+
+Mục Tin nhắn từ G2J là nơi Go2Joy gửi cho khách sạn: thông báo về đặt phòng, chính sách khuyến mãi, tính năng mới (loại ""Thông báo"" và ""Chức năng""). Nhiều thông báo có giá trị như Phụ lục hợp đồng và có hiệu lực khi khách sạn xác nhận hoặc không phản hồi trước ngày áp dụng.
+
+Nguồn: Hotel Admin v23.3.0 và các thông báo Go2Joy 2020–2026 (đọc 16/09/2026). Số điện thoại có thể thay đổi — ưu tiên số hiển thị trên Hotel Admin.","GTJ-HA-POL-19-VI","https://ha.go2joy.vn/msg-from-g2j"
+"HA · Liên hệ & thông báo Go2Joy","How partner hotels reach Go2Joy, and the Messages from G2J inbox","Go2Joy contact channels for partner hotels (per Hotel Admin and Go2Joy's notices to hotels):
+- Support hotline: 1900 638 838.
+- Customer care / sales specialists: 0931 836 836 (South), 0777 892 399 (North) — numbers quoted in 2024 notices.
+- E-mail: support@go2joy.vn.
+- In Hotel Admin: Message management → Messages from G2J → ""New message"": enter a Topic and Details (e.g. ""Hi Go2Joy, I want to add a new product type..."") to send a feature request or question; Go2Joy answers in the same thread (Q&A content). Notices Go2Joy sent can be answered with ""Reply"".
+- Other channels Go2Joy mentions: Zalo, the Go2Joy Partner app.
+
+Messages from G2J is where Go2Joy sends hotels booking notices, promotion policies and new-feature announcements (types ""Notice"" and ""Feature""). Several notices count as contract annexes and take effect when the hotel confirms or does not respond before the effective date.
+
+Source: Hotel Admin v23.3.0 and Go2Joy notices 2020–2026 (read 2026-09-16). Phone numbers may change — prefer the number shown in Hotel Admin.","GTJ-HA-POL-19-EN","https://ha.go2joy.vn/msg-from-g2j"
+"HA · Liên hệ & thông báo Go2Joy","Các thông báo chính sách gần đây Go2Joy gửi khách sạn (2024–2026)","Tóm tắt các thông báo trong mục Tin nhắn từ G2J (mới nhất trước):
+
+- 04/09/2026 — Cập nhật và thực hiện lại đối soát Kỳ 2 tháng 8 (2T8): hệ thống phát sinh sai lệch dữ liệu đối soát gửi tới một số khách sạn; Go2Joy đã điều chỉnh trên HA. Khách sạn cần: đăng nhập HA → Quản lý đối soát → chọn Kỳ 2 tháng 8 → kiểm tra lại theo dữ liệu đã cập nhật (dùng ""Tải Excel"") → thực hiện lại đối soát.
+- 19/09/2024 — Thời hạn chỉnh sửa trạng thái giao dịch đặt phòng: từ 01/10/2024 là F+10 (F = ngày cuối tháng khách trả phòng), áp dụng cho đặt phòng từ 09/2024. Không phản hồi trước ngày áp dụng được xem là đồng ý, là một phần của Hợp đồng dịch vụ.
+- 17/06/2024 — Tính năng mới: Quản lý số phòng còn lại (room allotment), giao diện Quản lý loại phòng mới, Khóa phòng nhanh và Quản lý khóa phòng.
+- 18/01/2024 — Từ 01/02/2024 thông báo đặt phòng gửi qua Hotel Admin, ứng dụng Go2Joy Partner và/hoặc email hợp đồng, thay cho SMS.
+- Các thông báo khác: tạo coupon cho tệp khách hàng mục tiêu; khuyến mãi mục tiêu dành cho khách sạn; chính sách về tỉ lệ hủy phòng và tỉ lệ khiếu nại dịch vụ áp dụng từ 12/11/2024; điều chỉnh ngôn ngữ hợp đồng về điều khoản đối soát cho phù hợp quy định thuế.
+
+Nguồn: Tin nhắn từ G2J, Hotel Admin UAT v23.3.0 (đọc 16/09/2026).","GTJ-HA-POL-20-VI","https://ha.go2joy.vn/msg-from-g2j"
+"HA · Liên hệ & thông báo Go2Joy","Recent policy notices Go2Joy sent to hotels (2024–2026)","Summary of notices in Messages from G2J (newest first):
+
+- 04/09/2026 — Redo of the August period-2 (2T8) reconciliation: a data discrepancy affected reconciliations sent to some hotels; Go2Joy corrected the data in HA. Hotels must: log in to HA → Reconciliation management → select August period 2 → re-check against the updated data (use ""Download Excel"") → complete the reconciliation again.
+- 19/09/2024 — Edit window for booking transaction status: from 01/10/2024 it is F+10 (F = last day of the guest's check-out month), for bookings from September 2024. No response before the effective date counts as acceptance and becomes part of the service contract.
+- 17/06/2024 — New features: remaining-room management (room allotment), redesigned Room type management, Quick lock and Room lock management.
+- 18/01/2024 — From 01/02/2024 booking notifications are delivered via Hotel Admin, the Go2Joy Partner app and/or the contract e-mail instead of SMS.
+- Others: targeted-audience coupons; targeted promotions for hotels; a policy on cancellation and service-complaint rates effective 12/11/2024; contract wording adjusted on reconciliation clauses for tax compliance.
+
+Source: Messages from G2J, Hotel Admin UAT v23.3.0 (read 2026-09-16).","GTJ-HA-POL-20-EN","https://ha.go2joy.vn/msg-from-g2j"
+"HA · Loại phòng & giá","Sản phẩm đi kèm (sản phẩm, dịch vụ bán thêm)","Quản lý sản phẩm: khách sạn thêm các sản phẩm, dịch vụ mình kinh doanh (Thêm sản phẩm: loại sản phẩm, tên, giá...) để khách đặt kèm khi đặt phòng. Sản phẩm mới ở trạng thái Chờ xác nhận cho tới khi Go2Joy duyệt. Muốn thêm loại sản phẩm chưa có trong danh mục, gửi yêu cầu qua Tin nhắn từ G2J → Tin nhắn mới (mẫu gợi ý: ""Chào Go2Joy, tôi muốn thêm mới loại sản phẩm: ..."").
+
+Về tiền: Sản phẩm đặt kèm cộng vào Tiền phòng / Tổng thanh toán; hoa hồng trên sản phẩm đặt kèm là 10% (theo công thức Phí hoa hồng); giá sản phẩm hiển thị thành cột riêng trong Báo cáo đặt phòng.
+
+Nguồn: Quản lý sản phẩm, Tin nhắn từ G2J và Báo cáo đặt phòng, Hotel Admin v23.3.0 (16/09/2026).","GTJ-HA-POL-21-VI","https://ha.go2joy.vn/product"
+"HA · Loại phòng & giá","Add-on products (extra products and services)","Product management: the hotel adds the products and services it sells (Add product: product type, name, price...) so guests can order them with a booking. New products stay in Pending confirmation until Go2Joy approves them. To add a product type missing from the catalogue, send a request via Messages from G2J → New message (suggested wording: ""Hi Go2Joy, I want to add a new product type: ..."").
+
+Money: add-on products are added to room revenue / total payment; commission on add-on products is 10% (see the commission formula); product prices appear as their own column in the Booking report.
+
+Source: Product management, Messages from G2J and Booking report, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-21-EN","https://ha.go2joy.vn/product"
