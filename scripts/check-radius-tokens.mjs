@@ -26,9 +26,15 @@ import { join, relative } from 'path';
 const ROOT = new URL('..', import.meta.url).pathname;
 const PANEL = join(ROOT, 'apps/widget/src');
 const SKIP_DIR = join(PANEL, 'components/storefront');
-const BANNED = /\brounded-(?:t|r|b|l|tl|tr|br|bl|s|e|ss|se|es|ee)?-?(?:sm|md|lg|xl|2xl|3xl)\b/g;
+// Bare `rounded` (Tailwind's 4px) counts too — it is how ten attachment chips
+// and thumbnails escaped the first sweep of this very fix, which is the same
+// way the bug started. Comments are stripped before matching, because prose
+// about rounding is not a class name.
+const BANNED =
+  /(?<![\w-])rounded(?:-(?:t|r|b|l|tl|tr|br|bl|s|e|ss|se|es|ee))?(?:-(?:sm|md|lg|xl|2xl|3xl))?(?![\w-])/g;
 const ALLOWED = new Set(['rounded-bl-sm']);
 const SUGGEST = {
+  rounded: 'rounded-st-xs',
   'rounded-sm': 'rounded-st-sm',
   'rounded-md': 'rounded-st-sm',
   'rounded-lg': 'rounded-st-md',
@@ -46,9 +52,13 @@ function* files(dir) {
   }
 }
 
+/** Blank out comments, keeping newlines so reported line numbers stay true. */
+const stripComments = (src) =>
+  src.replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+
 const findings = [];
 for (const file of files(PANEL)) {
-  readFileSync(file, 'utf8')
+  stripComments(readFileSync(file, 'utf8'))
     .split('\n')
     .forEach((line, i) => {
       for (const hit of line.match(BANNED) ?? []) {

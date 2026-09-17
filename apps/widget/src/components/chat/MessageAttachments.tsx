@@ -37,7 +37,7 @@ export function MessageAttachments({
             broken[a.id] ? (
               <div
                 key={a.id}
-                className="flex h-20 w-20 items-center justify-center rounded border border-dashed border-gray-300 bg-gray-50 px-1 text-center text-[10px] text-gray-500"
+                className="flex h-20 w-20 items-center justify-center rounded-st-xs border border-dashed border-gray-300 bg-gray-50 px-1 text-center text-[10px] text-gray-500"
               >
                 {t('chat.attachment.unavailable')}
               </div>
@@ -46,7 +46,7 @@ export function MessageAttachments({
                 key={a.id}
                 type="button"
                 onClick={() => setZoom(a)}
-                className="overflow-hidden rounded border border-black/5"
+                className="overflow-hidden rounded-st-xs border border-black/5"
                 aria-label={t('chat.attachment.open', { name: a.filename })}
               >
                 <img
@@ -70,8 +70,8 @@ export function MessageAttachments({
           rel="noopener noreferrer"
           className={
             mine
-              ? 'flex items-center gap-1.5 rounded bg-white/20 px-2 py-1 text-[11px]'
-              : 'flex items-center gap-1.5 rounded bg-white px-2 py-1 text-[11px] text-gray-700'
+              ? 'flex items-center gap-1.5 rounded-st-xs bg-white/20 px-2 py-1 text-[11px]'
+              : 'flex items-center gap-1.5 rounded-st-xs bg-white px-2 py-1 text-[11px] text-gray-700'
           }
         >
           <FileText className="h-3.5 w-3.5 flex-shrink-0" />
@@ -92,7 +92,7 @@ export function MessageAttachments({
             type="button"
             onClick={() => setZoom(null)}
             aria-label={t('chat.attachment.close')}
-            className="absolute right-3 top-3 rounded p-1 text-white hover:bg-white/10"
+            className="absolute right-3 top-3 rounded-st-xs p-1 text-white hover:bg-white/10"
           >
             <X className="h-5 w-5" />
           </button>

@@ -549,7 +549,7 @@ export function ChatTab() {
       {(uploads.pending.length > 0 || uploadNotice) && (
         <div className="space-y-1 border-t border-gray-100 px-2 pt-2">
           {uploadNotice && (
-            <div className="flex items-start gap-1.5 rounded bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800">
+            <div className="flex items-start gap-1.5 rounded-st-xs bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800">
               <span className="min-w-0 flex-1">{uploadNotice}</span>
               <button
                 type="button"
@@ -564,12 +564,12 @@ export function ChatTab() {
           {uploads.pending.map((p) => (
             <div
               key={p.key}
-              className={`flex items-center gap-2 rounded border px-2 py-1 text-[11px] ${
+              className={`flex items-center gap-2 rounded-st-xs border px-2 py-1 text-[11px] ${
                 p.error ? 'border-red-300 bg-red-50 text-red-700' : 'border-gray-200 bg-gray-50'
               }`}
             >
               {p.previewUrl ? (
-                <img src={p.previewUrl} alt="" className="h-8 w-8 flex-shrink-0 rounded object-cover" />
+                <img src={p.previewUrl} alt="" className="h-8 w-8 flex-shrink-0 rounded-st-xs object-cover" />
               ) : (
                 <FileText className="h-4 w-4 flex-shrink-0 text-gray-400" />
               )}
@@ -577,7 +577,7 @@ export function ChatTab() {
                 <div className="truncate">{p.error ?? p.name}</div>
                 {!p.attachment && !p.error && (
                   <>
-                    <div className="mt-0.5 h-1 w-full overflow-hidden rounded bg-gray-200">
+                    <div className="mt-0.5 h-1 w-full overflow-hidden rounded-st-xs bg-gray-200">
                       <div
                         className="h-full bg-primary-500 transition-all"
                         style={{ width: `${p.progress}%` }}

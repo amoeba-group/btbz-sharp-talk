@@ -71,7 +71,7 @@ test('the radius scale specifically is clearable', () => {
   // The regression this file was written for; kept explicit so a future
   // refactor of the generic check above cannot quietly drop it.
   const cleared = clearedNames();
-  for (const step of ['sm', 'md', 'lg', 'xl']) {
+  for (const step of ['xs', 'sm', 'md', 'lg', 'xl']) {
     assert.ok(cleared.has(`--ivy-radius-${step}`), `--ivy-radius-${step} is not cleared`);
   }
 });

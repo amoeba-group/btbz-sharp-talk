@@ -7,6 +7,7 @@ export default {
       // written with the same class names it is previewing (FIX-260917). The
       // console itself is not themed — only the preview box sets these vars.
       borderRadius: {
+        'st-xs': 'var(--ivy-radius-xs, 4px)',
         'st-sm': 'var(--ivy-radius-sm, 6px)',
         'st-md': 'var(--ivy-radius-md, 8px)',
         'st-lg': 'var(--ivy-radius-lg, 12px)',

@@ -64,7 +64,7 @@ export function ReviewForm({
             onMouseLeave={() => setHover(0)}
             onClick={() => setRating(v)}
             aria-label={t('review.stars', { count: v })}
-            className="rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="rounded-st-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <Star
               className={`h-6 w-6 ${

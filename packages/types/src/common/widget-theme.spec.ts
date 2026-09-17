@@ -234,9 +234,11 @@ describe('radius scale (POL-001, FIX-260917)', () => {
   // value that was hardcoded before the token existed, so the tenants already
   // on the default see nothing change.
   it.each([
-    ['sm', { '--ivy-radius': '8px', '--ivy-radius-sm': '4px', '--ivy-radius-md': '5px', '--ivy-radius-lg': '8px', '--ivy-radius-xl': '11px' }],
-    ['md', { '--ivy-radius': '12px', '--ivy-radius-sm': '6px', '--ivy-radius-md': '8px', '--ivy-radius-lg': '12px', '--ivy-radius-xl': '16px' }],
-    ['lg', { '--ivy-radius': '16px', '--ivy-radius-sm': '8px', '--ivy-radius-md': '11px', '--ivy-radius-lg': '16px', '--ivy-radius-xl': '21px' }],
+    ['sm', { '--ivy-radius': '8px', '--ivy-radius-xs': '3px', '--ivy-radius-sm': '4px', '--ivy-radius-md': '5px', '--ivy-radius-lg': '8px', '--ivy-radius-xl': '11px' }],
+    // `md` is the calibration row: every value here is what the component
+    // hardcoded before the token existed (bare rounded, md, lg, xl, 2xl).
+    ['md', { '--ivy-radius': '12px', '--ivy-radius-xs': '4px', '--ivy-radius-sm': '6px', '--ivy-radius-md': '8px', '--ivy-radius-lg': '12px', '--ivy-radius-xl': '16px' }],
+    ['lg', { '--ivy-radius': '16px', '--ivy-radius-xs': '5px', '--ivy-radius-sm': '8px', '--ivy-radius-md': '11px', '--ivy-radius-lg': '16px', '--ivy-radius-xl': '21px' }],
   ] as const)('derives the documented scale for %s', (radius, expected) => {
     expect(radiusVars(radius)).toEqual(expected);
     // buildThemeVariables must publish exactly what radiusVars says — the

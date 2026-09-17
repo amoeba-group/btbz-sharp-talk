@@ -111,6 +111,7 @@ const THEMED_PROPERTIES = [
   // The derived scale (FIX-260917). Listed here for the same reason as the
   // rest: a tenant switching back to the default widget must lose these, or
   // the corners keep a setting the shop no longer has.
+  '--ivy-radius-xs',
   '--ivy-radius-sm',
   '--ivy-radius-md',
   '--ivy-radius-lg',
