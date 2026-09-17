@@ -40,7 +40,7 @@ export function ContactEmailCard({
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+    <div className="rounded-st-md border border-gray-200 bg-gray-50 p-3">
       <div className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-gray-800">
         <Mail className="h-4 w-4 shrink-0 text-primary-500" />
         {t('chat.contactEmail.title')}
@@ -53,12 +53,12 @@ export function ContactEmailCard({
           onChange={(e) => setEmail(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && submit()}
           placeholder={t('chat.contactEmail.placeholder')}
-          className="min-w-0 flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="min-w-0 flex-1 rounded-st-md border border-gray-200 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
         <button
           onClick={submit}
           disabled={!valid || saving}
-          className="shrink-0 rounded-lg bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-50"
+          className="shrink-0 rounded-st-md bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-50"
         >
           {saving ? t('common.loading') : t('chat.contactEmail.submit')}
         </button>

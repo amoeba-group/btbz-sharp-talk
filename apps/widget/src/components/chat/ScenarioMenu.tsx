@@ -40,7 +40,7 @@ function MenuChip({
     return (
       <button
         onClick={onClick}
-        className="st-quick-reply flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-left text-sm font-medium text-gray-800 transition-colors hover:border-primary-300 hover:bg-primary-50"
+        className="st-quick-reply flex items-center gap-2 rounded-st-lg border border-gray-200 bg-white px-3.5 py-2.5 text-left text-sm font-medium text-gray-800 transition-colors hover:border-primary-300 hover:bg-primary-50"
       >
         {Icon && <Icon className="h-4 w-4 flex-shrink-0 text-primary-600" />}
         <span className="min-w-0 truncate">{label}</span>

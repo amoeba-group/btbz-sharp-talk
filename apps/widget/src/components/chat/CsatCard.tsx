@@ -66,7 +66,7 @@ export function CsatCard({
   };
 
   return (
-    <div className="rounded-xl border-2 border-primary-300 bg-white px-3 py-4 text-center">
+    <div className="rounded-st-lg border-2 border-primary-300 bg-white px-3 py-4 text-center">
       <p className="mb-3 text-sm text-gray-700">
         {submitted != null ? t('chat.csatThanks') : t('chat.csatQuestion')}
       </p>
@@ -87,7 +87,7 @@ export function CsatCard({
               aria-label={t(`chat.csatLevel.${rating}`)}
               disabled={busy || submitted != null}
               onClick={() => void submit(rating)}
-              className={`flex flex-1 flex-col items-center gap-1 rounded-lg px-1 py-1.5 transition-all ${
+              className={`flex flex-1 flex-col items-center gap-1 rounded-st-md px-1 py-1.5 transition-all ${
                 submitted == null ? 'hover:bg-gray-50' : 'cursor-default'
               } ${submitted != null && !chosen ? 'opacity-30' : ''}`}
             >

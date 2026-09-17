@@ -21,6 +21,7 @@
     "kb:import": "npm run kb:import --workspace=@sharptalk/api",
     "i18n:check": "node scripts/i18n-check.mjs",
     "env:check": "node scripts/env-inventory.mjs",
+    "radius:check": "node scripts/check-radius-tokens.mjs",
     "migrations:manifest": "node scripts/check-migrations.mjs --manifest"
   },
   "devDependencies": {

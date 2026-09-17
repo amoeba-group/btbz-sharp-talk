@@ -382,7 +382,7 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
             type="button"
             onClick={deleteSelected}
             disabled={selectedIds.length === 0 || removeNotifications.isPending}
-            className="w-full rounded-lg bg-primary-500 py-2.5 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-40"
+            className="w-full rounded-st-md bg-primary-500 py-2.5 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-40"
           >
             {t('notifications.deleteSelected', { count: selectedIds.length })}
           </button>
@@ -390,7 +390,7 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
             type="button"
             onClick={deleteAll}
             disabled={removeNotifications.isPending}
-            className="w-full rounded-lg border border-primary-500 py-2.5 text-sm font-medium text-primary-600 hover:bg-primary-50 disabled:opacity-40"
+            className="w-full rounded-st-md border border-primary-500 py-2.5 text-sm font-medium text-primary-600 hover:bg-primary-50 disabled:opacity-40"
           >
             {t('notifications.deleteAll')}
           </button>

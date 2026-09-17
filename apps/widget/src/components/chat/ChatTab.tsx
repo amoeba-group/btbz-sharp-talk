@@ -443,7 +443,7 @@ export function ChatTab() {
 
         {/* End-chat confirm (render-only; the session and sign-in survive). */}
         {endConfirm && chatLive && (
-          <div className="flex flex-col items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <div className="flex flex-col items-center gap-2 rounded-st-md border border-gray-200 bg-gray-50 p-3">
             <span className="text-xs text-gray-600">{t('chat.endConfirm')}</span>
             <div className="flex gap-2">
               <button
@@ -537,7 +537,7 @@ export function ChatTab() {
               setShowEscalate(false);
               void escalate();
             }}
-            className="flex w-full items-center justify-center gap-2 rounded-lg border border-primary-400 bg-primary-500/5 px-3 py-2 text-sm font-medium text-primary-600 hover:bg-primary-500/10"
+            className="flex w-full items-center justify-center gap-2 rounded-st-md border border-primary-400 bg-primary-500/5 px-3 py-2 text-sm font-medium text-primary-600 hover:bg-primary-500/10"
           >
             <Headphones className="h-4 w-4" />
             {t('chat.connectAgent')}
@@ -629,7 +629,7 @@ export function ChatTab() {
           onClick={() => fileInputRef.current?.click()}
           disabled={sending}
           aria-label={t('chat.attachment.attach')}
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-40"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-st-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-40"
         >
           <Paperclip className="h-4 w-4" />
         </button>

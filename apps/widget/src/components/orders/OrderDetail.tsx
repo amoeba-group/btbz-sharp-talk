@@ -66,7 +66,7 @@ export function OrderDetailView({
         {t('orders.back')}
       </button>
 
-      <div className="mb-3 rounded-lg border border-gray-200 bg-white p-3">
+      <div className="mb-3 rounded-st-md border border-gray-200 bg-white p-3">
         <div className="flex items-center justify-between">
           <span className="text-sm font-semibold text-gray-900">
             #{order.orderNumber}
@@ -92,7 +92,7 @@ export function OrderDetailView({
         {items.map((it, i) => (
           <div
             key={it.id ?? i}
-            className="rounded-lg border border-gray-200 bg-white p-2.5"
+            className="rounded-st-md border border-gray-200 bg-white p-2.5"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
@@ -147,14 +147,14 @@ export function OrderDetailView({
             setShowTrack(next);
             if (next) analytics.trackingView(orderId);
           }}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-st-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           <Truck className="h-4 w-4" />
           {t('orders.track')}
         </button>
         <button
           onClick={() => onAsk(order.orderNumber)}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-st-md bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600"
         >
           <MessageSquare className="h-4 w-4" />
           {t('orders.ask')}

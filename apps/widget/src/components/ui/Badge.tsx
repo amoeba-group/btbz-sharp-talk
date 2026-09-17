@@ -29,7 +29,7 @@ export function Badge({
   const cls = tones[tone] ?? tones.default;
   return (
     <span
-      className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${cls}`}
+      className={`inline-flex items-center rounded-st-sm px-2 py-0.5 text-xs font-semibold ${cls}`}
     >
       {children}
     </span>

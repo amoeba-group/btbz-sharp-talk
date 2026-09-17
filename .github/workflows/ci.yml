@@ -46,6 +46,11 @@ jobs:
       - name: Migration manifest is current
         run: node scripts/check-migrations.mjs --check
 
+      # A component with a fixed radius ignores the tenant's 모서리 setting and
+      # says nothing about it — how 47 call sites drifted before FIX-260917.
+      - name: Widget radius tokens
+        run: npm run radius:check
+
       - name: Test
         run: npm test
 

@@ -151,6 +151,35 @@ export const PANEL_FRAME_PAD = { w: 40, h: 80 } as const;
 
 export const RADIUS_PX: Record<WidgetRadius, number> = { sm: 8, md: 12, lg: 16 };
 
+/**
+ * Corner radius is ONE tenant input, but a panel has surfaces at four sizes —
+ * a message bubble should not turn as sharply as the small tag inside it. So
+ * the setting publishes a scale and components pick a step by name; adding a
+ * component never means touching this file again (POL-001, FIX-260917).
+ *
+ * The ratios are calibrated so `md` reproduces the values that were hardcoded
+ * before the token existed — 6/8/12/16px, i.e. Tailwind's md/lg/xl/2xl — so a
+ * tenant on the default setting sees no change at all.
+ */
+export const RADIUS_SCALE = { sm: 0.5, md: 0.67, lg: 1, xl: 1.33 } as const;
+
+/** Keeps a derived step a corner: never a hairline, never a pill by accident. */
+export const clampRadius = (px: number): number => Math.max(2, Math.min(28, Math.round(px)));
+
+/**
+ * The radius half of the theme, on its own — the console's editor preview needs
+ * exactly this and nothing else. Sharing the function rather than the table is
+ * what keeps the preview from drifting away from the widget it is previewing.
+ */
+export function radiusVars(radius: WidgetRadius): Record<string, string> {
+  const base = RADIUS_PX[radius];
+  const vars: Record<string, string> = { '--ivy-radius': `${base}px` };
+  for (const [step, ratio] of Object.entries(RADIUS_SCALE)) {
+    vars[`--ivy-radius-${step}`] = `${clampRadius(base * ratio)}px`;
+  }
+  return vars;
+}
+
 /** Font stacks per preset. 'custom' is prefixed with the uploaded face at runtime. */
 export const FONT_STACKS: Record<Exclude<FontPreset, 'custom'>, string> = {
   pretendard:
@@ -371,7 +400,7 @@ export function buildThemeVariables(theme: WidgetTheme | null | undefined): Reco
     // which keeps line heights and bubbles proportional at every size.
     vars['--ivy-root-size'] = `${((16 * design.font.baseSize) / DESIGN_LIMITS.baseSize.default).toFixed(2)}px`;
   }
-  if (design?.radius) vars['--ivy-radius'] = `${RADIUS_PX[design.radius]}px`;
+  if (design?.radius) Object.assign(vars, radiusVars(design.radius));
   if (design?.panel) {
     vars['--ivy-panel-w'] = `${design.panel.width}px`;
     vars['--ivy-panel-h'] = `${design.panel.height}px`;

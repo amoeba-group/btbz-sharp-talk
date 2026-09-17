@@ -63,7 +63,7 @@ class ErrorBoundaryInner extends Component<Props & { t: (k: string) => string },
         <p className="text-xs text-gray-500">{t('common.crashBody')}</p>
         <button
           onClick={this.reset}
-          className="mt-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          className="mt-1 rounded-st-md border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
         >
           {t('common.retry')}
         </button>

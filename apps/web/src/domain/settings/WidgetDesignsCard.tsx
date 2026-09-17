@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
@@ -12,7 +12,9 @@ import {
   FONT_PRESET,
   FONT_STACKS,
   RADIUS_PX,
+  radiusVars,
 } from '../../../../../packages/types/src/common/widget-theme';
+import type { WidgetRadius } from '../../../../../packages/types/src/common/widget-theme';
 import { useTenantAssets, useWidgetDesignAction, useWidgetDesigns, useWidgetTheme } from './settings.hooks';
 import { settingsService } from './settings.service';
 import type { WidgetDesignDraft, WidgetDesignItem, WidgetDesignRevision } from './settings.service';
@@ -411,13 +413,16 @@ export function WidgetDesignsCard() {
               {fontFile && (
                 <style>{`@font-face{font-family:'IvyPreviewFont';src:url("${apiBaseUrl()}${fontFile.url.slice('/api/v1'.length)}");font-display:swap;}`}</style>
               )}
+              {/* The shell followed 모서리 already; the bubbles did not, which is the
+                  same gap the widget itself had (FIX-260917). Both now read the one
+                  scale the widget reads — see radiusVars(). */}
               <div className="overflow-hidden border border-gray-200 shadow-sm"
-                style={{ fontFamily: previewFont, fontSize: `${ed.draft.baseSize / DESIGN_LIMITS.baseSize.default}em`, borderRadius: RADIUS_PX[ed.draft.radius as keyof typeof RADIUS_PX] ?? 12 }}>
+                style={{ fontFamily: previewFont, fontSize: `${ed.draft.baseSize / DESIGN_LIMITS.baseSize.default}em`, borderRadius: RADIUS_PX[ed.draft.radius as keyof typeof RADIUS_PX] ?? 12, ...radiusVars(ed.draft.radius as WidgetRadius) } as CSSProperties}>
                 <div className="px-3 py-2.5 text-sm font-bold" style={{ backgroundColor: brand, color: '#fff' }}>ivyusa</div>
                 <div className="space-y-2 bg-white px-3 py-3">
-                  <div className="w-4/5 rounded-xl bg-gray-100 px-3 py-2 text-xs text-gray-800">{t('widgetTheme.previewBubble')}</div>
+                  <div className="w-4/5 rounded-st-lg bg-gray-100 px-3 py-2 text-xs text-gray-800">{t('widgetTheme.previewBubble')}</div>
                   <div className="flex justify-end">
-                    <span className="rounded-xl px-3 py-2 text-xs font-medium" style={{ backgroundColor: brand, color: '#fff' }}>{t('widgetTheme.previewUser')}</span>
+                    <span className="rounded-st-lg px-3 py-2 text-xs font-medium" style={{ backgroundColor: brand, color: '#fff' }}>{t('widgetTheme.previewUser')}</span>
                   </div>
                 </div>
               </div>
