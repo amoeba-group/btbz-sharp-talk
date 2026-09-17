@@ -70,6 +70,10 @@ function load({
       getElementById: () => null,
       addEventListener() {},
       createElement: () => ({ style: {}, setAttribute() {} }),
+      // A real install always has one: the loader derives the widget host from
+      // its own <script src> when the snippet omits widgetUrl (FIX-260917).
+      currentScript: { src: 'https://widget.example/widget/v1/embed.js' },
+      getElementsByTagName: () => [],
     },
     sessionStorage: {
       getItem: (k) => (storage.has(k) ? storage.get(k) : null),
