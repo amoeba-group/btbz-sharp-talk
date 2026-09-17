@@ -54,7 +54,7 @@ export function AffiliateCard({
     <div className="space-y-2">
       {/* Lead-in reads as the bot speaking, matching frame 65 — the programme
           used to be introduced by a bordered card header instead. */}
-      <div className="max-w-[85%] rounded-xl bg-gray-100 px-3.5 py-2.5 text-sm text-gray-800">
+      <div className="max-w-[85%] rounded-st-lg bg-gray-100 px-3.5 py-2.5 text-sm text-gray-800">
         {t('affiliate.title')}
       </div>
       {/* Steps are the tenant's own copy (`affiliate.steps`), rendered as the
@@ -63,7 +63,7 @@ export function AffiliateCard({
           baked into a multi-tenant widget. */}
       <ol className="space-y-2 pl-3">
         {steps.map((step, i) => (
-          <li key={i} className="rounded-xl bg-primary-50 px-3.5 py-3 text-sm font-medium text-gray-800">
+          <li key={i} className="rounded-st-lg bg-primary-50 px-3.5 py-3 text-sm font-medium text-gray-800">
             {step}
           </li>
         ))}

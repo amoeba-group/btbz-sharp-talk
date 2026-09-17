@@ -77,7 +77,7 @@ export function AuthGate({
       aria-modal="true"
       aria-labelledby={titleId}
       tabIndex={-1}
-      className="rounded-lg border border-gray-200 bg-white p-3 focus:outline-none"
+      className="rounded-st-md border border-gray-200 bg-white p-3 focus:outline-none"
     >
       <div id={titleId} className="mb-1 text-sm font-semibold text-gray-800">
         {t('auth.title')}
@@ -102,7 +102,7 @@ export function AuthGate({
           {canLogin && (
             <button
               onClick={login}
-              className="flex items-center justify-center gap-2 rounded-lg bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600"
+              className="flex items-center justify-center gap-2 rounded-st-md bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600"
             >
               <LogIn className="h-4 w-4" />
               {t('auth.signIn')}
@@ -110,7 +110,7 @@ export function AuthGate({
           )}
           <button
             onClick={() => setMode('guest')}
-            className="flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="flex items-center justify-center gap-2 rounded-st-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             <Search className="h-4 w-4" />
             {t('auth.guestLookup')}
@@ -128,20 +128,20 @@ export function AuthGate({
             value={orderNumber}
             onChange={(e) => setOrderNumber(e.target.value)}
             placeholder={t('auth.orderNumber')}
-            className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="rounded-st-md border border-gray-200 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           <input
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={t('auth.email')}
             type="email"
-            className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="rounded-st-md border border-gray-200 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
           />
           {error && <p className="text-xs text-error">{error}</p>}
           <button
             disabled={loading || !orderNumber || !email}
             onClick={submit}
-            className="rounded-lg bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-50"
+            className="rounded-st-md bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-50"
           >
             {loading ? t('common.loading') : t('auth.submit')}
           </button>

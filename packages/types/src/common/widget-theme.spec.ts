@@ -9,6 +9,8 @@ import {
   panelFrame,
   stripCustomCss,
   normalizeLauncher,
+  clampRadius,
+  radiusVars,
 } from './widget-theme';
 
 /**
@@ -220,7 +222,32 @@ describe('design profile (PLN-260910 P2)', () => {
     const theme = normalizeWidgetTheme({ brand: '#2B7FFF' });
     const vars = buildThemeVariables(theme);
     expect(Object.keys(vars).some((k) => k.startsWith('--ivy-font') || k.startsWith('--ivy-panel'))).toBe(false);
+    // No radius step either: the panel falls back to the built-in 6/8/12/16px,
+    // which is what an unthemed widget has always rendered (POL-001 Rule 4).
+    expect(Object.keys(vars).some((k) => k.startsWith('--ivy-radius'))).toBe(false);
     expect(panelFrame(theme)).toEqual({ w: 444, h: 680 });
+  });
+});
+
+describe('radius scale (POL-001, FIX-260917)', () => {
+  // The whole point of the calibration: at `md` every derived step equals the
+  // value that was hardcoded before the token existed, so the tenants already
+  // on the default see nothing change.
+  it.each([
+    ['sm', { '--ivy-radius': '8px', '--ivy-radius-sm': '4px', '--ivy-radius-md': '5px', '--ivy-radius-lg': '8px', '--ivy-radius-xl': '11px' }],
+    ['md', { '--ivy-radius': '12px', '--ivy-radius-sm': '6px', '--ivy-radius-md': '8px', '--ivy-radius-lg': '12px', '--ivy-radius-xl': '16px' }],
+    ['lg', { '--ivy-radius': '16px', '--ivy-radius-sm': '8px', '--ivy-radius-md': '11px', '--ivy-radius-lg': '16px', '--ivy-radius-xl': '21px' }],
+  ] as const)('derives the documented scale for %s', (radius, expected) => {
+    expect(radiusVars(radius)).toEqual(expected);
+    // buildThemeVariables must publish exactly what radiusVars says — the
+    // console preview reads the same function, and a divergence here is the
+    // editor lying to the tenant again.
+    const vars = buildThemeVariables(normalizeWidgetTheme({ brand: '#2B7FFF', design: { radius } }));
+    for (const [k, v] of Object.entries(expected)) expect(vars[k]).toBe(v);
+  });
+
+  it('keeps a derived step a corner, not a hairline or a pill', () => {
+    expect([0, 1, 27, 40].map(clampRadius)).toEqual([2, 2, 27, 28]);
   });
 });
 

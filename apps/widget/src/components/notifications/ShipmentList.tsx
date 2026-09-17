@@ -87,7 +87,7 @@ function ShipmentCard({
 
       <button
         onClick={onOpen}
-        className="mt-3 w-full rounded-lg border border-gray-300 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
+        className="mt-3 w-full rounded-st-md border border-gray-300 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
       >
         {t('orders.trackingCta')}
       </button>

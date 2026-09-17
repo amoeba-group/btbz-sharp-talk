@@ -25,7 +25,7 @@ export function InlineOrderCard({ order }: { order: OrderSummary }) {
     : t('orders.itemCount', { count: order.itemCount });
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white px-3.5 py-3">
+    <div className="rounded-st-lg border border-gray-200 bg-white px-3.5 py-3">
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-bold text-gray-900">{order.orderNumber}</span>
         {order.statusUi && <Badge tone={toneForStatus(order.statusUi)}>{order.statusUi}</Badge>}
@@ -52,7 +52,7 @@ export function InlineOrdersAnswer({ sessionToken }: { sessionToken: string | nu
 
   return (
     <div className="space-y-2">
-      <div className="max-w-[85%] rounded-xl bg-gray-100 px-3.5 py-2.5 text-sm text-gray-800">
+      <div className="max-w-[85%] rounded-st-lg bg-gray-100 px-3.5 py-2.5 text-sm text-gray-800">
         {orders.length ? t('orders.inlineLead') : t('orders.emptyRecent')}
       </div>
       {orders.map((o) => (

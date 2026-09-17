@@ -12,7 +12,7 @@ export function TrackingStepper({ tracking }: { tracking: Tracking }) {
     : (t('orders.trackingSteps', { returnObjects: true }) as string[]);
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3">
+    <div className="rounded-st-md border border-gray-200 bg-white p-3">
       <div className="mb-3 flex items-center justify-between">
         <span className="text-sm font-semibold text-gray-800">
           {tracking.carrier || 'Carrier'}

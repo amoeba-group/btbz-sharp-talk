@@ -136,7 +136,7 @@ export function WidgetPanel() {
           <button
             onClick={() => setShowSettings(!showSettings)}
             aria-label={t('settings')}
-            className={`rounded-lg p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+            className={`rounded-st-md p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
               showSettings ? 'bg-header-fg/10 text-header-fg' : ''
             }`}
           >
@@ -146,7 +146,7 @@ export function WidgetPanel() {
             <button
               onClick={dismiss}
               aria-label={t('a11y.close')}
-              className="rounded-lg p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="rounded-st-md p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <X className="h-5 w-5" />
             </button>

@@ -3,6 +3,17 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // Corner radius is themed at RUNTIME the same way the palette is: the
+      // tenant sets one value, the theme layer publishes a four-step scale,
+      // and components name a step instead of a pixel size (FIX-260917).
+      // The fallbacks are the values these steps replaced (Tailwind's
+      // md/lg/xl/2xl), so an unthemed widget is unchanged.
+      borderRadius: {
+        'st-sm': 'var(--ivy-radius-sm, 6px)',
+        'st-md': 'var(--ivy-radius-md, 8px)',
+        'st-lg': 'var(--ivy-radius-lg, 12px)',
+        'st-xl': 'var(--ivy-radius-xl, 16px)',
+      },
       // Palette sampled pixel-by-pixel from the Figma "TalkTalk" Master Shots
       // frames (design/screens/34-69), not eyeballed — see PLN-260817 §2. The
       // ramp is indigo no longer: the design's action colour is a brighter blue

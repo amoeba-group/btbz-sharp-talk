@@ -34,7 +34,7 @@ export function ReviewForm({
 
   if (done) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-lg border border-gray-200 bg-white p-4 text-center">
+      <div className="flex flex-col items-center gap-2 rounded-st-md border border-gray-200 bg-white p-4 text-center">
         <CheckCircle2 className="h-6 w-6 text-success" />
         <p className="text-sm font-medium text-gray-800">
           {t('review.thanks')}
@@ -50,7 +50,7 @@ export function ReviewForm({
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-3">
+    <div className="rounded-st-md border border-gray-200 bg-white p-3">
       <div className="mb-2 text-sm font-semibold text-gray-800">
         {t('review.title')}
       </div>
@@ -81,19 +81,19 @@ export function ReviewForm({
         onChange={(e) => setBody(e.target.value)}
         placeholder={t('review.placeholder')}
         rows={3}
-        className="mb-2 w-full resize-none rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        className="mb-2 w-full resize-none rounded-st-md border border-gray-200 px-3 py-2 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
       />
       <div className="flex gap-2">
         <button
           disabled={rating === 0 || loading}
           onClick={submit}
-          className="flex-1 rounded-lg bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-50"
+          className="flex-1 rounded-st-md bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-50"
         >
           {loading ? t('common.loading') : t('review.submit')}
         </button>
         <button
           onClick={onClose}
-          className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
+          className="rounded-st-md border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50"
         >
           {t('orders.back')}
         </button>
