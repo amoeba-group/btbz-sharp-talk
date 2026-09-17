@@ -19,12 +19,8 @@ import {
   useUpdateAiAgent,
 } from './ai-agents.hooks';
 import type { AiAgentRow } from './ai-agents.service';
+import { WIDGET_URL } from '@/lib/widget-url';
 
-// Where the widget SPA + embed.js are served — same source as the Settings
-// install guide, so the copied snippet points at the same deployment.
-const WIDGET_URL = (
-  (import.meta.env.VITE_WIDGET_URL as string | undefined) || 'https://shoptalk.amoeba.site/widget'
-).replace(/\/+$/, '');
 
 /** What the operator pastes on the page that should talk as this agent. */
 function snippetFor(code: string, shop: string): string {

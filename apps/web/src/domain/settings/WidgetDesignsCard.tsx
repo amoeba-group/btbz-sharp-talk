@@ -18,10 +18,8 @@ import type { WidgetRadius } from '../../../../../packages/types/src/common/widg
 import { useTenantAssets, useWidgetDesignAction, useWidgetDesigns, useWidgetTheme } from './settings.hooks';
 import { settingsService } from './settings.service';
 import type { WidgetDesignDraft, WidgetDesignItem, WidgetDesignRevision } from './settings.service';
+import { WIDGET_URL } from '@/lib/widget-url';
 
-const WIDGET_URL = (
-  (import.meta.env.VITE_WIDGET_URL as string | undefined) || 'https://shoptalk.amoeba.site/widget'
-).replace(/\/+$/, '');
 
 const EMPTY: WidgetDesignDraft = {
   fontPreset: FONT_PRESET.PRETENDARD,
