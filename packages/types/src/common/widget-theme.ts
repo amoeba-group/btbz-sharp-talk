@@ -158,10 +158,13 @@ export const RADIUS_PX: Record<WidgetRadius, number> = { sm: 8, md: 12, lg: 16 }
  * component never means touching this file again (POL-001, FIX-260917).
  *
  * The ratios are calibrated so `md` reproduces the values that were hardcoded
- * before the token existed — 6/8/12/16px, i.e. Tailwind's md/lg/xl/2xl — so a
- * tenant on the default setting sees no change at all.
+ * before the token existed — 4/6/8/12/16px, i.e. Tailwind's bare/md/lg/xl/2xl —
+ * so a tenant on the default setting sees no change at all. `xs` exists for
+ * that last reason alone: attachment chips and thumbnails sat at Tailwind's
+ * bare `rounded` (4px), below every other step, and rounding them up to `sm`
+ * would have been a visible change at the default setting.
  */
-export const RADIUS_SCALE = { sm: 0.5, md: 0.67, lg: 1, xl: 1.33 } as const;
+export const RADIUS_SCALE = { xs: 0.33, sm: 0.5, md: 0.67, lg: 1, xl: 1.33 } as const;
 
 /** Keeps a derived step a corner: never a hairline, never a pill by accident. */
 export const clampRadius = (px: number): number => Math.max(2, Math.min(28, Math.round(px)));

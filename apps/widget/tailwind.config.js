@@ -4,11 +4,12 @@ export default {
   theme: {
     extend: {
       // Corner radius is themed at RUNTIME the same way the palette is: the
-      // tenant sets one value, the theme layer publishes a four-step scale,
+      // tenant sets one value, the theme layer publishes a five-step scale,
       // and components name a step instead of a pixel size (FIX-260917).
-      // The fallbacks are the values these steps replaced (Tailwind's
-      // md/lg/xl/2xl), so an unthemed widget is unchanged.
+      // The fallbacks are the values these steps replaced (Tailwind's bare
+      // rounded and md/lg/xl/2xl), so an unthemed widget is unchanged.
       borderRadius: {
+        'st-xs': 'var(--ivy-radius-xs, 4px)',
         'st-sm': 'var(--ivy-radius-sm, 6px)',
         'st-md': 'var(--ivy-radius-md, 8px)',
         'st-lg': 'var(--ivy-radius-lg, 12px)',
