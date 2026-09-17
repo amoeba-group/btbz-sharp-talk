@@ -22,11 +22,13 @@
  * Usage (Shopify theme / app-embed block):
  *   <script>window.SHARPTALK_WIDGET_CONFIG = {
  *     shop: "your-store.myshopify.com", locale: "en",
- *     widgetUrl: "https://widget.ivyusa.app",
  *     ga4Id: "G-XXXXXXXXXX",
  *     hideOnPaths: ["/signin"] };</script>   // optional: replace the sign-in
  *                                            // path list ([] turns it off)
- *   <script src="https://widget.ivyusa.app/embed.js" defer></script>
+ *   <script src="https://your-host/widget/v1/embed.js" defer></script>
+ *
+ * `widgetUrl` is optional: the loader defaults to wherever this script itself
+ * was served from, so one snippet works on every environment.
  *
  * The pre-rename global IVY_WIDGET_CONFIG is honoured forever: it is baked
  * into store themes we cannot redeploy (ivyusa, amoebaorder, go2joy). When
@@ -186,7 +188,46 @@
   // can't render its "my page" order-history link.
   var shop =
     cfg.shop || (window.Shopify && window.Shopify.shop) || (isCafe24Host ? pageHost : '');
-  var base = String(cfg.widgetUrl || 'https://widget.ivyusa.app').replace(/\/+$/, '');
+  /**
+   * Where this loader was served from — a hosted loader knows its own address,
+   * so an install does not have to repeat it (FIX-260917-Embed-Self-Base).
+   *
+   * It has to: the console's install snippet does not set `widgetUrl`, and the
+   * old default was `https://widget.ivyusa.app`, a domain that never shipped.
+   * Every store that pasted that snippet got an iframe pointed at a name that
+   * does not resolve — a widget that silently never appeared.
+   *
+   * `.../widget/embed.js` and the pinned `.../widget/v1/embed.js` both mean the
+   * widget lives at `.../widget`.
+   */
+  function selfBase() {
+    try {
+      var el = document.currentScript;
+      if (!el || !el.src) {
+        var all = document.getElementsByTagName('script');
+        for (var i = all.length - 1; i >= 0; i--) {
+          if (all[i].src && /embed\.js(?:[?#]|$)/.test(all[i].src)) {
+            el = all[i];
+            break;
+          }
+        }
+      }
+      return el && el.src ? el.src.replace(/\/(?:v\d+\/)?embed\.js(?:[?#].*)?$/, '') : '';
+    } catch (_) {
+      return ''; // no DOM to ask (tests, exotic hosts) — cfg.widgetUrl decides
+    }
+  }
+
+  var base = String(cfg.widgetUrl || selfBase() || '').replace(/\/+$/, '');
+  if (!base) {
+    // Guessing here is what produced the dead-domain failure. Say so instead.
+    if (window.console && console.error) {
+      console.error(
+        '[SharpTalk] cannot tell where the widget is hosted — add widgetUrl to the install snippet.',
+      );
+    }
+    return;
+  }
   // Origin only (scheme+host+port) — `base` may carry a sub-path (e.g. /widget),
   // but postMessage e.origin never includes a path, so compare against the origin.
   var baseOrigin = (function () {
