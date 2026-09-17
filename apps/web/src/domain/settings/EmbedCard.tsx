@@ -5,6 +5,7 @@ import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Field';
 import { useEmbedSettings, useRotateEmbedSecret, useSaveEmbedOrigins } from './settings.hooks';
+import { EMBED_LOADER_URL } from '@/lib/widget-url';
 
 /**
  * Embed & SDK settings (PLN-260819 §5).
@@ -29,7 +30,6 @@ export function EmbedCard() {
   const dirty = draft !== null;
 
   const snippet = useMemo(() => {
-    const host = typeof window !== 'undefined' ? window.location.origin : '';
     // Config BEFORE the deferred script, through the queue: an inline
     // `ShopTalk.init(...)` placed after a `defer` tag runs first and throws,
     // because the loader has not been evaluated yet.
@@ -38,7 +38,7 @@ export function EmbedCard() {
       '  window.ShopTalk = window.ShopTalk || { q: [] };',
       `  ShopTalk.q.push(['init', { shop: ${JSON.stringify(data?.shopDomain ?? '')} }]);`,
       '</script>',
-      `<script src="${host}/v1/embed.js" defer></script>`,
+      `<script src="${EMBED_LOADER_URL}" defer></script>`,
     ].join('\n');
   }, [data?.shopDomain]);
 

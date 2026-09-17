@@ -60,12 +60,8 @@ import {
   type MessengerChannel,
 } from './messenger.service';
 import { toast } from '@/store/toast-store';
+import { WIDGET_URL } from '@/lib/widget-url';
 
-// Where the widget SPA + embed.js are served. Env override lets each build target
-// its own host; default is the staging deployment (served under /widget).
-const WIDGET_URL = (
-  (import.meta.env.VITE_WIDGET_URL as string | undefined) || 'https://shoptalk.amoeba.site/widget'
-).replace(/\/+$/, '');
 
 type InstallMethod = 'appEmbed' | 'scriptTag' | 'manual';
 
