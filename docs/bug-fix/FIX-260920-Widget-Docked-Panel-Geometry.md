@@ -106,7 +106,7 @@ frame.style.top = triggerOffset + 'px';                       // = 68px
 | PR | **#551** (squash → main `31263ef`) |
 | SQL | 없음 (스키마 변경 없음) |
 | staging | 배포 완료 2026-09-20 — `deploy-staging.sh`, api/web/widget/pwa/nginx 재생성, api healthy |
-| production | **미배포** (별도 스택 `~/sharptalk-production`, 브랜치 `production`) — 다음 승격 시 함께 |
+| production | 배포 완료 2026-09-20 — `main:production` 승격(`2233fe0`) → `check-migrations.sh` OK(80 적용·대기 0) → `deploy-self-hosted.sh`. api healthy·`successfully started` 1회·widget/console 200 |
 
 배포 확인은 상태코드가 아니라 **내용**으로:
 
@@ -115,7 +115,12 @@ curl .../widget/embed.js | grep -c DOCK_BOTTOM_GAP            → 2
 widget CSS 번들의 .ivy-panel-desktop                           → 미디어 쿼리 밖, 클램프 포함
 ```
 
-실 스토어 `ambshop-dev.myshopify.com` (헤더 `#st-bell` 설치 완료, 로그인 상태):
+프로덕션 스모크(`sharptalk.amoeba.site/widget/trigger-test.html`, 테마 미설정 기본 테넌트):
+로더 `DOCK_BOTTOM_GAP` 2건 · 위젯 CSS 미디어 쿼리 밖 · 스테이징과 `embed.js` 바이트 동일 ·
+패널 **404×600 모서리 12**(문서화된 기본값)로 카드 렌더, 창 밖 초과 0px. 수정 전이라면
+444×680 풀블리드 사각형이었을 자리다.
+
+실 스토어 `ambshop-dev.myshopify.com` (스테이징 연결, 헤더 `#st-bell` 설치 완료, 로그인 상태):
 
 ```
 뷰포트 1004×857, 헤더 바닥 61
