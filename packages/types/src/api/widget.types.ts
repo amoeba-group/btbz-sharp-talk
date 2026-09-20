@@ -233,6 +233,12 @@ export interface OrderItemResponse {
   optionText: string | null;
   qty: number;
   price: number | null;
+  /**
+   * Product picture for the line, resolved from the tenant's catalogue
+   * (PLN-260920 P4). Null when the line cannot be matched — the client draws a
+   * placeholder rather than shifting the layout.
+   */
+  imageUrl?: string | null;
 }
 
 /** Flat: the order's own fields sit alongside `items` — never `{ order, items }`. */
@@ -242,10 +248,30 @@ export interface OrderDetailResponse {
   statusInternal: string | null;
   statusUi: string | null;
   total: number | null;
+  /**
+   * Money breakdown behind the total (PLN-260920 P2). Every field is nullable
+   * and additive: an order cached before the columns existed carries none, and
+   * the client hides the row rather than rendering a 0 it was never told.
+   */
+  subtotal?: number | null;
+  discountTotal?: number | null;
+  shippingTotal?: number | null;
+  /**
+   * Summed line QUANTITY — "Subtotal · 3 items". Deliberately not `itemCount`:
+   * the list DTO already uses that name for the number of line rows.
+   */
+  itemQty?: number | null;
   currency: string | null;
   createdAt: string;
   /** When the order was placed on the platform; null for rows that predate it. */
   orderedAt: string | null;
+  /**
+   * The shopper's own contact pair, shown in the order detail (PLN-260920 P3).
+   * Only ever the bound customer's own data — the detail route refuses any
+   * order that is not theirs.
+   */
+  contactName?: string | null;
+  contactEmail?: string | null;
   items: OrderItemResponse[];
 }
 

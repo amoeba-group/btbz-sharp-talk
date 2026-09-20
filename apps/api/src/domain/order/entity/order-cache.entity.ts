@@ -50,6 +50,26 @@ export class OrderCache {
   @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true, transformer: decimalTransformer })
   total: number | null;
 
+  /**
+   * Money breakdown behind the total (PLN-260920 P2). Nullable rather than 0:
+   * an order cached before these columns existed knows nothing about its
+   * subtotal, and the widget must hide those rows instead of claiming "$0.00".
+   * `itemQty` is the summed line quantity — the design labels the subtotal
+   * "Subtotal · 3 items", which is not the same as the number of line rows
+   * (the list DTO's `itemCount`).
+   */
+  @Column({ type: 'decimal', precision: 12, scale: 2, nullable: true, transformer: decimalTransformer })
+  subtotal: number | null;
+
+  @Column({ name: 'discount_total', type: 'decimal', precision: 12, scale: 2, nullable: true, transformer: decimalTransformer })
+  discountTotal: number | null;
+
+  @Column({ name: 'shipping_total', type: 'decimal', precision: 12, scale: 2, nullable: true, transformer: decimalTransformer })
+  shippingTotal: number | null;
+
+  @Column({ name: 'item_qty', type: 'int', nullable: true })
+  itemQty: number | null;
+
   @Column({ type: 'varchar', length: 8, nullable: true, default: 'USD' })
   currency: string | null;
 

@@ -20,6 +20,15 @@ export interface ShopifyOrderDto {
   /** When the order was placed (webhooks carry it natively). */
   created_at?: string | null;
   total_price?: string | null;
+  /**
+   * Money breakdown (PLN-260920 P2). Webhooks carry `subtotal_price` and
+   * `total_discounts` as plain strings and shipping inside a price SET; the
+   * GraphQL sync maps its own fields onto the same three names so the upsert
+   * has one shape to read.
+   */
+  subtotal_price?: string | number | null;
+  total_discounts?: string | number | null;
+  total_shipping_price_set?: { shop_money?: { amount?: string | number | null } } | null;
   currency?: string | null;
   customer?: {
     id?: number;
@@ -77,6 +86,9 @@ interface OrderNode {
   displayFinancialStatus?: string | null;
   displayFulfillmentStatus?: string | null;
   totalPriceSet?: { shopMoney?: { amount?: string; currencyCode?: string } };
+  subtotalPriceSet?: { shopMoney?: { amount?: string } } | null;
+  totalDiscountsSet?: { shopMoney?: { amount?: string } } | null;
+  totalShippingPriceSet?: { shopMoney?: { amount?: string } } | null;
   customer?: {
     legacyResourceId?: string;
     email?: string | null;
@@ -130,6 +142,9 @@ query Orders($first: Int!, $after: String, $query: String) {
       displayFinancialStatus
       displayFulfillmentStatus
       totalPriceSet { shopMoney { amount currencyCode } }
+      subtotalPriceSet { shopMoney { amount } }
+      totalDiscountsSet { shopMoney { amount } }
+      totalShippingPriceSet { shopMoney { amount } }
       customer { legacyResourceId email firstName lastName }${
         withLineItems ? LINE_ITEMS_SELECTION : ''
       }
@@ -370,6 +385,11 @@ export class ShopifyAdminClient {
       financial_status: n.displayFinancialStatus?.toLowerCase() ?? null,
       fulfillment_status: this.mapFulfillmentStatus(n.displayFulfillmentStatus),
       total_price: n.totalPriceSet?.shopMoney?.amount ?? null,
+      subtotal_price: n.subtotalPriceSet?.shopMoney?.amount ?? null,
+      total_discounts: n.totalDiscountsSet?.shopMoney?.amount ?? null,
+      total_shipping_price_set: n.totalShippingPriceSet?.shopMoney?.amount != null
+        ? { shop_money: { amount: n.totalShippingPriceSet.shopMoney.amount } }
+        : null,
       currency: n.totalPriceSet?.shopMoney?.currencyCode ?? null,
       customer: n.customer
         ? {

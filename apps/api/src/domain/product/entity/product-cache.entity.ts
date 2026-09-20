@@ -28,6 +28,16 @@ export class ProductCache {
   @Column({ type: 'varchar', length: 255 })
   handle: string;
 
+  /**
+   * The platform's own product id (Shopify numeric id from `/products.json`).
+   * The import still keys on `handle`; this exists so an ORDER LINE — which
+   * carries the id and nothing else — can find its product's picture
+   * (PLN-260920 P4). Nullable: not every storefront reports one.
+   */
+  @Index('idx_prdc_tenant_ext')
+  @Column({ name: 'external_id', type: 'varchar', length: 64, nullable: true })
+  externalId: string | null;
+
   @Column({ type: 'varchar', length: 255 })
   title: string;
 

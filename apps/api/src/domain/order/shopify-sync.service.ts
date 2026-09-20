@@ -10,6 +10,17 @@ import { CustomerService } from '../customer/customer.service';
 import { IntegrationService } from '../integration/integration.service';
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
 
+/**
+ * Shopify money → number. Amounts arrive as strings ("55.00"), sometimes as
+ * numbers, and sometimes not at all. `null` means "the payload said nothing",
+ * which callers must not confuse with 0 (PLN-260920 P2).
+ */
+function money(v: unknown): number | null {
+  if (v == null || v === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
 const SHOPIFY = 'shopify';
 /** Overlap subtracted from the last_sync_at cursor — upserts are idempotent, so
  *  re-pulling a few minutes protects against clock skew and error-stamped cursors. */
@@ -236,10 +247,19 @@ export class ShopifySyncService {
     const orderNumber = (
       o.order_number != null ? String(o.order_number) : o.name ?? shopifyOrderId
     ).replace(/^#/, '');
-    const total =
-      o.total_price != null && o.total_price !== '' && !Number.isNaN(Number(o.total_price))
-        ? Number(o.total_price)
-        : null;
+    const total = money(o.total_price);
+    // Breakdown (PLN-260920 P2). `null` when the payload is silent — a minimal
+    // orders/updated webhook must not overwrite a known subtotal with nothing,
+    // so the assignment below keeps the cached value in that case. Zero is a
+    // real answer though (free shipping), which is why this is not `|| null`.
+    const subtotal = money(o.subtotal_price);
+    const discountTotal = money(o.total_discounts);
+    const shippingTotal = money(o.total_shipping_price_set?.shop_money?.amount);
+    // Summed QUANTITY, not the number of rows: "Subtotal · 3 items" counts what
+    // the shopper bought. Only when the payload actually carries the lines.
+    const itemQty = Array.isArray(o.line_items)
+      ? o.line_items.reduce((n, li) => n + (li.quantity != null && li.quantity > 0 ? li.quantity : 1), 0)
+      : null;
 
     let row =
       prefetched ??
@@ -264,6 +284,10 @@ export class ShopifySyncService {
     row.statusInternal = internal;
     row.statusUi = internalToUiStatus(internal);
     row.total = total;
+    row.subtotal = subtotal ?? row.subtotal ?? null;
+    row.discountTotal = discountTotal ?? row.discountTotal ?? null;
+    row.shippingTotal = shippingTotal ?? row.shippingTotal ?? null;
+    row.itemQty = itemQty ?? row.itemQty ?? null;
     row.currency = o.currency ?? row.currency ?? 'USD';
     // Order-placed time when the payload names it; otherwise keep what we had —
     // the widget's recent-orders window falls back to the cache-insert time.
