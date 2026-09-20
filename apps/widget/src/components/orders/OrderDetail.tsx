@@ -215,7 +215,34 @@ export function OrderDetailView({
         {/* Money. Only Total is always known; the breakdown rows appear as the
             sync fills them in and stay hidden otherwise — a missing subtotal
             must not read as zero (PLN §2-3). */}
+        {order.discountTotal != null && order.discountTotal > 0 && (
+          <div className="mt-1 border-t border-gray-100 pt-2">
+            <MoneyRow
+              label={t('orders.discount')}
+              value={`-${formatMoney(order.discountTotal, order.currency)}`}
+              negative
+            />
+          </div>
+        )}
         <div className="mt-1 border-t border-gray-100 pt-2">
+          {order.subtotal != null && (
+            <MoneyRow
+              label={`${t('orders.subtotal')} · ${t('orders.itemCount', {
+                count: order.itemQty ?? items.length,
+              })}`}
+              value={formatMoney(order.subtotal, order.currency)}
+            />
+          )}
+          {order.shippingTotal != null && (
+            <MoneyRow
+              label={t('orders.shipping')}
+              value={
+                order.shippingTotal === 0
+                  ? t('orders.shippingFree')
+                  : formatMoney(order.shippingTotal, order.currency)
+              }
+            />
+          )}
           <MoneyRow
             label={t('orders.total')}
             value={`${order.currency ?? ''} ${formatMoney(order.total, order.currency)}`.trim()}
