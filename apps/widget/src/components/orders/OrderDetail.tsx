@@ -250,6 +250,25 @@ export function OrderDetailView({
           />
         </div>
 
+        {(order.contactName || order.contactEmail) && (
+          <div className="mt-2 border-t border-gray-100 pt-3">
+            <div className="mb-1 text-sm font-semibold text-gray-900">
+              {t('orders.contact')}
+            </div>
+            {order.contactName && (
+              <div className="text-sm text-gray-700">{order.contactName}</div>
+            )}
+            {order.contactEmail && (
+              <a
+                href={`mailto:${order.contactEmail}`}
+                className="text-sm text-primary-600 hover:underline"
+              >
+                {order.contactEmail}
+              </a>
+            )}
+          </div>
+        )}
+
         <div className="mt-2 border-t border-gray-100">
           <ActionRow
             icon={<Truck className="h-4 w-4" />}

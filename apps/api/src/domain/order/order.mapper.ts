@@ -60,7 +60,11 @@ export class OrderMapper {
     };
   }
 
-  static toDetail(order: OrderCache, items: OrderItem[]): OrderDetailView {
+  static toDetail(
+    order: OrderCache,
+    items: OrderItem[],
+    customer?: { name: string | null; email: string | null } | null,
+  ): OrderDetailView {
     return {
       id: String(order.id),
       orderNumber: order.orderNumber,
@@ -74,6 +78,8 @@ export class OrderMapper {
       currency: order.currency,
       createdAt: order.createdAt.toISOString(),
       orderedAt: order.orderedAt ? order.orderedAt.toISOString() : null,
+      contactName: customer?.name ?? null,
+      contactEmail: customer?.email ?? null,
       items: items.map((i) => this.toItemView(i)),
     };
   }

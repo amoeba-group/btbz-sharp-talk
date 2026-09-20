@@ -181,7 +181,15 @@ export class OrderService {
       throw new BusinessException(ERROR_CODE.ORDER_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
     const items = await this.itemRepo.find({ where: { orderId: order.id }, order: { id: 'ASC' } });
-    return OrderMapper.toDetail(order, items);
+    // Contact block (PLN-260920 P3). The ownership check above already proved
+    // this session IS the customer, so what goes out is the shopper's own name
+    // and email — the same pair the store's own order page shows them. Decryption
+    // is the entity transformer's job; nothing plaintext is stored or logged here.
+    const customer =
+      order.customerId != null
+        ? await this.customerRepo.findOne({ where: { id: order.customerId } })
+        : null;
+    return OrderMapper.toDetail(order, items, customer);
   }
 
   /** Latest fulfillment + delivery stepper for an order (FR-031). */

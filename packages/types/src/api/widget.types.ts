@@ -259,6 +259,13 @@ export interface OrderDetailResponse {
   createdAt: string;
   /** When the order was placed on the platform; null for rows that predate it. */
   orderedAt: string | null;
+  /**
+   * The shopper's own contact pair, shown in the order detail (PLN-260920 P3).
+   * Only ever the bound customer's own data — the detail route refuses any
+   * order that is not theirs.
+   */
+  contactName?: string | null;
+  contactEmail?: string | null;
   items: OrderItemResponse[];
 }
 
