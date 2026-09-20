@@ -10,6 +10,8 @@ import { Session } from '../session/entity/session.entity';
 import { AuditService } from '../audit/audit.service';
 import { AttachmentService } from '../attachment/attachment.service';
 import { AiUsageDaily } from '../ai-engine/entity/ai-usage-daily.entity';
+import { ModerationLog } from '../moderation/entity/moderation-log.entity';
+import { AgentAlert } from '../agent/entity/agent-alert.entity';
 
 export interface RetentionPurgeResult {
   retentionDays: number;
@@ -24,6 +26,10 @@ export interface RetentionPurgeResult {
   /** AI usage roll-ups dropped, on their own longer window (PLN-260824 D9). */
   aiUsage: number;
   aiUsageRetentionDays: number;
+  /** Moderation records disposed of — they quote the message (PLN-260920 P4). */
+  moderationLogs: number;
+  /** Escalation alerts disposed of — they carry a message preview. */
+  agentAlerts: number;
 }
 
 /** First scheduled run fires shortly after boot so frequent restarts can't starve disposal. */
@@ -49,6 +55,8 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     @InjectRepository(Notification) private readonly notificationRepo: Repository<Notification>,
     @InjectRepository(Session) private readonly sessionRepo: Repository<Session>,
     @InjectRepository(AiUsageDaily) private readonly aiUsageRepo: Repository<AiUsageDaily>,
+    @InjectRepository(ModerationLog) private readonly moderationRepo: Repository<ModerationLog>,
+    @InjectRepository(AgentAlert) private readonly alertRepo: Repository<AgentAlert>,
     private readonly config: ConfigService,
     private readonly audit: AuditService,
     private readonly attachments: AttachmentService,
@@ -125,6 +133,13 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     // Notifications carry order numbers / PII in title+body — same window (PRV-H3).
     const notif = await this.notificationRepo.delete({ createdAt: LessThan(cutoff) });
 
+    // Moderation records and escalation alerts quote the message that tripped
+    // them (up to 512 chars, and a preview). They outlived the conversation
+    // they came from until now, which made the conversation window a partial
+    // promise (PLN-260920 P4, data-inventory gaps G-1~G-7).
+    const moderation = await this.moderationRepo.delete({ createdAt: LessThan(cutoff) });
+    const alerts = await this.alertRepo.delete({ createdAt: LessThan(cutoff) });
+
     // AI usage on its own clock: keyed by `stat_date`, not a row timestamp, and
     // held longer than conversations (see aiUsageRetentionDays).
     const aiUsageRetentionDays = this.aiUsageRetentionDays();
@@ -153,6 +168,8 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       attachments,
       aiUsage: usage.affected ?? 0,
       aiUsageRetentionDays,
+      moderationLogs: moderation.affected ?? 0,
+      agentAlerts: alerts.affected ?? 0,
     };
 
     // Scheduler-driven purge — 'system' actor, not a phantom admin (Stage 4).
@@ -172,6 +189,8 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         attachments: result.attachments,
         aiUsage: result.aiUsage,
         aiUsageRetentionDays: result.aiUsageRetentionDays,
+        moderationLogs: result.moderationLogs,
+        agentAlerts: result.agentAlerts,
       },
     });
 

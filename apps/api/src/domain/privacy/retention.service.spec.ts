@@ -30,6 +30,8 @@ describe('RetentionService — AI usage window', () => {
       repo('notifications') as never,
       repo('sessions') as never,
       repo('aiUsage') as never,
+      repo('moderationLogs') as never,
+      repo('agentAlerts') as never,
       { get: (k: string, d: unknown) => env[k] ?? d } as never,
       { write: jest.fn(async (a: unknown) => audits.push(a)) } as never,
       { deleteOlderThan: jest.fn(async () => 0), purgeUnattached: jest.fn(async () => 0) } as never,

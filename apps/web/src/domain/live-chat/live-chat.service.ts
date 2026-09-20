@@ -75,6 +75,8 @@ export interface CustomerContext {
   name?: string | null;
   email?: string | null;
   phone?: string | null;
+  /** False only for a panel fetched through the audited reveal route. */
+  masked?: boolean;
   tier?: string | null;
   recentOrders?: { id: number; status?: string | null; total?: number | null; createdAt?: string }[];
 }
@@ -311,8 +313,13 @@ export const liveChatService = {
     apiPost<{ id: string; status: string }>(`/agent/conversations/${id}/handback`, {}),
   alerts: (status = 'new') => apiGet<AgentAlert[]>(`/agent/alerts?status=${status}`),
   ackAlert: (id: string) => apiPost<AgentAlert>(`/agent/alerts/${id}/ack`),
-  searchCustomers: (q: string) =>
-    apiGet<CustomerContext[]>(`/agent/customers/search`, { q }),
+  // POST, so a shopper's address typed into the search box never becomes part
+  // of a URL — query strings live on in proxy access logs and browser history
+  // long after the conversation is disposed of (PLN-260920 P3).
+  searchCustomers: (q: string) => apiPost<CustomerContext[]>(`/agent/customers/search`, { q }),
+  /** Unmasked customer panel for one customer. Audited server-side. */
+  revealCustomer: (customerId: number) =>
+    apiGet<CustomerContext>(`/agent/customers/${customerId}/reveal`),
   linkCustomer: (id: string, customerId: number) =>
     apiPost<CustomerContext>(`/agent/conversations/${id}/link-customer`, { customer_id: customerId }),
   createCustomer: (id: string, lead: CustomerLead) =>

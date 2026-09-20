@@ -8,6 +8,7 @@ import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { AuditService } from '../audit/audit.service';
 import { GdriveClient } from './gdrive.client';
+import { maskPii } from '../../global/util/pii.util';
 import {
   GoogleServiceAccount,
   InvalidServiceAccountError,
@@ -68,7 +69,10 @@ export class GdriveCredentialService {
       actorId: actorUserId ?? 0,
       action: 'knowledge.gdrive_credential.save',
       target: `tenant:${tenantId}`,
-      metadata: { provider: PROVIDER, clientEmail: sa.clientEmail, replaced: !!existing },
+      // Masked like every other audit row: the entity's contract is that
+      // metadata never holds a raw address, and "this one is not secret" is
+      // the argument that erodes the rule (FIX-260920).
+      metadata: { provider: PROVIDER, clientEmail: maskPii(sa.clientEmail), replaced: !!existing },
     });
     return { clientEmail: sa.clientEmail };
   }

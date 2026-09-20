@@ -14,6 +14,7 @@ export type Capability =
   | 'settings'
   | 'work_log'
   | 'statistics'
+  | 'customer_pii_reveal'
   | 'dashboard';
 
 // Label codes mapped to capability groups.
@@ -40,6 +41,10 @@ const RANK_EXTRA: Record<Rank, Capability[]> = {
     'settings',
     'work_log',
     'statistics',
+    // Reading a shopper's contact details is audited and deliberately narrow
+    // (PLN-260920). The server enforces it; this only decides whether the
+    // console offers the control.
+    'customer_pii_reveal',
   ],
   director: [
     'dashboard',
@@ -55,6 +60,7 @@ const RANK_EXTRA: Record<Rank, Capability[]> = {
     'settings',
     'work_log',
     'statistics',
+    'customer_pii_reveal',
   ],
   manager: ['dashboard', 'ai_settings', 'statistics'],
   staff: ['dashboard'],

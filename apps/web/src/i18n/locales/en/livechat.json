@@ -73,7 +73,9 @@
     "hint": "Saved answers are indexed immediately and used for similar questions.",
     "save": "Save as knowledge",
     "saved": "Saved to the knowledge base.",
-    "saveFailed": "Could not save the knowledge document."
+    "saveFailed": "Could not save the knowledge document.",
+    "piiWarning": "This looks like it contains contact details. A knowledge document outlives the chat and can be answered back to other shoppers.",
+    "piiScrub": "Remove contact details"
   },
   "issue": {
     "status": {
@@ -379,5 +381,9 @@
     "reply": "Quote reply",
     "quoteRemove": "Remove quote",
     "fileIssue": "File this message as an issue"
-  }
+  },
+  "revealCustomer": "Show full details",
+  "revealAudited": "Contact details revealed. This read is recorded in the audit log.",
+  "revealFailed": "Could not reveal the contact details.",
+  "revealedNotice": "Full details are shown. This read has been recorded."
 }

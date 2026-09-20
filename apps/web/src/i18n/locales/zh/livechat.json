@@ -73,7 +73,9 @@
     "hint": "保存的答案会立即建立索引，并用于类似问题。",
     "save": "保存到知识库",
     "saved": "已保存到知识库。",
-    "saveFailed": "无法保存知识文档。"
+    "saveFailed": "无法保存知识文档。",
+    "piiWarning": "其中似乎包含联系方式。知识文档比会话留存更久，并可能作为答复发送给其他客户。",
+    "piiScrub": "移除联系方式"
   },
   "issue": {
     "status": {
@@ -379,5 +381,9 @@
     "reply": "引用回复",
     "quoteRemove": "移除引用",
     "fileIssue": "将此消息登记为工单"
-  }
+  },
+  "revealCustomer": "查看完整信息",
+  "revealAudited": "已显示客户联系信息。本次查看已记入审计日志。",
+  "revealFailed": "无法显示客户联系信息。",
+  "revealedNotice": "正在显示完整信息。本次查看已被记录。"
 }

@@ -12,7 +12,7 @@ import { Customer } from '../customer/entity/customer.entity';
 import { User } from '../user/entity/user.entity';
 import { QuestionStatDaily, STAT_DIMENSION } from './entity/question-stat-daily.entity';
 import { RedisService } from '../../infrastructure/cache/redis.service';
-import { maskPii } from '../../global/util/pii.util';
+import { maskName } from '../../global/util/pii-display.util';
 import { toDateKey } from '../../global/util/date-range.util';
 import { classifyOutcome } from '../../global/util/resolution.util';
 import { AuditLog } from '../audit/entity/audit-log.entity';
@@ -546,13 +546,21 @@ export class AnalyticsService {
     );
   }
 
-  /** Customer id → masked display name. Loaded through the repository so the
-   * PII-at-rest transformer decrypts, then masked again for the console. */
+  /**
+   * Customer id → masked display name. Loaded through the repository so the
+   * PII-at-rest transformer decrypts, then masked again for the console.
+   *
+   * Uses the display mask, not the log mask: history sits next to the live-chat
+   * queue and the customers screen, and one name should not wear two different
+   * disguises across three screens (PLN-260920).
+   */
   private async customerNames(ids: Array<number | null>): Promise<Map<string, string>> {
     const unique = [...new Set(ids.filter((i): i is number => i != null))];
     if (unique.length === 0) return new Map();
     const rows = await this.customerRepo.find({ where: { id: In(unique) }, select: ['id', 'name'] });
-    return new Map(rows.filter((r) => r.name).map((r) => [String(r.id), maskPii(r.name)]));
+    return new Map(
+      rows.filter((r) => r.name).map((r) => [String(r.id), maskName(r.name) as string]),
+    );
   }
 
   /** Staff user id → display name (agent column + agent message attribution). */

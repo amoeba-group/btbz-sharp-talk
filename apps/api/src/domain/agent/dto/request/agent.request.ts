@@ -152,6 +152,11 @@ export class CreateCustomerRequest {
   @IsOptional() @IsString() phone?: string;
 }
 
+/** Customer search term carried in the body so it stays out of access logs. */
+export class SearchCustomersRequest {
+  @IsOptional() @IsString() @MaxLength(200) q?: string;
+}
+
 export class UpsertProfileRequest {
   @IsOptional() @IsString() languages?: string;
   @IsOptional() @IsString() skills?: string;

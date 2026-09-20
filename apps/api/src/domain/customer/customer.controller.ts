@@ -6,14 +6,20 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Post,
   Query,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CAPABILITY, Principal } from '@sharptalk/types';
 import { buildPagination, normalizePage } from '@sharptalk/common';
 import { CustomerService } from './customer.service';
 import { CustomerMapper } from './customer.mapper';
-import { ListCustomersQuery, UpdateCustomerRequest } from './dto/request/customer.request';
+import {
+  ListCustomersQuery,
+  SearchCustomersRequest,
+  UpdateCustomerRequest,
+} from './dto/request/customer.request';
 import { Paginated } from '../../global/interceptor/transform.interceptor';
 import { RequireCapability, RequireMenu } from '../../global/decorator/auth.decorator';
 import { CurrentUser } from '../../global/decorator/current-user.decorator';
@@ -45,6 +51,19 @@ export class CustomerController {
     );
   }
 
+  @Post('search')
+  @RequireCapability(CAPABILITY.CUSTOMER_MANAGE)
+  @ApiOperation({ summary: 'Search customers with the term in the body (keeps it out of logs)' })
+  async search(@CurrentUser() user: Principal, @Body() body: SearchCustomersRequest) {
+    const tenantId = this.tenantId(user);
+    const { page, size } = normalizePage(body.page, body.size);
+    const { items, total, stats } = await this.customerService.list(tenantId, page, size, body.email);
+    return new Paginated(
+      CustomerMapper.toCustomerList(items, stats),
+      buildPagination(page, size, total),
+    );
+  }
+
   @Get(':id')
   @RequireCapability(CAPABILITY.CUSTOMER_MANAGE)
   @ApiOperation({ summary: 'Get a customer by id (tenant-scoped)' })
@@ -52,6 +71,24 @@ export class CustomerController {
     const tenantId = this.tenantId(user);
     const customer = await this.customerService.findById(tenantId, id);
     return CustomerMapper.toCustomer(customer);
+  }
+
+  /**
+   * The unmasked record for ONE customer (PLN-260920).
+   *
+   * Separate route rather than a `?reveal=1` flag on the list: a privacy event
+   * should be impossible to trigger by accident, has its own capability, its
+   * own rate limit, and leaves its own audit row. A flag on a paginated list
+   * would hand over a whole page of contact details in a single request.
+   */
+  @Get(':id/reveal')
+  @RequireCapability(CAPABILITY.CUSTOMER_PII_REVEAL)
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Reveal one customer\'s unmasked contact details (audited)' })
+  async reveal(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    const tenantId = this.tenantId(user);
+    const customer = await this.customerService.reveal(tenantId, id, this.actorId(user));
+    return CustomerMapper.toCustomer(customer, undefined, { reveal: true });
   }
 
   @Patch(':id')
@@ -67,7 +104,16 @@ export class CustomerController {
       name: body.name,
       tier: body.tier,
     });
-    return CustomerMapper.toCustomer(customer);
+    // Echo back only what was writable. The old response returned the whole
+    // record, so a tier change also handed over the email and phone.
+    return CustomerMapper.toCustomerSummary(customer);
+  }
+
+  private actorId(user: Principal): number {
+    if (user.actorType !== 'user') {
+      throw new BusinessException(ERROR_CODE.FORBIDDEN, HttpStatus.FORBIDDEN);
+    }
+    return user.userId;
   }
 
   private tenantId(user: Principal): number {

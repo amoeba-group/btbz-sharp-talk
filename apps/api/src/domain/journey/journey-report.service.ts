@@ -14,6 +14,7 @@ import { ModerationService } from '../moderation/moderation.service';
 import { AuditService } from '../audit/audit.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { scrubPii } from '../../global/util/pii-scrub.util';
 
 /**
  * A run older than this was almost certainly cut off by a restart.
@@ -287,7 +288,11 @@ export class JourneyReportService implements OnModuleInit {
       .map((m) => ({
         at: m.createdAt.toISOString().slice(0, 10),
         who: m.senderType,
-        text: (m.body ?? '').slice(0, maxChars),
+        // Every other AI path already minimizes its egress copy; this one did
+        // not, and it is the path that asks the model to write a "contact"
+        // section (PLN-260920 P4). Quotes come back scrubbed, which is what
+        // the report needs — the pattern of what shoppers ask, not who asked.
+        text: scrubPii((m.body ?? '').slice(0, maxChars)).text,
       }));
   }
 
