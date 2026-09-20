@@ -19,7 +19,7 @@
 | App URL | `https://shoptalk.amoeba.site` |
 | Redirect URL | `https://shoptalk.amoeba.site/api/v1/auth/shopify/callback` |
 | App Proxy | prefix `apps` / subpath `ivy` → `https://shoptalk.amoeba.site/api/v1/shopify/proxy` |
-| Scopes | `read_orders,read_customers,read_fulfillments` |
+| Scopes | `read_orders,read_customers,read_fulfillments,read_products,write_customer_data_erasure`<br>*(2026-09-20 `read_products` 추가 → 앱 버전 shoptalk-8. 주문 라인의 옵션·사진용)* |
 | GDPR Compliance webhooks | `…/api/v1/webhooks/shopify/customers/data_request` · `…/customers/redact` · `…/shop/redact` |
 | 설치 방식 | `use_legacy_install_flow = true` (인가 코드 OAuth), `embedded = false` (독립형 콘솔) |
 | 배포 방식 | **Custom distribution** → 대상 스토어 `ambshop-dev.myshopify.com` (개발 스토어) |
@@ -58,7 +58,7 @@ application_url = "https://shoptalk.amoeba.site"
 embedded = false
 
 [access_scopes]
-scopes = "read_orders,read_customers,read_fulfillments"
+scopes = "read_orders,read_customers,read_fulfillments,read_products,write_customer_data_erasure"
 use_legacy_install_flow = true
 
 [auth]
@@ -119,7 +119,7 @@ npx -y @shopify/cli@latest app deploy --path . --allow-updates --message "설명
 SHOPIFY_API_KEY=6999d1547fe02aeafa5d0b9396aa4aba
 SHOPIFY_API_SECRET=<Client Secret — secrets/staging-server.md>
 SHOPIFY_WEBHOOK_SECRET=<위와 동일 값 — 웹훅 HMAC은 앱 secret으로 서명됨>
-SHOPIFY_SCOPES=read_orders,read_customers
+SHOPIFY_SCOPES=read_orders,read_customers,read_fulfillments,read_products   # TOML과 일치시킬 것
 SHOPIFY_APP_URL=https://shoptalk.amoeba.site
 SHOPIFY_SYNC_INTERVAL_MIN=30        # 예약 증분 동기화 (0=off)
 CRED_ENC_KEY=<base64 32B — 토큰 암호화 저장용, 기존 값 유지>
