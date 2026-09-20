@@ -33,7 +33,8 @@
     "channels": "Kênh",
     "agents": "Nhân viên",
     "resolution": "Kết quả",
-    "hours": "Khung giờ"
+    "hours": "Khung giờ",
+    "access": "Truy cập"
   },
   "csat": {
     "avgTitle": "Điểm trung bình",
@@ -116,5 +117,30 @@
       "sat": "T7"
     }
   },
-  "retentionNote": "Tính trực tiếp từ nhật ký hội thoại, nên chỉ truy được đến giới hạn lưu trữ của nhật ký."
+  "retentionNote": "Tính trực tiếp từ nhật ký hội thoại, nên chỉ truy được đến giới hạn lưu trữ của nhật ký.",
+  "access": {
+    "funnelTitle": "Widget được hiển thị, mở và dẫn tới hội thoại bao nhiêu lần",
+    "funnelSubtitle": "Hiển thị đếm số lần tải widget; truy cập đếm số lần mở bảng.",
+    "impressions": "Hiển thị",
+    "impressionsHint": "Widget đã tải",
+    "opens": "Truy cập",
+    "opensHint": "{{count}} lần mở · tính theo phiên",
+    "conversations": "Hội thoại",
+    "conversationsHint": "Đã bắt đầu chat",
+    "openRate": "Tỷ lệ mở",
+    "chatRate": "Tỷ lệ hội thoại",
+    "agent": "Nhân viên AI",
+    "path": "Đường dẫn",
+    "byAgentTitle": "Theo nhân viên AI",
+    "byPathTitle": "Trang đã hiển thị (top 20)",
+    "defaultAgent": "Nhân viên mặc định",
+    "defaultAgentNote": "Phiên không gán nhân viên được tính vào “Nhân viên mặc định”.",
+    "pathNote": "Không lưu chuỗi truy vấn (quyền riêng tư). Tính theo đường dẫn.",
+    "otherPaths": "{{count}} đường dẫn khác",
+    "neverOpened": "Hiển thị nhiều nhưng không ai mở — hãy kiểm tra nút mở có hiện không.",
+    "since": "Đường dẫn và lượt mở được thu thập từ {{date}}; các lần hiển thị trước đó không có.",
+    "appModeNote": "Chế độ ứng dụng (WebView) mở sẵn bảng nên hiển thị bằng truy cập.",
+    "empty": "Không có lượt hiển thị trong khoảng này.",
+    "noPaths": "Chưa thu thập được đường dẫn nào."
+  }
 }

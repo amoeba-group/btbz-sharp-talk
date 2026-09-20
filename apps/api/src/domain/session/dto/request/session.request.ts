@@ -17,6 +17,17 @@ export class EnsureSessionRequest {
    * snippet must never take the widget down.
    */
   @IsOptional() @IsString() agent_code?: string;
+  /**
+   * Storefront page the widget is mounted on (PLN-260920). Optional — installs
+   * predating this send nothing, and the server normalizes/discards anything it
+   * cannot parse, so a bad value never fails the call that mounts the widget.
+   */
+  @IsOptional() @IsString() landing_path?: string;
+}
+
+/** Panel-open ping (PLN-260920). Fire-and-forget; identified by session token. */
+export class SessionOpenedRequest {
+  @IsString() session_token: string;
 }
 
 export class ConsentRequest {

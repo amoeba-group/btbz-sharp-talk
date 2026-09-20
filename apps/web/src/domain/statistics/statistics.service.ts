@@ -111,7 +111,38 @@ export interface CsatListParams {
   size: number;
 }
 
+/** Widget funnel: shown → opened → talked (PLN-260920). */
+export interface AccessRow {
+  key: string;
+  id?: number | null;
+  impressions: number;
+  opens: number;
+  openedSessions: number;
+  conversations: number;
+  openRate: number;
+  chatRate: number;
+}
+
+export interface AccessDaily {
+  day: string;
+  impressions: number;
+  opens: number;
+  openedSessions: number;
+  conversations: number;
+}
+
+export interface AccessBreakdown {
+  totals: AccessRow;
+  daily: AccessDaily[];
+  byAgent: AccessRow[];
+  byPath: AccessRow[];
+  otherPaths: (AccessRow & { paths: number }) | null;
+  collectingSince: string | null;
+}
+
 export const statisticsService = {
+  access: (from: string, to: string) => apiGet<AccessBreakdown>('/analytics/access', { from, to }),
+
   channels: (from: string, to: string) =>
     apiGet<ChannelRow[]>('/analytics/channels', { from, to }),
   agents: (from: string, to: string) =>

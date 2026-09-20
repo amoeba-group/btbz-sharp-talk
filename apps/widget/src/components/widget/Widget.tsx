@@ -3,6 +3,7 @@ import { CircleHelp, Headset, MessageCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore, type TabKey } from '../../store/widgetStore';
 import { useEnsureSession } from '../../hooks/useSession';
+import { reportPanelOpened } from '../../services/sessionService';
 import { useEmbedIdentity } from '../../hooks/useEmbedIdentity';
 import { useEmbedCommands } from '../../hooks/useEmbedCommands';
 import { useLauncherReport } from '../../hooks/useLauncherReport';
@@ -119,8 +120,15 @@ export function Widget() {
     }
     // Engagement funnel: fire open/close only on an actual transition.
     if (panelOpen !== prevOpen.current) {
-      if (panelOpen) analytics.widgetOpen();
-      else analytics.widgetClose();
+      if (panelOpen) {
+        analytics.widgetOpen();
+        // Same transition, first-party count (PLN-260920). GA4 only fires for
+        // tenants who configured it and consented, but "was the widget opened"
+        // is an operational number every tenant's console has to be able to
+        // show — so it is reported here too, independently.
+        const token = useWidgetStore.getState().sessionToken;
+        if (token) reportPanelOpened(token);
+      } else analytics.widgetClose();
       prevOpen.current = panelOpen;
     }
   }, [panelOpen, analytics]);

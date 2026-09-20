@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { statisticsService } from './statistics.service';
 import type {
+  AccessBreakdown,
   AgentRow,
   ChannelRow,
   CsatListParams,
@@ -60,6 +61,15 @@ const keepWithinTenant =
   <T,>(tenantKey: unknown) =>
   (previous: T | undefined, previousQuery?: { queryKey: readonly unknown[] }): T | undefined =>
     previousQuery?.queryKey?.[1] === tenantKey ? previous : undefined;
+
+export const useAccessStats = (from: string, to: string) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['stats-access', tenantKey, from, to],
+    queryFn: () => statisticsService.access(from, to),
+    placeholderData: keepWithinTenant<AccessBreakdown>(tenantKey),
+  });
+};
 
 /** The four AN-260826 P1 lenses. One shape each; the window is shared with the rest. */
 export const useChannelStats = (from: string, to: string) => {

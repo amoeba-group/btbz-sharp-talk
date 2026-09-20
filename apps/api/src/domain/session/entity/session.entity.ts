@@ -20,6 +20,32 @@ export class Session {
   @Column({ type: 'varchar', length: 16, nullable: true })
   channel: string | null;
 
+  /**
+   * Storefront page the widget appeared on, normalized to scheme+host+path
+   * (PLN-260920). NULL for messenger/preview sessions and for every row written
+   * before collection started.
+   *
+   * Query strings are DROPPED on purpose: a storefront URL can carry an email
+   * or an order token, and this is an analytics column, not a log of where the
+   * shopper has been. Paths also group the way an operator reads them — one
+   * product page, not one row per tracking parameter.
+   */
+  @Column({ name: 'landing_path', type: 'varchar', length: 255, nullable: true })
+  landingPath: string | null;
+
+  /**
+   * How many times the shopper opened the panel (PLN-260920).
+   *
+   * The row itself is the impression — it exists because the widget loaded.
+   * This counter is what separates "was shown" from "was opened", the two
+   * numbers that used to be indistinguishable in the console.
+   */
+  @Column({ name: 'open_count', type: 'int', default: 0 })
+  openCount: number;
+
+  @Column({ name: 'first_opened_at', type: 'datetime', nullable: true })
+  firstOpenedAt: Date | null;
+
   // Tenant the session belongs to (resolved at creation). Threads tenant context
   // through the chat/notification path instead of a "first tenant" lookup.
   @Column({ name: 'tenant_id', type: 'bigint', nullable: true, transformer: bigintTransformer })

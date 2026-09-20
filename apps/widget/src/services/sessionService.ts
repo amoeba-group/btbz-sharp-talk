@@ -7,6 +7,7 @@ export function ensureSession(
   shopDomain?: string,
   parentOrigin?: string,
   agentCode?: string,
+  landingPath?: string,
 ): Promise<SessionResponse> {
   return apiClient.post<SessionResponse>('/session/ensure', {
     session_token: sessionToken ?? undefined,
@@ -16,7 +17,22 @@ export function ensureSession(
     // AI agent for sessions born on this page (PLN-260820); server falls back
     // to the tenant default on unknown codes.
     agent_code: agentCode ?? undefined,
+    // Which storefront page showed the widget (PLN-260920). The server strips
+    // the query string and keeps the path — see normalizeLandingPath.
+    landing_path: landingPath ?? undefined,
   });
+}
+
+/**
+ * Tell the server the shopper opened the panel (PLN-260920).
+ *
+ * Fire-and-forget by contract: the session row already records that the widget
+ * was shown, and this is the counter that separates shown from opened. It must
+ * never delay or break the panel, so the promise is swallowed here rather than
+ * awaited at the call site.
+ */
+export function reportPanelOpened(sessionToken: string): void {
+  void apiClient.post('/session/opened', { session_token: sessionToken }).catch(() => {});
 }
 
 /**
