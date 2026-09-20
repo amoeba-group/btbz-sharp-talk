@@ -51,6 +51,11 @@ export interface ShopifyOrderDto {
     variant_title?: string | null;
     quantity?: number | null;
     price?: string | number | null;
+    /**
+     * Picture for this line, straight from the order (PLN-260920 §7 follow-up).
+     * Webhooks do not carry one; the GraphQL rich tier does.
+     */
+    image_url?: string | null;
   }> | null;
 }
 
@@ -100,6 +105,15 @@ interface OrderNode {
       title?: string | null;
       quantity?: number | null;
       originalUnitPriceSet?: { shopMoney?: { amount?: string } } | null;
+      /** Rich tier only (read_products). */
+      variant?: {
+        title?: string | null;
+        image?: { url?: string | null } | null;
+        product?: {
+          legacyResourceId?: string | null;
+          featuredImage?: { url?: string | null } | null;
+        } | null;
+      } | null;
     }>;
   } | null;
 }
@@ -115,22 +129,44 @@ interface OrdersQueryResponse {
 }
 
 /**
- * `lineItems` selection, kept to fields readable with `read_orders` alone. The
- * richer ones (`variant`, `product`, `sku`) require **read_products**, which this
- * app does not request — asking for them fails the whole query, so we don't.
- * Add them here only together with the scope.
+ * `lineItems` in two tiers.
+ *
+ * `basic` holds what `read_orders` alone can read. `rich` adds the variant and
+ * its product, which need **read_products** — the app requests that scope now
+ * (PLN-260920 §7 follow-up), but a store that has not re-authorised yet still
+ * has the old grant, and asking for a field the token cannot read fails the
+ * WHOLE query. So the tier is negotiated at call time rather than assumed:
+ * rich → basic → none (see `fetchOrders`).
+ *
+ * What the rich tier buys: the option text the design shows under each line,
+ * and the picture beside it. The picture has to come from the ORDER — the
+ * catalogue cache is synced from the tenant's storefront, which is not
+ * necessarily the shop the orders came from (ivyusa.com vs ambshop-dev), so a
+ * catalogue join can miss every line no matter the scope.
  */
-const LINE_ITEMS_SELECTION = `
-      lineItems(first: ${LINE_ITEMS_PER_ORDER}) {
-        nodes {
+const LINE_ITEMS_BASIC = `
           title
           quantity
-          originalUnitPriceSet { shopMoney { amount } }
+          originalUnitPriceSet { shopMoney { amount } }`;
+
+const LINE_ITEMS_RICH = `${LINE_ITEMS_BASIC}
+          variant {
+            title
+            image { url }
+            product { legacyResourceId featuredImage { url } }
+          }`;
+
+const lineItemsSelection = (rich: boolean): string => `
+      lineItems(first: ${LINE_ITEMS_PER_ORDER}) {
+        nodes {${rich ? LINE_ITEMS_RICH : LINE_ITEMS_BASIC}
         }
       }`;
 
-/** Orders page query; `withLineItems` toggles the optional enrichment above. */
-function ordersQuery(withLineItems: boolean): string {
+/** How much of a line item this call asks for. */
+type LineItemTier = 'rich' | 'basic' | 'none';
+
+/** Orders page query; the tier decides how much of each line item is selected. */
+function ordersQuery(tier: LineItemTier): string {
   return `
 query Orders($first: Int!, $after: String, $query: String) {
   orders(first: $first, after: $after, query: $query, sortKey: UPDATED_AT) {
@@ -146,7 +182,7 @@ query Orders($first: Int!, $after: String, $query: String) {
       totalDiscountsSet { shopMoney { amount } }
       totalShippingPriceSet { shopMoney { amount } }
       customer { legacyResourceId email firstName lastName }${
-        withLineItems ? LINE_ITEMS_SELECTION : ''
+        tier === 'none' ? '' : lineItemsSelection(tier === 'rich')
       }
     }
   }
@@ -204,6 +240,30 @@ export class ShopifyAdminClient {
     return /access denied|access scope/i.test(msg);
   }
 
+  /** rich → basic → none, stepping down only on a scope/access denial. */
+  private async fetchOrdersPage(
+    shopDomain: string,
+    token: string,
+    vars: Record<string, unknown>,
+  ): Promise<OrdersQueryResponse> {
+    const tiers: LineItemTier[] = ['rich', 'basic', 'none'];
+    let lastError: unknown;
+    for (const tier of tiers) {
+      try {
+        return (await this.gql(shopDomain, token, ordersQuery(tier), vars)) as OrdersQueryResponse;
+      } catch (e) {
+        if (!this.isAccessScopeError(e)) throw e;
+        lastError = e;
+        const next = tiers[tiers.indexOf(tier) + 1];
+        this.logger.warn(
+          `Line item tier "${tier}" unavailable for ${shopDomain} (${(e as Error).message})` +
+            (next ? ` — retrying as "${next}"` : ''),
+        );
+      }
+    }
+    throw lastError;
+  }
+
   /**
    * Fetch one page of orders. Incremental (`updatedAtMin`) + cursor-paginated.
    * GraphQL cursors are only valid alongside the query they were issued for, so
@@ -227,18 +287,11 @@ export class ShopifyAdminClient {
     }
 
     const vars = { first: limit, after, query };
-    let body: OrdersQueryResponse;
-    try {
-      body = (await this.gql(shopDomain, token, ordersQuery(true), vars)) as OrdersQueryResponse;
-    } catch (e) {
-      // Line items are optional enrichment — never let a scope/access error on
-      // them stall order sync. Retry once without that selection.
-      if (!this.isAccessScopeError(e)) throw e;
-      this.logger.warn(
-        `Line items unavailable for ${shopDomain} (${(e as Error).message}) — syncing orders without them`,
-      );
-      body = (await this.gql(shopDomain, token, ordersQuery(false), vars)) as OrdersQueryResponse;
-    }
+    // Ask for the most we can use, fall back a tier at a time. A store that has
+    // not re-authorised since `read_products` was added still syncs — it just
+    // loses the option text and the picture, not its orders (which is what
+    // dropping straight to `none` would have cost it).
+    const body = await this.fetchOrdersPage(shopDomain, token, vars);
     const conn = body.data?.orders;
     const orders = (conn?.nodes ?? []).map((n) => this.toOrderDto(n));
     const nextPageInfo =
@@ -406,6 +459,14 @@ export class ShopifyAdminClient {
             title: li.title ?? null,
             quantity: li.quantity ?? null,
             price: li.originalUnitPriceSet?.shopMoney?.amount ?? null,
+            product_id: li.variant?.product?.legacyResourceId ?? null,
+            // "Default Title" is Shopify's placeholder for a product with no
+            // options; showing it under the line would be noise, not an option.
+            variant_title:
+              li.variant?.title && li.variant.title !== 'Default Title' ? li.variant.title : null,
+            // Variant picture first — it is the colour the shopper actually
+            // bought; the product's featured image is the fallback.
+            image_url: li.variant?.image?.url ?? li.variant?.product?.featuredImage?.url ?? null,
           }))
         : undefined,
     };

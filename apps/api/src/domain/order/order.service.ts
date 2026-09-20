@@ -226,10 +226,13 @@ export class OrderService {
     items: OrderItem[],
   ): Promise<Map<string, string>> {
     const out = new Map<string, string>();
-    if (tenantId == null || items.length === 0) return out;
+    // Lines that came with their own picture need no lookup at all — and with
+    // `read_products` granted that is most of them.
+    const unresolved = items.filter((i) => !i.imageUrl);
+    if (tenantId == null || unresolved.length === 0) return out;
 
-    const ids = [...new Set(items.map((i) => i.productId).filter((v): v is string => !!v))];
-    const titles = [...new Set(items.map((i) => normaliseTitle(i.title)).filter(Boolean))];
+    const ids = [...new Set(unresolved.map((i) => i.productId).filter((v): v is string => !!v))];
+    const titles = [...new Set(unresolved.map((i) => normaliseTitle(i.title)).filter(Boolean))];
     if (ids.length === 0 && titles.length === 0) return out;
 
     const qb = this.productRepo
@@ -256,7 +259,7 @@ export class OrderService {
       // be told apart, so picking either is a guess — keep it stable instead.
       if (key && !byTitle.has(key)) byTitle.set(key, r.imageUrl);
     }
-    for (const it of items) {
+    for (const it of unresolved) {
       const hit =
         (it.productId ? byId.get(it.productId) : undefined) ?? byTitle.get(normaliseTitle(it.title));
       if (hit) out.set(String(it.id), hit);

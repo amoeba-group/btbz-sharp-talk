@@ -21,6 +21,14 @@ export class OrderItem {
   @Column({ type: 'varchar', length: 255 })
   title: string;
 
+  /**
+   * Picture of the line as ordered (variant first, product featured image
+   * second). Null when the payload carried none — the detail route then falls
+   * back to the catalogue, and the widget to a placeholder.
+   */
+  @Column({ name: 'image_url', type: 'varchar', length: 1024, nullable: true })
+  imageUrl: string | null;
+
   @Column({ name: 'option_text', type: 'varchar', length: 255, nullable: true })
   optionText: string | null;
 

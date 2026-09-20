@@ -39,6 +39,7 @@
 260911-widget-designs.sql	column	tenants	active_widget_design_id
 260913-tenant-default-language.sql	column	tenants	default_language
 260916-notifications-deleted-at.sql	column	notifications	deleted_at
+260920-order-items-image-url.sql	column	order_items	image_url
 260920-orders-cache-money-breakdown.sql	column	orders_cache	subtotal
 260920-orders-cache-money-breakdown.sql	column	orders_cache	discount_total
 260920-orders-cache-money-breakdown.sql	column	orders_cache	shipping_total
