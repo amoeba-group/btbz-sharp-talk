@@ -79,3 +79,52 @@ api **1940/1940**(191 suites, 신규 11) · types 108/108 · widget 36/36 · `ts
 - **주소(G8)**: PCD 승인 후 별도 REQ. 화면은 연락처 아래에 자리를 비워 뒀다.
 - PWA `OrderDetailPage` 동일 개편 여부 미결(응답 추가형이라 현재는 무해).
 - 할인 > 0 실데이터 케이스 미확인(단위 테스트로만 검증).
+
+## 7. 후속 — `read_products` 스코프 (2026-09-20, PR #559 → main `021026a`)
+
+사용자 요청("썸네일 나오게 read_products 추가")으로 PLN §7의 D1-ⓐ를 실행했다.
+
+### 7-1. 먼저 드러난 사실 — 카탈로그 조인으로는 영영 안 뜬다
+
+```
+tenants(id=1)  storefront_url = https://ivyusa.com          ← 카탈로그 2,316건의 출처
+               shop_domain    = ambshop-dev.myshopify.com   ← 주문의 출처
+```
+
+두 스토어가 다르다. 상품 id를 얻어도(=스코프를 켜도) 카탈로그에는 그 상품이 없다.
+그래서 **사진을 주문 라인 자체에서 받아 저장**하는 쪽으로 설계를 바꿨다(`order_items.image_url`).
+카탈로그 해석(P4)은 라인에 사진이 없을 때의 폴백으로 남는다.
+
+### 7-2. 변경
+
+| 영역 | 변경 |
+|---|---|
+| 스코프 | `shopify.app.toml` + `env/backend/.env.development` + 스테이징 `.env.staging`에 `read_products` |
+| GraphQL | `lineItems`를 **rich/basic** 2단으로 나누고 **rich → basic → none** 사다리 협상. 스코프 거부일 때만 한 단 하강 — 곧장 `none`이면 미재승인 스토어가 **품목 캐시 자체를 잃는다**(기존 동작) |
+| 수집 | `variant.title`(옵션) · `variant.image` → `product.featuredImage`(사진) · `product.legacyResourceId`. `"Default Title"`은 옵션으로 치지 않음 |
+| 저장/노출 | `order_items.image_url` 신설, **라인 사진 > 카탈로그 추정**. 라인에 사진이 있으면 카탈로그 쿼리 자체를 건너뜀 |
+
+테스트 7건 추가 → api **1947/1947**(192 suites).
+
+### 7-3. 스테이징 실측 — 사다리가 실제로 작동함
+
+`image_url` 컬럼 선적용 → 배포 → env에 스코프 추가 → 주문 전량 재동기화(6건):
+
+```
+WARN [ShopifyAdminClient] Line item tier "rich" unavailable for ambshop-dev.myshopify.com
+  (Access denied for variant field. Required access: `read_products` access scope.)
+  — retrying as "basic"
+```
+
+즉 **코드는 준비됐고, 스토어 토큰에 아직 스코프가 없다.** 주문 6건은 그대로 동기화됐고
+옵션·사진은 비어 있다(= 재승인 전까지 지금과 동일, 회귀 없음).
+
+### 7-4. 남은 외부 단계 (코드로 끝낼 수 없는 것)
+
+| # | 할 일 | 주체 |
+|---|---|---|
+| 1 | `shopify app deploy` — Partner 대시보드 앱 설정에 `read_products` 포함한 새 버전 릴리스. **이걸 빼먹으면 재승인해도 부여되지 않는다**(부여분 = 앱 선언 ∩ authorize URL, `shopify.app.toml` 주석의 실측 교훈) | 사용자(Shopify CLI/Partner 인증) |
+| 2 | 스토어 재승인: `https://shoptalk.amoeba.site/api/v1/auth/shopify/install?shop=ambshop-dev.myshopify.com` 를 열어 승인 | 사용자(OAuth 동의) |
+| 3 | 주문 전량 재동기화 → 옵션·사진 적재, 위젯에서 썸네일 확인 | Claude |
+
+프로덕션: SQL(`order_items.image_url`) 선적용 + env 스코프 반영 후 배포 필요 — 미실행.
