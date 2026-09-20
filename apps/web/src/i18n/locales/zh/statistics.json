@@ -33,7 +33,8 @@
     "channels": "渠道",
     "agents": "客服",
     "resolution": "处理结果",
-    "hours": "时段"
+    "hours": "时段",
+    "access": "展示与访问"
   },
   "csat": {
     "avgTitle": "平均评分",
@@ -116,5 +117,30 @@
       "sat": "六"
     }
   },
-  "retentionNote": "直接根据会话日志计算，因此只能回溯到日志保留期限。"
+  "retentionNote": "直接根据会话日志计算，因此只能回溯到日志保留期限。",
+  "access": {
+    "funnelTitle": "挂件被展示、打开并进入会话的次数",
+    "funnelSubtitle": "展示统计挂件加载次数；访问统计面板打开次数。",
+    "impressions": "展示",
+    "impressionsHint": "挂件已加载",
+    "opens": "访问",
+    "opensHint": "打开 {{count}} 次 · 按会话计",
+    "conversations": "会话",
+    "conversationsHint": "已发起会话",
+    "openRate": "打开率",
+    "chatRate": "会话转化率",
+    "agent": "客服",
+    "path": "路径",
+    "byAgentTitle": "按客服",
+    "byPathTitle": "出现过的页面（前 20）",
+    "defaultAgent": "默认客服",
+    "defaultAgentNote": "未指定客服的会话计入“默认客服”。",
+    "pathNote": "不保存查询字符串（隐私）。按路径统计。",
+    "otherPaths": "其余 {{count}} 个路径",
+    "neverOpened": "展示足够却无人打开 — 请检查启动按钮是否可见。",
+    "since": "自 {{date}} 起收集路径与打开数；此前的展示没有这些值。",
+    "appModeNote": "App（WebView）模式面板默认打开，因此展示等于访问。",
+    "empty": "此期间没有展示。",
+    "noPaths": "尚未收集到路径。"
+  }
 }

@@ -19,6 +19,7 @@ import {
   ResolutionSection,
 } from './BreakdownSections';
 import { CsatSection } from './CsatSection';
+import { AccessSection } from './AccessSection';
 
 /** Below this confidence an answer is treated as shaky (matches RAG_MIN_SIMILARITY). */
 const LOW_CONFIDENCE = 0.45;
@@ -26,11 +27,11 @@ const LOW_CONFIDENCE = 0.45;
  * Tab order: what was asked first (questions), then where it came from, who
  * answered, how it ended, and when it happens.
  */
-const SECTIONS = ['questions', 'channels', 'agents', 'resolution', 'csat', 'hours'] as const;
+const SECTIONS = ['questions', 'access', 'channels', 'agents', 'resolution', 'csat', 'hours'] as const;
 type Section = (typeof SECTIONS)[number];
 
 /** Tabs computed from conversations/messages, which the retention purge removes. */
-const LOG_BACKED_SECTIONS: readonly Section[] = ['channels', 'agents', 'resolution', 'hours'];
+const LOG_BACKED_SECTIONS: readonly Section[] = ['access', 'channels', 'agents', 'resolution', 'hours'];
 
 /** Days behind yesterday before the page says so. 1 = simply "no questions yesterday". */
 const STALE_WARN_DAYS = 2;
@@ -170,6 +171,7 @@ export function StatisticsPage() {
       {LOG_BACKED_SECTIONS.includes(section) && (
         <p className="mb-3 text-xs text-gray-400">{t('retentionNote')}</p>
       )}
+      {section === 'access' && <AccessSection from={from} to={to} />}
       {section === 'channels' && <ChannelSection from={from} to={to} />}
       {section === 'agents' && <AgentSection from={from} to={to} />}
       {section === 'resolution' && <ResolutionSection from={from} to={to} />}

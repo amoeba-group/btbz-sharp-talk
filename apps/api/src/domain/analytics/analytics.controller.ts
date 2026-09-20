@@ -101,6 +101,19 @@ export class AnalyticsController {
     return this.analyticsService.questionStats(tenantScope(user), { dimension, from, to, limit });
   }
 
+  /**
+   * The funnel before the conversation (PLN-260920): shown → opened → talked.
+   * Every other route here starts from conversations, so this is the only one
+   * that can say how often the widget appeared and was never opened.
+   */
+  @Get('access')
+  @RequireCapability(CAPABILITY.ANALYTICS_READ)
+  @RequireMenu('statistics')
+  @ApiOperation({ summary: 'Widget impressions, panel opens and chats — overall, per agent, per page' })
+  async access(@CurrentUser() user: Principal, @Query() query: QuestionStatsQuery) {
+    return this.breakdown.access(this.tenantOf(user), this.windowOf(query));
+  }
+
   @Get('channels')
   @RequireCapability(CAPABILITY.ANALYTICS_READ)
   @RequireMenu('statistics')

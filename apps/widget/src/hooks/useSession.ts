@@ -65,6 +65,21 @@ export function getShopDomain(): string | undefined {
  * PLN-260820). Decides which persona answers sessions born on this page;
  * absent (older loaders, direct open) = the tenant's default agent.
  */
+/**
+ * Storefront page the widget is mounted on (PLN-260920).
+ *
+ * The loader already puts it in the iframe URL as `ivy_land` for attribution,
+ * so this reads the value that is there rather than adding a second channel for
+ * the same fact.
+ */
+export function getLandingPath(): string | undefined {
+  try {
+    return new URLSearchParams(window.location.search).get('ivy_land') ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function getAgentCode(): string | undefined {
   try {
     return new URLSearchParams(window.location.search).get('agent') ?? undefined;
@@ -207,7 +222,16 @@ export function useEnsureSession() {
     // token the backend returns reaches the store/queries.
     const resumeToken =
       useWidgetStore.getState().sessionToken ?? (embedded ? null : getStoredSessionToken());
-    ensureSession(resumeToken, language, getShopDomain(), getParentOrigin(), getAgentCode())
+    ensureSession(
+      resumeToken,
+      language,
+      getShopDomain(),
+      getParentOrigin(),
+      getAgentCode(),
+      // Which page showed the widget (PLN-260920). Already parsed for GA4; the
+      // server normalizes it and drops the query string.
+      getLandingPath(),
+    )
       .then((res) => {
         if (cancelled) return;
         // Tenant widget config is safe to adopt regardless of which session wins

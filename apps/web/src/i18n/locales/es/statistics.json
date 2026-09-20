@@ -33,7 +33,8 @@
     "channels": "Canales",
     "agents": "Agentes",
     "resolution": "Resultados",
-    "hours": "Horas"
+    "hours": "Horas",
+    "access": "Acceso"
   },
   "csat": {
     "avgTitle": "Puntuación media",
@@ -116,5 +117,30 @@
       "sat": "Sáb"
     }
   },
-  "retentionNote": "Se calcula desde el registro de conversaciones, así que solo llega hasta donde se conserva el registro."
+  "retentionNote": "Se calcula desde el registro de conversaciones, así que solo llega hasta donde se conserva el registro.",
+  "access": {
+    "funnelTitle": "Cuántas veces se mostró, se abrió y llegó a conversación",
+    "funnelSubtitle": "Las impresiones cuentan cargas del widget; el acceso cuenta aperturas del panel.",
+    "impressions": "Impresiones",
+    "impressionsHint": "Widget cargado",
+    "opens": "Accesos",
+    "opensHint": "{{count}} aperturas · por sesión",
+    "conversations": "Conversaciones",
+    "conversationsHint": "Chat iniciado",
+    "openRate": "Tasa de apertura",
+    "chatRate": "Tasa de conversación",
+    "agent": "Agente",
+    "path": "Ruta",
+    "byAgentTitle": "Por agente",
+    "byPathTitle": "Páginas donde apareció (top 20)",
+    "defaultAgent": "Agente predeterminado",
+    "defaultAgentNote": "Las sesiones sin agente asignado se cuentan como «Agente predeterminado».",
+    "pathNote": "Las cadenas de consulta no se almacenan (privacidad). Se cuenta por ruta.",
+    "otherPaths": "Otras {{count}} rutas",
+    "neverOpened": "Se mostró bastante y nadie lo abrió — comprueba que el lanzador se vea.",
+    "since": "Rutas y aperturas se recogen desde {{date}}; las impresiones anteriores no las tienen.",
+    "appModeNote": "En modo app (WebView) el panel arranca abierto, así que impresiones y accesos coinciden.",
+    "empty": "Sin impresiones en este rango.",
+    "noPaths": "Aún no hay rutas recogidas."
+  }
 }

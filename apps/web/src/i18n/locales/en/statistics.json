@@ -33,7 +33,8 @@
     "channels": "Channels",
     "agents": "Agents",
     "resolution": "Outcomes",
-    "hours": "Hours"
+    "hours": "Hours",
+    "access": "Access"
   },
   "csat": {
     "avgTitle": "Average rating",
@@ -116,5 +117,30 @@
       "sat": "Sat"
     }
   },
-  "retentionNote": "Computed from the conversation log, so this view reaches back only as far as the log is kept."
+  "retentionNote": "Computed from the conversation log, so this view reaches back only as far as the log is kept.",
+  "access": {
+    "funnelTitle": "How often the widget was shown, opened and talked to",
+    "funnelSubtitle": "Impressions count widget loads; access counts panel opens.",
+    "impressions": "Impressions",
+    "impressionsHint": "Widget loaded",
+    "opens": "Access",
+    "opensHint": "{{count}} opens · counted by session",
+    "conversations": "Conversations",
+    "conversationsHint": "Chat started",
+    "openRate": "Open rate",
+    "chatRate": "Chat rate",
+    "agent": "Agent",
+    "path": "Path",
+    "byAgentTitle": "By agent",
+    "byPathTitle": "Pages it appeared on (top 20)",
+    "defaultAgent": "Default agent",
+    "defaultAgentNote": "Sessions with no agent pinned are counted as “Default agent”.",
+    "pathNote": "Query strings are not stored (privacy). Counted by path.",
+    "otherPaths": "{{count}} other paths",
+    "neverOpened": "Shown often enough, opened by nobody — check the launcher is visible.",
+    "since": "Paths and opens are collected from {{date}}; earlier impressions have neither.",
+    "appModeNote": "App (WebView) mode starts with the panel open, so impressions equal access there.",
+    "empty": "No impressions in this range.",
+    "noPaths": "No paths collected yet."
+  }
 }

@@ -33,7 +33,8 @@
     "channels": "채널",
     "agents": "상담원",
     "resolution": "처리",
-    "hours": "시간대"
+    "hours": "시간대",
+    "access": "노출·접속"
   },
   "csat": {
     "avgTitle": "평균 평점",
@@ -116,5 +117,30 @@
       "sat": "토"
     }
   },
-  "retentionNote": "대화 로그에서 직접 계산합니다 — 보존기간을 넘는 과거는 조회되지 않습니다."
+  "retentionNote": "대화 로그에서 직접 계산합니다 — 보존기간을 넘는 과거는 조회되지 않습니다.",
+  "access": {
+    "funnelTitle": "위젯이 얼마나 보여지고, 열리고, 대화로 이어졌나",
+    "funnelSubtitle": "노출은 위젯이 페이지에 뜬 횟수, 접속은 고객이 패널을 연 횟수입니다.",
+    "impressions": "노출",
+    "impressionsHint": "위젯 로드",
+    "opens": "접속",
+    "opensHint": "열람 {{count}}회 · 고유 세션 기준",
+    "conversations": "대화",
+    "conversationsHint": "대화 생성됨",
+    "openRate": "열람률",
+    "chatRate": "대화 전환율",
+    "agent": "에이전트",
+    "path": "경로",
+    "byAgentTitle": "에이전트별",
+    "byPathTitle": "노출된 페이지 (상위 20)",
+    "defaultAgent": "기본 에이전트",
+    "defaultAgentNote": "에이전트가 지정되지 않은 세션은 “기본 에이전트”로 집계됩니다.",
+    "pathNote": "쿼리스트링은 저장하지 않습니다(개인정보). 경로 기준 집계입니다.",
+    "otherPaths": "그 외 {{count}}개 경로",
+    "neverOpened": "노출은 충분한데 아무도 열지 않았습니다 — 런처가 보이는지 확인하세요.",
+    "since": "{{date}}부터 경로·접속을 수집합니다. 그 이전 노출에는 값이 없습니다.",
+    "appModeNote": "앱(WebView) 모드는 패널이 열린 채 시작하므로 노출과 접속이 같습니다.",
+    "empty": "이 기간에 노출이 없습니다.",
+    "noPaths": "아직 수집된 경로가 없습니다."
+  }
 }

@@ -1,4 +1,11 @@
-import { AnalyticsBreakdownService, inZone, median } from './analytics-breakdown.service';
+import {
+  AnalyticsBreakdownService,
+  emptyAccessRow,
+  inZone,
+  median,
+  mergeRow,
+  withRates,
+} from './analytics-breakdown.service';
 
 /**
  * The two calculations in these lenses that can be wrong without looking wrong.
@@ -105,5 +112,44 @@ describe('session lookup for the agent lens', () => {
 
     expect(rows).toEqual([]);
     expect(captured).toHaveLength(0);
+  });
+});
+
+describe('access funnel rates (PLN-260920)', () => {
+  const row = (over: Partial<ReturnType<typeof emptyAccessRow>>) =>
+    Object.assign(emptyAccessRow('k'), over);
+
+  it('divides by sessions, not by raw opens', () => {
+    // The trap: one shopper who opens and closes four times is ONE person who
+    // engaged. Dividing conversations by `opens` would report 25% where the
+    // truth is 100%, and an open-happy page could print rates above 100%.
+    const r = withRates(row({ impressions: 10, opens: 4, openedSessions: 1, conversations: 1 }));
+
+    expect(r.openRate).toBeCloseTo(0.1);
+    expect(r.chatRate).toBe(1);
+  });
+
+  it('is zero rather than NaN when nothing happened', () => {
+    const r = withRates(row({ impressions: 0, opens: 0, openedSessions: 0, conversations: 0 }));
+
+    expect(r.openRate).toBe(0);
+    expect(r.chatRate).toBe(0);
+  });
+
+  it('reports a page that is shown and never opened as exactly zero', () => {
+    // The row the operator is meant to act on: plenty of impressions, no opens.
+    const r = withRates(row({ impressions: 402, opens: 0, openedSessions: 0, conversations: 0 }));
+
+    expect(r.openRate).toBe(0);
+    expect(r.chatRate).toBe(0);
+  });
+
+  it('folds the long tail without losing any count', () => {
+    const others = emptyAccessRow('others');
+    mergeRow(others, row({ impressions: 5, opens: 3, openedSessions: 2, conversations: 1 }));
+    mergeRow(others, row({ impressions: 7, opens: 1, openedSessions: 1, conversations: 0 }));
+
+    expect(others).toMatchObject({ impressions: 12, opens: 4, openedSessions: 3, conversations: 1 });
+    expect(withRates(others).chatRate).toBeCloseTo(1 / 3);
   });
 });

@@ -33,7 +33,8 @@
     "channels": "チャネル",
     "agents": "担当",
     "resolution": "結果",
-    "hours": "時間帯"
+    "hours": "時間帯",
+    "access": "表示・接続"
   },
   "csat": {
     "avgTitle": "平均評価",
@@ -116,5 +117,30 @@
       "sat": "土"
     }
   },
-  "retentionNote": "会話ログから直接集計するため、ログの保存期間より前は表示できません。"
+  "retentionNote": "会話ログから直接集計するため、ログの保存期間より前は表示できません。",
+  "access": {
+    "funnelTitle": "ウィジェットが表示・開封され、会話に至った回数",
+    "funnelSubtitle": "表示はウィジェットの読み込み回数、接続はパネルを開いた回数です。",
+    "impressions": "表示",
+    "impressionsHint": "ウィジェット読み込み",
+    "opens": "接続",
+    "opensHint": "開封 {{count}} 回 · セッション基準",
+    "conversations": "会話",
+    "conversationsHint": "会話が開始",
+    "openRate": "開封率",
+    "chatRate": "会話転換率",
+    "agent": "エージェント",
+    "path": "パス",
+    "byAgentTitle": "エージェント別",
+    "byPathTitle": "表示されたページ（上位20）",
+    "defaultAgent": "既定エージェント",
+    "defaultAgentNote": "エージェント未指定のセッションは「既定エージェント」に集計されます。",
+    "pathNote": "クエリ文字列は保存しません（プライバシー）。パス単位で集計します。",
+    "otherPaths": "その他 {{count}} 件のパス",
+    "neverOpened": "十分表示されているのに誰も開いていません — ランチャーが見えるか確認してください。",
+    "since": "パスと開封は {{date}} から収集します。それ以前の表示には値がありません。",
+    "appModeNote": "アプリ（WebView）モードはパネルが開いた状態で始まるため、表示と接続が一致します。",
+    "empty": "この期間に表示がありません。",
+    "noPaths": "まだ収集されたパスがありません。"
+  }
 }

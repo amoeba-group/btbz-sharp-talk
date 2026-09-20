@@ -16,6 +16,44 @@ export const DEFAULT_AGENT_LABEL = 'default';
 /** Prefix for an agent that no longer exists; the console translates it. */
 export const DELETED_AGENT_LABEL = 'deleted:';
 
+/** One row of the funnel, whatever the axis is (total, agent, page). */
+export interface AccessRow {
+  key: string;
+  /** Agent rows only: null = the tenant default answered. */
+  id?: number | null;
+  /** Widget loaded — the session row exists because of it. */
+  impressions: number;
+  /** Panel opened, counted per open. Can exceed `openedSessions`. */
+  opens: number;
+  /** Sessions that were opened at least once — the honest conversion base. */
+  openedSessions: number;
+  /** Sessions that produced a conversation. */
+  conversations: number;
+  /** openedSessions / impressions. */
+  openRate: number;
+  /** conversations / openedSessions. */
+  chatRate: number;
+}
+
+export interface AccessDaily {
+  day: string;
+  impressions: number;
+  opens: number;
+  openedSessions: number;
+  conversations: number;
+}
+
+export interface AccessBreakdown {
+  totals: AccessRow;
+  daily: AccessDaily[];
+  byAgent: AccessRow[];
+  byPath: AccessRow[];
+  /** Paths beyond the top N, folded into one row; null when there are none. */
+  otherPaths: (AccessRow & { paths: number }) | null;
+  /** Oldest session carrying collected values — "we only know from here". */
+  collectingSince: string | null;
+}
+
 export interface Window {
   from: Date;
   to: Date;
@@ -72,6 +110,48 @@ export interface HourGrid {
  * cannot see past the conversation-log retention window, which the screen says
  * out loud rather than pretending otherwise.
  */
+/** Pages listed individually; the tail is folded into one "others" row. */
+const ACCESS_TOP_PATHS = 20;
+
+export const emptyAccessRow = (key: string): AccessRow => ({
+  key,
+  impressions: 0,
+  opens: 0,
+  openedSessions: 0,
+  conversations: 0,
+  openRate: 0,
+  chatRate: 0,
+});
+
+/** Fold one session into a row. Impressions count sessions, not opens. */
+function addSession(row: AccessRow, opens: number, opened: number, chat: number): void {
+  row.impressions += 1;
+  row.opens += opens;
+  row.openedSessions += opened;
+  row.conversations += chat;
+}
+
+/** Fold an already-aggregated row into another (the "others" bucket). */
+export function mergeRow(into: AccessRow, from: AccessRow): void {
+  into.impressions += from.impressions;
+  into.opens += from.opens;
+  into.openedSessions += from.openedSessions;
+  into.conversations += from.conversations;
+}
+
+/**
+ * Both rates divide by SESSIONS, never by raw opens: one shopper toggling the
+ * panel four times is one person who engaged, and `opens` as a denominator
+ * prints conversion above 100%.
+ */
+export function withRates(row: AccessRow): AccessRow {
+  row.openRate = row.impressions ? row.openedSessions / row.impressions : 0;
+  row.chatRate = row.openedSessions ? row.conversations / row.openedSessions : 0;
+  return row;
+}
+
+const isoDay = (d: Date): string => new Date(d).toISOString().slice(0, 10);
+
 @Injectable()
 export class AnalyticsBreakdownService {
   constructor(
@@ -93,6 +173,113 @@ export class AnalyticsBreakdownService {
       .andWhere(
         "NOT EXISTS (SELECT 1 FROM sessions ps WHERE ps.id = c.session_id AND ps.channel = 'preview')",
       );
+  }
+
+  /**
+   * The funnel before the conversation: shown → opened → talked (PLN-260920).
+   *
+   * Every other method here starts from `conversations`, which is why the
+   * console could only ever describe traffic that already turned into a chat.
+   * This one starts from `sessions` — one row per widget load — so the two
+   * numbers that were previously invisible (how often the widget appeared, how
+   * often anyone opened it) finally have somewhere to be.
+   *
+   * Rates use `openedSessions`, never `opens`: a shopper toggling the panel
+   * four times is one person who engaged, and dividing by the raw count would
+   * print conversion rates above 100%.
+   */
+  async access(tenantId: number, window: Window): Promise<AccessBreakdown> {
+    const sessions = await this.sessionRepo
+      .createQueryBuilder('s')
+      .select(['s.id', 's.aiAgentId', 's.landingPath', 's.openCount', 's.createdAt'])
+      .where('s.tenant_id = :tenantId', { tenantId })
+      .andWhere('s.created_at >= :from AND s.created_at < :to', window)
+      // Preview sessions are the console's own sandbox, excluded here for the
+      // same reason as everywhere else: operators testing the widget would show
+      // up as shoppers who never talk.
+      .andWhere("(s.channel IS NULL OR s.channel <> 'preview')")
+      .getMany();
+    if (!sessions.length) {
+      return {
+        totals: emptyAccessRow('total'),
+        daily: [],
+        byAgent: [],
+        byPath: [],
+        otherPaths: null,
+        collectingSince: null,
+      };
+    }
+
+    const ids = sessions.map((s) => Number(s.id));
+    const [convRows, aiAgents] = await Promise.all([
+      this.convRepo
+        .createQueryBuilder('c')
+        .select('DISTINCT c.session_id', 'sessionId')
+        .where('c.tenant_id = :tenantId', { tenantId })
+        .andWhere('c.session_id IN (:...ids)', { ids })
+        .getRawMany<{ sessionId: string | number }>(),
+      this.aiAgentRepo.find({ where: { tenantId } }),
+    ]);
+    const chatted = new Set(convRows.map((r) => Number(r.sessionId)));
+    const aiName = new Map(aiAgents.map((a) => [Number(a.id), a.name]));
+    const nameOf = (id: number | null): string =>
+      id == null ? DEFAULT_AGENT_LABEL : (aiName.get(id) ?? `${DELETED_AGENT_LABEL}#${id}`);
+
+    const totals = emptyAccessRow('total');
+    const byDay = new Map<string, AccessDaily>();
+    const byAgent = new Map<string, AccessRow>();
+    const byPath = new Map<string, AccessRow>();
+    let since: Date | null = null;
+
+    for (const s of sessions) {
+      const opens = Number(s.openCount ?? 0);
+      const opened = opens > 0 ? 1 : 0;
+      const chat = chatted.has(Number(s.id)) ? 1 : 0;
+      const agentId = s.aiAgentId == null ? null : Number(s.aiAgentId);
+
+      addSession(totals, opens, opened, chat);
+
+      const day = isoDay(s.createdAt);
+      const d = byDay.get(day) ?? { day, impressions: 0, opens: 0, openedSessions: 0, conversations: 0 };
+      d.impressions += 1;
+      d.opens += opens;
+      d.openedSessions += opened;
+      d.conversations += chat;
+      byDay.set(day, d);
+
+      const aKey = nameOf(agentId);
+      const a = byAgent.get(aKey) ?? { ...emptyAccessRow(aKey), id: agentId };
+      addSession(a, opens, opened, chat);
+      byAgent.set(aKey, a);
+
+      // A session written before collection started has no path; counting it
+      // under "/" would invent traffic for the home page.
+      if (s.landingPath) {
+        const p = byPath.get(s.landingPath) ?? emptyAccessRow(s.landingPath);
+        addSession(p, opens, opened, chat);
+        byPath.set(s.landingPath, p);
+        if (!since || s.createdAt < since) since = s.createdAt;
+      }
+    }
+
+    const paths = [...byPath.values()].sort((x, y) => y.impressions - x.impressions);
+    const top = paths.slice(0, ACCESS_TOP_PATHS).map(withRates);
+    const rest = paths.slice(ACCESS_TOP_PATHS);
+    let otherPaths: (AccessRow & { paths: number }) | null = null;
+    if (rest.length) {
+      const folded = emptyAccessRow('others');
+      for (const r of rest) mergeRow(folded, r);
+      otherPaths = { ...withRates(folded), paths: rest.length };
+    }
+
+    return {
+      totals: withRates(totals),
+      daily: [...byDay.values()].sort((x, y) => x.day.localeCompare(y.day)),
+      byAgent: [...byAgent.values()].map(withRates).sort((x, y) => y.impressions - x.impressions),
+      byPath: top,
+      otherPaths,
+      collectingSince: since ? isoDay(since) : null,
+    };
   }
 
   async channels(tenantId: number, window: Window): Promise<ChannelRow[]> {

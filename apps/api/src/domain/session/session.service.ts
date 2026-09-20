@@ -21,6 +21,7 @@ import {
   normalizeWidgetTheme, stripCustomCss,
 } from '@sharptalk/types';
 import { generateToken } from '@sharptalk/common';
+import { normalizeLandingPath } from '../../global/util/landing-path.util';
 import { Session } from './entity/session.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { Customer } from '../customer/entity/customer.entity';
@@ -81,6 +82,13 @@ export function sessionCacheKey(token: string): string {
 }
 
 /**
+ * Most opens a single session may contribute (PLN-260920). A shopper who opens
+ * and closes a few times is normal; a page that toggles in a loop is not, and
+ * one session must not be able to move a tenant's chart.
+ */
+const OPEN_COUNT_CEILING = 50;
+
+/**
  * Session lifecycle (S1 / FN-006). Creates or resumes a widget session, tracks
  * CCPA consent, and resolves UI language. Emits a CJM Awareness event on create.
  */
@@ -103,6 +111,7 @@ export class SessionService {
     shopDomain?: string,
     parentOrigin?: string,
     agentCode?: string,
+    landingPath?: string,
   ): Promise<Session> {
     if (token) {
       const existing = await this.sessionRepo.findOne({ where: { sessionToken: token } });
@@ -136,6 +145,9 @@ export class SessionService {
         // Pinned once here — the session keeps its agent for its whole life.
         aiAgentId: await this.resolveAiAgentId(tenant.id, agentCode),
         language: this.resolveLanguage(locale, tenant.timezone, tenant.defaultLanguage),
+        // Impression analytics (PLN-260920). Normalized server-side; a bad value
+        // becomes NULL rather than failing the call that mounts the widget.
+        landingPath: normalizeLandingPath(landingPath),
         consentState: CONSENT_STATE.PENDING,
         customerId: null,
         identityLevel: SESSION_IDENTITY.GUEST,
@@ -403,6 +415,35 @@ export class SessionService {
       `consent recorded: session=${session.id} state=${saved.consentState} version=${saved.consentVersion}`,
     );
     return saved;
+  }
+
+  /**
+   * The shopper opened the panel (PLN-260920).
+   *
+   * The session row already says the widget was SHOWN; this says it was USED.
+   * Counting opens rather than flipping a flag is what the operator asked for,
+   * but a counter invites two failure modes, so both are handled here:
+   *
+   *  - a page that toggles the panel in a loop would drown the tenant's numbers
+   *    → per-session ceiling, silently ignored past it;
+   *  - console preview traffic is not a shopper → excluded, like everywhere else.
+   *
+   * Errors never reach the widget: the caller treats this as fire-and-forget.
+   */
+  async recordOpen(token: string): Promise<void> {
+    const session = await this.sessionRepo.findOne({
+      where: { sessionToken: token },
+      select: ['id', 'channel', 'openCount', 'firstOpenedAt'],
+    });
+    if (!session || session.channel === 'preview') return;
+    if (session.openCount >= OPEN_COUNT_CEILING) return;
+    await this.sessionRepo.update(
+      { id: session.id },
+      {
+        openCount: () => '`open_count` + 1',
+        ...(session.firstOpenedAt ? {} : { firstOpenedAt: new Date() }),
+      },
+    );
   }
 
   // ---- Consent policy (PLN-Privacy-Control-Gap Stage 1, fail-closed D-1) ----
