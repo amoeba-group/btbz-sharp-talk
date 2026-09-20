@@ -99,7 +99,34 @@ frame.style.top = triggerOffset + 'px';                       // = 68px
 - 모바일(부모 창 <640px)과 앱 모드는 지금과 동일한 풀스크린 시트.
 - 스키마 변경 없음. 배포 대상은 위젯 번들 + `embed.js`.
 
-## 6. 예방 패턴 (일반화)
+## 6. 배포 상태 · 실 스토어 실측
+
+| 항목 | 상태 |
+|---|---|
+| PR | **#551** (squash → main `31263ef`) |
+| SQL | 없음 (스키마 변경 없음) |
+| staging | 배포 완료 2026-09-20 — `deploy-staging.sh`, api/web/widget/pwa/nginx 재생성, api healthy |
+| production | **미배포** (별도 스택 `~/sharptalk-production`, 브랜치 `production`) — 다음 승격 시 함께 |
+
+배포 확인은 상태코드가 아니라 **내용**으로:
+
+```
+curl .../widget/embed.js | grep -c DOCK_BOTTOM_GAP            → 2
+widget CSS 번들의 .ivy-panel-desktop                           → 미디어 쿼리 밖, 클램프 포함
+```
+
+실 스토어 `ambshop-dev.myshopify.com` (헤더 `#st-bell` 설치 완료, 로그인 상태):
+
+```
+뷰포트 1004×857, 헤더 바닥 61
+frame  top=68  420×784  bottom=852   → 창 밖 초과 0px   (수정 전: +68px)
+       inline height = min(800px, calc(100vh - 73px))  ← 857-73 = 784 그대로
+패널    380×720(설정값 그대로) · 모서리 16 · 우측 여백 20 · 헤더 바로 아래 도킹
+```
+
+창이 패널보다 낮을 때만 클램프가 걸리고, 그때 하단 여백이 정확히 25px가 된다(§4 로컬 실측).
+
+## 7. 예방 패턴 (일반화)
 
 **iframe 안에서 `@media (min-width: …)`로 "데스크톱이냐"를 묻지 말 것.** 그 질문의 답은 호스트
 페이지의 폭인데, 프레임 안에서 보이는 것은 프레임의 폭이다. 프레임을 만드는 쪽만 진짜 폭을 알고
