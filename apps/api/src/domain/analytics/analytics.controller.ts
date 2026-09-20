@@ -6,7 +6,7 @@ import { AnalyticsService } from './analytics.service';
 import { QuestionStatsService } from './question-stats.service';
 import { AnalyticsBreakdownService } from './analytics-breakdown.service';
 import { AuditService } from '../audit/audit.service';
-import { RequireCapability, RequireMenu } from '../../global/decorator/auth.decorator';
+import { AdminOnly, RequireCapability, RequireMenu } from '../../global/decorator/auth.decorator';
 import { CurrentUser } from '../../global/decorator/current-user.decorator';
 import { Paginated } from '../../global/interceptor/transform.interceptor';
 import { BusinessException } from '../../global/exception/business.exception';
@@ -106,6 +106,35 @@ export class AnalyticsController {
    * Every other route here starts from conversations, so this is the only one
    * that can say how often the widget appeared and was never opened.
    */
+  /**
+   * The seven stages for this tenant, in the order a shopper meets them
+   * (PLN-260920b). The lens tabs each explain one of them; this says where the
+   * drop happens.
+   */
+  @Get('journey')
+  @RequireCapability(CAPABILITY.ANALYTICS_READ)
+  @RequireMenu('statistics')
+  @ApiOperation({ summary: 'Impression → access → chat → agent → escalation → rating → end' })
+  async journey(@CurrentUser() user: Principal, @Query() query: QuestionStatsQuery) {
+    return this.breakdown.journeyStages(this.tenantOf(user), this.windowOf(query));
+  }
+
+  /**
+   * Every tenant's seven stages, ONE ROW EACH (PLN-260920b).
+   *
+   * Deliberately a separate route rather than relaxing `tenantOf`: that gate
+   * refuses a null tenant because a blended total is a cross-tenant leak. Rows
+   * broken out per tenant are the opposite — the platform operator sees which
+   * tenant is alive and where each one stalls, and no tenant's traffic is mixed
+   * into another's. Aggregate counts only; no conversation content, no customer.
+   */
+  @Get('admin/tenants')
+  @AdminOnly()
+  @ApiOperation({ summary: 'Per-tenant journey stages for the platform console' })
+  async adminTenants(@Query() query: QuestionStatsQuery) {
+    return this.breakdown.tenantJourney(this.windowOf(query));
+  }
+
   @Get('access')
   @RequireCapability(CAPABILITY.ANALYTICS_READ)
   @RequireMenu('statistics')

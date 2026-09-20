@@ -6,5 +6,21 @@
   "conversations": "会话数",
   "comingSoon": "即将推出",
   "integrationStatus": "集成状态",
-  "noIntegrations": "尚未配置任何集成。"
+  "noIntegrations": "尚未配置任何集成。",
+  "journey": {
+    "title": "各租户客户旅程",
+    "tenant": "租户",
+    "impressions": "展示",
+    "access": "访问",
+    "conversations": "会话",
+    "aiHandled": "客服",
+    "escalated": "转人工",
+    "rated": "评价",
+    "ended": "结束",
+    "empty": "此期间没有活动。",
+    "activeHint": "期间内有展示或会话的租户",
+    "funnelNote": "展示→访问→会话逐层包含；后四项为会话的占比。",
+    "collectionNote": "展示与访问自 2026-09-20 起收集。",
+    "privacyNote": "仅显示汇总数值，不包含会话内容与客户信息。"
+  }
 }

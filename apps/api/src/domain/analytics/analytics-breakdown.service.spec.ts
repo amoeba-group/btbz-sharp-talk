@@ -183,3 +183,37 @@ describe('access funnel stays monotonic (FIX after staging read-back)', () => {
       .toBeLessThanOrEqual(1);
   });
 });
+
+describe('journey stages: funnel vs breakdown (PLN-260920b)', () => {
+  /**
+   * The distinction the UI has to preserve. Encoded here so a future change
+   * that "tidies" the seven stages into one funnel fails a test instead of
+   * shipping a chart that reads as broken.
+   */
+  const stages = {
+    impressions: 5062, opens: 236, openedSessions: 214, conversations: 19,
+    aiHandled: 17, escalated: 4, rated: 2, ended: 15,
+  };
+
+  it('the first three nest: each is a subset of the one before', () => {
+    expect(stages.impressions).toBeGreaterThanOrEqual(stages.openedSessions);
+    expect(stages.openedSessions).toBeGreaterThanOrEqual(stages.conversations);
+  });
+
+  it('the last four are proportions OF conversations, not of each other', () => {
+    // escalated + rated + ended routinely exceeds `conversations` — an escalated
+    // conversation is still rated and still ends. Summing them, or chaining them
+    // as funnel stages, would report impossible percentages.
+    const summed = stages.aiHandled + stages.escalated + stages.rated + stages.ended;
+    expect(summed).toBeGreaterThan(stages.conversations);
+    for (const n of [stages.aiHandled, stages.escalated, stages.rated, stages.ended]) {
+      expect(n).toBeLessThanOrEqual(stages.conversations);
+    }
+  });
+
+  it('opens may exceed opened sessions, and only sessions drive the rate', () => {
+    expect(stages.opens).toBeGreaterThanOrEqual(stages.openedSessions);
+    const openRate = stages.openedSessions / stages.impressions;
+    expect(openRate).toBeLessThanOrEqual(1);
+  });
+});

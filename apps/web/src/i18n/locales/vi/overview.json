@@ -6,5 +6,21 @@
   "conversations": "Cuộc hội thoại",
   "comingSoon": "sắp có",
   "integrationStatus": "Trạng thái tích hợp",
-  "noIntegrations": "Chưa cấu hình tích hợp nào."
+  "noIntegrations": "Chưa cấu hình tích hợp nào.",
+  "journey": {
+    "title": "Hành trình khách hàng theo tenant",
+    "tenant": "Tenant",
+    "impressions": "Hiển thị",
+    "access": "Truy cập",
+    "conversations": "Hội thoại",
+    "aiHandled": "Nhân viên AI",
+    "escalated": "Chuyển",
+    "rated": "Đánh giá",
+    "ended": "Kết thúc",
+    "empty": "Không có hoạt động trong khoảng này.",
+    "activeHint": "Tenant có hiển thị hoặc hội thoại trong khoảng",
+    "funnelNote": "Hiển thị → truy cập → hội thoại lồng nhau; bốn mục cuối là tỷ lệ trên hội thoại.",
+    "collectionNote": "Hiển thị và truy cập được thu thập từ 2026-09-20.",
+    "privacyNote": "Chỉ số liệu tổng hợp — không có nội dung hội thoại hay thông tin khách hàng."
+  }
 }

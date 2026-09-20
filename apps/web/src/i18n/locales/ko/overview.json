@@ -6,5 +6,21 @@
   "conversations": "대화",
   "comingSoon": "출시 예정",
   "integrationStatus": "연동 상태",
-  "noIntegrations": "구성된 연동이 없습니다."
+  "noIntegrations": "구성된 연동이 없습니다.",
+  "journey": {
+    "title": "테넌트별 고객여정",
+    "tenant": "테넌트",
+    "impressions": "노출",
+    "access": "접속",
+    "conversations": "대화",
+    "aiHandled": "에이전트",
+    "escalated": "이관",
+    "rated": "평가",
+    "ended": "종료",
+    "empty": "이 기간에 활동이 없습니다.",
+    "activeHint": "기간 내 노출 또는 대화가 있는 테넌트",
+    "funnelNote": "노출→접속→대화는 각각 앞 단계의 일부이고, 뒤의 넷은 대화를 분모로 한 비율입니다.",
+    "collectionNote": "노출·접속은 2026-09-20부터 수집합니다.",
+    "privacyNote": "집계 수치만 표시하며 대화 내용과 고객 정보는 포함하지 않습니다."
+  }
 }

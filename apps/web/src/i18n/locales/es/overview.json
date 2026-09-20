@@ -6,5 +6,21 @@
   "conversations": "Conversaciones",
   "comingSoon": "próximamente",
   "integrationStatus": "Estado de integraciones",
-  "noIntegrations": "No hay integraciones configuradas."
+  "noIntegrations": "No hay integraciones configuradas.",
+  "journey": {
+    "title": "Recorrido del cliente por inquilino",
+    "tenant": "Inquilino",
+    "impressions": "Impresiones",
+    "access": "Accesos",
+    "conversations": "Conversaciones",
+    "aiHandled": "Agente",
+    "escalated": "Derivadas",
+    "rated": "Valoradas",
+    "ended": "Finalizadas",
+    "empty": "Sin actividad en este rango.",
+    "activeHint": "Inquilinos con impresiones o conversaciones en el rango",
+    "funnelNote": "Impresiones → accesos → conversaciones se anidan; las cuatro últimas son porcentajes de conversaciones.",
+    "collectionNote": "Impresiones y accesos se recogen desde 2026-09-20.",
+    "privacyNote": "Solo recuentos agregados — sin contenido de conversaciones ni datos de clientes."
+  }
 }

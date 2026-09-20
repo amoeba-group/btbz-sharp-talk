@@ -34,7 +34,8 @@
     "agents": "客服",
     "resolution": "处理结果",
     "hours": "时段",
-    "access": "展示与访问"
+    "access": "展示与访问",
+    "journey": "旅程"
   },
   "csat": {
     "avgTitle": "平均评分",
@@ -142,5 +143,22 @@
     "appModeNote": "App（WebView）模式面板默认打开，因此展示等于访问。",
     "empty": "此期间没有展示。",
     "noPaths": "尚未收集到路径。"
+  },
+  "journey": {
+    "title": "客户经过的顺序",
+    "subtitle": "前三项逐层包含。后四项并不互斥，分母为会话。",
+    "impressions": "展示",
+    "access": "访问",
+    "conversations": "会话",
+    "openRate": "打开率",
+    "chatRate": "会话转化率",
+    "ofConversations": "{{count}} 个会话的去向",
+    "aiHandled": "客服已回复",
+    "escalated": "转人工",
+    "rated": "已评价",
+    "ended": "已结束",
+    "details": "详情",
+    "notExclusive": "转人工的会话同样会被评价并结束 — 合计可能超过会话数。",
+    "collectionNote": "展示与访问自 2026-09-20 起收集；更早的区间从会话开始。"
   }
 }

@@ -34,7 +34,8 @@
     "agents": "상담원",
     "resolution": "처리",
     "hours": "시간대",
-    "access": "노출·접속"
+    "access": "노출·접속",
+    "journey": "여정"
   },
   "csat": {
     "avgTitle": "평균 평점",
@@ -142,5 +143,22 @@
     "appModeNote": "앱(WebView) 모드는 패널이 열린 채 시작하므로 노출과 접속이 같습니다.",
     "empty": "이 기간에 노출이 없습니다.",
     "noPaths": "아직 수집된 경로가 없습니다."
+  },
+  "journey": {
+    "title": "고객이 지나간 순서",
+    "subtitle": "앞의 세 칸은 각각 앞 단계의 일부입니다. 뒤의 네 개는 서로 배타가 아니며 대화를 분모로 합니다.",
+    "impressions": "노출",
+    "access": "접속",
+    "conversations": "대화",
+    "openRate": "열람률",
+    "chatRate": "대화 전환율",
+    "ofConversations": "대화 {{count}}건은 이렇게 흘렀습니다",
+    "aiHandled": "에이전트 응답",
+    "escalated": "상담원 이관",
+    "rated": "평가받음",
+    "ended": "종료됨",
+    "details": "상세",
+    "notExclusive": "이관된 대화도 평가와 종료를 거칩니다 — 합이 대화 수를 넘을 수 있습니다.",
+    "collectionNote": "노출·접속은 2026-09-20부터 수집합니다. 이전 구간은 대화부터 표시됩니다."
   }
 }

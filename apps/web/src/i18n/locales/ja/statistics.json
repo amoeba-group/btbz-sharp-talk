@@ -34,7 +34,8 @@
     "agents": "担当",
     "resolution": "結果",
     "hours": "時間帯",
-    "access": "表示・接続"
+    "access": "表示・接続",
+    "journey": "ジャーニー"
   },
   "csat": {
     "avgTitle": "平均評価",
@@ -142,5 +143,22 @@
     "appModeNote": "アプリ（WebView）モードはパネルが開いた状態で始まるため、表示と接続が一致します。",
     "empty": "この期間に表示がありません。",
     "noPaths": "まだ収集されたパスがありません。"
+  },
+  "journey": {
+    "title": "顧客がたどった順序",
+    "subtitle": "最初の3つは入れ子です。後の4つは排他ではなく、会話を分母とします。",
+    "impressions": "表示",
+    "access": "接続",
+    "conversations": "会話",
+    "openRate": "開封率",
+    "chatRate": "会話転換率",
+    "ofConversations": "会話 {{count}} 件の内訳",
+    "aiHandled": "エージェント応答",
+    "escalated": "担当者へ引き継ぎ",
+    "rated": "評価あり",
+    "ended": "終了",
+    "details": "詳細",
+    "notExclusive": "引き継いだ会話も評価され終了します — 合計が会話数を超えることがあります。",
+    "collectionNote": "表示・接続は 2026-09-20 から収集します。それ以前は会話から表示されます。"
   }
 }

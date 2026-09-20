@@ -36,5 +36,13 @@
     "range": "{{from}}–{{to}} of {{total}}",
     "pageOf": "{{page}} / {{totalPages}}"
   },
-  "help": "Help"
+  "help": "Help",
+  "range": {
+    "d7": "Last 7 days",
+    "d30": "Last 30 days",
+    "d90": "Last 90 days",
+    "custom": "Custom",
+    "from": "From",
+    "to": "To"
+  }
 }

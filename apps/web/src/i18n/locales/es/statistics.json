@@ -34,7 +34,8 @@
     "agents": "Agentes",
     "resolution": "Resultados",
     "hours": "Horas",
-    "access": "Acceso"
+    "access": "Acceso",
+    "journey": "Recorrido"
   },
   "csat": {
     "avgTitle": "Puntuación media",
@@ -142,5 +143,22 @@
     "appModeNote": "En modo app (WebView) el panel arranca abierto, así que impresiones y accesos coinciden.",
     "empty": "Sin impresiones en este rango.",
     "noPaths": "Aún no hay rutas recogidas."
+  },
+  "journey": {
+    "title": "El orden por el que pasan los clientes",
+    "subtitle": "Los tres primeros se anidan. Los cuatro últimos no son excluyentes; su base son las conversaciones.",
+    "impressions": "Impresiones",
+    "access": "Accesos",
+    "conversations": "Conversaciones",
+    "openRate": "Tasa de apertura",
+    "chatRate": "Tasa de conversación",
+    "ofConversations": "Así fueron las {{count}} conversaciones",
+    "aiHandled": "Respondió el agente",
+    "escalated": "Derivadas",
+    "rated": "Valoradas",
+    "ended": "Finalizadas",
+    "details": "Detalle",
+    "notExclusive": "Una conversación derivada también se valora y finaliza — pueden sumar más que el total.",
+    "collectionNote": "Impresiones y accesos se recogen desde 2026-09-20; antes se empieza en conversaciones."
   }
 }

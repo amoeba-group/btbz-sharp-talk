@@ -54,6 +54,33 @@ export interface AccessBreakdown {
   collectingSince: string | null;
 }
 
+/**
+ * The seven stages a shopper passes through (PLN-260920b), in order.
+ *
+ * The first three are a real funnel — each is a subset of the one before it.
+ * The last four are NOT: an escalated conversation is still rated and still
+ * ends, so they are proportions OF conversations, not stages after each other.
+ * Anything rendering this must keep that distinction or it invites reading
+ * "95% ended, 11% rated" as a fault.
+ */
+export interface JourneyStages {
+  impressions: number;
+  opens: number;
+  openedSessions: number;
+  conversations: number;
+  /** Conversations the AI actually answered in (PLN-260920b O1). */
+  aiHandled: number;
+  escalated: number;
+  rated: number;
+  ended: number;
+}
+
+export interface TenantJourneyRow extends JourneyStages {
+  tenantId: number;
+  name: string;
+  slug: string | null;
+}
+
 export interface Window {
   from: Date;
   to: Date;
@@ -287,6 +314,135 @@ export class AnalyticsBreakdownService {
       otherPaths,
       collectingSince: since ? isoDay(since) : null,
     };
+  }
+
+  /**
+   * The seven stages for one tenant (PLN-260920b).
+   *
+   * Reuses `access()` for the first three rather than recomputing them, so the
+   * journey tab and the access tab can never disagree about how many
+   * impressions there were — the bug that kind of duplication always produces.
+   */
+  async journeyStages(tenantId: number, window: Window): Promise<JourneyStages> {
+    const [access, convs] = await Promise.all([
+      this.access(tenantId, window),
+      this.scoped(tenantId, window).select(['c.id', 'c.escalated', 'c.csatRating', 'c.endedAt']).getMany(),
+    ]);
+    const ids = convs.map((c) => Number(c.id));
+    const aiSent = await this.senderCountsByConversation(ids, SENDER_TYPE.AI);
+    return {
+      impressions: access.totals.impressions,
+      opens: access.totals.opens,
+      openedSessions: access.totals.openedSessions,
+      conversations: convs.length,
+      aiHandled: ids.filter((id) => (aiSent.get(id) ?? 0) > 0).length,
+      escalated: convs.filter((c) => Number(c.escalated) === 1).length,
+      rated: convs.filter((c) => c.csatRating != null).length,
+      ended: convs.filter((c) => c.endedAt != null).length,
+    };
+  }
+
+  /**
+   * Every tenant's seven stages, one row each (PLN-260920b, FR-002).
+   *
+   * Deliberately NOT `journeyStages()` in a loop: a platform with fifty tenants
+   * would issue hundreds of queries to draw one table. Four grouped queries
+   * cover it whatever the tenant count, and the numbers are cross-checked
+   * against `journeyStages` in the tests so the two paths cannot drift.
+   *
+   * Rows are per tenant and never summed here — a single blended total is the
+   * cross-tenant leak the tenant-scoped routes exist to prevent.
+   */
+  async tenantJourney(window: Window): Promise<TenantJourneyRow[]> {
+    const tenants = await this.tenantRepo.find();
+    const byId = new Map<number, TenantJourneyRow>();
+    for (const t of tenants) {
+      byId.set(Number(t.id), {
+        tenantId: Number(t.id),
+        // A tenant may have no name; the slug (or id) still identifies the row.
+        name: t.name ?? t.slug ?? `#${t.id}`,
+        slug: t.slug ?? null,
+        impressions: 0, opens: 0, openedSessions: 0, conversations: 0,
+        aiHandled: 0, escalated: 0, rated: 0, ended: 0,
+      });
+    }
+    const row = (tenantId: unknown): TenantJourneyRow | undefined => byId.get(Number(tenantId));
+
+    const [sessionRows, convRows, aiRows, chattedRows] = await Promise.all([
+      this.sessionRepo
+        .createQueryBuilder('s')
+        .select('s.tenant_id', 'tenantId')
+        .addSelect('COUNT(*)', 'impressions')
+        .addSelect('COALESCE(SUM(s.open_count), 0)', 'opens')
+        .addSelect('SUM(CASE WHEN s.open_count > 0 THEN 1 ELSE 0 END)', 'openedSessions')
+        .where('s.created_at >= :from AND s.created_at < :to', window)
+        .andWhere("(s.channel IS NULL OR s.channel <> 'preview')")
+        .groupBy('s.tenant_id')
+        .getRawMany(),
+      this.convRepo
+        .createQueryBuilder('c')
+        .select('c.tenant_id', 'tenantId')
+        .addSelect('COUNT(*)', 'conversations')
+        .addSelect('SUM(CASE WHEN c.escalated = 1 THEN 1 ELSE 0 END)', 'escalated')
+        .addSelect('SUM(CASE WHEN c.csat_rating IS NOT NULL THEN 1 ELSE 0 END)', 'rated')
+        .addSelect('SUM(CASE WHEN c.ended_at IS NOT NULL THEN 1 ELSE 0 END)', 'ended')
+        .where('c.created_at >= :from AND c.created_at < :to', window)
+        .andWhere(
+          "NOT EXISTS (SELECT 1 FROM sessions ps WHERE ps.id = c.session_id AND ps.channel = 'preview')",
+        )
+        .groupBy('c.tenant_id')
+        .getRawMany(),
+      // Conversations the AI answered in, counted once each.
+      this.convRepo
+        .createQueryBuilder('c')
+        .select('c.tenant_id', 'tenantId')
+        .addSelect('COUNT(DISTINCT c.id)', 'aiHandled')
+        .innerJoin('messages', 'm', 'm.conversation_id = c.id AND m.sender_type = :ai', {
+          ai: SENDER_TYPE.AI,
+        })
+        .where('c.created_at >= :from AND c.created_at < :to', window)
+        .andWhere(
+          "NOT EXISTS (SELECT 1 FROM sessions ps WHERE ps.id = c.session_id AND ps.channel = 'preview')",
+        )
+        .groupBy('c.tenant_id')
+        .getRawMany(),
+      // Sessions that produced a conversation: the same "a chat proves an open"
+      // rule `access()` applies, so pre-collection rows are not undercounted.
+      this.convRepo
+        .createQueryBuilder('c')
+        .select('c.tenant_id', 'tenantId')
+        .addSelect('COUNT(DISTINCT c.session_id)', 'chattedSessions')
+        .innerJoin('sessions', 's', 's.id = c.session_id AND s.open_count = 0')
+        .where('s.created_at >= :from AND s.created_at < :to', window)
+        .andWhere("(s.channel IS NULL OR s.channel <> 'preview')")
+        .groupBy('c.tenant_id')
+        .getRawMany(),
+    ]);
+
+    for (const r of sessionRows) {
+      const t = row(r.tenantId);
+      if (!t) continue;
+      t.impressions = Number(r.impressions ?? 0);
+      t.opens = Number(r.opens ?? 0);
+      t.openedSessions = Number(r.openedSessions ?? 0);
+    }
+    for (const r of chattedRows) {
+      const t = row(r.tenantId);
+      if (t) t.openedSessions += Number(r.chattedSessions ?? 0);
+    }
+    for (const r of convRows) {
+      const t = row(r.tenantId);
+      if (!t) continue;
+      t.conversations = Number(r.conversations ?? 0);
+      t.escalated = Number(r.escalated ?? 0);
+      t.rated = Number(r.rated ?? 0);
+      t.ended = Number(r.ended ?? 0);
+    }
+    for (const r of aiRows) {
+      const t = row(r.tenantId);
+      if (t) t.aiHandled = Number(r.aiHandled ?? 0);
+    }
+    return [...byId.values()].sort((a, b) => b.impressions - a.impressions || b.conversations - a.conversations);
   }
 
   async channels(tenantId: number, window: Window): Promise<ChannelRow[]> {

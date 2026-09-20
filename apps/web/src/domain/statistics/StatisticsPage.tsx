@@ -7,7 +7,6 @@ import { Card } from '@/components/Card';
 import { Badge } from '@/components/Badge';
 import { Table } from '@/components/Table';
 import type { Column } from '@/components/Table';
-import { FormRow, Input } from '@/components/Field';
 import { useQuestionStats } from './statistics.hooks';
 import { DIMENSION_TABS } from './statistics.service';
 import type { Dimension, StatRow } from './statistics.service';
@@ -19,6 +18,8 @@ import {
   ResolutionSection,
 } from './BreakdownSections';
 import { CsatSection } from './CsatSection';
+import { JourneySection } from './JourneySection';
+import { DateRangePicker, useDateRange } from '@/components/DateRangePicker';
 import { AccessSection } from './AccessSection';
 
 /** Below this confidence an answer is treated as shaky (matches RAG_MIN_SIMILARITY). */
@@ -27,22 +28,16 @@ const LOW_CONFIDENCE = 0.45;
  * Tab order: what was asked first (questions), then where it came from, who
  * answered, how it ended, and when it happens.
  */
-const SECTIONS = ['questions', 'access', 'channels', 'agents', 'resolution', 'csat', 'hours'] as const;
+const SECTIONS = ['journey', 'questions', 'access', 'channels', 'agents', 'resolution', 'csat', 'hours'] as const;
 type Section = (typeof SECTIONS)[number];
 
 /** Tabs computed from conversations/messages, which the retention purge removes. */
-const LOG_BACKED_SECTIONS: readonly Section[] = ['access', 'channels', 'agents', 'resolution', 'hours'];
+const LOG_BACKED_SECTIONS: readonly Section[] = ['journey', 'access', 'channels', 'agents', 'resolution', 'hours'];
 
 /** Days behind yesterday before the page says so. 1 = simply "no questions yesterday". */
 const STALE_WARN_DAYS = 2;
 /** Escalation rate above which a topic is worth a knowledge fix. */
 const HIGH_ESCALATION = 0.25;
-
-function isoDaysAgo(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString().slice(0, 10);
-}
 
 /**
  * Customer question statistics (SCR-104 §4). Four lenses over the same daily
@@ -57,9 +52,11 @@ export function StatisticsPage() {
   const [dimension, setDimension] = useState<Dimension>('intent');
   // Two sections share the window below: question analytics and CSAT
   // (PLN-260826-Dashboard-Integration-CSAT-Stats).
-  const [section, setSection] = useState<Section>('questions');
-  const [from, setFrom] = useState(isoDaysAgo(30));
-  const [to, setTo] = useState(isoDaysAgo(0));
+  const [section, setSection] = useState<Section>('journey');
+  // Presets first (PLN-260920b): "last 30 days" is the question operators
+  // actually ask, and the custom range stays for the ones presets cannot say.
+  const dateRange = useDateRange('d30');
+  const { from, to } = dateRange.range;
 
   const { data, isLoading, error } = useQuestionStats({ dimension, from, to });
   const total = data?.total ?? 0;
@@ -154,13 +151,8 @@ export function StatisticsPage() {
       )}
 
       <Card className="mb-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormRow label={t('from')}>
-            <Input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
-          </FormRow>
-          <FormRow label={t('to')}>
-            <Input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} />
-          </FormRow>
+        <div className="px-5 py-4">
+          <DateRangePicker {...dateRange} />
         </div>
       </Card>
 
@@ -170,6 +162,9 @@ export function StatisticsPage() {
           past the window would otherwise read as "nothing happened". */}
       {LOG_BACKED_SECTIONS.includes(section) && (
         <p className="mb-3 text-xs text-gray-400">{t('retentionNote')}</p>
+      )}
+      {section === 'journey' && (
+        <JourneySection from={from} to={to} onGoToSection={(sec) => setSection(sec as Section)} />
       )}
       {section === 'access' && <AccessSection from={from} to={to} />}
       {section === 'channels' && <ChannelSection from={from} to={to} />}

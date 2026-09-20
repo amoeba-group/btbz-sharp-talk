@@ -140,7 +140,27 @@ export interface AccessBreakdown {
   collectingSince: string | null;
 }
 
+/** Seven stages in journey order (PLN-260920b). */
+export interface JourneyStages {
+  impressions: number;
+  opens: number;
+  openedSessions: number;
+  conversations: number;
+  aiHandled: number;
+  escalated: number;
+  rated: number;
+  ended: number;
+}
+
+export interface TenantJourneyRow extends JourneyStages {
+  tenantId: number;
+  name: string;
+  slug: string | null;
+}
+
 export const statisticsService = {
+  journey: (from: string, to: string) => apiGet<JourneyStages>('/analytics/journey', { from, to }),
+
   access: (from: string, to: string) => apiGet<AccessBreakdown>('/analytics/access', { from, to }),
 
   channels: (from: string, to: string) =>

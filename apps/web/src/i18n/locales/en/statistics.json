@@ -34,7 +34,8 @@
     "agents": "Agents",
     "resolution": "Outcomes",
     "hours": "Hours",
-    "access": "Access"
+    "access": "Access",
+    "journey": "Journey"
   },
   "csat": {
     "avgTitle": "Average rating",
@@ -142,5 +143,22 @@
     "appModeNote": "App (WebView) mode starts with the panel open, so impressions equal access there.",
     "empty": "No impressions in this range.",
     "noPaths": "No paths collected yet."
+  },
+  "journey": {
+    "title": "The order customers went through",
+    "subtitle": "The first three nest inside each other. The last four are not exclusive; their base is conversations.",
+    "impressions": "Impressions",
+    "access": "Access",
+    "conversations": "Conversations",
+    "openRate": "Open rate",
+    "chatRate": "Chat rate",
+    "ofConversations": "How the {{count}} conversations went",
+    "aiHandled": "Agent answered",
+    "escalated": "Escalated",
+    "rated": "Rated",
+    "ended": "Ended",
+    "details": "Details",
+    "notExclusive": "An escalated conversation is still rated and still ends — these can sum past the conversation count.",
+    "collectionNote": "Impressions and access are collected from 2026-09-20; earlier ranges start at conversations."
   }
 }
