@@ -61,7 +61,12 @@ api **1940/1940**(191 suites, 신규 11) · types 108/108 · widget 36/36 · `ts
 | PR | **#556** → main `e31c061` |
 | SQL staging | **선적용 완료** 2026-09-20 (코드 배포 전) |
 | 코드 staging | 배포 완료 — api healthy, `successfully started` 1회, 엔티티 4필드 추가 후 정상 부팅 |
-| production | **미배포** — SQL 2건 **선적용 필수** 후 `main:production` 승격 |
+| SQL production | **선적용 완료** 2026-09-20 — `db_sharptalk`에 5컬럼 확인 후 코드 배포 |
+| 코드 production | 배포 완료 2026-09-20 — `main:production` 승격(`0d1b68d`) → `check-migrations.sh` **82 적용·대기 0** → `deploy-self-hosted.sh`. api healthy·`successfully started` 1회·스키마 관련 에러 로그 0건 |
+
+프로덕션 스모크(내용 기준): 위젯 번들에 `orders.detail`·`문의하기`·`Contact information`·
+`Subtotal` 모두 존재. 번들 해시는 스테이징과 다르다 — `VITE_*`가 환경마다 인라인되기 때문이며,
+같은 코드인지는 해시가 아니라 내용으로 확인해야 한다.
 
 ## 6. 잔여·후속
 
