@@ -123,8 +123,18 @@ WARN [ShopifyAdminClient] Line item tier "rich" unavailable for ambshop-dev.mysh
 
 | # | 할 일 | 주체 |
 |---|---|---|
-| 1 | `shopify app deploy` — Partner 대시보드 앱 설정에 `read_products` 포함한 새 버전 릴리스. **이걸 빼먹으면 재승인해도 부여되지 않는다**(부여분 = 앱 선언 ∩ authorize URL, `shopify.app.toml` 주석의 실측 교훈) | 사용자(Shopify CLI/Partner 인증) |
+| 1 | ~~`shopify app deploy`~~ — **완료 2026-09-20**: 버전 **shoptalk-8** 릴리스("read_products scope for order line variant+image"). `app info` 확인 — Access scopes에 `read_products` 포함, 조직 AMOEBA COMPANY LIMITED(184769504). Node 22 필요(로컬은 20이라 스크래치패드에 22를 받아 실행), device auth는 사용자 승인 | 완료 |
 | 2 | 스토어 재승인: `https://shoptalk.amoeba.site/api/v1/auth/shopify/install?shop=ambshop-dev.myshopify.com` 를 열어 승인 | 사용자(OAuth 동의) |
 | 3 | 주문 전량 재동기화 → 옵션·사진 적재, 위젯에서 썸네일 확인 | Claude |
 
-프로덕션: SQL(`order_items.image_url`) 선적용 + env 스코프 반영 후 배포 필요 — 미실행.
+### 7-5. 진행 상황 (2026-09-20)
+
+| 단계 | 상태 |
+|---|---|
+| 코드·스키마(스테이징) | ✅ PR #559 배포, `order_items.image_url` 선적용, env 스코프 반영 |
+| 앱 버전 릴리스 | ✅ **shoptalk-8** (`app info`로 `read_products` 확인) |
+| 스토어 재승인 | ⬜ 사용자 — `https://shoptalk.amoeba.site/api/v1/auth/shopify/install?shop=ambshop-dev.myshopify.com` |
+| 재동기화·실측 | ⬜ 재승인 후 |
+| 프로덕션 | ⬜ SQL(`order_items.image_url`) 선적용 + env 스코프 반영 후 배포 |
+
+재승인 전까지 사다리가 `basic`으로 내려가며 동작은 종전과 같다(스테이징 로그로 확인).
