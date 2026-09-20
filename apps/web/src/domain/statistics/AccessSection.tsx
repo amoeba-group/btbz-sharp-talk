@@ -39,8 +39,10 @@ export function AccessSection({ from, to }: RangeProps) {
     {
       key: 'key',
       header: label,
+      // Identify the default row by its id (null), never by the label: a tenant
+      // is free to name a real agent "default".
       render: (r) =>
-        r.key === 'default' ? (
+        'id' in r && r.id === null ? (
           <span>{t('access.defaultAgent')}</span>
         ) : r.key.startsWith('deleted:') ? (
           <span className="text-gray-400">
