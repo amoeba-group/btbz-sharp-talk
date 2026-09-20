@@ -434,3 +434,78 @@ describe('ShopifySyncService.syncOrders', () => {
     });
   });
 });
+
+/**
+ * Money breakdown (PLN-260920 P2). The cache used to hold only the total, so
+ * the widget could not draw "Discount / Subtotal · N items / Shipping". These
+ * numbers are readable with `read_orders` alone — the point of the test is the
+ * three rules around them: strings parse, 0 survives, and silence does not
+ * overwrite what we already knew.
+ */
+describe('ShopifySyncService — order money breakdown', () => {
+  function buildOne(prefetched?: Partial<OrderCache>) {
+    const saved: OrderCache[] = [];
+    const orderRepo = {
+      findOne: jest.fn().mockResolvedValue(prefetched ? { ...prefetched } : null),
+      find: jest.fn().mockResolvedValue([]),
+      create: jest.fn((x: Partial<OrderCache>) => ({ ...x }) as OrderCache),
+      save: jest.fn((x: OrderCache) => {
+        saved.push(x);
+        return Promise.resolve(x);
+      }),
+    };
+    const itemRepo = {
+      create: jest.fn((x: Record<string, unknown>) => ({ ...x })),
+      delete: jest.fn().mockResolvedValue(undefined),
+      save: jest.fn(async (rows: unknown[]) => rows),
+    };
+    const svc = new ShopifySyncService(
+      orderRepo as never,
+      itemRepo as never,
+      { fetchOrders: jest.fn() } as never,
+      { getShopifyConnection: jest.fn() } as never,
+      { findOrCreateByEmail: jest.fn().mockResolvedValue({ id: 42 }) } as never,
+      { upsert: jest.fn(), findByName: jest.fn() } as never,
+      { publish: jest.fn(async () => undefined) } as never,
+    );
+    return { svc, saved };
+  }
+
+  it('maps string amounts and counts the summed quantity, not the row count', async () => {
+    const { svc, saved } = buildOne();
+
+    await svc.upsertOrder(1, {
+      id: 1005,
+      order_number: 1005,
+      total_price: '55.00',
+      subtotal_price: '59.99',
+      total_discounts: '4.99',
+      total_shipping_price_set: { shop_money: { amount: '0.00' } },
+      line_items: [
+        { title: 'Mask', quantity: 2, price: '4.99' },
+        { title: 'Fan', quantity: 1, price: '4.99' },
+      ],
+    } as never);
+
+    expect(saved[0]).toMatchObject({ subtotal: 59.99, discountTotal: 4.99, itemQty: 3 });
+    // Free shipping: 0 is an answer, and must not be flattened to null.
+    expect(saved[0].shippingTotal).toBe(0);
+  });
+
+  it('a minimal follow-up webhook does not wipe a breakdown we already have', async () => {
+    const { svc, saved } = buildOne({
+      id: 9,
+      subtotal: 59.99,
+      discountTotal: 4.99,
+      shippingTotal: 0,
+      itemQty: 3,
+      currency: 'USD',
+    });
+
+    // orders/updated carrying nothing but a status change.
+    await svc.upsertOrder(1, { id: 1005, financial_status: 'refunded' } as never);
+
+    expect(saved[0]).toMatchObject({ subtotal: 59.99, discountTotal: 4.99, itemQty: 3 });
+    expect(saved[0].shippingTotal).toBe(0);
+  });
+});

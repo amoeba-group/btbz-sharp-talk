@@ -233,6 +233,12 @@ export interface OrderItemResponse {
   optionText: string | null;
   qty: number;
   price: number | null;
+  /**
+   * Product picture for the line, resolved from the tenant's catalogue
+   * (PLN-260920 P4). Null when the line cannot be matched — the client draws a
+   * placeholder rather than shifting the layout.
+   */
+  imageUrl?: string | null;
 }
 
 /** Flat: the order's own fields sit alongside `items` — never `{ order, items }`. */

@@ -273,6 +273,8 @@ export class ProductSyncService implements OnModuleInit, OnModuleDestroy {
     seen.add(handle);
 
     const mapped: Partial<ProductCache> = {
+      // Join key for order lines (P4) — present in the payload all along.
+      externalId: raw.id != null ? String(raw.id).slice(0, 64) : null,
       title: String(raw.title || handle).slice(0, 255),
       vendor: raw.vendor ? String(raw.vendor).slice(0, 128) : null,
       category: raw.product_type ? String(raw.product_type).slice(0, 128) : null,

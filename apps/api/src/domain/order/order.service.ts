@@ -26,6 +26,16 @@ import { RedisService } from '../../infrastructure/cache/redis.service';
 import { WebhookSecretService } from '../tenant/webhook-secret.service';
 import { assertWebhookSecret } from '../../global/util/webhook-secret.util';
 import { blindIndex } from '../../global/util/crypto.util';
+import { ProductCache } from '../product/entity/product-cache.entity';
+
+/**
+ * Title key for catalogue matching: case and whitespace differences are noise,
+ * everything else is signal. Nothing is stripped beyond that — a looser
+ * normaliser starts matching different products to each other.
+ */
+function normaliseTitle(title: string | null | undefined): string {
+  return String(title ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
 
 const LOOKUP_MAX_ATTEMPTS = 5;
 const LOOKUP_WINDOW_SEC = 15 * 60;
@@ -58,6 +68,10 @@ export class OrderService {
     private readonly redis: RedisService,
     private readonly webhookSecretService: WebhookSecretService,
     private readonly sessionService: SessionService,
+    // Appended, not slotted in beside the other repositories: the unit specs
+    // build this service positionally, and inserting a parameter in the middle
+    // silently shifts every double after it.
+    @InjectRepository(ProductCache) private readonly productRepo: Repository<ProductCache>,
   ) {}
 
   /** Guest order lookup (FR-019). Rate-limited per email; binds session on success. */
@@ -189,7 +203,65 @@ export class OrderService {
       order.customerId != null
         ? await this.customerRepo.findOne({ where: { id: order.customerId } })
         : null;
-    return OrderMapper.toDetail(order, items, customer);
+    const images = await this.itemImages(order.tenantId, items);
+    return OrderMapper.toDetail(order, items, customer, images);
+  }
+
+  /**
+   * Line item → catalogue picture (PLN-260920 P4), resolved in two passes.
+   *
+   *  1. `product_id` against `products_cache.external_id` — exact, and the only
+   *     one that survives a retitled product.
+   *  2. Normalised title, EXACT equality. The scheduled GraphQL sync cannot read
+   *     product ids without the `read_products` scope, so most lines arrive with
+   *     nothing but a title; matching them is the difference between pictures on
+   *     two lines out of eight and pictures on most of them.
+   *
+   * Substring/`LIKE` matching is deliberately not used: it is how "fulfil"
+   * matched "Unfulfilled" once already. No match → no entry, and the widget
+   * draws its placeholder.
+   */
+  private async itemImages(
+    tenantId: number | null,
+    items: OrderItem[],
+  ): Promise<Map<string, string>> {
+    const out = new Map<string, string>();
+    if (tenantId == null || items.length === 0) return out;
+
+    const ids = [...new Set(items.map((i) => i.productId).filter((v): v is string => !!v))];
+    const titles = [...new Set(items.map((i) => normaliseTitle(i.title)).filter(Boolean))];
+    if (ids.length === 0 && titles.length === 0) return out;
+
+    const qb = this.productRepo
+      .createQueryBuilder('p')
+      .select(['p.externalId', 'p.title', 'p.imageUrl'])
+      .where('p.tenantId = :tenantId', { tenantId })
+      .andWhere('p.imageUrl IS NOT NULL');
+    if (ids.length && titles.length) {
+      qb.andWhere('(p.externalId IN (:...ids) OR p.title IN (:...titles))', { ids, titles });
+    } else if (ids.length) {
+      qb.andWhere('p.externalId IN (:...ids)', { ids });
+    } else {
+      qb.andWhere('p.title IN (:...titles)', { titles });
+    }
+    const rows = await qb.getMany();
+
+    const byId = new Map<string, string>();
+    const byTitle = new Map<string, string>();
+    for (const r of rows) {
+      if (!r.imageUrl) continue;
+      if (r.externalId) byId.set(r.externalId, r.imageUrl);
+      const key = normaliseTitle(r.title);
+      // First writer wins: two catalogue rows sharing a normalised title cannot
+      // be told apart, so picking either is a guess — keep it stable instead.
+      if (key && !byTitle.has(key)) byTitle.set(key, r.imageUrl);
+    }
+    for (const it of items) {
+      const hit =
+        (it.productId ? byId.get(it.productId) : undefined) ?? byTitle.get(normaliseTitle(it.title));
+      if (hit) out.set(String(it.id), hit);
+    }
+    return out;
   }
 
   /** Latest fulfillment + delivery stepper for an order (FR-031). */

@@ -175,7 +175,12 @@ export function OrderDetailView({
             return (
               <li key={it.id ?? i} className="flex gap-3 py-3">
                 <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-st-md bg-gray-100">
-                  <Package className="h-5 w-5 text-gray-300" />
+                  {it.imageUrl ? (
+                    // Decorative: the title right beside it already names the product.
+                    <img src={it.imageUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <Package className="h-5 w-5 text-gray-300" />
+                  )}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">

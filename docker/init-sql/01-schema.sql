@@ -1422,6 +1422,7 @@ DROP TABLE IF EXISTS `products_cache`;
 CREATE TABLE `products_cache` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `tenant_id` bigint DEFAULT NULL,
+  `external_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `handle` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `vendor` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -1440,6 +1441,7 @@ CREATE TABLE `products_cache` (
   `sku` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'storefront variant SKU â€” lookup aid, not an identity key',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_product_tenant_handle` (`tenant_id`,`handle`),
+  KEY `idx_prdc_tenant_ext` (`tenant_id`,`external_id`),
   KEY `idx_prdc_tenant` (`tenant_id`),
   KEY `idx_prdc_sku` (`tenant_id`,`sku`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

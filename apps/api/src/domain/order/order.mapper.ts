@@ -50,13 +50,14 @@ export class OrderMapper {
     };
   }
 
-  static toItemView(item: OrderItem): OrderItemView {
+  static toItemView(item: OrderItem, imageUrl?: string | null): OrderItemView {
     return {
       id: String(item.id),
       title: item.title,
       optionText: item.optionText,
       qty: item.qty,
       price: item.price,
+      imageUrl: imageUrl ?? null,
     };
   }
 
@@ -64,6 +65,8 @@ export class OrderMapper {
     order: OrderCache,
     items: OrderItem[],
     customer?: { name: string | null; email: string | null } | null,
+    /** item id → catalogue picture, resolved by the service (PLN-260920 P4). */
+    images?: Map<string, string>,
   ): OrderDetailView {
     return {
       id: String(order.id),
@@ -71,16 +74,19 @@ export class OrderMapper {
       statusInternal: order.statusInternal,
       statusUi: this.uiStatus(order),
       total: order.total,
-      subtotal: order.subtotal,
-      discountTotal: order.discountTotal,
-      shippingTotal: order.shippingTotal,
-      itemQty: order.itemQty,
+      // `?? null` rather than passing the property through: the column is new,
+      // so a row built before it existed reads `undefined`, which JSON drops
+      // from the response entirely. Null is the answer the contract promises.
+      subtotal: order.subtotal ?? null,
+      discountTotal: order.discountTotal ?? null,
+      shippingTotal: order.shippingTotal ?? null,
+      itemQty: order.itemQty ?? null,
       currency: order.currency,
       createdAt: order.createdAt.toISOString(),
       orderedAt: order.orderedAt ? order.orderedAt.toISOString() : null,
       contactName: customer?.name ?? null,
       contactEmail: customer?.email ?? null,
-      items: items.map((i) => this.toItemView(i)),
+      items: items.map((i) => this.toItemView(i, images?.get(String(i.id)) ?? null)),
     };
   }
 }
