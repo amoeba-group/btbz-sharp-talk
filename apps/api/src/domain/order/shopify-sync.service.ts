@@ -344,6 +344,7 @@ export class ShopifySyncService {
             // Shopify webhooks use `title`; some payloads only carry `name`.
             title: (li.title ?? li.name ?? '').slice(0, 255) || 'Item',
             optionText: li.variant_title ? String(li.variant_title).slice(0, 255) : null,
+            imageUrl: li.image_url ? String(li.image_url).slice(0, 1024) : null,
             qty: li.quantity != null && li.quantity > 0 ? li.quantity : 1,
             price,
           });

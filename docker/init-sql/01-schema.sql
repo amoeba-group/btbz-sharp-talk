@@ -1359,6 +1359,7 @@ CREATE TABLE `order_items` (
   `order_id` bigint NOT NULL,
   `product_id` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `image_url` varchar(1024) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `option_text` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `qty` int NOT NULL DEFAULT '1',
   `price` decimal(12,2) DEFAULT NULL,

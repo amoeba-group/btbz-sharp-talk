@@ -509,3 +509,79 @@ describe('ShopifySyncService — order money breakdown', () => {
     expect(saved[0].shippingTotal).toBe(0);
   });
 });
+
+/**
+ * Line items with `read_products` (PLN-260920 §7 follow-up). The order now
+ * reports the variant the shopper bought and its picture — which matters
+ * because the catalogue cache is synced from the tenant's STOREFRONT, and that
+ * is not always the shop the orders came from, so a catalogue join can miss
+ * every line no matter the scope.
+ */
+describe('ShopifySyncService — line item variant and picture', () => {
+  function build() {
+    const savedItems: Record<string, unknown>[] = [];
+    const orderRepo = {
+      findOne: jest.fn().mockResolvedValue(null),
+      find: jest.fn().mockResolvedValue([]),
+      create: jest.fn((x: Partial<OrderCache>) => ({ ...x }) as OrderCache),
+      save: jest.fn(async (x: OrderCache) => ({ ...x, id: 7 })),
+    };
+    const itemRepo = {
+      create: jest.fn((x: Record<string, unknown>) => ({ ...x })),
+      delete: jest.fn().mockResolvedValue(undefined),
+      save: jest.fn(async (rows: Record<string, unknown>[]) => {
+        savedItems.push(...rows);
+        return rows;
+      }),
+    };
+    const svc = new ShopifySyncService(
+      orderRepo as never,
+      itemRepo as never,
+      { fetchOrders: jest.fn() } as never,
+      { getShopifyConnection: jest.fn() } as never,
+      { findOrCreateByEmail: jest.fn().mockResolvedValue({ id: 42 }) } as never,
+      { upsert: jest.fn(), findByName: jest.fn() } as never,
+      { publish: jest.fn(async () => undefined) } as never,
+    );
+    return { svc, savedItems };
+  }
+
+  it('stores the picture and option text the order carried', async () => {
+    const { svc, savedItems } = build();
+
+    await svc.upsertOrder(1, {
+      id: 2001,
+      order_number: 2001,
+      line_items: [
+        {
+          title: 'Ultra Mini Portable Fan',
+          quantity: 1,
+          price: '4.99',
+          product_id: 222,
+          variant_title: 'Burgundy / 6-8',
+          image_url: 'https://cdn.shopify.com/variant.jpg',
+        },
+      ],
+    } as never);
+
+    expect(savedItems[0]).toMatchObject({
+      productId: '222',
+      optionText: 'Burgundy / 6-8',
+      imageUrl: 'https://cdn.shopify.com/variant.jpg',
+    });
+  });
+
+  it('leaves the picture null when the payload has none (webhook path)', async () => {
+    const { svc, savedItems } = build();
+
+    await svc.upsertOrder(1, {
+      id: 2002,
+      order_number: 2002,
+      line_items: [{ title: 'Ski Wax', quantity: 1, price: '24.95' }],
+    } as never);
+
+    // Null, not empty string: the detail route reads it as "fall back to the
+    // catalogue", and '' would look like a picture that failed to load.
+    expect(savedItems[0].imageUrl).toBeNull();
+  });
+});

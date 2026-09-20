@@ -50,6 +50,11 @@ export class OrderMapper {
     };
   }
 
+  /**
+   * `imageUrl` here is the CATALOGUE guess. The line's own picture — stored
+   * when the order carried one — wins: it is the variant the shopper actually
+   * bought, not a lookalike matched by title.
+   */
   static toItemView(item: OrderItem, imageUrl?: string | null): OrderItemView {
     return {
       id: String(item.id),
@@ -57,7 +62,7 @@ export class OrderMapper {
       optionText: item.optionText,
       qty: item.qty,
       price: item.price,
-      imageUrl: imageUrl ?? null,
+      imageUrl: item.imageUrl ?? imageUrl ?? null,
     };
   }
 

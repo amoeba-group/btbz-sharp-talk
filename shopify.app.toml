@@ -18,7 +18,12 @@ embedded = false
 # write_customer_data_erasure is required by customerRequestDataErasure (DSAR
 # propagation). It is not sufficient on its own: the store also demands the staff
 # user hold the "Erase customer data" permission, which no scope can grant.
-scopes = "read_orders,read_customers,read_fulfillments,write_customer_data_erasure"
+# read_products (added 2026-09-20) is what lets an order line report its variant
+# title and picture. Declaring it here is only half the job: a store that
+# installed under the old scope set keeps the old grant until it re-authorises,
+# so the sync negotiates the line-item selection down when the token cannot read
+# it (shopify-admin.client.ts, `fetchOrdersPage`).
+scopes = "read_orders,read_customers,read_fulfillments,read_products,write_customer_data_erasure"
 use_legacy_install_flow = true
 
 [auth]
