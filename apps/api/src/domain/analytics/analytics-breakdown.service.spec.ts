@@ -153,3 +153,33 @@ describe('access funnel rates (PLN-260920)', () => {
     expect(withRates(others).chatRate).toBeCloseTo(1 / 3);
   });
 });
+
+describe('access funnel stays monotonic (FIX after staging read-back)', () => {
+  /**
+   * Mirrors the per-session derivation in `access()`. A conversation proves the
+   * panel was opened, so "opened" is not just the ping.
+   */
+  const openedOf = (opens: number, chat: 0 | 1) => (opens > 0 || chat ? 1 : 0);
+
+  it('counts a session that chatted as opened even with no ping', () => {
+    // The staging read-back that caught this: opens were collected from today,
+    // conversations reach back weeks, and 22/2 printed "Chat rate 1100%".
+    expect(openedOf(0, 1)).toBe(1);
+  });
+
+  it('never lets a stage exceed the one before it', () => {
+    const sessions: Array<{ opens: number; chat: 0 | 1 }> = [
+      { opens: 0, chat: 1 }, // pre-collection session that chatted
+      { opens: 3, chat: 0 }, // opened repeatedly, never spoke
+      { opens: 0, chat: 0 }, // shown only
+    ];
+    const impressions = sessions.length;
+    const openedSessions = sessions.reduce((n, s) => n + openedOf(s.opens, s.chat), 0);
+    const conversations = sessions.reduce((n, s) => n + s.chat, 0);
+
+    expect(impressions).toBeGreaterThanOrEqual(openedSessions);
+    expect(openedSessions).toBeGreaterThanOrEqual(conversations);
+    expect(withRates(Object.assign(emptyAccessRow('k'), { impressions, openedSessions, conversations })).chatRate)
+      .toBeLessThanOrEqual(1);
+  });
+});

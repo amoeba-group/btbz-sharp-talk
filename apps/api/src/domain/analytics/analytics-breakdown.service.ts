@@ -233,8 +233,15 @@ export class AnalyticsBreakdownService {
 
     for (const s of sessions) {
       const opens = Number(s.openCount ?? 0);
-      const opened = opens > 0 ? 1 : 0;
       const chat = chatted.has(Number(s.id)) ? 1 : 0;
+      // A conversation PROVES the panel was opened — you cannot type into a
+      // widget you never opened. Deriving it that way rather than trusting the
+      // open ping alone keeps the funnel monotonic (shown ≥ opened ≥ talked)
+      // in the two cases where the ping is legitimately missing: sessions from
+      // before collection started, and pings dropped in flight (the report is
+      // fire-and-forget by design). Without this the rate divides 22 chats by
+      // 2 recorded opens and prints 1100%.
+      const opened = opens > 0 || chat ? 1 : 0;
       const agentId = s.aiAgentId == null ? null : Number(s.aiAgentId);
 
       addSession(totals, opens, opened, chat);
