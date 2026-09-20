@@ -319,6 +319,9 @@
     // Trigger mode: nothing to draw while closed, so the frame takes no room and
     // cannot intercept clicks on the page beneath it.
     CLOSED = triggerMode ? { w: '0px', h: '0px' } : { w: px, h: px };
+    // The mode and the offset both feed the open box, and both are only known
+    // here — recompute before anything paints with them.
+    recomputeOpen();
     placeFrame();
     checkTrigger();
     if (next.position === 'left') {
@@ -328,8 +331,14 @@
       frame.style.right = '0';
       frame.style.left = 'auto';
     }
-    // Only resize while closed; mid-conversation the panel owns the box.
-    if (frame.style.width !== OPEN.w) {
+    // An open panel keeps the box, but it must still follow the new numbers: a
+    // theme change that moves the dock down makes the frame shorter. (Deciding
+    // "is it open?" by comparing the inline width against OPEN.w could not tell
+    // an open panel from a stale OPEN string, and collapsed it.)
+    if (isOpen) {
+      frame.style.width = OPEN.w;
+      frame.style.height = OPEN.h;
+    } else {
       frame.style.width = CLOSED.w;
       frame.style.height = CLOSED.h;
     }
@@ -342,15 +351,44 @@
   // Must clear the panel's own width plus the gap it holds from the frame edge:
   // the panel is 404px at `right: 20px`, so anything under 424px clips it.
   // (PLN-260817 SI-6 — it was 420px against a 380px panel, with 20px to spare.)
+  //
+  // A docked frame starts `offsetTop` down the page, so it cannot also be a full
+  // `100vh` tall — it hung off the bottom of the window by exactly that offset,
+  // which is what made the panel look unrelated to the window height
+  // (FIX-260920). Reserve the offset, plus enough room under the panel to read
+  // as a gap rather than a cut edge.
+  var DOCK_BOTTOM_GAP = 25;
+  // The panel keeps its own inset inside the frame (WidgetPanel: right-5 /
+  // bottom-5), and that inset is part of the gap the shopper sees — so the frame
+  // only has to reserve the rest of it.
+  var PANEL_GUTTER = 20;
+  var frameSize = { w: 444, h: 680 };
   var OPEN = { w: 'min(444px, 100vw)', h: 'min(680px, 100vh)' };
+  function recomputeOpen() {
+    // Floating keeps its old box exactly: bottom corner, nothing reserved.
+    var reserved = triggerMode
+      ? triggerOffset + Math.max(0, DOCK_BOTTOM_GAP - PANEL_GUTTER)
+      : 0;
+    OPEN = {
+      w: 'min(' + frameSize.w + 'px, 100vw)',
+      h:
+        'min(' +
+        frameSize.h +
+        'px, ' +
+        (reserved > 0 ? 'calc(100vh - ' + reserved + 'px)' : '100vh') +
+        ')',
+    };
+  }
   // Open-panel frame from the widget (PLN-260910 P2): the panel size is a tenant
   // setting, reported with the launcher and cached the same way. Bounded here
   // too — the loader never trusts a number it did not clamp.
   function applyFrame(f) {
     if (!f) return;
-    var w = Math.max(400, Math.min(520, Number(f.w) || 444));
-    var h = Math.max(560, Math.min(840, Number(f.h) || 680));
-    OPEN = { w: 'min(' + w + 'px, 100vw)', h: 'min(' + h + 'px, 100vh)' };
+    frameSize = {
+      w: Math.max(400, Math.min(520, Number(f.w) || 444)),
+      h: Math.max(560, Math.min(840, Number(f.h) || 680)),
+    };
+    recomputeOpen();
   }
   if (launcher && launcher.frame) applyFrame(launcher.frame);
 

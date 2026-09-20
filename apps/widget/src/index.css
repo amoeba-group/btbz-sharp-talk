@@ -25,12 +25,21 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-@media (min-width: 640px) {
-  .ivy-panel-desktop {
-    width: var(--ivy-panel-w, 404px);
-    height: var(--ivy-panel-h, 600px);
-    border-radius: var(--ivy-radius, 12px);
-  }
+/* The card geometry, deliberately NOT behind a width media query (FIX-260920).
+   Inside the loader's iframe the viewport IS the frame — 420px for a 380px
+   panel, and never more than 520px for the largest panel a tenant can set — so
+   `@media (min-width: 640px)` never matched on a real storefront and every
+   embed rendered the mobile sheet: full bleed, square corners, panel size
+   ignored. The one side that knows the page's real width is the loader, and it
+   already says so with `?compact=1`; WidgetPanel picks the layout from that.
+
+   The viewport clamps keep the panel inside whatever box the loader gave it:
+   the docked frame is shortened by the header offset, so the configured height
+   can exceed the room available and would otherwise clip the composer. */
+.ivy-panel-desktop {
+  width: min(var(--ivy-panel-w, 404px), calc(100vw - 20px));
+  height: min(var(--ivy-panel-h, 600px), calc(100vh - 20px));
+  border-radius: var(--ivy-radius, 12px);
 }
 
 /* thin scrollbar for chat/lists */

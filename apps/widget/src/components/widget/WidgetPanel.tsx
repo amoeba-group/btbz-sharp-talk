@@ -52,6 +52,8 @@ export function WidgetPanel() {
   const triggerMode = resolveLauncher(theme).mode === 'trigger' && !isAppMode() && !triggerUnavailable;
   const compact = new URLSearchParams(window.location.search).get('compact') === '1';
   const showClose = !triggerMode || compact;
+  // A phone-sized page gets the bottom sheet; a host app gets the whole screen.
+  const fullBleed = compact || isAppMode();
   // A greeting names the customer, so it wins over the brand mark: the shopper
   // being addressed matters more than the logo at that moment.
   const logo = theme?.logo && !customerName ? logoUrl(theme.logo) : null;
@@ -85,19 +87,29 @@ export function WidgetPanel() {
       className={[
         // st-* classes are the stable hooks tenant custom CSS may target (P5).
         'st-panel flex flex-col overflow-hidden bg-white shadow-lg focus:outline-none',
-        // mobile: full-width bottom sheet; desktop: floating card
-        'fixed inset-x-0 bottom-0 top-0 rounded-none',
-        // In app mode the host app owns the whole screen, so the panel always
-        // fills it — the sm: floating card left a landscape phone showing the
-        // chat pinned to the right half of a blank page (found on-device,
-        // FIX-260828).
-        ...(isAppMode()
-          ? []
-          // Size and corners come from the design tokens (ivy-panel-desktop in
-          // index.css) so a tenant's panel size reaches the panel and the loader alike.
+        // Full bleed or floating card — ONE of the two, never both: these are
+        // plain utilities now (no `sm:`), so leaving the sheet's insets in place
+        // would have them fight the card's on stylesheet order rather than on
+        // intent.
+        //
+        // Which one is not a question about this document's width: inside the
+        // loader's iframe that is always the frame (FIX-260920). It is a question
+        // about the PAGE, which only the loader can see — it tells us with
+        // `?compact=1`. In app mode the host owns the whole screen, so the panel
+        // always fills it (a landscape phone had the chat pinned to the right
+        // half of a blank page, FIX-260828).
+        //
+        // Size and corners come from the design tokens (.ivy-panel-desktop in
+        // index.css) so a tenant's panel size reaches the panel and the loader alike.
+        fullBleed
+          ? 'fixed inset-x-0 bottom-0 top-0 rounded-none'
           : triggerMode
-            ? ['sm:inset-auto sm:top-0 sm:right-5 sm:bottom-auto ivy-panel-desktop']
-            : ['sm:inset-auto sm:bottom-24 sm:right-5 sm:top-auto ivy-panel-desktop']),
+            ? 'fixed inset-auto top-0 right-5 ivy-panel-desktop'
+            // 20px above the frame's bottom edge, not 96: the launcher is not
+            // drawn while the panel is open, and the frame only reserves 80px
+            // there (PANEL_FRAME_PAD.h) — at 96 the panel overflowed its own
+            // frame and lost 16px off the top.
+            : 'fixed inset-auto bottom-5 right-5 ivy-panel-desktop',
       ].join(' ')}
       role="dialog"
       aria-modal="true"
