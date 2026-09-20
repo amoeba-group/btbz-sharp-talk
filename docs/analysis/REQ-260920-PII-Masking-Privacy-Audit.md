@@ -12,7 +12,7 @@
 고객 PII는 DB에서 AES-256-GCM으로 암호화되지만 TypeORM 트랜스포머가 읽을 때 복호화하므로,
 API 응답과 콘솔 화면에는 평문 그대로 나온다. 마스킹·열람 감사·열람 권한 분리가 세 축으로 비어 있다.
 
-발견 8건 중 P0 3건(평문 반환·열람 무감사·라이브챗 검색 우회), P1 3건, P2 2건이다. 상세는 §3.
+발견 10건 중 P0 3건(평문 반환·열람 무감사·라이브챗 검색 우회), P1 4건, P2 3건이다. 상세는 §3.
 
 ## 1. 실측 AS-IS — 고객 페이지
 
@@ -36,17 +36,28 @@ API 응답과 콘솔 화면에는 평문 그대로 나온다. 마스킹·열람 
 고객(정보주체) PII가 나타나는 화면만 추린 것이다. 임직원 계정 이메일(`/users`, `/admin/admins`)은
 계정 관리에 필요한 범위라 대상에서 제외했다.
 
-| 라우트 | 화면 파일 | 노출 PII | 출처 API | 현재 마스킹 |
-|---|---|---|---|---|
-| `/customers` | `customers/CustomersPage.tsx` | 이름, 이메일 (전화는 응답에만) | `GET /customers` | 없음 |
-| `/live-chat` | `live-chat/LiveChatPage.tsx` | 세션 고객명, 고객 패널(이름·이메일·전화·최근 주문), 리드 등록 입력 | `GET /agent/customers/search`, 고객 컨텍스트 | 없음 |
-| `/live-chat` 그룹 | `live-chat/Group*.tsx` | 고객명(별칭 우선) | 세션 목록 | 없음(별칭이 있으면 대체) |
-| `/history` | `history/HistoryPage.tsx`, `ConversationTranscript.tsx` | 고객명, **대화 원문 전체**(본문에 이메일·주소·주문번호가 섞일 수 있음) | 대화 이력 | 없음(설계상 평문 — §4) |
-| `/statistics` | `statistics/CsatSection.tsx` | 만족도 응답자 고객명 | 통계 | 없음 |
-| `/issues` | `live-chat/IssuePanel.tsx` 외 | 담당자·요청자 표기(주로 임직원) | 이슈 | 해당 없음 |
-| `/orders` | `orders/OrdersPage.tsx` | **없음**(주문번호·금액·상태만) | `GET /admin/orders` | 해당 없음 |
-| `/reviews`·`/campaigns`·`/products` | — | 고객 식별자 미표시(실측) | — | 해당 없음 |
-| `/admin/audit` | `admin/AuditPage.tsx` | 감사 대상 이메일 | `GET /audit` | **마스킹됨**(`de*@amoeba.group` 실측) |
+| 라우트 · 영역 | 노출 PII | 출처 | 현재 상태 |
+|---|---|---|---|
+| `/customers` | 이름, 이메일 (전화는 응답에만) | `GET /customers` | 마스킹 없음, 감사 없음 |
+| `/live-chat` 세션 목록 | 고객명·이메일(별칭 없을 때 라벨) | `GET /agent/sessions` | 마스킹 없음 |
+| `/live-chat` 대화 본문 | 메시지 원문, 발신자명, 첨부 파일 | `GET /agent/conversations/:id` | 마스킹 없음, **열람 감사 있음** |
+| `/live-chat` 고객 패널 | 이름·이메일·전화·최근 주문 | 대화 응답의 `customer` | 마스킹 없음 |
+| `/live-chat` 고객 검색 모달 | 이름·이메일·전화(검색 결과 전건) | `GET /agent/customers/search` | 마스킹 없음, 감사 없음, **스태프 접근 가능** |
+| `/live-chat` 고객 생성(리드) | 이름·이메일·전화 입력 | `POST …/create-customer` | 해당 없음(입력) |
+| `/live-chat` 에스컬레이션 알림 | 메시지 미리보기 | `GET /agent/alerts` | 마스킹 없음, 보존 미연결 |
+| `/live-chat` 내부 코멘트·브리핑 | 상담원 메모, AI 요약(고객 정보 재진술 가능) | 코멘트·브리핑 API | 마스킹 없음 |
+| `/issues` 보드·미리보기 | 세션 별칭, 메시지 미리보기, 최근 10건 원문 | 이슈 보드 · 대화 API | 열람 감사 있음 |
+| `/history` 목록·전문 | 고객명, 대화 원문 전체, 본문 검색 | `GET /analytics/conversations` | 열람 감사 있음(`agent.transcript_viewed`), 마스킹 없음 |
+| `/statistics` 만족도 | 응답자 고객명 | `GET /agent/csat/conversations` | 마스킹 없음 |
+| `/statistics` 여정 리포트 | **대화 원문 인용 + "연락처" 섹션** | `journey` 모듈 | 마스킹 없음, **AI 전송 시 스크러빙 없음**(F-09) |
+| `/knowledge` | 상담 내용을 KB로 담는 경로가 있어 본문에 PII가 섞일 수 있음 | 지식 캡처·문서 | 수집·표시 시 검사 없음(F-10) |
+| `/reviews` | `customerId`(숫자)와 리뷰 본문 | `GET /reviews` | 식별자는 비공개 대상 아님 |
+| `/orders` | **없음**(주문번호·금액·상태) | `GET /admin/orders` | 해당 없음 |
+| `/admin/audit` · `/work-log` | 감사 대상 이메일(마스킹됨), **행위자 IP 평문** | `GET /audit` | 부분 충족 |
+| `/users` · `/admin/*` 계정 화면 | 임직원 이메일, 1회성 임시 비밀번호 | 사용자 관리 | 대상 외(계정 관리 목적) |
+
+첨부 파일: 고객이 채팅으로 올린 이미지·문서는 서명 URL로 원본 그대로 열람·다운로드된다(내용 검사 없음).
+고객 본인 DSAR 내보내기(`GET /privacy/export`)는 설계상 평문이며 정상이다.
 
 내보내기(CSV/XLSX/PDF): 고객 데이터 내보내기는 **존재하지 않는다**. 지식 KB 내보내기와 위젯 디자인
 패키지 내보내기만 있고 둘 다 고객 PII를 담지 않는다(실측 grep).
@@ -70,6 +81,8 @@ API 응답과 콘솔 화면에는 평문 그대로 나온다. 마스킹·열람 
 | F-06 | `moderation_logs.excerpt`(최대 512자 대화 원문)·`agent_alerts.preview`가 평문 보존, 보존 주기 미연결 | `moderation.service.ts:190` · 데이터 인벤토리 G-1~G-7 | PRV-004 | P1 |
 | F-07 | 감사 메타데이터에 원문 이메일을 쓰는 경로 1곳 | `knowledge/gdrive-credential.service.ts:71` | PRV-005 "never raw PII" | P2 |
 | F-08 | 프로덕션 `MFA_ENFORCE_FROM`이 비어 있음(강제 미적용) | 서버 `.env.self-hosted` 실측 | PCB-04 | P2 |
+| F-09 | **여정 리포트가 대화 원문을 스크러빙 없이 AI 제공자에 전송**하고, 결과에 "연락처" 섹션을 만들어 콘솔에 표시 | `journey-report.service.ts:288-292`(원문 `m.body` 그대로) · `journey-prompt.ts:26-31` · 다른 AI 경로는 `scrubPii` 적용 | PRV-002, PRV-031 | P1 |
+| F-10 | 상담 내용을 지식 문서로 담는 경로가 있어 KB 본문·KB 내보내기(CSV/XLSX)에 고객 PII가 섞일 수 있음 | `KnowledgeCaptureModal.tsx` · `bulk-export.service.ts`(`content` 칼럼) | PRV-002 | P2 |
 
 ### 이미 충족된 항목 (재확인)
 

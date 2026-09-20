@@ -31,11 +31,13 @@
 | 인프라 | nginx 로그 포맷에서 쿼리스트링 제거(`$uri`), 스테이징·프로덕션 동시 적용 |
 | API | `gdrive-credential.service.ts:71` 감사 메타데이터 `maskPii` 적용 |
 
-### P4 — 보존·최소화 확장 (F-06)
+### P4 — AI 전송·보존 최소화 (F-06·F-09·F-10)
 | 층 | 변경 |
 |---|---|
+| API | **여정 리포트 샘플에 `scrubPii` 적용** — 다른 AI 경로는 이미 적용돼 있는데 이 경로만 원문이 나간다(`journey-report.service.ts:288-292`). 인용은 스크러빙된 문장으로 생성 |
 | API | `moderation_logs.excerpt`·`agent_alerts.preview`를 보존 파기 대상에 추가(대화와 동일 창) |
 | API | 신규 excerpt 저장 시 `scrubPii` 적용(모더레이션 판정은 원문으로, 저장본만 최소화) |
+| 콘솔 | 상담 내용을 지식 문서로 담을 때 PII 감지 경고 + 스크러빙 버튼(F-10) |
 | 문서 | 데이터 인벤토리 G-1~G-7 갱신 |
 
 ### P5 — 운영·문서 (F-08, PCB-08)
