@@ -2,6 +2,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { statisticsService } from './statistics.service';
 import type {
   AccessBreakdown,
+  JourneyStages,
   AgentRow,
   ChannelRow,
   CsatListParams,
@@ -61,6 +62,15 @@ const keepWithinTenant =
   <T,>(tenantKey: unknown) =>
   (previous: T | undefined, previousQuery?: { queryKey: readonly unknown[] }): T | undefined =>
     previousQuery?.queryKey?.[1] === tenantKey ? previous : undefined;
+
+export const useJourneyStats = (from: string, to: string) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['stats-journey', tenantKey, from, to],
+    queryFn: () => statisticsService.journey(from, to),
+    placeholderData: keepWithinTenant<JourneyStages>(tenantKey),
+  });
+};
 
 export const useAccessStats = (from: string, to: string) => {
   const tenantKey = useTenantKey();

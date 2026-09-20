@@ -6,5 +6,21 @@
   "conversations": "会話数",
   "comingSoon": "準備中",
   "integrationStatus": "連携ステータス",
-  "noIntegrations": "連携が設定されていません。"
+  "noIntegrations": "連携が設定されていません。",
+  "journey": {
+    "title": "テナント別カスタマージャーニー",
+    "tenant": "テナント",
+    "impressions": "表示",
+    "access": "接続",
+    "conversations": "会話",
+    "aiHandled": "エージェント",
+    "escalated": "引き継ぎ",
+    "rated": "評価",
+    "ended": "終了",
+    "empty": "この期間の活動はありません。",
+    "activeHint": "期間内に表示または会話があったテナント",
+    "funnelNote": "表示→接続→会話は入れ子で、後の4つは会話を分母とする割合です。",
+    "collectionNote": "表示・接続は 2026-09-20 から収集します。",
+    "privacyNote": "集計値のみを表示し、会話内容と顧客情報は含みません。"
+  }
 }

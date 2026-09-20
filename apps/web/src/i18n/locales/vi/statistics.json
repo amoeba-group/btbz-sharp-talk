@@ -34,7 +34,8 @@
     "agents": "Nhân viên",
     "resolution": "Kết quả",
     "hours": "Khung giờ",
-    "access": "Truy cập"
+    "access": "Truy cập",
+    "journey": "Hành trình"
   },
   "csat": {
     "avgTitle": "Điểm trung bình",
@@ -142,5 +143,22 @@
     "appModeNote": "Chế độ ứng dụng (WebView) mở sẵn bảng nên hiển thị bằng truy cập.",
     "empty": "Không có lượt hiển thị trong khoảng này.",
     "noPaths": "Chưa thu thập được đường dẫn nào."
+  },
+  "journey": {
+    "title": "Thứ tự khách hàng đã đi qua",
+    "subtitle": "Ba mục đầu lồng vào nhau. Bốn mục sau không loại trừ nhau; mẫu số là hội thoại.",
+    "impressions": "Hiển thị",
+    "access": "Truy cập",
+    "conversations": "Hội thoại",
+    "openRate": "Tỷ lệ mở",
+    "chatRate": "Tỷ lệ hội thoại",
+    "ofConversations": "{{count}} hội thoại đã diễn ra như sau",
+    "aiHandled": "Nhân viên AI trả lời",
+    "escalated": "Chuyển nhân viên",
+    "rated": "Được đánh giá",
+    "ended": "Đã kết thúc",
+    "details": "Chi tiết",
+    "notExclusive": "Hội thoại đã chuyển vẫn được đánh giá và kết thúc — tổng có thể vượt số hội thoại.",
+    "collectionNote": "Hiển thị và truy cập được thu thập từ 2026-09-20; khoảng trước đó bắt đầu từ hội thoại."
   }
 }

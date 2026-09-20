@@ -6,5 +6,21 @@
   "conversations": "Conversations",
   "comingSoon": "coming soon",
   "integrationStatus": "Integration status",
-  "noIntegrations": "No integrations configured."
+  "noIntegrations": "No integrations configured.",
+  "journey": {
+    "title": "Customer journey by tenant",
+    "tenant": "Tenant",
+    "impressions": "Impressions",
+    "access": "Access",
+    "conversations": "Conversations",
+    "aiHandled": "Agent",
+    "escalated": "Escalated",
+    "rated": "Rated",
+    "ended": "Ended",
+    "empty": "No activity in this range.",
+    "activeHint": "Tenants with impressions or conversations in range",
+    "funnelNote": "Impressions → access → conversations nest; the last four are shares of conversations.",
+    "collectionNote": "Impressions and access are collected from 2026-09-20.",
+    "privacyNote": "Aggregate counts only — no conversation content and no customer information."
+  }
 }

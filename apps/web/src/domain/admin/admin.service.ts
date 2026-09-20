@@ -99,7 +99,25 @@ export interface AuditEntry {
   createdAt?: string;
 }
 
+/** Per-tenant journey stages for the platform console (PLN-260920b). */
+export interface TenantJourneyRow {
+  tenantId: number;
+  name: string;
+  slug: string | null;
+  impressions: number;
+  opens: number;
+  openedSessions: number;
+  conversations: number;
+  aiHandled: number;
+  escalated: number;
+  rated: number;
+  ended: number;
+}
+
 export const adminService = {
+  tenantJourney: (from: string, to: string) =>
+    apiGet<TenantJourneyRow[]>('/analytics/admin/tenants', { from, to }),
+
   tenants: (params: { page: number; pageSize: number }) =>
     apiGetList<Tenant>('/tenants', { page: params.page, size: params.pageSize }),
   tenant: (uuid: string) => apiGet<Tenant>(`/tenants/${uuid}`),

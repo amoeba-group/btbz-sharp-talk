@@ -36,5 +36,13 @@
     "range": "{{from}}–{{to}} trên {{total}}",
     "pageOf": "{{page}} / {{totalPages}}"
   },
-  "help": "Trợ giúp"
+  "help": "Trợ giúp",
+  "range": {
+    "d7": "7 ngày qua",
+    "d30": "30 ngày qua",
+    "d90": "90 ngày qua",
+    "custom": "Tùy chọn",
+    "from": "Từ",
+    "to": "Đến"
+  }
 }
