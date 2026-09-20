@@ -41,9 +41,36 @@
 
 | 환경 | 상태 |
 |---|---|
-| 스테이징 `shoptalk.amoeba.site` | **배포 완료** — main `573471e`, api/web/widget/nginx 재기동, 실측 검증 완료(TCR §2) |
-| 호스트 nginx(공용 TLS 종단) | shoptalk·sharptalk vhost에 쿼리 없는 로그 포맷 적용, 백업 `/root/nginx-bak-*.20260920-114517`, 다른 사이트 영향 없음 |
-| 프로덕션 `sharptalk.amoeba.site` | **코드 미배포**(브랜치 `production`). DB 변경이 없어 언제든 배포 가능 — 지시 대기 |
+| 스테이징 `shoptalk.amoeba.site` | **배포 완료**(2026-09-20 02:3x UTC) — main `573471e` → 실측 검증 완료(TCR §2) |
+| 프로덕션 `sharptalk.amoeba.site` | **배포 완료**(2026-09-20 02:55 UTC) — `production` 브랜치를 main `041ac8b`로 승격, `deploy-self-hosted.sh` |
+| 호스트 nginx(공용 TLS 종단) | shoptalk·sharptalk vhost 모두 쿼리 없는 로그 포맷, 백업 `/root/nginx-bak-*.20260920-114517`, 다른 사이트 영향 없음 |
+
+### 프로덕션 배포 절차·검증
+```
+백업      scripts/backup-self-hosted.sh ~/backups/sharptalk-production/20260920-0253  (db 610KB)
+승격      git push origin main:production   (fast-forward, 4 커밋)
+마이그레이션 MYSQL_CONTAINER=sharptalk_mysql check-migrations.sh → OK(80건 적용, 추가분 없음)
+배포      scripts/deploy-self-hosted.sh → api/web/widget 재생성, api healthy
+nginx     바인드 마운트 반영 위해 컨테이너 강제 재생성
+```
+
+| 검증 | 결과 |
+|---|---|
+| `/api/v1/health`, 콘솔, 위젯 | 200 / 200 / 200 |
+| `GET /customers/:id/reveal`(무인증) | **401** — 배포됨(404였다면 미배포) |
+| `POST /customers/search`(무인증) | **401** — 배포됨 |
+| 컨테이너 이미지 | `apps/api/dist`에 `customer.pii_revealed`·`pii-display.util.js` 포함, 웹 번들에 열람 문구 포함 |
+| 접근 로그(컨테이너·호스트) | 쿼리스트링 0건 |
+| 위젯 `session/ensure`(ivyusa.myshopify.com) | ok, 탭 구성 정상 |
+| API 오류 로그 | 없음 |
+
+이번 승격에는 다른 세션의 통계 작업(#546 어드민 테넌트별 통계·7단 여정)도 함께 실렸다.
+스키마 변경이 없어 추가 SQL은 필요하지 않았다.
+
+**프로덕션 데이터 레벨 확인은 보류.** `dev@amoeba.group` 계정이 아직 최초 로그인
+비밀번호 변경 상태(E1005)라 인증이 필요한 응답을 확인하지 못했다. 비밀번호 변경은
+사용자가 직접 해야 하는 일이므로, 변경 후 콘솔 `/customers`에서 마스킹과 눈 아이콘을
+확인하면 된다. 코드·라우트·로그 레벨 검증은 위 표대로 끝났다.
 
 ## 4. 배포 중 발견하고 고친 것
 
@@ -59,7 +86,7 @@
 
 | 항목 | 성격 |
 |---|---|
-| 프로덕션 코드 배포 | 지시 대기(스키마 변경 없음) |
+| 프로덕션 콘솔 최초 로그인 비밀번호 변경 | 사용자 — 변경해야 데이터 레벨 확인 가능 |
 | 콘솔 화면 육안 확인(눈 아이콘·토스트) | 콘솔 로그인이 비밀번호 입력을 요구해 자동 확인 불가 — 사용자 확인 필요 |
 | 수탁사 DPA·SCC 확인(PCB-01) | 계약·법무 |
 | 프로덕션 `MFA_ENFORCE_FROM` 설정(PCB-04) | 운영 결정 — 현재 비어 있음 |
