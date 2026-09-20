@@ -13,6 +13,22 @@ export const useCustomers = (params: CustomerListParams) => {
   });
 };
 
+/**
+ * Fetch one customer's real contact details.
+ *
+ * Not a react-query cache entry on purpose: a revealed record is a
+ * time-limited view the operator asked for, not shared state to keep warm.
+ * The caller holds it for a few minutes and drops it.
+ */
+export function useRevealCustomer() {
+  return useMutation({
+    mutationFn: (id: number) => customersService.reveal(id),
+    onError: (e: Error) => {
+      toast.error(e.message || 'Failed to reveal customer details.');
+    },
+  });
+}
+
 export function useUpdateTier() {
   const qc = useQueryClient();
   const tenantKey = useTenantKey();

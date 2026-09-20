@@ -29,6 +29,8 @@ import {
 } from '../customer/customer.service';
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
 import { AuditService } from '../audit/audit.service';
+import { maskPii } from '../../global/util/pii.util';
+import { maskEmail, maskName, maskPhone } from '../../global/util/pii-display.util';
 import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { EventBusService, EVENTS, MailerService } from '../../infrastructure/infrastructure.module';
 import { RedisService } from '../../infrastructure/cache/redis.service';
@@ -1238,26 +1240,70 @@ export class AgentService {
     return user?.name ?? null;
   }
 
+  /**
+   * Mask a customer panel before it leaves for the console (PLN-260920).
+   *
+   * The panel is the one place an agent sees contact details while working, so
+   * it keeps the shape of the values (first letter, domain, last four digits)
+   * and nothing that reaches the person. `revealCustomer` returns the full
+   * record when an agent explicitly asks, and writes an audit row for it.
+   */
+  private maskContext(ctx: CustomerContext): CustomerContext {
+    return {
+      ...ctx,
+      name: maskName(ctx.name),
+      email: maskEmail(ctx.email),
+      phone: maskPhone(ctx.phone),
+      masked: true,
+    };
+  }
+
   /** Customer context for the console panel, via conversation -> session -> customer. */
   async customerContext(conversationId: number, tenantId: number): Promise<CustomerContext | null> {
     const conversation = await this.convRepo.findOne({ where: { id: conversationId, tenantId } });
     if (!conversation) return null;
     const session = await this.sessionRepo.findOne({ where: { id: conversation.sessionId } });
     if (!session?.customerId) return null;
-    return this.customerService.getContext(tenantId, session.customerId);
+    return this.maskContext(await this.customerService.getContext(tenantId, session.customerId));
+  }
+
+  /**
+   * The unmasked customer panel. Reachable only with CUSTOMER_PII_REVEAL, and
+   * every call leaves a `customer.pii_revealed` row behind — that audit trail
+   * is the control, the capability only decides who can trigger it.
+   */
+  async revealCustomer(
+    tenantId: number,
+    customerId: number,
+    actorUserId: number,
+  ): Promise<CustomerContext> {
+    const ctx = await this.customerService.getContext(tenantId, customerId);
+    await this.audit.write({
+      tenantId,
+      actorType: 'user',
+      actorId: actorUserId,
+      action: 'customer.pii_revealed',
+      target: `customer:${customerId}`,
+      // Masked even here: an audit row records THAT contact details were read,
+      // never the details themselves (audit-log.entity: never raw PII).
+      metadata: { email: maskPii(ctx.email) },
+    });
+    return { ...ctx, masked: false };
   }
 
   /** Suggest existing customers to link to the current chat. */
   async searchCustomers(tenantId: number, query: string): Promise<CustomerContext[]> {
     const customers = await this.customerService.searchByEmailOrName(tenantId, query);
-    return customers.map((c) => ({
-      id: c.id,
-      name: c.name,
-      email: c.email,
-      phone: c.phone,
-      tier: c.tier,
-      recentOrders: [],
-    }));
+    return customers.map((c) =>
+      this.maskContext({
+        id: c.id,
+        name: c.name,
+        email: c.email,
+        phone: c.phone,
+        tier: c.tier,
+        recentOrders: [],
+      }),
+    );
   }
 
   /** Link the conversation's session to an existing customer (tenant-checked). */
@@ -1271,7 +1317,7 @@ export class AgentService {
     await this.customerService.findById(tenantId, customerId);
     await this.sessionRepo.update({ id: conversation.sessionId }, { customerId });
     await this.invalidateSessionCache(conversation.sessionId);
-    return this.customerService.getContext(tenantId, customerId);
+    return this.maskContext(await this.customerService.getContext(tenantId, customerId));
   }
 
   /** Create a new customer from chat-collected fields and link it to the session. */
@@ -1284,7 +1330,7 @@ export class AgentService {
     const customer = await this.customerService.createFromLead(tenantId, lead);
     await this.sessionRepo.update({ id: conversation.sessionId }, { customerId: customer.id });
     await this.invalidateSessionCache(conversation.sessionId);
-    return this.customerService.getContext(tenantId, customer.id);
+    return this.maskContext(await this.customerService.getContext(tenantId, customer.id));
   }
 
   /** End a conversation and release the active assignment. */
@@ -1590,7 +1636,7 @@ export class AgentService {
           id: Number(c.id),
           sessionId: String(c.sessionId),
           alias: states.get(String(c.sessionId))?.alias ?? null,
-          customerName: contacts.get(String(c.id))?.name ?? null,
+          customerName: maskName(contacts.get(String(c.id))?.name ?? null),
           agentId: attributed != null ? Number(attributed) : null,
           agentName: attributed != null ? (nameById.get(String(attributed)) ?? null) : null,
           channel: c.channel || 'widget',

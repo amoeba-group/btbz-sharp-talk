@@ -11,5 +11,9 @@
   "editTierTitle": "Edit customer tier",
   "tierFor": "Tier for {{name}}",
   "searchPlaceholder": "Search by name or email",
-  "empty": "No customers found."
+  "empty": "No customers found.",
+  "reveal": "Show full details",
+  "revealAudited": "Contact details revealed. This read is recorded in the audit log.",
+  "maskedHint": "Customer identifiers are masked. Master and director accounts can reveal them.",
+  "maskedHintWithReveal": "Customer identifiers are masked. Revealing one shows it for 5 minutes and is recorded in the audit log."
 }

@@ -9,6 +9,7 @@ import { ChatComment } from './entity/chat-comment.entity';
 import { ConversationBriefing } from './entity/conversation-briefing.entity';
 import { ChatGroup } from './entity/chat-group.entity';
 import { GroupMemberView } from './chat-group.service';
+import { maskEmail, maskName } from '../../global/util/pii-display.util';
 
 /** Escalation alert row for the console alarm modal (FR-S3). */
 export function toAlertResponse(a: AgentAlert) {
@@ -56,9 +57,12 @@ export function toSessionResponse(
     pinned: c.pinnedAt != null,
     pinnedAt: c.pinnedAt ?? null,
     escalated: c.escalated === 1,
-    customerName: contact.name,
+    // Masked: the queue only has to let an agent tell two shoppers apart, and
+    // it is on screen all day in a shared room (PLN-260920). The full value is
+    // one audited reveal away in the customer panel.
+    customerName: maskName(contact.name),
     // Fallback identity for a shopper who only ever left an address.
-    customerEmail: contact.email,
+    customerEmail: maskEmail(contact.email),
     lastMessagePreview: lastMessage ? lastMessage.body.slice(0, 140) : null,
     lastMessageAt: lastMessage?.createdAt ?? null,
     createdAt: c.createdAt,
@@ -106,7 +110,7 @@ export function toGroupDetailResponse(g: ChatGroup, members: GroupMemberView[]) 
     members: members.map((m) => ({
       sessionId: String(m.sessionId),
       alias: m.alias,
-      customerName: m.customerName,
+      customerName: maskName(m.customerName),
       channel: m.channel,
       receiveOnly: m.receiveOnly,
       targetConversationId: m.targetConversationId != null ? String(m.targetConversationId) : null,

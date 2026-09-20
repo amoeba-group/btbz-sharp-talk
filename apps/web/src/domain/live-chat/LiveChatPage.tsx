@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Send,
@@ -18,6 +18,7 @@ import {
   Languages,
   Pin,
   Reply,
+  Eye,
   X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -49,6 +50,7 @@ import {
   useTranslateMessage,
 } from './live-chat.hooks';
 import { useUsers } from '@/domain/users/users.hooks';
+import { makeCan } from '@/lib/rbac';
 import { BriefingCard } from './BriefingCard';
 import { JourneyPanel } from '../journey/JourneyPanel';
 import { CommentCard } from './CommentCard';
@@ -302,6 +304,37 @@ export function LiveChatPage() {
     .reverse()
     .find((m) => m.senderType === 'user')?.body;
   const { link, create } = useCustomerActions(selected);
+
+  /**
+   * Revealed customer panel (PLN-260920).
+   *
+   * Kept in component state and cleared whenever the agent moves to another
+   * conversation: a reveal is a deliberate, audited act for the customer in
+   * front of you, not a mode the console stays in.
+   */
+  const [revealedCustomer, setRevealedCustomer] = useState<CustomerContext | null>(null);
+  const [revealingCustomer, setRevealingCustomer] = useState(false);
+  const canRevealCustomer = useMemo(
+    () => makeCan(principal)('customer_pii_reveal'),
+    [principal],
+  );
+  useEffect(() => {
+    setRevealedCustomer(null);
+  }, [selected]);
+  const customerPanel: CustomerContext = revealedCustomer ?? convo?.customer ?? {};
+  const onRevealCustomer = async () => {
+    const id = convo?.customer?.id;
+    if (id == null) return;
+    setRevealingCustomer(true);
+    try {
+      setRevealedCustomer(await liveChatService.revealCustomer(id));
+      toast.success(t('revealAudited'));
+    } catch (e) {
+      toast.error((e as Error).message || t('revealFailed'));
+    } finally {
+      setRevealingCustomer(false);
+    }
+  };
 
   // Customer match / create modals (FR-057).
   const [matchOpen, setMatchOpen] = useState(false);
@@ -1348,9 +1381,9 @@ export function LiveChatPage() {
             </div>
             {convo?.customer ? (
               <dl className="space-y-2 text-sm">
-                <Row label={t('name')} value={convo.customer.name} />
-                <Row label={t('email')} value={convo.customer.email} />
-                <Row label={t('phone')} value={convo.customer.phone} />
+                <Row label={t('name')} value={customerPanel.name} />
+                <Row label={t('email')} value={customerPanel.email} />
+                <Row label={t('phone')} value={customerPanel.phone} />
                 <div className="flex items-center justify-between">
                   <dt className="text-gray-500">{t('tier')}</dt>
                   <dd>{convo.customer.tier ? <Badge tone="primary">{convo.customer.tier}</Badge> : '—'}</dd>
@@ -1358,6 +1391,20 @@ export function LiveChatPage() {
               </dl>
             ) : (
               <p className="text-sm text-gray-400">{t('noCustomerContext')}</p>
+            )}
+            {convo?.customer && canRevealCustomer && customerPanel.masked !== false && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="mt-2"
+                disabled={revealingCustomer}
+                onClick={() => void onRevealCustomer()}
+              >
+                <Eye className="h-4 w-4" /> {t('revealCustomer')}
+              </Button>
+            )}
+            {convo?.customer && customerPanel.masked === false && (
+              <p className="mt-2 text-xs text-gray-500">{t('revealedNotice')}</p>
             )}
             {selected && (
               <div className="mt-3 flex flex-col gap-2">

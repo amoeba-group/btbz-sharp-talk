@@ -44,9 +44,14 @@ describe('CustomerService.findOrCreateByEmail (duplicate prevention)', () => {
     rows = [];
     customerRepo = makeRepo();
     // Suppression stub: these tests cover dedup, not erasure — nothing suppressed.
-    svc = new CustomerService(customerRepo, {} as Repository<OrderCache>, {
-      isSuppressed: async () => false,
-    } as unknown as ErasureSuppressionService);
+    svc = new CustomerService(
+      customerRepo,
+      {} as Repository<OrderCache>,
+      {
+        isSuppressed: async () => false,
+      } as unknown as ErasureSuppressionService,
+      { write: jest.fn(async () => undefined) } as never,
+    );
   });
 
   it('adopts the email-less proxy-created row instead of creating a duplicate', async () => {

@@ -32,6 +32,8 @@ import { PrivacyService } from './privacy.service';
 import { RetentionService } from './retention.service';
 import { ErasureSuppressionModule } from './erasure-suppression.module';
 import { PrivacyController, ShopifyComplianceController } from './privacy.controller';
+import { ModerationLog } from '../moderation/entity/moderation-log.entity';
+import { AgentAlert } from '../agent/entity/agent-alert.entity';
 
 /**
  * Privacy / consumer-rights module: Shopify GDPR webhooks (audit High-2) and
@@ -63,6 +65,8 @@ import { PrivacyController, ShopifyComplianceController } from './privacy.contro
       AiUsageDaily,
       Campaign,
       Tenant,
+      ModerationLog,
+      AgentAlert,
     ]),
     AuditModule,
     ErasureSuppressionModule,

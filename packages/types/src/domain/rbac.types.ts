@@ -42,6 +42,15 @@ export const CAPABILITY = {
   MODULE_ACCOUNTING: 'module.accounting',
   MODULE_OPERATIONS: 'module.operations',
   CUSTOMER_MANAGE: 'customer.manage',
+  /**
+   * See a customer's UNMASKED name/email/phone (FIX/PLN-260920).
+   *
+   * Deliberately separate from CUSTOMER_MANAGE: managing a customer (tier,
+   * display name) is day-to-day work, reading their contact details is a
+   * privacy event that has to be logged and held by fewer people. Every grant
+   * of this capability produces `customer.pii_revealed` audit rows.
+   */
+  CUSTOMER_PII_REVEAL: 'customer.pii_reveal',
 } as const;
 export type Capability = (typeof CAPABILITY)[keyof typeof CAPABILITY];
 

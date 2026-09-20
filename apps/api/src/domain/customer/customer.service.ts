@@ -8,6 +8,8 @@ import { CustomerOrderStats } from './customer.mapper';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { ErasureSuppressionService } from '../privacy/erasure-suppression.service';
+import { AuditService } from '../audit/audit.service';
+import { maskPii } from '../../global/util/pii.util';
 
 /** Customer detail shown in the agent console context panel (FR-045). */
 export interface CustomerContext {
@@ -15,6 +17,8 @@ export interface CustomerContext {
   name: string | null;
   email: string | null;
   phone: string | null;
+  /** True when name/email/phone above are masked (PLN-260920). */
+  masked?: boolean;
   tier: string;
   recentOrders: { id: number; status: string | null; total: number | null; createdAt: Date }[];
 }
@@ -33,6 +37,7 @@ export class CustomerService {
     @InjectRepository(Customer) private readonly customerRepo: Repository<Customer>,
     @InjectRepository(OrderCache) private readonly orderRepo: Repository<OrderCache>,
     private readonly suppression: ErasureSuppressionService,
+    private readonly audit: AuditService,
   ) {}
 
   async list(
@@ -97,6 +102,26 @@ export class CustomerService {
     if (!customer) {
       throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
+    return customer;
+  }
+
+  /**
+   * The customer behind an explicit reveal request, plus the audit row that
+   * makes the read accountable (PRV-040). Masking is the default everywhere
+   * else; this is the one door out, and it is a narrow, logged one.
+   */
+  async reveal(tenantId: number, id: number, actorUserId: number): Promise<Customer> {
+    const customer = await this.findById(tenantId, id);
+    await this.audit.write({
+      tenantId,
+      actorType: 'user',
+      actorId: actorUserId,
+      action: 'customer.pii_revealed',
+      target: `customer:${id}`,
+      // The audit row records that contact details were read, never the
+      // details (audit-log.entity: metadata is never raw PII).
+      metadata: { email: maskPii(customer.email) },
+    });
     return customer;
   }
 

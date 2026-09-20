@@ -11,5 +11,9 @@
   "editTierTitle": "修改客户等级",
   "tierFor": "{{name}} 的等级",
   "searchPlaceholder": "按姓名或邮箱搜索",
-  "empty": "未找到客户。"
+  "empty": "未找到客户。",
+  "reveal": "查看完整信息",
+  "revealAudited": "已显示客户联系信息。本次查看已记入审计日志。",
+  "maskedHint": "客户标识信息已脱敏显示。仅主账号和总监可查看完整信息。",
+  "maskedHintWithReveal": "客户标识信息已脱敏显示。查看后显示 5 分钟，并记入审计日志。"
 }

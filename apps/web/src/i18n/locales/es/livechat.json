@@ -73,7 +73,9 @@
     "hint": "Las respuestas guardadas se indexan de inmediato y se usan en preguntas similares.",
     "save": "Guardar como conocimiento",
     "saved": "Guardado en la base de conocimiento.",
-    "saveFailed": "No se pudo guardar el documento."
+    "saveFailed": "No se pudo guardar el documento.",
+    "piiWarning": "Parece contener datos de contacto. Un documento de conocimiento dura más que el chat y puede responderse a otros clientes.",
+    "piiScrub": "Quitar datos de contacto"
   },
   "issue": {
     "status": {
@@ -379,5 +381,9 @@
     "reply": "Responder citando",
     "quoteRemove": "Quitar cita",
     "fileIssue": "Registrar este mensaje como incidencia"
-  }
+  },
+  "revealCustomer": "Ver datos completos",
+  "revealAudited": "Datos de contacto mostrados. Esta consulta queda registrada en la auditoría.",
+  "revealFailed": "No se pudieron mostrar los datos de contacto.",
+  "revealedNotice": "Se muestran los datos completos. Esta consulta ha quedado registrada."
 }

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/Modal';
 import { Button } from '@/components/Button';
 import { FormRow, Input, Select } from '@/components/Field';
 import { toast } from '@/store/toast-store';
 import { useCreateDocument } from '../knowledge/knowledge.hooks';
+import { findPii } from '@/lib/pii-hint';
 
 /** Categories offered here — the KB accepts any string, these are the common ones. */
 const CATEGORIES = ['faq', 'policy', 'product', 'shipping', 'partnership'] as const;
@@ -38,6 +39,11 @@ export function KnowledgeCaptureModal({
   // Seeded with what the assistant said: usually a good skeleton that only
   // needs the missing fact added, which is faster than writing from scratch.
   const [content, setContent] = useState(answer);
+
+  // A knowledge document outlives the conversation it was written from, gets
+  // answered back to other shoppers, and can be exported — so contact details
+  // pasted in here escape the retention window (PLN-260920 F-10).
+  const piiHint = useMemo(() => findPii(content), [content]);
 
   const save = async () => {
     if (!title.trim() || !content.trim()) return;
@@ -82,6 +88,15 @@ export function KnowledgeCaptureModal({
             ))}
           </Select>
         </FormRow>
+        {piiHint.kinds.length > 0 && (
+          <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+            <p className="mb-2">{t('knowledge.piiWarning')}</p>
+            <Button size="sm" variant="secondary" onClick={() => setContent(piiHint.scrubbed)}>
+              {t('knowledge.piiScrub')}
+            </Button>
+          </div>
+        )}
+
         <FormRow label={t('knowledge.bestAnswer')}>
           <textarea
             value={content}

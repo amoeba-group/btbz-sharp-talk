@@ -11,5 +11,9 @@
   "editTierTitle": "고객 등급 편집",
   "tierFor": "{{name}}의 등급",
   "searchPlaceholder": "이름 또는 이메일로 검색",
-  "empty": "고객을 찾을 수 없습니다."
+  "empty": "고객을 찾을 수 없습니다.",
+  "reveal": "전체 정보 보기",
+  "revealAudited": "고객 정보를 열람했습니다. 열람 기록이 남습니다.",
+  "maskedHint": "고객 식별정보는 가려져 표시됩니다. 전체 정보 열람 권한은 마스터·디렉터에게 있습니다.",
+  "maskedHintWithReveal": "고객 식별정보는 가려져 표시됩니다. 눈 아이콘으로 열람하면 5분간 표시되고 열람 기록이 남습니다."
 }

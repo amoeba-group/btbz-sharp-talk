@@ -7,6 +7,7 @@ import { ContentFilterRule } from './entity/content-filter-rule.entity';
 import { ModerationLog } from './entity/moderation-log.entity';
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
 import { RedisService } from '../../infrastructure/cache/redis.service';
+import { scrubPii } from '../../global/util/pii-scrub.util';
 
 /** TTL for the per-tenant active-rules cache (PERF-11). */
 const MOD_RULES_CACHE_TTL_SEC = 60;
@@ -187,7 +188,11 @@ export class ModerationService {
           conversationId: input.conversationId ?? null,
           authorType: input.authorType,
           authorId: input.authorId ?? null,
-          excerpt: truncate(input.text, 512),
+          // The DECISION is made on the original text above; only this stored
+          // copy is minimized (PLN-260920 P4). A moderation record has to say
+          // what kind of message tripped a rule, not carry the shopper's
+          // address and phone number for a year.
+          excerpt: scrubPii(truncate(input.text, 512)).text,
           ruleId: ruleId ?? null,
           action,
           decision,

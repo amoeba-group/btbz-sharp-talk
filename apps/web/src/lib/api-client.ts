@@ -191,6 +191,24 @@ export const saveBlob = (blob: Blob, filename: string): void => {
   URL.revokeObjectURL(href);
 };
 
+/**
+ * Same list envelope as `apiGetList`, but the query travels in the body.
+ *
+ * Used where the query itself is personal data (a shopper's address): a query
+ * string is copied into every proxy access log and the operator's browser
+ * history, and neither of those is covered by the retention window (PLN-260920).
+ */
+export const apiPostList = async <T>(url: string, data?: unknown): Promise<Paginated<T>> => {
+  const res = await http.post<T[]>(url, data);
+  const p = (res as { __pagination?: PaginationMeta }).__pagination;
+  return {
+    items: (res.data ?? []) as T[],
+    total: p?.totalCount ?? (Array.isArray(res.data) ? res.data.length : 0),
+    page: p?.page ?? 1,
+    pageSize: p?.size ?? 0,
+  };
+};
+
 export const apiPost = async <T>(url: string, data?: unknown): Promise<T> => {
   const res = await http.post<T>(url, data);
   return res.data;

@@ -14,6 +14,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Throttle } from '@nestjs/throttler';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CAPABILITY, Principal, USER_RANK } from '@sharptalk/types';
 import { normalizePage, buildPagination } from '@sharptalk/common';
@@ -34,6 +35,7 @@ import {
   AgentMessageRequest,
   CreateCommentRequest,
   CreateCustomerRequest,
+  SearchCustomersRequest,
   CreateGroupRequest,
   GroupMessageRequest,
   UpdateGroupRequest,
@@ -445,9 +447,37 @@ export class AgentConsoleController {
 
   @Get('customers/search')
   @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
-  @ApiOperation({ summary: 'Search existing customers to link to a chat' })
+  @ApiOperation({ summary: 'Search existing customers to link to a chat (masked results)' })
   async searchCustomers(@CurrentUser() user: Principal, @Query('q') q?: string) {
     return this.agentService.searchCustomers(tenantOf(user), q ?? '');
+  }
+
+  /**
+   * Same search, with the term in the body (PLN-260920 P3).
+   *
+   * A shopper's address typed into the console used to travel as a query
+   * string, which lands verbatim in the access log of every proxy on the way
+   * and in the operator's browser history. The GET form stays for links and
+   * existing clients; the console calls this one.
+   */
+  @Post('customers/search')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Search existing customers (term in body, keeps it out of logs)' })
+  async searchCustomersPost(@CurrentUser() user: Principal, @Body() body: SearchCustomersRequest) {
+    return this.agentService.searchCustomers(tenantOf(user), body.q ?? '');
+  }
+
+  /**
+   * One customer's unmasked contact details for the chat panel (PLN-260920).
+   * Held by master/director only and audited on every call — the live-chat
+   * path must not be a way around the customers screen's controls.
+   */
+  @Get('customers/:id/reveal')
+  @RequireCapability(CAPABILITY.CUSTOMER_PII_REVEAL)
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Reveal one customer for the chat panel (audited)' })
+  async revealCustomer(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    return this.agentService.revealCustomer(tenantOf(user), id, actorIdOf(user));
   }
 
   @Get('conversations/:id')

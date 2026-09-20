@@ -11,5 +11,9 @@
   "editTierTitle": "Sửa hạng khách hàng",
   "tierFor": "Hạng của {{name}}",
   "searchPlaceholder": "Tìm theo tên hoặc email",
-  "empty": "Không tìm thấy khách hàng nào."
+  "empty": "Không tìm thấy khách hàng nào.",
+  "reveal": "Xem đầy đủ",
+  "revealAudited": "Đã hiển thị thông tin liên hệ. Lần xem này được ghi vào nhật ký kiểm toán.",
+  "maskedHint": "Thông tin nhận dạng khách hàng được che. Tài khoản master và director có thể hiển thị đầy đủ.",
+  "maskedHintWithReveal": "Thông tin nhận dạng khách hàng được che. Khi hiển thị, thông tin hiện trong 5 phút và được ghi vào nhật ký kiểm toán."
 }

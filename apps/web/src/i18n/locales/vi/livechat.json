@@ -73,7 +73,9 @@
     "hint": "Câu trả lời đã lưu được lập chỉ mục ngay và dùng cho các câu hỏi tương tự.",
     "save": "Lưu vào kho tri thức",
     "saved": "Đã lưu vào kho tri thức.",
-    "saveFailed": "Không lưu được tài liệu tri thức."
+    "saveFailed": "Không lưu được tài liệu tri thức.",
+    "piiWarning": "Nội dung này có vẻ chứa thông tin liên hệ. Tài liệu kiến thức tồn tại lâu hơn cuộc trò chuyện và có thể được trả lời cho khách khác.",
+    "piiScrub": "Xoá thông tin liên hệ"
   },
   "issue": {
     "status": {
@@ -379,5 +381,9 @@
     "reply": "Trả lời trích dẫn",
     "quoteRemove": "Xóa trích dẫn",
     "fileIssue": "Ghi nhận tin nhắn này thành sự cố"
-  }
+  },
+  "revealCustomer": "Xem đầy đủ",
+  "revealAudited": "Đã hiển thị thông tin liên hệ. Lần xem này được ghi vào nhật ký kiểm toán.",
+  "revealFailed": "Không thể hiển thị thông tin liên hệ.",
+  "revealedNotice": "Đang hiển thị thông tin đầy đủ. Lần xem này đã được ghi lại."
 }

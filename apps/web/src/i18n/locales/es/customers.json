@@ -11,5 +11,9 @@
   "editTierTitle": "Editar nivel del cliente",
   "tierFor": "Nivel para {{name}}",
   "searchPlaceholder": "Buscar por nombre o correo",
-  "empty": "No se encontraron clientes."
+  "empty": "No se encontraron clientes.",
+  "reveal": "Ver datos completos",
+  "revealAudited": "Datos de contacto mostrados. Esta consulta queda registrada en la auditoría.",
+  "maskedHint": "Los identificadores del cliente están enmascarados. Las cuentas máster y director pueden mostrarlos.",
+  "maskedHintWithReveal": "Los identificadores del cliente están enmascarados. Al mostrarlos se ven durante 5 minutos y queda registro en la auditoría."
 }
