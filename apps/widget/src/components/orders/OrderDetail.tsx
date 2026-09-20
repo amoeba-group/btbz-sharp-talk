@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, MessageSquare, Truck, Star } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, MessageSquare, Package, Star, Truck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore } from '../../store/widgetStore';
 import { isAuthError } from '../../lib/errors';
@@ -11,6 +11,82 @@ import { formatMoney } from '../../lib/format';
 import { TrackingStepper } from './TrackingStepper';
 import { isDelivered as isOrderDeliveredStatus, statusLabel } from './order-status';
 import { ReviewForm } from './ReviewForm';
+
+/**
+ * One line of the money block. Labels sit left, values right; `strong` is the
+ * Total row and `negative` the discount, which the design paints red.
+ */
+function MoneyRow({
+  label,
+  value,
+  strong,
+  negative,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+  negative?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between py-1 text-sm">
+      <span
+        className={
+          negative
+            ? 'font-semibold text-error'
+            : strong
+              ? 'font-semibold text-gray-900'
+              : 'text-gray-500'
+        }
+      >
+        {label}
+      </span>
+      <span
+        className={
+          negative
+            ? 'font-semibold text-error'
+            : strong
+              ? 'font-semibold text-gray-900'
+              : 'text-gray-700'
+        }
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * A full-width action row (PLN-260920 §2): the design replaced the two pinned
+ * buttons with rows, so tracking and "ask" read as a list rather than a toolbar.
+ */
+function ActionRow({
+  icon,
+  label,
+  open,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  /** Tracking expands in place; undefined = a row that navigates instead. */
+  open?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      aria-expanded={open}
+      className="flex w-full items-center gap-2.5 py-3 text-sm font-medium text-gray-800 hover:text-gray-900"
+    >
+      <span className="text-gray-400">{icon}</span>
+      <span className="flex-1 text-left">{label}</span>
+      {open === true ? (
+        <ChevronDown className="h-4 w-4 text-gray-300" />
+      ) : (
+        <ChevronRight className="h-4 w-4 text-gray-300" />
+      )}
+    </button>
+  );
+}
 
 export function OrderDetailView({
   orderId,
@@ -57,108 +133,121 @@ export function OrderDetailView({
   const delivered = isOrderDeliveredStatus(order);
 
   return (
-    <div className="scroll-thin h-full overflow-y-auto p-3">
-      <button
-        onClick={onBack}
-        className="mb-3 flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" />
-        {t('orders.back')}
-      </button>
+    <div className="flex h-full flex-col">
+      {/* Centred title with the back arrow beside it (Figma 345-17800). The
+          spacer keeps the title optically centred without absolute positioning. */}
+      <header className="flex flex-shrink-0 items-center gap-2 border-b border-gray-100 px-3 py-2.5">
+        <button
+          onClick={onBack}
+          aria-label={t('orders.back')}
+          className="rounded-st-md p-1 text-gray-500 hover:bg-gray-50 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
+        <h2 className="flex-1 text-center text-sm font-semibold text-gray-900">
+          {t('orders.detail')}
+        </h2>
+        <span className="h-6 w-6" aria-hidden="true" />
+      </header>
 
-      <div className="mb-3 rounded-st-md border border-gray-200 bg-white p-3">
-        <div className="flex items-center justify-between">
+      <div className="scroll-thin min-h-0 flex-1 overflow-y-auto px-4 py-3">
+        {/* Order number + status. The design shows the number alone, but the
+            badge stays: the list row that led here shows one, and dropping it
+            here makes the same order look like two (PLN §2-1). */}
+        <div className="mb-3 flex items-center justify-between gap-2">
           <span className="text-sm font-semibold text-gray-900">
             #{order.orderNumber}
           </span>
-          {/* Translated, like the list row. Showing "Confirmed" here while the
-              row that led here said 결제완료 makes one order look like two. */}
           <Badge tone={toneForStatus(order.statusInternal ?? order.statusUi)}>
             {statusLabel(t, order)}
           </Badge>
         </div>
-        <div className="mt-2 flex items-center justify-between text-sm">
-          <span className="text-gray-500">{t('orders.total')}</span>
-          <span className="font-semibold text-gray-900">
-            {formatMoney(order.total, order.currency)}
-          </span>
-        </div>
-      </div>
 
-      <div className="mb-2 text-xs font-medium text-gray-400">
-        {t('orders.items')}
-      </div>
-      <div className="mb-3 space-y-2">
-        {items.map((it, i) => (
-          <div
-            key={it.id ?? i}
-            className="rounded-st-md border border-gray-200 bg-white p-2.5"
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <div className="truncate text-sm font-medium text-gray-800">
-                  {it.title}
+        <ul className="divide-y divide-gray-50">
+          {items.map((it, i) => {
+            // Option text is only present on orders that arrived through the
+            // webhook path; the scheduled GraphQL sync cannot read it without
+            // the read_products scope (PLN §1). Absent → the line just carries
+            // the quantity rather than an empty separator.
+            const meta = [it.optionText, t('orders.qty', { count: it.qty })]
+              .filter(Boolean)
+              .join(' · ');
+            return (
+              <li key={it.id ?? i} className="flex gap-3 py-3">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-st-md bg-gray-100">
+                  <Package className="h-5 w-5 text-gray-300" />
                 </div>
-                {it.optionText && (
-                  <div className="text-xs text-gray-500">{it.optionText}</div>
-                )}
-                <div className="text-xs text-gray-400">x{it.qty}</div>
-              </div>
-              <span className="flex-shrink-0 text-sm text-gray-700">
-                {formatMoney(it.price, order.currency)}
-              </span>
-            </div>
-            {delivered && it.id && (
-              <button
-                onClick={() => setReviewItemId(it.id!)}
-                className="mt-2 flex items-center gap-1 text-xs font-medium text-primary-600 hover:underline"
-              >
-                <Star className="h-3.5 w-3.5" />
-                {t('orders.writeReview')}
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="line-clamp-2 text-sm text-gray-900">
+                      {it.title}
+                    </span>
+                    <span className="flex-shrink-0 text-sm text-gray-900">
+                      {formatMoney(it.price, order.currency)}
+                    </span>
+                  </div>
+                  <div className="mt-0.5 text-xs text-gray-400">{meta}</div>
+                  {delivered && it.id && (
+                    <button
+                      onClick={() => setReviewItemId(it.id!)}
+                      className="mt-1.5 flex items-center gap-1 text-xs font-medium text-primary-600 hover:underline"
+                    >
+                      <Star className="h-3.5 w-3.5" />
+                      {t('orders.writeReview')}
+                    </button>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
 
-      {reviewItemId && (
-        <div className="mb-3">
-          <ReviewForm
-            sessionToken={sessionToken}
-            orderItemId={reviewItemId}
-            onClose={() => setReviewItemId(null)}
+        {reviewItemId && (
+          <div className="my-3">
+            <ReviewForm
+              sessionToken={sessionToken}
+              orderItemId={reviewItemId}
+              onClose={() => setReviewItemId(null)}
+            />
+          </div>
+        )}
+
+        {/* Money. Only Total is always known; the breakdown rows appear as the
+            sync fills them in and stay hidden otherwise — a missing subtotal
+            must not read as zero (PLN §2-3). */}
+        <div className="mt-1 border-t border-gray-100 pt-2">
+          <MoneyRow
+            label={t('orders.total')}
+            value={`${order.currency ?? ''} ${formatMoney(order.total, order.currency)}`.trim()}
+            strong
           />
         </div>
-      )}
 
-      {showTrack && tracking.data && (
-        <div className="mb-3">
-          <TrackingStepper tracking={tracking.data} />
+        <div className="mt-2 border-t border-gray-100">
+          <ActionRow
+            icon={<Truck className="h-4 w-4" />}
+            label={t('orders.track')}
+            open={showTrack}
+            onClick={() => {
+              const next = !showTrack;
+              setShowTrack(next);
+              if (next) analytics.trackingView(orderId);
+            }}
+          />
+          {showTrack && tracking.isLoading && <Spinner />}
+          {showTrack && tracking.data && (
+            <div className="pb-3">
+              <TrackingStepper tracking={tracking.data} />
+            </div>
+          )}
+          <div className="border-t border-gray-100">
+            <ActionRow
+              icon={<MessageSquare className="h-4 w-4" />}
+              label={t('orders.askRow')}
+              onClick={() => onAsk(order.orderNumber)}
+            />
+          </div>
         </div>
-      )}
-      {showTrack && tracking.isLoading && <Spinner />}
-
-      {/* Pinned so the actions stay reachable on a long order instead of being
-          pushed below the fold by the item list. */}
-      <div className="sticky bottom-0 -mx-3 flex gap-2 border-t border-gray-100 bg-white px-3 pb-1 pt-2">
-        <button
-          onClick={() => {
-            const next = !showTrack;
-            setShowTrack(next);
-            if (next) analytics.trackingView(orderId);
-          }}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-st-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          <Truck className="h-4 w-4" />
-          {t('orders.track')}
-        </button>
-        <button
-          onClick={() => onAsk(order.orderNumber)}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-st-md bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600"
-        >
-          <MessageSquare className="h-4 w-4" />
-          {t('orders.ask')}
-        </button>
       </div>
     </div>
   );
