@@ -738,6 +738,8 @@
     "quickReplyStyle": "クイック返信のスタイル",
     "quickReplyChip": "塗りつぶしチップ（既定）",
     "quickReplyCard": "アイコン付きカード（白・枠線）",
+    "reviewLink": "レビューリンク",
+    "reviewLinkHint": "ウィジェットのレビュータブの「レビューを書く」の遷移先です。空欄＝商品ページ。レビューアプリの欄へ直接移動するには {productUrl}#reviews、または {productUrl} を含む完全な https:// URL を入力してください。",
     "historyTitle": "変更履歴 — {{name}}",
     "historyEmpty": "以前のバージョンはまだありません（編集のたびにスナップショットを保存）",
     "restoreRevision": "このバージョンに復元"

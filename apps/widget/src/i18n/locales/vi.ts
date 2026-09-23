@@ -242,6 +242,11 @@ export const vi: Translation = {
     items: 'Sản phẩm',
     total: 'Tổng cộng',
     writeReview: 'Viết đánh giá',
+    reviewItems: {
+      badge: 'Đánh giá',
+      reviewed: 'Đã đánh giá',
+      empty: 'Chưa có sản phẩm đã giao để đánh giá.',
+    },
     back: 'Quay lại',
     qty: 'SL {{count}}',
     askRow: 'Liên hệ',

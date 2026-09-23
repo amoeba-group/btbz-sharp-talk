@@ -238,6 +238,11 @@ export const ko: Translation = {
     items: '상품',
     total: '합계',
     writeReview: '리뷰 작성',
+    reviewItems: {
+      badge: '리뷰',
+      reviewed: '작성완료',
+      empty: '리뷰를 남길 수 있는 배송완료 상품이 없습니다.',
+    },
     back: '뒤로',
     qty: '수량 {{count}}',
     askRow: '문의하기',

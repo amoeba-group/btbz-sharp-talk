@@ -235,6 +235,11 @@ export const zh: Translation = {
     items: '商品',
     total: '合计',
     writeReview: '写评价',
+    reviewItems: {
+      badge: '评价',
+      reviewed: '已评价',
+      empty: '暂无可评价的已送达商品。',
+    },
     back: '返回',
     qty: '数量 {{count}}',
     askRow: '联系我们',

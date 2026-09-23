@@ -155,6 +155,36 @@ function syncStoredConsent(info: ConsentInfo): void {
 }
 
 /**
+ * Adopt everything in a session response that is TENANT configuration rather
+ * than session state: tab layout, login mode, brand theme, widget copy and the
+ * AI-processing region named in the disclosure.
+ *
+ * Both /session/ensure call sites must run this. A storefront-signed-in widget
+ * never makes the anonymous ensure (useEnsureSession bails once the app-proxy
+ * handshake has bound the session) — its only ensure is the profile re-ensure
+ * in useSessionProfile. That call used to adopt copy and consent one field at
+ * a time, so everything else silently stayed at the built-in default: a tenant
+ * configured for two tabs showed three to every signed-in shopper
+ * (FIX-260923-Signed-In-Widget-Tenant-Config). One function, two callers.
+ */
+export function adoptTenantConfig(res: SessionResponse): void {
+  const s = useWidgetStore.getState();
+  if (res.widgetLoginMode) s.setLoginMode(res.widgetLoginMode);
+  // Tab layout is tenant configuration (PLN-260817-Widget-Tab-Config).
+  // Guarded: a server that predates the setting sends neither field, and the
+  // store's seeded default is the right answer in that case.
+  if (res.widgetTabs?.length) s.setTabLayout(res.widgetTabs, res.widgetTabPosition ?? 'top');
+  // Brand theme (PLN-260818). Applied even when null — that clears any cached
+  // theme from a tenant that has since turned theming off.
+  applyTheme(res.widgetTheme ?? null);
+  s.setWidgetTheme(res.widgetTheme ?? null);
+  if (res.widgetCopy) s.setWidgetCopy(res.widgetCopy);
+  s.setIssueFeed(!!res.issueFeed);
+  // Deployment-level: where inference runs, named in the AI disclosure (G7).
+  s.setAiProcessingRegion((res.aiProcessingRegion || 'US').toUpperCase());
+}
+
+/**
  * Ensures a session token exists once the widget mounts.
  * Stores token + authenticated flag in the Zustand store.
  */
@@ -167,10 +197,6 @@ export function useEnsureSession() {
   const setAuthenticated = useWidgetStore((s) => s.setAuthenticated);
   const setCustomerName = useWidgetStore((s) => s.setCustomerName);
   const setLanguage = useWidgetStore((s) => s.setLanguage);
-  const setAiProcessingRegion = useWidgetStore((s) => s.setAiProcessingRegion);
-  const setLoginMode = useWidgetStore((s) => s.setLoginMode);
-  const setTabLayout = useWidgetStore((s) => s.setTabLayout);
-  const setWidgetCopy = useWidgetStore((s) => s.setWidgetCopy);
   const setWidgetTheme = useWidgetStore((s) => s.setWidgetTheme);
 
   useEffect(() => {
@@ -236,17 +262,8 @@ export function useEnsureSession() {
         if (cancelled) return;
         // Tenant widget config is safe to adopt regardless of which session wins
         // below (it keys off the shop, not the session).
-        if (res.widgetLoginMode) setLoginMode(res.widgetLoginMode);
-        // Tab layout is tenant configuration (PLN-260817-Widget-Tab-Config).
-        // Guarded: a server that predates the setting sends neither field, and
-        // the store's seeded default is the right answer in that case.
-        if (res.widgetTabs?.length) {
-          setTabLayout(res.widgetTabs, res.widgetTabPosition ?? 'top');
-        }
-        // Brand theme (PLN-260818). Applied even when null — that clears any
-        // cached theme from a tenant that has since turned theming off.
-        applyTheme(res.widgetTheme ?? null);
-        setWidgetTheme(res.widgetTheme ?? null);
+        adoptTenantConfig(res);
+        // Theme is cached per shop so the next load paints before this round trip.
         cacheTheme(getShopDomain(), res.widgetTheme ?? null);
         // Console preview (PLN-260910 P3 D-15): a signed ?preview= token paints
         // an unapplied design over the live one — never cached, never for shoppers.
@@ -265,7 +282,6 @@ export function useEnsureSession() {
               /* an expired token simply shows the live widget */
             });
         }
-        if (res.widgetCopy) setWidgetCopy(res.widgetCopy);
         // The app-proxy handshake (useEmbedIdentity) may have adopted a
         // customer-bound token while this anonymous ensure was in flight. Don't
         // clobber it: re-read the live store and bail if already authenticated.
@@ -292,8 +308,6 @@ export function useEnsureSession() {
           void i18n.changeLanguage(code);
           setLanguage(code);
         }
-        // Deployment-level: where inference runs, named in the AI disclosure (G7).
-        setAiProcessingRegion((res.aiProcessingRegion || 'US').toUpperCase());
       })
       .catch(() => {
         /* offline / backend not running — widget still renders */

@@ -137,7 +137,16 @@ describe('SessionService consent (PLN-Privacy-Control-Gap Stage 1-2)', () => {
         // the widget's own stylesheet already holds the built-in palette.
         widgetTheme: null,
         widgetCopy: expect.objectContaining({ firstVisit: {}, loginGreeting: {} }),
+        // 'base' (the default) has no shopper-facing issue feed.
+        issueFeed: false,
       });
+    });
+
+    it('offers the inquiry feed only to tenants running an issue workflow (PLN-260923 D-2)', async () => {
+      for (const [mode, expected] of [['native', true], ['bridge', true], ['base', false]] as const) {
+        tenant!.workflowMode = mode;
+        await expect(svc.privacyNotice(1)).resolves.toMatchObject({ issueFeed: expected });
+      }
     });
 
     /**

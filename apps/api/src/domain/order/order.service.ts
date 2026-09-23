@@ -10,6 +10,7 @@ import {
   internalToUiStatus,
 } from '@sharptalk/types';
 import { buildPagination, normalizePage } from '@sharptalk/common';
+import { carrierTrackingUrl, safeTrackingUrl } from './carrier-tracking';
 import { INTEGRATION_PROVIDER } from '@sharptalk/types';
 import { OrderCache } from './entity/order-cache.entity';
 import { OrderItem } from './entity/order-item.entity';
@@ -17,7 +18,7 @@ import { Fulfillment } from './entity/fulfillment.entity';
 import { Session } from '../session/entity/session.entity';
 import { SessionService, sessionCacheKey } from '../session/session.service';
 import { Customer } from '../customer/entity/customer.entity';
-import { OrderMapper } from './order.mapper';
+import { OrderMapper, type ReviewItemView } from './order.mapper';
 import { Paginated } from '../../global/interceptor/transform.interceptor';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
@@ -27,6 +28,7 @@ import { WebhookSecretService } from '../tenant/webhook-secret.service';
 import { assertWebhookSecret } from '../../global/util/webhook-secret.util';
 import { blindIndex } from '../../global/util/crypto.util';
 import { ProductCache } from '../product/entity/product-cache.entity';
+import { Review } from '../review/entity/review.entity';
 
 /**
  * Title key for catalogue matching: case and whitespace differences are noise,
@@ -40,6 +42,9 @@ function normaliseTitle(title: string | null | undefined): string {
 const LOOKUP_MAX_ATTEMPTS = 5;
 const LOOKUP_WINDOW_SEC = 15 * 60;
 const DAYS_WINDOW_MAX = 90;
+/** Review chip window — the widget's inline order window (10 orders / 30 days, PLN-260923 D-3). */
+const REVIEW_WINDOW_ORDERS = 10;
+const REVIEW_WINDOW_DAYS = 30;
 
 /** `days` query param → integer 1–90, null when absent, 400 on garbage/out-of-range. */
 function parseDaysWindow(days?: string): number | null {
@@ -72,6 +77,8 @@ export class OrderService {
     // build this service positionally, and inserting a parameter in the middle
     // silently shifts every double after it.
     @InjectRepository(ProductCache) private readonly productRepo: Repository<ProductCache>,
+    // Appended for the same reason (PLN-260923 P3): read-only "already reviewed".
+    @InjectRepository(Review) private readonly reviewRepo: Repository<Review>,
   ) {}
 
   /** Guest order lookup (FR-019). Rate-limited per email; binds session on success. */
@@ -145,6 +152,76 @@ export class OrderService {
       OrderMapper.toListItem(o, summaryByOrder.get(String(o.id)) ?? OrderService.EMPTY_ITEM_SUMMARY),
     );
     return new Paginated(items, buildPagination(p, s, total));
+  }
+
+  /**
+   * Lines the shopper can review — the widget's Review chip (PLN-260923 P3).
+   *
+   * Delivered only (D-3): asking for a review of something still in transit
+   * is noise. "Delivered" is read from EITHER the order status or a delivered
+   * fulfillment row, because the scheduled sync maps a fulfilled order back to
+   * `shipping` (it cannot see delivery) and would otherwise hide lines the
+   * fulfillment webhook already marked delivered. Same bounded window as the
+   * widget's order list (10 orders / 30 days); tenant AND customer scoped.
+   */
+  async reviewItemsForSession(sessionToken: string): Promise<ReviewItemView[]> {
+    const session = await this.sessionService.requireCustomer(sessionToken);
+    const customerId = session.customerId as number;
+    const tenantId = session.tenantId ?? (await this.tenantIdOfCustomer(customerId));
+    if (tenantId == null) {
+      throw new BusinessException(ERROR_CODE.TENANT_NOT_FOUND, HttpStatus.BAD_REQUEST);
+    }
+
+    const orders = await this.orderRepo
+      .createQueryBuilder('o')
+      .where('o.customer_id = :customerId', { customerId })
+      .andWhere('o.tenant_id = :tenantId', { tenantId })
+      .andWhere(
+        `(o.status_internal = :orderDelivered OR EXISTS (
+            SELECT 1 FROM fulfillments f WHERE f.order_id = o.id AND f.status = :shipDelivered))`,
+        {
+          orderDelivered: ORDER_STATUS_INTERNAL.DELIVERED,
+          shipDelivered: FULFILLMENT_STATUS.DELIVERED,
+        },
+      )
+      .andWhere('COALESCE(o.ordered_at, o.created_at) >= DATE_SUB(NOW(), INTERVAL :d DAY)', {
+        d: REVIEW_WINDOW_DAYS,
+      })
+      .orderBy('COALESCE(o.ordered_at, o.created_at)', 'DESC')
+      .take(REVIEW_WINDOW_ORDERS)
+      .getMany();
+    if (orders.length === 0) return [];
+
+    const items = await this.itemRepo.find({
+      where: { orderId: In(orders.map((o) => o.id)) },
+      order: { orderId: 'DESC', id: 'ASC' },
+    });
+    if (items.length === 0) return [];
+
+    // One query for "already reviewed", scoped to THIS customer's rows.
+    const reviewed = new Set(
+      (
+        await this.reviewRepo.find({
+          select: { orderItemId: true },
+          where: { orderItemId: In(items.map((i) => i.id)), customerId },
+        })
+      ).map((r) => String(r.orderItemId)),
+    );
+    const images = await this.itemImages(tenantId, items);
+    const orderById = new Map(orders.map((o) => [String(o.id), o]));
+    // Newest order first, lines in their order within it.
+    return orders.flatMap((o) =>
+      items
+        .filter((i) => String(i.orderId) === String(o.id))
+        .map((i) =>
+          OrderMapper.toReviewItem(
+            orderById.get(String(i.orderId))!,
+            i,
+            reviewed.has(String(i.id)),
+            images.get(String(i.id)) ?? null,
+          ),
+        ),
+    );
   }
 
   /**
@@ -285,6 +362,12 @@ export class OrderService {
       status,
       carrier: fulfillment?.carrier ?? null,
       trackingNumber: fulfillment?.trackingNumber ?? null,
+      // The carrier's page (PLN-260923 P2): the platform's own link first, else
+      // one built from carrier + number, else null — the widget then keeps its
+      // inline stepper rather than guessing.
+      trackingUrl:
+        safeTrackingUrl(fulfillment?.trackingUrl) ??
+        carrierTrackingUrl(fulfillment?.carrier, fulfillment?.trackingNumber),
       stepIndex: fulfillmentStepIndex(status),
       steps: deliverySteps(session.language),
     };
@@ -377,19 +460,28 @@ export class OrderService {
     status: string,
     trackingNumber?: string,
     carrier?: string,
+    trackingUrl?: string,
   ) {
     const orderId = order.id;
+    // Only an absolute http(s) link is kept — the widget opens it as given.
+    const url = safeTrackingUrl(trackingUrl);
     let fulfillment = await this.fulfillRepo.findOne({ where: { orderId } });
     if (fulfillment) {
       fulfillment.status = status;
       fulfillment.trackingNumber = trackingNumber ?? fulfillment.trackingNumber;
       fulfillment.carrier = carrier ?? fulfillment.carrier;
+      fulfillment.trackingUrl = url ?? fulfillment.trackingUrl;
+      // Rows created before the fix below carry no tenant; repair on touch.
+      fulfillment.tenantId = fulfillment.tenantId ?? order.tenantId;
     } else {
       fulfillment = this.fulfillRepo.create({
+        // Was omitted, leaving tenant-less rows (PLN-260923 G8).
+        tenantId: order.tenantId,
         orderId,
         status,
         trackingNumber: trackingNumber ?? null,
         carrier: carrier ?? null,
+        trackingUrl: url,
       });
     }
     await this.fulfillRepo.save(fulfillment);

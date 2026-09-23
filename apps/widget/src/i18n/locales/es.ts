@@ -238,6 +238,11 @@ export const es: Translation = {
     items: 'Artículos',
     total: 'Total',
     writeReview: 'Escribir una reseña',
+    reviewItems: {
+      badge: 'Reseña',
+      reviewed: 'Reseñado',
+      empty: 'Aún no hay artículos entregados para reseñar.',
+    },
     back: 'Atrás',
     qty: 'Cant. {{count}}',
     askRow: 'Contáctanos',

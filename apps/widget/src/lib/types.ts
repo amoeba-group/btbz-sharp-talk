@@ -22,6 +22,7 @@ import type {
   NotificationResponse,
   OrderDetailResponse,
   OrderItemResponse,
+  ReviewItemResponse,
   OrderListItemResponse,
   OrderLookupResponse,
   ScenarioButtonResponse,
@@ -88,6 +89,7 @@ export type OrderItem = OrderItemResponse;
 export type OrderDetail = OrderDetailResponse;
 export type OrderLookupResult = OrderLookupResponse;
 export type Tracking = TrackingResponse;
+export type ReviewItem = ReviewItemResponse;
 
 export type NotificationCategory =
   | 'payment'

@@ -738,6 +738,8 @@
     "quickReplyStyle": "Kiểu trả lời nhanh",
     "quickReplyChip": "Chip tô màu (mặc định)",
     "quickReplyCard": "Thẻ có biểu tượng (nền trắng, viền)",
+    "reviewLink": "Liên kết đánh giá",
+    "reviewLinkHint": "Nơi nút \"Viết đánh giá\" trong tab Đánh giá của widget dẫn tới. Để trống = trang sản phẩm. Dùng {productUrl}#reviews để tới phần ứng dụng đánh giá, hoặc một URL https:// đầy đủ có chứa {productUrl}.",
     "historyTitle": "Lịch sử — {{name}}",
     "historyEmpty": "Chưa có phiên bản trước (mỗi lần sửa sẽ lưu một bản chụp)",
     "restoreRevision": "Khôi phục phiên bản này"

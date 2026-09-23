@@ -1,4 +1,4 @@
-import { ShopifyAdminClient } from './shopify-admin.client';
+import { ShopifyAdminClient, productUrl } from './shopify-admin.client';
 
 /**
  * Line-item selection tiers (PLN-260920 §7 follow-up).
@@ -31,6 +31,8 @@ describe('ShopifyAdminClient — line item tier negotiation', () => {
                     image: { url: 'https://cdn/variant.jpg' },
                     product: {
                       legacyResourceId: '222',
+                      handle: 'ultra-mini-fan',
+                      onlineStoreUrl: 'https://shop.example/products/ultra-mini-fan',
                       featuredImage: { url: 'https://cdn/product.jpg' },
                     },
                   },
@@ -69,7 +71,9 @@ describe('ShopifyAdminClient — line item tier negotiation', () => {
       product_id: '222',
       variant_title: 'Burgundy / 6-8',
       image_url: 'https://cdn/variant.jpg', // variant beats the product image
+      product_url: 'https://shop.example/products/ultra-mini-fan',
     });
+    expect(queries[0]).toContain('handle onlineStoreUrl');
   });
 
   it('falls back to the basic selection when the token cannot read products', async () => {
@@ -134,5 +138,25 @@ describe('ShopifyAdminClient — line item tier negotiation', () => {
       variant_title: null,
       image_url: 'https://cdn/product.jpg', // no variant picture → product's
     });
+  });
+});
+
+describe('productUrl (PLN-260923 P3)', () => {
+  it("prefers Shopify's onlineStoreUrl", () => {
+    expect(productUrl({ handle: 'h', onlineStoreUrl: 'https://ivy.example/products/h' }, 's.myshopify.com')).toBe(
+      'https://ivy.example/products/h',
+    );
+  });
+
+  it('falls back to the handle on the shop domain when unpublished', () => {
+    expect(productUrl({ handle: 'rose hip', onlineStoreUrl: null }, 's.myshopify.com')).toBe(
+      'https://s.myshopify.com/products/rose%20hip',
+    );
+  });
+
+  it('is null without a product or handle, and ignores a non-http onlineStoreUrl', () => {
+    expect(productUrl(null, 's.myshopify.com')).toBeNull();
+    expect(productUrl({ handle: '  ' }, 's.myshopify.com')).toBeNull();
+    expect(productUrl({ onlineStoreUrl: 'javascript:x', handle: null }, 's.myshopify.com')).toBeNull();
   });
 });

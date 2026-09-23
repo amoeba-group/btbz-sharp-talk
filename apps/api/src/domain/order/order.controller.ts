@@ -30,6 +30,14 @@ export class OrderController {
     return this.orderService.listForSession(token, query.page, query.size, query.days);
   }
 
+  // Declared before ':id' — otherwise ParseIntPipe claims "review-items" and 400s.
+  @Get('review-items')
+  @Public()
+  @ApiOperation({ summary: "Delivered lines the session customer can review (PLN-260923 P3)" })
+  async reviewItems(@SessionToken() token: string) {
+    return this.orderService.reviewItemsForSession(token);
+  }
+
   @Get(':id')
   @Public()
   @ApiOperation({ summary: 'Order detail with line items (FR-020)' })

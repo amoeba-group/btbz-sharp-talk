@@ -133,6 +133,13 @@ export interface WidgetDesign {
   /** Opening scenario menu: filled chips (default) or outlined cards with an icon (PLN-260916 P4). */
   quickReplyStyle?: QuickReplyStyle | null;
   /**
+   * Where the Review chip's "write a review" goes (PLN-260923 P3). Must contain
+   * `{productUrl}`: either it LEADS the template (`{productUrl}#reviews` — the
+   * store's review app anchor) or it sits inside an absolute http(s) URL, where
+   * it is inserted URL-encoded. Absent = the product page itself.
+   */
+  reviewLinkTemplate?: string | null;
+  /**
    * Tenant custom CSS (P5) — ALREADY sanitized by the API's allowlist; stored
    * and delivered only while the platform add-on is on. Never raw input.
    */
@@ -467,10 +474,45 @@ export function normalizeDesign(input: unknown): WidgetDesign | null {
   const icon = normalizeAssetRef(raw.launcherIcon);
   if (icon) out.launcherIcon = icon;
   if (raw.quickReplyStyle === QUICK_REPLY_STYLE.CARD) out.quickReplyStyle = QUICK_REPLY_STYLE.CARD;
+  const reviewLink = normalizeReviewLinkTemplate(raw.reviewLinkTemplate);
+  if (reviewLink) out.reviewLinkTemplate = reviewLink;
   if (typeof raw.customCss === 'string' && raw.customCss.trim()) {
     out.customCss = raw.customCss.trim().slice(0, CUSTOM_CSS_MAX_CHARS);
   }
   return Object.keys(out).length ? out : null;
+}
+
+export const REVIEW_LINK_TOKEN = '{productUrl}';
+const REVIEW_LINK_MAX_CHARS = 512;
+
+/**
+ * A usable review-link template, or null. Invalid input degrades to "the
+ * product page" rather than failing the save — same stance as the rest of the
+ * design (one bad field must not cost the tenant their colour).
+ */
+export function normalizeReviewLinkTemplate(input: unknown): string | null {
+  if (typeof input !== 'string') return null;
+  const tpl = input.trim();
+  if (!tpl || tpl.length > REVIEW_LINK_MAX_CHARS || !tpl.includes(REVIEW_LINK_TOKEN)) return null;
+  // The bare token is the default; storing it would only add noise.
+  if (tpl === REVIEW_LINK_TOKEN) return null;
+  if (tpl.startsWith(REVIEW_LINK_TOKEN)) return tpl;
+  return /^https?:\/\/[^\s]+$/i.test(tpl) ? tpl : null;
+}
+
+/**
+ * The link behind a review button: the product page run through the tenant's
+ * template. Null when there is no product URL (the widget then opens its own
+ * form) or the result is not an absolute http(s) URL.
+ */
+export function reviewLinkFor(template: string | null | undefined, productUrl: string | null | undefined): string | null {
+  if (!productUrl || !/^https?:\/\//i.test(productUrl)) return null;
+  const tpl = normalizeReviewLinkTemplate(template);
+  if (!tpl) return productUrl;
+  const out = tpl.startsWith(REVIEW_LINK_TOKEN)
+    ? productUrl + tpl.slice(REVIEW_LINK_TOKEN.length)
+    : tpl.split(REVIEW_LINK_TOKEN).join(encodeURIComponent(productUrl));
+  return /^https?:\/\//i.test(out) ? out : null;
 }
 
 /** The theme a shopper may receive: custom CSS only while the add-on is on. */

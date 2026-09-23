@@ -3,6 +3,7 @@ import type {
   OrderDetail,
   OrderLookupResult,
   OrderSummary,
+  ReviewItem,
   Tracking,
 } from '../lib/types';
 
@@ -41,6 +42,11 @@ export function listOrders(
     size: String(opts.size ?? INLINE_ORDER_LIMIT),
     days: String(opts.days ?? INLINE_ORDER_DAYS),
   });
+}
+
+/** Delivered lines the shopper can review — the Review chip (PLN-260923 P3). */
+export function listReviewItems(sessionToken: string): Promise<ReviewItem[]> {
+  return apiClient.get<ReviewItem[]>('/orders/review-items', { session_token: sessionToken });
 }
 
 export function getOrder(

@@ -82,6 +82,8 @@ interface WidgetState {
    * anything that must not act on a guess (deep links) waits for this.
    */
   tabsResolved: boolean;
+  /** Tenant runs an issue workflow → the single list tab offers an Inquiries chip (PLN-260923 D-2). */
+  issueFeed: boolean;
   /**
    * Inbound chat messages that arrived while the Chat tab was not the active one
    * — the count on the Chat tab's badge (PLN-260817 W-1). Cleared the moment the
@@ -97,6 +99,7 @@ interface WidgetState {
   setAuthPending: (v: boolean) => void;
   setLoginMode: (m: WidgetLoginMode) => void;
   setWidgetCopy: (c: WidgetCopy | null) => void;
+  setIssueFeed: (v: boolean) => void;
   setCustomerName: (n: string | null) => void;
   /** Tenant theme, for the parts that are markup rather than CSS (logo, launcher). */
   widgetTheme: WidgetTheme | null;
@@ -148,6 +151,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   visibleTabs: [...WIDGET_TABS_DEFAULT],
   tabPosition: 'top',
   tabsResolved: false,
+  issueFeed: false,
   chatUnread: 0,
   setSessionToken: (t) => {
     setStoredSessionToken(t);
@@ -161,6 +165,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setAuthPending: (v) => set({ authPending: v }),
   setLoginMode: (m) => set({ loginMode: m }),
   setWidgetCopy: (c) => set({ widgetCopy: c }),
+  setIssueFeed: (v) => set({ issueFeed: v }),
   setCustomerName: (n) => set({ customerName: n }),
   widgetTheme: null,
   setWidgetTheme: (t) => set({ widgetTheme: t }),

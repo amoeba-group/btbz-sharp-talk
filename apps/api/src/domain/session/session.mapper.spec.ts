@@ -41,6 +41,7 @@ describe('SessionMapper.toResponse', () => {
       widgetLoginMode: 'redirect',
       widgetCopy: { displayName: 'Shop', firstVisit: {}, loginGreeting: {} },
       aiProcessingRegion: 'US',
+      issueFeed: false,
     });
   });
 

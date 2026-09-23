@@ -1,5 +1,6 @@
 import { useQueries } from '@tanstack/react-query';
-import { PackageSearch } from 'lucide-react';
+import { ExternalLink, PackageSearch } from 'lucide-react';
+import { useAnalytics } from '../../lib/analytics';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import { getTracking } from '../../services/orderService';
@@ -42,6 +43,7 @@ function ShipmentCard({
   onOpen: () => void;
 }) {
   const { t } = useTranslation();
+  const analytics = useAnalytics();
   const fallbackSteps = trackingStepLabels(t);
   const steps = tracking?.steps?.length ? tracking.steps : fallbackSteps;
   const delivered = !!tracking && tracking.stepIndex >= steps.length - 1;
@@ -85,12 +87,27 @@ function ShipmentCard({
         </p>
       )}
 
-      <button
-        onClick={onOpen}
-        className="mt-3 w-full rounded-st-md border border-gray-300 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
-      >
-        {t('orders.trackingCta')}
-      </button>
+      {/* Same rule as the order detail's Track row (PLN-260923 P2): the
+          carrier's own page when we have one, otherwise the order detail. */}
+      {tracking?.trackingUrl ? (
+        <a
+          href={tracking.trackingUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => analytics.trackingView(order.id, true)}
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-st-md border border-gray-300 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
+        >
+          {t('orders.trackingCta')}
+          <ExternalLink className="h-3.5 w-3.5 text-gray-400" />
+        </a>
+      ) : (
+        <button
+          onClick={onOpen}
+          className="mt-3 w-full rounded-st-md border border-gray-300 py-2.5 text-sm font-semibold text-gray-900 transition-colors hover:bg-gray-50"
+        >
+          {t('orders.trackingCta')}
+        </button>
+      )}
     </div>
   );
 }

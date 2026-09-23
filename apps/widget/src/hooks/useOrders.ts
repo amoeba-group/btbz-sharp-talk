@@ -3,6 +3,7 @@ import {
   getOrder,
   getTracking,
   listOrders,
+  listReviewItems,
 } from '../services/orderService';
 
 /**
@@ -35,5 +36,15 @@ export function useTracking(id: string | null, sessionToken: string | null) {
     queryKey: ['tracking', id, sessionToken],
     queryFn: () => getTracking(id!, sessionToken!),
     enabled: !!id && !!sessionToken,
+  });
+}
+
+/** Review chip list (PLN-260923 P3). Keyed per token; invalidated after an in-widget review. */
+export function useReviewItems(sessionToken: string | null, enabled = true) {
+  return useQuery({
+    queryKey: ['review-items', sessionToken],
+    queryFn: () => listReviewItems(sessionToken!),
+    enabled: !!sessionToken && enabled,
+    staleTime: 60_000,
   });
 }

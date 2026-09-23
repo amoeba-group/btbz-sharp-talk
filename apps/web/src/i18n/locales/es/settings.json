@@ -738,6 +738,8 @@
     "quickReplyStyle": "Estilo de respuestas rápidas",
     "quickReplyChip": "Chips rellenos (predeterminado)",
     "quickReplyCard": "Tarjetas con icono (blancas, con borde)",
+    "reviewLink": "Enlace de reseña",
+    "reviewLinkHint": "Adónde lleva \"Escribir una reseña\" en la pestaña Reseñas del widget. Vacío = la página del producto. Use {productUrl}#reviews para ir a la sección de su app de reseñas, o una URL https:// completa que contenga {productUrl}.",
     "historyTitle": "Historial — {{name}}",
     "historyEmpty": "Aún no hay versiones anteriores (cada edición guarda una instantánea)",
     "restoreRevision": "Restaurar esta versión"

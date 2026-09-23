@@ -345,6 +345,8 @@ export class ShopifySyncService {
             title: (li.title ?? li.name ?? '').slice(0, 255) || 'Item',
             optionText: li.variant_title ? String(li.variant_title).slice(0, 255) : null,
             imageUrl: li.image_url ? String(li.image_url).slice(0, 1024) : null,
+            // Over-long URLs are dropped, not truncated — a cut URL is a broken link.
+            productUrl: li.product_url && li.product_url.length <= 1024 ? li.product_url : null,
             qty: li.quantity != null && li.quantity > 0 ? li.quantity : 1,
             price,
           });

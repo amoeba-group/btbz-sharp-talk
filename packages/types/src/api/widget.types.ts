@@ -79,6 +79,12 @@ export interface SessionResponse {
   widgetTheme: WidgetTheme | null;
   /** Tenant widget copy (display name + greetings); displayName pre-falls back to the tenant name. */
   widgetCopy: WidgetCopy;
+  /**
+   * The tenant runs an issue workflow, so the shopper has an inquiry feed
+   * (PLN-260923 D-2). Optional: a server that predates it sends nothing, which
+   * reads as "no feed".
+   */
+  issueFeed?: boolean;
 }
 
 // ---- chat ---------------------------------------------------------------
@@ -241,6 +247,31 @@ export interface OrderItemResponse {
   imageUrl?: string | null;
 }
 
+/**
+ * One purchased line the shopper can review — the widget's Review chip
+ * (PLN-260923 P3). Only lines from delivered orders are listed.
+ */
+export interface ReviewItemResponse {
+  /** order_items.id — also what POST /reviews takes (the in-widget fallback form). */
+  orderItemId: string;
+  orderId: string;
+  orderNumber: string;
+  title: string;
+  optionText: string | null;
+  price: number | null;
+  currency: string | null;
+  imageUrl: string | null;
+  /**
+   * The product's storefront page, where the store's review form lives. Null
+   * when the order did not carry one — the widget then opens its own form.
+   */
+  productUrl: string | null;
+  /** The shopper already reviewed this line (a `reviews` row exists). */
+  reviewed: boolean;
+  /** When the order was placed (ISO), for the row's relative date. */
+  orderedAt: string;
+}
+
 /** Flat: the order's own fields sit alongside `items` — never `{ order, items }`. */
 export interface OrderDetailResponse {
   id: string;
@@ -283,6 +314,12 @@ export interface TrackingResponse {
   status: string;
   carrier: string | null;
   trackingNumber: string | null;
+  /**
+   * The carrier's own tracking page (PLN-260923 P2): the platform's link, else
+   * one built from carrier + number, else null (widget keeps its stepper).
+   * Optional so a server that predates it reads as "no link".
+   */
+  trackingUrl?: string | null;
   stepIndex: number;
   steps: string[];
 }

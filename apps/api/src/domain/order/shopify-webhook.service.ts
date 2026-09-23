@@ -64,6 +64,7 @@ export class ShopifyWebhookService {
       status,
       payload.tracking_number ?? undefined,
       payload.tracking_company ?? undefined,
+      payload.tracking_url ?? payload.tracking_urls?.[0] ?? undefined,
     );
   }
 

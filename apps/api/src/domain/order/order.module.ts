@@ -7,6 +7,7 @@ import { Fulfillment } from './entity/fulfillment.entity';
 import { Session } from '../session/entity/session.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { ProductCache } from '../product/entity/product-cache.entity';
+import { Review } from '../review/entity/review.entity';
 import { OrderService } from './order.service';
 import { AdminOrderController, OrderController } from './order.controller';
 import { WebhookController } from './webhook.controller';
@@ -23,7 +24,7 @@ import { IntegrationModule } from '../integration/integration.module';
 @Module({
   imports: [
     SessionModule,
-    TypeOrmModule.forFeature([OrderCache, OrderItem, Fulfillment, Session, Customer, ProductCache]),
+    TypeOrmModule.forFeature([OrderCache, OrderItem, Fulfillment, Session, Customer, ProductCache, Review]),
     TenantModule,
     CustomerModule,
     IntegrationModule,

@@ -51,9 +51,33 @@ describe('ShopifyWebhookService', () => {
       });
       // Applies via the already-HMAC-verified path (passes the order entity), never
       // through the generic X-Webhook-Secret-gated handleFulfillmentWebhook.
-      expect(orderService.applyFulfillment).toHaveBeenCalledWith(order, expected, 'TN1', 'UPS');
+      expect(orderService.applyFulfillment).toHaveBeenCalledWith(order, expected, 'TN1', 'UPS', undefined);
       expect(orderService.handleFulfillmentWebhook).not.toHaveBeenCalled();
     }
+  });
+
+  it('passes the carrier tracking link through, falling back to tracking_urls[0] (PLN-260923 P2)', async () => {
+    const order = { id: 42 };
+    const direct = build({ tenant: { id: 7 }, order });
+    await direct.svc.handleFulfillment('ivyusa.myshopify.com', {
+      order_id: 900001,
+      tracking_number: 'TN1',
+      tracking_company: 'UPS',
+      tracking_url: 'https://www.ups.com/track?tracknum=TN1',
+      tracking_urls: ['https://other.example/1'],
+    });
+    expect(direct.orderService.applyFulfillment).toHaveBeenCalledWith(
+      order, 'shipped', 'TN1', 'UPS', 'https://www.ups.com/track?tracknum=TN1',
+    );
+
+    const listOnly = build({ tenant: { id: 7 }, order });
+    await listOnly.svc.handleFulfillment('ivyusa.myshopify.com', {
+      order_id: 900001,
+      tracking_urls: ['https://parcel.example/2'],
+    });
+    expect(listOnly.orderService.applyFulfillment).toHaveBeenCalledWith(
+      order, 'shipped', undefined, undefined, 'https://parcel.example/2',
+    );
   });
 
   it('ignores a fulfillment for an uncached order', async () => {

@@ -738,6 +738,8 @@
     "quickReplyStyle": "빠른 답장 스타일",
     "quickReplyChip": "채움 칩 (기본)",
     "quickReplyCard": "아이콘 카드 (흰 배경·외곽선)",
+    "reviewLink": "리뷰 작성 링크",
+    "reviewLinkHint": "위젯 리뷰 탭의 '리뷰 쓰기'가 이동할 주소입니다. 비우면 상품 페이지로 이동합니다. 리뷰 앱 영역으로 바로 가려면 {productUrl}#reviews 처럼, 또는 {productUrl}을 포함한 전체 https:// 주소를 입력하세요.",
     "historyTitle": "변경 이력 — {{name}}",
     "historyEmpty": "이전 버전이 없습니다 (편집할 때마다 스냅샷이 남습니다)",
     "restoreRevision": "이 버전으로 복원"
