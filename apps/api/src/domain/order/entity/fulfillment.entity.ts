@@ -24,6 +24,13 @@ export class Fulfillment {
   @Column({ type: 'varchar', length: 64, nullable: true })
   carrier: string | null;
 
+  /**
+   * The carrier's tracking page as the platform gave it (Shopify `tracking_url`,
+   * PLN-260923 P2). Null → the API builds one from carrier + number when it can.
+   */
+  @Column({ name: 'tracking_url', type: 'varchar', length: 1024, nullable: true })
+  trackingUrl: string | null;
+
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

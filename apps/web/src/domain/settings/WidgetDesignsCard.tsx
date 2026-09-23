@@ -30,6 +30,7 @@ const EMPTY: WidgetDesignDraft = {
   panelHeight: DESIGN_LIMITS.panel.height.default,
   launcherIconUuid: null,
   quickReplyStyle: 'chip',
+  reviewLinkTemplate: '',
   customCss: '',
 };
 
@@ -43,6 +44,7 @@ function toDraft(d: WidgetDesignItem['design']): WidgetDesignDraft {
     panelHeight: d.panel?.height ?? EMPTY.panelHeight,
     launcherIconUuid: d.launcherIcon?.uuid ?? null,
     quickReplyStyle: d.quickReplyStyle === 'card' ? 'card' : 'chip',
+    reviewLinkTemplate: d.reviewLinkTemplate ?? '',
     customCss: d.customCss ?? '',
   };
 }
@@ -346,6 +348,16 @@ export function WidgetDesignsCard() {
                   <option value="card">{t('widgetDesigns.quickReplyCard')}</option>
                 </Select>
               </FormRow>
+              <FormRow label={t('widgetDesigns.reviewLink')}>
+                <Input
+                  value={ed.draft.reviewLinkTemplate ?? ''}
+                  onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, reviewLinkTemplate: e.target.value } })}
+                  placeholder="{productUrl}#reviews"
+                  maxLength={512}
+                  className="w-full font-mono text-xs"
+                />
+              </FormRow>
+              <p className="mb-2 text-xs text-gray-400">{t('widgetDesigns.reviewLinkHint')}</p>
               <FormRow label={t('widgetTheme.panel')}>
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <input type="number" min={DESIGN_LIMITS.panel.width.min} max={DESIGN_LIMITS.panel.width.max} step={4} value={ed.draft.panelWidth}

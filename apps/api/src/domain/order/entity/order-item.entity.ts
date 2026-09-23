@@ -29,6 +29,15 @@ export class OrderItem {
   @Column({ name: 'image_url', type: 'varchar', length: 1024, nullable: true })
   imageUrl: string | null;
 
+  /**
+   * The product's own storefront page (PLN-260923 P3) — where the widget's
+   * "write a review" sends the shopper. From the order's GraphQL rich tier
+   * (`onlineStoreUrl`, else `https://{shop}/products/{handle}`); null for lines
+   * that arrived by webhook or a downgraded tier until the next sync fills it.
+   */
+  @Column({ name: 'product_url', type: 'varchar', length: 1024, nullable: true })
+  productUrl: string | null;
+
   @Column({ name: 'option_text', type: 'varchar', length: 255, nullable: true })
   optionText: string | null;
 

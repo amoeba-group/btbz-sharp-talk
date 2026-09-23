@@ -6,6 +6,7 @@ import { Tenant, TenantWidgetCopy } from './entity/tenant.entity';
 import { normalizeStorefrontUrl } from '../../global/util/storefront-url.util';
 import {
   EXTERNAL_CHANNELS,
+  normalizeReviewLinkTemplate,
   normalizeWidgetTheme,
   NOTIFICATION_CATEGORY,
   WIDGET_TABS_DEFAULT,
@@ -689,6 +690,8 @@ export class TenantService {
       panel: d.panel ?? null,
       launcherIcon: await ref(d.launcher_icon_uuid, 'icon'),
       quickReplyStyle: d.quick_reply_style === 'card' ? 'card' : null,
+      // Normalized again with the whole theme; invalid → the product page (null).
+      reviewLinkTemplate: normalizeReviewLinkTemplate(d.review_link_template),
       customCss,
     };
   }

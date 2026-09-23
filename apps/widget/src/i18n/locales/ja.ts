@@ -242,6 +242,11 @@ export const ja: Translation = {
     items: '商品',
     total: '合計',
     writeReview: 'レビューを書く',
+    reviewItems: {
+      badge: 'レビュー',
+      reviewed: 'レビュー済み',
+      empty: 'レビューできる配達済みの商品はまだありません。',
+    },
     back: '戻る',
     qty: '数量 {{count}}',
     askRow: 'お問い合わせ',

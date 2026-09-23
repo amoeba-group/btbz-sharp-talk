@@ -738,6 +738,8 @@
     "quickReplyStyle": "Quick-reply style",
     "quickReplyChip": "Filled chips (default)",
     "quickReplyCard": "Icon cards (white, outlined)",
+    "reviewLink": "Review link",
+    "reviewLinkHint": "Where \"Write a review\" in the widget's Review tab goes. Empty = the product page. Use {productUrl}#reviews to jump to your review app's section, or a full https:// URL containing {productUrl}.",
     "historyTitle": "History — {{name}}",
     "historyEmpty": "No earlier versions yet (a snapshot is taken on every edit)",
     "restoreRevision": "Restore this version"

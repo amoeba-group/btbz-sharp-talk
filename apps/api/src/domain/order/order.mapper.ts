@@ -4,6 +4,7 @@ import {
   type OrderItemResponse,
   type OrderListItemResponse,
   type OrderLookupResponse,
+  type ReviewItemResponse,
 } from '@sharptalk/types';
 import { OrderCache } from './entity/order-cache.entity';
 import { OrderItem } from './entity/order-item.entity';
@@ -15,6 +16,7 @@ import { OrderItem } from './entity/order-item.entity';
 export type OrderSummary = OrderLookupResponse;
 export type OrderListItem = OrderListItemResponse;
 export type OrderItemView = OrderItemResponse;
+export type ReviewItemView = ReviewItemResponse;
 export type OrderDetailView = OrderDetailResponse;
 
 /** Entity -> response mapping for orders (camelCase payloads). */
@@ -63,6 +65,28 @@ export class OrderMapper {
       qty: item.qty,
       price: item.price,
       imageUrl: item.imageUrl ?? imageUrl ?? null,
+    };
+  }
+
+  /** A delivered line for the Review chip (PLN-260923 P3). */
+  static toReviewItem(
+    order: OrderCache,
+    item: OrderItem,
+    reviewed: boolean,
+    imageUrl?: string | null,
+  ): ReviewItemView {
+    return {
+      orderItemId: String(item.id),
+      orderId: String(order.id),
+      orderNumber: order.orderNumber,
+      title: item.title,
+      optionText: item.optionText,
+      price: item.price,
+      currency: order.currency,
+      imageUrl: item.imageUrl ?? imageUrl ?? null,
+      productUrl: item.productUrl ?? null,
+      reviewed,
+      orderedAt: new Date(order.orderedAt ?? order.createdAt).toISOString(),
     };
   }
 

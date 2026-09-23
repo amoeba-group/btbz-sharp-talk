@@ -30,6 +30,7 @@ export class SessionMapper {
       widgetTheme: notice.widgetTheme,
       widgetCopy: notice.widgetCopy,
       aiProcessingRegion: notice.aiProcessingRegion ?? 'US',
+      issueFeed: notice.issueFeed ?? false,
     };
   }
 }

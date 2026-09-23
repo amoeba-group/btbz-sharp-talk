@@ -738,6 +738,8 @@
     "quickReplyStyle": "快捷回复样式",
     "quickReplyChip": "填充圆片（默认）",
     "quickReplyCard": "图标卡片（白底描边）",
+    "reviewLink": "评价链接",
+    "reviewLinkHint": "小部件评价标签中“写评价”跳转的地址。留空＝商品页面。使用 {productUrl}#reviews 跳到评价应用区域，或输入包含 {productUrl} 的完整 https:// 地址。",
     "historyTitle": "变更历史 — {{name}}",
     "historyEmpty": "暂无早期版本（每次编辑都会保存快照）",
     "restoreRevision": "恢复此版本"

@@ -146,6 +146,8 @@ export interface WidgetDesignDraft {
   launcherIconUuid?: string | null;
   /** 'chip' | 'card' — opening scenario menu style (PLN-260916 P4). */
   quickReplyStyle?: 'chip' | 'card';
+  /** Review chip link template, e.g. `{productUrl}#reviews` (PLN-260923 P3). Empty = product page. */
+  reviewLinkTemplate?: string | null;
   /** Raw custom CSS as typed; the API sanitizes and may drop parts (P5). */
   customCss?: string | null;
 }
@@ -186,6 +188,7 @@ export function designToWire(design: WidgetDesignDraft) {
     panel: { width: design.panelWidth, height: design.panelHeight },
     launcher_icon_uuid: design.launcherIconUuid ?? null,
     quick_reply_style: design.quickReplyStyle ?? 'chip',
+    review_link_template: design.reviewLinkTemplate?.trim() || null,
     custom_css: design.customCss ?? null,
   };
 }

@@ -38,7 +38,8 @@ export interface Analytics {
   escalate: () => void;
   orderSearch: (found: boolean) => void;
   orderView: (order: { id: string; value?: number; currency?: string }) => void;
-  trackingView: (orderId: string) => void;
+  /** `outbound`: Track left for the carrier's own page (PLN-260923 P2) rather than the inline stepper. */
+  trackingView: (orderId: string, outbound?: boolean) => void;
   beginCheckout: (params?: { value?: number; currency?: string; items?: GaItem[] }) => void;
   /** Payment-conversion key event (deduped per transaction within the session). */
   purchase: (payload: PurchasePayload) => void;
@@ -135,7 +136,8 @@ export function Ga4Provider({ children, measurementId, consent = false, context 
         });
         track(GA_EVENT.FUNNEL_STAGE, { stage: FUNNEL_STAGE.CONSIDERATION });
       },
-      trackingView: (orderId) => track(GA_EVENT.TRACKING_VIEW, { order_id: orderId }),
+      trackingView: (orderId, outbound = false) =>
+        track(GA_EVENT.TRACKING_VIEW, { order_id: orderId, outbound }),
       beginCheckout: (params) => {
         track(GA_EVENT.BEGIN_CHECKOUT, { ...params });
         track(GA_EVENT.FUNNEL_STAGE, { stage: FUNNEL_STAGE.INTENT });

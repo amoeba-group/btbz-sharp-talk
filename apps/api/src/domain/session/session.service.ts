@@ -60,6 +60,8 @@ export interface PrivacyNoticeInfo {
   widgetCopy: WidgetCopy;
   /** Where AI inference runs for this deployment (AI_PROCESSING_REGION, e.g. 'US'). */
   aiProcessingRegion?: string;
+  /** Tenant runs an issue workflow (native/bridge) — the widget shows an Inquiries chip. */
+  issueFeed?: boolean;
 }
 
 /** TTL for the token→session Redis cache (PERF-11). */
@@ -538,6 +540,8 @@ export class SessionService {
         firstVisit: agentGreeting ?? tenant?.widgetCopy?.firstVisit ?? {},
         loginGreeting: tenant?.widgetCopy?.loginGreeting ?? {},
       },
+      // 'base' (the default) has no shopper-facing issue feed (PLN-260923 D-2).
+      issueFeed: !!tenant?.workflowMode && tenant.workflowMode !== 'base',
     };
   }
 

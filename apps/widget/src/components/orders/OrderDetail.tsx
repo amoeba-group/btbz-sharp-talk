@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, ChevronDown, ChevronRight, MessageSquare, Package, Star, Truck } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight, ExternalLink, MessageSquare, Package, Star, Truck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore } from '../../store/widgetStore';
 import { isAuthError } from '../../lib/errors';
@@ -88,6 +88,43 @@ function ActionRow({
   );
 }
 
+/**
+ * Track as a link to the carrier's own page (PLN-260923 P2). Same row geometry
+ * as ActionRow so the list reads the same whichever form Track takes; the
+ * trailing ↗ says it leaves the widget.
+ */
+function ActionLink({
+  icon,
+  label,
+  detail,
+  href,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  /** Carrier · number, when known — tells the shopper where they are going. */
+  detail?: string;
+  href: string;
+  onClick: () => void;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={onClick}
+      className="flex w-full items-center gap-2.5 py-3 text-sm font-medium text-gray-800 hover:text-gray-900"
+    >
+      <span className="text-gray-400">{icon}</span>
+      <span className="min-w-0 flex-1 truncate text-left">
+        {label}
+        {detail && <span className="ml-1.5 font-normal text-gray-400">· {detail}</span>}
+      </span>
+      <ExternalLink className="h-4 w-4 flex-shrink-0 text-gray-300" />
+    </a>
+  );
+}
+
 export function OrderDetailView({
   orderId,
   sessionToken,
@@ -105,7 +142,13 @@ export function OrderDetailView({
   const setAuthenticated = useWidgetStore((s) => s.setAuthenticated);
   const [showTrack, setShowTrack] = useState(false);
   const [reviewItemId, setReviewItemId] = useState<string | null>(null);
-  const tracking = useTracking(showTrack ? orderId : null, sessionToken);
+  // Fetched up front rather than on expand: whether Track is a link to the
+  // carrier or an in-place stepper depends on the answer (PLN-260923 P2).
+  const tracking = useTracking(orderId, sessionToken);
+  const trackingUrl = tracking.data?.trackingUrl ?? null;
+  const trackingDetail = [tracking.data?.carrier, tracking.data?.trackingNumber]
+    .filter(Boolean)
+    .join(' ');
 
   // Session no longer customer-bound → clear the flag; NotificationsTab (our
   // parent since the Orders tab was retired) then renders the sign-in prompt
@@ -275,18 +318,28 @@ export function OrderDetailView({
         )}
 
         <div className="mt-2 border-t border-gray-100">
-          <ActionRow
-            icon={<Truck className="h-4 w-4" />}
-            label={t('orders.track')}
-            open={showTrack}
-            onClick={() => {
-              const next = !showTrack;
-              setShowTrack(next);
-              if (next) analytics.trackingView(orderId);
-            }}
-          />
-          {showTrack && tracking.isLoading && <Spinner />}
-          {showTrack && tracking.data && (
+          {trackingUrl ? (
+            <ActionLink
+              icon={<Truck className="h-4 w-4" />}
+              label={t('orders.track')}
+              detail={trackingDetail || undefined}
+              href={trackingUrl}
+              onClick={() => analytics.trackingView(orderId, true)}
+            />
+          ) : (
+            <ActionRow
+              icon={<Truck className="h-4 w-4" />}
+              label={t('orders.track')}
+              open={showTrack}
+              onClick={() => {
+                const next = !showTrack;
+                setShowTrack(next);
+                if (next) analytics.trackingView(orderId);
+              }}
+            />
+          )}
+          {!trackingUrl && showTrack && tracking.isLoading && <Spinner />}
+          {!trackingUrl && showTrack && tracking.data && (
             <div className="pb-3">
               <TrackingStepper tracking={tracking.data} />
             </div>

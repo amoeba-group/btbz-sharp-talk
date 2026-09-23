@@ -56,6 +56,8 @@ export interface ShopifyOrderDto {
      * Webhooks do not carry one; the GraphQL rich tier does.
      */
     image_url?: string | null;
+    /** The product's storefront page (PLN-260923 P3) — rich tier only, like image_url. */
+    product_url?: string | null;
   }> | null;
 }
 
@@ -66,6 +68,10 @@ export interface ShopifyFulfillmentDto {
   shipment_status?: string | null;
   tracking_number?: string | null;
   tracking_company?: string | null;
+  /** Carrier tracking page; Shopify fills it for carriers it knows (PLN-260923 P2). */
+  tracking_url?: string | null;
+  /** Multi-parcel form of the above; the first entry backs `tracking_url` when that is absent. */
+  tracking_urls?: string[] | null;
 }
 
 export interface FetchOrdersOptions {
@@ -111,6 +117,9 @@ interface OrderNode {
         image?: { url?: string | null } | null;
         product?: {
           legacyResourceId?: string | null;
+          handle?: string | null;
+          /** Null when the product is not published to the Online Store channel. */
+          onlineStoreUrl?: string | null;
           featuredImage?: { url?: string | null } | null;
         } | null;
       } | null;
@@ -153,7 +162,7 @@ const LINE_ITEMS_RICH = `${LINE_ITEMS_BASIC}
           variant {
             title
             image { url }
-            product { legacyResourceId featuredImage { url } }
+            product { legacyResourceId handle onlineStoreUrl featuredImage { url } }
           }`;
 
 const lineItemsSelection = (rich: boolean): string => `
@@ -161,6 +170,22 @@ const lineItemsSelection = (rich: boolean): string => `
         nodes {${rich ? LINE_ITEMS_RICH : LINE_ITEMS_BASIC}
         }
       }`;
+
+/**
+ * Where a line's product lives on the storefront (PLN-260923 P3): Shopify's own
+ * `onlineStoreUrl` (the store's primary domain) when the product is published
+ * there, else the handle on the shop's myshopify domain, which Shopify
+ * redirects to the primary domain. Null when neither is known.
+ */
+export function productUrl(
+  product: { handle?: string | null; onlineStoreUrl?: string | null } | null | undefined,
+  shopDomain: string,
+): string | null {
+  if (!product) return null;
+  if (product.onlineStoreUrl && /^https?:\/\//i.test(product.onlineStoreUrl)) return product.onlineStoreUrl;
+  const handle = product.handle?.trim();
+  return handle ? `https://${shopDomain}/products/${encodeURIComponent(handle)}` : null;
+}
 
 /** How much of a line item this call asks for. */
 type LineItemTier = 'rich' | 'basic' | 'none';
@@ -293,7 +318,7 @@ export class ShopifyAdminClient {
     // dropping straight to `none` would have cost it).
     const body = await this.fetchOrdersPage(shopDomain, token, vars);
     const conn = body.data?.orders;
-    const orders = (conn?.nodes ?? []).map((n) => this.toOrderDto(n));
+    const orders = (conn?.nodes ?? []).map((n) => this.toOrderDto(n, shopDomain));
     const nextPageInfo =
       conn?.pageInfo?.hasNextPage && conn.pageInfo.endCursor
         ? this.encodeCursor(conn.pageInfo.endCursor, query)
@@ -430,7 +455,7 @@ export class ShopifyAdminClient {
   }
 
   /** GraphQL node → REST-shaped DTO the sync/upsert layer already understands. */
-  private toOrderDto(n: OrderNode): ShopifyOrderDto {
+  private toOrderDto(n: OrderNode, shopDomain: string): ShopifyOrderDto {
     return {
       id: Number(n.legacyResourceId ?? 0),
       name: n.name,
@@ -467,6 +492,7 @@ export class ShopifyAdminClient {
             // Variant picture first — it is the colour the shopper actually
             // bought; the product's featured image is the fallback.
             image_url: li.variant?.image?.url ?? li.variant?.product?.featuredImage?.url ?? null,
+            product_url: productUrl(li.variant?.product, shopDomain),
           }))
         : undefined,
     };

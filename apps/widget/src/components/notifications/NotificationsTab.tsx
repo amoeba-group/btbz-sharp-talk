@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BellOff, Check, ExternalLink, Lock, Star } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore, type TabKey } from '../../store/widgetStore';
 import { AuthGate } from '../chat/AuthGate';
@@ -16,6 +16,7 @@ import { ShipmentList } from './ShipmentList';
 import { OrderList } from '../orders/OrderList';
 import { OrderDetailView } from '../orders/OrderDetail';
 import { ReviewForm } from '../orders/ReviewForm';
+import { ReviewItemList } from '../orders/ReviewItemList';
 import { chipBelongsTo, chipsFor, defaultChip } from './tab-chips';
 import { NOTIFICATION_SCOPE } from '../../lib/widget-tabs';
 import type { NotificationItem } from '../../lib/types';
@@ -174,14 +175,16 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
   const storedFilter = useWidgetStore((s) => s.notificationFilter);
   const setStoredFilter = useWidgetStore((s) => s.setNotificationFilter);
 
-  const chips = chipsFor(tab, visibleTabs);
+  const hasIssueFeed = useWidgetStore((s) => s.issueFeed);
+  const chipOpts = { inquiries: hasIssueFeed };
+  const chips = chipsFor(tab, visibleTabs, chipOpts);
   // The store holds ONE selected chip so a deep link (`?reopen=orders`) can aim
   // at it. When two list tabs exist that chip belongs to only one of them, so
   // the other falls back to its own first chip instead of rendering a filter it
   // does not offer.
-  const notifFilter = chipBelongsTo(storedFilter, tab, visibleTabs)
+  const notifFilter = chipBelongsTo(storedFilter, tab, visibleTabs, chipOpts)
     ? storedFilter
-    : defaultChip(tab, visibleTabs);
+    : defaultChip(tab, visibleTabs, chipOpts);
   const setNotifFilter = setStoredFilter;
 
   // Sub-views pushed over the list. Both used to be reachable only through the
@@ -192,6 +195,8 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
 
   const isShipping = notifFilter === 'shipping';
   const isInquiries = notifFilter === 'inquiries';
+  // Purchased lines to review (PLN-260923 P3), not the review-notification feed.
+  const isReviewList = notifFilter === 'review';
   // The order LIST, not a notification category — see tab-chips ORDER_CHIPS.
   const isOrderList = notifFilter === 'orders';
   // What "all" covers. With both list tabs on, each shows only its own half —
@@ -206,10 +211,11 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
       : NOTIFICATION_SCOPE.NOTICE;
   const { data, isLoading, isError, error } = useNotifications(
     sessionToken,
-    isShipping || isInquiries || isOrderList ? 'all' : notifFilter,
+    isShipping || isInquiries || isOrderList || isReviewList ? 'all' : notifFilter,
     scope,
   );
   const markRead = useMarkRead(sessionToken);
+  const queryClient = useQueryClient();
   // Selection mode (PLN-260916 P3): pick rows → delete selected / delete all.
   const removeNotifications = useDeleteNotifications(sessionToken);
   const [selecting, setSelecting] = useState(false);
@@ -281,7 +287,11 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
         <ReviewForm
           sessionToken={sessionToken}
           orderItemId={reviewItem}
-          onClose={() => setReviewItem(null)}
+          onClose={() => {
+            setReviewItem(null);
+            // The Review chip marks written lines; refresh it on the way back.
+            void queryClient.invalidateQueries({ queryKey: ['review-items'] });
+          }}
         />
       </div>
     );
@@ -312,7 +322,7 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
           </button>
         ))}
         {/* Selection mode toggle — only where the plain notification list renders. */}
-        {!isOrderList && !isShipping && !isInquiries && (data?.length ?? 0) > 0 && (
+        {!isOrderList && !isShipping && !isInquiries && !isReviewList && (data?.length ?? 0) > 0 && (
           <button
             type="button"
             onClick={() => (selecting ? exitSelecting() : setSelecting(true))}
@@ -328,6 +338,8 @@ export function NotificationsTab({ tab = 'notifications' }: { tab?: TabKey } = {
           <OrderList sessionToken={sessionToken} onOpenOrder={setOpenOrder} />
         ) : isShipping ? (
           <ShipmentList sessionToken={sessionToken} onOpenOrder={setOpenOrder} />
+        ) : isReviewList ? (
+          <ReviewItemList sessionToken={sessionToken} onWrite={setReviewItem} />
         ) : isInquiries ? (
           <IssueFeed
             issues={issueFeed ?? []}
