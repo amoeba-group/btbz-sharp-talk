@@ -42,9 +42,14 @@ function normaliseTitle(title: string | null | undefined): string {
 const LOOKUP_MAX_ATTEMPTS = 5;
 const LOOKUP_WINDOW_SEC = 15 * 60;
 const DAYS_WINDOW_MAX = 90;
-/** Review chip window — the widget's inline order window (10 orders / 30 days, PLN-260923 D-3). */
-const REVIEW_WINDOW_ORDERS = 10;
-const REVIEW_WINDOW_DAYS = 30;
+/**
+ * Review chip window = the order list beside it, the Payment chip (widget
+ * TAB_ORDER_LIMIT/TAB_ORDER_DAYS, 20 orders / 90 days — PLN-260923 D-3). Not
+ * the chat card's 10/30: a line is reviewable only once delivered, which is
+ * often past day 30, so the narrower window emptied the list for real orders.
+ */
+const REVIEW_WINDOW_ORDERS = 20;
+const REVIEW_WINDOW_DAYS = 90;
 
 /** `days` query param → integer 1–90, null when absent, 400 on garbage/out-of-range. */
 function parseDaysWindow(days?: string): number | null {
@@ -162,7 +167,7 @@ export class OrderService {
    * fulfillment row, because the scheduled sync maps a fulfilled order back to
    * `shipping` (it cannot see delivery) and would otherwise hide lines the
    * fulfillment webhook already marked delivered. Same bounded window as the
-   * widget's order list (10 orders / 30 days); tenant AND customer scoped.
+   * widget's order list (20 orders / 90 days); tenant AND customer scoped.
    */
   async reviewItemsForSession(sessionToken: string): Promise<ReviewItemView[]> {
     const session = await this.sessionService.requireCustomer(sessionToken);
