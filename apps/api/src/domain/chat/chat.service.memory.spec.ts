@@ -156,6 +156,18 @@ describe('ChatService — conversation memory', () => {
     expect(JSON.stringify(history)).not.toContain('010-1234-5678');
   });
 
+  it('searches with the shop\'s last reply as well as the customer turns (S8)', async () => {
+    const b = build({ prior: PRIOR_652 });
+
+    await b.svc.handleUserMessage(b.session, '예약 진행');
+
+    const searchText = b.rag.answer.mock.calls[0][5] as string;
+    expect(searchText).toContain('성함, 연락처, 주소, 희망 일시를 알려주세요');
+    expect(searchText).toContain('벽걸이');
+    expect(searchText).not.toContain('010-1234-5678');
+    expect(searchText.endsWith('예약 진행')).toBe(true);
+  });
+
   it('shows the classifier the exchange the message answers', async () => {
     const b = build({ prior: PRIOR_652 });
 

@@ -2,6 +2,7 @@ import {
   buildHistory,
   hasAssistantTurn,
   replacePiiTokens,
+  retrievalQuery,
   transcript,
   withCurrentTurn,
 } from './conversation-history.util';
@@ -132,5 +133,53 @@ describe('replacePiiTokens (PLN-260929 S7)', () => {
 
   it('is a no-op on clean text', () => {
     expect(replacePiiTokens('안녕하세요', 'KO')).toBe('안녕하세요');
+  });
+});
+
+describe('retrievalQuery (PLN-260929 S8)', () => {
+  it('adds the shop\'s last reply so a topic-less confirmation still finds its topic', () => {
+    const q = retrievalQuery(
+      [
+        { role: 'user', content: '에어컨 벽걸이, 가정, 2대' },
+        { role: 'assistant', content: '**최종 예약 내용**\n- 서비스: 벽걸이 에어컨 청소' },
+        { role: 'user', content: '1. 김익용' },
+        { role: 'assistant', content: '김익용 님으로 확인했습니다. 예약 내용 최종 확인' },
+      ],
+      '예약 진행',
+    );
+    expect(q).toBe(
+      '에어컨 벽걸이, 가정, 2대\n1. 김익용\n김익용 님으로 확인했습니다. 예약 내용 최종 확인\n예약 진행',
+    );
+  });
+
+  it('keeps only the last two customer turns (FIX-260806 A2)', () => {
+    const q = retrievalQuery(
+      [
+        { role: 'user', content: 'a' },
+        { role: 'assistant', content: 'x' },
+        { role: 'user', content: 'b' },
+        { role: 'assistant', content: 'y' },
+        { role: 'user', content: 'c' },
+      ],
+      'd',
+    );
+    expect(q).toBe('b\ny\nc\nd');
+  });
+
+  it('strips markdown and the agent marker, and caps each part', () => {
+    const q = retrievalQuery(
+      [
+        { role: 'user', content: 'q' },
+        { role: 'assistant', content: `[Agent] **Hello** ${'z'.repeat(300)}` },
+      ],
+      'now',
+    );
+    const [, reply] = q.split('\n');
+    expect(reply.startsWith('Hello z')).toBe(true);
+    expect(reply).toHaveLength(200);
+  });
+
+  it('is the current message alone on the first turn', () => {
+    expect(retrievalQuery([], '에어컨 청소 가격')).toBe('에어컨 청소 가격');
   });
 });

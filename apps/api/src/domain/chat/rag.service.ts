@@ -134,6 +134,16 @@ export class RagService {
    * cannot invert a clear RRF gap.
    */
   private static readonly GROUP_BONUS = 0.002;
+  /**
+   * Slots that go to the best documents by unbiased rank whatever the group
+   * preference says (PLN-260929 S9). The bonus above was meant to be a nudge,
+   * but RRF gaps between neighbouring ranks are ~0.0003, so 0.002 jumps about
+   * ten places — in a KB of 2,275 products and ~30 policy sections a question
+   * the classifier labelled product_inquiry ("What is your return policy?")
+   * came back with six products and no policy at all, and the model said it
+   * had no information (measured on staging 2026-09-29).
+   */
+  private static readonly UNBIASED_RESERVE = 3;
   private static readonly SNIPPET_CHARS = 800;
   /**
    * Documents handed to the model per answer. Was 4, which is too few for this
@@ -184,6 +194,30 @@ export class RagService {
     const scopeAgentId =
       aiAgentId == null ? null : await this.aiConfig.effectiveAgentId(tenantId, aiAgentId);
     return (await this.retrieveHybrid(tenantId, query, limit, undefined, scopeAgentId)).chunks;
+  }
+
+  /**
+   * Top `limit` with the group bonus applied, except that the best
+   * UNBIASED_RESERVE documents by plain score always keep a place (S9). Result
+   * is ordered by the biased score, so a preferred document still leads.
+   */
+  static rankWithPreference<T extends { doc: { docGroup?: string | null }; rrf: number }>(
+    scored: T[],
+    limit: number,
+    preferGroup?: string,
+  ): T[] {
+    const plain = [...scored].sort((a, b) => b.rrf - a.rrf);
+    if (!preferGroup) return plain.slice(0, limit);
+    const biasedScore = (e: T) =>
+      e.rrf + (e.doc.docGroup === preferGroup ? RagService.GROUP_BONUS : 0);
+    const kept = new Set(plain.slice(0, Math.min(RagService.UNBIASED_RESERVE, limit)));
+    for (const e of [...scored].sort((a, b) => biasedScore(b) - biasedScore(a))) {
+      if (kept.size >= limit) break;
+      kept.add(e);
+    }
+    return [...kept]
+      .sort((a, b) => biasedScore(b) - biasedScore(a))
+      .map((e) => ({ ...e, rrf: biasedScore(e) }));
   }
 
   /** Who is answering, after inactive/unknown pins degrade to the default. */
@@ -261,18 +295,14 @@ export class RagService {
       rows.forEach((d) => ftById.set(Number(d.id), d));
     }
 
-    const ranked = [...fused.entries()]
+    const scored = [...fused.entries()]
       .map(([id, e]) => ({ doc: ftById.get(id), ...e }))
       .filter((e): e is { doc: KbDocument; rrf: number; similarity: number | null } => !!e.doc)
       .map((e) => ({
         ...e,
-        rrf:
-          e.rrf +
-          (e.doc.source === 'knowledge_store' ? RagService.SOURCE_BONUS : 0) +
-          (preferGroup && e.doc.docGroup === preferGroup ? RagService.GROUP_BONUS : 0),
-      }))
-      .sort((a, b) => b.rrf - a.rrf)
-      .slice(0, limit);
+        rrf: e.rrf + (e.doc.source === 'knowledge_store' ? RagService.SOURCE_BONUS : 0),
+      }));
+    const ranked = RagService.rankWithPreference(scored, limit, preferGroup);
 
     const storefront = await this.storefrontFor(tenantId);
     const chunks = ranked.map(({ doc, similarity }) => ({

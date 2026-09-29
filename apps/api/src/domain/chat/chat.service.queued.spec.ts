@@ -73,10 +73,11 @@ describe('ChatService — queued threads', () => {
       save: msgSave,
       create: (m: Partial<Message>) => m,
       update: jest.fn(),
-      // Newest-first, like the real query the retrieval context uses.
+      // Newest-first, like the real history query the retrieval context now
+      // derives from (PLN-260929 S8).
       find: jest.fn(async () =>
         (opts.previousUserTurns ?? [])
-          .map((body, i) => ({ id: 10 + i, body }) as Message)
+          .map((body, i) => ({ id: String(10 + i), senderType: 'user', body }) as unknown as Message)
           .reverse(),
       ),
       findOne: jest.fn(async () => null),

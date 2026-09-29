@@ -81,6 +81,45 @@ export function hasAssistantTurn(history: AiMessage[] | undefined): boolean {
   return !!history?.some((m) => m.role === 'assistant');
 }
 
+/** Earlier customer turns folded into the retrieval query (FIX-260806 A2). */
+export const RETRIEVAL_CONTEXT_TURNS = 2;
+/** Per-turn cap on that borrowed context, so one long message can't drown the query. */
+export const RETRIEVAL_CONTEXT_CHARS = 200;
+
+/**
+ * Search text for this turn: the shopper's last two turns and the shop's last
+ * reply, then the current message. Retrieval only.
+ *
+ * Customer turns alone were FIX-260806 A2 ("and for my young son?" needs the
+ * skincare question before it). The shop's reply joined in PLN-260929 S8: a
+ * confirmation such as "예약 진행" after "1. 김익용" carries no topic word on
+ * the customer side at all — the topic lives in what the assistant just said
+ * ("예약 내용 최종 확인 …"), and without it the turn scored low and was handed
+ * off as unanswerable. Already scrubbed: `history` comes from buildHistory.
+ */
+export function retrievalQuery(history: AiMessage[], current: string): string {
+  const picked = new Set<AiMessage>();
+  const lastAssistant = [...history].reverse().find((m) => m.role === 'assistant');
+  if (lastAssistant) picked.add(lastAssistant);
+  history
+    .filter((m) => m.role === 'user')
+    .slice(-RETRIEVAL_CONTEXT_TURNS)
+    .forEach((m) => picked.add(m));
+  const parts = history
+    .filter((m) => picked.has(m))
+    .map((m) =>
+      m.content
+        .replace(AGENT_PREFIX, '')
+        // Markdown and emoji are noise to a keyword index.
+        .replace(/[*#>`_~|]+/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, RETRIEVAL_CONTEXT_CHARS),
+    )
+    .filter(Boolean);
+  return parts.length ? [...parts, current].join('\n') : current;
+}
+
 /** The recent exchange as a plain transcript, for the classifier's system block. */
 export function transcript(history: AiMessage[]): string {
   return history
