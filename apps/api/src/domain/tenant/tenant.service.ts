@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto';
+import { randomBytes, randomUUID } from 'crypto';
 import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, Repository } from 'typeorm';
@@ -6,8 +6,11 @@ import { Tenant, TenantWidgetCopy } from './entity/tenant.entity';
 import { normalizeStorefrontUrl } from '../../global/util/storefront-url.util';
 import {
   EXTERNAL_CHANNELS,
+  isValidIpEntry,
   normalizeReviewLinkTemplate,
+  normalizeWidgetAccess,
   normalizeWidgetTheme,
+  parseUrlRule,
   NOTIFICATION_CATEGORY,
   WIDGET_TABS_DEFAULT,
   normalizeWidgetTabs,
@@ -46,6 +49,7 @@ import {
   UpdateKnowledgeSettingsRequest,
   UpdateTenantCustomCssRequest,
   UpdateWidgetSettingsRequest,
+  UpdateWidgetAccessRequest,
   UpdateWidgetThemeRequest,
   UpdateShopifySettingsRequest,
 } from './dto/request/tenant.request';
@@ -541,6 +545,78 @@ export class TenantService {
       action: 'tenant.embed_secret_rotated',
       target: 'embed signing secret',
     });
+  }
+
+  /**
+   * Widget exposure restriction (PLN-260929). Stored whole after validation:
+   * a bad IP or URL is refused here so the operator hears about the typo, not
+   * later while wondering why their office never matched.
+   */
+  async updateWidgetAccess(
+    tenantId: number,
+    actorId: number,
+    body: UpdateWidgetAccessRequest,
+  ): Promise<Tenant> {
+    const tenant = await this.findById(tenantId);
+
+    for (const entry of body.ips ?? []) {
+      if (!isValidIpEntry(entry)) {
+        throw new BusinessException(ERROR_CODE.WIDGET_ACCESS_INVALID_IP, HttpStatus.BAD_REQUEST);
+      }
+    }
+    for (const entry of body.urls ?? []) {
+      if (!parseUrlRule(entry)) {
+        throw new BusinessException(ERROR_CODE.WIDGET_ACCESS_INVALID_URL, HttpStatus.BAD_REQUEST);
+      }
+    }
+
+    const next = normalizeWidgetAccess({
+      enabled: body.enabled,
+      startsAt: body.starts_at ?? null,
+      endsAt: body.ends_at ?? null,
+      ips: body.ips ?? [],
+      urls: body.urls ?? [],
+    });
+
+    if (next?.startsAt && next.endsAt && new Date(next.startsAt) >= new Date(next.endsAt)) {
+      throw new BusinessException(ERROR_CODE.WIDGET_ACCESS_BAD_WINDOW, HttpStatus.BAD_REQUEST);
+    }
+    // Switched on with no rule at all hides the widget from everyone including
+    // the operator — refuse it rather than let a save produce a blackout.
+    if (next?.enabled && !next.ips.length && !next.urls.length && !tenant.widgetAccessKey) {
+      throw new BusinessException(ERROR_CODE.WIDGET_ACCESS_NO_RULES, HttpStatus.BAD_REQUEST);
+    }
+
+    tenant.widgetAccess = next;
+    const saved = await this.tenantRepo.save(tenant);
+    await this.audit
+      .write({
+        tenantId,
+        actorType: 'user',
+        actorId,
+        action: 'tenant.widget_access_updated',
+        target: next?.enabled ? 'widget access: on' : 'widget access: off',
+        // Audit metadata is a loose record; the config is a typed shape.
+        metadata: next ? { ...next } : undefined,
+      })
+      .catch(() => undefined);
+    return saved;
+  }
+
+  /** New invite key, stored encrypted. Returned in full to the caller. */
+  async rotateWidgetAccessKey(tenantId: number, actorId: number): Promise<string> {
+    const key = randomBytes(16).toString('hex');
+    await this.tenantRepo.update({ id: tenantId }, { widgetAccessKey: key });
+    await this.audit
+      .write({
+        tenantId,
+        actorType: 'user',
+        actorId,
+        action: 'tenant.widget_access_key_rotated',
+        target: 'widget access invite key',
+      })
+      .catch(() => undefined);
+    return key;
   }
 
   async updateWidgetTheme(

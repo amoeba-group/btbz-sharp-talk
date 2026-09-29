@@ -36,6 +36,7 @@ import {
   UpdateKnowledgeSettingsRequest,
   UpdateTenantCustomCssRequest,
   UpdateNotificationChannelsRequest,
+  UpdateWidgetAccessRequest,
   UpdateWidgetThemeRequest,
   UpdateEmbedOriginsRequest,
   UpdateWidgetSettingsRequest,
@@ -225,6 +226,45 @@ export class TenantController {
     }
     const tenant = await this.tenantService.updateWidgetTheme(user.tenantId, user.userId, body);
     return TenantMapper.toWidgetTheme(tenant);
+  }
+
+  /**
+   * Widget exposure restriction (PLN-260929). Declared before ':uuid' for the
+   * same reason the theme routes are — otherwise the path reads as a UUID.
+   */
+  @Get('widget-access')
+  @RequireRank(USER_RANK.MASTER, USER_RANK.DIRECTOR)
+  @ApiOperation({ summary: "This tenant's widget exposure restriction" })
+  async getWidgetAccess(@CurrentUser() user: Principal) {
+    const tenant = await this.tenantService.findById(this.tenantId(user));
+    return TenantMapper.toWidgetAccess(tenant);
+  }
+
+  @Patch('widget-access')
+  @RequireRank(USER_RANK.MASTER)
+  @ApiOperation({ summary: 'Replace the widget exposure restriction (sent whole)' })
+  async updateWidgetAccess(
+    @CurrentUser() user: Principal,
+    @Body() body: UpdateWidgetAccessRequest,
+  ) {
+    if (user.actorType !== 'user') {
+      throw new BusinessException(ERROR_CODE.FORBIDDEN, HttpStatus.FORBIDDEN);
+    }
+    const tenant = await this.tenantService.updateWidgetAccess(user.tenantId, user.userId, body);
+    return TenantMapper.toWidgetAccess(tenant);
+  }
+
+  @Post('widget-access/key')
+  @RequireRank(USER_RANK.MASTER)
+  @ApiOperation({ summary: 'Generate (or replace) the tester invite key' })
+  async rotateWidgetAccessKey(@CurrentUser() user: Principal) {
+    if (user.actorType !== 'user') {
+      throw new BusinessException(ERROR_CODE.FORBIDDEN, HttpStatus.FORBIDDEN);
+    }
+    // Rotating invalidates every invite link already handed out — the console
+    // confirms before calling, the same stance as the embed secret.
+    const key = await this.tenantService.rotateWidgetAccessKey(user.tenantId, user.userId);
+    return { key };
   }
 
   @Get('embed-settings')

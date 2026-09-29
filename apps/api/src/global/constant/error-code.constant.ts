@@ -253,6 +253,15 @@ export const ERROR_CODE = {
   WIDGET_DESIGN_ACTIVE: { code: 'E5086', message: 'This design is in use — switch to the basic widget or another design first' },
   WIDGET_DESIGN_NAME_TAKEN: { code: 'E5087', message: 'A design with this name already exists' },
 
+  // E5088-E5090 — Widget exposure restriction (PLN-260929).
+  WIDGET_ACCESS_INVALID_IP: { code: 'E5088', message: 'Not an IP address or CIDR block' },
+  WIDGET_ACCESS_INVALID_URL: { code: 'E5089', message: 'Not a URL' },
+  /** Switched on with nothing allowed would hide the widget from everyone. */
+  WIDGET_ACCESS_NO_RULES: { code: 'E5090', message: 'Turn-on requires at least one allowed IP, URL or invite key' },
+  WIDGET_ACCESS_BAD_WINDOW: { code: 'E5091', message: 'The test window must start before it ends' },
+  /** The visitor is outside the tenant's test-mode allowlist. */
+  WIDGET_ACCESS_DENIED: { code: 'E5092', message: 'Widget is not available from here' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

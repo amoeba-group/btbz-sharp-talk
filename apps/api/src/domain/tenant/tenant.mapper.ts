@@ -4,6 +4,7 @@ import { IntegrationCredential } from './entity/integration-credential.entity';
 import { IntegrationStatusEntity } from '../integration/entity/integration-status.entity';
 import {
   EXTERNAL_CHANNELS,
+  isWithinWindow,
   normalizeWidgetTheme,
   NOTIFICATION_CATEGORY,
   WIDGET_LOGIN_MODE,
@@ -123,6 +124,26 @@ export class TenantMapper {
       channels: t.notificationChannels ?? {},
       categories: Object.values(NOTIFICATION_CATEGORY).filter((c) => c !== 'all'),
       channelKeys: [...EXTERNAL_CHANNELS],
+    };
+  }
+
+  /**
+   * The restriction as the console edits it. The invite key itself is NOT sent
+   * back here — only whether one exists; the key travels once, in the response
+   * to the rotate call, like the embed secret.
+   */
+  static toWidgetAccess(tenant: Tenant) {
+    const access = tenant.widgetAccess ?? null;
+    return {
+      enabled: access?.enabled ?? false,
+      startsAt: access?.startsAt ?? null,
+      endsAt: access?.endsAt ?? null,
+      ips: access?.ips ?? [],
+      urls: access?.urls ?? [],
+      keyConfigured: !!tenant.widgetAccessKey,
+      /** Whether the window is open right now — drives the console badge. */
+      activeNow: access?.enabled ? isWithinWindow(access, new Date()) : false,
+      shopDomain: tenant.shopDomain ?? null,
     };
   }
 
