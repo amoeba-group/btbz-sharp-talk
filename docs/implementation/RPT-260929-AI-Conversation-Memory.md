@@ -16,6 +16,8 @@
 | S5 | 답변 재사용: AI가 이미 말한 대화에선 **조회·후보 저장 모두 안 함**(구현 중 추가 발견: 맥락 의존 답변이 후보로 저장되면 다른 대화의 첫 질문에 재생될 수 있었다) |
 | S6 | out_of_scope → `rag.groundingConfidence()`(검색만, LLM 0회) ≥ 0.45면 RAG 경로 |
 | S7 | 모더레이션 후 `[PHONE]/[EMAIL]/[ADDR]/[CARD]/[ORDER]` → 세션 언어 표현(6개 언어, 원문 복원 없음) |
+| S8 (추가, #572) | 검색어 = 고객 2턴 + **AI 직전 1턴** + 현재 (`retrievalQuery`, 스크럽된 이력에서 파생 → 턴당 DB 조회 1회 감소) |
+| S9 (추가, #572) | `RagService.rankWithPreference` — 그룹 선호 가산(0.002 ≈ RRF 인접 간격 7배)이 다른 그룹을 전부 밀어내지 않게 편향 없는 상위 3건 보존 |
 
 ## 2. 파일
 
@@ -32,6 +34,9 @@
 - 단위: 신규 33케이스 + API 전체 **200 suites / 2017 tests 통과**, `tsc` 통과, CI 통과
 - 스테이징 실측(대화 652 원문 재생 → 대화 654): PLN §4 판정 5종 **전부 통과** — 상세 TCR §2
 - 회귀(ivyusa EN, 대화 656): 후속 질문 맥락 유지 ✅. 첫 턴 반품정책 미답변은 기존 현상(변경 전과 동일한 호출) — TCR §3
+- S8/S9 재실측(#572 배포 후):
+  - skyliving 대화 657: "예약 진행" → AI가 예약 요약으로 접수 확인 → deny 규칙 핸드오프(`policy`) → `waiting`·escalated. **목표 흐름 그대로** 동작
+  - ivyusa 콘솔 `/knowledge/ask` "What is your return policy?" `group=product`: 변경 전 출처 0건·conf 0.95 "정보 없음" → 변경 후 `Returns & Exchanges` 인용, 정상 답변. "How do I start a return?"도 `2.2.3 How to Request a Return` 인용
 
 ## 4. 운영 설정 (D2-A)
 
@@ -49,10 +54,13 @@
 | PR | #570 (squash, `f351986`) |
 | 스키마 | 변경 없음 (SQL 0건) |
 | 스테이징 | ✅ 2026-09-29 14:23 배포 — 컨테이너 재생성, 부팅 로그 `Nest application successfully started`, `dist/domain/chat/conversation-history.util.js` 존재, `/health` ok |
-| 프로덕션 | ⏳ 대기 (`production` 브랜치 머지 후 `scripts/deploy-self-hosted.sh`) |
+| PR (추가) | #572 (squash, `6de28cd`) — S8/S9 |
+| 스테이징 (추가) | ✅ 2026-09-29 #572 배포 — 컨테이너 재생성, 부팅 로그, dist에 `UNBIASED_RESERVE` 확인 |
+| 프로덕션 | ✅ 2026-09-29 15:01 — `production` fast-forward `1d3de70..6de28cd`(#569~#572), `check-migrations.sh` OK(스키마 변경 없음), `deploy-self-hosted.sh` → api/web/widget 재생성, 부팅 로그 `successfully started`, dist에 신규 코드 확인, `https://sharptalk.amoeba.site/api/v1/health` ok. 프로덕션은 테넌트 ivyusa 1개·최근 24h 대화 0건이라 실트래픽 스모크는 없음 |
 
 ## 6. 후속 후보
 
-1. 검색어에 직전 AI 발화를 포함 — "예약 진행"처럼 주제어 없는 확정 발화가 `low_confidence`로 떨어지지 않게 한다(TCR §3).
-2. ivyusa "return policy"가 `product_inquiry`로 분류되어 상품 그룹으로 검색되는 기존 현상 점검.
-3. G7 B/C안 — 확정 요청을 요약과 함께 넘기거나 구조화된 접수 목록을 만든다(별도 REQ).
+1. ~~검색어에 직전 AI 발화 포함~~ → S8 완료. ~~ivyusa return policy 오검색~~ → S9 완료(분류 자체는 여전히 `product_inquiry`. 정책 라벨 추가는 UI·i18n까지 번져 보류).
+2. Voyage 유사도 임계(`RAG_MIN_SIMILARITY` 0.5): "How do I start a return?"처럼 정답 문서를 찾고 답도 맞는데 conf 0.2로 계산돼, 채팅에서는 `low_confidence` 핸드오프가 난다. 임계 재조정 점검 후보.
+3. 프로덕션 skyliving 이관 시 D2-A 인계 규칙을 함께 설정한다.
+4. G7 B/C안 — 확정 요청을 요약과 함께 넘기거나 구조화된 접수 목록을 만든다(별도 REQ).
