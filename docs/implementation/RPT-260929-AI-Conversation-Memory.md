@@ -36,7 +36,8 @@
 - 회귀(ivyusa EN, 대화 656): 후속 질문 맥락 유지 ✅. 첫 턴 반품정책 미답변은 기존 현상(변경 전과 동일한 호출) — TCR §3
 - S8/S9 재실측(#572 배포 후):
   - skyliving 대화 657: "예약 진행" → AI가 예약 요약으로 접수 확인 → deny 규칙 핸드오프(`policy`) → `waiting`·escalated. **목표 흐름 그대로** 동작
-  - ivyusa 콘솔 `/knowledge/ask` "What is your return policy?" `group=product`: 변경 전 출처 0건·conf 0.95 "정보 없음" → 변경 후 `Returns & Exchanges` 인용, 정상 답변. "How do I start a return?"도 `2.2.3 How to Request a Return` 인용
+  - ivyusa 콘솔 `/knowledge/ask` "What is your return policy?" `group=product`: 변경 전 출처 0건·conf 0.95 "정보 없음" → 변경 후 `Returns & Exchanges` 인용, 정상 답변.
+    > ⚠️ **정정(2026-09-30, [FIX-260930](../bug-fix/FIX-260930-Env-Blank-Numbers.md) §5)**: "변경 전" 측정의 conf 0.95는 Voyage 임베딩 실패 → 스텁 폴백 → 개수 기반 신뢰도 경로였다. 그룹 가산만의 효과가 아니었고, 그 사례의 근본 수정은 FIX-260930 D2다. S9는 원리가 유효해 유지한다. "How do I start a return?"도 `2.2.3 How to Request a Return` 인용
 
 ## 4. 운영 설정 (D2-A)
 

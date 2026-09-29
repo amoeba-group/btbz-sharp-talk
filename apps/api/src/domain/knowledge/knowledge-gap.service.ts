@@ -13,6 +13,7 @@ import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { scrubPii } from '../../global/util/pii-scrub.util';
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
+import { envNumber } from '../../global/util/env-number.util';
 
 const WINDOW_DAYS = 7;
 const MIN_ASKED = 3;
@@ -55,7 +56,7 @@ export class KnowledgeGapService implements OnModuleInit {
         this.logger.warn(`gap capture proposal failed: ${(e as Error).message}`);
       }
     });
-    const hours = Number(process.env.KNOWLEDGE_GAP_INTERVAL_HOURS ?? 24);
+    const hours = envNumber('KNOWLEDGE_GAP_INTERVAL_HOURS', 24);
     if (!Number.isFinite(hours) || hours <= 0) {
       this.logger.log('knowledge-gap batch disabled (KNOWLEDGE_GAP_INTERVAL_HOURS <= 0)');
       return;

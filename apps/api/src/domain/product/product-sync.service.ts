@@ -7,6 +7,7 @@ import { Tenant } from '../tenant/entity/tenant.entity';
 import { IntegrationCredential } from '../tenant/entity/integration-credential.entity';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { envNumber } from '../../global/util/env-number.util';
 
 /** Storefront page size (Shopify's `/products.json` maximum). */
 const PAGE_LIMIT = 250;
@@ -83,7 +84,7 @@ export class ProductSyncService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
-    const minutes = Number(process.env.PRODUCT_SYNC_INTERVAL_MIN ?? '0');
+    const minutes = envNumber('PRODUCT_SYNC_INTERVAL_MIN', '0');
     if (Number.isFinite(minutes) && minutes > 0) {
       this.logger.log(`Product auto-sync enabled — every ${minutes} min`);
       this.timer = setInterval(() => void this.runAll(), minutes * 60_000);

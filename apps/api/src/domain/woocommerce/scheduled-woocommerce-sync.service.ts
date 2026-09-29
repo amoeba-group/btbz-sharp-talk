@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { TenantService } from '../tenant/tenant.service';
 import { WooProductSyncService } from './woocommerce-product-sync.service';
 import { WooSyncService } from './woocommerce-sync.service';
+import { envNumber } from '../../global/util/env-number.util';
 
 /** Optional periodic WooCommerce sync. Disabled unless WOOCOMMERCE_SYNC_INTERVAL_MIN > 0. */
 @Injectable()
@@ -17,7 +18,7 @@ export class ScheduledWooSyncService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
-    const minutes = Number(process.env.WOOCOMMERCE_SYNC_INTERVAL_MIN ?? '0');
+    const minutes = envNumber('WOOCOMMERCE_SYNC_INTERVAL_MIN', '0');
     if (!Number.isFinite(minutes) || minutes <= 0) {
       this.logger.log('WooCommerce auto-sync disabled (set WOOCOMMERCE_SYNC_INTERVAL_MIN to enable)');
       return;

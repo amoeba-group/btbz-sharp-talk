@@ -22,6 +22,7 @@ import { createHash } from 'crypto';
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { envNumber } from '../../global/util/env-number.util';
 
 /** Expo push tokens look like ExponentPushToken[xxxx] / ExpoPushToken[xxxx]. */
 const EXPO_TOKEN_RE = /^Expo(nent)?PushToken\[.+\]$/;
@@ -76,7 +77,7 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
     });
     // Deferred delivery-receipt sweep (Expo receipts become available ~15 min
     // after send). In-memory buffer — best-effort within the process lifetime.
-    const minutes = Number(process.env.PUSH_RECEIPT_SWEEP_MIN ?? '15');
+    const minutes = envNumber('PUSH_RECEIPT_SWEEP_MIN', '15');
     if (minutes > 0) {
       this.receiptTimer = setInterval(() => void this.sweepReceipts(), minutes * 60_000);
       this.receiptTimer.unref?.();
