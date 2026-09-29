@@ -90,4 +90,12 @@ RPT-260929는 S9(그룹 선호 보존)가 "return policy 무응답"을 고쳤다
 ## 8. 테스트·배포
 
 - API 전체 203 suites / 2037 tests 통과, `tsc` 통과
-- 배포 상태는 PR 본문과 이 문서 하단에 추가한다
+
+| 항목 | 상태 |
+|---|---|
+| PR | #574 (squash, `07963e8`) |
+| 스키마 | 변경 없음 |
+| 스테이징 | ✅ 배포 — 컨테이너 재생성, 부팅 로그, dist에 `DEGRADED_CONFIDENCE` 확인. 정상 경로 불변(ivyusa ask: 0.557/0.440/범위 밖 모두 이전과 동일 척도, degraded 경고 0건), 스케줄러 기동 로그 동일 |
+| 프로덕션 | ✅ `production` ff `6de28cd..07963e8`, `check-migrations` OK, `deploy-self-hosted.sh` → 부팅 로그 확인. **컨테이너 안에서 실효값 확인: `RAG_MIN_SIMILARITY` 0 → 0.45, `ANSWER_REUSE_THRESHOLD` 0 → 0.92, `ANSWER_REUSE_TTL_DAYS` 0 → 30** |
+
+- 후속 후보: 배포 템플릿의 빈 값 키에 권장값을 주석으로 넣거나, 배포 검증 스크립트에 "핵심 튜닝 키 빈 값" 경고를 추가한다(`envNumber` 이후에는 빈 값이 곧 기본값이라 필수는 아니다).
