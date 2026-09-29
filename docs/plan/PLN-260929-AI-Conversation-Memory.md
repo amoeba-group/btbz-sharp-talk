@@ -166,3 +166,19 @@ handleUserMessage(turn N)
 
 > 승인 후 S1→S7 순으로 구현한다. 예상 변경 파일: `chat.service.ts`, `rag.service.ts`,
 > `conversation-history.util.ts`(신규), 스펙 3~4개. 승인 전에는 구현하지 않는다.
+
+---
+
+## 7. 추가 (2026-09-29, 1차 배포 실측 후 — 사용자 "진행" 승인)
+
+### S8 — 검색어에 직전 AI 발화 포함
+- 실측: "예약 진행"의 검색어가 고객 2턴("…위에 알려줬어 / 1. 김익용")+현재라 주제어가 없었고, KB 점수 < 0.45로 `low_confidence` 핸드오프됐다.
+- 변경: `retrievalQuery(history, current)`(순수 함수) = 고객 최근 2턴 + **AI 최근 1턴**(마크다운 제거, 200자) + 현재. 이미 스크럽된 `history`에서 만들므로 턴당 DB 조회가 1회 줄어든다.
+
+### S9 — 그룹 선호가 다른 그룹을 밀어내지 않게
+- 실측(ivyusa, 콘솔 `/knowledge/ask`): "What is your return policy?" — 그룹 없음 → 반품 섹션 인용·정상 답변 /
+  `group=product` → **출처 0건, conf 0.95로 "정보 없음"**. 분류기 폐쇄 라벨(PLN-260813 P1)에 정책 라벨이 없어
+  `product_inquiry`로 판정 → `GROUP_BONUS 0.002`가 RRF 인접 순위 간격(~0.0003)의 약 7배라 정책 문서를 전부 밀어냈다.
+- 변경: `RagService.rankWithPreference` — 편향 없는 상위 3건은 항상 남기고, 나머지 슬롯만 선호 그룹 가산으로 채운다. 결과 순서는 가산 점수 기준.
+- 라벨 추가(정책 intent)는 콘솔 통계·AI 설정 UI와 6개 언어 i18n까지 번지므로 채택하지 않았다. 검색단 보정은 앞으로의 오분류에도 효과가 있다.
+- UI 영향 없음, 스키마 변경 없음.

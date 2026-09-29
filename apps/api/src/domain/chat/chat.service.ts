@@ -43,6 +43,7 @@ import {
   buildHistory,
   hasAssistantTurn,
   replacePiiTokens,
+  retrievalQuery,
 } from './conversation-history.util';
 
 const ESCALATION_CONFIDENCE = 0.45;
@@ -84,10 +85,6 @@ const AGENT_REQUEST_PHRASES =
   /(talk|speak|chat)\s+(to|with)\s+(a\s+|an\s+|the\s+)?(real\s+)?(person|human|agent|someone|representative)|real person|live agent|human agent|hablar con (una persona|un agente|alguien|un humano)|(상담원|상담사|담당자)(과|와|하고|이랑|을|를|에게|한테)?\s*(직접\s*)?(통화|연결|대화|얘기|이야기|바꿔|불러)|사람과\s*(통화|대화|얘기|이야기)/i;
 /** Recent orders handed to the assistant as grounding for order questions. */
 const ORDER_CONTEXT_LIMIT = 5;
-/** Earlier customer turns folded into the retrieval query (FIX-260806 A2). */
-const RETRIEVAL_CONTEXT_TURNS = 2;
-/** Per-turn cap on that borrowed context, so one long message can't drown the query. */
-const RETRIEVAL_CONTEXT_CHARS = 200;
 
 /**
  * Localized backend-generated conversational strings keyed by session.language
@@ -714,8 +711,7 @@ export class ChatService {
       this.nonQuestionKind(intent),
       tenantId,
       conversation.id,
-      userTurn.id,
-      egressText,
+      retrievalQuery(history, egressText),
       session.aiAgentId ?? null,
     );
     if (nonQuestion) {
@@ -847,7 +843,7 @@ export class ChatService {
           // young son?" carries none of the words its own topic is indexed under,
           // so searching on it alone scored off-topic and escalated a question the
           // knowledge base could answer.
-          await this.retrievalQueryFor(conversation.id, userTurn.id, egressText),
+          retrievalQuery(history, egressText),
           // Resolved, not raw: an unpinned session answers as the tenant's
           // default agent, and RAG applies what it is given rather than
           // guessing what null meant.
@@ -1016,54 +1012,17 @@ export class ChatService {
     kind: 'smalltalk' | 'out_of_scope' | 'unintelligible' | null,
     tenantId: number,
     conversationId: number,
-    currentTurnId: number,
-    egressText: string,
+    searchText: string,
     aiAgentId: number | null,
   ): Promise<'smalltalk' | 'out_of_scope' | 'unintelligible' | null> {
     if (kind !== 'out_of_scope') return kind;
     const scope = await this.rag.effectiveAgentId(tenantId, aiAgentId);
-    const grounded = await this.rag.groundingConfidence(
-      tenantId,
-      await this.retrievalQueryFor(conversationId, currentTurnId, egressText),
-      scope,
-    );
+    const grounded = await this.rag.groundingConfidence(tenantId, searchText, scope);
     if (grounded < ESCALATION_CONFIDENCE) return kind;
     this.logger.log(
       `out_of_scope overridden by knowledge (conf ${grounded}) conversation=${conversationId}`,
     );
     return null;
-  }
-
-  /**
-   * Search text for this turn: the shopper's earlier questions prepended to the
-   * current one (FIX-260806 A2). Retrieval only — the model is still asked the
-   * current message alone. A follow-up carries none of the vocabulary its topic
-   * is indexed under ("thanks, and recomend my young son." after a skincare
-   * question), so searching on it alone scored off-topic and escalated a
-   * question the catalogue could answer. PII is scrubbed here too: this text
-   * reaches the embedding provider.
-   */
-  private async retrievalQueryFor(
-    conversationId: number,
-    currentTurnId: number,
-    current: string,
-  ): Promise<string> {
-    const previous = await this.msgRepo.find({
-      where: {
-        conversationId,
-        senderType: SENDER_TYPE.USER,
-        id: LessThan(currentTurnId),
-      },
-      order: { id: 'DESC' },
-      take: RETRIEVAL_CONTEXT_TURNS,
-      select: { id: true, body: true },
-    });
-    if (previous.length === 0) return current;
-    const history = previous
-      .reverse()
-      .map((m) => scrubPii(m.body).text.trim().slice(0, RETRIEVAL_CONTEXT_CHARS))
-      .filter(Boolean);
-    return [...history, current].join('\n');
   }
 
   /**
