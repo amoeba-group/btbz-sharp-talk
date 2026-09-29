@@ -767,5 +767,35 @@
       "restore": "設定を復元しました",
       "delete": "スナップショットを削除しました"
     }
+  },
+  "widgetAccess": {
+    "title": "表示制限（テストモード）",
+    "on": "使用中",
+    "off": "使用しない",
+    "hint": "指定した IP または URL からのみ、下の期間だけウィジェットを表示します。それ以外の訪問者にはウィジェット自体が表示されません。",
+    "period": "テスト期間",
+    "start": "開始",
+    "end": "終了",
+    "periodHint": "時刻はブラウザのタイムゾーンです。期間が終わると制限は自動的に解除されます。",
+    "ips": "許可 IP",
+    "ipsHint": "IPv4・IPv6、単一アドレスまたは CIDR ブロック。",
+    "urls": "許可 URL",
+    "urlsHint": "パスまで書くとその配下すべてが対象です。https://shop.example.com/collections/test は /collections/test/item-1 も含みますが /collections/testing は含みません。",
+    "add": "追加",
+    "remove": "{{value}} を削除",
+    "invite": "招待リンク",
+    "inviteHint": "このリンクを一度開いたブラウザは、期間中どのページでもウィジェットが表示されます。",
+    "inviteNone": "招待リンクはまだ発行されていません。",
+    "inviteExisting": "招待リンクは発行済みです。再発行すると再表示できますが、以前のリンクは使えなくなります。",
+    "inviteIssue": "招待リンクを発行",
+    "inviteRotate": "再発行",
+    "inviteRotateConfirm": "再発行すると配布済みの招待リンクはすべて無効になります。続けますか？",
+    "summary": "現在の設定：IP {{ips}} 件・URL {{urls}} 件{{key}}からのみ表示されます。",
+    "summaryKey": "・招待リンク",
+    "expiredBadge": "期間終了 — 現在は全員に表示",
+    "saved": "表示制限を保存しました",
+    "saveError": "表示制限を保存できませんでした",
+    "keyIssued": "招待リンクを発行しました",
+    "keyError": "招待リンクを発行できませんでした"
   }
 }
