@@ -54,9 +54,33 @@ api **1984/1984**(197 suites) · types **138/138** · `tsc` 4패키지 · 빌드
 | PR | **#567** → main `abcc655` |
 | SQL staging | **선적용 완료** 2026-09-29 (코드 배포 전) |
 | 코드 staging | 배포 완료 — api healthy, `successfully started` 1회 |
-| production | **미배포** — `sql/260929-tenant-widget-access.sql` 선적용 후 승격 필요 |
+| SQL production | **선적용 완료** 2026-09-29 — 밀려 있던 **4건을 순서대로** 적용(아래) |
+| 코드 production | 배포 완료 2026-09-29 — `main:production` 승격(`1d3de70`) → `check-migrations.sh` **86 적용·대기 0** → `deploy-self-hosted.sh`. api healthy · `successfully started` 1회 · 스키마 에러 로그 0건 |
 
 기본값은 "미설정 = 꺼짐"이라 **배포만으로 바뀌는 테넌트는 없다**.
+
+### 5-1. 프로덕션에 함께 올라간 SQL 4건
+
+`production`이 9/20 이후로 밀려 있어, 이번 배포는 이 기능만의 것이 아니었다. 코드 배포 전에
+**전부 선적용**했다(모두 nullable 추가형, 백필 1건 포함).
+
+| # | SQL | 출처 |
+|---|---|---|
+| 1 | `260920-order-items-image-url.sql` | read_products 후속(#559) |
+| 2 | `260924-fulfillments-tracking-url.sql` | 탭·칩·Track 작업(#562, `fulfillments.tenant_id` 백필 포함) |
+| 3 | `260924-order-items-product-url.sql` | 같은 작업 |
+| 4 | `260929-tenant-widget-access.sql` | 이번 기능 |
+
+> 교훈: 프로덕션 승격은 **내 변경만 보는 게 아니라 `production..main`의 SQL 전부**를 봐야 한다.
+> 이번에는 4건 중 2건이 다른 세션 작업이었다.
+
+### 5-2. 프로덕션 스모크 (내용 기준)
+
+```
+GET /public/widget/visibility → {visible:true, restricted:false, yourIp:…}, Cache-Control: no-store
+로더 embed.js                → checkVisibility 2 · st:restricted 1 · st_access 2
+콘솔 번들                     → widgetAccess 문구 6건
+```
 
 ## 6. 잔여·후속
 
