@@ -8,6 +8,7 @@ import { AttachmentService } from '../domain/attachment/attachment.service';
 import { ImageDecodeService } from '../domain/attachment/image-decode.service';
 import { parseDataUri, extensionForMime } from '../domain/messenger/adapter/data-uri.util';
 import type { ConfigService } from '@nestjs/config';
+import { envNumber } from '../global/util/env-number.util';
 
 /**
  * One-time backfill for FIX-260817: messages whose whole body is a `data:` URI.
@@ -149,7 +150,7 @@ async function main(): Promise<void> {
   const ds = new DataSource({
     type: 'mysql',
     host: process.env.DB_HOST ?? '127.0.0.1',
-    port: Number(process.env.DB_PORT ?? 3306),
+    port: envNumber('DB_PORT', 3306),
     username: process.env.DB_USER ?? 'sharptalk',
     password: process.env.DB_PASSWORD ?? '',
     database: process.env.DB_NAME ?? 'db_sharptalk',

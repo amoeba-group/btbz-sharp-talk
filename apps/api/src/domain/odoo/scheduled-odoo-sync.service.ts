@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { TenantService } from '../tenant/tenant.service';
 import { OdooProductSyncService } from './odoo-product-sync.service';
 import { OdooSyncService } from './odoo-sync.service';
+import { envNumber } from '../../global/util/env-number.util';
 
 /**
  * Optional periodic Odoo sync. Disabled unless ODOO_SYNC_INTERVAL_MIN > 0.
@@ -22,7 +23,7 @@ export class ScheduledOdooSyncService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
-    const minutes = Number(process.env.ODOO_SYNC_INTERVAL_MIN ?? '0');
+    const minutes = envNumber('ODOO_SYNC_INTERVAL_MIN', '0');
     if (!Number.isFinite(minutes) || minutes <= 0) {
       this.logger.log('Odoo auto-sync disabled (set ODOO_SYNC_INTERVAL_MIN to enable)');
       return;

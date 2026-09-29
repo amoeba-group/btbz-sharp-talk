@@ -10,6 +10,7 @@ import { QdrantService } from '../../infrastructure/external/vector/qdrant.servi
 import { AiConfigService } from '../ai-engine/ai-config.service';
 import type { AiMessage } from '../../infrastructure/external/ai/ai-adapter.interface';
 import { CONVERSATION_RULES, transcript, withCurrentTurn } from './conversation-history.util';
+import { envNumber } from '../../global/util/env-number.util';
 
 export interface RetrievedChunk {
   id: number;
@@ -144,6 +145,8 @@ export class RagService {
    * had no information (measured on staging 2026-09-29).
    */
   private static readonly UNBIASED_RESERVE = 3;
+  /** Confidence when real embeddings are expected but missing — under escalation (FIX-260930). */
+  private static readonly DEGRADED_CONFIDENCE = 0.2;
   private static readonly SNIPPET_CHARS = 800;
   /**
    * Documents handed to the model per answer. Was 4, which is too few for this
@@ -622,12 +625,25 @@ export class RagService {
    * to the legacy count-based estimate, i.e. the pre-hybrid behavior.
    */
   private confidence(chunks: RetrievedChunk[], vectorProvider: string | null): number {
+    // Real embeddings are configured but this turn did not get them — the
+    // gateway fell back to the stub, or the vector leg threw (FIX-260930 D2).
+    // The count formula below then scored full-text noise at 0.95: ivyusa's
+    // "What is your return policy?" was answered "I don't have that
+    // information" with six unrelated products and nobody paged. Without the
+    // signal we trust, "don't know → hand off" (policy §0.4) is the safe
+    // reading, so the turn goes to a person instead.
+    // Qdrant switched off is configuration, not failure — that keeps the
+    // count-based estimate below, exactly as before.
+    if (process.env.VOYAGE_API_KEY && this.qdrant.enabled && vectorProvider !== 'voyage') {
+      this.logger.warn(`vector leg degraded (provider=${vectorProvider ?? 'none'}) — confidence withheld`);
+      return RagService.DEGRADED_CONFIDENCE;
+    }
     const best = chunks.reduce<number | null>(
       (m, c) => (c.similarity !== null && (m === null || c.similarity > m) ? c.similarity : m),
       null,
     );
     if (vectorProvider === 'voyage' && best !== null) {
-      const minSim = Number(process.env.RAG_MIN_SIMILARITY ?? '0.5');
+      const minSim = envNumber('RAG_MIN_SIMILARITY', '0.45');
       return best >= minSim ? Math.min(0.95, Math.max(0.5, best)) : 0.2;
     }
     return chunks.length ? Math.min(0.95, 0.5 + chunks.length * 0.12) : 0.2;

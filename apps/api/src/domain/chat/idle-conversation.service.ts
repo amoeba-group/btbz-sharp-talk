@@ -8,13 +8,14 @@ import { Message } from './entity/message.entity';
 import { Session } from '../session/entity/session.entity';
 import { Assignment } from '../agent/entity/assignment.entity';
 import { AuditService } from '../audit/audit.service';
+import { envNumber } from '../../global/util/env-number.util';
 
 /** How often the sweep runs. 0 disables it. */
-const SWEEP_INTERVAL_SEC = Number(process.env.IDLE_SWEEP_INTERVAL_SEC ?? '30');
+const SWEEP_INTERVAL_SEC = envNumber('IDLE_SWEEP_INTERVAL_SEC', '30');
 /** Silence from both sides before the customer is asked whether anything is left. */
-const PROMPT_AFTER_MIN = Number(process.env.IDLE_PROMPT_AFTER_MIN ?? '30');
+const PROMPT_AFTER_MIN = envNumber('IDLE_PROMPT_AFTER_MIN', '30');
 /** Grace period after that question before the thread closes. */
-const CLOSE_AFTER_SEC = Number(process.env.IDLE_CLOSE_AFTER_SEC ?? '60');
+const CLOSE_AFTER_SEC = envNumber('IDLE_CLOSE_AFTER_SEC', '60');
 /** The only channel this sweeper owns; everything else belongs to an agent. */
 const CONVERSATION_CHANNEL_WIDGET = 'widget';
 /**
@@ -23,7 +24,7 @@ const CONVERSATION_CHANNEL_WIDGET = 'widget';
  * system glitch, not service — the oldest abandoned thread on staging last
  * spoke on 2026-06-30.
  */
-const STALE_AFTER_DAYS = Number(process.env.IDLE_STALE_AFTER_DAYS ?? '7');
+const STALE_AFTER_DAYS = envNumber('IDLE_STALE_AFTER_DAYS', '7');
 /** Rows handled per sweep, so a backlog cannot stall the tick. */
 const BATCH = 50;
 

@@ -8,6 +8,7 @@ import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.se
 import { ReuseQdrantService } from '../../infrastructure/external/vector/reuse-qdrant.service';
 import { scrubPii } from '../../global/util/pii-scrub.util';
 import { KbCategory } from '../knowledge/entity/kb-category.entity';
+import { envNumber } from '../../global/util/env-number.util';
 
 /** What the chat pipeline gets on a hit — shaped to slot in for RagAnswer. */
 export interface ReuseHit {
@@ -19,12 +20,12 @@ export interface ReuseHit {
 
 // Reuse only on a NEAR-duplicate question: a lower bar answers a different
 // product/policy question with someone else's answer (REQ Track C 제약).
-const THRESHOLD = () => Number(process.env.ANSWER_REUSE_THRESHOLD ?? 0.92);
+const THRESHOLD = () => envNumber('ANSWER_REUSE_THRESHOLD', 0.92);
 // Near-identical existing entry → don't store a duplicate.
 const DEDUPE_THRESHOLD = 0.95;
 // AI answers must be confidently grounded before they are worth replaying.
-const MIN_AI_CONFIDENCE = () => Number(process.env.ANSWER_REUSE_MIN_CONFIDENCE ?? 0.75);
-const TTL_DAYS = () => Number(process.env.ANSWER_REUSE_TTL_DAYS ?? 30);
+const MIN_AI_CONFIDENCE = () => envNumber('ANSWER_REUSE_MIN_CONFIDENCE', 0.75);
+const TTL_DAYS = () => envNumber('ANSWER_REUSE_TTL_DAYS', 30);
 const TENANT_CAP = 2000;
 // Confidence reported for replays so they never trip the low-confidence
 // escalation: agent answers are human-verified; AI answers carry their own.

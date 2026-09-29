@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { TenantService } from '../tenant/tenant.service';
 import { ShopifySyncService } from './shopify-sync.service';
+import { envNumber } from '../../global/util/env-number.util';
 
 /**
  * Optional periodic Shopify sync. Disabled unless SHOPIFY_SYNC_INTERVAL_MIN > 0
@@ -19,7 +20,7 @@ export class ScheduledShopifySyncService implements OnModuleInit, OnModuleDestro
   ) {}
 
   onModuleInit(): void {
-    const minutes = Number(process.env.SHOPIFY_SYNC_INTERVAL_MIN ?? '0');
+    const minutes = envNumber('SHOPIFY_SYNC_INTERVAL_MIN', '0');
     if (!Number.isFinite(minutes) || minutes <= 0) {
       this.logger.log('Shopify auto-sync disabled (set SHOPIFY_SYNC_INTERVAL_MIN to enable)');
       return;

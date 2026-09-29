@@ -7,6 +7,7 @@ import { AdapterRegistry } from './adapter/adapter.registry';
 import { ThreadCursor } from './adapter/messenger-adapter';
 import { MessengerIngestService } from './messenger-ingest.service';
 import { decryptChannelSecret } from './messenger-secret.util';
+import { envNumber } from '../../global/util/env-number.util';
 
 /** Neither hub exposes an outbound webhook, so freshness comes from this poll. */
 const DEFAULT_INTERVAL_SEC = 15;
@@ -40,7 +41,7 @@ export class MessengerSyncService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
-    const seconds = Number(process.env.MESSENGER_SYNC_INTERVAL_SEC ?? DEFAULT_INTERVAL_SEC);
+    const seconds = envNumber('MESSENGER_SYNC_INTERVAL_SEC', DEFAULT_INTERVAL_SEC);
     if (!Number.isFinite(seconds) || seconds <= 0) {
       this.logger.log('Messenger sync disabled (MESSENGER_SYNC_INTERVAL_SEC <= 0)');
       return;

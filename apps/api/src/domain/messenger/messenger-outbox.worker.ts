@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { MessengerOutboxService } from './messenger-outbox.service';
+import { envNumber } from '../../global/util/env-number.util';
 
 /** Default cadence; agent replies from the console ride this tick. */
 const DEFAULT_INTERVAL_SEC = 5;
@@ -21,7 +22,7 @@ export class MessengerOutboxWorker implements OnModuleInit, OnModuleDestroy {
   constructor(private readonly outbox: MessengerOutboxService) {}
 
   onModuleInit(): void {
-    const seconds = Number(process.env.MESSENGER_OUTBOX_INTERVAL_SEC ?? DEFAULT_INTERVAL_SEC);
+    const seconds = envNumber('MESSENGER_OUTBOX_INTERVAL_SEC', DEFAULT_INTERVAL_SEC);
     if (!Number.isFinite(seconds) || seconds <= 0) {
       this.logger.log('Messenger outbox worker disabled (MESSENGER_OUTBOX_INTERVAL_SEC <= 0)');
       return;
