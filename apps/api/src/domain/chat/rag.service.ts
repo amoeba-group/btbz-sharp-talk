@@ -8,6 +8,8 @@ import { normalizeStorefrontUrl, productLinkFor } from '../../global/util/storef
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
 import { QdrantService } from '../../infrastructure/external/vector/qdrant.service';
 import { AiConfigService } from '../ai-engine/ai-config.service';
+import type { AiMessage } from '../../infrastructure/external/ai/ai-adapter.interface';
+import { CONVERSATION_RULES, transcript, withCurrentTurn } from './conversation-history.util';
 
 export interface RetrievedChunk {
   id: number;
@@ -187,6 +189,28 @@ export class RagService {
   /** Who is answering, after inactive/unknown pins degrade to the default. */
   effectiveAgentId(tenantId: number, aiAgentId?: number | null): Promise<number | null> {
     return this.aiConfig.effectiveAgentId(tenantId, aiAgentId);
+  }
+
+  /**
+   * How well the knowledge base covers `query`, on the same scale `answer()`
+   * reports — retrieval only, no model call (PLN-260929 S6). Lets the chat path
+   * second-guess an out_of_scope label: the classifier assumes a shop, so a
+   * cleaning company's "에어컨 청소 예약" was refused while its price sheet sat
+   * in the knowledge base.
+   */
+  async groundingConfidence(
+    tenantId: number,
+    query: string,
+    aiAgentId?: number | null,
+  ): Promise<number> {
+    const { chunks, vectorProvider } = await this.retrieveHybrid(
+      tenantId,
+      query,
+      RagService.TOP_K,
+      undefined,
+      aiAgentId ?? null,
+    );
+    return this.confidence(chunks, vectorProvider);
   }
 
   private async retrieveHybrid(
@@ -408,6 +432,7 @@ export class RagService {
     retrievalQuery?: string,
     aiAgentId?: number | null,
     extraCandidates?: RagCandidateInput[],
+    history?: AiMessage[],
   ): Promise<RagAnswer> {
     // The caller decides the group preference; RAG only applies it. Keeping the
     // judgement out of here means the chat path can use its intent label and
@@ -416,7 +441,10 @@ export class RagService {
     // `retrievalQuery` lets the caller search with more words than the model is
     // asked to answer — chat passes the previous turns so a follow-up that only
     // makes sense in context ("and for my young son?") still retrieves the topic
-    // it refers to. The model still sees just `query` (FIX-260806 A2).
+    // it refers to. `history` is the conversation itself (PLN-260929 S2): the
+    // model reads the earlier turns so it stops asking for what the customer
+    // already gave. Console callers pass none and get the single-question
+    // prompt unchanged.
     // `aiAgentId` is applied as given, never resolved here. Null means "no
     // scope" — the console's operator view, which has to see everything it
     // manages. A widget turn is a different thing: an unpinned session answers
@@ -467,13 +495,14 @@ export class RagService {
         'The order data is authoritative for their order status, items and totals; ' +
         'never invent order numbers, dates or tracking details that are not listed.'
       : 'Answer ONLY from the context.';
+    const hasHistory = !!history?.length;
 
     const res = await this.ai.complete({
       tenantId,
       function: AI_FUNCTION.RAG,
       feature: 'chat_answer',
       system:
-        `${persona}${rulesBlock}\n` +
+        `${persona}${rulesBlock}${hasHistory ? CONVERSATION_RULES : ''}\n` +
         `${sourceRule} If the information is insufficient, apologize briefly and ` +
         `offer to connect a human agent. Reply in language code: ${language}.\n` +
         `The context items are numbered. After your reply, on its own final line, ` +
@@ -483,7 +512,7 @@ export class RagService {
         `or refer to the context items in the visible reply.\n` +
         `CONTEXT_START\n${context || '(no relevant documents found)'}\nCONTEXT_END` +
         orderBlock,
-      messages: [{ role: 'user', content: query }],
+      messages: withCurrentTurn(history, query),
     });
 
     // Show only what the answer stands on. The retrieved set is the top matches,
@@ -588,17 +617,22 @@ export class RagService {
     query: string,
     language: string,
     aiAgentId?: number | null,
+    history?: AiMessage[],
   ): Promise<string> {
     const { persona, rules } = await this.aiConfig.getPersonaRules(tenantId, aiAgentId);
     const instruction = NO_KNOWLEDGE_INSTRUCTION[kind];
+    // A misclassified reply ("1. 김익용" to "what is your name?") lands here too;
+    // with the conversation in view the model answers it instead of saying it
+    // did not understand (PLN-260929 S3).
+    const memory = history?.length ? CONVERSATION_RULES : '';
     const res = await this.ai.complete({
       tenantId,
       function: AI_FUNCTION.RAG,
       feature: 'chat_rewrite',
       system:
-        `${persona}\n${rules.map((r) => `- ${r}`).join('\n')}\n` +
+        `${persona}\n${rules.map((r) => `- ${r}`).join('\n')}${memory}\n` +
         `${instruction}\nReply in ${language.toUpperCase()}. Two sentences at most.`,
-      messages: [{ role: 'user', content: query }],
+      messages: withCurrentTurn(history, query),
     });
     return res.text.trim();
   }
@@ -606,7 +640,19 @@ export class RagService {
   async classifyIntent(
     tenantId: number,
     query: string,
+    recent?: AiMessage[],
   ): Promise<{ intent: string; needsOrderData: boolean; confidence: number; fallback?: boolean }> {
+    // The exchange the message answers, as reference text in the system prompt
+    // rather than as turns: the classifier labels the final message only
+    // (PLN-260929 S4). Without it "벽걸이" or "1. 김익용" after a question read
+    // as noise and fell into the no-knowledge branch.
+    const recentBlock = recent?.length
+      ? '\nRecent conversation (context only — classify ONLY the final shopper ' +
+        `message):\n${transcript(recent)}\n` +
+        "If the shopper's message answers a question the assistant just asked, " +
+        'classify it by the topic of the conversation — never unintelligible, ' +
+        'smalltalk or out_of_scope.'
+      : '';
     const res = await this.ai.complete({
       tenantId,
       function: AI_FUNCTION.CHAT,
@@ -628,7 +674,8 @@ export class RagService {
           'IMPORTANT: a greeting followed by a real question takes the ' +
           "question's intent — \"Hi, where is my order?\" is order_status, not " +
           'smalltalk. Return ' +
-          '{"intent":string,"needsOrderData":boolean,"confidence":number}.',
+          '{"intent":string,"needsOrderData":boolean,"confidence":number}.' +
+          recentBlock,
       messages: [{ role: 'user', content: query }],
     });
     try {

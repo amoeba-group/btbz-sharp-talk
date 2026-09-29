@@ -36,6 +36,14 @@ import { MessageAttachment } from '../attachment/entity/message-attachment.entit
 import { scrubPii } from '../../global/util/pii-scrub.util';
 import { detectLanguage } from '../../global/util/detect-language.util';
 import { DENY_MODE } from '../ai-engine/entity/tenant-ai-config.entity';
+import type { AiMessage } from '../../infrastructure/external/ai/ai-adapter.interface';
+import {
+  HISTORY_MESSAGES,
+  INTENT_HISTORY_MESSAGES,
+  buildHistory,
+  hasAssistantTurn,
+  replacePiiTokens,
+} from './conversation-history.util';
 
 const ESCALATION_CONFIDENCE = 0.45;
 
@@ -604,8 +612,18 @@ export class ChatService {
       );
     }
 
+    // The conversation so far, scrubbed like the message itself (PLN-260929 S1).
+    // Loaded once and shared by the classifier, both answering paths and the
+    // reuse gate — every model call used to see this turn alone, so the
+    // assistant asked for a booking's details again right after receiving them.
+    const history = await this.conversationHistory(conversation.id, userTurn.id);
+
     // Intent + scope check (FN-015): order data requires authentication first.
-    const intent = await this.rag.classifyIntent(tenantId, egressText);
+    const intent = await this.rag.classifyIntent(
+      tenantId,
+      egressText,
+      history.slice(-INTENT_HISTORY_MESSAGES),
+    );
     // Record the label on the turn that produced it. The classifier already
     // runs on every message and its result was discarded after the
     // needsOrderData check below, so the intent statistics lens costs no extra
@@ -692,7 +710,14 @@ export class ChatService {
     // and the old code read that as "no answer found" and paged an agent — 19
     // of 34 low-confidence handoffs on staging were greetings, compliments,
     // off-topic questions or noise (REQ-260813).
-    const nonQuestion = this.nonQuestionKind(intent);
+    const nonQuestion = await this.overrideOutOfScope(
+      this.nonQuestionKind(intent),
+      tenantId,
+      conversation.id,
+      userTurn.id,
+      egressText,
+      session.aiAgentId ?? null,
+    );
     if (nonQuestion) {
       // A deny topic that reads as chit-chat is still a deny topic.
       if (denyAnswersFirst) return denyHandoffNow();
@@ -703,6 +728,7 @@ export class ChatService {
         egressText,
         session.language,
         session.aiAgentId ?? null,
+        history,
       );
       // Same gate as any other AI egress (FR-069, non-bypassable).
       const checked = await this.moderation.moderate({
@@ -733,7 +759,7 @@ export class ChatService {
         streak + 1 >= NON_QUESTION_STREAK_FOR_OFFER
           ? ` ${AGENT_OFFER_COPY[session.language?.toUpperCase() ?? 'EN'] ?? AGENT_OFFER_COPY.EN}`
           : '';
-      const body = `${checked.text}${offer}`;
+      const body = `${replacePiiTokens(checked.text, session.language)}${offer}`;
       await this.persist(tenantId, conversation.id, SENDER_TYPE.AI, body, session.language, {
         // Recorded so a misclassification can be found later without guessing
         // which turns took this path (PLN-260813 P4).
@@ -792,8 +818,12 @@ export class ChatService {
     // Resolved through RAG so replay, retrieval and persona all agree on which
     // agent is speaking (a deactivated pin degrades to the tenant default).
     const effectiveAgentId = await this.rag.effectiveAgentId(tenantId, session.aiAgentId ?? null);
+    // Only a conversation's opening question is self-contained enough to replay
+    // (PLN-260929 S5): "예약 진행" means something different in every thread
+    // that says it, and a stored answer cannot know which.
+    const contextual = hasAssistantTurn(history);
     const reused =
-      intent.needsOrderData || !this.answerReuse
+      intent.needsOrderData || !this.answerReuse || contextual
         ? null
         : await this.answerReuse.lookup(
             tenantId,
@@ -822,6 +852,8 @@ export class ChatService {
           // default agent, and RAG applies what it is given rather than
           // guessing what null meant.
           effectiveAgentId,
+          undefined,
+          history,
         );
 
     // Mandatory moderation gate (FR-069).
@@ -832,6 +864,8 @@ export class ChatService {
       conversationId: conversation.id,
       text: answer.text,
     });
+    // A privacy token the model copied despite the rule (PLN-260929 S7).
+    const replyText = replacePiiTokens(moderated.text, session.language);
 
     // Already queued: the agents have been paged and the customer has seen the
     // handoff notice, so a second one per message would be noise and a duplicate
@@ -895,7 +929,7 @@ export class ChatService {
         conversationId: String(conversation.id),
         reply: null,
         draft: {
-          body: moderated.text,
+          body: replyText,
           confidence: answer.confidence,
           citations: answer.citations,
         },
@@ -904,7 +938,7 @@ export class ChatService {
       };
     }
 
-    const aiTurn = await this.persist(tenantId, conversation.id, SENDER_TYPE.AI, moderated.text, session.language, {
+    const aiTurn = await this.persist(tenantId, conversation.id, SENDER_TYPE.AI, replyText, session.language, {
       citations: answer.citations,
       confidence: answer.confidence,
       // Console diagnostics: which answers came from the reuse store (D-C2:
@@ -913,14 +947,14 @@ export class ChatService {
     });
     if (reused) {
       void this.answerReuse?.recordHit(reused.reuseId);
-    } else {
+    } else if (!contextual) {
       // A freshly generated, delivered answer becomes a reuse candidate (the
       // service applies the D-C1 filters: cited + confident, no order context).
       void this.answerReuse?.recordAiAnswer({
         tenantId,
         lang: session.language,
         question: egressText,
-        answerText: moderated.text,
+        answerText: replyText,
         confidence: answer.confidence,
         citations: answer.citations,
         sourceMessageId: aiTurn.id,
@@ -941,7 +975,7 @@ export class ChatService {
       // confidence rides along for the admin preview diagnostics; widget ignores it.
       reply: {
         senderType: 'ai',
-        body: moderated.text,
+        body: replyText,
         citations: answer.citations,
         confidence: answer.confidence,
         // Lets the /ai-setting preview hand this exact turn to the coaching tab.
@@ -951,6 +985,53 @@ export class ChatService {
       needsAuth: false,
       ...(denyHandoff ? { needsContactEmail: denyHandoff.needsContactEmail } : {}),
     };
+  }
+
+  /**
+   * The turns before `currentTurnId`, oldest first, shaped for the model
+   * (PLN-260929 S1). One query per turn; `messages(conversation_id)` is indexed.
+   */
+  private async conversationHistory(conversationId: number, currentTurnId: number): Promise<AiMessage[]> {
+    const rows = await this.msgRepo.find({
+      where: {
+        conversationId,
+        senderType: In([SENDER_TYPE.USER, SENDER_TYPE.AI, SENDER_TYPE.AGENT]),
+        id: LessThan(currentTurnId),
+      },
+      order: { id: 'DESC' },
+      take: HISTORY_MESSAGES,
+      select: { id: true, senderType: true, body: true },
+    });
+    return buildHistory(rows.reverse());
+  }
+
+  /**
+   * An out_of_scope label the knowledge base disagrees with is dropped
+   * (PLN-260929 S6). The classifier assumes a shop; a service tenant's core
+   * business ("에어컨 청소 예약") was refused without retrieval ever running.
+   * Only out_of_scope is second-guessed — a greeting searched against the
+   * knowledge base is exactly what PLN-260813 P2 stopped doing.
+   */
+  private async overrideOutOfScope(
+    kind: 'smalltalk' | 'out_of_scope' | 'unintelligible' | null,
+    tenantId: number,
+    conversationId: number,
+    currentTurnId: number,
+    egressText: string,
+    aiAgentId: number | null,
+  ): Promise<'smalltalk' | 'out_of_scope' | 'unintelligible' | null> {
+    if (kind !== 'out_of_scope') return kind;
+    const scope = await this.rag.effectiveAgentId(tenantId, aiAgentId);
+    const grounded = await this.rag.groundingConfidence(
+      tenantId,
+      await this.retrievalQueryFor(conversationId, currentTurnId, egressText),
+      scope,
+    );
+    if (grounded < ESCALATION_CONFIDENCE) return kind;
+    this.logger.log(
+      `out_of_scope overridden by knowledge (conf ${grounded}) conversation=${conversationId}`,
+    );
+    return null;
   }
 
   /**
