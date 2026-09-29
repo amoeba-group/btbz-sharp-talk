@@ -767,5 +767,35 @@
       "restore": "Đã khôi phục cài đặt",
       "delete": "Đã xóa ảnh chụp"
     }
+  },
+  "widgetAccess": {
+    "title": "Giới hạn hiển thị (chế độ thử nghiệm)",
+    "on": "Đang bật",
+    "off": "Tắt",
+    "hint": "Chỉ hiển thị widget từ các IP hoặc URL được liệt kê và chỉ trong khoảng thời gian bên dưới. Người khác sẽ không thấy widget.",
+    "period": "Thời gian thử nghiệm",
+    "start": "Bắt đầu",
+    "end": "Kết thúc",
+    "periodHint": "Giờ theo múi giờ trình duyệt. Hết thời gian, giới hạn tự gỡ bỏ.",
+    "ips": "IP được phép",
+    "ipsHint": "IPv4 hoặc IPv6, một địa chỉ hoặc dải CIDR.",
+    "urls": "URL được phép",
+    "urlsHint": "Thêm đường dẫn để bao gồm mọi thứ bên dưới. https://shop.example.com/collections/test cũng khớp /collections/test/item-1 nhưng không khớp /collections/testing.",
+    "add": "Thêm",
+    "remove": "Xóa {{value}}",
+    "invite": "Liên kết mời",
+    "inviteHint": "Người mở liên kết này một lần sẽ thấy widget ở mọi trang trong suốt thời gian thử nghiệm.",
+    "inviteNone": "Chưa phát hành liên kết mời.",
+    "inviteExisting": "Đã có liên kết mời. Phát hành lại để xem — liên kết cũ sẽ ngừng hoạt động.",
+    "inviteIssue": "Phát hành liên kết",
+    "inviteRotate": "Phát hành lại",
+    "inviteRotateConfirm": "Phát hành lại sẽ vô hiệu hóa mọi liên kết đã gửi. Tiếp tục?",
+    "summary": "Hiện tại: chỉ hiển thị từ {{ips}} IP và {{urls}} URL{{key}}.",
+    "summaryKey": " và liên kết mời",
+    "expiredBadge": "Đã hết thời gian — hiển thị cho mọi người",
+    "saved": "Đã lưu giới hạn hiển thị",
+    "saveError": "Không lưu được giới hạn hiển thị",
+    "keyIssued": "Đã phát hành liên kết mời",
+    "keyError": "Không phát hành được liên kết mời"
   }
 }

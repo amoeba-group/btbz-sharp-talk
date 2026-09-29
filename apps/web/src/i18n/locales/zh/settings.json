@@ -767,5 +767,35 @@
       "restore": "已恢复设置",
       "delete": "已删除快照"
     }
+  },
+  "widgetAccess": {
+    "title": "展示限制（测试模式）",
+    "on": "已启用",
+    "off": "未启用",
+    "hint": "仅在指定的 IP 或 URL，并且仅在下方时间段内展示挂件。其他访客将看不到任何挂件。",
+    "period": "测试时间段",
+    "start": "开始",
+    "end": "结束",
+    "periodHint": "时间以浏览器时区为准。时间段结束后限制会自动解除。",
+    "ips": "允许的 IP",
+    "ipsHint": "IPv4 或 IPv6，单个地址或 CIDR 网段。",
+    "urls": "允许的 URL",
+    "urlsHint": "写到路径即可覆盖其下全部。https://shop.example.com/collections/test 也匹配 /collections/test/item-1，但不匹配 /collections/testing。",
+    "add": "添加",
+    "remove": "删除 {{value}}",
+    "invite": "邀请链接",
+    "inviteHint": "打开过该链接的浏览器，在整个时间段内任意页面都能看到挂件。",
+    "inviteNone": "尚未生成邀请链接。",
+    "inviteExisting": "已生成邀请链接。重新生成可再次查看，旧链接将失效。",
+    "inviteIssue": "生成邀请链接",
+    "inviteRotate": "重新生成",
+    "inviteRotateConfirm": "重新生成后，已分发的邀请链接将全部失效。是否继续？",
+    "summary": "当前设置：仅从 {{ips}} 个 IP、{{urls}} 个 URL{{key}} 展示。",
+    "summaryKey": " 和邀请链接",
+    "expiredBadge": "时间段已结束 — 当前对所有人展示",
+    "saved": "已保存展示限制",
+    "saveError": "未能保存展示限制",
+    "keyIssued": "已生成邀请链接",
+    "keyError": "未能生成邀请链接"
   }
 }

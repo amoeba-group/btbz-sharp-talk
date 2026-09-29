@@ -9,7 +9,13 @@ import type {
 } from '@sharptalk/types';
 import type { SaveTenantEngineBody, UsageGroupBy } from './settings.service';
 import { settingsService } from './settings.service';
-import type { SaveShopifyBody, UpdateCredentialBody, WidgetCopyDraft, WidgetDesignDraft } from './settings.service';
+import type {
+  SaveShopifyBody,
+  UpdateCredentialBody,
+  WidgetAccessDraft,
+  WidgetCopyDraft,
+  WidgetDesignDraft,
+} from './settings.service';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
 
@@ -471,6 +477,48 @@ export function useSaveEmbedOrigins() {
  * never cached in the query client, which would put a credential in memory for
  * the rest of the session.
  */
+export function useWidgetAccess() {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['widget-access', tenantKey],
+    queryFn: settingsService.widgetAccess,
+  });
+}
+
+export function useSaveWidgetAccess() {
+  const { t } = useTranslation('settings');
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: (body: WidgetAccessDraft) => settingsService.saveWidgetAccess(body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['widget-access', tenantKey] });
+      toast.success(t('widgetAccess.saved'));
+    },
+    onError: (e: Error) => {
+      // Server-side validation (bad CIDR, empty rule set, inverted window)
+      // speaks through the error code — show it rather than a generic failure.
+      toast.error(e.message || t('widgetAccess.saveError'), { sticky: true });
+    },
+  });
+}
+
+export function useRotateWidgetAccessKey() {
+  const { t } = useTranslation('settings');
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: () => settingsService.rotateWidgetAccessKey(),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['widget-access', tenantKey] });
+      toast.success(t('widgetAccess.keyIssued'));
+    },
+    onError: (e: Error) => {
+      toast.error(e.message || t('widgetAccess.keyError'), { sticky: true });
+    },
+  });
+}
+
 export function useRotateEmbedSecret() {
   const { t } = useTranslation('settings');
   const qc = useQueryClient();

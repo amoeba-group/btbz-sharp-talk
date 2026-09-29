@@ -1,4 +1,4 @@
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 
 /** Request DTOs — snake_case (amoeba_code_convention). */
 export class EnsureSessionRequest {
@@ -23,6 +23,9 @@ export class EnsureSessionRequest {
    * cannot parse, so a bad value never fails the call that mounts the widget.
    */
   @IsOptional() @IsString() landing_path?: string;
+
+  /** Invite key for a tenant running the widget in restricted test mode. */
+  @IsOptional() @IsString() @MaxLength(64) access_key?: string;
 }
 
 /** Panel-open ping (PLN-260920). Fire-and-forget; identified by session token. */

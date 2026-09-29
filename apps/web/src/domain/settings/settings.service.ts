@@ -210,6 +210,28 @@ export interface WidgetThemeSettings {
 }
 
 /** Embed allowlist + whether a signing secret exists (PLN-260819). */
+/** Widget exposure restriction as the console edits it (PLN-260929). */
+export interface WidgetAccessSettings {
+  enabled: boolean;
+  startsAt: string | null;
+  endsAt: string | null;
+  ips: string[];
+  urls: string[];
+  /** The key itself never comes back — only whether one was issued. */
+  keyConfigured: boolean;
+  /** Whether the window is open right now; drives the "expired" badge. */
+  activeNow: boolean;
+  shopDomain: string | null;
+}
+
+export interface WidgetAccessDraft {
+  enabled: boolean;
+  startsAt: string | null;
+  endsAt: string | null;
+  ips: string[];
+  urls: string[];
+}
+
 export interface EmbedSettings {
   /** What is stored; null when never configured. */
   origins: string[] | null;
@@ -225,6 +247,18 @@ export const settingsService = {
   saveEmbedOrigins: (origins: string[]) =>
     apiPatch<EmbedSettings>('/tenants/embed-origins', { origins }),
   rotateEmbedSecret: () => apiPost<{ secret: string }>('/tenants/embed-secret/rotate', {}),
+  // Widget exposure restriction (PLN-260929). Sent whole — a partial update of
+  // a rule set is how "I removed it but it is still there" happens.
+  widgetAccess: () => apiGet<WidgetAccessSettings>('/tenants/widget-access'),
+  saveWidgetAccess: (body: WidgetAccessDraft) =>
+    apiPatch<WidgetAccessSettings>('/tenants/widget-access', {
+      enabled: body.enabled,
+      starts_at: body.startsAt,
+      ends_at: body.endsAt,
+      ips: body.ips,
+      urls: body.urls,
+    }),
+  rotateWidgetAccessKey: () => apiPost<{ key: string }>('/tenants/widget-access/key', {}),
   widgetSettings: () => apiGet<WidgetSettings>('/tenants/widget-settings'),
   storefront: () => apiGet<Storefront>('/tenants/storefront'),
   notificationChannels: () => apiGet<NotificationChannels>('/tenants/notification-channels'),

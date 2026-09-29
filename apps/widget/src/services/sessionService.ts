@@ -8,6 +8,7 @@ export function ensureSession(
   parentOrigin?: string,
   agentCode?: string,
   landingPath?: string,
+  accessKey?: string,
 ): Promise<SessionResponse> {
   return apiClient.post<SessionResponse>('/session/ensure', {
     session_token: sessionToken ?? undefined,
@@ -20,6 +21,9 @@ export function ensureSession(
     // Which storefront page showed the widget (PLN-260920). The server strips
     // the query string and keeps the path — see normalizeLandingPath.
     landing_path: landingPath ?? undefined,
+    // Invite key for a restricted (test-mode) widget (PLN-260929). Absent for
+    // everyone else, which is the normal case.
+    access_key: accessKey ?? undefined,
   });
 }
 

@@ -52,6 +52,15 @@ export function getParentOrigin(): string | undefined {
   }
 }
 
+/** Invite key handed down by the loader for a restricted widget (PLN-260929). */
+export function getAccessKey(): string | undefined {
+  try {
+    return new URLSearchParams(window.location.search).get('access') ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function getShopDomain(): string | undefined {
   try {
     return new URLSearchParams(window.location.search).get('shop') ?? undefined;
@@ -257,6 +266,7 @@ export function useEnsureSession() {
       // Which page showed the widget (PLN-260920). Already parsed for GA4; the
       // server normalizes it and drops the query string.
       getLandingPath(),
+      getAccessKey(),
     )
       .then((res) => {
         if (cancelled) return;

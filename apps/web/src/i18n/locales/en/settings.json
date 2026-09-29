@@ -767,5 +767,35 @@
       "restore": "Settings restored",
       "delete": "Snapshot deleted"
     }
+  },
+  "widgetAccess": {
+    "title": "Exposure restriction (test mode)",
+    "on": "On",
+    "off": "Off",
+    "hint": "Show the widget only from the IPs or URLs you list, and only during the window below. Everyone else sees no widget at all.",
+    "period": "Test window",
+    "start": "Start",
+    "end": "End",
+    "periodHint": "Times are in your browser’s timezone. The restriction lifts itself when the window ends.",
+    "ips": "Allowed IPs",
+    "ipsHint": "IPv4 or IPv6, single address or CIDR block.",
+    "urls": "Allowed URLs",
+    "urlsHint": "Include a path to cover everything under it. https://shop.example.com/collections/test also matches /collections/test/item-1, but not /collections/testing.",
+    "add": "Add",
+    "remove": "Remove {{value}}",
+    "invite": "Invite link",
+    "inviteHint": "A tester who opens this link once keeps seeing the widget anywhere for the rest of the window.",
+    "inviteNone": "No invite link issued yet.",
+    "inviteExisting": "An invite link exists. Issue a new one to see it again — the old link stops working.",
+    "inviteIssue": "Issue invite link",
+    "inviteRotate": "Reissue",
+    "inviteRotateConfirm": "Reissuing stops every invite link already handed out. Continue?",
+    "summary": "Right now: visible only from {{ips}} IP(s), {{urls}} URL(s){{key}}.",
+    "summaryKey": " and the invite link",
+    "expiredBadge": "Window ended — visible to everyone",
+    "saved": "Exposure restriction saved",
+    "saveError": "Could not save the exposure restriction",
+    "keyIssued": "Invite link issued",
+    "keyError": "Could not issue the invite link"
   }
 }

@@ -767,5 +767,35 @@
       "restore": "설정을 복원했습니다",
       "delete": "스냅샷을 삭제했습니다"
     }
+  },
+  "widgetAccess": {
+    "title": "노출 제한 (테스트 모드)",
+    "on": "사용 중",
+    "off": "사용 안 함",
+    "hint": "지정한 IP 또는 URL에서만, 아래 기간 동안만 위젯을 노출합니다. 그 밖의 방문자에게는 위젯이 아예 표시되지 않습니다.",
+    "period": "테스트 기간",
+    "start": "시작",
+    "end": "종료",
+    "periodHint": "시간은 브라우저 시간대 기준입니다. 기간이 끝나면 제한이 자동으로 풀립니다.",
+    "ips": "허용 IP",
+    "ipsHint": "IPv4·IPv6, 단일 주소 또는 CIDR 대역.",
+    "urls": "허용 URL",
+    "urlsHint": "경로까지 적으면 그 아래 전부 포함합니다. https://shop.example.com/collections/test 는 /collections/test/item-1 도 포함하지만 /collections/testing 은 포함하지 않습니다.",
+    "add": "추가",
+    "remove": "{{value}} 삭제",
+    "invite": "초대 링크",
+    "inviteHint": "이 링크로 한 번 들어온 브라우저는 기간 내내 어디서든 위젯이 보입니다.",
+    "inviteNone": "아직 발급한 초대 링크가 없습니다.",
+    "inviteExisting": "초대 링크가 발급돼 있습니다. 다시 보려면 재발급하세요 — 기존 링크는 더 이상 동작하지 않습니다.",
+    "inviteIssue": "초대 링크 발급",
+    "inviteRotate": "재발급",
+    "inviteRotateConfirm": "재발급하면 이미 나눠준 초대 링크가 모두 동작하지 않습니다. 계속할까요?",
+    "summary": "지금 설정: IP {{ips}}개 · URL {{urls}}개{{key}}에서만 노출됩니다.",
+    "summaryKey": " · 초대 링크",
+    "expiredBadge": "기간 종료 — 현재 모두에게 노출",
+    "saved": "노출 제한을 저장했습니다",
+    "saveError": "노출 제한을 저장하지 못했습니다",
+    "keyIssued": "초대 링크를 발급했습니다",
+    "keyError": "초대 링크를 발급하지 못했습니다"
   }
 }

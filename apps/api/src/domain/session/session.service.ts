@@ -30,6 +30,11 @@ import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.mod
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { isOriginAllowed } from '../embed/embed-origin.util';
+import { evaluateWidgetAccess } from '@sharptalk/types';
+import { getRequestContext } from '../../global/middleware/request-context.middleware';
+
+/** A suspended tenant serves nobody — widget included (REQ-260929 G6). */
+const TENANT_SUSPENDED = 'suspended';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 
 /**
@@ -114,6 +119,7 @@ export class SessionService {
     parentOrigin?: string,
     agentCode?: string,
     landingPath?: string,
+    accessKey?: string,
   ): Promise<Session> {
     if (token) {
       const existing = await this.sessionRepo.findOne({ where: { sessionToken: token } });
@@ -139,6 +145,7 @@ export class SessionService {
     }
     const tenant = await this.resolveTenant(shopDomain);
     this.assertEmbedOriginAllowed(tenant, parentOrigin);
+    this.assertWidgetAccessAllowed(tenant, parentOrigin, landingPath, accessKey);
 
     const session = await this.sessionRepo.save(
       this.sessionRepo.create({
@@ -246,6 +253,48 @@ export class SessionService {
    * It is a misconfiguration guard, not authentication: `parentOrigin` comes from
    * the browser. Identity is proved by the signed handshake (S2).
    */
+  /**
+   * Exposure restriction (PLN-260929), the authoritative half.
+   *
+   * The loader already decided whether to SHOW the widget; this decides whether
+   * it may hold a session at all, so a stale loader or a direct call does not
+   * get one. The page URL is rebuilt from the two things the widget already
+   * reports — parent origin and landing path — rather than adding a third field
+   * that could disagree with them.
+   *
+   * Same caveat as the origin allowlist: the inputs come from the browser. This
+   * bounds a test rollout; it is not authentication (REQ-260929 §3-3).
+   */
+  private assertWidgetAccessAllowed(
+    tenant: Tenant,
+    parentOrigin?: string,
+    landingPath?: string,
+    accessKey?: string,
+  ): void {
+    if (tenant.status === TENANT_SUSPENDED) {
+      this.logger.warn(`session refused: tenant ${tenant.id} is suspended`);
+      throw new BusinessException(ERROR_CODE.WIDGET_ACCESS_DENIED, HttpStatus.FORBIDDEN);
+    }
+    if (!tenant.widgetAccess?.enabled) return;
+
+    const pageUrl = parentOrigin ? `${parentOrigin.replace(/\/+$/, '')}${landingPath ?? ''}` : null;
+    const verdict = evaluateWidgetAccess(tenant.widgetAccess, {
+      ip: getRequestContext()?.ip ?? null,
+      pageUrl,
+      key: accessKey ?? null,
+      tenantKey: tenant.widgetAccessKey,
+      // No parent origin means no page to match — a host app WebView or a
+      // direct open. The IP, the key and the window still apply.
+      skipUrlRule: !parentOrigin,
+    });
+    if (verdict.visible) return;
+
+    // 4xx are not server-logged by default, so this line is the only evidence
+    // that a tester was turned away.
+    this.logger.warn(`widget access denied (tenant ${tenant.id}, page ${pageUrl ?? 'n/a'})`);
+    throw new BusinessException(ERROR_CODE.WIDGET_ACCESS_DENIED, HttpStatus.FORBIDDEN);
+  }
+
   private assertEmbedOriginAllowed(tenant: Tenant, parentOrigin?: string): void {
     if (!parentOrigin) return;
     if (isOriginAllowed(parentOrigin, tenant.embedOrigins, tenant)) return;

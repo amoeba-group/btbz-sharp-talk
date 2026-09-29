@@ -273,6 +273,22 @@ export class UpdateWidgetDesignRequest {
   @IsOptional() @IsObject() design?: NonNullable<UpdateWidgetThemeRequest['design']>;
 }
 
+/**
+ * Widget exposure restriction (PLN-260929). Sent whole, like the embed
+ * allowlist: partial updates of a rule set invite the "I removed it but it is
+ * still there" class of confusion.
+ */
+export class UpdateWidgetAccessRequest {
+  @IsBoolean() enabled: boolean;
+
+  /** ISO instants; null/absent = open-ended on that side. */
+  @IsOptional() @IsString() starts_at?: string | null;
+  @IsOptional() @IsString() ends_at?: string | null;
+
+  @IsArray() @IsString({ each: true }) @ArrayMaxSize(50) ips: string[];
+  @IsArray() @IsString({ each: true }) @ArrayMaxSize(50) urls: string[];
+}
+
 /** PLN-260819 S1 — replace the embed allowlist wholesale (empty = back to default). */
 export class UpdateEmbedOriginsRequest {
   @IsArray()

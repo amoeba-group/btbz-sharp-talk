@@ -295,6 +295,54 @@
   // the box. Cached on the PARENT origin so the next visit places the frame
   // correctly on the first frame instead of sliding across after the widget
   // boots — the same trick the widget uses for the brand colour.
+  // --- Exposure restriction (PLN-260929) ------------------------------------
+  //
+  // A tenant can limit the widget to certain IPs/URLs for a test window. Only
+  // the server can decide that (it is the one that sees the real IP), so the
+  // loader asks before showing anything — and hides the frame outright when the
+  // answer is no, rather than mounting a widget that cannot talk.
+  //
+  // Two things make this cheap for the 99% of stores with no restriction:
+  //   * the verdict request runs in parallel with mounting, and
+  //   * only the BOOLEAN "this tenant uses restrictions" is remembered, so an
+  //     unrestricted store never waits. The verdict itself is never cached —
+  //     the test window has to be able to close on time.
+  var ACCESS_KEY_KEY = 'st:access:' + (shop || 'default');
+  var RESTRICTED_KEY = 'st:restricted:' + (shop || 'default');
+  var accessDenied = false;
+
+  function lsGet(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (_) {
+      return null; // private mode / blocked storage — treat as "nothing known"
+    }
+  }
+  function lsSet(key, value) {
+    try {
+      if (value == null) localStorage.removeItem(key);
+      else localStorage.setItem(key, value);
+    } catch (_) {
+      /* not remembering only costs one more flash on the next visit */
+    }
+  }
+
+  // An invite link (`?st_access=…`) is spent once and remembered, so the tester
+  // keeps seeing the widget as they browse the rest of the store.
+  var accessKey = (function () {
+    var fromUrl = '';
+    try {
+      fromUrl = (new URLSearchParams(window.location.search).get('st_access') || '').slice(0, 64);
+    } catch (_) {
+      fromUrl = '';
+    }
+    if (fromUrl) {
+      lsSet(ACCESS_KEY_KEY, fromUrl);
+      return fromUrl;
+    }
+    return lsGet(ACCESS_KEY_KEY) || '';
+  })();
+
   var LAUNCHER_KEY = 'ivy:launcher:' + (shop || 'default');
   var launcher = (function () {
     try {
@@ -458,6 +506,10 @@
       // Phone-sized viewport: the widget keeps its close button even in trigger
       // mode, because a full-screen panel has no "outside" to click.
       (window.innerWidth < 640 ? '&compact=1' : '') +
+      // Invite key for the exposure restriction (PLN-260929): the loader has
+      // already spent the link, the widget needs it to pass the server-side
+      // check on every session call.
+      (accessKey ? '&access=' + encodeURIComponent(accessKey) : '') +
       (attribution ? '&' + attribution : '')
     );
   }
@@ -500,9 +552,66 @@
    * Put the frame on the page. Runs once, from whichever entry point comes
    * first: the legacy config-only install (bottom of this file) or ShopTalk.init().
    */
+  /**
+   * Ask the server whether this visitor may see the widget at all. Runs once per
+   * page load, alongside boot(). Failure leaves the widget VISIBLE on purpose:
+   * the common case is an unrestricted store, and a network blip must not make
+   * every storefront's widget vanish. The session call refuses on the server
+   * side regardless, so a blip cannot leak data either (PLN-260929 §3).
+   */
+  function checkVisibility() {
+    var url = apiBase + '/public/widget/visibility?shop=' + encodeURIComponent(shop || '');
+    try {
+      url += '&url=' + encodeURIComponent(window.location.origin + window.location.pathname);
+    } catch (_) {
+      /* exotic host — the server falls back to the IP and key rules */
+    }
+    if (accessKey) url += '&key=' + encodeURIComponent(accessKey);
+    // `mode=app` is not reachable from here: a host app embeds the widget
+    // directly through the SDK, without this loader.
+
+    fetch(url, { credentials: 'omit' })
+      .then(function (r) {
+        return r.ok ? r.json() : null;
+      })
+      .then(function (body) {
+        var d = (body && body.data) || body || {};
+        if (typeof d.visible !== 'boolean') return; // unknown shape → leave as is
+        // Remember only WHETHER this tenant restricts, never the verdict.
+        lsSet(RESTRICTED_KEY, d.restricted ? '1' : null);
+        if (d.visible) {
+          revealFrame();
+          return;
+        }
+        accessDenied = true;
+        hideFrame();
+      })
+      .catch(function () {
+        revealFrame(); // fail open — see the note above
+      });
+  }
+
+  /** Take the widget off the page entirely: no launcher, no iframe, no trace. */
+  function hideFrame() {
+    try {
+      if (frame.parentNode) frame.parentNode.removeChild(frame);
+    } catch (_) {
+      /* already gone */
+    }
+  }
+
+  function revealFrame() {
+    if (accessDenied) return;
+    frame.style.visibility = triggerMode && !isOpen ? 'hidden' : 'visible';
+  }
+
   function boot() {
     if (booted || signInScreen) return;
     booted = true;
+    // A store we have seen restrict before starts hidden and waits for the
+    // verdict — one flash per browser instead of one on every page.
+    if (lsGet(RESTRICTED_KEY) === '1') frame.style.visibility = 'hidden';
+    checkVisibility();
     // `base` is resolved from cfg at load; if init() changed widgetUrl, honour it.
     if (cfg.widgetUrl) {
       base = String(cfg.widgetUrl).replace(/\/+$/, '');

@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { bigintTransformer } from '../../../global/util/transformers';
 import { decryptSecret, encryptSecret } from '../../../global/util/crypto.util';
-import type { WidgetTheme } from '@sharptalk/types';
+import type { WidgetAccess, WidgetTheme } from '@sharptalk/types';
 
 /**
  * The embed secret is a credential, so it never sits in the database as text.
@@ -139,6 +139,31 @@ export class Tenant {
    */
   @Column({ name: 'embed_origins', type: 'json', nullable: true })
   embedOrigins: string[] | null;
+
+  /**
+   * Widget exposure restriction (PLN-260929): show the widget only from these
+   * IPs or URLs, only inside this window, plus whoever holds the invite key.
+   * NULL = never configured = off, so no existing tenant changes behaviour.
+   *
+   * Exposure control, not access control — the URL comes from the browser and
+   * the IP is the edge's X-Forwarded-For. See widget-access.ts.
+   */
+  @Column({ name: 'widget_access', type: 'json', nullable: true })
+  widgetAccess: WidgetAccess | null;
+
+  /**
+   * Invite key for testers who are not on a fixed IP. Encrypted at rest and
+   * shown again in the console, like `embed_secret` — it is a test-window
+   * convenience, not a credential that proves anything about who holds it.
+   */
+  @Column({
+    name: 'widget_access_key',
+    type: 'varbinary',
+    length: 512,
+    nullable: true,
+    transformer: secretTransformer,
+  })
+  widgetAccessKey: string | null;
 
   /**
    * Shared secret the customer's own server signs user ids with (PLN-260819 S2).

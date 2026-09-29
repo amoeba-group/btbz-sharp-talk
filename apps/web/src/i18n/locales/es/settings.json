@@ -767,5 +767,35 @@
       "restore": "Configuración restaurada",
       "delete": "Instantánea eliminada"
     }
+  },
+  "widgetAccess": {
+    "title": "Restricción de visibilidad (modo prueba)",
+    "on": "Activada",
+    "off": "Desactivada",
+    "hint": "Muestra el widget solo desde las IP o URL indicadas y solo durante el periodo. El resto no verá ningún widget.",
+    "period": "Periodo de prueba",
+    "start": "Inicio",
+    "end": "Fin",
+    "periodHint": "Horario según la zona del navegador. La restricción se levanta sola al terminar el periodo.",
+    "ips": "IP permitidas",
+    "ipsHint": "IPv4 o IPv6, dirección única o bloque CIDR.",
+    "urls": "URL permitidas",
+    "urlsHint": "Incluye una ruta para cubrir todo lo que cuelga de ella. https://shop.example.com/collections/test también cubre /collections/test/item-1, pero no /collections/testing.",
+    "add": "Añadir",
+    "remove": "Eliminar {{value}}",
+    "invite": "Enlace de invitación",
+    "inviteHint": "Quien abra este enlace una vez seguirá viendo el widget en cualquier página durante el periodo.",
+    "inviteNone": "Todavía no hay enlace de invitación.",
+    "inviteExisting": "Ya existe un enlace. Emite uno nuevo para volver a verlo; el anterior dejará de funcionar.",
+    "inviteIssue": "Emitir enlace",
+    "inviteRotate": "Reemitir",
+    "inviteRotateConfirm": "Al reemitir dejarán de funcionar todos los enlaces repartidos. ¿Continuar?",
+    "summary": "Ahora mismo: visible solo desde {{ips}} IP y {{urls}} URL{{key}}.",
+    "summaryKey": " y el enlace de invitación",
+    "expiredBadge": "Periodo terminado: visible para todos",
+    "saved": "Restricción guardada",
+    "saveError": "No se pudo guardar la restricción",
+    "keyIssued": "Enlace emitido",
+    "keyError": "No se pudo emitir el enlace"
   }
 }
