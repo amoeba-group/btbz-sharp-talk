@@ -44,7 +44,9 @@
 - 스테이징 tenant 5(skyliving) `tenant_ai_config.handoff_config.denyRules`에 1건 추가(2026-09-29, SQL `JSON_SET`):
   키워드 `예약 진행`·`예약진행`·`예약 확정`·`예약확정`·`진행해 주세요`·`진행해주세요`, `mode=answer_then_handoff`, `type=other`, `label=consult`.
   재실측(대화 655): "예약 진행" → 대화 `waiting`, 상담원 호출 확인.
-  ⚠️ 콘솔이 아닌 SQL로 넣었으므로 AI 설정 리비전 이력에는 남지 않는다. 콘솔 "AI 설정 > 인계"에서 확인·수정할 수 있다.
+  콘솔 "AI 설정 > 인계"에서 확인·수정할 수 있다. (정정 2026-09-30: AI 설정 리비전 이력은 페르소나·응답 규칙·시나리오만 기록하고
+  `handoff_config`는 **콘솔 저장 경로에서도 기록되지 않는다**(`ai-config.service.ts` `upsertConfig` → `revisions.record`).
+  콘솔 저장이 인계 설정에 대해 추가로 하는 일도 없어서(무효화하는 캐시는 페르소나용이고 인계 설정은 매 턴 DB에서 읽는다) SQL 입력과 동등하다.)
   skyliving에는 이슈 애드온이 없어 이슈 행은 생성되지 않는다(대기열 알림만).
 - 프로덕션에는 미적용(테넌트 이관 시 함께 설정).
 
