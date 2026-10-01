@@ -26,6 +26,7 @@ import { AuthGate } from './AuthGate';
 import { ContactCard } from './ContactCard';
 import { AffiliateCard } from './AffiliateCard';
 import { InlineOrdersAnswer } from './InlineOrderCard';
+import { replyChips } from './reply-chips';
 
 type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'orders' | null;
 
@@ -73,6 +74,7 @@ export function ChatTab() {
         ? 'queued'
         : null;
   const scenarioButtons = useScenario(sessionToken);
+  const commerceEnabled = useWidgetStore((s) => s.commerceEnabled);
   const quickReplyStyle = useWidgetStore((s) => s.widgetTheme?.design?.quickReplyStyle) ?? 'chip';
   // Recent orders for the in-thread "My orders" answer. Only fetched once the
   // shopper actually asks — `enabled` follows the inline card being shown.
@@ -318,12 +320,12 @@ export function ChatTab() {
     !sending &&
     !showEscalate &&
     inline === null;
-  const fallbackActions: { id: string; label: string }[] = [
-    { id: 'my_orders', label: t('chat.nextActions.myOrders') },
-    { id: 'shipping_policy', label: t('chat.nextActions.shipping') },
-    { id: 'return_exchange', label: t('chat.nextActions.returns') },
-    { id: 'agent_connect', label: t('chat.nextActions.agent') },
-  ];
+  const fallbackActions = replyChips(commerceEnabled, scenarioButtons, {
+    myOrders: t('chat.nextActions.myOrders'),
+    shipping: t('chat.nextActions.shipping'),
+    returns: t('chat.nextActions.returns'),
+    agent: t('chat.nextActions.agent'),
+  });
 
   function submitInput(e: React.FormEvent) {
     e.preventDefault();
@@ -491,7 +493,8 @@ export function ChatTab() {
             {fallbackActions.map((a) => (
               <button
                 key={a.id}
-                onClick={() => handleQuickReply(a.id, a.label)}
+                // A scenario button behaves exactly as it does in the menu.
+                onClick={() => (a.button ? handleScenario(a.button) : handleQuickReply(a.id, a.label))}
                 className="rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50"
               >
                 {a.label}

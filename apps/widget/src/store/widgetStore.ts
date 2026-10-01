@@ -85,6 +85,12 @@ interface WidgetState {
   /** Tenant runs an issue workflow → the single list tab offers an Inquiries chip (PLN-260923 D-2). */
   issueFeed: boolean;
   /**
+   * Tenant has orders to look up (PLN-261001). False = a hotel partner desk or
+   * B2B help desk: reply chips come from the tenant's scenario buttons. Seeded
+   * true so a widget that has not heard back yet keeps the store behaviour.
+   */
+  commerceEnabled: boolean;
+  /**
    * Inbound chat messages that arrived while the Chat tab was not the active one
    * — the count on the Chat tab's badge (PLN-260817 W-1). Cleared the moment the
    * shopper opens the tab, since the messages are then on screen.
@@ -100,6 +106,7 @@ interface WidgetState {
   setLoginMode: (m: WidgetLoginMode) => void;
   setWidgetCopy: (c: WidgetCopy | null) => void;
   setIssueFeed: (v: boolean) => void;
+  setCommerceEnabled: (v: boolean) => void;
   setCustomerName: (n: string | null) => void;
   /** Tenant theme, for the parts that are markup rather than CSS (logo, launcher). */
   widgetTheme: WidgetTheme | null;
@@ -152,6 +159,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   tabPosition: 'top',
   tabsResolved: false,
   issueFeed: false,
+  commerceEnabled: true,
   chatUnread: 0,
   setSessionToken: (t) => {
     setStoredSessionToken(t);
@@ -166,6 +174,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setLoginMode: (m) => set({ loginMode: m }),
   setWidgetCopy: (c) => set({ widgetCopy: c }),
   setIssueFeed: (v) => set({ issueFeed: v }),
+  setCommerceEnabled: (v) => set({ commerceEnabled: v }),
   setCustomerName: (n) => set({ customerName: n }),
   widgetTheme: null,
   setWidgetTheme: (t) => set({ widgetTheme: t }),

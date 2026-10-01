@@ -111,6 +111,8 @@ export interface WidgetSettings {
   /** Effective tab set — already resolved to the built-in default when unset. */
   tabs: WidgetTab[];
   tabPosition: WidgetTabPosition;
+  /** Store features: order sign-in gate + order chips (PLN-261001). */
+  commerceEnabled: boolean;
   timezone: string | null;
   /** Explicit default widget language (code) or null = follow the timezone. */
   defaultLanguage: string | null;
@@ -355,9 +357,11 @@ export const settingsService = {
     tabs?: WidgetTab[],
     tabPosition?: WidgetTabPosition,
     defaultLanguage?: string | null,
+    commerceEnabled?: boolean,
   ) =>
     apiPatch<WidgetSettings>('/tenants/widget-settings', {
       login_mode: loginMode,
+      ...(commerceEnabled !== undefined ? { commerce_enabled: commerceEnabled } : {}),
       ...(defaultLanguage !== undefined ? { default_language: defaultLanguage } : {}),
       ...(tabs !== undefined ? { tabs } : {}),
       ...(tabPosition !== undefined ? { tab_position: tabPosition } : {}),

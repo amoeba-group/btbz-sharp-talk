@@ -443,7 +443,10 @@
   },
   "widgetTabs": {
     "title": "Pestañas del widget",
-    "desc": "Qué pestañas muestra el widget y dónde va la barra."
+    "desc": "Qué pestañas muestra el widget y dónde va la barra.",
+    "commerceTitle": "Funciones de tienda",
+    "commerceLabel": "Usar consulta de pedidos, envíos y devoluciones",
+    "commerceHint": "Desactívalo en servicios sin pedidos de clientes (socios hoteleros, soporte B2B). El chat dejará de pedir inicio de sesión para preguntas sobre pedidos y las respuestas terminarán con tus botones de escenario (ajustes de IA) en lugar de Mis pedidos · Envío · Devoluciones."
   },
   "widgetTheme": {
     "title": "Tema del widget",

@@ -72,6 +72,13 @@ export interface SessionResponse {
   /** Where the tab bar sits: 'top' (default) or 'bottom'. */
   widgetTabPosition: WidgetTabPosition;
   /**
+   * False when shoppers have no orders here — a hotel partner desk, a B2B help
+   * desk (PLN-261001). The widget then ends replies with the tenant's scenario
+   * buttons instead of My orders / Shipping / Returns. Optional so an older API
+   * reads as a store.
+   */
+  commerceEnabled?: boolean;
+  /**
    * Brand theme, or null when unthemed. Null is meaningful: the widget's own
    * stylesheet carries the built-in palette, so an unthemed tenant needs no
    * variables written at all (PLN-260818 §2.4).

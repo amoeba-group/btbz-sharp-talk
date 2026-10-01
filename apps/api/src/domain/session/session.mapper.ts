@@ -27,6 +27,7 @@ export class SessionMapper {
       widgetLoginMode: notice.widgetLoginMode,
       widgetTabs: notice.widgetTabs,
       widgetTabPosition: notice.widgetTabPosition,
+      commerceEnabled: notice.commerceEnabled ?? true,
       widgetTheme: notice.widgetTheme,
       widgetCopy: notice.widgetCopy,
       aiProcessingRegion: notice.aiProcessingRegion ?? 'US',

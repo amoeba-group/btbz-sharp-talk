@@ -443,7 +443,10 @@
   },
   "widgetTabs": {
     "title": "Tab của widget",
-    "desc": "Widget hiển thị những tab nào và thanh tab nằm ở đâu."
+    "desc": "Widget hiển thị những tab nào và thanh tab nằm ở đâu.",
+    "commerceTitle": "Tính năng cửa hàng",
+    "commerceLabel": "Dùng tra cứu đơn hàng, giao hàng và đổi trả",
+    "commerceHint": "Tắt cho dịch vụ không có đơn hàng của khách (đối tác khách sạn, hỗ trợ B2B). Khi tắt, chat không yêu cầu đăng nhập cho câu hỏi về đơn hàng, và cuối câu trả lời sẽ hiện các nút kịch bản (cài đặt AI) thay cho Đơn hàng · Giao hàng · Đổi trả."
   },
   "widgetTheme": {
     "title": "Giao diện widget",

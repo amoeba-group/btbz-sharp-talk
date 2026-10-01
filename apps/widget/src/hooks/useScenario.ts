@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { getScenario } from '../services/scenarioService';
+import { useWidgetStore } from '../store/widgetStore';
 import type { ScenarioButton } from '../lib/types';
 
 /**
@@ -13,6 +14,7 @@ import type { ScenarioButton } from '../lib/types';
  */
 export function useScenario(sessionToken: string | null): ScenarioButton[] {
   const { t } = useTranslation();
+  const commerceEnabled = useWidgetStore((s) => s.commerceEnabled);
 
   const { data, isError } = useQuery({
     queryKey: ['scenario', sessionToken],
@@ -33,7 +35,10 @@ export function useScenario(sessionToken: string | null): ScenarioButton[] {
     { id: 'my_orders', label: t('chat.scenarios.myOrders'), action: 'my_orders', enabled: true },
   ];
 
-  // No data yet (loading) or a failed fetch → the widget still shows a menu.
-  if (isError || !data) return fallback;
+  // No data yet (loading) or a failed fetch → the widget still shows a menu —
+  // but only a store has a sensible built-in one. A hotel partner desk shown
+  // "Delivery Status / Cancel / Refund" while loading is the defect PLN-261001
+  // removed; there it waits for the tenant's own buttons.
+  if (isError || !data) return commerceEnabled ? fallback : [];
   return data.scenarioButtons ?? [];
 }
