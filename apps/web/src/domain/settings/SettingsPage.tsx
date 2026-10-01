@@ -747,6 +747,8 @@ export function WidgetTabsCard() {
 
   const [tabsPicked, setTabsPicked] = useState<WidgetTab[] | null>(null);
   const [positionPicked, setPositionPicked] = useState<WidgetTabPosition | null>(null);
+  const [commercePicked, setCommercePicked] = useState<boolean | null>(null);
+  const commerceEnabled = commercePicked ?? data?.commerceEnabled ?? true;
   const tabs = tabsPicked ?? data?.tabs ?? [...WIDGET_TABS_DEFAULT];
   const tabPosition: WidgetTabPosition = positionPicked ?? data?.tabPosition ?? 'top';
 
@@ -768,7 +770,8 @@ export function WidgetTabsCard() {
   // NULL means unconfigured, and it has to survive a save of its neighbour.
   const tabsChanged = tabsPicked != null && JSON.stringify(tabsPicked) !== JSON.stringify(data?.tabs);
   const positionChanged = positionPicked != null && positionPicked !== data?.tabPosition;
-  const dirty = data != null && (tabsChanged || positionChanged);
+  const commerceChanged = commercePicked != null && commercePicked !== data?.commerceEnabled;
+  const dirty = data != null && (tabsChanged || positionChanged || commerceChanged);
 
   return (
     <Card title={t('widgetTabs.title')}>
@@ -820,12 +823,29 @@ export function WidgetTabsCard() {
         </FormRow>
         <p className="mb-4 text-xs text-gray-400">{t('widgetBehavior.tabPositionHint')}</p>
 
+        {/* Store features — PLN-261001. Lives beside the tabs because hiding
+            the Orders tab is the other half of the same decision. */}
+        <div className="mb-2 border-t border-gray-100 pt-4 text-sm font-medium text-gray-700">
+          {t('widgetTabs.commerceTitle')}
+        </div>
+        <label className="mb-1 flex items-center gap-1.5 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            checked={commerceEnabled}
+            disabled={isLoading}
+            onChange={(e) => setCommercePicked(e.target.checked)}
+          />
+          {t('widgetTabs.commerceLabel')}
+        </label>
+        <p className="mb-4 text-xs text-gray-400">{t('widgetTabs.commerceHint')}</p>
+
         <Button
           onClick={() =>
             save.mutate({
               loginMode: data?.loginMode ?? 'redirect',
               ...(tabsChanged ? { tabs } : {}),
               ...(positionChanged ? { tabPosition } : {}),
+              ...(commerceChanged ? { commerceEnabled } : {}),
             })
           }
           disabled={!dirty || save.isPending}

@@ -177,6 +177,11 @@ export class UpdateWidgetSettingsRequest {
   @IsIn(Object.values(WIDGET_TAB_POSITION))
   tab_position?: WidgetTabPosition;
 
+  // Store features on/off (PLN-261001). Same omitted-vs-null rule as above.
+  @ValidateIf((_o, value) => value !== undefined)
+  @IsBoolean()
+  commerce_enabled?: boolean;
+
   // IANA timezone (e.g. 'Asia/Seoul'); drives the default widget language. Empty
   // string / null clears it. Optional so a login-mode-only update leaves it intact.
   @IsOptional()

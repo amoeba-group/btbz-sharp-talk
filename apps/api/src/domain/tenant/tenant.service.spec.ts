@@ -147,6 +147,16 @@ describe('TenantService.updatePrivacyNotice', () => {
       ).rejects.toThrow();
     });
 
+    it('stores the store-features flag and keeps it when omitted (PLN-261001)', async () => {
+      tenant.commerceEnabled = 1;
+      const off = await svc.updateWidgetSettings(1, 7, { login_mode: 'redirect', commerce_enabled: false });
+      expect(off.commerceEnabled).toBe(0);
+      const kept = await svc.updateWidgetSettings(1, 7, { login_mode: 'redirect' });
+      expect(kept.commerceEnabled).toBe(0);
+      const on = await svc.updateWidgetSettings(1, 7, { login_mode: 'redirect', commerce_enabled: true });
+      expect(on.commerceEnabled).toBe(1);
+    });
+
     it('leaves the stored configuration alone when the request omits it', async () => {
       tenant.widgetTabs = ['notifications', 'orders'];
       tenant.widgetTabPosition = 'bottom';

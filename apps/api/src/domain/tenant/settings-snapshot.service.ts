@@ -24,6 +24,7 @@ const FIELDS = [
   'notificationChannels',
   'embedOrigins',
   'usageGuidesEnabled',
+  'commerceEnabled',
   'timezone',
   'defaultLanguage',
   'storefrontUrl',

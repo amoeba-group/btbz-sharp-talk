@@ -194,6 +194,15 @@ export class Tenant {
   @Column({ name: 'usage_guides_enabled', type: 'tinyint', width: 1, default: 0 })
   usageGuidesEnabled: number;
 
+  /**
+   * Whether shoppers have orders here (PLN-261001 S0). 0 = a hotel partner desk
+   * or B2B help desk: the chat skips the order sign-in gate and the reply chips
+   * come from the tenant's scenario buttons instead of My orders / Shipping /
+   * Returns. Default 1 — every store behaves as before.
+   */
+  @Column({ name: 'commerce_enabled', type: 'tinyint', width: 1, default: 1 })
+  commerceEnabled: number;
+
   /** Live custom widget (widget_designs.id); NULL = the basic widget (PLN-260910 P3). */
   @Column({ name: 'active_widget_design_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
   activeWidgetDesignId: number | null;

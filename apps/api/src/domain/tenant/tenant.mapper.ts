@@ -109,6 +109,7 @@ export class TenantMapper {
         t.widgetTabPosition === WIDGET_TAB_POSITION.BOTTOM
           ? WIDGET_TAB_POSITION.BOTTOM
           : WIDGET_TAB_POSITION.TOP,
+      commerceEnabled: Number(t.commerceEnabled ?? 1) !== 0,
       timezone: t.timezone ?? null,
       defaultLanguage: t.defaultLanguage ?? null,
       displayName: t.widgetCopy?.displayName ?? null,

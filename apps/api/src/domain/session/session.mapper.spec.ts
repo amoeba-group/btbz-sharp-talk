@@ -34,6 +34,8 @@ describe('SessionMapper.toResponse', () => {
       consentState: 'pending',
       authenticated: true,
       customerName: 'Huy Tester',
+      // Notice predates the flag → read as a store (PLN-261001).
+      commerceEnabled: true,
       privacyPolicyUrl: 'https://shop.example/privacy',
       consentNoticeVersion: 'v2',
       noticeOutdated: false,

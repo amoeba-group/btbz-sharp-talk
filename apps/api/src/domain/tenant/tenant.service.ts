@@ -433,6 +433,7 @@ export class TenantService {
       tenant.widgetTabs = tabs;
     }
     if (dto.tab_position !== undefined) tenant.widgetTabPosition = dto.tab_position;
+    if (dto.commerce_enabled !== undefined) tenant.commerceEnabled = dto.commerce_enabled ? 1 : 0;
     if (dto.timezone !== undefined) tenant.timezone = dto.timezone?.trim() || null;
     if (dto.default_language !== undefined) tenant.defaultLanguage = dto.default_language?.trim().toLowerCase() || null;
     tenant.widgetCopy = mergeWidgetCopy(tenant.widgetCopy, dto);
@@ -447,6 +448,7 @@ export class TenantService {
         `tabs:${(saved.widgetTabs ?? WIDGET_TABS_DEFAULT).join('+')}@${saved.widgetTabPosition}`,
         saved.timezone,
         saved.defaultLanguage ? `lang:${saved.defaultLanguage}` : null,
+        Number(saved.commerceEnabled) === 0 ? 'commerce:off' : null,
       ]
         .filter(Boolean)
         .join(' · '),

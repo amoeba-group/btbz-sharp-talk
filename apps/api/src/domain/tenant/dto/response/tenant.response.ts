@@ -86,6 +86,8 @@ export interface WidgetSettingsResponse {
    */
   tabs: WidgetTab[];
   tabPosition: WidgetTabPosition;
+  /** Store features (order sign-in gate, commerce chips) — PLN-261001. */
+  commerceEnabled: boolean;
   timezone: string | null;
   /** Explicit default widget language (code) or null = follow the timezone. */
   defaultLanguage: string | null;

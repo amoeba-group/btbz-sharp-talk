@@ -189,6 +189,8 @@ export function adoptTenantConfig(res: SessionResponse): void {
   s.setWidgetTheme(res.widgetTheme ?? null);
   if (res.widgetCopy) s.setWidgetCopy(res.widgetCopy);
   s.setIssueFeed(!!res.issueFeed);
+  // Absent (older API) reads as a store — the behaviour before the flag existed.
+  s.setCommerceEnabled(res.commerceEnabled !== false);
   // Deployment-level: where inference runs, named in the AI disclosure (G7).
   s.setAiProcessingRegion((res.aiProcessingRegion || 'US').toUpperCase());
 }

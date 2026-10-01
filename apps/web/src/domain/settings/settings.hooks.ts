@@ -39,8 +39,17 @@ export function useSaveWidgetSettings() {
       tabs?: WidgetTab[];
       tabPosition?: WidgetTabPosition;
       defaultLanguage?: string | null;
+      commerceEnabled?: boolean;
     }) =>
-      settingsService.saveWidgetSettings(v.loginMode, v.timezone, v.copy, v.tabs, v.tabPosition, v.defaultLanguage),
+      settingsService.saveWidgetSettings(
+        v.loginMode,
+        v.timezone,
+        v.copy,
+        v.tabs,
+        v.tabPosition,
+        v.defaultLanguage,
+        v.commerceEnabled,
+      ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['widget-settings', tenantKey] });
       // Success auto-closes; errors stay until dismissed (dev-kit §4.3).

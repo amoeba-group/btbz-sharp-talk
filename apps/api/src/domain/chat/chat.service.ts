@@ -629,6 +629,12 @@ export class ChatService {
       { id: userTurn.id },
       { intent: intent.intent ?? null, intentConfidence: intent.confidence ?? null },
     );
+    // A tenant with no orders (hotel partner desk, B2B help desk — PLN-261001)
+    // has nothing to sign in to: "오늘 예약 현황" is a how-to question there,
+    // and asking for a guest order lookup sent partners to a store login that
+    // does not exist. The classifier's label is still recorded above; only the
+    // order gate, order grounding and the reuse exclusion read this.
+    const needsOrderData = !!intent.needsOrderData && (await this.commerceEnabled(tenantId));
     // Policy deny-list (P2, REQ §5.3): a matched topic goes to a human no matter
     // how confident the AI would be — the LLM is not even asked. A queued thread
     // stays silent (agents are already paged; see the blocked/low-conf branches).
@@ -774,7 +780,7 @@ export class ChatService {
       };
     }
 
-    if (intent.needsOrderData && session.customerId == null && !denyAnswersFirst) {
+    if (needsOrderData && session.customerId == null && !denyAnswersFirst) {
       const body = sysMsg('authRequired', session.language);
       await this.persist(tenantId, conversation.id, SENDER_TYPE.SYSTEM, body, session.language);
       return { conversationId: String(conversation.id), reply: { senderType: 'system', body }, escalate: false, needsAuth: true };
@@ -791,7 +797,7 @@ export class ChatService {
     // orders, not guessed from the knowledge base. Only reached once the gate
     // above proved the session is bound to a customer.
     const orderContext =
-      intent.needsOrderData && session.customerId != null
+      needsOrderData && session.customerId != null
         ? await this.buildOrderContext(tenantId, session.customerId)
         : undefined;
 
@@ -819,7 +825,7 @@ export class ChatService {
     // that says it, and a stored answer cannot know which.
     const contextual = hasAssistantTurn(history);
     const reused =
-      intent.needsOrderData || !this.answerReuse || contextual
+      needsOrderData || !this.answerReuse || contextual
         ? null
         : await this.answerReuse.lookup(
             tenantId,
@@ -954,7 +960,7 @@ export class ChatService {
         confidence: answer.confidence,
         citations: answer.citations,
         sourceMessageId: aiTurn.id,
-        needsOrderData: intent.needsOrderData ?? false,
+        needsOrderData,
         aiAgentId: effectiveAgentId,
       });
     }
@@ -1326,6 +1332,15 @@ export class ChatService {
 
   private async markWaiting(conversationId: number): Promise<void> {
     await this.convRepo.update({ id: conversationId }, { status: CONVERSATION_STATUS.WAITING, escalated: 1 });
+  }
+
+  /** Store features flag (PLN-261001); an unknown tenant reads as a store. */
+  private async commerceEnabled(tenantId: number): Promise<boolean> {
+    const tenant = await this.tenantRepo.findOne({
+      where: { id: tenantId },
+      select: { id: true, commerceEnabled: true },
+    });
+    return Number(tenant?.commerceEnabled ?? 1) !== 0;
   }
 
   private async resolveTenantId(): Promise<number> {

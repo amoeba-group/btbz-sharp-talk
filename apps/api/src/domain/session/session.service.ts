@@ -59,6 +59,8 @@ export interface PrivacyNoticeInfo {
   widgetTabs: WidgetTab[];
   /** Where the tab bar sits. */
   widgetTabPosition: WidgetTabPosition;
+  /** False for tenants with no orders to look up (PLN-261001). */
+  commerceEnabled: boolean;
   /** Brand theme, or null when this tenant never configured one. */
   widgetTheme: WidgetTheme | null;
   /** Tenant widget copy; displayName already resolved (config ?? tenant name). */
@@ -575,6 +577,9 @@ export class SessionService {
         tenant?.widgetTabPosition === WIDGET_TAB_POSITION.BOTTOM
           ? WIDGET_TAB_POSITION.BOTTOM
           : WIDGET_TAB_POSITION.TOP,
+      // Unknown tenant → a store: the safe direction is the behaviour every
+      // widget had before the flag existed.
+      commerceEnabled: Number(tenant?.commerceEnabled ?? 1) !== 0,
       // Null passes through as null: the widget's CSS already holds the built-in
       // palette, so "no theme" needs no payload and paints no variables.
       widgetTheme: stripCustomCss(normalizeWidgetTheme(tenant?.widgetTheme), Number(tenant?.customCssEnabled) === 1),

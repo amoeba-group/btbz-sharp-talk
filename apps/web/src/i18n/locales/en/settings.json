@@ -443,7 +443,10 @@
   },
   "widgetTabs": {
     "title": "Widget tabs",
-    "desc": "Which tabs the chat widget shows, and where the tab bar sits."
+    "desc": "Which tabs the chat widget shows, and where the tab bar sits.",
+    "commerceTitle": "Store features",
+    "commerceLabel": "Use order lookup, shipping and returns",
+    "commerceHint": "Turn off for services without shopper orders (hotel partners, B2B help desks). The chat then stops asking guests to sign in for order questions, and replies end with your scenario buttons (AI settings) instead of My orders · Shipping · Returns."
   },
   "widgetTheme": {
     "title": "Widget theme",
