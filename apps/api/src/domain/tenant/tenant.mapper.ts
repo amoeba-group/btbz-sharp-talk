@@ -4,7 +4,10 @@ import { IntegrationCredential } from './entity/integration-credential.entity';
 import { IntegrationStatusEntity } from '../integration/entity/integration-status.entity';
 import {
   EXTERNAL_CHANNELS,
+  LANGUAGES,
   isWithinWindow,
+  privacyProfileCopy,
+  resolvePrivacyProfile,
   normalizeWidgetTheme,
   NOTIFICATION_CATEGORY,
   WIDGET_LOGIN_MODE,
@@ -68,9 +71,23 @@ export class TenantMapper {
 
   /** Tenant privacy-notice settings (stored values; null = platform default). */
   static toPrivacyNotice(t: Tenant): PrivacyNoticeResponse {
+    const effectiveProfile = resolvePrivacyProfile(
+      t.privacyProfile,
+      Number(t.commerceEnabled ?? 1) !== 0,
+    );
+    // The profile's own text travels with the settings so the console can show
+    // it as the placeholder in every language — an operator must be able to see
+    // what they are overriding before they decide to override it.
+    const profileCopy = Object.fromEntries(
+      LANGUAGES.map((l) => [l.session, privacyProfileCopy(effectiveProfile, l.session)]),
+    );
     return {
       privacyPolicyUrl: t.privacyPolicyUrl,
       consentNoticeVersion: t.consentNoticeVersion,
+      privacyProfile: t.privacyProfile ?? null,
+      effectiveProfile,
+      privacyNoticeCopy: (t.privacyNoticeCopy ?? null) as Record<string, Record<string, string>> | null,
+      profileCopy: profileCopy as Record<string, Record<string, string>>,
     };
   }
 

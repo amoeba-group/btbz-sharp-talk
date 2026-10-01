@@ -18,6 +18,7 @@ type Action = 'accept' | 'decline';
 export function ConsentBanner({
   version,
   privacyPolicyUrl,
+  noticeCopy,
   noticeOutdated,
   onAccept,
   onDecline,
@@ -27,6 +28,8 @@ export function ConsentBanner({
   version?: string | null;
   /** Tenant privacy-policy link; hidden when not configured. */
   privacyPolicyUrl?: string | null;
+  /** Tenant/industry notice lines from the server; absent keys use the bundle. */
+  noticeCopy?: Partial<Record<string, string>>;
   /** True when a previous consent predates the current notice version. */
   noticeOutdated?: boolean;
   onAccept: () => Promise<void>;
@@ -52,11 +55,20 @@ export function ConsentBanner({
     }
   }
 
+  /**
+   * The tenant's own wording wins; the bundled text is the fallback for every
+   * line the server did not send (PLN-261001 §2-5). That is what lets a lodging
+   * tenant say "booking lookups" without re-translating the whole notice — and
+   * what keeps this banner intact against a server that says nothing at all.
+   */
+  const line = (key: string, fallbackKey: string): string =>
+    noticeCopy?.[key]?.trim() || t(fallbackKey);
+
   const disclosures: string[] = [
-    t('chat.consent.items'),
-    t('chat.consent.purpose'),
-    t('chat.consent.retention'),
-    t('chat.consent.aiProcessor'),
+    line('items', 'chat.consent.items'),
+    line('purpose', 'chat.consent.purpose'),
+    line('retention', 'chat.consent.retention'),
+    line('aiProcessor', 'chat.consent.aiProcessor'),
   ];
 
   return (
@@ -70,7 +82,7 @@ export function ConsentBanner({
         className="mb-1 flex items-center gap-1.5 text-sm font-semibold text-gray-800"
       >
         <ShieldCheck className="h-4 w-4 shrink-0 text-primary-500" />
-        <span className="flex-1">{t('chat.consent.title')}</span>
+        <span className="flex-1">{line('title', 'chat.consent.title')}</span>
         {version && (
           <span
             className="rounded-full border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-gray-500"
@@ -88,7 +100,7 @@ export function ConsentBanner({
       )}
 
       <p className="mb-2 text-xs leading-relaxed text-gray-600">
-        {t('chat.consent.body')}
+        {line('body', 'chat.consent.body')}
       </p>
 
       <ul className="mb-2 space-y-0.5 text-[11px] leading-relaxed text-gray-500">

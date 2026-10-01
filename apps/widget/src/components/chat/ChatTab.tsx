@@ -378,6 +378,7 @@ export function ChatTab() {
           <ConsentBanner
             version={consent?.noticeVersion}
             privacyPolicyUrl={consent?.privacyPolicyUrl}
+            noticeCopy={consent?.noticeCopy}
             noticeOutdated={consent?.noticeOutdated}
             onAccept={() => recordConsent(true)}
             onDecline={() => recordConsent(false)}

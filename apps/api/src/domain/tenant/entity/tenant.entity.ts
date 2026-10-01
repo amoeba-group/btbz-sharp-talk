@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { bigintTransformer } from '../../../global/util/transformers';
 import { decryptSecret, encryptSecret } from '../../../global/util/crypto.util';
-import type { WidgetAccess, WidgetTheme } from '@sharptalk/types';
+import type { PrivacyNoticeCopy, WidgetAccess, WidgetTheme } from '@sharptalk/types';
 
 /**
  * The embed secret is a credential, so it never sits in the database as text.
@@ -77,6 +77,17 @@ export class Tenant {
    */
   @Column({ name: 'consent_notice_version', type: 'varchar', length: 32, nullable: true })
   consentNoticeVersion: string | null;
+
+  /**
+   * Which industry's notice copy this tenant shows (PLN-261001). NULL = decided
+   * by `commerce_enabled`, so a tenant that never chose keeps today's wording.
+   */
+  @Column({ name: 'privacy_profile', type: 'varchar', length: 16, nullable: true })
+  privacyProfile: string | null;
+
+  /** Per-language rewrites of individual notice lines; NULL = profile copy only. */
+  @Column({ name: 'privacy_notice_copy', type: 'json', nullable: true })
+  privacyNoticeCopy: PrivacyNoticeCopy | null;
 
   /** Widget "Sign in" behavior: 'redirect' (whole-tab, default) or 'popup'. */
   @Column({ name: 'widget_login_mode', type: 'varchar', length: 16, default: 'redirect' })

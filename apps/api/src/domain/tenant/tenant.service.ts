@@ -6,7 +6,9 @@ import { Tenant, TenantWidgetCopy } from './entity/tenant.entity';
 import { normalizeStorefrontUrl } from '../../global/util/storefront-url.util';
 import {
   EXTERNAL_CHANNELS,
+  isPrivacyProfile,
   isValidIpEntry,
+  normalizePrivacyNoticeCopy,
   normalizeReviewLinkTemplate,
   normalizeWidgetAccess,
   normalizeWidgetTheme,
@@ -70,6 +72,25 @@ const SHOPIFY_API_VERSION = '2026-01';
  * Tenant lifecycle + per-tenant integration credentials (FR-051/FR-060).
  * Secrets are stored AES-256-GCM encrypted and never returned to clients.
  */
+
+/**
+ * Next notice version when an operator declares a change material.
+ *
+ * `YYYY-MM` is what the platform ships ('2026-07'), so a bump within the same
+ * month has to stay distinguishable — hence the `.2`, `.3` suffix rather than
+ * jumping a month the notice was not actually written in. Any unrecognised
+ * stored value is left to the operator: inventing a successor for a scheme we
+ * do not understand would silently re-prompt every shopper.
+ */
+export function nextNoticeVersion(current: string | null): string {
+  const today = new Date().toISOString().slice(0, 7);
+  if (!current) return today;
+  const m = /^(\d{4}-\d{2})(?:\.(\d+))?$/.exec(current.trim());
+  if (!m) return current;
+  if (m[1] !== today) return today;
+  return `${m[1]}.${Number(m[2] ?? 1) + 1}`;
+}
+
 @Injectable()
 export class TenantService {
   // 4xx are not server-logged by default, so a rejected save would otherwise
@@ -342,6 +363,24 @@ export class TenantService {
     }
     if (dto.consent_notice_version !== undefined) {
       tenant.consentNoticeVersion = dto.consent_notice_version?.trim() || null;
+    }
+    // Notice copy (PLN-261001). The profile picks the industry wording; the
+    // overrides rewrite single lines. Both are optional and both clear on null.
+    if (dto.privacy_profile !== undefined) {
+      const profile = dto.privacy_profile?.trim() || null;
+      if (profile && !isPrivacyProfile(profile)) {
+        throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.BAD_REQUEST);
+      }
+      tenant.privacyProfile = profile;
+    }
+    if (dto.privacy_notice_copy !== undefined) {
+      tenant.privacyNoticeCopy = normalizePrivacyNoticeCopy(dto.privacy_notice_copy);
+    }
+    // Changing the words is not automatically a material change: an operator
+    // fixing a typo must not force every shopper to consent again, and a real
+    // change must. So the caller says which this is (PLN-261001 §2-4, D5).
+    if (dto.bump_version) {
+      tenant.consentNoticeVersion = nextNoticeVersion(tenant.consentNoticeVersion);
     }
     const saved = await this.tenantRepo.save(tenant);
     // Audit target: the new notice version, else the policy URL's host — never

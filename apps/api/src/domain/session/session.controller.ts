@@ -31,7 +31,7 @@ export class SessionController {
       body.landing_path,
       body.access_key,
     );
-    const notice = await this.sessionService.privacyNotice(s.tenantId, s.aiAgentId);
+    const notice = await this.sessionService.privacyNotice(s.tenantId, s.aiAgentId, s.language);
     return SessionMapper.toResponse(s, notice, await this.sessionService.customerDisplayName(s));
   }
 

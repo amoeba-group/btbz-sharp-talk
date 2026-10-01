@@ -30,6 +30,13 @@ import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.mod
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { isOriginAllowed } from '../embed/embed-origin.util';
+import {
+  languageBySession,
+  normalizePrivacyNoticeCopy,
+  resolvePrivacyNotice,
+  resolvePrivacyProfile,
+} from '@sharptalk/types';
+import type { ResolvedPrivacyNotice, SessionLanguage } from '@sharptalk/types';
 import { evaluateWidgetAccess } from '@sharptalk/types';
 import { getRequestContext } from '../../global/middleware/request-context.middleware';
 
@@ -69,6 +76,12 @@ export interface PrivacyNoticeInfo {
   aiProcessingRegion?: string;
   /** Tenant runs an issue workflow (native/bridge) — the widget shows an Inquiries chip. */
   issueFeed?: boolean;
+  /**
+   * Consent notice lines for this session's language (PLN-261001). Only the
+   * lines we can actually fill travel; the widget keeps its bundled copy for
+   * anything absent, which is also what an older build does with all of it.
+   */
+  privacyNoticeCopy?: ResolvedPrivacyNotice;
 }
 
 /** TTL for the token→session Redis cache (PERF-11). */
@@ -549,6 +562,8 @@ export class SessionService {
   async privacyNotice(
     tenantId: number | null,
     aiAgentId?: number | null,
+    /** Session language — the notice copy is resolved for it (PLN-261001). */
+    language?: string | null,
   ): Promise<PrivacyNoticeInfo> {
     const tenant =
       tenantId != null ? await this.tenantRepo.findOne({ where: { id: tenantId } }) : null;
@@ -561,9 +576,18 @@ export class SessionService {
         : null;
     const agentGreeting =
       agent?.greeting && Object.keys(agent.greeting).length ? agent.greeting : null;
+    const profile = resolvePrivacyProfile(
+      tenant?.privacyProfile,
+      Number(tenant?.commerceEnabled ?? 1) !== 0,
+    );
     return {
       privacyPolicyUrl: tenant?.privacyPolicyUrl ?? null,
       consentNoticeVersion: tenant?.consentNoticeVersion ?? CONSENT_NOTICE_VERSION,
+      privacyNoticeCopy: resolvePrivacyNotice(
+        profile,
+        normalizePrivacyNoticeCopy(tenant?.privacyNoticeCopy),
+        (languageBySession(language)?.session ?? null) as SessionLanguage | null,
+      ),
       aiProcessingRegion: AI_PROCESSING_REGION,
       widgetLoginMode:
         tenant?.widgetLoginMode === WIDGET_LOGIN_MODE.POPUP
