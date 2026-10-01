@@ -382,6 +382,12 @@ export interface ScenarioButtonResponse {
   label: string;
   action: string;
   enabled: boolean;
+  /**
+   * For a button that simply asks something ("send a message"): the question to
+   * send, already resolved to this session's language. Empty = send the label,
+   * which is what these buttons did before the field existed.
+   */
+  message?: string;
 }
 
 export interface ScenarioConfigResponse {

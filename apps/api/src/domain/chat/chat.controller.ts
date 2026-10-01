@@ -35,7 +35,7 @@ export class ChatController {
   @ApiOperation({ summary: 'Scenario button/quick-reply → deterministic scripted reply (FR-S1)' })
   async scenario(@Body() body: ScenarioRequest) {
     const session = await this.sessionService.findByToken(body.session_token);
-    return this.scenarioService.handle(session, body.action);
+    return this.scenarioService.handle(session, body.action, body.text);
   }
 
   @Post('message')

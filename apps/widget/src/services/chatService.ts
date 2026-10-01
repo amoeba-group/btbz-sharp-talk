@@ -73,9 +73,15 @@ export function escalate(sessionToken: string, conversationId: string): Promise<
 export function sendScenario(
   sessionToken: string,
   action: string,
+  /**
+   * What to ask when the action has no script (a "send a message" button). The
+   * server answers it as a chat turn rather than 404ing (PLN-261001 §1-1).
+   */
+  text?: string,
 ): Promise<ScenarioReply> {
   return apiClient.post<ScenarioReply>('/chat/scenario', {
     session_token: sessionToken,
     action,
+    text: text || undefined,
   });
 }

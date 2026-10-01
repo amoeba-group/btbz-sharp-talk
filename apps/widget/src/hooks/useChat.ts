@@ -143,7 +143,12 @@ export function useChat(sessionToken: string | null) {
    * caller can navigate after the reply lands; undefined = stay in the thread.
    */
   const scenario = useCallback(
-    async (action: string, label: string): Promise<ScenarioPostAction | undefined> => {
+    async (
+      action: string,
+      label: string,
+      /** What to ask when the action has no script; defaults to the label. */
+      text?: string,
+    ): Promise<ScenarioPostAction | undefined> => {
       if (!sessionToken) return undefined;
       append({
         id: `local-${Date.now()}`,
@@ -154,15 +159,20 @@ export function useChat(sessionToken: string | null) {
       setSending(true);
       inFlight.current = true;
       try {
-        const res = await sendScenario(sessionToken, action);
+        const res = await sendScenario(sessionToken, action, text);
         setConversationId(res.conversationId);
-        append({
-          id: `scen-${Date.now()}`,
-          senderType: res.reply.senderType,
-          body: res.reply.body,
-          createdAt: new Date().toISOString(),
-          quickReplies: res.followUps,
-        });
+        // An empty body means the turn produced no visible reply — agent mode,
+        // where the human answers through polling (PLN-261001 §1-2). Appending
+        // it would draw an empty bubble under the shopper's own message.
+        if (res.reply.body) {
+          append({
+            id: `scen-${Date.now()}`,
+            senderType: res.reply.senderType,
+            body: res.reply.body,
+            createdAt: new Date().toISOString(),
+            quickReplies: res.followUps,
+          });
+        }
         return res.postAction;
       } catch (e) {
         if (!isAuthError(e)) {

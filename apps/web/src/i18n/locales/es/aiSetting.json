@@ -348,5 +348,7 @@
     "noButtons": "Ninguno activo para este agente"
   },
   "labelLanguage": "Idioma de la etiqueta",
-  "labelLanguageHint": "La etiqueta escrita aquí se aplica solo a ese idioma; los demás conservan la suya."
+  "labelLanguageHint": "La etiqueta escrita aquí se aplica solo a ese idioma; los demás conservan la suya.",
+  "buttonMessage": "Mensaje a enviar",
+  "buttonMessageHint": "Déjalo vacío para enviar la etiqueta como pregunta."
 }

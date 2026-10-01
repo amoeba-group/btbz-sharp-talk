@@ -38,6 +38,11 @@ export class EscalateRequest {
 export class ScenarioRequest {
   @IsString() session_token: string;
   @IsString() @MinLength(1) action: string;
+  /**
+   * What to ask on the shopper's behalf when the action has no script — the
+   * button's own message, or its label. Ignored for scripted actions.
+   */
+  @IsOptional() @IsString() @MaxLength(500) text?: string;
 }
 
 /** Address an off-hours shopper wants the answer sent to (PLN-260806). */

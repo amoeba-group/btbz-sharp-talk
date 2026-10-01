@@ -233,8 +233,10 @@ export function ChatTab() {
         return;
       case 'message':
       default:
-        // Custom button: send its label as a chat message (RAG path).
-        void doSend(button.label);
+        // Custom button: ask the question it carries, or its label when it
+        // carries none (PLN-261001 §1-3) — a label has to stay short, a
+        // question usually should not.
+        void doSend(button.message?.trim() || button.label);
         return;
     }
   }

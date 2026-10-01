@@ -6,7 +6,7 @@ import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
 import { Select } from '@/components/Field';
 import { cn } from '@/lib/cn';
-import { useAiConfig } from './ai-settings.hooks';
+import { useAiConfig, useAiConfigDefaults } from './ai-settings.hooks';
 import { previewService } from './preview.service';
 import type { PreviewReply } from './preview.service';
 // Runtime table from the registry source (see apps/web/src/i18n/i18n.ts for why).
@@ -59,6 +59,7 @@ let nextId = 1;
 export function PreviewPanel({ agentId, onCoach, replayQuestion, onReplayed }: PreviewPanelProps = {}) {
   const { t } = useTranslation('aiSetting');
   const { data: config } = useAiConfig();
+  const { data: defaults } = useAiConfigDefaults();
 
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [language, setLanguage] = useState<string>('ko');
@@ -139,6 +140,25 @@ export function PreviewPanel({ agentId, onCoach, replayQuestion, onReplayed }: P
     } finally {
       setBusy(false);
     }
+  }
+
+  /**
+   * Which actions actually have a script is the SERVER's list — the console
+   * already fetches it for the "this button runs <script>" hint. Keeping a
+   * second copy here is how the console and the runtime ended up each knowing
+   * half of this map once before (see SCRIPT_BY_BUTTON_ACTION's comment).
+   */
+  const hasScript = (action: string): boolean =>
+    !!defaults?.scriptByButtonAction[action] ||
+    !!defaults?.scripts.some((s) => s.action === action);
+
+  /**
+   * Scenario chips and follow-ups share one click handler, the way the widget's
+   * do: a scripted action runs the script, anything else asks the question.
+   */
+  function runChip(action: string, label: string, message?: string) {
+    if (hasScript(action)) return void runScenario(action, label);
+    return void sendCustomer((message || label).trim());
   }
 
   async function runScenario(action: string, label: string) {
@@ -269,10 +289,11 @@ export function PreviewPanel({ agentId, onCoach, replayQuestion, onReplayed }: P
         {/* The preview speaks the language picked above, so its chips resolve
             the same way the widget's would for that session. */}
         {(followUps.length > 0
-          ? followUps
+          ? followUps.map((f) => ({ ...f, message: '' }))
           : scenarioChips.map((b) => ({
               id: b.action,
               label: scenarioLabelText(b.label, language.toUpperCase() as ScenarioLang),
+              message: scenarioLabelText(b.message, language.toUpperCase() as ScenarioLang),
             }))
         ).map(
           (chip) => (
@@ -280,7 +301,11 @@ export function PreviewPanel({ agentId, onCoach, replayQuestion, onReplayed }: P
               key={chip.id}
               type="button"
               disabled={busy || !sessionToken}
-              onClick={() => runScenario(chip.id, chip.label)}
+              // A button whose action has no script ("send a message") is a
+              // chat turn, not a scenario turn. Routing it to /chat/scenario is
+              // what made every go2joy button answer "Resource not found" here
+              // while the same question typed below worked (PLN-261001 §1-1).
+              onClick={() => runChip(chip.id, chip.label, chip.message)}
               className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs text-gray-700 hover:bg-gray-100 disabled:opacity-50"
             >
               {chip.label}

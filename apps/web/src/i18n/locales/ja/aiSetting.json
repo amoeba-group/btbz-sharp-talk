@@ -348,5 +348,7 @@
     "noButtons": "このエージェントに表示されるボタンはありません"
   },
   "labelLanguage": "ラベルの言語",
-  "labelLanguageHint": "ここで入力したラベルはその言語にのみ適用され、他の言語はそのままです。"
+  "labelLanguageHint": "ここで入力したラベルはその言語にのみ適用され、他の言語はそのままです。",
+  "buttonMessage": "送信する文",
+  "buttonMessageHint": "空欄ならラベルをそのまま質問として送ります。"
 }
