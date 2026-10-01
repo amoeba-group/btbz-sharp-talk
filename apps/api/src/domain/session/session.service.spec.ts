@@ -140,7 +140,28 @@ describe('SessionService consent (PLN-Privacy-Control-Gap Stage 1-2)', () => {
         widgetCopy: expect.objectContaining({ firstVisit: {}, loginGreeting: {} }),
         // 'base' (the default) has no shopper-facing issue feed.
         issueFeed: false,
+        // Notice copy now travels too (PLN-261001). A tenant that chose no
+        // profile gets the commerce wording here because it sells — the
+        // guarantee that nobody's notice changed when this shipped.
+        privacyNoticeCopy: expect.objectContaining({
+          items: expect.stringContaining('order lookups'),
+        }),
       });
+    });
+
+    it('serves the lodging wording once the tenant picks that profile', async () => {
+      tenant!.privacyProfile = 'lodging';
+      const notice = await svc.privacyNotice(1, null, 'KO');
+      expect(notice.privacyNoticeCopy?.items).toContain('예약 조회');
+      expect(notice.privacyNoticeCopy?.items).not.toContain('주문 조회');
+    });
+
+    it('lets a tenant rewrite one line and keeps the profile for the rest', async () => {
+      tenant!.privacyProfile = 'lodging';
+      tenant!.privacyNoticeCopy = { KO: { items: '수집 항목: 메시지만' } } as never;
+      const notice = await svc.privacyNotice(1, null, 'KO');
+      expect(notice.privacyNoticeCopy?.items).toBe('수집 항목: 메시지만');
+      expect(notice.privacyNoticeCopy?.purpose).toContain('숙박');
     });
 
     it('offers the inquiry feed only to tenants running an issue workflow (PLN-260923 D-2)', async () => {

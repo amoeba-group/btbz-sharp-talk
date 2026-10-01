@@ -305,6 +305,24 @@ function ScenarioButtonsSection() {
         return { ...b, label: { ...base, [labelLang]: text } };
       }),
     );
+  /**
+   * The question, per language, with the same seeding rule as the label: typing
+   * one language must not blank the five the button was already answering in.
+   * An empty value is removed entirely so the button falls back to its label.
+   */
+  const setMessage = (i: number, text: string) =>
+    setButtons((prev) =>
+      prev.map((b, idx) => {
+        if (idx !== i) return b;
+        const base =
+          typeof b.message === 'string'
+            ? Object.fromEntries(LANGUAGES.map((l) => [l.session, b.message as string]))
+            : { ...(b.message ?? {}) };
+        const next = { ...base, [labelLang]: text };
+        const anyFilled = Object.values(next).some((v) => (v ?? '').trim());
+        return { ...b, message: anyFilled ? next : undefined };
+      }),
+    );
   const removeAt = (i: number) => setButtons((prev) => prev.filter((_, idx) => idx !== i));
   const move = (i: number, dir: -1 | 1) =>
     setButtons((prev) => {
@@ -388,6 +406,20 @@ function ScenarioButtonsSection() {
                   ))}
                 </Select>
               </div>
+              {/* Only a "send a message" button asks something; for scripted
+                  actions the script owns the wording. */}
+              {btn.action === 'message' && (
+                <div className="w-full">
+                  <Label>{t('buttonMessage')}</Label>
+                  <Input
+                    value={scenarioLabelText(btn.message, labelLang)}
+                    aria-label={t('buttonMessage')}
+                    placeholder={scenarioLabelText(btn.label, labelLang)}
+                    onChange={(e) => setMessage(i, e.target.value)}
+                  />
+                  <p className="mt-0.5 text-[11px] text-gray-400">{t('buttonMessageHint')}</p>
+                </div>
+              )}
               <label className="flex h-9 items-center gap-2 text-sm text-gray-700">
                 <input
                   type="checkbox"

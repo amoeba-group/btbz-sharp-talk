@@ -22,6 +22,7 @@ export class SessionMapper {
       customerName,
       privacyPolicyUrl: notice.privacyPolicyUrl,
       consentNoticeVersion: notice.consentNoticeVersion,
+      privacyNoticeCopy: notice.privacyNoticeCopy,
       noticeOutdated: s.consentVersion != null && s.consentVersion !== notice.consentNoticeVersion,
       consentAt: s.consentAt ? new Date(s.consentAt).toISOString() : null,
       widgetLoginMode: notice.widgetLoginMode,

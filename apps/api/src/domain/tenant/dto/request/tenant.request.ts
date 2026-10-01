@@ -140,6 +140,18 @@ export class UpdatePrivacyNoticeRequest {
   @Length(1, 32)
   @Matches(/^[A-Za-z0-9][A-Za-z0-9._-]*$/)
   consent_notice_version?: string | null;
+
+  /** Industry wording: commerce | lodging | generic. Null/absent = infer. */
+  @IsOptional() @IsString() @MaxLength(16) privacy_profile?: string | null;
+
+  /** Per-language rewrites of single notice lines; null clears them. */
+  @IsOptional() @IsObject() privacy_notice_copy?: Record<string, Record<string, string>> | null;
+
+  /**
+   * True only when the operator declares this a material change — it raises the
+   * notice version, which asks every shopper to consent again.
+   */
+  @IsOptional() @IsBoolean() bump_version?: boolean;
 }
 
 /**

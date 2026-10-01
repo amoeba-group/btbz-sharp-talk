@@ -348,5 +348,7 @@
     "noButtons": "Không có nút nào cho trợ lý này"
   },
   "labelLanguage": "Ngôn ngữ của nhãn",
-  "labelLanguageHint": "Nhãn nhập ở đây chỉ áp dụng cho ngôn ngữ đó; các ngôn ngữ khác giữ nguyên."
+  "labelLanguageHint": "Nhãn nhập ở đây chỉ áp dụng cho ngôn ngữ đó; các ngôn ngữ khác giữ nguyên.",
+  "buttonMessage": "Nội dung gửi đi",
+  "buttonMessageHint": "Để trống sẽ gửi nhãn làm câu hỏi."
 }

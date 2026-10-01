@@ -348,5 +348,7 @@
     "noButtons": "该助手没有可显示的按钮"
   },
   "labelLanguage": "标签语言",
-  "labelLanguageHint": "此处输入的标签仅适用于该语言，其他语言保持不变。"
+  "labelLanguageHint": "此处输入的标签仅适用于该语言，其他语言保持不变。",
+  "buttonMessage": "发送的内容",
+  "buttonMessageHint": "留空则直接把标签作为问题发送。"
 }

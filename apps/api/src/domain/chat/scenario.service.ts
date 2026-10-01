@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CONSENT_STATE, MODERATION_DECISION, SENDER_TYPE, languageBySession } from '@sharptalk/types';
@@ -20,6 +20,9 @@ import type {
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { SCENARIOS, resolveScriptAction, isValidFollowUpId } from './scenario-scripts';
+
+/** The console's "Send a message" action — a button with no script, by design. */
+const MESSAGE_ACTION = 'message';
 import type { Lang, ScenarioScript } from './scenario-scripts';
 
 /** Response shapes live in `@sharptalk/types` — the widget imports the same contract. */
@@ -38,6 +41,8 @@ function lang(session: Session): Lang {
  */
 @Injectable()
 export class ScenarioService {
+  private readonly logger = new Logger(ScenarioService.name);
+
   constructor(
     @InjectRepository(Message) private readonly msgRepo: Repository<Message>,
     private readonly chatService: ChatService,
@@ -50,10 +55,66 @@ export class ScenarioService {
     return Object.prototype.hasOwnProperty.call(SCENARIOS, action);
   }
 
-  async handle(session: Session, action: string): Promise<ScenarioTurnResult> {
-    const builtIn = SCENARIOS[action];
+  /**
+   * A button whose action has no script is answered as if the shopper had typed
+   * it (PLN-261001 §1-1).
+   *
+   * The console offers "Send a message" (`message`) as a button action, but that
+   * action has no entry in SCENARIOS, so every client that routed it here got a
+   * 404 — the console preview still does, and so would any older widget build or
+   * SDK host. Answering here fixes all of them at once; the widget's own
+   * branching stays as it is.
+   *
+   * `message` is the configured, expected case. Any OTHER unknown action is a
+   * misconfiguration we should hear about: 4xx responses are not server-logged,
+   * which is exactly why this 404 was visible to operators and invisible to us.
+   */
+  private async answerAsMessage(
+    session: Session,
+    action: string,
+    text: string,
+  ): Promise<ScenarioTurnResult> {
+    if (action === MESSAGE_ACTION) {
+      this.logger.debug(`scenario action "${action}" → chat message`);
+    } else {
+      this.logger.warn(
+        `scenario action "${action}" has no script — answering it as a chat message`,
+      );
+    }
+    const turn = await this.chatService.handleUserMessage(session, text);
+    // Shaped as a scenario turn because that is what the caller asked for; a
+    // different shape here would break the clients this is meant to rescue.
+    //
+    // `turn.reply` is null in agent mode — the human answers through polling.
+    // The scenario contract promises a reply object, and widening it to null
+    // would make every existing client's `res.reply.body` throw, so the empty
+    // body carries that case instead; clients skip rendering an empty one.
+    return {
+      conversationId: turn.conversationId,
+      reply: {
+        senderType: turn.reply?.senderType ?? SENDER_TYPE.SYSTEM,
+        body: turn.reply?.body ?? '',
+      },
+      followUps: [],
+    };
+  }
+
+  async handle(session: Session, action: string, text?: string): Promise<ScenarioTurnResult> {
+    // A console BUTTON action is not always a script key: "delivery_status"
+    // runs `shipping_policy`. Resolve first, or the fallback below would treat
+    // a perfectly good scripted button as scriptless and answer it with RAG —
+    // which a test caught while this was being written.
+    const scriptAction = resolveScriptAction(action);
+    const builtIn = SCENARIOS[scriptAction];
     if (!builtIn) {
-      throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
+      // The caller sends the button's own text when it has one; the label is the
+      // fallback, and an action with neither is nothing we can ask on the
+      // shopper's behalf.
+      const asked = (text ?? '').trim();
+      if (!asked) {
+        throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
+      }
+      return this.answerAsMessage(session, action, asked);
     }
     const l = lang(session);
     // Tenant edits (FR-003, PLN-AiSetting W2) layer over the built-in script:

@@ -58,6 +58,8 @@ export interface ScenarioButton {
   enabled: boolean;
   /** AI agents this button shows for (REQ-260825 R5); empty/absent = all agents. */
   agentIds?: number[];
+  /** Question a "send a message" button asks; empty = use the label. */
+  message?: string | Partial<Record<ScenarioLang, string>>;
 }
 
 /** Session language the console edits copy for — one source of truth with the API. */

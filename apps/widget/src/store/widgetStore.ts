@@ -25,6 +25,12 @@ export interface ConsentInfo {
   noticeVersion: string | null;
   privacyPolicyUrl: string | null;
   noticeOutdated: boolean;
+  /**
+   * Notice lines the server resolved for this tenant and language
+   * (PLN-261001). Absent keys keep the bundled copy — a lodging tenant only
+   * rewrites the lines that are wrong for it, not the whole notice.
+   */
+  noticeCopy?: Partial<Record<string, string>>;
 }
 
 interface WidgetState {

@@ -430,7 +430,13 @@ export class AiConfigService {
     const lang = languageBySession(session.language)?.session ?? null;
     const scoped = buttons
       .filter((b) => b.enabled)
-      .map((b) => ({ ...b, label: resolveScenarioLabel(b.label, lang) }));
+      // The button's own question resolves the same way its label does, so the
+      // widget receives one string per field and never sees the language map.
+      .map((b) => ({
+        ...b,
+        label: resolveScenarioLabel(b.label, lang),
+        message: resolveScenarioLabel(b.message, lang) || undefined,
+      }));
     const hasScoping = scoped.some((b) => (b.agentIds ?? []).length > 0);
     if (!hasScoping) return { scenarioButtons: scoped };
     let effectiveAgentId = session.aiAgentId != null ? Number(session.aiAgentId) : null;

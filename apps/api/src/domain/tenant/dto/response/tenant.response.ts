@@ -65,6 +65,14 @@ export interface ShopifyTestResponse {
 export interface PrivacyNoticeResponse {
   privacyPolicyUrl: string | null;
   consentNoticeVersion: string | null;
+  /** Stored choice; null = inferred from commerceEnabled (PLN-261001). */
+  privacyProfile: string | null;
+  /** The profile actually in force right now — what the console previews. */
+  effectiveProfile: string;
+  /** Per-language line rewrites, exactly as stored. */
+  privacyNoticeCopy: Record<string, Record<string, string>> | null;
+  /** The profile's own wording, per language — the console shows it as the placeholder. */
+  profileCopy: Record<string, Record<string, string>>;
 }
 
 /** Widget behavior settings (PLN-Widget-Login-Redirect-Orders). */

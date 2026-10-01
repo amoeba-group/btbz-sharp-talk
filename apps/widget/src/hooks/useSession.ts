@@ -112,6 +112,7 @@ export function consentInfoFromSession(res: SessionResponse): ConsentInfo {
     noticeVersion: res.consentNoticeVersion ?? null,
     privacyPolicyUrl: res.privacyPolicyUrl ?? null,
     noticeOutdated: !!res.noticeOutdated,
+    noticeCopy: res.privacyNoticeCopy,
   };
 }
 

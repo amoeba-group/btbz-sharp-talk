@@ -348,5 +348,7 @@
     "noButtons": "이 에이전트에 노출되는 버튼 없음"
   },
   "labelLanguage": "라벨 언어",
-  "labelLanguageHint": "여기서 입력한 라벨은 해당 언어에만 적용되고, 나머지 언어는 그대로 유지됩니다."
+  "labelLanguageHint": "여기서 입력한 라벨은 해당 언어에만 적용되고, 나머지 언어는 그대로 유지됩니다.",
+  "buttonMessage": "보낼 문장",
+  "buttonMessageHint": "비우면 라벨을 그대로 질문으로 보냅니다."
 }

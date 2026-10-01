@@ -15,6 +15,14 @@ export interface ScenarioButton {
   action: string; // delivery_status|cancel_refund|product_help|contact_support|affiliate|my_orders|message
   enabled: boolean;
   /**
+   * What a "send a message" button asks on the shopper's behalf. Empty/absent =
+   * the label is the question, which is how every such button behaved before
+   * this field existed (PLN-261001 §1-3) — so nothing needs migrating.
+   *
+   * Same shape as `label`: a plain string, or a per-language map.
+   */
+  message?: string | LocalizedText;
+  /**
    * AI agents this button shows for (REQ-260825 R5). Empty/absent = every
    * agent (the pre-R5 behaviour). Visibility only — the button's behaviour
    * never differs per agent.

@@ -17,6 +17,7 @@
  */
 
 import type { WidgetLoginMode, WidgetTab, WidgetTabPosition } from '../common/enum.types';
+import type { PrivacyNoticeKey } from '../common/privacy-notice-copy';
 import type { WidgetTheme } from '../common/widget-theme';
 
 // ---- session -------------------------------------------------------------
@@ -51,6 +52,12 @@ export interface SessionResponse {
   privacyPolicyUrl: string | null;
   /** Effective consent-notice version (tenant override ?? platform default). */
   consentNoticeVersion: string;
+  /**
+   * Notice lines for this session's language, when the server has them
+   * (PLN-261001). A key that is absent means "use your own copy", which is also
+   * what an older widget does with the whole field — so nothing renders blank.
+   */
+  privacyNoticeCopy?: Partial<Record<PrivacyNoticeKey, string>>;
   /** True when a recorded consent references a version other than the effective one. */
   noticeOutdated: boolean;
   /** When the consent choice was recorded (ISO 8601), null when never recorded. */
@@ -382,6 +389,12 @@ export interface ScenarioButtonResponse {
   label: string;
   action: string;
   enabled: boolean;
+  /**
+   * For a button that simply asks something ("send a message"): the question to
+   * send, already resolved to this session's language. Empty = send the label,
+   * which is what these buttons did before the field existed.
+   */
+  message?: string;
 }
 
 export interface ScenarioConfigResponse {

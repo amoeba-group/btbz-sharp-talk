@@ -1716,6 +1716,8 @@ CREATE TABLE `tenants` (
   `plan` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `privacy_policy_url` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `consent_notice_version` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `privacy_profile` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `privacy_notice_copy` json DEFAULT NULL,
   `widget_login_mode` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'redirect',
   `widget_copy` json DEFAULT NULL,
   `widget_tabs` json DEFAULT NULL,

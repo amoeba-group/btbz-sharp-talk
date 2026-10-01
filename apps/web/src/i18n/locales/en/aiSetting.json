@@ -348,5 +348,7 @@
     "noButtons": "None enabled for this agent"
   },
   "labelLanguage": "Label language",
-  "labelLanguageHint": "A label typed here applies to that language only; the rest keep theirs."
+  "labelLanguageHint": "A label typed here applies to that language only; the rest keep theirs.",
+  "buttonMessage": "Message to send",
+  "buttonMessageHint": "Leave empty to send the label as the question."
 }
