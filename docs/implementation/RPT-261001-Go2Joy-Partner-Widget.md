@@ -46,7 +46,7 @@
 | 환경 | SQL | 코드 | 비고 |
 |------|-----|------|------|
 | staging | ✅ 2026-10-01 선적용 | ✅ `0181c8b` 배포, API healthy | go2joy `commerce_enabled=0` |
-| production | ⬜ | ⬜ | go2joy 없음 — 반영 시 동작 변화 0. 별도 승인 후 SQL 선적용 → 배포 |
+| production | ✅ 2026-10-01 선적용(ivyusa=1) | ✅ `production` ff `07963e8..9d314f3` | 백업 `~/backups/sharptalk-production/20261001-0705`, `check-migrations` OK, `deploy-self-hosted.sh` → api healthy·`successfully started` 1회·스키마 에러 0, health 200, `/tenants/widget-settings` 401, ensure `commerceEnabled: true`. go2joy 없음 → 동작 변화 0 |
 
 ## 6. 남은 일 / 관찰
 
