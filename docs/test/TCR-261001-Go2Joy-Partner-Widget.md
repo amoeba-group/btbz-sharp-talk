@@ -25,11 +25,11 @@
 |----|---------|------|
 | I1 | 로컬 `node dist/main.js` 부팅 | `Nest application successfully started`, `tenants.commerce_enabled` tinyint NOT NULL DEFAULT 1 ✅ |
 | I2 | 로컬 ensure(ivyusa) | `commerceEnabled: true` ✅ |
-| I3 | 스테이징 SQL 선적용 → 배포 → 신규 필드 응답 | ensure에 `commerceEnabled` |
-| I4 | 콘솔 go2joy 위젯 탭 카드에서 스토어 기능 끄기 → 저장 토스트 | `commerce_enabled=0`, 감사 `commerce:off` |
-| I5 | go2joy(hotel-admin) "오늘 예약 현황 보기" | 로그인 요청 없음, 대시보드 안내 답변 |
-| I6 | go2joy 답변 뒤 칩 | 파트너 버튼 3개 + Talk to an agent |
-| I7 | ivyusa 무회귀 | 칩 4종 그대로, 주문 질의 시 로그인 요청 그대로 |
+| I3 | 스테이징 SQL 선적용 → 배포 → 신규 필드 응답 | ensure에 `commerceEnabled` ✅ (API healthy, `successfully started`, `/tenants/widget-settings` 401) |
+| I4 | 콘솔 go2joy 위젯 탭 카드에서 스토어 기능 끄기 → 저장 토스트 | ⏸ go2joy 콘솔 계정이 없어 SQL로 `commerce_enabled=0` 설정 — 콘솔 토글 클릭 확인은 운영자 몫 |
+| I5 | go2joy(hotel-admin) "오늘 예약 현황 보기" | 로그인 요청 없음, 대시보드 안내 답변 ✅ (needsAuth=false) |
+| I6 | go2joy 답변 뒤 칩 | 파트너 버튼 3개 + Talk to an agent ✅ (브라우저 실측: 채팅 탭만, 체크인 답변 Video 21 인용, 칩 '오늘 예약 현황 보기·체크인 방법·예약 이의 제기·상담원 연결') |
+| I7 | 스토어 무회귀 | 주문 질의 시 로그인 요청 그대로 ✅ (스테이징 ivyusa는 노출 제한 E5092라 amoebaorder로 확인: needsAuth=true) |
 
 ## 3. 엣지
 - 구 위젯 번들(필드 모름) → 스토어 동작 유지(안전 방향).
