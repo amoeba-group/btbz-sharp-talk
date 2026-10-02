@@ -89,6 +89,39 @@ describe('SessionService — widget access restriction on ensure', () => {
     ).resolves.toBeTruthy();
   });
 
+  it('reads the real widget\u2019s landing value, which is a full URL (FIX-261002)', async () => {
+    // The loader sends window.location.href as `landing_path`. Joining that onto
+    // the parent origin produced "https://shophttps://shop/" and the URL rule
+    // matched nothing in production while hand-made calls with a bare path
+    // passed — the exact shape of this test is the bug it closes.
+    const svc = service(restricted());
+    await expect(
+      ensure(svc, {
+        origin: 'https://shop.example.com',
+        path: 'https://shop.example.com/collections/test/item-1',
+        ip: '198.51.100.1',
+      }),
+    ).resolves.toBeTruthy();
+  });
+
+  it('still refuses a full URL that no rule covers', async () => {
+    const svc = service(restricted());
+    await expect(
+      ensure(svc, {
+        origin: 'https://shop.example.com',
+        path: 'https://shop.example.com/cart',
+        ip: '198.51.100.1',
+      }),
+    ).rejects.toThrow(BusinessException);
+  });
+
+  it('matches on the landing URL even when the parent origin is missing', async () => {
+    const svc = service(restricted());
+    await expect(
+      ensure(svc, { path: 'https://shop.example.com/collections/test', ip: '198.51.100.1' }),
+    ).resolves.toBeTruthy();
+  });
+
   it('admits the invite key holder', async () => {
     const svc = service(restricted({ widgetAccessKey: 'k-123' }));
     await expect(
