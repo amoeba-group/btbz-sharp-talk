@@ -100,6 +100,23 @@ describe('matchUrl', () => {
     expect(matchUrl('https://shop.example.com/a*', 'https://shop.example.com/abc')).toBe(false);
   });
 
+  it('accepts the same `*.host` wildcard the embed allowlist uses', () => {
+    expect(matchUrl('*.amoeba.site', 'https://acm.amoeba.site/')).toBe(true);
+    expect(matchUrl('*.amoeba.site', 'https://shoptalk.amoeba.site/widget/')).toBe(true);
+    expect(matchUrl('*.amoeba.site', 'https://shop.example.com/')).toBe(false);
+  });
+
+  it('does NOT let `*.x` cover the apex `x` — list both when both are meant', () => {
+    // Same stance as embed-origin.util: a wildcard quietly covering the apex is
+    // the kind of surprise that gets discovered during an incident.
+    expect(matchUrl('*.amoeba.site', 'https://amoeba.site/')).toBe(false);
+  });
+
+  it('a wildcard host still honours the path prefix', () => {
+    expect(matchUrl('*.amoeba.site/sample', 'https://acm.amoeba.site/sample/x')).toBe(true);
+    expect(matchUrl('*.amoeba.site/sample', 'https://acm.amoeba.site/other')).toBe(false);
+  });
+
   it('never matches without a page URL', () => {
     expect(matchUrl(rule, null)).toBe(false);
   });
