@@ -292,21 +292,36 @@ export class SessionService {
     }
     if (!tenant.widgetAccess?.enabled) return;
 
-    const pageUrl = parentOrigin ? `${parentOrigin.replace(/\/+$/, '')}${landingPath ?? ''}` : null;
+    // `landing_path` is a misnomer: the loader sends `window.location.href`, so
+    // the value is already an absolute URL. Concatenating it onto the parent
+    // origin produced `https://shophttps://shop/` and the URL rule therefore
+    // matched NOTHING on a real widget — only on hand-made calls that passed a
+    // bare path (FIX-261002). Normalise first, join only when it really is a path.
+    const normalised = normalizeLandingPath(landingPath);
+    const pageUrl =
+      normalised ??
+      (parentOrigin
+        ? `${parentOrigin.replace(/\/+$/, '')}${landingPath?.startsWith('/') ? landingPath : ''}`
+        : null);
+    const ip = getRequestContext()?.ip ?? null;
     const verdict = evaluateWidgetAccess(tenant.widgetAccess, {
-      ip: getRequestContext()?.ip ?? null,
+      ip,
       pageUrl,
       key: accessKey ?? null,
       tenantKey: tenant.widgetAccessKey,
-      // No parent origin means no page to match — a host app WebView or a
-      // direct open. The IP, the key and the window still apply.
-      skipUrlRule: !parentOrigin,
+      // Nothing to match a URL rule against — a host app WebView or a direct
+      // open. The IP, the key and the window still apply.
+      skipUrlRule: !pageUrl,
     });
     if (verdict.visible) return;
 
     // 4xx are not server-logged by default, so this line is the only evidence
     // that a tester was turned away.
-    this.logger.warn(`widget access denied (tenant ${tenant.id}, page ${pageUrl ?? 'n/a'})`);
+    // The IP belongs in this line: answering "why is the widget hidden for this
+    // visitor" took a round of log archaeology without it.
+    this.logger.warn(
+      `widget access denied (tenant ${tenant.id}, ip ${ip ?? 'n/a'}, page ${pageUrl ?? 'n/a'})`,
+    );
     throw new BusinessException(ERROR_CODE.WIDGET_ACCESS_DENIED, HttpStatus.FORBIDDEN);
   }
 
