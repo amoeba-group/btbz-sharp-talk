@@ -189,20 +189,38 @@ export function parseUrlRule(raw: string | null | undefined): ParsedUrlRule | nu
 }
 
 /**
+ * Host comparison, with the same wildcard the embed allowlist already uses:
+ * `*.example.com` covers any subdomain but NOT the apex. Operators type this
+ * syntax because the "allowed domains" box next door accepts it — a rule that
+ * saved cleanly and then matched nothing was the silent no-op this closes.
+ *
+ * The apex exclusion is deliberate and matches `embed-origin.util`: "*.x"
+ * quietly covering "x" is the kind of surprise that gets found during an
+ * incident. List both when both are meant.
+ */
+function hostMatches(ruleHost: string, pageHost: string): boolean {
+  if (!ruleHost.startsWith('*.')) return ruleHost === pageHost;
+  const suffix = ruleHost.slice(2);
+  if (!suffix || suffix === pageHost) return false;
+  return pageHost.endsWith(`.${suffix}`);
+}
+
+/**
  * One URL rule against the page the shopper is on.
  *
  * The path is a PREFIX, and the prefix must end on a segment boundary:
  * `/collections/test` matches `/collections/test` and `/collections/test/x`,
  * and does NOT match `/collections/testing`. Substring matching is how
  * "fulfil" once matched "Unfulfilled" in this codebase; it is not repeated here.
- * No wildcards: a prefix already means "everything under this".
+ * No wildcards in the PATH: a prefix already means "everything under this".
+ * The host does take `*.` — see `hostMatches`.
  */
 export function matchUrl(entry: string, pageUrl: string | null | undefined): boolean {
   const rule = parseUrlRule(entry);
   const page = parseUrlRule(pageUrl);
   if (!rule || !page) return false;
   if (rule.scheme !== page.scheme) return false;
-  if (rule.host !== page.host) return false;
+  if (!hostMatches(rule.host, page.host)) return false;
   if (rule.port && rule.port !== page.port) return false;
   if (!rule.path) return true; // host-only rule = the whole site
   if (page.path === rule.path) return true;
