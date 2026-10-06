@@ -307,7 +307,7 @@
     },
     "title": "그룹 제목",
     "titlePlaceholder": "예: 홍길동 님 반품 건",
-    "needTwo": "그룹을 만들려면 세션을 2개 이상 선택하세요.",
+    "needTwo": "세션을 1개 이상 선택하세요.",
     "pickGroup": "그룹",
     "pickGroupPlaceholder": "그룹을 선택하세요…",
     "selectedMembers": "선택한 세션 ({{count}})",
@@ -327,7 +327,7 @@
     "recipientPlaceholder": "수신자 1명을 선택하세요…",
     "pickRecipientFirst": "메시지를 보내려면 수신 대상을 선택하세요",
     "removeMember": "멤버 제거",
-    "minMembersHint": "그룹은 멤버가 2명 이상이어야 합니다 — 대신 그룹을 해제하세요.",
+    "minMembersHint": "그룹에는 세션이 1개 이상 있어야 합니다 — 대신 그룹을 해제하세요.",
     "dissolve": "그룹 해제",
     "confirmDissolve": "해제할까요?",
     "dissolveHint": "해제해도 그룹만 사라질 뿐 대화와 메시지는 그대로 남습니다.",
@@ -385,5 +385,14 @@
   "revealCustomer": "전체 정보 보기",
   "revealAudited": "고객 정보를 열람했습니다. 열람 기록이 남습니다.",
   "revealFailed": "고객 정보를 열람하지 못했습니다.",
-  "revealedNotice": "전체 정보가 표시 중입니다. 이 열람은 기록되었습니다."
+  "revealedNotice": "전체 정보가 표시 중입니다. 이 열람은 기록되었습니다.",
+  "related": {
+    "title": "같은 고객의 다른 세션 {{count}}건",
+    "byCustomer": "같은 고객 계정",
+    "byEmail": "다른 고객 기록의 같은 이메일",
+    "more": "외 {{count}}건",
+    "addTo": "‘{{title}}’에 추가",
+    "group": "타임라인으로 묶기",
+    "dismiss": "이 대화에서 숨기기"
+  }
 }

@@ -8,7 +8,7 @@ import { AttachmentMapper } from '../attachment/attachment.mapper';
 import { ChatComment } from './entity/chat-comment.entity';
 import { ConversationBriefing } from './entity/conversation-briefing.entity';
 import { ChatGroup } from './entity/chat-group.entity';
-import { GroupMemberView } from './chat-group.service';
+import { GroupMemberView, GroupRef, RelatedSessionView } from './chat-group.service';
 import { maskEmail, maskName } from '../../global/util/pii-display.util';
 
 /** Escalation alert row for the console alarm modal (FR-S3). */
@@ -114,6 +114,28 @@ export function toGroupDetailResponse(g: ChatGroup, members: GroupMemberView[]) 
       channel: m.channel,
       receiveOnly: m.receiveOnly,
       targetConversationId: m.targetConversationId != null ? String(m.targetConversationId) : null,
+    })),
+  };
+}
+
+/** Same-person suggestion (PLN-261006 P1) — metadata only, ids as strings. */
+export function toRelatedSessionsResponse(r: {
+  sessionId: number;
+  currentGroups: GroupRef[];
+  sessions: RelatedSessionView[];
+}) {
+  const group = (g: GroupRef) => ({ id: String(g.id), title: g.title, kind: g.kind });
+  return {
+    sessionId: String(r.sessionId),
+    currentGroups: r.currentGroups.map(group),
+    sessions: r.sessions.map((s) => ({
+      sessionId: String(s.sessionId),
+      conversationId: String(s.conversationId),
+      channel: s.channel,
+      alias: s.alias,
+      lastAt: s.lastAt,
+      matchedBy: s.matchedBy,
+      groups: s.groups.map(group),
     })),
   };
 }

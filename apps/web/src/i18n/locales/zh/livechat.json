@@ -307,7 +307,7 @@
     },
     "title": "分组标题",
     "titlePlaceholder": "例：洪女士 — 退货案例",
-    "needTwo": "至少选择两个会话才能创建分组。",
+    "needTwo": "请至少选择一个会话。",
     "pickGroup": "分组",
     "pickGroupPlaceholder": "请选择分组…",
     "selectedMembers": "已选会话（{{count}}）",
@@ -327,7 +327,7 @@
     "recipientPlaceholder": "请选择一位接收人…",
     "pickRecipientFirst": "发送消息前请先选择接收人",
     "removeMember": "移除成员",
-    "minMembersHint": "分组至少需要两名成员 — 请改为解散分组。",
+    "minMembersHint": "群组至少需要一个会话——请改为解散群组。",
     "dissolve": "解散分组",
     "confirmDissolve": "确认解散？",
     "dissolveHint": "解散仅删除分组，对话和消息全部保留。",
@@ -385,5 +385,14 @@
   "revealCustomer": "查看完整信息",
   "revealAudited": "已显示客户联系信息。本次查看已记入审计日志。",
   "revealFailed": "无法显示客户联系信息。",
-  "revealedNotice": "正在显示完整信息。本次查看已被记录。"
+  "revealedNotice": "正在显示完整信息。本次查看已被记录。",
+  "related": {
+    "title": "同一客户的其他会话 {{count}} 个",
+    "byCustomer": "同一客户账户",
+    "byEmail": "其他客户记录中的相同邮箱",
+    "more": "另 {{count}} 个",
+    "addTo": "添加到“{{title}}”",
+    "group": "归为时间线",
+    "dismiss": "在此对话中隐藏"
+  }
 }

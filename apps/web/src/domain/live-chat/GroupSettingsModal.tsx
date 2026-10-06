@@ -119,9 +119,9 @@ export function GroupSettingsModal({
                 </span>
                 <button
                   type="button"
-                  disabled={group.members.length <= 2 || actions.removeMember.isPending}
+                  disabled={group.members.length <= 1 || actions.removeMember.isPending}
                   title={
-                    group.members.length <= 2 ? t('groups.minMembersHint') : t('groups.removeMember')
+                    group.members.length <= 1 ? t('groups.minMembersHint') : t('groups.removeMember')
                   }
                   aria-label={t('groups.removeMember')}
                   onClick={() => actions.removeMember.mutate(m.sessionId)}
@@ -132,7 +132,7 @@ export function GroupSettingsModal({
               </li>
             ))}
           </ul>
-          {group.members.length <= 2 && (
+          {group.members.length <= 1 && (
             <p className="mt-1 text-[11px] text-gray-400">{t('groups.minMembersHint')}</p>
           )}
         </div>

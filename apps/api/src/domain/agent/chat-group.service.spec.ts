@@ -7,7 +7,7 @@ import { Message } from '../chat/entity/message.entity';
 
 /**
  * Session grouping (PLN-260824-Session-Grouping): tenancy fences, the
- * two-member floor, 1:1 send target resolution, and the merged id-cursor feed.
+ * one-member floor, 1:1 send target resolution, and the merged id-cursor feed.
  */
 describe('ChatGroupService', () => {
   function build(
@@ -103,11 +103,19 @@ describe('ChatGroupService', () => {
     return { svc, groupRepo, memberRepo, sessionRepo, convRepo, msgRepo, agentService, savedGroups, savedMembers, deleted, msgFinds, convFinds };
   }
 
-  it('refuses creating a group with fewer than two unique sessions', async () => {
+  it('refuses creating a group with no sessions', async () => {
     const h = build();
 
-    await expect(h.svc.create(1, 7, 'timeline', '제목', [10, 10])).rejects.toThrow();
+    await expect(h.svc.create(1, 7, 'timeline', '제목', [])).rejects.toThrow();
     expect(h.groupRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('creates a one-session timeline — a first-time customer can have a journey (PLN-261006 D2)', async () => {
+    const h = build();
+
+    await h.svc.create(1, 7, 'timeline', '김OO', [10, 10]);
+
+    expect(h.savedMembers[0]).toHaveLength(1);
   });
 
   it("refuses creating a group holding another tenant's session", async () => {
@@ -187,16 +195,16 @@ describe('ChatGroupService', () => {
     expect(h.agentService.sendMessage).not.toHaveBeenCalled();
   });
 
-  it('refuses removing a member when the group would drop below two', async () => {
-    const h = build({ members: [{ id: 1, sessionId: 10 }, { id: 2, sessionId: 11 }] as never });
+  it('refuses removing the last member — dissolve instead', async () => {
+    const h = build({ members: [{ id: 1, sessionId: 10 }] as never });
 
     await expect(h.svc.removeMember(50, 1, 10)).rejects.toThrow();
     expect(h.memberRepo.delete).not.toHaveBeenCalled();
   });
 
-  it('removes a member when three or more remain before the removal', async () => {
+  it('removes a member when another one remains', async () => {
     const h = build({
-      members: [{ id: 1, sessionId: 10 }, { id: 2, sessionId: 11 }, { id: 3, sessionId: 12 }] as never,
+      members: [{ id: 1, sessionId: 10 }, { id: 2, sessionId: 11 }] as never,
     });
 
     await h.svc.removeMember(50, 1, 10);
