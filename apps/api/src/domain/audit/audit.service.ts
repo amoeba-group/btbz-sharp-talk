@@ -32,6 +32,8 @@ export interface ListAuditParams {
   actorId?: number;
   /** Action-prefix filter, e.g. 'agent.' for the agent work log. */
   actionPrefix?: string;
+  /** Exact target, e.g. 'group:12' — one object's history (PLN-261006). */
+  target?: string;
   from?: Date;
   to?: Date;
   page: number;
@@ -79,6 +81,7 @@ export class AuditService {
     if (params.actionPrefix) {
       qb.andWhere('a.action LIKE :prefix', { prefix: `${params.actionPrefix}%` });
     }
+    if (params.target) qb.andWhere('a.target = :target', { target: params.target });
     if (params.actorType) qb.andWhere('a.actor_type = :actorType', { actorType: params.actorType });
     if (params.actorId != null) qb.andWhere('a.actor_id = :actorId', { actorId: params.actorId });
     if (params.from) qb.andWhere('a.created_at >= :from', { from: params.from });

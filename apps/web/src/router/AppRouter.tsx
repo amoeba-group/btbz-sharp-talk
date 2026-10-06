@@ -21,6 +21,9 @@ const DashboardPage = lazy(() => import('@/domain/dashboard/DashboardPage').then
 const LiveChatPage = lazy(() => import('@/domain/live-chat/LiveChatPage').then((m) => ({ default: m.LiveChatPage })));
 const IssueBoardPage = lazy(() => import('@/domain/issues/IssueBoardPage').then((m) => ({ default: m.IssueBoardPage })));
 const HistoryPage = lazy(() => import('@/domain/history/HistoryPage').then((m) => ({ default: m.HistoryPage })));
+const JourneyBoardPage = lazy(() =>
+  import('@/domain/journey/JourneyBoardPage').then((m) => ({ default: m.JourneyBoardPage })),
+);
 const WorkLogPage = lazy(() => import('@/domain/work-log/WorkLogPage').then((m) => ({ default: m.WorkLogPage })));
 const StatisticsPage = lazy(() => import('@/domain/statistics/StatisticsPage').then((m) => ({ default: m.StatisticsPage })));
 const AiSettingsPage = lazy(() => import('@/domain/ai-settings/AiSettingsPage').then((m) => ({ default: m.AiSettingsPage })));
@@ -91,6 +94,7 @@ const router = createBrowserRouter([
       { path: '/live-chat', element: <LiveChatPage /> },
       { path: '/issues', element: <IssueBoardPage /> },
       { path: '/history', element: <HistoryPage /> },
+      { path: '/journey', element: <JourneyBoardPage /> },
       { path: '/work-log', element: <WorkLogPage /> },
       { path: '/statistics', element: <StatisticsPage /> },
       { path: '/ai-setting', element: <AiSettingsPage /> },

@@ -223,4 +223,29 @@ describe('ChatGroupService', () => {
     ]);
     expect(h.convRepo.find).not.toHaveBeenCalled();
   });
+
+  it("dissolve also removes the group's journey and its next actions (PLN-261006)", async () => {
+    const h = build();
+    const journeyRepo = {
+      findOne: jest.fn(async () => ({ id: 3, tenantId: 1, groupId: 50 })),
+      delete: jest.fn(async () => ({ affected: 1 })),
+    };
+    const taskRepo = { delete: jest.fn(async () => ({ affected: 2 })) };
+    const svc = new ChatGroupService(
+      h.groupRepo as never,
+      h.memberRepo as never,
+      h.sessionRepo as never,
+      h.convRepo as never,
+      h.msgRepo as never,
+      { find: jest.fn(async () => []) } as never,
+      h.agentService as never,
+      journeyRepo as never,
+      taskRepo as never,
+    );
+
+    await svc.dissolve(50, 1);
+
+    expect(taskRepo.delete).toHaveBeenCalledWith({ tenantId: 1, journeyId: 3 });
+    expect(journeyRepo.delete).toHaveBeenCalledWith({ id: 3, tenantId: 1 });
+  });
 });

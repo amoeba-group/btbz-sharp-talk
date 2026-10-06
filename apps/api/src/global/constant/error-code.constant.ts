@@ -261,6 +261,9 @@ export const ERROR_CODE = {
   WIDGET_ACCESS_BAD_WINDOW: { code: 'E5091', message: 'The test window must start before it ends' },
   /** The visitor is outside the tenant's test-mode allowlist. */
   WIDGET_ACCESS_DENIED: { code: 'E5092', message: 'Widget is not available from here' },
+  // E5093-E5094 — Customer journey management (PLN-261006).
+  JOURNEY_STAGE_UNKNOWN: { code: 'E5093', message: 'No such journey stage for this tenant' },
+  JOURNEY_STAGE_IN_USE: { code: 'E5094', message: 'Move the journeys out of a stage before removing it' },
 
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },

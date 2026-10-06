@@ -12,6 +12,8 @@ import { AgentAlert } from './entity/agent-alert.entity';
 import { AiAgent } from '../ai-engine/entity/ai-agent.entity';
 import { ChatComment } from './entity/chat-comment.entity';
 import { ChatGroup } from './entity/chat-group.entity';
+import { Journey } from '../journey/entity/journey.entity';
+import { JourneyTask } from '../journey/entity/journey-task.entity';
 import { ChatGroupMember } from './entity/chat-group-member.entity';
 import { ConversationBriefing } from './entity/conversation-briefing.entity';
 import { Customer } from '../customer/entity/customer.entity';
@@ -51,6 +53,9 @@ import { AttachmentModule } from '../attachment/attachment.module';
       // Session grouping: timeline/project (PLN-260824-Session-Grouping).
       ChatGroup,
       ChatGroupMember,
+      // A dissolved group takes its journey with it (PLN-261006 P2).
+      Journey,
+      JourneyTask,
       // Read-only: group member display names (session → customer).
       Customer,
       Conversation,

@@ -141,7 +141,7 @@ export function JourneyPanel({ groupId }: { groupId: string }) {
         </div>
       ) : null}
 
-      <JourneyReportModal reportId={open} onClose={() => setOpen(null)} />
+      <JourneyReportModal reportId={open} groupId={groupId} onClose={() => setOpen(null)} />
     </Card>
   );
 }

@@ -2,6 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JourneyReport } from './entity/journey-report.entity';
 import { JourneyReportCriteria } from './entity/journey-report-criteria.entity';
+import { JourneyStage } from './entity/journey-stage.entity';
+import { Journey } from './entity/journey.entity';
+import { JourneyTask } from './entity/journey-task.entity';
+import { ChatGroup } from '../agent/entity/chat-group.entity';
+import { User } from '../user/entity/user.entity';
+import { JourneyManageService } from './journey-manage.service';
 import { Session } from '../session/entity/session.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Message } from '../chat/entity/message.entity';
@@ -26,6 +32,13 @@ import { AuditModule } from '../audit/audit.module';
     TypeOrmModule.forFeature([
       JourneyReport,
       JourneyReportCriteria,
+      // Journey management (PLN-261006) — the only tables this module writes
+      // besides reports and criteria.
+      JourneyStage,
+      Journey,
+      JourneyTask,
+      ChatGroup,
+      User,
       // Read-only across domains: the report reads what already happened and
       // writes nothing back into chat, sessions or assignments.
       Session,
@@ -41,7 +54,7 @@ import { AuditModule } from '../audit/audit.module';
     AuditModule,
   ],
   controllers: [JourneyController],
-  providers: [JourneyMetricsService, JourneyCriteriaService, JourneyReportService],
+  providers: [JourneyMetricsService, JourneyCriteriaService, JourneyReportService, JourneyManageService],
   exports: [JourneyMetricsService, JourneyCriteriaService, JourneyReportService],
 })
 export class JourneyModule {}

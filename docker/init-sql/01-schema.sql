@@ -947,6 +947,51 @@ CREATE TABLE `journey_report_criteria` (
   UNIQUE KEY `uk_jrc` (`tenant_id`,`version`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `journey_stages`;
+CREATE TABLE `journey_stages` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `key` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `label` json NOT NULL,
+  `sort_order` int NOT NULL DEFAULT '0',
+  `color` varchar(9) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_journey_stage` (`tenant_id`,`key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+DROP TABLE IF EXISTS `journeys`;
+CREATE TABLE `journeys` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `group_id` bigint NOT NULL,
+  `stage_key` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `owner_user_id` bigint DEFAULT NULL,
+  `stage_changed_at` datetime DEFAULT NULL,
+  `created_by` bigint NOT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_journey_group` (`tenant_id`,`group_id`),
+  KEY `idx_journey_stage` (`tenant_id`,`stage_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+DROP TABLE IF EXISTS `journey_tasks`;
+CREATE TABLE `journey_tasks` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `journey_id` bigint NOT NULL,
+  `title` varchar(300) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `due_at` date DEFAULT NULL,
+  `assignee_user_id` bigint DEFAULT NULL,
+  `done_at` datetime DEFAULT NULL,
+  `source` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'manual',
+  `report_id` bigint DEFAULT NULL,
+  `created_by` bigint NOT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  KEY `idx_journey_task_journey` (`tenant_id`,`journey_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 DROP TABLE IF EXISTS `journey_reports`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;

@@ -43,5 +43,93 @@
       "needs": "⑥ Needs (hypothesis)",
       "actions": "⑦ Next actions"
     }
+  },
+  "card": {
+    "title": "Customer journey",
+    "stage": "Stage",
+    "owner": "Owner",
+    "noStage": "No stage",
+    "noOwner": "No owner",
+    "inStage": "In {{stage}} for {{days}} day(s)",
+    "history": "History",
+    "noHistory": "No stage changes yet.",
+    "stageSaved": "Stage updated.",
+    "ownerSaved": "Owner updated.",
+    "saveError": "Could not save the journey."
+  },
+  "tasks": {
+    "title": "Next actions",
+    "empty": "No next actions yet.",
+    "placeholder": "Add a next action…",
+    "due": "Due date",
+    "assignee": "Assignee",
+    "noAssignee": "Unassigned",
+    "add": "Add",
+    "delete": "Delete",
+    "overdue": "overdue",
+    "fromReport": "from report",
+    "added": "Next action added.",
+    "deleted": "Next action deleted.",
+    "saveError": "Could not save the next action.",
+    "pickHint": "Select a sentence in the report to turn it into a next action.",
+    "fromSelection": "Add as next action"
+  },
+  "timeline": {
+    "title": "Touchpoints",
+    "empty": "No touchpoints recorded yet.",
+    "more": "Load more",
+    "conversation_started": "Conversation started ({{channel}})",
+    "conversation_ended": "Conversation ended",
+    "csat": "Rated {{n}}/5",
+    "event": {
+      "session_start": "Visit (widget opened)",
+      "product_view": "Viewed a product",
+      "order_created": "Placed an order",
+      "shipment_update": "Shipment update",
+      "review_submitted": "Wrote a review",
+      "nudge_sent": "Nudge sent",
+      "save_added": "Saved an item",
+      "wish_added": "Added to wishlist"
+    },
+    "stage": {
+      "Awareness": "Awareness",
+      "Browse": "Browse",
+      "Inquiry": "Inquiry",
+      "Purchase": "Purchase",
+      "Delivery": "Delivery",
+      "Post": "After purchase"
+    }
+  },
+  "board": {
+    "title": "Customer journey board",
+    "subtitle": "Every timeline (a person) and project (a client company) by stage. Drag a card to change its stage; click it to open the group.",
+    "kind": "Type",
+    "allKinds": "All types",
+    "kindTimeline": "Timelines",
+    "kindProject": "Projects",
+    "allOwners": "All owners",
+    "overdueOnly": "Overdue only",
+    "empty": "No groups yet — group sessions in Live chat to start tracking journeys.",
+    "days": "{{n}}d in stage",
+    "members": "{{n}} session(s)",
+    "openTasks": "{{n}} open action(s)",
+    "overdueTasks": "{{n}} overdue of {{open}}",
+    "kind_timeline": "Timeline",
+    "kind_project": "Project"
+  },
+  "stages": {
+    "title": "Journey stages",
+    "desc": "The columns of the journey board. Start from Kotler’s 5A and adapt them to your business. Names are edited in the current console language.",
+    "color": "Colour",
+    "name": "Stage name",
+    "key": "Key",
+    "keyHint": "Lowercase letters, digits, - or _. Fixed once saved.",
+    "up": "Move up",
+    "down": "Move down",
+    "remove": "Remove",
+    "add": "Add stage",
+    "inUseHint": "A stage that still holds journeys cannot be removed — move those cards first.",
+    "saved": "Journey stages saved.",
+    "saveError": "Could not save the stages."
   }
 }
