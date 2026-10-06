@@ -61,6 +61,8 @@ export class AiConfigController {
         scenarioOverrides: body.scenario_overrides as Record<string, ScenarioOverride> | undefined,
         handoffConfig: body.handoff_config as HandoffConfig | undefined,
         answerFooter: body.answer_footer,
+        // Pruned/validated in the service (sanitizeGuestGuidance).
+        guestGuidance: body.guest_guidance,
       },
       { kind: CONFIG_REVISION_KIND.MANUAL, actorUserId: user.userId, note: body.note ?? null },
       body.ai_agent_id ?? null,

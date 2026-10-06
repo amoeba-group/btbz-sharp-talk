@@ -108,4 +108,34 @@ describe('RagService retrieval scope', () => {
       expect(await scopeOf(7)).toContain("c.origin <> 'catalog'");
     });
   });
+
+  describe('guest gate scope (PLN-261001 v1.1 T3)', () => {
+    const scopeWith = async (opts?: { guestOnly?: boolean }) => {
+      const { svc, wheres } = build();
+      await (
+        svc as unknown as {
+          retrieveFulltext: (
+            t: number,
+            q: string,
+            l: number,
+            a?: number | null,
+            o?: { guestOnly?: boolean },
+          ) => Promise<unknown>;
+        }
+      ).retrieveFulltext(1, '', 5, 10, opts);
+      return wheres.join(' | ');
+    };
+
+    it('an unidentified visitor of a gated agent only reads guest-visible categories', async () => {
+      const scope = await scopeWith({ guestOnly: true });
+      expect(scope).toContain('g.guest_visible = 1');
+      // Uncategorised documents are NOT opened by the flag: nothing owns them.
+      expect(scope).toContain('kb.category IS NOT NULL');
+    });
+
+    it('is not applied unless asked — every other caller keeps its scope byte-identical', async () => {
+      expect(await scopeWith()).not.toContain('guest_visible');
+      expect(await scopeWith({ guestOnly: false })).not.toContain('guest_visible');
+    });
+  });
 });

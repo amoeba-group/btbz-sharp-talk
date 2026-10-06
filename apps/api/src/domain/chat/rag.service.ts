@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, In, Repository } from 'typeorm';
 import { AI_FUNCTION } from '@sharptalk/types';
+import type { GuestGuidance } from '@sharptalk/types';
 import { KbDocument } from '../knowledge/entity/kb-document.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { normalizeStorefrontUrl, productLinkFor } from '../../global/util/storefront-url.util';
@@ -49,6 +50,25 @@ export interface RagCandidateInput {
   content: string;
   category: string | null;
   group: string;
+}
+
+/**
+ * Retrieval narrowing beyond the agent scope (PLN-261001 v1.1). `guestOnly`
+ * keeps an unidentified visitor of a `login_guidance` agent inside the
+ * categories an operator marked guest-visible — enforced in `baseQuery`, so
+ * both legs and the vector re-hydration obey it.
+ */
+export interface RetrievalOpts {
+  guestOnly?: boolean;
+}
+
+export interface AnswerOpts extends RetrievalOpts {
+  /**
+   * One line of signed partner context ("Partner: Hotel X (hotelSn 1721),
+   * role receptionist") for the system prompt (REQ-261006 H6). Context only —
+   * it never widens retrieval.
+   */
+  partnerContext?: string;
 }
 
 export interface RagAnswer {
@@ -212,10 +232,21 @@ export class RagService {
     query: string,
     limit = RagService.TOP_K,
     aiAgentId?: number | null,
+    opts?: RetrievalOpts,
   ): Promise<RetrievedChunk[]> {
     const scopeAgentId =
       aiAgentId == null ? null : await this.aiConfig.effectiveAgentId(tenantId, aiAgentId);
-    return (await this.retrieveHybrid(tenantId, query, limit, undefined, scopeAgentId)).chunks;
+    return (await this.retrieveHybrid(tenantId, query, limit, undefined, scopeAgentId, opts)).chunks;
+  }
+
+  /** The answering agent's guest policy (PLN-261001 v1.1), from the cached persona payload. */
+  async agentGuestPolicy(tenantId: number, aiAgentId?: number | null): Promise<string> {
+    return (await this.aiConfig.getPersonaRules(tenantId, aiAgentId)).guestPolicy;
+  }
+
+  /** Tenant sign-in guidance for gated guests, or null when never configured. */
+  guestGuidance(tenantId: number | null): Promise<GuestGuidance | null> {
+    return this.aiConfig.getGuestGuidance(tenantId);
   }
 
   /**
@@ -326,9 +357,10 @@ export class RagService {
     limit = 4,
     preferGroup?: string,
     aiAgentId?: number | null,
+    opts?: RetrievalOpts,
   ): Promise<{ chunks: RetrievedChunk[]; vectorProvider: string | null }> {
     const [ftDocs, vec] = await Promise.all([
-      this.retrieveFulltext(tenantId, query, RagService.LEG_LIMIT, aiAgentId),
+      this.retrieveFulltext(tenantId, query, RagService.LEG_LIMIT, aiAgentId, opts),
       this.retrieveVector(tenantId, query, RagService.LEG_LIMIT),
     ]);
     // Uncalibrated (stub) vector scores may RANK docs but never ADMIT them:
@@ -362,7 +394,7 @@ export class RagService {
     if (missingIds.length) {
       // The vector leg searches Qdrant, which knows nothing about categories or
       // agents; re-hydrating through baseQuery is what applies the scope to it.
-      const rows = await this.baseQuery(tenantId, aiAgentId)
+      const rows = await this.baseQuery(tenantId, aiAgentId, opts)
         .andWhere({ id: In(missingIds) })
         .getMany();
       rows.forEach((d) => ftById.set(Number(d.id), d));
@@ -404,6 +436,7 @@ export class RagService {
     query: string,
     limit: number,
     aiAgentId?: number | null,
+    opts?: RetrievalOpts,
   ): Promise<KbDocument[]> {
     const terms = query
       .toLowerCase()
@@ -413,14 +446,14 @@ export class RagService {
       .slice(0, 8);
 
     if (!terms.length) {
-      return this.baseQuery(tenantId, aiAgentId)
+      return this.baseQuery(tenantId, aiAgentId, opts)
         .orderBy("CASE WHEN kb.source = 'knowledge_store' THEN 0 ELSE 1 END", 'ASC')
         .addOrderBy('kb.updatedAt', 'DESC')
         .take(limit)
         .getMany();
     }
     try {
-      return await this.baseQuery(tenantId, aiAgentId)
+      return await this.baseQuery(tenantId, aiAgentId, opts)
         .addSelect('MATCH(kb.title, kb.content) AGAINST (:ftq IN NATURAL LANGUAGE MODE)', 'relevance')
         .andWhere('MATCH(kb.title, kb.content) AGAINST (:ftq IN NATURAL LANGUAGE MODE)')
         .setParameter('ftq', terms.join(' '))
@@ -430,7 +463,7 @@ export class RagService {
         .getMany();
     } catch {
       // FULLTEXT index not present yet (pre-migration DB) — legacy LIKE scan.
-      return this.retrieveLike(tenantId, terms, limit, aiAgentId);
+      return this.retrieveLike(tenantId, terms, limit, aiAgentId, opts);
     }
   }
 
@@ -461,7 +494,7 @@ export class RagService {
    * vector leg re-hydrates its hits from it — so a rule added here cannot be
    * bypassed by whichever leg happened to find the document.
    */
-  private baseQuery(tenantId: number, aiAgentId?: number | null) {
+  private baseQuery(tenantId: number, aiAgentId?: number | null, opts?: RetrievalOpts) {
     const qb = (
       this.kbRepo
         .createQueryBuilder('kb')
@@ -502,6 +535,25 @@ export class RagService {
         { scopeTenantId: tenantId, scopeAgentId: aiAgentId },
       );
     }
+    // Guest gate (PLN-261001 v1.1 T3): an unidentified visitor of a
+    // login_guidance agent is answered ONLY from categories an operator opened
+    // to guests. Phrased as "in the opened set" — the opposite polarity to the
+    // agent scope above — because the safe default here is nothing, not
+    // everything: a gated agent with no guest-visible category answers a guest
+    // from no document and the chat path turns that into a sign-in prompt.
+    // Catalogue categories are not opened by this flag (setGuestVisible refuses
+    // them), so product knowledge stays behind the gate too.
+    if (opts?.guestOnly) {
+      qb.andWhere(
+        `(kb.category IS NOT NULL AND EXISTS
+           (SELECT 1 FROM kb_categories g
+             WHERE g.tenant_id = :guestTenantId
+               AND g.doc_group = kb.doc_group
+               AND g.name = kb.category
+               AND g.guest_visible = 1))`,
+        { guestTenantId: tenantId },
+      );
+    }
     return qb;
   }
 
@@ -511,8 +563,9 @@ export class RagService {
     terms: string[],
     limit: number,
     aiAgentId?: number | null,
+    opts?: RetrievalOpts,
   ): Promise<KbDocument[]> {
-    const qb = this.baseQuery(tenantId, aiAgentId).andWhere(
+    const qb = this.baseQuery(tenantId, aiAgentId, opts).andWhere(
       new Brackets((b) => {
         terms.forEach((term, i) => {
           b.orWhere(`LOWER(kb.title) LIKE :t${i}`, { [`t${i}`]: `%${term}%` });
@@ -543,6 +596,7 @@ export class RagService {
     aiAgentId?: number | null,
     extraCandidates?: RagCandidateInput[],
     history?: AiMessage[],
+    opts?: AnswerOpts,
   ): Promise<RagAnswer> {
     // The caller decides the group preference; RAG only applies it. Keeping the
     // judgement out of here means the chat path can use its intent label and
@@ -572,6 +626,7 @@ export class RagService {
       // The agent was already being passed for its persona; it decides what may
       // be retrieved as well (REQ-260826 R2).
       scopeAgentId,
+      opts,
     );
     // The current message searched on its own as well (FIX-261007-Topic-Switch).
     // Prepending the earlier turns rescues a follow-up with no topic words of
@@ -612,6 +667,12 @@ export class RagService {
     // null falls back to the tenant's default agent.
     const { persona, rules } = await this.aiConfig.getPersonaRules(tenantId, aiAgentId);
     const rulesBlock = rules.length ? `\nResponse rules:\n${rules.map((r) => `- ${r}`).join('\n')}` : '';
+    // Signed partner context (REQ-261006 H6): who the model is talking to, so a
+    // receptionist is not walked through manager-only screens. Context only —
+    // retrieval was already scoped above and this line widens nothing.
+    const partnerBlock = opts?.partnerContext?.trim()
+      ? `\nPARTNER_CONTEXT: ${opts.partnerContext.trim()}`
+      : '';
     const orderBlock = hasOrderContext
       ? `\nCUSTOMER_ORDERS_START\n${orderContext!.trim()}\nCUSTOMER_ORDERS_END`
       : '';
@@ -632,7 +693,7 @@ export class RagService {
       // Long Vietnamese answers hit 1,024 and stopped mid-sentence (REQ-261007 I-5).
       maxTokens: envNumber('RAG_MAX_TOKENS', 2048),
       system:
-        `${persona}${rulesBlock}${hasHistory ? CONVERSATION_RULES : ''}${footerOn ? FOOTER_RULE : ''}\n` +
+        `${persona}${rulesBlock}${partnerBlock}${hasHistory ? CONVERSATION_RULES : ''}${footerOn ? FOOTER_RULE : ''}\n` +
         `${sourceRule} If the information is insufficient, apologize briefly and ` +
         `offer to connect a human agent. Reply in language code: ${language}.\n` +
         `The context items are numbered. After your reply, on its own final line, ` +

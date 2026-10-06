@@ -26,6 +26,8 @@ import { Session } from './entity/session.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { AiAgent } from '../ai-engine/entity/ai-agent.entity';
+import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
+import { GUEST_POLICY } from '@sharptalk/types';
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { BusinessException } from '../../global/exception/business.exception';
@@ -74,6 +76,10 @@ export interface PrivacyNoticeInfo {
   widgetCopy: WidgetCopy;
   /** Where AI inference runs for this deployment (AI_PROCESSING_REGION, e.g. 'US'). */
   aiProcessingRegion?: string;
+  /** Guest policy of the answering agent (PLN-261001 v1.1); absent = open. */
+  guestPolicy?: string;
+  /** Sign-in links for gated guests on a tenant without a storefront login. */
+  guestGuidance?: { loginUrl: string | null; signupUrl: string | null } | null;
   /** Tenant runs an issue workflow (native/bridge) — the widget shows an Inquiries chip. */
   issueFeed?: boolean;
   /**
@@ -125,6 +131,9 @@ export class SessionService {
     private readonly bus: EventBusService,
     private readonly redis: RedisService,
     @InjectRepository(AiAgent) private readonly aiAgentRepo?: Repository<AiAgent>,
+    // Guest guidance (PLN-261001 v1.1) rides on the tenant AI config row. Repo
+    // only — importing AiEngineModule here would be a cycle (see the module).
+    @InjectRepository(TenantAiConfig) private readonly aiConfigRepo?: Repository<TenantAiConfig>,
   ) {}
 
   async ensure(
@@ -591,6 +600,10 @@ export class SessionService {
         : null;
     const agentGreeting =
       agent?.greeting && Object.keys(agent.greeting).length ? agent.greeting : null;
+    const guidance =
+      tenantId != null && this.aiConfigRepo
+        ? ((await this.aiConfigRepo.findOne({ where: { tenantId } }))?.guestGuidance ?? null)
+        : null;
     const profile = resolvePrivacyProfile(
       tenant?.privacyProfile,
       Number(tenant?.commerceEnabled ?? 1) !== 0,
@@ -604,6 +617,12 @@ export class SessionService {
         (languageBySession(language)?.session ?? null) as SessionLanguage | null,
       ),
       aiProcessingRegion: AI_PROCESSING_REGION,
+      // Guest gate (PLN-261001 v1.1): the widget learns up front whether this
+      // agent gates guests and where its sign-in card should send them.
+      guestPolicy: agent?.guestPolicy || GUEST_POLICY.OPEN,
+      guestGuidance: guidance
+        ? { loginUrl: guidance.loginUrl ?? null, signupUrl: guidance.signupUrl ?? null }
+        : null,
       widgetLoginMode:
         tenant?.widgetLoginMode === WIDGET_LOGIN_MODE.POPUP
           ? WIDGET_LOGIN_MODE.POPUP

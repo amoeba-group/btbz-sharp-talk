@@ -34,6 +34,7 @@ import { AiAgentController } from './ai-agent.controller';
       Tenant,
     ]),
     SessionModule,
+    // Guest-policy flips are audited (PLN-261001 v1.1 B8).
     AuditModule,
   ],
   controllers: [

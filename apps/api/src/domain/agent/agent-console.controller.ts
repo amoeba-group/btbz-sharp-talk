@@ -311,6 +311,7 @@ export class AgentConsoleController {
       scope,
       query.channel,
       Number.isFinite(agentFilter) ? agentFilter : undefined,
+      query.hotel,
     );
     return new Paginated(
       items.map(
@@ -323,6 +324,7 @@ export class AgentConsoleController {
           autoReplyEffective,
           aiAgentId,
           aiAgentName,
+          identityClaims,
         }) =>
           toSessionResponse(
             conversation,
@@ -331,6 +333,7 @@ export class AgentConsoleController {
             alias,
             { mode: autoReplyMode, effective: autoReplyEffective },
             { id: aiAgentId, name: aiAgentName },
+            identityClaims,
           ),
       ),
       buildPagination(page, size, total),

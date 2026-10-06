@@ -40,6 +40,7 @@ export class CustomerMapper {
       orders: stats?.orders ?? 0,
       totalSpent: stats?.totalSpent ?? 0,
       currency: stats?.currency ?? null,
+      lastClaims: c.lastClaims ?? null,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
     };

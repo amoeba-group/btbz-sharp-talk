@@ -32,6 +32,7 @@ export class AiAgentController {
       name: body.name,
       persona: body.persona ?? null,
       rules: body.rules ?? null,
+      guestPolicy: body.guest_policy,
     });
     return AiAgentMapper.toResponse(row);
   }
@@ -44,14 +45,20 @@ export class AiAgentController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateAiAgentRequest,
   ) {
-    const row = await this.agents.update(this.tenantId(user), id, {
-      name: body.name,
-      displayName: body.display_name,
-      persona: body.persona,
-      rules: body.rules,
-      greeting: body.greeting,
-      active: body.active,
-    });
+    const row = await this.agents.update(
+      this.tenantId(user),
+      id,
+      {
+        name: body.name,
+        displayName: body.display_name,
+        persona: body.persona,
+        rules: body.rules,
+        greeting: body.greeting,
+        active: body.active,
+        guestPolicy: body.guest_policy,
+      },
+      user.actorType === 'user' ? user.userId : null,
+    );
     return AiAgentMapper.toResponse(row);
   }
 

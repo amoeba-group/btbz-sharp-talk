@@ -6,6 +6,8 @@ import { TenantAiConfig } from './entity/tenant-ai-config.entity';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { RedisService } from '../../infrastructure/cache/redis.service';
+import { AuditService } from '../audit/audit.service';
+import { GUEST_POLICY, type GuestPolicy } from '@sharptalk/types';
 
 /** Shared with the coach limits: a persona longer than this stops fitting the prompt budget. */
 const PERSONA_MAX_CHARS = 4000;
@@ -19,6 +21,8 @@ export interface AiAgentInput {
   /** Per-agent first message, lang→text; empty map clears (tenant fallback). */
   greeting?: Record<string, string> | null;
   active?: boolean;
+  /** `open` | `login_guidance` (PLN-261001 v1.1). */
+  guestPolicy?: GuestPolicy;
 }
 
 /** Widget-copy language keys — mirrors tenants.widget_copy (uppercase codes). */
@@ -54,6 +58,9 @@ export class AiAgentService {
     @InjectRepository(TenantAiConfig) private readonly configRepo: Repository<TenantAiConfig>,
     private readonly dataSource: DataSource,
     private readonly redis: RedisService,
+    // Optional so existing specs that build the service with four arguments
+    // keep working; the module always provides it.
+    private readonly audit?: AuditService,
   ) {}
 
   /**
@@ -88,7 +95,13 @@ export class AiAgentService {
 
   async create(
     tenantId: number,
-    input: { code: string; name: string; persona?: string | null; rules?: string[] | null },
+    input: {
+      code: string;
+      name: string;
+      persona?: string | null;
+      rules?: string[] | null;
+      guestPolicy?: GuestPolicy;
+    },
   ): Promise<AiAgent> {
     const code = input.code?.trim().toLowerCase();
     if (!code || !AI_AGENT_CODE_PATTERN.test(code)) {
@@ -110,6 +123,7 @@ export class AiAgentService {
         name: input.name.trim().slice(0, 100),
         persona: this.clampPersona(input.persona),
         rules: input.rules ?? null,
+        guestPolicy: input.guestPolicy ?? GUEST_POLICY.OPEN,
         active: 1,
         isDefault: 0,
       }),
@@ -117,8 +131,14 @@ export class AiAgentService {
   }
 
   /** PATCH semantics: only fields the caller sent move — neighbours stay put. */
-  async update(tenantId: number, id: number, input: AiAgentInput): Promise<AiAgent> {
+  async update(
+    tenantId: number,
+    id: number,
+    input: AiAgentInput,
+    actorUserId?: number | null,
+  ): Promise<AiAgent> {
     const row = await this.require(tenantId, id);
+    const policyBefore = row.guestPolicy || GUEST_POLICY.OPEN;
     if (input.name !== undefined) row.name = input.name.trim().slice(0, 100);
     if (input.displayName !== undefined) {
       const trimmed = (input.displayName ?? '').trim().slice(0, 100);
@@ -127,6 +147,14 @@ export class AiAgentService {
     if (input.persona !== undefined) row.persona = this.clampPersona(input.persona);
     if (input.rules !== undefined) row.rules = input.rules;
     if (input.greeting !== undefined) row.greeting = sanitizeGreeting(input.greeting);
+    if (input.guestPolicy !== undefined && input.guestPolicy !== row.guestPolicy) {
+      // The switch that can lock every unidentified visitor out of an agent is
+      // worth a log line of its own, on top of the audit row the controller writes.
+      this.logger.log(
+        `ai agent guest policy: tenant=${tenantId} id=${id} ${row.guestPolicy || GUEST_POLICY.OPEN} → ${input.guestPolicy}`,
+      );
+      row.guestPolicy = input.guestPolicy;
+    }
     if (input.active !== undefined) {
       if (!input.active && row.isDefault === 1) {
         this.logger.warn(`refused to deactivate default ai agent: tenant=${tenantId} id=${id}`);
@@ -136,6 +164,19 @@ export class AiAgentService {
     }
     const saved = await this.agentRepo.save(row);
     await this.invalidatePersonaCache(tenantId, Number(saved.id));
+    const policyAfter = saved.guestPolicy || GUEST_POLICY.OPEN;
+    if (policyAfter !== policyBefore) {
+      // Privileged: flipping to login_guidance can lock every unidentified
+      // visitor out of this agent (CLAUDE.md §2 — audit privileged actions).
+      await this.audit?.write({
+        tenantId,
+        actorType: 'user',
+        actorId: actorUserId ?? 0,
+        action: 'ai_agent.guest_policy',
+        target: `agent:${Number(saved.id)}`,
+        metadata: { from: policyBefore, to: policyAfter },
+      });
+    }
     return saved;
   }
 

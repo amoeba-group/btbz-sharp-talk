@@ -44,6 +44,7 @@ export class CustomerController {
       page,
       size,
       query.email,
+      query.hotel,
     );
     return new Paginated(
       CustomerMapper.toCustomerList(items, stats),
@@ -57,7 +58,13 @@ export class CustomerController {
   async search(@CurrentUser() user: Principal, @Body() body: SearchCustomersRequest) {
     const tenantId = this.tenantId(user);
     const { page, size } = normalizePage(body.page, body.size);
-    const { items, total, stats } = await this.customerService.list(tenantId, page, size, body.email);
+    const { items, total, stats } = await this.customerService.list(
+      tenantId,
+      page,
+      size,
+      body.email,
+      body.hotel,
+    );
     return new Paginated(
       CustomerMapper.toCustomerList(items, stats),
       buildPagination(page, size, total),

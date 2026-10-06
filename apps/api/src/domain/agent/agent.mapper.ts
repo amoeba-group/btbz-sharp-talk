@@ -10,6 +10,7 @@ import { ConversationBriefing } from './entity/conversation-briefing.entity';
 import { ChatGroup } from './entity/chat-group.entity';
 import { GroupMemberView, GroupRef, RelatedSessionView } from './chat-group.service';
 import { maskEmail, maskName } from '../../global/util/pii-display.util';
+import type { IdentityClaims } from '@sharptalk/types';
 
 /** Escalation alert row for the console alarm modal (FR-S3). */
 export function toAlertResponse(a: AgentAlert) {
@@ -32,6 +33,7 @@ export function toSessionResponse(
   alias: string | null = null,
   autoReply: { mode: string; effective: boolean } = { mode: 'inherit', effective: true },
   aiAgent: { id: number | null; name: string | null } = { id: null, name: null },
+  identityClaims: IdentityClaims | null = null,
 ) {
   return {
     id: c.id,
@@ -39,6 +41,12 @@ export function toSessionResponse(
     /** Effective AI agent of the session (REQ-260825 R6) — NULL pin = default. */
     aiAgentId: aiAgent.id != null ? String(aiAgent.id) : null,
     aiAgentName: aiAgent.name,
+    /**
+     * Signed partner context (REQ-261006 H3): which hotel the identified staff
+     * member is acting for. Null for guests and v1 identities. Not PII — the
+     * hotel is a business, and the staff name travels in `customerName`.
+     */
+    identityClaims,
     // The session this row belongs to. The row id is a CONVERSATION id (the
     // console calls it a session), so the real session id has to travel too —
     // the alias hangs off the session, not the conversation (PLN-260812).

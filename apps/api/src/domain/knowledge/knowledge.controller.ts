@@ -60,6 +60,7 @@ import {
   SaveUsageGuideRequest,
   SaveUsageTypeRequest,
   SetCategoryAgentsRequest,
+  SetCategoryGuestVisibleRequest,
   SetCategoryHiddenRequest,
   TestGdriveRequest,
   TestNotionRequest,
@@ -722,6 +723,24 @@ export class KnowledgeController {
       this.tenantUser(user).tenantId,
       Number(id),
       body.agent_ids ?? [],
+    );
+    return KnowledgeMapper.toCategory(row);
+  }
+
+  @Put('categories/:id/guest-visible')
+  @RequireCapability(CAPABILITY.KNOWLEDGE_SOURCE_MANAGE)
+  @ApiOperation({
+    summary: 'Let unidentified visitors of a login_guidance agent be answered from this category',
+  })
+  async setCategoryGuestVisible(
+    @CurrentUser() user: Principal,
+    @Param('id') id: string,
+    @Body() body: SetCategoryGuestVisibleRequest,
+  ) {
+    const row = await this.kbCategories.setGuestVisible(
+      this.tenantUser(user).tenantId,
+      Number(id),
+      body.guest_visible,
     );
     return KnowledgeMapper.toCategory(row);
   }
