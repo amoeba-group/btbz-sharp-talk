@@ -1,6 +1,27 @@
 import { apiDelete, apiGet, apiPatch, apiPost, apiUpload } from '@/lib/api-client';
 
 /** Mirrors the API's toSessionResponse — no invented fields (they render as '—'). */
+export interface GroupRef {
+  id: string;
+  title: string;
+  kind: 'timeline' | 'project';
+}
+
+/** Same-person suggestion (PLN-261006 P1) — session metadata only. */
+export interface RelatedSessions {
+  sessionId: string;
+  currentGroups: GroupRef[];
+  sessions: Array<{
+    sessionId: string;
+    conversationId: string;
+    channel: string;
+    alias: string | null;
+    lastAt: string;
+    matchedBy: 'customer' | 'email';
+    groups: GroupRef[];
+  }>;
+}
+
 export interface AgentSession {
   id: string;
   /** Session behind the row (row ids are conversation ids). */
@@ -275,6 +296,9 @@ export const liveChatService = {
   end: (id: string) => apiPost<ConversationDetail>(`/agent/conversations/${id}/end`),
   // Session groups: timeline/project (REQ-260824-Session-Grouping).
   groups: () => apiGet<ChatGroupSummary[]>('/agent/groups'),
+  /** Other sessions of the same confirmed customer (PLN-261006 P1). */
+  relatedSessions: (conversationId: string) =>
+    apiGet<RelatedSessions>(`/agent/conversations/${conversationId}/related-sessions`),
   createGroup: (kind: 'timeline' | 'project', title: string, sessionIds: string[]) =>
     apiPost<ChatGroupSummary>('/agent/groups', {
       kind,

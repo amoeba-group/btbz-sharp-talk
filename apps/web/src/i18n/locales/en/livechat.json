@@ -307,7 +307,7 @@
     },
     "title": "Group title",
     "titlePlaceholder": "e.g. Ms. Hong — return case",
-    "needTwo": "Pick at least two sessions to create a group.",
+    "needTwo": "Select at least one session.",
     "pickGroup": "Group",
     "pickGroupPlaceholder": "Choose a group…",
     "selectedMembers": "Selected sessions ({{count}})",
@@ -327,7 +327,7 @@
     "recipientPlaceholder": "Choose one recipient…",
     "pickRecipientFirst": "Choose a recipient to send a message",
     "removeMember": "Remove member",
-    "minMembersHint": "A group needs at least two members — dissolve it instead.",
+    "minMembersHint": "A group needs at least one session — dissolve it instead.",
     "dissolve": "Dissolve group",
     "confirmDissolve": "Dissolve?",
     "dissolveHint": "Dissolving removes only the group. Conversations and messages stay.",
@@ -385,5 +385,14 @@
   "revealCustomer": "Show full details",
   "revealAudited": "Contact details revealed. This read is recorded in the audit log.",
   "revealFailed": "Could not reveal the contact details.",
-  "revealedNotice": "Full details are shown. This read has been recorded."
+  "revealedNotice": "Full details are shown. This read has been recorded.",
+  "related": {
+    "title": "Same customer · {{count}} other session(s)",
+    "byCustomer": "Same customer account",
+    "byEmail": "Same email on another customer record",
+    "more": "+{{count}} more",
+    "addTo": "Add to “{{title}}”",
+    "group": "Group as timeline",
+    "dismiss": "Hide for this conversation"
+  }
 }

@@ -109,7 +109,7 @@ export class AgentMessageRequest {
 export class CreateGroupRequest {
   @IsIn(['timeline', 'project']) kind: 'timeline' | 'project';
   @IsString() @MinLength(1) @MaxLength(100) title: string;
-  @IsArray() @ArrayMinSize(2) @IsInt({ each: true }) session_ids: number[];
+  @IsArray() @ArrayMinSize(1) @IsInt({ each: true }) session_ids: number[];
 }
 
 export class UpdateGroupRequest {

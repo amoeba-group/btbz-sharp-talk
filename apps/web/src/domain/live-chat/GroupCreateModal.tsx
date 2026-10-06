@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/Button';
 import { Modal } from '@/components/Modal';
@@ -16,7 +16,12 @@ export function GroupCreateModal({
   onClose,
   sessions,
   onDone,
+  initialKind = 'timeline',
+  initialTitle = '',
 }: {
+  /** Prefill from the same-person suggestion (PLN-261006 P1). */
+  initialKind?: 'timeline' | 'project';
+  initialTitle?: string;
   open: boolean;
   onClose: () => void;
   /** Selected list rows, already deduplicated by sessionId. */
@@ -25,8 +30,15 @@ export function GroupCreateModal({
 }) {
   const { t } = useTranslation('livechat');
   const [mode, setMode] = useState<'create' | 'add'>('create');
-  const [kind, setKind] = useState<'timeline' | 'project'>('timeline');
-  const [title, setTitle] = useState('');
+  const [kind, setKind] = useState<'timeline' | 'project'>(initialKind);
+  const [title, setTitle] = useState(initialTitle);
+  // The suggestion banner reopens this modal for a different customer; take
+  // its prefill each time it opens rather than the first one only.
+  useEffect(() => {
+    if (!open) return;
+    setKind(initialKind);
+    setTitle(initialTitle);
+  }, [open, initialKind, initialTitle]);
   const [targetGroup, setTargetGroup] = useState('');
   const { data: groups } = useGroups(open);
   const actions = useGroupActions(null);
@@ -43,7 +55,7 @@ export function GroupCreateModal({
   const canSubmit =
     !busy &&
     sessionIds.length > 0 &&
-    (mode === 'create' ? sessionIds.length >= 2 && !!title.trim() : !!targetGroup);
+    (mode === 'create' ? sessionIds.length >= 1 && !!title.trim() : !!targetGroup);
 
   const submit = () => {
     if (!canSubmit) return;
@@ -124,7 +136,7 @@ export function GroupCreateModal({
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500"
               />
             </div>
-            {sessionIds.length < 2 && (
+            {sessionIds.length < 1 && (
               <p className="text-xs text-amber-600">{t('groups.needTwo')}</p>
             )}
           </>

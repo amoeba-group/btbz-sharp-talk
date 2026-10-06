@@ -298,6 +298,17 @@ export function useCommentActions(id: string | null) {
 }
 
 /** Session groups (timeline/project) for the list's group tab (REQ-260824). */
+/** Same-person suggestion for the open conversation (PLN-261006 P1). */
+export const useRelatedSessions = (conversationId: string | null) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['agent', tenantKey, 'related', conversationId],
+    queryFn: () => liveChatService.relatedSessions(conversationId as string),
+    enabled: !!conversationId,
+    staleTime: 30_000,
+  });
+};
+
 export const useGroups = (enabled = true) => {
   const tenantKey = useTenantKey();
   return useQuery({
@@ -346,6 +357,8 @@ export function useGroupActions(id: string | null) {
       liveChatService.createGroup(v.kind, v.title, v.sessionIds),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'groups'] });
+      // Grouped sessions drop out of every open same-person suggestion.
+      qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'related'] });
       toast.success(t('groups.created'));
     },
     onError: (e: Error) => toast.error(e.message || t('groups.createError'), { sticky: true }),
@@ -368,6 +381,7 @@ export function useGroupActions(id: string | null) {
       qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'groups'] });
       qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'group', v.groupId] });
       qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'group-messages', v.groupId] });
+      qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'related'] });
       toast.success(t('groups.membersAdded'));
     },
     onError: (e: Error) => toast.error(e.message || t('groups.saveError'), { sticky: true }),

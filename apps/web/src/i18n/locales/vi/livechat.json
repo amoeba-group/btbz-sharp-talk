@@ -307,7 +307,7 @@
     },
     "title": "Tên nhóm",
     "titlePlaceholder": "VD: Chị Hong — vụ đổi trả",
-    "needTwo": "Chọn ít nhất hai phiên để tạo nhóm.",
+    "needTwo": "Hãy chọn ít nhất một phiên.",
     "pickGroup": "Nhóm",
     "pickGroupPlaceholder": "Chọn một nhóm…",
     "selectedMembers": "Phiên đã chọn ({{count}})",
@@ -327,7 +327,7 @@
     "recipientPlaceholder": "Chọn một người nhận…",
     "pickRecipientFirst": "Chọn người nhận để gửi tin nhắn",
     "removeMember": "Xóa thành viên",
-    "minMembersHint": "Nhóm cần ít nhất hai thành viên — hãy giải tán nhóm thay vì xóa.",
+    "minMembersHint": "Nhóm cần ít nhất một phiên — hãy giải tán nhóm thay vào đó.",
     "dissolve": "Giải tán nhóm",
     "confirmDissolve": "Giải tán?",
     "dissolveHint": "Giải tán chỉ xóa nhóm. Hội thoại và tin nhắn vẫn còn nguyên.",
@@ -385,5 +385,14 @@
   "revealCustomer": "Xem đầy đủ",
   "revealAudited": "Đã hiển thị thông tin liên hệ. Lần xem này được ghi vào nhật ký kiểm toán.",
   "revealFailed": "Không thể hiển thị thông tin liên hệ.",
-  "revealedNotice": "Đang hiển thị thông tin đầy đủ. Lần xem này đã được ghi lại."
+  "revealedNotice": "Đang hiển thị thông tin đầy đủ. Lần xem này đã được ghi lại.",
+  "related": {
+    "title": "Cùng khách hàng · {{count}} phiên khác",
+    "byCustomer": "Cùng tài khoản khách hàng",
+    "byEmail": "Cùng email ở hồ sơ khách hàng khác",
+    "more": "+{{count}} phiên",
+    "addTo": "Thêm vào “{{title}}”",
+    "group": "Gộp thành dòng thời gian",
+    "dismiss": "Ẩn trong cuộc trò chuyện này"
+  }
 }

@@ -55,6 +55,7 @@ import { BriefingCard } from './BriefingCard';
 import { JourneyPanel } from '../journey/JourneyPanel';
 import { CommentCard } from './CommentCard';
 import { GroupCreateModal } from './GroupCreateModal';
+import { RelatedSessionsBanner } from './RelatedSessionsBanner';
 import { GroupRoom } from './GroupRoom';
 import { useGroups } from './live-chat.hooks';
 import { KnowledgeCaptureModal } from './KnowledgeCaptureModal';
@@ -905,6 +906,12 @@ export function LiveChatPage() {
 
               {/* Issue P1 (native tenants only — renders nothing when no issue). */}
               <IssuePanel conversationId={selected} />
+              {/* Same-person suggestion (PLN-261006 P1) — nothing for guests. */}
+              <RelatedSessionsBanner
+                conversationId={selected}
+                customerName={convo?.customer?.name ?? null}
+                onOpenConversation={(id) => setSelected(id)}
+              />
 
               <div
                 role="log"

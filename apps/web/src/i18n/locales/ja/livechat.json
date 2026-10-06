@@ -307,7 +307,7 @@
     },
     "title": "グループ名",
     "titlePlaceholder": "例: ホン様 — 返品対応",
-    "needTwo": "グループを作るにはセッションを2件以上選択してください。",
+    "needTwo": "セッションを1つ以上選択してください。",
     "pickGroup": "グループ",
     "pickGroupPlaceholder": "グループを選択…",
     "selectedMembers": "選択中のセッション（{{count}}）",
@@ -327,7 +327,7 @@
     "recipientPlaceholder": "送信先を1名選択…",
     "pickRecipientFirst": "メッセージを送るには送信先を選択してください",
     "removeMember": "メンバーを削除",
-    "minMembersHint": "グループには2名以上のメンバーが必要です — 代わりに解除してください。",
+    "minMembersHint": "グループには1つ以上のセッションが必要です — 代わりにグループを解除してください。",
     "dissolve": "グループ解除",
     "confirmDissolve": "解除しますか？",
     "dissolveHint": "解除してもグループが消えるだけで、会話とメッセージは残ります。",
@@ -385,5 +385,14 @@
   "revealCustomer": "全体を表示",
   "revealAudited": "顧客情報を表示しました。この閲覧は監査ログに記録されます。",
   "revealFailed": "顧客情報を表示できませんでした。",
-  "revealedNotice": "全体を表示しています。この閲覧は記録されました。"
+  "revealedNotice": "全体を表示しています。この閲覧は記録されました。",
+  "related": {
+    "title": "同じ顧客の別セッション {{count}}件",
+    "byCustomer": "同じ顧客アカウント",
+    "byEmail": "別の顧客レコードの同じメール",
+    "more": "他 {{count}}件",
+    "addTo": "「{{title}}」に追加",
+    "group": "タイムラインにまとめる",
+    "dismiss": "この会話では非表示"
+  }
 }

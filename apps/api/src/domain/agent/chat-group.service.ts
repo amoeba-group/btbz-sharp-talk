@@ -22,10 +22,37 @@ const OPEN_STATUSES = [
 /** Channels that cannot receive an outbound reply (mirrors the console rule). */
 const RECEIVE_ONLY_CHANNELS = new Set(['sms']);
 
-/** A group below this many sessions is meaningless — dissolve instead. */
-const MIN_MEMBERS = 2;
+/**
+ * A group needs at least one session. It was two while a group was only a
+ * merged view (one session needs no merging); since a group also carries the
+ * customer's journey (PLN-261006 D2), a first-time customer with a single
+ * session is a legitimate timeline.
+ */
+const MIN_MEMBERS = 1;
+
+/** How many sibling sessions the same-person suggestion lists at most. */
+const RELATED_LIMIT = 20;
 
 const MESSAGE_PAGE_SIZE = 30;
+
+export interface GroupRef {
+  id: number;
+  title: string;
+  kind: GroupKind;
+}
+
+/** Another session of the same customer (PLN-261006 P1). */
+export interface RelatedSessionView {
+  sessionId: number;
+  /** Its newest conversation — what a click opens. */
+  conversationId: number;
+  channel: string;
+  alias: string | null;
+  lastAt: Date;
+  /** Which confirmed identity matched: the same customer row, or the same email on another row. */
+  matchedBy: 'customer' | 'email';
+  groups: GroupRef[];
+}
 
 export interface GroupMemberView {
   sessionId: number;
@@ -340,6 +367,94 @@ export class ChatGroupService {
       throw new BusinessException(ERROR_CODE.GROUP_MIN_MEMBERS, HttpStatus.CONFLICT);
     }
     await this.memberRepo.delete({ id: Number(member.id) });
+  }
+
+  /** Groups each session belongs to, keyed by session id. */
+  private async groupsOfSessions(tenantId: number, sessionIds: number[]): Promise<Map<number, GroupRef[]>> {
+    const out = new Map<number, GroupRef[]>();
+    if (!sessionIds.length) return out;
+    const members = await this.memberRepo.find({ where: { tenantId, sessionId: In(sessionIds) } });
+    if (!members.length) return out;
+    const groups = await this.groupRepo.find({
+      where: { tenantId, id: In([...new Set(members.map((m) => Number(m.groupId)))]) },
+    });
+    const byId = new Map(groups.map((g) => [Number(g.id), g]));
+    for (const m of members) {
+      const g = byId.get(Number(m.groupId));
+      if (!g) continue;
+      const list = out.get(Number(m.sessionId)) ?? [];
+      list.push({ id: Number(g.id), title: g.title, kind: g.kind as GroupKind });
+      out.set(Number(m.sessionId), list);
+    }
+    return out;
+  }
+
+  /**
+   * Same-person suggestion (PLN-261006 P1, D4): other sessions of the customer
+   * this conversation is linked to — by the same customer row, or by another
+   * customer row with the same email (blind index). Confirmed identities only;
+   * a guest session has no suggestion. Sessions that already share a group
+   * with this one are left out — they are grouped already. Nothing is merged
+   * here: the operator decides, and only session metadata leaves this method
+   * (no message bodies of the other sessions before they are grouped).
+   */
+  async relatedSessions(
+    conversationId: number,
+    tenantId: number,
+  ): Promise<{ sessionId: number; currentGroups: GroupRef[]; sessions: RelatedSessionView[] }> {
+    const conv = await this.convRepo.findOne({ where: { id: conversationId, tenantId } });
+    if (!conv) throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
+    const sessionId = Number(conv.sessionId);
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId, tenantId } });
+    const currentGroups = (await this.groupsOfSessions(tenantId, [sessionId])).get(sessionId) ?? [];
+    if (session?.customerId == null) return { sessionId, currentGroups, sessions: [] };
+
+    const ownId = Number(session.customerId);
+    const own = await this.customerRepo.findOne({ where: { id: ownId, tenantId } });
+    const sameEmail = own?.emailHash
+      ? await this.customerRepo.find({ where: { tenantId, emailHash: own.emailHash } })
+      : [];
+    const customerIds = [...new Set([ownId, ...sameEmail.map((c) => Number(c.id))])];
+
+    const siblings = (
+      await this.sessionRepo.find({
+        where: { tenantId, customerId: In(customerIds) },
+        order: { id: 'DESC' },
+        take: RELATED_LIMIT * 3,
+      })
+    ).filter((s) => Number(s.id) !== sessionId);
+    if (!siblings.length) return { sessionId, currentGroups, sessions: [] };
+
+    const siblingIds = siblings.map((s) => Number(s.id));
+    const groupsBySession = await this.groupsOfSessions(tenantId, siblingIds);
+    const shared = new Set(currentGroups.map((g) => g.id));
+    const convs = await this.convRepo.find({
+      where: { tenantId, sessionId: In(siblingIds) },
+      order: { id: 'DESC' },
+    });
+    const latest = new Map<number, Conversation>();
+    for (const c of convs) if (!latest.has(Number(c.sessionId))) latest.set(Number(c.sessionId), c);
+
+    const sessions: RelatedSessionView[] = [];
+    for (const s of siblings) {
+      const sid = Number(s.id);
+      const c = latest.get(sid);
+      // A session nobody ever wrote in has nothing to look at.
+      if (!c) continue;
+      const groups = groupsBySession.get(sid) ?? [];
+      if (groups.some((g) => shared.has(g.id))) continue;
+      sessions.push({
+        sessionId: sid,
+        conversationId: Number(c.id),
+        channel: c.channel || 'widget',
+        alias: s.alias ?? null,
+        lastAt: c.createdAt,
+        matchedBy: Number(s.customerId) === ownId ? 'customer' : 'email',
+        groups,
+      });
+      if (sessions.length >= RELATED_LIMIT) break;
+    }
+    return { sessionId, currentGroups, sessions };
   }
 
   /** Dissolve = delete the group and its memberships. Conversations untouched. */

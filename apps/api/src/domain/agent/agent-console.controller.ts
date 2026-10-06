@@ -61,6 +61,7 @@ import {
   toBriefingResponse,
   toCommentResponse,
   toGroupDetailResponse,
+  toRelatedSessionsResponse,
   toGroupMessageResponse,
   toGroupResponse,
   toMessageResponse,
@@ -118,6 +119,13 @@ export class AgentConsoleController {
       members: body.session_ids.length,
     });
     return toGroupResponse(group, body.session_ids.length);
+  }
+
+  @Get('conversations/:id/related-sessions')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Other sessions of the same confirmed customer (grouping suggestion)' })
+  async relatedSessions(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    return toRelatedSessionsResponse(await this.groupService.relatedSessions(id, tenantOf(user)));
   }
 
   @Get('groups/:id')

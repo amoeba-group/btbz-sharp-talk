@@ -307,7 +307,7 @@
     },
     "title": "Título del grupo",
     "titlePlaceholder": "p. ej. Sra. Hong — caso de devolución",
-    "needTwo": "Elige al menos dos sesiones para crear un grupo.",
+    "needTwo": "Selecciona al menos una sesión.",
     "pickGroup": "Grupo",
     "pickGroupPlaceholder": "Elige un grupo…",
     "selectedMembers": "Sesiones seleccionadas ({{count}})",
@@ -327,7 +327,7 @@
     "recipientPlaceholder": "Elige un destinatario…",
     "pickRecipientFirst": "Elige un destinatario para enviar un mensaje",
     "removeMember": "Quitar miembro",
-    "minMembersHint": "Un grupo necesita al menos dos miembros — disuélvelo en su lugar.",
+    "minMembersHint": "Un grupo necesita al menos una sesión; disuélvelo en su lugar.",
     "dissolve": "Disolver grupo",
     "confirmDissolve": "¿Disolver?",
     "dissolveHint": "Disolver elimina solo el grupo. Las conversaciones y mensajes permanecen.",
@@ -385,5 +385,14 @@
   "revealCustomer": "Ver datos completos",
   "revealAudited": "Datos de contacto mostrados. Esta consulta queda registrada en la auditoría.",
   "revealFailed": "No se pudieron mostrar los datos de contacto.",
-  "revealedNotice": "Se muestran los datos completos. Esta consulta ha quedado registrada."
+  "revealedNotice": "Se muestran los datos completos. Esta consulta ha quedado registrada.",
+  "related": {
+    "title": "Mismo cliente · {{count}} sesión(es) más",
+    "byCustomer": "Misma cuenta de cliente",
+    "byEmail": "Mismo correo en otro registro de cliente",
+    "more": "+{{count}} más",
+    "addTo": "Añadir a «{{title}}»",
+    "group": "Agrupar como línea de tiempo",
+    "dismiss": "Ocultar en esta conversación"
+  }
 }
