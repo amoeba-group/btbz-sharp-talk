@@ -41,7 +41,7 @@
 | 환경 | SQL | 코드 |
 |------|-----|------|
 | staging | ✅ 2026-10-06 `261006-journey-management.sql` 선적용 | ✅ `2e337c3` (FIX #586·P1 #588 포함) |
-| production | ⬜ | ⬜ 승인 대기 — SQL(신규 테이블 3) 선적용 후 `production` ff |
+| production | ✅ 2026-10-06 선적용(백업 `~/backups/sharptalk-production/20261006-1311`) | ✅ `production` ff `3b2523b..f47f0a4` — check-migrations OK, api healthy·부팅 1회·스키마 에러 0, health 200, 신규 라우트 401, 콘솔 번들에 `/journey`·related-sessions 포함 |
 
 ## 5. 후속
 - 회사 엔티티(여러 프로젝트를 한 회사로), 세그먼트, 리포트 5A 가설의 '단계 제안' 표시, 그룹 메모.
