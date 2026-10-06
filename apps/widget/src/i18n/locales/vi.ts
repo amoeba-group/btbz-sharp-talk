@@ -159,7 +159,7 @@ export const vi: Translation = {
     lookupFailed:
       'Chúng tôi không tìm thấy đơn hàng khớp với mã và email đó. Vui lòng kiểm tra lại cả hai và thử lần nữa.',
     lookupThrottled: 'Bạn đã thử quá nhiều lần. Vui lòng đợi vài phút rồi thử lại.',
-    useGuestInstead: 'Tra cứu bằng mã đơn hàng',
+    useGuestInstead: 'Tra cứu bằng mã đơn hàng',
     loginTitle: 'Đăng nhập để tiếp tục',
     loginBody: 'Nội dung đó dành cho đối tác đã đăng nhập. Hãy đăng nhập rồi hỏi lại, hoặc tiếp tục với tư cách khách cho các câu hỏi chung.',
     partnerSignIn: 'Đăng nhập',

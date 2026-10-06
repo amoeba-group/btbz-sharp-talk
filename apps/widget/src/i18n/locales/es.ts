@@ -155,7 +155,7 @@ export const es: Translation = {
     waiting: 'Esperando a que inicies sesión…',
     lookupFailed: "No encontramos un pedido con ese número y correo. Revisa ambos e inténtalo de nuevo.",
     lookupThrottled: 'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
-    useGuestInstead: 'Buscar por número de pedido',
+    useGuestInstead: 'Buscar por número de pedido',
     loginTitle: 'Inicia sesión para continuar',
     loginBody: 'Esa respuesta es para socios con sesión iniciada. Inicia sesión y vuelve a preguntar, o continúa como invitado con preguntas generales.',
     partnerSignIn: 'Iniciar sesión',

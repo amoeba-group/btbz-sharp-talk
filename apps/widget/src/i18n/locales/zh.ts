@@ -156,7 +156,7 @@ export const zh: Translation = {
     waiting: '正在等待您登录…',
     lookupFailed: '未找到与该订单号和邮箱匹配的订单。请核对后重试。',
     lookupThrottled: '尝试次数过多。请等待几分钟后重试。',
-    useGuestInstead: '改用订单号查询',
+    useGuestInstead: '改用订单号查询',
     loginTitle: '登录后继续',
     loginBody: '该回答仅面向已登录的合作伙伴。请登录后再次提问，或以访客身份继续咨询一般问题。',
     partnerSignIn: '登录',

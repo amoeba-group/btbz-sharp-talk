@@ -159,7 +159,7 @@ export const ja: Translation = {
     lookupFailed:
       'その注文番号とメールアドレスに一致するご注文が見つかりませんでした。両方をご確認のうえ、もう一度お試しください。',
     lookupThrottled: '試行回数が多すぎます。数分お待ちいただいてから、もう一度お試しください。',
-    useGuestInstead: '注文番号で照会する',
+    useGuestInstead: '注文番号で照会する',
     loginTitle: '続けるにはログイン',
     loginBody: 'その回答はログイン済みのパートナー向けです。ログインして再度お尋ねいただくか、一般的なご質問はゲストのまま続けてください。',
     partnerSignIn: 'ログイン',

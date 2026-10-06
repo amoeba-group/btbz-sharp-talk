@@ -155,7 +155,7 @@ export const ko: Translation = {
     waiting: '로그인을 기다리는 중…',
     lookupFailed: "입력하신 주문번호와 이메일로 주문을 찾을 수 없습니다. 다시 확인해 주세요.",
     lookupThrottled: '시도 횟수가 많습니다. 몇 분 후 다시 시도해 주세요.',
-    useGuestInstead: '주문 번호로 조회하기',
+    useGuestInstead: '주문 번호로 조회하기',
     loginTitle: '계속하려면 로그인',
     loginBody: '해당 답변은 로그인한 파트너에게만 제공됩니다. 로그인 후 다시 질문하시거나, 일반 문의는 게스트로 계속하세요.',
     partnerSignIn: '로그인',
