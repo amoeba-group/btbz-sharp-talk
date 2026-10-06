@@ -91,6 +91,28 @@ function absTime(value: string | undefined | null): string {
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleString();
 }
 
+interface TranslateMenuAnchor {
+  id: string;
+  style: React.CSSProperties;
+}
+
+/**
+ * Place the translate menu next to its icon, in viewport coordinates.
+ * Opens upward like before when there is room, otherwise downward — a message
+ * at the top of the thread has no room above it (FIX-261006). The height is the
+ * menu's own: a title row plus one row per language.
+ */
+function anchorTranslateMenu(id: string, rect: DOMRect): TranslateMenuAnchor {
+  const GAP = 4;
+  const height = 30 + LANGUAGES.length * 24;
+  const left = Math.max(8, Math.min(rect.left, window.innerWidth - 160 - 8));
+  const style: React.CSSProperties =
+    rect.top - GAP >= height + 8
+      ? { left, bottom: window.innerHeight - rect.top + GAP }
+      : { left, top: Math.min(rect.bottom + GAP, window.innerHeight - height - 8) };
+  return { id, style };
+}
+
 export function LiveChatPage() {
   const { t } = useTranslation('livechat');
   const { t: tc } = useTranslation('common');
@@ -181,7 +203,13 @@ export function LiveChatPage() {
   // Inline message translations (R2): message id → lang → text. Component
   // state on purpose — chat is flowing data, the server caches the LLM side.
   const [translations, setTranslations] = useState<Record<string, Record<string, string>>>({});
-  const [trOpenFor, setTrOpenFor] = useState<string | null>(null);
+  // Translate popover: which message, and where on screen (FIX-261006). It is
+  // `fixed` to the viewport, not `absolute` inside the thread — the thread is a
+  // scroll box, so an upward menu on a message near its top was clipped and only
+  // the last two of the six languages showed.
+  const [trMenu, setTrMenu] = useState<TranslateMenuAnchor | null>(null);
+  const trOpenFor = trMenu?.id ?? null;
+  const setTrOpenFor = (id: null) => setTrMenu(id);
   const translateMsg = useTranslateMessage();
   const setPin = useSetPin();
   const kbInputRef = useRef<HTMLTextAreaElement>(null);
@@ -885,6 +913,8 @@ export function LiveChatPage() {
                 aria-busy={convoLoading}
                 aria-label={t('messageThread')}
                 className="min-h-0 flex-1 space-y-3 overflow-y-auto p-4"
+                // A fixed menu would float away from its message on scroll.
+                onScroll={() => trMenu && setTrMenu(null)}
               >
                 {convoLoading && (
                   <Loader2 className="mx-auto h-5 w-5 animate-spin text-gray-400" />
@@ -977,7 +1007,13 @@ export function LiveChatPage() {
                           <div className="relative flex shrink-0 items-center gap-0.5 self-center opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
                             <button
                               type="button"
-                              onClick={() => setTrOpenFor(trOpenFor === m.id ? null : m.id)}
+                              onClick={(e) =>
+                                setTrMenu(
+                                  trOpenFor === m.id
+                                    ? null
+                                    : anchorTranslateMenu(m.id, e.currentTarget.getBoundingClientRect()),
+                                )
+                              }
                               aria-label={t('msgActions.translate')}
                               title={t('msgActions.translate')}
                               className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
@@ -1027,8 +1063,12 @@ export function LiveChatPage() {
                               <ClipboardPlus className="h-3.5 w-3.5" />
                             </button>
                             {/* One-click language popover (AmoebaTalk mirror). */}
-                            {trOpenFor === m.id && (
-                              <div className="absolute bottom-full left-0 z-10 mb-1 w-40 rounded-lg border border-gray-200 bg-white p-1 shadow-lg">
+                            {trMenu?.id === m.id && (
+                              <div
+                                role="menu"
+                                style={trMenu.style}
+                                className="fixed z-50 w-40 rounded-lg border border-gray-200 bg-white p-1 shadow-lg"
+                              >
                                 <p className="px-2 py-1 text-[10px] font-medium text-gray-400">
                                   {t('msgActions.translateTitle')}
                                 </p>
