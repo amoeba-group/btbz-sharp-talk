@@ -8,6 +8,8 @@ import { Session } from '../session/entity/session.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Message } from '../chat/entity/message.entity';
 import { Customer } from '../customer/entity/customer.entity';
+import { Journey } from '../journey/entity/journey.entity';
+import { JourneyTask } from '../journey/entity/journey-task.entity';
 import { AgentService } from './agent.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
@@ -84,6 +86,8 @@ export class ChatGroupService {
     @InjectRepository(Message) private readonly msgRepo: Repository<Message>,
     @InjectRepository(Customer) private readonly customerRepo: Repository<Customer>,
     private readonly agentService: AgentService,
+    @InjectRepository(Journey) private readonly journeyRepo?: Repository<Journey>,
+    @InjectRepository(JourneyTask) private readonly journeyTaskRepo?: Repository<JourneyTask>,
   ) {}
 
   private async owned(id: number, tenantId: number): Promise<ChatGroup> {
@@ -457,9 +461,18 @@ export class ChatGroupService {
     return { sessionId, currentGroups, sessions };
   }
 
-  /** Dissolve = delete the group and its memberships. Conversations untouched. */
+  /**
+   * Dissolve = delete the group, its memberships and its journey (stage, owner,
+   * next actions — PLN-261006). Conversations untouched; reports stay, as they
+   * always did, and stage history stays in audit_logs.
+   */
   async dissolve(id: number, tenantId: number): Promise<void> {
     const group = await this.owned(id, tenantId);
+    const journey = await this.journeyRepo?.findOne({ where: { tenantId, groupId: Number(group.id) } });
+    if (journey) {
+      await this.journeyTaskRepo?.delete({ tenantId, journeyId: Number(journey.id) });
+      await this.journeyRepo?.delete({ id: Number(journey.id), tenantId });
+    }
     await this.memberRepo.delete({ groupId: Number(group.id), tenantId });
     await this.groupRepo.delete({ id: Number(group.id), tenantId });
   }

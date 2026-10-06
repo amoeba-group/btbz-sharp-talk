@@ -43,5 +43,93 @@
       "needs": "⑥ Nhu cầu (giả thuyết)",
       "actions": "⑦ Hành động tiếp theo"
     }
+  },
+  "card": {
+    "title": "Hành trình khách hàng",
+    "stage": "Giai đoạn",
+    "owner": "Phụ trách",
+    "noStage": "Chưa có giai đoạn",
+    "noOwner": "Chưa có người phụ trách",
+    "inStage": "{{stage}} · {{days}} ngày",
+    "history": "Lịch sử",
+    "noHistory": "Chưa có thay đổi giai đoạn.",
+    "stageSaved": "Đã cập nhật giai đoạn.",
+    "ownerSaved": "Đã cập nhật người phụ trách.",
+    "saveError": "Không lưu được hành trình."
+  },
+  "tasks": {
+    "title": "Việc tiếp theo",
+    "empty": "Chưa có việc tiếp theo.",
+    "placeholder": "Thêm việc tiếp theo…",
+    "due": "Hạn",
+    "assignee": "Người thực hiện",
+    "noAssignee": "Chưa giao",
+    "add": "Thêm",
+    "delete": "Xoá",
+    "overdue": "quá hạn",
+    "fromReport": "từ báo cáo",
+    "added": "Đã thêm việc.",
+    "deleted": "Đã xoá việc.",
+    "saveError": "Không lưu được việc.",
+    "pickHint": "Chọn một câu trong báo cáo để biến nó thành việc tiếp theo.",
+    "fromSelection": "Thêm thành việc"
+  },
+  "timeline": {
+    "title": "Điểm chạm",
+    "empty": "Chưa có điểm chạm.",
+    "more": "Xem thêm",
+    "conversation_started": "Bắt đầu hội thoại ({{channel}})",
+    "conversation_ended": "Kết thúc hội thoại",
+    "csat": "Đánh giá {{n}}/5",
+    "event": {
+      "session_start": "Truy cập (mở widget)",
+      "product_view": "Xem sản phẩm",
+      "order_created": "Đặt hàng",
+      "shipment_update": "Cập nhật vận chuyển",
+      "review_submitted": "Viết đánh giá",
+      "nudge_sent": "Đã gửi nhắc",
+      "save_added": "Lưu sản phẩm",
+      "wish_added": "Thêm vào yêu thích"
+    },
+    "stage": {
+      "Awareness": "Nhận biết",
+      "Browse": "Tìm hiểu",
+      "Inquiry": "Hỏi",
+      "Purchase": "Mua",
+      "Delivery": "Giao hàng",
+      "Post": "Sau mua"
+    }
+  },
+  "board": {
+    "title": "Bảng hành trình khách hàng",
+    "subtitle": "Mọi dòng thời gian (một người) và dự án (một công ty khách hàng) theo giai đoạn. Kéo thẻ để đổi giai đoạn; bấm để mở nhóm.",
+    "kind": "Loại",
+    "allKinds": "Tất cả loại",
+    "kindTimeline": "Dòng thời gian",
+    "kindProject": "Dự án",
+    "allOwners": "Tất cả người phụ trách",
+    "overdueOnly": "Chỉ quá hạn",
+    "empty": "Chưa có nhóm — hãy gộp phiên trong Trò chuyện trực tiếp để bắt đầu.",
+    "days": "{{n}} ngày",
+    "members": "{{n}} phiên",
+    "openTasks": "{{n}} việc",
+    "overdueTasks": "{{n}} quá hạn / {{open}}",
+    "kind_timeline": "Dòng thời gian",
+    "kind_project": "Dự án"
+  },
+  "stages": {
+    "title": "Giai đoạn hành trình",
+    "desc": "Các cột của bảng hành trình. Bắt đầu từ mô hình 5A của Kotler và điều chỉnh theo ngành của bạn. Tên được sửa theo ngôn ngữ hiện tại của bảng điều khiển.",
+    "color": "Màu",
+    "name": "Tên giai đoạn",
+    "key": "Khoá",
+    "keyHint": "Chữ thường, số, - hoặc _. Không đổi sau khi lưu.",
+    "up": "Lên",
+    "down": "Xuống",
+    "remove": "Xoá",
+    "add": "Thêm giai đoạn",
+    "inUseHint": "Không thể xoá giai đoạn còn hành trình — hãy chuyển các thẻ trước.",
+    "saved": "Đã lưu giai đoạn.",
+    "saveError": "Không lưu được giai đoạn."
   }
 }

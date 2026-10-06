@@ -43,5 +43,93 @@
       "needs": "⑥ 欲求段階（仮説）",
       "actions": "⑦ 次の行動"
     }
+  },
+  "card": {
+    "title": "カスタマージャーニー",
+    "stage": "段階",
+    "owner": "担当",
+    "noStage": "段階未設定",
+    "noOwner": "担当なし",
+    "inStage": "{{stage}} {{days}}日目",
+    "history": "履歴",
+    "noHistory": "段階の変更はまだありません。",
+    "stageSaved": "段階を変更しました。",
+    "ownerSaved": "担当を変更しました。",
+    "saveError": "ジャーニーを保存できませんでした。"
+  },
+  "tasks": {
+    "title": "次のアクション",
+    "empty": "次のアクションはありません。",
+    "placeholder": "次のアクションを追加…",
+    "due": "期限",
+    "assignee": "担当",
+    "noAssignee": "未割当",
+    "add": "追加",
+    "delete": "削除",
+    "overdue": "期限切れ",
+    "fromReport": "レポートから",
+    "added": "次のアクションを追加しました。",
+    "deleted": "次のアクションを削除しました。",
+    "saveError": "次のアクションを保存できませんでした。",
+    "pickHint": "レポートの文を選択すると次のアクションにできます。",
+    "fromSelection": "アクションとして追加"
+  },
+  "timeline": {
+    "title": "タッチポイント",
+    "empty": "タッチポイントはまだありません。",
+    "more": "さらに表示",
+    "conversation_started": "会話開始（{{channel}}）",
+    "conversation_ended": "会話終了",
+    "csat": "評価 {{n}}/5",
+    "event": {
+      "session_start": "訪問（ウィジェット表示）",
+      "product_view": "商品を閲覧",
+      "order_created": "注文",
+      "shipment_update": "配送更新",
+      "review_submitted": "レビュー投稿",
+      "nudge_sent": "案内送信",
+      "save_added": "商品を保存",
+      "wish_added": "お気に入り追加"
+    },
+    "stage": {
+      "Awareness": "認知",
+      "Browse": "探索",
+      "Inquiry": "問い合わせ",
+      "Purchase": "購入",
+      "Delivery": "配送",
+      "Post": "購入後"
+    }
+  },
+  "board": {
+    "title": "カスタマージャーニーボード",
+    "subtitle": "タイムライン（個人）とプロジェクト（取引先企業）を段階別に表示します。カードをドラッグして段階を変更し、クリックでグループを開きます。",
+    "kind": "種類",
+    "allKinds": "すべての種類",
+    "kindTimeline": "タイムライン",
+    "kindProject": "プロジェクト",
+    "allOwners": "すべての担当",
+    "overdueOnly": "期限切れのみ",
+    "empty": "グループはまだありません — ライブチャットでセッションをまとめると開始できます。",
+    "days": "{{n}}日目",
+    "members": "セッション {{n}}",
+    "openTasks": "アクション {{n}}",
+    "overdueTasks": "期限切れ {{n}} / {{open}}",
+    "kind_timeline": "タイムライン",
+    "kind_project": "プロジェクト"
+  },
+  "stages": {
+    "title": "ジャーニーの段階",
+    "desc": "ジャーニーボードの列です。コトラーの5Aから始め、業種に合わせて変更してください。名前は現在のコンソール言語で編集されます。",
+    "color": "色",
+    "name": "段階名",
+    "key": "キー",
+    "keyHint": "英小文字・数字・- _ のみ。保存後は変更できません。",
+    "up": "上へ",
+    "down": "下へ",
+    "remove": "削除",
+    "add": "段階を追加",
+    "inUseHint": "ジャーニーが残っている段階は削除できません — 先にカードを移動してください。",
+    "saved": "段階を保存しました。",
+    "saveError": "段階を保存できませんでした。"
   }
 }

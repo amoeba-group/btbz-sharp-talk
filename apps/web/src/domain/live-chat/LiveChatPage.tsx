@@ -53,6 +53,7 @@ import { useUsers } from '@/domain/users/users.hooks';
 import { makeCan } from '@/lib/rbac';
 import { BriefingCard } from './BriefingCard';
 import { JourneyPanel } from '../journey/JourneyPanel';
+import { JourneyCard } from '../journey/JourneyCard';
 import { CommentCard } from './CommentCard';
 import { GroupCreateModal } from './GroupCreateModal';
 import { RelatedSessionsBanner } from './RelatedSessionsBanner';
@@ -229,6 +230,15 @@ export function LiveChatPage() {
   useEffect(() => {
     if (deepLink) setSelected(deepLink);
   }, [deepLink]);
+  // Deep link from the journey board (PLN-261006 P3): /live-chat?group={id}
+  // opens that group's room with the groups list showing.
+  const groupLink = searchParams.get('group');
+  useEffect(() => {
+    if (!groupLink) return;
+    setScope('groups');
+    setSelectedGroup(groupLink);
+    setSelected(null);
+  }, [groupLink]);
   const { data: sessions, isLoading: sessionsLoading } = useSessions(
     listSearch,
     scope === 'groups' ? 'all' : scope,
@@ -1303,7 +1313,11 @@ export function LiveChatPage() {
               like". So the briefing gives way to the journey report here, and
               only here (PLN-260825). */}
           {selectedGroup ? (
-            <JourneyPanel groupId={selectedGroup} />
+            <>
+              {/* Journey management above the analysis (PLN-261006 P2). */}
+              <JourneyCard groupId={selectedGroup} />
+              <JourneyPanel groupId={selectedGroup} />
+            </>
           ) : (
             /* On-demand briefing + translation (REQ-260824 R3). */
             <BriefingCard conversationId={selected} />

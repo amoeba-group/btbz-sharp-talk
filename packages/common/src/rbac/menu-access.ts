@@ -40,6 +40,7 @@ export const DEFAULT_ROLE_MENUS: Record<UserRank, readonly MenuCode[]> = {
     MENU.LIVE_CHAT,
     MENU.ISSUES,
     MENU.HISTORY,
+    MENU.JOURNEY,
     MENU.KNOWLEDGE,
     MENU.PRODUCTS,
     MENU.CUSTOMERS,

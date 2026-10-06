@@ -43,5 +43,93 @@
       "needs": "⑥ 욕구 단계(가설)",
       "actions": "⑦ 다음 행동"
     }
+  },
+  "card": {
+    "title": "고객여정",
+    "stage": "단계",
+    "owner": "담당",
+    "noStage": "단계 미지정",
+    "noOwner": "담당 없음",
+    "inStage": "{{stage}} {{days}}일째",
+    "history": "이력",
+    "noHistory": "아직 단계 변경이 없습니다.",
+    "stageSaved": "단계를 바꿨습니다.",
+    "ownerSaved": "담당자를 바꿨습니다.",
+    "saveError": "여정을 저장하지 못했습니다."
+  },
+  "tasks": {
+    "title": "다음 행동",
+    "empty": "다음 행동이 없습니다.",
+    "placeholder": "다음 행동 추가…",
+    "due": "기한",
+    "assignee": "담당",
+    "noAssignee": "담당 없음",
+    "add": "추가",
+    "delete": "삭제",
+    "overdue": "기한 지남",
+    "fromReport": "리포트에서",
+    "added": "다음 행동을 추가했습니다.",
+    "deleted": "다음 행동을 삭제했습니다.",
+    "saveError": "다음 행동을 저장하지 못했습니다.",
+    "pickHint": "리포트에서 문장을 선택하면 다음 행동으로 옮길 수 있습니다.",
+    "fromSelection": "할 일로 추가"
+  },
+  "timeline": {
+    "title": "터치포인트",
+    "empty": "기록된 터치포인트가 없습니다.",
+    "more": "더 보기",
+    "conversation_started": "대화 시작 ({{channel}})",
+    "conversation_ended": "대화 종료",
+    "csat": "만족도 {{n}}/5",
+    "event": {
+      "session_start": "방문 (위젯 열림)",
+      "product_view": "상품 조회",
+      "order_created": "주문",
+      "shipment_update": "배송 갱신",
+      "review_submitted": "리뷰 작성",
+      "nudge_sent": "안내 발송",
+      "save_added": "상품 저장",
+      "wish_added": "찜 추가"
+    },
+    "stage": {
+      "Awareness": "인지",
+      "Browse": "탐색",
+      "Inquiry": "문의",
+      "Purchase": "구매",
+      "Delivery": "배송",
+      "Post": "구매 후"
+    }
+  },
+  "board": {
+    "title": "고객여정 보드",
+    "subtitle": "타임라인(사람)과 프로젝트(고객사)를 단계별로 봅니다. 카드를 끌어 단계를 바꾸고, 누르면 그룹이 열립니다.",
+    "kind": "유형",
+    "allKinds": "전체 유형",
+    "kindTimeline": "타임라인",
+    "kindProject": "프로젝트",
+    "allOwners": "전체 담당",
+    "overdueOnly": "기한 지난 것만",
+    "empty": "아직 그룹이 없습니다 — 라이브챗에서 세션을 묶으면 여정 관리를 시작할 수 있습니다.",
+    "days": "{{n}}일째",
+    "members": "세션 {{n}}",
+    "openTasks": "할 일 {{n}}",
+    "overdueTasks": "기한 지남 {{n}} / {{open}}",
+    "kind_timeline": "타임라인",
+    "kind_project": "프로젝트"
+  },
+  "stages": {
+    "title": "고객여정 단계",
+    "desc": "고객여정 보드의 열입니다. 코틀러 5A에서 시작해 업종에 맞게 바꾸세요. 이름은 현재 콘솔 언어로 편집됩니다.",
+    "color": "색",
+    "name": "단계 이름",
+    "key": "키",
+    "keyHint": "영문 소문자·숫자·- _ 만. 저장 후 바꿀 수 없습니다.",
+    "up": "위로",
+    "down": "아래로",
+    "remove": "삭제",
+    "add": "단계 추가",
+    "inUseHint": "여정이 남아 있는 단계는 삭제할 수 없습니다 — 카드를 먼저 옮기세요.",
+    "saved": "고객여정 단계를 저장했습니다.",
+    "saveError": "단계를 저장하지 못했습니다."
   }
 }

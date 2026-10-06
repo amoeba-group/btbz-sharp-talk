@@ -43,5 +43,93 @@
       "needs": "⑥ Necesidades (hipótesis)",
       "actions": "⑦ Próximas acciones"
     }
+  },
+  "card": {
+    "title": "Recorrido del cliente",
+    "stage": "Etapa",
+    "owner": "Responsable",
+    "noStage": "Sin etapa",
+    "noOwner": "Sin responsable",
+    "inStage": "{{days}} día(s) en {{stage}}",
+    "history": "Historial",
+    "noHistory": "Aún no hay cambios de etapa.",
+    "stageSaved": "Etapa actualizada.",
+    "ownerSaved": "Responsable actualizado.",
+    "saveError": "No se pudo guardar el recorrido."
+  },
+  "tasks": {
+    "title": "Próximas acciones",
+    "empty": "Aún no hay próximas acciones.",
+    "placeholder": "Añadir una próxima acción…",
+    "due": "Fecha límite",
+    "assignee": "Asignado",
+    "noAssignee": "Sin asignar",
+    "add": "Añadir",
+    "delete": "Eliminar",
+    "overdue": "vencida",
+    "fromReport": "del informe",
+    "added": "Acción añadida.",
+    "deleted": "Acción eliminada.",
+    "saveError": "No se pudo guardar la acción.",
+    "pickHint": "Selecciona una frase del informe para convertirla en una próxima acción.",
+    "fromSelection": "Añadir como acción"
+  },
+  "timeline": {
+    "title": "Puntos de contacto",
+    "empty": "Aún no hay puntos de contacto.",
+    "more": "Cargar más",
+    "conversation_started": "Conversación iniciada ({{channel}})",
+    "conversation_ended": "Conversación finalizada",
+    "csat": "Valoración {{n}}/5",
+    "event": {
+      "session_start": "Visita (widget abierto)",
+      "product_view": "Vio un producto",
+      "order_created": "Hizo un pedido",
+      "shipment_update": "Actualización de envío",
+      "review_submitted": "Escribió una reseña",
+      "nudge_sent": "Aviso enviado",
+      "save_added": "Guardó un artículo",
+      "wish_added": "Añadió a deseos"
+    },
+    "stage": {
+      "Awareness": "Conocimiento",
+      "Browse": "Exploración",
+      "Inquiry": "Consulta",
+      "Purchase": "Compra",
+      "Delivery": "Entrega",
+      "Post": "Poscompra"
+    }
+  },
+  "board": {
+    "title": "Tablero del recorrido del cliente",
+    "subtitle": "Cada línea de tiempo (una persona) y proyecto (una empresa cliente) por etapa. Arrastra una tarjeta para cambiar su etapa; haz clic para abrir el grupo.",
+    "kind": "Tipo",
+    "allKinds": "Todos los tipos",
+    "kindTimeline": "Líneas de tiempo",
+    "kindProject": "Proyectos",
+    "allOwners": "Todos los responsables",
+    "overdueOnly": "Solo vencidas",
+    "empty": "Aún no hay grupos: agrupa sesiones en el chat en vivo para empezar.",
+    "days": "{{n}} d en etapa",
+    "members": "{{n}} sesión(es)",
+    "openTasks": "{{n}} acción(es) abierta(s)",
+    "overdueTasks": "{{n}} vencida(s) de {{open}}",
+    "kind_timeline": "Línea de tiempo",
+    "kind_project": "Proyecto"
+  },
+  "stages": {
+    "title": "Etapas del recorrido",
+    "desc": "Las columnas del tablero. Parte de las 5A de Kotler y adáptalas a tu negocio. Los nombres se editan en el idioma actual de la consola.",
+    "color": "Color",
+    "name": "Nombre de la etapa",
+    "key": "Clave",
+    "keyHint": "Minúsculas, dígitos, - o _. Fija una vez guardada.",
+    "up": "Subir",
+    "down": "Bajar",
+    "remove": "Eliminar",
+    "add": "Añadir etapa",
+    "inUseHint": "No se puede eliminar una etapa con recorridos; mueve antes esas tarjetas.",
+    "saved": "Etapas guardadas.",
+    "saveError": "No se pudieron guardar las etapas."
   }
 }

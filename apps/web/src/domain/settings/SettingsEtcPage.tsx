@@ -4,6 +4,7 @@ import { MenuAccessSection } from './MenuAccessSection';
 import { IntegrationCredentialsCard } from './IntegrationCredentialsCard';
 import { SettingsSnapshotsCard } from './SettingsSnapshotsCard';
 import { JourneyCriteriaCard } from '../journey/JourneyCriteriaCard';
+import { JourneyStagesCard } from '../journey/JourneyStagesCard';
 import { useAuthStore } from '@/store/auth-store';
 
 /** Tenant settings — etc (PLN-260824 B). Composition only; every card moved here unchanged. */
@@ -23,6 +24,8 @@ export function SettingsEtcPage() {
       {/* How journey reports are written. Master-only for the same reason menu
           access is: the API gates it on TENANT_SETTINGS_MANAGE. */}
       {isMaster && <JourneyCriteriaCard />}
+      {/* Journey board columns (PLN-261006 P3) — same API gate as the criteria. */}
+      {isMaster && <JourneyStagesCard />}
       <IntegrationCredentialsCard />
       {/* Settings backup/restore in the tenant's own folder (PLN-260910 P4). Master/director gate is on the API. */}
       <SettingsSnapshotsCard />

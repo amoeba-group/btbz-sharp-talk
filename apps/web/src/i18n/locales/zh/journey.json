@@ -43,5 +43,93 @@
       "needs": "⑥ 需求层次（假设）",
       "actions": "⑦ 下一步行动"
     }
+  },
+  "card": {
+    "title": "客户旅程",
+    "stage": "阶段",
+    "owner": "负责人",
+    "noStage": "未设阶段",
+    "noOwner": "无负责人",
+    "inStage": "{{stage}} 第 {{days}} 天",
+    "history": "历史",
+    "noHistory": "尚无阶段变更。",
+    "stageSaved": "已更新阶段。",
+    "ownerSaved": "已更新负责人。",
+    "saveError": "无法保存旅程。"
+  },
+  "tasks": {
+    "title": "下一步行动",
+    "empty": "暂无下一步行动。",
+    "placeholder": "添加下一步行动…",
+    "due": "截止日期",
+    "assignee": "执行人",
+    "noAssignee": "未分配",
+    "add": "添加",
+    "delete": "删除",
+    "overdue": "已逾期",
+    "fromReport": "来自报告",
+    "added": "已添加下一步行动。",
+    "deleted": "已删除下一步行动。",
+    "saveError": "无法保存下一步行动。",
+    "pickHint": "在报告中选中一句话即可将其设为下一步行动。",
+    "fromSelection": "添加为行动"
+  },
+  "timeline": {
+    "title": "触点",
+    "empty": "暂无触点记录。",
+    "more": "加载更多",
+    "conversation_started": "开始对话（{{channel}}）",
+    "conversation_ended": "对话结束",
+    "csat": "评分 {{n}}/5",
+    "event": {
+      "session_start": "访问（打开挂件）",
+      "product_view": "浏览商品",
+      "order_created": "下单",
+      "shipment_update": "物流更新",
+      "review_submitted": "发表评价",
+      "nudge_sent": "已发送提醒",
+      "save_added": "收藏商品",
+      "wish_added": "加入心愿单"
+    },
+    "stage": {
+      "Awareness": "认知",
+      "Browse": "浏览",
+      "Inquiry": "咨询",
+      "Purchase": "购买",
+      "Delivery": "配送",
+      "Post": "购后"
+    }
+  },
+  "board": {
+    "title": "客户旅程看板",
+    "subtitle": "按阶段查看所有时间线（个人）和项目（客户公司）。拖动卡片可更改阶段，点击可打开群组。",
+    "kind": "类型",
+    "allKinds": "全部类型",
+    "kindTimeline": "时间线",
+    "kindProject": "项目",
+    "allOwners": "全部负责人",
+    "overdueOnly": "仅逾期",
+    "empty": "暂无群组——在在线聊天中归组会话即可开始。",
+    "days": "第 {{n}} 天",
+    "members": "{{n}} 个会话",
+    "openTasks": "{{n}} 项行动",
+    "overdueTasks": "逾期 {{n}} / {{open}}",
+    "kind_timeline": "时间线",
+    "kind_project": "项目"
+  },
+  "stages": {
+    "title": "旅程阶段",
+    "desc": "旅程看板的列。从科特勒 5A 开始，按行业调整。名称以当前控制台语言编辑。",
+    "color": "颜色",
+    "name": "阶段名称",
+    "key": "键",
+    "keyHint": "仅限小写字母、数字、- 或 _。保存后不可更改。",
+    "up": "上移",
+    "down": "下移",
+    "remove": "删除",
+    "add": "添加阶段",
+    "inUseHint": "仍有旅程的阶段无法删除——请先移动这些卡片。",
+    "saved": "已保存旅程阶段。",
+    "saveError": "无法保存阶段。"
   }
 }

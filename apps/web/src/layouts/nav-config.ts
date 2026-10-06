@@ -3,6 +3,7 @@ import {
   MessagesSquare,
   SquareKanban,
   History,
+  Route,
   ClipboardList,
   BarChart3,
   Bot,
@@ -47,6 +48,8 @@ export const TENANT_NAV: NavItem[] = [
   // Issue board (P4) — same holders as live chat; non-native tenants get a notice.
   { to: '/issues', labelKey: 'issueBoard', icon: SquareKanban, code: 'issues', capability: 'live_chat' },
   { to: '/history', labelKey: 'history', icon: History, code: 'history', capability: 'history' },
+  // Customer journey board (PLN-261006 P3) — same holders as live chat.
+  { to: '/journey', labelKey: 'journey', icon: Route, code: 'journey', capability: 'live_chat' },
   // Audit-backed agent activity — same holders as TENANT_AUDIT_READ.
   { to: '/work-log', labelKey: 'workLog', icon: ClipboardList, code: 'work_log', capability: 'work_log' },
   { to: '/statistics', labelKey: 'statistics', icon: BarChart3, code: 'statistics', capability: 'statistics' },
