@@ -1,3 +1,5 @@
+import type { IdentityClaims } from '@sharptalk/types';
+
 /** Response DTO — camelCase. */
 export interface CustomerResponse {
   id: number;
@@ -15,6 +17,8 @@ export interface CustomerResponse {
   orders: number;
   totalSpent: number;
   currency: string | null;
+  /** Last signed partner context (REQ-261006 H5); null when never identified via v2. */
+  lastClaims?: IdentityClaims | null;
   createdAt: Date;
   updatedAt: Date;
 }

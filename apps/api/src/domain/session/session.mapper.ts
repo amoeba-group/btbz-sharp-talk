@@ -26,6 +26,8 @@ export class SessionMapper {
       noticeOutdated: s.consentVersion != null && s.consentVersion !== notice.consentNoticeVersion,
       consentAt: s.consentAt ? new Date(s.consentAt).toISOString() : null,
       widgetLoginMode: notice.widgetLoginMode,
+      guestPolicy: (notice.guestPolicy as 'open' | 'login_guidance' | undefined) ?? 'open',
+      guestGuidance: notice.guestGuidance ?? null,
       widgetTabs: notice.widgetTabs,
       widgetTabPosition: notice.widgetTabPosition,
       commerceEnabled: notice.commerceEnabled ?? true,

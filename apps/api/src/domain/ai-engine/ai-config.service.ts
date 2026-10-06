@@ -1,8 +1,14 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import type { LocalizedText, ScenarioConfigResponse } from '@sharptalk/types';
-import { SESSION_LANGUAGE_CODES, languageBySession } from '@sharptalk/types';
+import type { GuestGuidance, LocalizedText, ScenarioConfigResponse } from '@sharptalk/types';
+import {
+  GUEST_POLICY,
+  SCENARIO_AUDIENCE,
+  SESSION_IDENTITY,
+  SESSION_LANGUAGE_CODES,
+  languageBySession,
+} from '@sharptalk/types';
 import {
   HandoffConfig,
   ScenarioButton,
@@ -177,6 +183,8 @@ export interface AiConfigResponse {
   scenarioButtons: ScenarioButton[];
   scenarioOverrides: Record<string, ScenarioOverride>;
   handoffConfig: HandoffConfig | null;
+  /** Sign-in guidance for gated guests (PLN-261001 v1.1); null = built-in wording, no links. */
+  guestGuidance: GuestGuidance | null;
 }
 
 export interface AiConfigInput {
@@ -185,7 +193,20 @@ export interface AiConfigInput {
   scenarioButtons?: ScenarioButton[];
   scenarioOverrides?: Record<string, ScenarioOverride>;
   handoffConfig?: HandoffConfig | null;
+  guestGuidance?: Record<string, unknown> | null;
 }
+
+/** Persona payload cached per (tenant, agent) — read on every RAG turn. */
+export interface PersonaRules {
+  persona: string;
+  rules: string[];
+  /** The answering agent's guest policy (PLN-261001 v1.1); `open` when unset. */
+  guestPolicy: string;
+}
+
+const HTTPS_URL = /^https:\/\/[^\s]+$/i;
+const GUIDANCE_URL_MAX = 512;
+const GUIDANCE_NOTICE_MAX = 500;
 
 /** Tenant AI behavior config (FR-047 / FN-040): persona, response rules, scenario buttons. */
 @Injectable()
@@ -214,6 +235,7 @@ export class AiConfigService {
       scenarioButtons: row?.scenarioButtons ?? DEFAULT_SCENARIO_BUTTONS,
       scenarioOverrides: row?.scenarioOverrides ?? {},
       handoffConfig: row?.handoffConfig ?? null,
+      guestGuidance: row?.guestGuidance ?? null,
     };
   }
 
@@ -222,6 +244,13 @@ export class AiConfigService {
     if (tenantId == null) return null;
     const row = await this.configRepo.findOne({ where: { tenantId } });
     return row?.handoffConfig ?? null;
+  }
+
+  /** Sign-in guidance for gated guests (PLN-261001 v1.1), or null when never configured. */
+  async getGuestGuidance(tenantId: number | null): Promise<GuestGuidance | null> {
+    if (tenantId == null) return null;
+    const row = await this.configRepo.findOne({ where: { tenantId } });
+    return row?.guestGuidance ?? null;
   }
 
   /**
@@ -312,6 +341,9 @@ export class AiConfigService {
       row.scenarioOverrides = this.sanitizeOverrides(input.scenarioOverrides);
     }
     if (input.handoffConfig !== undefined) row.handoffConfig = input.handoffConfig;
+    if (input.guestGuidance !== undefined) {
+      row.guestGuidance = this.sanitizeGuestGuidance(input.guestGuidance);
+    }
     await this.configRepo.save(row);
 
     await this.redis.del(personaCacheKey(tenantId, aiAgentId ?? null));
@@ -335,15 +367,25 @@ export class AiConfigService {
     return after;
   }
 
-  /** RAG (FN-016/017) — persona + rules to inject into the system prompt. */
-  async getPersonaRules(
-    tenantId: number,
-    aiAgentId?: number | null,
-  ): Promise<{ persona: string; rules: string[] }> {
+  /**
+   * RAG (FN-016/017) — persona + rules to inject into the system prompt, plus
+   * the agent's guest policy (PLN-261001 v1.1) so the chat gate costs no extra
+   * read: it rides in the same cached payload the persona already travels in.
+   */
+  async getPersonaRules(tenantId: number, aiAgentId?: number | null): Promise<PersonaRules> {
     const key = personaCacheKey(tenantId, aiAgentId ?? null);
     if (this.redis.available()) {
       const hit = await this.redis.get(key);
-      if (hit) return JSON.parse(hit) as { persona: string; rules: string[] };
+      if (hit) {
+        const parsed = JSON.parse(hit) as Partial<PersonaRules>;
+        // A payload cached before the field existed reads as `open` — the
+        // pre-v1.1 behaviour — until the 60s TTL rolls it over.
+        return {
+          persona: parsed.persona ?? DEFAULT_PERSONA,
+          rules: parsed.rules ?? DEFAULT_RULES,
+          guestPolicy: parsed.guestPolicy ?? GUEST_POLICY.OPEN,
+        };
+      }
     }
     // Runtime path: a deactivated agent stops answering — pinned sessions
     // degrade to the tenant default rather than keeping a retired persona alive.
@@ -386,23 +428,62 @@ export class AiConfigService {
     aiAgentId: number | null,
     legacyRow?: TenantAiConfig | null,
     opts: { requireActive?: boolean } = {},
-  ): Promise<{ persona: string; rules: string[] }> {
+  ): Promise<PersonaRules> {
+    const fromAgent = (row: AiAgent): PersonaRules => ({
+      persona: row.persona ?? DEFAULT_PERSONA,
+      rules: row.rules ?? DEFAULT_RULES,
+      guestPolicy: row.guestPolicy || GUEST_POLICY.OPEN,
+    });
     if (aiAgentId != null) {
       const where = opts.requireActive
         ? { id: aiAgentId, tenantId, active: 1 }
         : { id: aiAgentId, tenantId };
       const row = await this.agentRepo.findOne({ where });
-      if (row) {
-        return { persona: row.persona ?? DEFAULT_PERSONA, rules: row.rules ?? DEFAULT_RULES };
-      }
+      if (row) return fromAgent(row);
     }
     const def = await this.agentRepo.findOne({ where: { tenantId, isDefault: 1 } });
-    if (def) {
-      return { persona: def.persona ?? DEFAULT_PERSONA, rules: def.rules ?? DEFAULT_RULES };
-    }
+    if (def) return fromAgent(def);
     const legacy =
       legacyRow !== undefined ? legacyRow : await this.configRepo.findOne({ where: { tenantId } });
-    return { persona: legacy?.persona ?? DEFAULT_PERSONA, rules: legacy?.rules ?? DEFAULT_RULES };
+    // A tenant with no agent rows has nothing to gate by: `open`.
+    return {
+      persona: legacy?.persona ?? DEFAULT_PERSONA,
+      rules: legacy?.rules ?? DEFAULT_RULES,
+      guestPolicy: GUEST_POLICY.OPEN,
+    };
+  }
+
+  /**
+   * Keep only what the widget can act on: https links (a tenant pasting
+   * `javascript:` or an http login page gets neither), notice text per known
+   * language, a template that must contain `{hotelSn}` to be a deep link at
+   * all. Everything empty → NULL, which is how a tenant resets to the built-in.
+   */
+  private sanitizeGuestGuidance(input: Record<string, unknown> | null): GuestGuidance | null {
+    if (!input) return null;
+    const url = (v: unknown): string | null => {
+      const s = typeof v === 'string' ? v.trim().slice(0, GUIDANCE_URL_MAX) : '';
+      return s && HTTPS_URL.test(s) ? s : null;
+    };
+    const read = (camel: string, snake: string): unknown => input[camel] ?? input[snake];
+    const notice: Partial<Record<string, string>> = {};
+    const rawNotice = read('notice', 'notice');
+    if (rawNotice && typeof rawNotice === 'object') {
+      for (const lang of SESSION_LANGUAGE_CODES) {
+        const v = (rawNotice as Record<string, unknown>)[lang];
+        const text = typeof v === 'string' ? v.trim().slice(0, GUIDANCE_NOTICE_MAX) : '';
+        if (text) notice[lang] = text;
+      }
+    }
+    const template = url(read('hostLinkTemplate', 'host_link_template'));
+    const out: GuestGuidance = {
+      loginUrl: url(read('loginUrl', 'login_url')),
+      signupUrl: url(read('signupUrl', 'signup_url')),
+      ...(Object.keys(notice).length ? { notice } : {}),
+      hostLinkTemplate: template && template.includes('{hotelSn}') ? template : null,
+    };
+    const empty = !out.loginUrl && !out.signupUrl && !out.notice && !out.hostLinkTemplate;
+    return empty ? null : out;
   }
 
 
@@ -428,8 +509,18 @@ export class AiConfigService {
     // widget build — including ones already cached in a shopper's browser —
     // working unchanged with per-language labels.
     const lang = languageBySession(session.language)?.session ?? null;
+    // Audience (PLN-261001 v1.1): a button marked for guests disappears once
+    // the session is identified, and vice versa. Absent = everyone, so a set
+    // saved before the field existed is served exactly as before.
+    const verified = session.identityLevel === SESSION_IDENTITY.VERIFIED;
     const scoped = buttons
       .filter((b) => b.enabled)
+      .filter((b) => {
+        const audience = b.audience ?? SCENARIO_AUDIENCE.ALL;
+        if (audience === SCENARIO_AUDIENCE.GUEST) return !verified;
+        if (audience === SCENARIO_AUDIENCE.VERIFIED) return verified;
+        return true;
+      })
       // The button's own question resolves the same way its label does, so the
       // widget receives one string per field and never sees the language map.
       .map((b) => ({
@@ -559,12 +650,19 @@ export class AiConfigService {
         const agentIds = [
           ...new Set((b.agentIds ?? []).map(Number).filter((n) => Number.isFinite(n) && n > 0)),
         ];
+        // Audience (PLN-261001 v1.1): stored only when narrowed, for the same
+        // byte-identical reason as agentIds. Unknown values read as `all`.
+        const audience =
+          b.audience === SCENARIO_AUDIENCE.GUEST || b.audience === SCENARIO_AUDIENCE.VERIFIED
+            ? b.audience
+            : undefined;
         return {
           id: b.id?.trim() || `btn_${i}`,
           label: this.trimLabel(b.label),
           action: b.action?.trim() || 'message',
           enabled: b.enabled !== false,
           ...(agentIds.length ? { agentIds } : {}),
+          ...(audience ? { audience } : {}),
         };
       });
   }

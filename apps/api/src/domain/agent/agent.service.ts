@@ -10,7 +10,7 @@ import {
   isSupportedLanguage,
   localized,
 } from '@sharptalk/types';
-import type { LocalizedText } from '@sharptalk/types';
+import type { IdentityClaims, LocalizedText } from '@sharptalk/types';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Message } from '../chat/entity/message.entity';
 import { AiAgent } from '../ai-engine/entity/ai-agent.entity';
@@ -294,6 +294,8 @@ export class AgentService {
     scope: 'all' | 'queue' | 'ended' = 'all',
     channel?: string,
     aiAgentId?: number,
+    /** Partner-hotel filter (REQ-261006 H3): exact hotelSn, or a name fragment. */
+    hotel?: string,
   ): Promise<{
     items: Array<{
       conversation: Conversation;
@@ -308,6 +310,8 @@ export class AgentService {
       /** Effective AI agent of the session (NULL pin = tenant default). */
       aiAgentId: number | null;
       aiAgentName: string | null;
+      /** Signed partner context of the session (REQ-261006); null for guests/v1. */
+      identityClaims: IdentityClaims | null;
     }>;
     total: number;
   }> {
@@ -349,6 +353,22 @@ export class AgentService {
           ? 'c.session_id IN (SELECT s.id FROM sessions s WHERE s.tenant_id = :tenantId AND (s.ai_agent_id = :aiAgentId OR s.ai_agent_id IS NULL))'
           : 'c.session_id IN (SELECT s.id FROM sessions s WHERE s.tenant_id = :tenantId AND s.ai_agent_id = :aiAgentId)',
         { aiAgentId: Number(aiAgentId) },
+      );
+    }
+
+    // Partner-hotel filter (REQ-261006 H3). hotelSn is the signed key and is
+    // matched exactly; the name is unsigned display text, matched loosely so a
+    // CS agent can type what the hotel calls itself. JSON_EXTRACT on sessions
+    // scoped to the tenant — measured on staging before a generated column is
+    // added (PLN-261001 v1.1 Q9).
+    const hotelFilter = hotel?.trim();
+    if (hotelFilter) {
+      qb.andWhere(
+        `c.session_id IN (SELECT s.id FROM sessions s WHERE s.tenant_id = :tenantId
+           AND s.identity_claims IS NOT NULL
+           AND (JSON_UNQUOTE(JSON_EXTRACT(s.identity_claims, '$.hotelSn')) = :hotelSn
+                OR LOWER(JSON_UNQUOTE(JSON_EXTRACT(s.identity_claims, '$.hotelName'))) LIKE :hotelName))`,
+        { hotelSn: hotelFilter, hotelName: `%${hotelFilter.toLowerCase()}%` },
       );
     }
 
@@ -411,6 +431,7 @@ export class AgentService {
           effectiveAgentId != null
             ? agentDisplay.byId.get(effectiveAgentId) ?? agentDisplay.defaultLabel
             : agentDisplay.defaultLabel,
+        identityClaims: state?.identityClaims ?? null,
       };
     });
     return { items, total };
@@ -528,6 +549,8 @@ export class AgentService {
     autoReplyEffective: boolean;
     aiAgentId: number | null;
     aiAgentName: string | null;
+    /** Signed partner context (REQ-261006) for the console header; null = none. */
+    identityClaims: IdentityClaims | null;
   }> {
     const state = (await this.sessionStates([sessionId])).get(String(sessionId));
     const mode = state?.autoReplyMode ?? AUTO_REPLY_MODE.INHERIT;
@@ -549,17 +572,26 @@ export class AgentService {
         effectiveAgentId != null
           ? display.byId.get(effectiveAgentId) ?? display.defaultLabel
           : display.defaultLabel,
+      identityClaims: state?.identityClaims ?? null,
     };
   }
 
-  /** session id → alias + auto-reply mode (+ AI agent pin), one query per page. */
-  private async sessionStates(
-    sessionIds: number[],
-  ): Promise<Map<string, { alias: string | null; autoReplyMode: string; aiAgentId: number | null }>> {
+  /** session id → alias + auto-reply mode (+ AI agent pin, partner claims), one query per page. */
+  private async sessionStates(sessionIds: number[]): Promise<
+    Map<
+      string,
+      {
+        alias: string | null;
+        autoReplyMode: string;
+        aiAgentId: number | null;
+        identityClaims: IdentityClaims | null;
+      }
+    >
+  > {
     if (sessionIds.length === 0) return new Map();
     const rows = await this.sessionRepo.find({
       where: { id: In(sessionIds) },
-      select: { id: true, alias: true, autoReplyMode: true, aiAgentId: true },
+      select: { id: true, alias: true, autoReplyMode: true, aiAgentId: true, identityClaims: true },
     });
     return new Map(
       rows.map((s) => [
@@ -568,6 +600,7 @@ export class AgentService {
           alias: s.alias ?? null,
           autoReplyMode: s.autoReplyMode || AUTO_REPLY_MODE.INHERIT,
           aiAgentId: s.aiAgentId != null ? Number(s.aiAgentId) : null,
+          identityClaims: s.identityClaims ?? null,
         },
       ]),
     );

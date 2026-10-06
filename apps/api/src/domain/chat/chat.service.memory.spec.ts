@@ -107,6 +107,8 @@ describe('ChatService — conversation memory', () => {
       answer: jest.fn(async () => ({ text: answerText, confidence: 0.9, citations: [{ id: 3340 }] })),
       groundingConfidence: jest.fn(async () => opts.grounding ?? 0.2),
       effectiveAgentId: jest.fn(async () => null),
+      // Guest gate (PLN-261001 v1.1): every agent is open unless a test says otherwise.
+      agentGuestPolicy: jest.fn(async () => 'open'),
     };
     const moderation = {
       moderate: jest.fn(async (p: { text: string }) => ({ decision: MODERATION_DECISION.DELIVERED, text: p.text })),

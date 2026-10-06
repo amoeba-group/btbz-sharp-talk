@@ -177,6 +177,55 @@ export function normalizeWidgetTabs(input: unknown): WidgetTab[] | null {
 export const SESSION_IDENTITY = { GUEST: 'guest', VERIFIED: 'verified' } as const;
 export type SessionIdentity = (typeof SESSION_IDENTITY)[keyof typeof SESSION_IDENTITY];
 
+// ---- Guest gate & signed identity claims (PLN-261001 v1.1) ----
+
+/**
+ * What an AI agent does for a visitor who has not been identified
+ * (`sessions.identity_level = 'guest'`). `open` is every agent's behaviour
+ * before this existed; `login_guidance` limits the guest to categories marked
+ * guest-visible and answers anything else with a sign-in prompt.
+ */
+export const GUEST_POLICY = { OPEN: 'open', LOGIN_GUIDANCE: 'login_guidance' } as const;
+export type GuestPolicy = (typeof GUEST_POLICY)[keyof typeof GUEST_POLICY];
+
+/** Who a scenario button is shown to. Absent = `all` (the pre-v1.1 shape). */
+export const SCENARIO_AUDIENCE = { ALL: 'all', GUEST: 'guest', VERIFIED: 'verified' } as const;
+export type ScenarioAudience = (typeof SCENARIO_AUDIENCE)[keyof typeof SCENARIO_AUDIENCE];
+
+/** Role of a partner-side user as signed into the identify v2 payload. */
+export const IDENTITY_ROLE = {
+  MANAGER: 'manager',
+  RECEPTIONIST: 'receptionist',
+  INTERNAL: 'internal',
+} as const;
+export type IdentityRole = (typeof IDENTITY_ROLE)[keyof typeof IDENTITY_ROLE];
+
+/**
+ * Partner context bound to a session by identify v2 (REQ-261006). `hotelSn`
+ * and `role` are covered by the HMAC; `hotelName`/`hotelCode` ride along
+ * unsigned for display, which is why `signed` is a separate flag the console
+ * shows rather than something inferred from the presence of a name.
+ */
+export interface IdentityClaims {
+  hotelSn: string;
+  role: IdentityRole;
+  hotelName?: string | null;
+  hotelCode?: string | null;
+  signed: boolean;
+  /** ISO 8601 — when the signature was verified; stale claims are visible as such. */
+  verifiedAt: string;
+}
+
+/** Tenant-set sign-in guidance for gated guests (tenant_ai_config.guest_guidance). */
+export interface GuestGuidance {
+  loginUrl?: string | null;
+  signupUrl?: string | null;
+  /** Per-language override of the built-in "please sign in" line. */
+  notice?: Partial<Record<string, string>>;
+  /** Console deep-link template; `{hotelSn}` is substituted from the signed claims. */
+  hostLinkTemplate?: string | null;
+}
+
 // The language set moved to ./language.ts, which carries labels, timezone
 // defaults and review state alongside the codes (REQ-260817). Re-exported here
 // so the many `import { SESSION_LANGUAGE } from '@sharptalk/types'` sites keep working.

@@ -99,6 +99,8 @@ describe('ChatService — queued threads', () => {
       { update: jest.fn() } as never, // Assignment repo (end-chat release; unused here)
       {
         effectiveAgentId: jest.fn(async () => null),
+        // Guest gate (PLN-261001 v1.1): every agent is open unless a test says otherwise.
+        agentGuestPolicy: jest.fn(async () => 'open'),
         classifyIntent: jest.fn(async () => ({
           intent: 'product_recommendation',
           needsOrderData: false,
@@ -231,6 +233,8 @@ describe('ChatService — off-hours reply channel', () => {
       { update: jest.fn() } as never, // Assignment repo (end-chat release; unused here)
       {
         effectiveAgentId: jest.fn(async () => null),
+        // Guest gate (PLN-261001 v1.1): every agent is open unless a test says otherwise.
+        agentGuestPolicy: jest.fn(async () => 'open'),
         classifyIntent: jest.fn(async () => ({ intent: 'x', needsOrderData: false, confidence: 0.9 })),
         answer: jest.fn(async () => ({ text: 'ok', confidence: 0.9, citations: [] })),
       } as never,

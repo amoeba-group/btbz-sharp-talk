@@ -32,6 +32,16 @@ export class EmbedController {
       sessionToken: body.session_token,
       userId: body.user_id,
       hash: body.hash,
+      // v2 (PLN-261001 v1.1): snake → camel at the edge; the service verifies.
+      claims: body.claims
+        ? {
+            hotelSn: body.claims.hotel_sn,
+            role: body.claims.role,
+            iat: body.claims.iat,
+            hotelName: body.claims.hotel_name ?? null,
+            hotelCode: body.claims.hotel_code ?? null,
+          }
+        : null,
       name: body.name ?? null,
       email: body.email ?? null,
       phone: body.phone ?? null,

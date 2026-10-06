@@ -85,6 +85,8 @@ describe('ChatService — attachment-only turns', () => {
         classifyIntent,
         answer: ragAnswer,
         effectiveAgentId: jest.fn(async () => null),
+        // Guest gate (PLN-261001 v1.1): every agent is open unless a test says otherwise.
+        agentGuestPolicy: jest.fn(async () => 'open'),
       } as unknown as RagService,
       { moderate } as unknown as ModerationService,
       { recentForCustomer: jest.fn(async () => []) } as never,

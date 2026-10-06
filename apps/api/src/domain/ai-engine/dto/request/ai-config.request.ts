@@ -1,4 +1,5 @@
-import { IsArray, IsBoolean, IsInt, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsIn, IsInt, IsObject, IsOptional, IsString } from 'class-validator';
+import { SCENARIO_AUDIENCE, type ScenarioAudience } from '@sharptalk/types';
 
 class ScenarioButtonDto {
   @IsString() id: string;
@@ -7,6 +8,8 @@ class ScenarioButtonDto {
   @IsBoolean() enabled: boolean;
   /** AI agents this button shows for (REQ-260825 R5); empty/absent = all. */
   @IsOptional() @IsArray() @IsInt({ each: true }) agentIds?: number[];
+  /** Who sees it (PLN-261001 v1.1): all | guest | verified; absent = all. */
+  @IsOptional() @IsIn(Object.values(SCENARIO_AUDIENCE)) audience?: ScenarioAudience;
 }
 
 /** /ai-setting preview sandbox session (PLN-AiSetting-Preview W1). */
@@ -34,6 +37,13 @@ export class UpdateAiConfigRequest {
 
   /** Escalation routing; shape is documented on HandoffConfig (entity). */
   @IsOptional() @IsObject() handoff_config?: Record<string, unknown>;
+
+  /**
+   * Sign-in guidance for gated guests (PLN-261001 v1.1): `{ login_url,
+   * signup_url, notice: {EN: …}, host_link_template }`. Pruned/validated in
+   * AiConfigService.sanitizeGuestGuidance (https URLs only, known languages).
+   */
+  @IsOptional() @IsObject() guest_guidance?: Record<string, unknown>;
 
   /** Why this change was made — stored on the revision, never sent to the model. */
   @IsOptional() @IsString() note?: string;

@@ -8,6 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import type { IdentityClaims } from '@sharptalk/types';
 import { bigintTransformer } from '../../../global/util/transformers';
 import { blindIndex, decryptPii, encryptPii } from '../../../global/util/crypto.util';
 
@@ -91,6 +92,15 @@ export class Customer {
 
   @Column({ name: 'shopify_tier', type: 'varchar', length: 32, nullable: true })
   shopifyTier: string | null;
+
+  /**
+   * Most recent signed partner context for this person (REQ-261006): the
+   * hotel/role their last identify v2 carried, for the Customers screen. The
+   * per-conversation truth is `sessions.identity_claims`; this is the "last
+   * known" summary and is overwritten on every successful identify.
+   */
+  @Column({ name: 'last_claims', type: 'json', nullable: true })
+  lastClaims: IdentityClaims | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -13,6 +13,12 @@ export class ListCustomersQuery {
   @IsOptional()
   @IsString()
   email?: string;
+
+  /** Partner-hotel filter (REQ-261006 H5): exact hotelSn or a hotel-name fragment. */
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  hotel?: string;
 }
 
 /**
@@ -35,6 +41,12 @@ export class SearchCustomersRequest {
   @IsString()
   @MaxLength(320)
   email?: string;
+
+  /** Partner-hotel filter (REQ-261006 H5). */
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  hotel?: string;
 }
 
 export class UpdateCustomerRequest {

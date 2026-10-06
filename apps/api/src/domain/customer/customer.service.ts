@@ -45,17 +45,31 @@ export class CustomerService {
     page: number,
     size: number,
     email?: string,
+    /** Partner-hotel filter (REQ-261006 H5): exact hotelSn or a name fragment. */
+    hotel?: string,
   ): Promise<{ items: Customer[]; total: number; stats: Map<string, CustomerOrderStats> }> {
     const where: FindOptionsWhere<Customer> = { tenantId };
     // Email is encrypted — partial LIKE is impossible; match the exact address
     // via the blind index (PRV-M6). Blank/garbage search returns nothing.
     if (email) where.emailHash = blindIndex(email) ?? '__none__';
-    const [items, total] = await this.customerRepo.findAndCount({
-      where,
-      order: { id: 'DESC' },
-      skip: (page - 1) * size,
-      take: size,
-    });
+    const hotelFilter = hotel?.trim();
+    const qb = this.customerRepo
+      .createQueryBuilder('c')
+      .where(where)
+      .orderBy('c.id', 'DESC')
+      .skip((page - 1) * size)
+      .take(size);
+    if (hotelFilter) {
+      // The signed key matches exactly; the unsigned display name loosely —
+      // same rule as the live-chat filter (agent.service listSessions).
+      qb.andWhere(
+        `(c.last_claims IS NOT NULL AND (
+           JSON_UNQUOTE(JSON_EXTRACT(c.last_claims, '$.hotelSn')) = :hotelSn
+           OR LOWER(JSON_UNQUOTE(JSON_EXTRACT(c.last_claims, '$.hotelName'))) LIKE :hotelName))`,
+        { hotelSn: hotelFilter, hotelName: `%${hotelFilter.toLowerCase()}%` },
+      );
+    }
+    const [items, total] = await qb.getManyAndCount();
     const stats = await this.orderStats(
       tenantId,
       items.map((c) => c.id),

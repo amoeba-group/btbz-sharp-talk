@@ -1,4 +1,5 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
+import type { IdentityClaims } from '@sharptalk/types';
 import { bigintTransformer } from '../../../global/util/transformers';
 
 /** sessions — widget visitor sessions (FR-001). */
@@ -71,6 +72,16 @@ export class Session {
   // weak guest identity must not unlock full-account access or deletion.
   @Column({ name: 'identity_level', type: 'varchar', length: 16, default: 'guest' })
   identityLevel: string; // guest | verified
+
+  /**
+   * Partner context bound by identify v2 (REQ-261006 / PLN-261001 v1.1):
+   * which hotel the signed-in staff member is acting for, and as what role.
+   * Per SESSION, not per customer — the same account can switch hotels in the
+   * host app, and the console must show the hotel of THIS conversation.
+   * NULL for every v1 identify and every guest. Explicit `type: 'json'` (A-1).
+   */
+  @Column({ name: 'identity_claims', type: 'json', nullable: true })
+  identityClaims: IdentityClaims | null;
 
   /**
    * Operator-set display name for this session (PLN-260812). Wins over the

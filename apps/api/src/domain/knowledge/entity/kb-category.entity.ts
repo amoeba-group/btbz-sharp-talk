@@ -100,6 +100,18 @@ export class KbCategory {
   @Column({ name: 'agent_ids', type: 'json', nullable: true })
   agentIds: number[] | null;
 
+  /**
+   * May an UNIDENTIFIED visitor be answered from documents filed here
+   * (PLN-261001 v1.1)? Only consulted when the answering agent's guest policy
+   * is `login_guidance`; for `open` agents it changes nothing. Default 0: a
+   * gated agent answers a guest from nothing until an operator opens a
+   * category on purpose — the same fail-closed direction as `agent_ids`.
+   *
+   * ⚠️ `ensure()` must never write this field either (see `agentIds`).
+   */
+  @Column({ name: 'guest_visible', type: 'tinyint', width: 1, default: 0 })
+  guestVisible: number;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

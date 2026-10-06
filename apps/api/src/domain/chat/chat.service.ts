@@ -7,8 +7,10 @@ import {
   CJM_STAGE,
   CONSENT_STATE,
   CONVERSATION_STATUS,
+  GUEST_POLICY,
   MODERATION_DECISION,
   SENDER_TYPE,
+  SESSION_IDENTITY,
   localized,
 } from '@sharptalk/types';
 import type { LocalizedText } from '@sharptalk/types';
@@ -101,6 +103,17 @@ const SYSTEM_MESSAGES = {
     JA: 'ご注文を確認するには本人確認が必要です。ログインするか、ゲスト注文照会をご利用ください。',
     ZH: '查询订单需要先验证您的身份。请登录或使用访客订单查询。',
   },
+  // Guest gate (PLN-261001 v1.1 B5/T4): an unidentified visitor of a
+  // login_guidance agent asked something outside the guest-visible knowledge.
+  // A tenant may override the line per language (guest_guidance.notice).
+  loginRequired: {
+    EN: 'This information is for signed-in partners. Please sign in to your partner account and I will walk you through it.',
+    ES: 'Esta información es para socios con sesión iniciada. Inicia sesión en tu cuenta de socio y te guiaré paso a paso.',
+    KO: '이 내용은 로그인한 파트너에게만 안내해 드릴 수 있습니다. 파트너 계정으로 로그인하시면 자세히 안내해 드릴게요.',
+    VI: 'Nội dung này dành cho đối tác đã đăng nhập. Vui lòng đăng nhập tài khoản đối tác để tôi hướng dẫn chi tiết.',
+    JA: 'この内容はログイン済みのパートナー様向けです。パートナーアカウントでログインしていただければ、詳しくご案内します。',
+    ZH: '此内容仅面向已登录的合作伙伴。请登录您的合作伙伴账户，我会为您详细说明。',
+  },
   connectingAgent: {
     EN: "I'm connecting you with a support agent who can help with this.",
     ES: 'Te estoy conectando con un agente de soporte que puede ayudarte con esto.',
@@ -164,6 +177,27 @@ const SYSTEM_MESSAGES = {
 } satisfies Record<string, LocalizedText>;
 
 /** Localized system-turn copy — shared with ScenarioService's consent gate. */
+/**
+ * One prompt line describing the signed partner behind a session (REQ-261006
+ * H6), or undefined for guests and v1 identities. Only the signed fields and
+ * the display name travel — never email or phone.
+ */
+export function partnerContextOf(session: Pick<Session, 'identityClaims'>): string | undefined {
+  const claims = session.identityClaims;
+  if (!claims?.signed || !claims.hotelSn) return undefined;
+  const name = claims.hotelName?.trim() || 'the partner hotel';
+  const code = claims.hotelCode?.trim() ? `, code ${claims.hotelCode.trim()}` : '';
+  return `The user is partner staff of ${name} (hotelSn ${claims.hotelSn}${code}), role: ${claims.role}.`;
+}
+
+/** Short partner label for alert channels and ticket notes (REQ-261006 H4), or undefined. */
+export function partnerLabelOf(session: Pick<Session, 'identityClaims'>): string | undefined {
+  const claims = session.identityClaims;
+  if (!claims?.signed || !claims.hotelSn) return undefined;
+  const name = claims.hotelName?.trim() || 'hotel';
+  return `${name} (${claims.hotelSn}) · ${claims.role}`;
+}
+
 export function sysMsg(key: keyof typeof SYSTEM_MESSAGES, lang: string): string {
   return localized(SYSTEM_MESSAGES[key], lang);
 }
@@ -205,6 +239,13 @@ export interface EscalationEvent {
   /** Issue type/label stamp from a deny rule (P2) — consumed by IssueService/alerts. */
   issueType?: string;
   issueLabel?: string;
+  /**
+   * Signed partner context in one line (REQ-261006 H4), e.g.
+   * "A In Hotel Del Luna (1721) · receptionist" — for the alert channels, so
+   * CS knows which hotel is paging before opening the console. Absent for
+   * guests and v1 identities.
+   */
+  partnerLabel?: string;
 }
 
 /**
@@ -780,10 +821,51 @@ export class ChatService {
       };
     }
 
+    // Resolved through RAG so the gate below, replay, retrieval and persona all
+    // agree on which agent is speaking (a deactivated pin degrades to default).
+    const effectiveAgentId = await this.rag.effectiveAgentId(tenantId, session.aiAgentId ?? null);
+
+    // Guest gate (PLN-261001 v1.1 B5). An agent set to `login_guidance` answers
+    // an UNIDENTIFIED visitor only from categories an operator opened to
+    // guests; anything else gets a sign-in prompt instead of an answer — and
+    // instead of a model call: the pre-check below retrieves with the guest
+    // scope first, so a question the guest knowledge cannot ground never
+    // reaches the LLM (Q2). Placed after the human-request and small-talk
+    // branches on purpose: a guest can still reach a person and still be
+    // greeted. Deny rules keep their priority — a matched topic is handed to
+    // a human exactly as it would be for an identified visitor.
+    const guestGated =
+      session.identityLevel !== SESSION_IDENTITY.VERIFIED &&
+      (await this.rag.agentGuestPolicy(tenantId, effectiveAgentId)) === GUEST_POLICY.LOGIN_GUIDANCE;
+    if (guestGated) {
+      const evidence = await this.rag.retrieve(
+        tenantId,
+        retrievalQuery(history, egressText),
+        undefined,
+        effectiveAgentId,
+        { guestOnly: true },
+      );
+      if (!evidence.length) {
+        if (denyAnswersFirst) return denyHandoffNow();
+        const body = await this.loginRequiredMessage(tenantId, session.language);
+        await this.persist(tenantId, conversation.id, SENDER_TYPE.SYSTEM, body, session.language);
+        this.logger.log(
+          `guest gate: sign-in prompt conversation=${conversation.id} agent=${effectiveAgentId ?? 'default'}`,
+        );
+        return {
+          conversationId: String(conversation.id),
+          reply: { senderType: 'system', body },
+          escalate: false,
+          needsAuth: true,
+          authReason: 'login',
+        };
+      }
+    }
+
     if (needsOrderData && session.customerId == null && !denyAnswersFirst) {
       const body = sysMsg('authRequired', session.language);
       await this.persist(tenantId, conversation.id, SENDER_TYPE.SYSTEM, body, session.language);
-      return { conversationId: String(conversation.id), reply: { senderType: 'system', body }, escalate: false, needsAuth: true };
+      return { conversationId: String(conversation.id), reply: { senderType: 'system', body }, escalate: false, needsAuth: true, authReason: 'order' };
     }
 
     // Answer-first deny rules skip that gate deliberately (REQ-260826). The
@@ -817,15 +899,13 @@ export class ChatService {
     // BEFORE rag.answer but upstream of the moderation gate below, so a replay
     // is still moderated (FR-069 non-bypassable). Never for order questions:
     // those answers are personal and the reuse store refuses them anyway.
-    // Resolved through RAG so replay, retrieval and persona all agree on which
-    // agent is speaking (a deactivated pin degrades to the tenant default).
-    const effectiveAgentId = await this.rag.effectiveAgentId(tenantId, session.aiAgentId ?? null);
     // Only a conversation's opening question is self-contained enough to replay
     // (PLN-260929 S5): "예약 진행" means something different in every thread
-    // that says it, and a stored answer cannot know which.
+    // that says it, and a stored answer cannot know which. A gated guest never
+    // replays either: the store holds answers given with the full scope.
     const contextual = hasAssistantTurn(history);
     const reused =
-      needsOrderData || !this.answerReuse || contextual
+      needsOrderData || !this.answerReuse || contextual || guestGated
         ? null
         : await this.answerReuse.lookup(
             tenantId,
@@ -856,6 +936,9 @@ export class ChatService {
           effectiveAgentId,
           undefined,
           history,
+          // Guest scope for gated visitors (PLN-261001 v1.1); signed partner
+          // context for identified ones (REQ-261006 H6).
+          { guestOnly: guestGated, partnerContext: partnerContextOf(session) },
         );
 
     // Mandatory moderation gate (FR-069).
@@ -949,7 +1032,9 @@ export class ChatService {
     });
     if (reused) {
       void this.answerReuse?.recordHit(reused.reuseId);
-    } else if (!contextual) {
+    } else if (!contextual && !guestGated) {
+      // A gated guest's answer came from the guest-only scope; stored, it
+      // would replay for identified visitors as if it were the full answer.
       // A freshly generated, delivered answer becomes a reuse candidate (the
       // service applies the D-C1 filters: cited + confident, no order context).
       void this.answerReuse?.recordAiAnswer({
@@ -1190,6 +1275,7 @@ export class ChatService {
       offHoursEmail: route.mode === 'email' ? route.email : undefined,
       issueType: stamp?.issueType,
       issueLabel: stamp?.issueLabel,
+      partnerLabel: partnerLabelOf(session),
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
     return { body, needsContactEmail };
@@ -1265,6 +1351,7 @@ export class ChatService {
       preview: (lastUser?.body ?? '').slice(0, 300),
       targetUserIds: route.targetUserIds,
       offHoursEmail: route.mode === 'email' ? route.email : undefined,
+      partnerLabel: partnerLabelOf(session),
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
   }
@@ -1277,6 +1364,17 @@ export class ChatService {
    * so order number, dates, status, totals and item titles are what's needed.
    * Never throws — losing the enrichment must not break the reply.
    */
+  /**
+   * The sign-in prompt for a gated guest (PLN-261001 v1.1 T4): the tenant's
+   * own wording for the session language when it set one, else the built-in
+   * line. Language keys are the session codes (EN/VI/…) on both sides.
+   */
+  private async loginRequiredMessage(tenantId: number | null, language: string): Promise<string> {
+    const guidance = await this.rag.guestGuidance(tenantId);
+    const override = guidance?.notice?.[String(language ?? '').toUpperCase()]?.trim();
+    return override || sysMsg('loginRequired', language);
+  }
+
   private async buildOrderContext(
     tenantId: number,
     customerId: number,

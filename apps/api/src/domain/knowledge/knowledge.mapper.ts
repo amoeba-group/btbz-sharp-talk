@@ -152,6 +152,7 @@ export class KnowledgeMapper {
       sortOrder: c.sortOrder,
       hidden: c.hidden === 1,
       agentIds: c.agentIds ?? [],
+      guestVisible: c.guestVisible === 1,
     };
   }
 }

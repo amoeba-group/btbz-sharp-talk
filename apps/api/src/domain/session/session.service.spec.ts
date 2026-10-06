@@ -130,6 +130,9 @@ describe('SessionService consent (PLN-Privacy-Control-Gap Stage 1-2)', () => {
         privacyPolicyUrl: 'https://shop.example/privacy',
         consentNoticeVersion: 'v9',
         aiProcessingRegion: 'US',
+        // No agent rows / no config row in this harness → open, no links (PLN-261001 v1.1).
+        guestPolicy: 'open',
+        guestGuidance: null,
         widgetLoginMode: 'redirect',
         widgetTabs: [...WIDGET_TABS_DEFAULT],
         widgetTabPosition: 'top',

@@ -65,6 +65,17 @@ export interface SessionResponse {
   /** How the widget's "Sign in" opens the storefront login (tenant console setting). */
   widgetLoginMode: WidgetLoginMode;
   /**
+   * Guest policy of the agent answering this session (PLN-261001 v1.1):
+   * `login_guidance` means an unidentified visitor only gets sign-in help.
+   * Absent on an older API = `open`.
+   */
+  guestPolicy?: 'open' | 'login_guidance';
+  /**
+   * Where the widget's sign-in card sends a visitor on a tenant that has no
+   * storefront login (a partner portal, an app). Null = no links configured.
+   */
+  guestGuidance?: { loginUrl: string | null; signupUrl: string | null } | null;
+  /**
    * Region code where AI inference runs for this deployment (env
    * AI_PROCESSING_REGION, default 'US'). The widget's AI disclosure names it
    * (REQ-260913-VN-Prerequisite-Gaps G7).
@@ -192,6 +203,12 @@ export interface ChatTurnResponse {
   } | null;
   escalate: boolean;
   needsAuth: boolean;
+  /**
+   * Why `needsAuth` is set (PLN-261001 v1.1): `order` = the order lookup gate
+   * (storefront sign-in), `login` = the agent's guest gate (partner sign-in
+   * links from `guestGuidance`). Absent on an older API = `order`.
+   */
+  authReason?: 'order' | 'login';
   /**
    * Off-hours handoff with no address on file: the widget asks for one so the
    * agent's reply has somewhere to go (PLN-260806).

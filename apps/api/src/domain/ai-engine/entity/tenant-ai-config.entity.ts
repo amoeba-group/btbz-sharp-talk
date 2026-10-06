@@ -1,5 +1,5 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
-import type { LocalizedText } from '@sharptalk/types';
+import type { GuestGuidance, LocalizedText } from '@sharptalk/types';
 import { bigintTransformer } from '../../../global/util/transformers';
 
 /** Scenario button shown in the widget menu (FR-003 / FN-009). */
@@ -28,6 +28,12 @@ export interface ScenarioButton {
    * never differs per agent.
    */
   agentIds?: number[];
+  /**
+   * Who sees the button (PLN-261001 v1.1): `guest` only before the session is
+   * identified, `verified` only after. Absent = `all`, the shape every button
+   * had before — so a stored set needs no migration.
+   */
+  audience?: 'all' | 'guest' | 'verified';
 }
 
 /** Where the widget should take the shopper after a scripted reply (FR-003). */
@@ -162,6 +168,16 @@ export class TenantAiConfig {
   /** Who gets paged on escalation, when, and what happens after hours. */
   @Column({ name: 'handoff_config', type: 'json', nullable: true })
   handoffConfig: HandoffConfig | null;
+
+  /**
+   * Sign-in guidance for gated guests (PLN-261001 v1.1): where the widget's
+   * card sends them, an optional per-language override of the built-in
+   * "please sign in" line, and the console's deep-link template. NULL = the
+   * built-in wording and no links (the card then only offers "continue as
+   * guest"). Explicit `type: 'json'` — see ai-agent.entity (A-1).
+   */
+  @Column({ name: 'guest_guidance', type: 'json', nullable: true })
+  guestGuidance: GuestGuidance | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

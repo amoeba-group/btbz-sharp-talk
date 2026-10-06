@@ -238,6 +238,11 @@ export class SetCategoryAgentsRequest {
   @IsArray() @IsInt({ each: true }) agent_ids: number[];
 }
 
+/** PUT /knowledge/categories/:id/guest-visible (PLN-261001 v1.1 T2). */
+export class SetCategoryGuestVisibleRequest {
+  @IsBoolean() guest_visible: boolean;
+}
+
 /** POST /knowledge/gap-tasks/:id/accept — 승인 전 인라인 편집(P5). */
 export class AcceptGapTaskRequest {
   @IsOptional() @IsString() @MaxLength(300) title?: string;

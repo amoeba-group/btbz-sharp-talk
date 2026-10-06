@@ -55,6 +55,16 @@ export class AiAgent {
   @Column({ type: 'json', nullable: true })
   rules: string[] | null;
 
+  /**
+   * What this agent does for an unidentified visitor (PLN-261001 v1.1):
+   * `open` = answer as always; `login_guidance` = only guest-visible categories,
+   * everything else gets a sign-in prompt. Default keeps every existing agent
+   * byte-identical. Explicit `type`: a union-typed column without one makes
+   * TypeORM infer Object and the API fails to boot (dev-kit lesson A-1).
+   */
+  @Column({ name: 'guest_policy', type: 'varchar', length: 16, default: 'open' })
+  guestPolicy: string; // open | login_guidance (GUEST_POLICY)
+
   /** Inactive agents stop matching by code; sessions already pinned fall back to default. */
   @Column({ type: 'tinyint', width: 1, default: 1 })
   active: number;
