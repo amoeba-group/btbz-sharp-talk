@@ -15,5 +15,13 @@
   "reveal": "Ver datos completos",
   "revealAudited": "Datos de contacto mostrados. Esta consulta queda registrada en la auditoría.",
   "maskedHint": "Los identificadores del cliente están enmascarados. Las cuentas máster y director pueden mostrarlos.",
-  "maskedHintWithReveal": "Los identificadores del cliente están enmascarados. Al mostrarlos se ven durante 5 minutos y queda registro en la auditoría."
+  "maskedHintWithReveal": "Los identificadores del cliente están enmascarados. Al mostrarlos se ven durante 5 minutos y queda registro en la auditoría.",
+  "hotel": "Hotel (último)",
+  "searchHotelPlaceholder": "Buscar por nombre o clave de hotel",
+  "unsigned": "autodeclarado",
+  "partnerRole": {
+    "manager": "Gerente",
+    "receptionist": "Recepcionista",
+    "internal": "Personal interno"
+  }
 }

@@ -455,5 +455,11 @@
     "write": "在看板上撰写",
     "body": "来自来源的资产和新知识先在看板上撰写并发布，经模拟验证后采纳为知识库文档。",
     "counts": "待审核 {{pending}} · 已采纳 {{promoted}}"
-  }
+  },
+  "categoryGuestVisibleOnLabel": "对访客可见",
+  "categoryGuestVisibleOffLabel": "仅限登录",
+  "categoryGuestVisibleHint": "仅引导登录的智能体是否可以用此分类回答未登录的访客。",
+  "categoryGuestVisibleConfirm": "允许 {{count}} 篇文档无需登录即可查看？",
+  "categoryGuestVisibleOn": "分类已对访客可见。",
+  "categoryGuestVisibleOff": "分类已改为仅限登录。"
 }

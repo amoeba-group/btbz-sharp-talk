@@ -20,6 +20,7 @@ import {
   Reply,
   Eye,
   X,
+  Building2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/PageHeader';
@@ -52,6 +53,7 @@ import {
 import { useUsers } from '@/domain/users/users.hooks';
 import { makeCan } from '@/lib/rbac';
 import { BriefingCard } from './BriefingCard';
+import { PartnerHeader, PartnerLine } from './PartnerContext';
 import { JourneyPanel } from '../journey/JourneyPanel';
 import { JourneyCard } from '../journey/JourneyCard';
 import { CommentCard } from './CommentCard';
@@ -184,6 +186,14 @@ export function LiveChatPage() {
   // AI-agent filter + roster (REQ-260825 R6/R7).
   const [agentFilter, setAgentFilter] = useState('all');
   const { data: aiRoster } = useAiAgentRoster();
+  // Hotel filter (REQ-261006 W6): key (exact) or name (contains) of the signed
+  // partner — debounced into the list query like the customer search.
+  const [hotelQuery, setHotelQuery] = useState('');
+  const [hotelFilter, setHotelFilter] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setHotelFilter(hotelQuery.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [hotelQuery]);
 
   // Detail-header controls (REQ-260825 R8).
   const [assignOpen, setAssignOpen] = useState(false);
@@ -244,6 +254,7 @@ export function LiveChatPage() {
     scope === 'groups' ? 'all' : scope,
     channel,
     agentFilter,
+    hotelFilter,
   );
   const { data: groups, isLoading: groupsLoading } = useGroups(scope === 'groups');
   const { data: convo, isLoading: convoLoading, isFetching: convoFetching, refetch: refetchConvo } =
@@ -571,7 +582,7 @@ export function LiveChatPage() {
               ))}
             </select>
           </div>
-          <div className="border-b border-gray-100 p-2">
+          <div className="space-y-1.5 border-b border-gray-100 p-2">
             <div className="relative">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
               <input
@@ -579,6 +590,20 @@ export function LiveChatPage() {
                 onChange={(e) => setListQuery(e.target.value)}
                 placeholder={t('listSearchPlaceholder')}
                 title={t('listSearchScope')}
+                className="w-full rounded-lg border border-gray-200 py-1.5 pl-8 pr-2 text-xs text-gray-700 outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400"
+              />
+            </div>
+            {/* Hotel filter (REQ-261006 W6) — only partner tenants have signed
+                claims, but the box costs nothing elsewhere and the server
+                simply returns no rows for a key no session carries. */}
+            <div className="relative">
+              <Building2 className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+              <input
+                value={hotelQuery}
+                onChange={(e) => setHotelQuery(e.target.value)}
+                placeholder={t('partner.filterPlaceholder')}
+                title={t('partner.filterScope')}
+                aria-label={t('partner.filterLabel')}
                 className="w-full rounded-lg border border-gray-200 py-1.5 pl-8 pr-2 text-xs text-gray-700 outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400"
               />
             </div>
@@ -707,6 +732,8 @@ export function LiveChatPage() {
                       </span>
                     )}
                   </div>
+                  {/* Which hotel this partner acts for (REQ-261006 W6). */}
+                  {s.identityClaims && <PartnerLine claims={s.identityClaims} />}
                   <div className="mt-0.5 flex items-center justify-between gap-2">
                     <span className="shrink-0 text-[11px] text-gray-400">
                       {t('sessionLabel', { id: s.id.slice(0, 6) })}
@@ -836,6 +863,11 @@ export function LiveChatPage() {
                     </Badge>
                   )}
                 </div>
+                {/* Partner context (REQ-261006 W6): role @ hotel (key), signed
+                    or not, when verified, and the jump into the host system. */}
+                {convo?.identityClaims && (
+                  <PartnerHeader claims={convo.identityClaims} partnerLink={convo.partnerLink} />
+                )}
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
@@ -1320,7 +1352,7 @@ export function LiveChatPage() {
             </>
           ) : (
             /* On-demand briefing + translation (REQ-260824 R3). */
-            <BriefingCard conversationId={selected} />
+            <BriefingCard conversationId={selected} claims={convo?.identityClaims ?? null} />
           )}
 
           {/* Internal notes on the thread / its session (REQ-260824 R4). */}

@@ -1,4 +1,8 @@
 import { apiDelete, apiGet, apiPatch, apiPost, apiUpload } from '@/lib/api-client';
+// Type-only: the package's CJS entry is unsafe for VALUE imports in the browser build.
+import type { IdentityClaims } from '@sharptalk/types';
+
+export type { IdentityClaims };
 
 /** Mirrors the API's toSessionResponse — no invented fields (they render as '—'). */
 export interface GroupRef {
@@ -39,6 +43,10 @@ export interface AgentSession {
   /** Effective AI agent of the session (REQ-260825 R6); NULL pin = default. */
   aiAgentId?: string | null;
   aiAgentName?: string | null;
+  /** Signed partner context (REQ-261006 W6): which hotel the staff member acts for. */
+  identityClaims?: IdentityClaims | null;
+  /** "Open in host system" link the API resolved for that hotel; null = none. */
+  partnerLink?: string | null;
   /** Origin surface: widget | telegram | viber | zalo | line | kakao | sms | email … */
   channel?: string | null;
   /** Team pin (PLN-260826) — pinned rows arrive first from the server. */
@@ -124,6 +132,9 @@ export interface ConversationDetail {
   assignedTo?: string | null;
   aiAgentId?: string | null;
   aiAgentName?: string | null;
+  /** Signed partner context for the header (REQ-261006 W6). */
+  identityClaims?: IdentityClaims | null;
+  partnerLink?: string | null;
   messages: ChatMessage[];
   /** Older messages exist before the first one returned (PLN-260807). */
   hasMore?: boolean;
@@ -210,12 +221,14 @@ export interface AiAgentOption {
 }
 
 export const liveChatService = {
-  sessions: (q?: string, status?: string, channel?: string, aiAgentId?: string) =>
+  sessions: (q?: string, status?: string, channel?: string, aiAgentId?: string, hotel?: string) =>
     apiGet<AgentSession[]>('/agent/sessions', {
       ...(q?.trim() ? { q: q.trim() } : {}),
       ...(status && status !== 'all' ? { status } : {}),
       ...(channel && channel !== 'all' ? { channel } : {}),
       ...(aiAgentId && aiAgentId !== 'all' ? { ai_agent_id: aiAgentId } : {}),
+      // Hotel key (exact) or name (contains) of the signed partner (REQ-261006 W6).
+      ...(hotel?.trim() ? { hotel: hotel.trim() } : {}),
     }),
   aiAgents: () => apiGet<AiAgentOption[]>('/agent/ai-agents'),
   setAiAgent: (id: string, aiAgentId: number) =>

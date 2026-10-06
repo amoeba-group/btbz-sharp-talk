@@ -1,5 +1,7 @@
 import { apiGet, apiPatch, apiPostList } from '@/lib/api-client';
 import type { Paginated } from '@/lib/types';
+// Type-only: the package's CJS entry is unsafe for VALUE imports in the browser build.
+import type { IdentityClaims } from '@sharptalk/types';
 
 export interface Customer {
   id: number;
@@ -13,12 +15,16 @@ export interface Customer {
   totalSpent?: number;
   currency?: string | null;
   createdAt?: string;
+  /** Last signed partner context (REQ-261006 W7); null for shoppers/guests. */
+  lastClaims?: IdentityClaims | null;
 }
 
 export interface CustomerListParams {
   page: number;
   pageSize: number;
   email?: string;
+  /** Hotel key (exact) or name (contains) of the last signed claims (W7). */
+  hotel?: string;
 }
 
 export const customersService = {
@@ -34,6 +40,7 @@ export const customersService = {
       page: String(params.page),
       size: String(params.pageSize),
       email: params.email || undefined,
+      hotel: params.hotel || undefined,
     }),
   /** Unmasked contact details for one customer. Audited server-side. */
   reveal: (id: number) => apiGet<Customer>(`/customers/${id}/reveal`),

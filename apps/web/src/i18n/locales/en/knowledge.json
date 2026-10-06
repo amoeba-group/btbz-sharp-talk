@@ -455,5 +455,11 @@
     "write": "Write on board",
     "body": "Sourced assets and new knowledge are written and published on the board first, checked with a simulation, then adopted as KB-Documents.",
     "counts": "Waiting for review {{pending}} · adopted {{promoted}}"
-  }
+  },
+  "categoryGuestVisibleOnLabel": "Visible to guests",
+  "categoryGuestVisibleOffLabel": "Signed-in only",
+  "categoryGuestVisibleHint": "Whether an agent that only guides sign-in may answer a visitor who has not signed in from this category.",
+  "categoryGuestVisibleConfirm": "Make {{count}} document(s) readable without signing in?",
+  "categoryGuestVisibleOn": "Category is now visible to guests.",
+  "categoryGuestVisibleOff": "Category is now signed-in only."
 }

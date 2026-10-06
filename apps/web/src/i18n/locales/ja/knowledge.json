@@ -455,5 +455,11 @@
     "write": "ボードに書く",
     "body": "ソースから取り込んだ資産と新しいナレッジはまずボードで作成・公開し、シミュレーションで確認してからKBドキュメントとして採用します。",
     "counts": "レビュー待ち {{pending}} · 採用 {{promoted}}"
-  }
+  },
+  "categoryGuestVisibleOnLabel": "ゲストに公開",
+  "categoryGuestVisibleOffLabel": "ログイン済みのみ",
+  "categoryGuestVisibleHint": "ログイン案内のみのエージェントが、未ログインの訪問者にこのカテゴリから回答してよいかどうか。",
+  "categoryGuestVisibleConfirm": "{{count}} 件の文書をログインなしで読めるようにしますか？",
+  "categoryGuestVisibleOn": "カテゴリをゲストに公開しました。",
+  "categoryGuestVisibleOff": "カテゴリをログイン済みのみに変更しました。"
 }

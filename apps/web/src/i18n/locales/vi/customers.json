@@ -15,5 +15,13 @@
   "reveal": "Xem đầy đủ",
   "revealAudited": "Đã hiển thị thông tin liên hệ. Lần xem này được ghi vào nhật ký kiểm toán.",
   "maskedHint": "Thông tin nhận dạng khách hàng được che. Tài khoản master và director có thể hiển thị đầy đủ.",
-  "maskedHintWithReveal": "Thông tin nhận dạng khách hàng được che. Khi hiển thị, thông tin hiện trong 5 phút và được ghi vào nhật ký kiểm toán."
+  "maskedHintWithReveal": "Thông tin nhận dạng khách hàng được che. Khi hiển thị, thông tin hiện trong 5 phút và được ghi vào nhật ký kiểm toán.",
+  "hotel": "Khách sạn (gần nhất)",
+  "searchHotelPlaceholder": "Tìm theo tên hoặc mã khách sạn",
+  "unsigned": "tự khai",
+  "partnerRole": {
+    "manager": "Quản lý",
+    "receptionist": "Lễ tân",
+    "internal": "Nhân viên nội bộ"
+  }
 }

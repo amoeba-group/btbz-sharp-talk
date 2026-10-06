@@ -832,6 +832,21 @@ export function useSetCategoryHidden() {
   });
 }
 
+/** Guest visibility of a category (PLN-261001 W3) — the public axis of the KB. */
+export function useSetCategoryGuestVisible() {
+  const invalidate = useTaxonomyInvalidator('categories');
+  const { t } = useTranslation('knowledge');
+  return useMutation({
+    mutationFn: (v: { id: string; guestVisible: boolean }) =>
+      knowledgeService.setCategoryGuestVisible(v.id, v.guestVisible),
+    onSuccess: (_res, v) => {
+      invalidate();
+      toast.success(v.guestVisible ? t('categoryGuestVisibleOn') : t('categoryGuestVisibleOff'));
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+}
+
 export function useRemoveCategory() {
   const invalidate = useTaxonomyInvalidator('categories');
   const { t } = useTranslation('knowledge');

@@ -310,7 +310,11 @@
     "displayNameHint": "Se muestra a los compradores en el widget. Vacío = nombre de la tienda.",
     "greeting": "Primer mensaje",
     "greetingPlaceholder": "¡Hola! Soy Livy, ¿en qué te ayudo?",
-    "greetingHint": "Primera burbuja de las sesiones con este agente. Idioma vacío = mensaje común de la tienda."
+    "greetingHint": "Primera burbuja de las sesiones con este agente. Idioma vacío = mensaje común de la tienda.",
+    "guestPolicy": "Visitantes sin iniciar sesión",
+    "guestPolicy_open": "Responder con normalidad",
+    "guestPolicy_login_guidance": "Solo guiar para iniciar sesión o registrarse",
+    "guestPolicyHint": "Con la guía de inicio de sesión, un visitante sin sesión solo recibe respuestas de las categorías marcadas \"Visible para invitados\"; cualquier otra pregunta recibe el aviso de inicio de sesión (edítalo en Guía para invitados). Se aplica desde el siguiente mensaje, sin despliegue."
   },
   "agentScope": {
     "button": "Agentes",
@@ -350,5 +354,22 @@
   "labelLanguage": "Idioma de la etiqueta",
   "labelLanguageHint": "La etiqueta escrita aquí se aplica solo a ese idioma; los demás conservan la suya.",
   "buttonMessage": "Mensaje a enviar",
-  "buttonMessageHint": "Déjalo vacío para enviar la etiqueta como pregunta."
+  "buttonMessageHint": "Déjalo vacío para enviar la etiqueta como pregunta.",
+  "audience": "Mostrar a",
+  "audience_all": "Todos",
+  "audience_guest": "Sin sesión",
+  "audience_verified": "Con sesión",
+  "guest": {
+    "title": "Guía para invitados (sin sesión)",
+    "hint": "Lo que ofrece el asistente cuando un agente configurado como \"solo guiar para iniciar sesión\" atiende a un visitante sin sesión. Qué agentes lo hacen se define arriba, por agente.",
+    "loginUrl": "URL de inicio de sesión",
+    "signupUrl": "URL de registro",
+    "httpsOnly": "Debe empezar por https://",
+    "notice": "Aviso de inicio de sesión",
+    "noticePlaceholder": "Esta respuesta es para socios con sesión iniciada. Inicia sesión y te guiaré paso a paso.",
+    "noticeHint": "En blanco = el aviso integrado en ese idioma.",
+    "hostLinkTemplate": "Plantilla de enlace \"Abrir en tu sistema\"",
+    "hostLinkTemplateHint": "{hotelSn} se sustituye por la clave de hotel firmada; la consola mostrará un botón \"Abrir en el sistema anfitrión\" en las conversaciones de socios. En blanco = sin botón.",
+    "hostLinkTemplateInvalid": "Debe ser una URL https:// que contenga {hotelSn}."
+  }
 }

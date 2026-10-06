@@ -200,6 +200,11 @@ export interface KbCategoryRow {
   documentCount: number;
   /** Agents allowed to cite documents here; empty = every agent (REQ-260826). */
   agentIds: number[];
+  /**
+   * Whether an UNIDENTIFIED visitor may be answered from here when the agent
+   * runs the login-guidance policy (PLN-261001 W3). Default off.
+   */
+  guestVisible?: boolean;
 }
 
 /** Live state of the async conversion (PLN-260807 P1 / RPT-260808 D3). */
@@ -503,6 +508,10 @@ export const knowledgeService = {
     apiPut<KbCategoryRow>(`/knowledge/categories/${id}/agents`, { agent_ids: agentIds }),
   setCategoryHidden: (id: string, hidden: boolean) =>
     apiPut<KbCategoryRow>(`/knowledge/categories/${id}/hidden`, { hidden }),
+  setCategoryGuestVisible: (id: string, guestVisible: boolean) =>
+    apiPut<KbCategoryRow>(`/knowledge/categories/${id}/guest-visible`, {
+      guest_visible: guestVisible,
+    }),
   removeCategory: (id: string) =>
     apiDelete<{ removed: boolean }>(`/knowledge/categories/${id}`),
   saveUsageGuide: (key: string, body: { title: string; content: string }) =>

@@ -455,5 +455,11 @@
     "write": "Viết lên bảng",
     "body": "Tài sản từ nguồn và tri thức mới được viết và đăng trên bảng trước, kiểm tra bằng mô phỏng rồi chấp nhận thành tài liệu KB.",
     "counts": "Chờ duyệt {{pending}} · đã chấp nhận {{promoted}}"
-  }
+  },
+  "categoryGuestVisibleOnLabel": "Công khai cho khách",
+  "categoryGuestVisibleOffLabel": "Chỉ đã đăng nhập",
+  "categoryGuestVisibleHint": "Trợ lý \"chỉ hướng dẫn đăng nhập\" có được trả lời khách chưa đăng nhập từ phân loại này không.",
+  "categoryGuestVisibleConfirm": "Cho phép đọc {{count}} tài liệu mà không cần đăng nhập?",
+  "categoryGuestVisibleOn": "Phân loại đã công khai cho khách.",
+  "categoryGuestVisibleOff": "Phân loại chỉ dành cho người đã đăng nhập."
 }

@@ -310,7 +310,11 @@
     "displayNameHint": "Shown to shoppers in the widget header. Blank = store display name.",
     "greeting": "First response message",
     "greetingPlaceholder": "Hi! I'm Livy — how can I help?",
-    "greetingHint": "First bubble for sessions on this agent. Blank language = store-wide first message."
+    "greetingHint": "First bubble for sessions on this agent. Blank language = store-wide first message.",
+    "guestPolicy": "Visitors who are not signed in",
+    "guestPolicy_open": "Answer as usual",
+    "guestPolicy_login_guidance": "Only guide them to sign in or register",
+    "guestPolicyHint": "With sign-in guidance, a visitor who has not signed in is answered only from categories marked \"Visible to guests\"; any other question gets the sign-in prompt (edit it under Guest guidance below). Applies from the next message — no deploy needed."
   },
   "agentScope": {
     "button": "Agents",
@@ -350,5 +354,22 @@
   "labelLanguage": "Label language",
   "labelLanguageHint": "A label typed here applies to that language only; the rest keep theirs.",
   "buttonMessage": "Message to send",
-  "buttonMessageHint": "Leave empty to send the label as the question."
+  "buttonMessageHint": "Leave empty to send the label as the question.",
+  "audience": "Show to",
+  "audience_all": "Everyone",
+  "audience_guest": "Not signed in",
+  "audience_verified": "Signed in",
+  "guest": {
+    "title": "Guest guidance (not signed in)",
+    "hint": "What the assistant offers when an agent set to \"only guide them to sign in\" meets a visitor who has not signed in. Which agents do that is set per agent above.",
+    "loginUrl": "Sign-in URL",
+    "signupUrl": "Registration URL",
+    "httpsOnly": "Must start with https://",
+    "notice": "Sign-in prompt",
+    "noticePlaceholder": "This answer is for signed-in partners. Please sign in and I will walk you through it.",
+    "noticeHint": "Blank = the built-in prompt in that language.",
+    "hostLinkTemplate": "\"Open in your system\" link template",
+    "hostLinkTemplateHint": "{hotelSn} is replaced with the signed hotel key; the console then shows an \"Open in host system\" button on partner conversations. Blank = no button.",
+    "hostLinkTemplateInvalid": "Must be an https:// URL containing {hotelSn}."
+  }
 }

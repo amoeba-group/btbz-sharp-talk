@@ -18,7 +18,8 @@ import {
   useSetDefaultAiAgent,
   useUpdateAiAgent,
 } from './ai-agents.hooks';
-import type { AiAgentRow } from './ai-agents.service';
+import { GUEST_POLICIES } from './ai-agents.service';
+import type { AiAgentRow, GuestPolicy } from './ai-agents.service';
 import { WIDGET_URL } from '@/lib/widget-url';
 
 
@@ -139,6 +140,8 @@ function AgentModal({
   const [displayName, setDisplayName] = useState('');
   const [greeting, setGreeting] = useState<Record<string, string>>({});
   const [greetLang, setGreetLang] = useState<ScenarioLang>('KO');
+  // Guest policy (PLN-261001 W1): what an unidentified visitor may be told.
+  const [guestPolicy, setGuestPolicy] = useState<GuestPolicy>('open');
   // Seed once per open — key the modal content on the agent id via `open` effect-free reset.
   const [seededFor, setSeededFor] = useState<string | null>(null);
   const seedKey = agent ? String(agent.id) : 'new';
@@ -149,6 +152,7 @@ function AgentModal({
     setActive(agent?.active ?? true);
     setDisplayName(agent?.displayName ?? '');
     setGreeting(agent?.greeting ?? {});
+    setGuestPolicy(agent?.guestPolicy ?? 'open');
   }
   if (!open && seededFor !== null) setSeededFor(null);
 
@@ -164,6 +168,7 @@ function AgentModal({
           active,
           display_name: displayName.trim(),
           greeting,
+          guest_policy: guestPolicy,
         },
         { onSuccess: onClose },
       );
@@ -291,6 +296,26 @@ function AgentModal({
               />
               <p className="text-xs text-gray-400">{t('agents.greetingHint')}</p>
             </div>
+            {/* Guest policy (PLN-261001 W1). A per-agent switch, not tenant-wide:
+                the partner desk asks visitors to sign in while the landing
+                agent keeps answering everyone. Takes effect on the next turn —
+                no deploy, so it is also the kill switch (PLN §5 risk 1). */}
+            <fieldset className="space-y-2">
+              <legend className="text-xs font-medium text-gray-500">{t('agents.guestPolicy')}</legend>
+              {GUEST_POLICIES.map((p) => (
+                <label key={p} className="flex items-start gap-2 text-sm text-gray-700">
+                  <input
+                    type="radio"
+                    name="guest-policy"
+                    className="mt-1"
+                    checked={guestPolicy === p}
+                    onChange={() => setGuestPolicy(p)}
+                  />
+                  <span>{t(`agents.guestPolicy_${p}`)}</span>
+                </label>
+              ))}
+              <p className="text-xs text-gray-400">{t('agents.guestPolicyHint')}</p>
+            </fieldset>
           </>
         )}
         {(agent || code.trim()) && (

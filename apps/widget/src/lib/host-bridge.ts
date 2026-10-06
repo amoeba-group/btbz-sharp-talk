@@ -81,6 +81,33 @@ export function postToHost(message: unknown): void {
   }
 }
 
+/**
+ * Open a tenant-supplied page OUTSIDE the widget (PLN-261001 V2): the partner
+ * portal's sign-in or registration. The widget iframe is sandboxed and must
+ * not navigate the host page itself, so a storefront frame asks its loader
+ * (`ivy:open-url`, which the loader honours only from this iframe, in the
+ * tenant's login mode — whole-tab redirect or popup) and a native host gets the
+ * same message to hand to the system browser. Standalone opens a new tab.
+ *
+ * Only http(s) ever leaves here. The URL comes from tenant configuration, and
+ * a `javascript:` value saved by mistake must not run in the storefront.
+ * Returns false when nothing was done.
+ */
+export function openHostUrl(url: string, mode: 'redirect' | 'popup' = 'redirect'): boolean {
+  if (!/^https?:\/\//i.test(url)) return false;
+  if (hostKind() !== null) {
+    postToHost({ type: 'ivy:open-url', url, mode });
+    return true;
+  }
+  try {
+    // noopener/noreferrer: the destination is tenant-supplied.
+    window.open(url, '_blank', 'noopener,noreferrer');
+  } catch {
+    // Popup blocked — nothing else the widget can do from inside its frame.
+  }
+  return true;
+}
+
 export interface HostMessage {
   type?: string;
   [key: string]: unknown;

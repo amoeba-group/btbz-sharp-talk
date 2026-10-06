@@ -192,6 +192,14 @@ export function adoptTenantConfig(res: SessionResponse): void {
   s.setIssueFeed(!!res.issueFeed);
   // Absent (older API) reads as a store — the behaviour before the flag existed.
   s.setCommerceEnabled(res.commerceEnabled !== false);
+  // Guest gate (PLN-261001): the session agent's policy for signed-out visitors
+  // and the tenant's sign-in links. Absent (older API) = open, no links.
+  s.setGuestPolicy(res.guestPolicy === 'login_guidance' ? 'login_guidance' : 'open');
+  s.setGuestGuidance(
+    res.guestGuidance
+      ? { loginUrl: res.guestGuidance.loginUrl ?? null, signupUrl: res.guestGuidance.signupUrl ?? null }
+      : null,
+  );
   // Deployment-level: where inference runs, named in the AI disclosure (G7).
   s.setAiProcessingRegion((res.aiProcessingRegion || 'US').toUpperCase());
 }

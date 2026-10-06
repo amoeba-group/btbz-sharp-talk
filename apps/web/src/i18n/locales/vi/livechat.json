@@ -394,5 +394,22 @@
     "addTo": "Thêm vào “{{title}}”",
     "group": "Gộp thành dòng thời gian",
     "dismiss": "Ẩn trong cuộc trò chuyện này"
+  },
+  "partner": {
+    "filterLabel": "Lọc theo khách sạn",
+    "filterPlaceholder": "Tên hoặc mã khách sạn",
+    "filterScope": "Chỉ phiên đối tác đã ký — mã chính xác hoặc một phần tên",
+    "signed": "đã ký",
+    "unsigned": "tự khai",
+    "signedHint": "Hệ thống chủ đã ký khách sạn và vai trò này.",
+    "unsignedHint": "Do trang tự khai, chưa ký — hãy xác minh trước khi xử lý.",
+    "verifiedAt": "Xác minh lúc",
+    "openInHost": "Mở trong hệ thống",
+    "briefingLine": "Đối tác của {{hotel}} · {{role}}",
+    "role": {
+      "manager": "Quản lý",
+      "receptionist": "Lễ tân",
+      "internal": "Nhân viên nội bộ"
+    }
   }
 }

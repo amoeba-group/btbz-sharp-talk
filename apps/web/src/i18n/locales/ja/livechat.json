@@ -394,5 +394,22 @@
     "addTo": "「{{title}}」に追加",
     "group": "タイムラインにまとめる",
     "dismiss": "この会話では非表示"
+  },
+  "partner": {
+    "filterLabel": "ホテルで絞り込み",
+    "filterPlaceholder": "ホテル名またはキー",
+    "filterScope": "署名済みパートナーセッションのみ — キーは完全一致、名前は部分一致",
+    "signed": "署名済み",
+    "unsigned": "自己申告",
+    "signedHint": "ホストシステムがこのホテルと役割に署名しています。",
+    "unsignedHint": "ページが申告した未署名の値です — 対応前に確認してください。",
+    "verifiedAt": "確認日時",
+    "openInHost": "ホストシステムで開く",
+    "briefingLine": "{{hotel}} のパートナー · {{role}}",
+    "role": {
+      "manager": "マネージャー",
+      "receptionist": "フロント",
+      "internal": "社内スタッフ"
+    }
   }
 }

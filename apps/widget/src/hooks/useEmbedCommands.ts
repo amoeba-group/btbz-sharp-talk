@@ -1,17 +1,17 @@
 import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useWidgetStore, type TabKey } from '../store/widgetStore';
 import {
   ensureSession,
   identify as identifyRequest,
   setSessionLanguage,
+  type IdentifyUser,
 } from '../services/sessionService';
 import { getParentOrigin, getShopDomain } from './useSession';
 import { hostPresent, onHostMessage, postToHost } from '../lib/host-bridge';
 import i18n, { LANG_STORAGE_KEY, SUPPORTED_LANGUAGES } from '../i18n/i18n';
 
 const TABS: TabKey[] = ['chat', 'orders', 'notifications'];
-
-type IdentifyUser = { userId: string; hash: string; name?: string; email?: string; phone?: string };
 
 /**
  * Host-application commands (PLN-260819 S3).
@@ -25,6 +25,7 @@ type IdentifyUser = { userId: string; hash: string; name?: string; email?: strin
  * the tenant secret, so a hostile page can send one but cannot make it verify.
  */
 export function useEmbedCommands(): void {
+  const queryClient = useQueryClient();
   useEffect(() => {
     if (!hostPresent()) return; // standalone — no host to take commands from
 
@@ -40,6 +41,10 @@ export function useEmbedCommands(): void {
       try {
         const res = await identifyRequest(token, user);
         store.setAuthenticated(res.authenticated);
+        // The menu is audience-filtered server-side (PLN-261001 V4): a
+        // signed-in partner gets the business chips, not the sign-in ones. The
+        // list was fetched once for a guest, so ask again now.
+        void queryClient.invalidateQueries({ queryKey: ['scenario', token] });
         postToHost({ type: 'ivy:event', event: 'identified', ok: true });
       } catch {
         // A rejected signature leaves the visitor a guest: they can still ask
@@ -152,5 +157,8 @@ export function useEmbedCommands(): void {
       stopMessages();
       stopTokenWatch();
     };
+    // queryClient is stable for the app's lifetime; the host subscription must
+    // be installed exactly once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }

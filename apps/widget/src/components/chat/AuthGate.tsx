@@ -1,23 +1,36 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { LogIn, Search } from 'lucide-react';
+import { LogIn, Search, UserPlus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { guestLookup } from '../../services/orderService';
 import { useStorefrontLogin } from '../../hooks/useStorefrontLogin';
+import { useWidgetStore } from '../../store/widgetStore';
 import { useAnalytics } from '../../lib/analytics';
 import { isAuthError } from '../../lib/errors';
+import { openHostUrl } from '../../lib/host-bridge';
 import { Spinner } from '../ui/Spinner';
 
 export function AuthGate({
   sessionToken,
+  reason = 'order',
   onSuccess,
   onCancel,
 }: {
   sessionToken: string | null;
+  /**
+   * Why the card is up (PLN-261001 V1): the order gate offers the storefront
+   * sign-in and the guest order lookup; the agent's guest policy offers the
+   * tenant's partner sign-in / registration links instead — there is no order
+   * to look up on a partner desk.
+   */
+  reason?: 'order' | 'login';
   onSuccess: () => void;
   onCancel: () => void;
 }) {
   const { t } = useTranslation();
   const { canLogin, pending, login, cancel } = useStorefrontLogin();
+  const guestGuidance = useWidgetStore((s) => s.guestGuidance);
+  const commerceEnabled = useWidgetStore((s) => s.commerceEnabled);
+  const loginMode = useWidgetStore((s) => s.loginMode);
   const analytics = useAnalytics();
   const [mode, setMode] = useState<'choice' | 'guest'>('choice');
   const [orderNumber, setOrderNumber] = useState('');
@@ -26,6 +39,11 @@ export function AuthGate({
   const [loading, setLoading] = useState(false);
   const titleId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Partner mode: the policy asked for a sign-in, or this tenant has no orders
+  // to look up but did give sign-in links — a help desk, not a store.
+  const hasLinks = !!(guestGuidance?.loginUrl || guestGuidance?.signupUrl);
+  const partnerMode = reason === 'login' || (!commerceEnabled && hasLinks);
 
   // Keep the latest onCancel without re-running the mount effect: the parent
   // re-renders every few seconds (chat poll) and passes a fresh onCancel each
@@ -68,6 +86,65 @@ export function AuthGate({
     } finally {
       setLoading(false);
     }
+  }
+
+  /** Leave for the tenant's page in the host window (never inside the iframe). */
+  function openLink(url: string) {
+    openHostUrl(url, loginMode);
+  }
+
+  if (partnerMode) {
+    return (
+      <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="rounded-st-md border border-gray-200 bg-white p-3 focus:outline-none"
+      >
+        <div id={titleId} className="mb-1 text-sm font-semibold text-gray-800">
+          {t('auth.loginTitle')}
+        </div>
+        <p className="mb-3 text-xs text-gray-600">{t('auth.loginBody')}</p>
+        <div className="flex flex-col gap-2">
+          {guestGuidance?.loginUrl ? (
+            <button
+              onClick={() => openLink(guestGuidance.loginUrl as string)}
+              className="flex items-center justify-center gap-2 rounded-st-md bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600"
+            >
+              <LogIn className="h-4 w-4" />
+              {t('auth.partnerSignIn')}
+            </button>
+          ) : (
+            // No partner link configured: the storefront sign-in is the only
+            // way in the widget knows, when embedded somewhere it exists.
+            canLogin && (
+              <button
+                onClick={login}
+                disabled={pending}
+                className="flex items-center justify-center gap-2 rounded-st-md bg-primary-500 px-3 py-2 text-sm font-medium text-on-primary hover:bg-primary-600 disabled:opacity-50"
+              >
+                <LogIn className="h-4 w-4" />
+                {pending ? t('auth.waiting') : t('auth.signIn')}
+              </button>
+            )
+          )}
+          {guestGuidance?.signupUrl && (
+            <button
+              onClick={() => openLink(guestGuidance.signupUrl as string)}
+              className="flex items-center justify-center gap-2 rounded-st-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              <UserPlus className="h-4 w-4" />
+              {t('auth.partnerSignUp')}
+            </button>
+          )}
+          <button onClick={onCancel} className="py-1 text-xs text-gray-400 hover:text-gray-600">
+            {t('auth.continueGuest')}
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -394,5 +394,22 @@
     "addTo": "添加到“{{title}}”",
     "group": "归为时间线",
     "dismiss": "在此对话中隐藏"
+  },
+  "partner": {
+    "filterLabel": "按酒店筛选",
+    "filterPlaceholder": "酒店名称或键",
+    "filterScope": "仅限已签名的合作伙伴会话 — 键需完全匹配，名称可部分匹配",
+    "signed": "已签名",
+    "unsigned": "自行申报",
+    "signedHint": "主系统已对该酒店和角色签名。",
+    "unsignedHint": "由页面申报、未签名 — 处理前请核实。",
+    "verifiedAt": "验证时间",
+    "openInHost": "在主系统中打开",
+    "briefingLine": "{{hotel}} 的合作伙伴 · {{role}}",
+    "role": {
+      "manager": "经理",
+      "receptionist": "前台",
+      "internal": "内部员工"
+    }
   }
 }

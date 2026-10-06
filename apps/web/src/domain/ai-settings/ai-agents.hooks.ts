@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { aiAgentsService } from './ai-agents.service';
+import type { GuestPolicy } from './ai-agents.service';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
 
@@ -45,6 +46,7 @@ export function useUpdateAiAgent() {
       active?: boolean;
       display_name?: string;
       greeting?: Record<string, string>;
+      guest_policy?: GuestPolicy;
     }) => aiAgentsService.update(id, body),
     onSuccess: () => {
       invalidate();

@@ -943,6 +943,17 @@
           redirectToLogin();
         }
       }
+    } else if (d.type === 'ivy:open-url') {
+      // The widget asks to leave for a tenant-configured page — the partner
+      // portal's sign-in or registration (PLN-261001 V2). Only the widget
+      // iframe may ask, only http(s) is followed (the URL is tenant config,
+      // never user input, but a stray `javascript:` must still go nowhere),
+      // and the tenant's login mode decides: navigate this tab, or a popup.
+      var target = String(d.url || '');
+      if (e.source === frame.contentWindow && /^https?:\/\//i.test(target)) {
+        if (d.mode === 'popup') window.open(target, '_blank', 'noopener');
+        else window.location.assign(target);
+      }
     } else if (d.type === 'ivy:cafe24-ticket') {
       // The Cafe24 sign-in popup (served by our API origin) posts the one-time
       // ticket here. Redeem it, authenticate the widget, and close the popup — the
@@ -1143,6 +1154,10 @@
    * Tell the widget who is signed in. `hash` is an HMAC of `userId` produced by
    * the host's OWN server — this loader never sees the secret, and a hash built
    * in the browser would prove nothing.
+   *
+   * v2 (PLN-261001 §1.2b): `claims: { hotelSn, role, iat, hotelName?, hotelCode? }`
+   * travels through untouched; the hash is then the server's signature over
+   * `userId|hotelSn|role|iat`. Claims under a v1 hash are refused by the API.
    */
   api.identify = function (user) {
     boot();

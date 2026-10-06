@@ -310,7 +310,11 @@
     "displayNameHint": "在小部件中向顾客展示。留空=店铺显示名。",
     "greeting": "首条回复消息",
     "greetingPlaceholder": "你好！我是 Livy，有什么可以帮你？",
-    "greetingHint": "分配到此客服的会话的第一条气泡。留空的语言使用店铺通用首条消息。"
+    "greetingHint": "分配到此客服的会话的第一条气泡。留空的语言使用店铺通用首条消息。",
+    "guestPolicy": "未登录的访客",
+    "guestPolicy_open": "照常回答",
+    "guestPolicy_login_guidance": "仅引导登录或注册",
+    "guestPolicyHint": "选择登录引导后，未登录访客只会从标记为\"对访客可见\"的分类中获得回答；其他问题会收到登录提示（在下方\"访客引导\"中编辑）。从下一条消息起生效，无需部署。"
   },
   "agentScope": {
     "button": "客服",
@@ -350,5 +354,22 @@
   "labelLanguage": "标签语言",
   "labelLanguageHint": "此处输入的标签仅适用于该语言，其他语言保持不变。",
   "buttonMessage": "发送的内容",
-  "buttonMessageHint": "留空则直接把标签作为问题发送。"
+  "buttonMessageHint": "留空则直接把标签作为问题发送。",
+  "audience": "显示给",
+  "audience_all": "所有人",
+  "audience_guest": "未登录",
+  "audience_verified": "已登录",
+  "guest": {
+    "title": "访客引导（未登录）",
+    "hint": "当设置为\"仅引导登录\"的智能体遇到未登录访客时所提供的内容。哪些智能体采用此策略在上方按智能体设置。",
+    "loginUrl": "登录 URL",
+    "signupUrl": "注册 URL",
+    "httpsOnly": "必须以 https:// 开头",
+    "notice": "登录提示语",
+    "noticePlaceholder": "此内容面向已登录的合作伙伴。请登录后我再为您详细说明。",
+    "noticeHint": "留空 = 使用该语言的内置提示语。",
+    "hostLinkTemplate": "\"在您的系统中打开\"链接模板",
+    "hostLinkTemplateHint": "{hotelSn} 会替换为已签名的酒店键；控制台将在合作伙伴会话中显示\"在主系统中打开\"按钮。留空 = 不显示按钮。",
+    "hostLinkTemplateInvalid": "必须是包含 {hotelSn} 的 https:// URL。"
+  }
 }

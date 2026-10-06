@@ -15,5 +15,13 @@
   "reveal": "Show full details",
   "revealAudited": "Contact details revealed. This read is recorded in the audit log.",
   "maskedHint": "Customer identifiers are masked. Master and director accounts can reveal them.",
-  "maskedHintWithReveal": "Customer identifiers are masked. Revealing one shows it for 5 minutes and is recorded in the audit log."
+  "maskedHintWithReveal": "Customer identifiers are masked. Revealing one shows it for 5 minutes and is recorded in the audit log.",
+  "hotel": "Hotel (latest)",
+  "searchHotelPlaceholder": "Search by hotel name or key",
+  "unsigned": "self-declared",
+  "partnerRole": {
+    "manager": "Manager",
+    "receptionist": "Receptionist",
+    "internal": "Internal staff"
+  }
 }

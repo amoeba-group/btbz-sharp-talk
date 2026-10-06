@@ -50,6 +50,9 @@ export function CustomersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
+  // Hotel of the last signed partner claims (REQ-261006 W7): key or name.
+  const [hotelSearch, setHotelSearch] = useState('');
+  const [debouncedHotel, setDebouncedHotel] = useState('');
   const [editing, setEditing] = useState<Customer | null>(null);
   const [tier, setTier] = useState<string>('guest');
   // Revealed records live here only, never in the query cache: they expire,
@@ -86,7 +89,7 @@ export function CustomersPage() {
     [reveal, revealed, t],
   );
 
-  // Debounce the search box and reset to the first page on a new query.
+  // Debounce the search boxes and reset to the first page on a new query.
   useEffect(() => {
     const id = setTimeout(() => {
       setDebouncedSearch(search.trim());
@@ -94,11 +97,19 @@ export function CustomersPage() {
     }, 300);
     return () => clearTimeout(id);
   }, [search]);
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setDebouncedHotel(hotelSearch.trim());
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(id);
+  }, [hotelSearch]);
 
   const { data, isLoading, error } = useCustomers({
     page,
     pageSize: PAGE_SIZE,
     email: debouncedSearch || undefined,
+    hotel: debouncedHotel || undefined,
   });
   const updateTier = useUpdateTier();
 
@@ -125,6 +136,25 @@ export function CustomersPage() {
         return (
           <span className={revealed[c.id] ? 'font-medium text-gray-900' : 'text-gray-600'}>
             {row.email ?? '—'}
+          </span>
+        );
+      },
+    },
+    {
+      // Last signed partner context (REQ-261006 W7). Key always beside the
+      // name: the name is not signed, the key is.
+      key: 'hotel',
+      header: t('hotel'),
+      render: (c) => {
+        const claims = c.lastClaims;
+        if (!claims) return '—';
+        const name = claims.hotelName?.trim();
+        const role = t(`partnerRole.${claims.role}`, { defaultValue: claims.role });
+        return (
+          <span title={claims.hotelCode ?? undefined}>
+            {name ? `${name} (${claims.hotelSn})` : claims.hotelSn}
+            {role ? ` · ${role}` : ''}
+            {!claims.signed ? ` · ${t('unsigned')}` : ''}
           </span>
         );
       },
@@ -177,7 +207,7 @@ export function CustomersPage() {
     <div>
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
 
-      <div className="mb-4">
+      <div className="mb-4 flex flex-wrap gap-2">
         <input
           type="search"
           value={search}
@@ -185,6 +215,14 @@ export function CustomersPage() {
           placeholder={t('searchPlaceholder')}
           aria-label={t('searchPlaceholder')}
           className="w-full max-w-sm rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
+        />
+        <input
+          type="search"
+          value={hotelSearch}
+          onChange={(e) => setHotelSearch(e.target.value)}
+          placeholder={t('searchHotelPlaceholder')}
+          aria-label={t('searchHotelPlaceholder')}
+          className="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500"
         />
       </div>
 

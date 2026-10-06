@@ -394,5 +394,22 @@
     "addTo": "Añadir a «{{title}}»",
     "group": "Agrupar como línea de tiempo",
     "dismiss": "Ocultar en esta conversación"
+  },
+  "partner": {
+    "filterLabel": "Filtrar por hotel",
+    "filterPlaceholder": "Nombre o clave del hotel",
+    "filterScope": "Solo sesiones de socios firmadas: clave exacta o parte del nombre",
+    "signed": "firmado",
+    "unsigned": "autodeclarado",
+    "signedHint": "El sistema anfitrión firmó este hotel y rol.",
+    "unsignedHint": "Declarado por la página, sin firmar: verifícalo antes de actuar.",
+    "verifiedAt": "Verificado el",
+    "openInHost": "Abrir en el sistema anfitrión",
+    "briefingLine": "Socio de {{hotel}} · {{role}}",
+    "role": {
+      "manager": "Gerente",
+      "receptionist": "Recepcionista",
+      "internal": "Personal interno"
+    }
   }
 }

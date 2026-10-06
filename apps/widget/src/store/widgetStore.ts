@@ -97,6 +97,15 @@ interface WidgetState {
    */
   commerceEnabled: boolean;
   /**
+   * The session's agent policy for visitors who are not signed in (PLN-261001).
+   * 'login_guidance' = the API answers them only from guest-visible knowledge
+   * and otherwise asks them to sign in; the widget then shows the partner
+   * sign-in card instead of the order lookup.
+   */
+  guestPolicy: 'open' | 'login_guidance';
+  /** Tenant sign-in / registration links for that card; null = none given. */
+  guestGuidance: { loginUrl: string | null; signupUrl: string | null } | null;
+  /**
    * Inbound chat messages that arrived while the Chat tab was not the active one
    * — the count on the Chat tab's badge (PLN-260817 W-1). Cleared the moment the
    * shopper opens the tab, since the messages are then on screen.
@@ -113,6 +122,8 @@ interface WidgetState {
   setWidgetCopy: (c: WidgetCopy | null) => void;
   setIssueFeed: (v: boolean) => void;
   setCommerceEnabled: (v: boolean) => void;
+  setGuestPolicy: (p: 'open' | 'login_guidance') => void;
+  setGuestGuidance: (g: { loginUrl: string | null; signupUrl: string | null } | null) => void;
   setCustomerName: (n: string | null) => void;
   /** Tenant theme, for the parts that are markup rather than CSS (logo, launcher). */
   widgetTheme: WidgetTheme | null;
@@ -166,6 +177,8 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   tabsResolved: false,
   issueFeed: false,
   commerceEnabled: true,
+  guestPolicy: 'open',
+  guestGuidance: null,
   chatUnread: 0,
   setSessionToken: (t) => {
     setStoredSessionToken(t);
@@ -181,6 +194,8 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setWidgetCopy: (c) => set({ widgetCopy: c }),
   setIssueFeed: (v) => set({ issueFeed: v }),
   setCommerceEnabled: (v) => set({ commerceEnabled: v }),
+  setGuestPolicy: (p) => set({ guestPolicy: p }),
+  setGuestGuidance: (g) => set({ guestGuidance: g }),
   setCustomerName: (n) => set({ customerName: n }),
   widgetTheme: null,
   setWidgetTheme: (t) => set({ widgetTheme: t }),

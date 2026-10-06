@@ -92,6 +92,17 @@ export function ChatTab() {
   // it, AuthGate's success handler just cleared `inline` and they landed back on
   // the menu having to pick "My orders" a second time.
   const [afterAuth, setAfterAuth] = useState<Inline>(null);
+  // Why the sign-in card is up (PLN-261001): the order gate, or the agent's
+  // guest policy — the card offers different ways in for each.
+  const [authReason, setAuthReason] = useState<'order' | 'login'>('order');
+  // A host-app identify (the partner portal signing the visitor in) can land
+  // while the policy card is showing. The card has nothing left to offer then —
+  // drop it so the next question simply goes through.
+  useEffect(() => {
+    if (authenticated && inline === 'auth' && authReason === 'login') setInline(null);
+    // Only the sign-in transition matters here.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authenticated]);
   // Attachments the shopper picked but has not sent yet (PLN-260814 S3).
   const uploads = useAttachmentUpload(sessionToken);
   const [uploadNotice, setUploadNotice] = useState<string | null>(null);
@@ -196,7 +207,10 @@ export function ChatTab() {
     analytics.messageSent(via);
     const res = await send(text, attachments);
     setShowEscalate(res.escalate);
-    if (res.needsAuth && !authenticated) setInline('auth');
+    if (res.needsAuth && !authenticated) {
+      setAuthReason(res.authReason === 'login' ? 'login' : 'order');
+      setInline('auth');
+    }
     // Handed off outside business hours and we hold no address: the reply has
     // to travel by email, so ask before the shopper walks away (PLN-260806).
     else if (res.needsContactEmail) setInline('contactEmail');
@@ -275,6 +289,7 @@ export function ChatTab() {
       return;
     }
     setAfterAuth(target);
+    setAuthReason('order');
     setInline('auth');
   }
 
@@ -509,6 +524,7 @@ export function ChatTab() {
         {inline === 'auth' && (
           <AuthGate
             sessionToken={sessionToken}
+            reason={authReason}
             onSuccess={() => {
               setAuthenticated(true);
               setInline(afterAuth);

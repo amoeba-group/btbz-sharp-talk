@@ -64,6 +64,20 @@ const CSAT_NOT_PREVIEW =
 const MESSAGE_PAGE_SIZE = 30;
 /** Operator alias length — matches sessions.alias (PLN-260812). */
 export const SESSION_ALIAS_MAX = 60;
+
+/**
+ * "Open in host system" link for a signed partner session (REQ-261006 W6):
+ * the tenant's template with `{hotelSn}` substituted. Only SIGNED claims earn
+ * a link — a self-declared hotel must not become a one-click jump into the
+ * wrong hotel's record. Null when either side is missing.
+ */
+export function partnerLinkOf(
+  template: string | null,
+  claims: IdentityClaims | null | undefined,
+): string | null {
+  if (!template || !claims?.signed || !claims.hotelSn) return null;
+  return template.split('{hotelSn}').join(encodeURIComponent(claims.hotelSn));
+}
 /** Identical agent reply inside this window counts as a double submission. */
 const DUPLICATE_REPLY_WINDOW_MS = 10_000;
 
@@ -312,6 +326,8 @@ export class AgentService {
       aiAgentName: string | null;
       /** Signed partner context of the session (REQ-261006); null for guests/v1. */
       identityClaims: IdentityClaims | null;
+      /** Deep link into the tenant's own system for that partner (W6); null = no template/claims. */
+      partnerLink: string | null;
     }>;
     total: number;
   }> {
@@ -411,6 +427,9 @@ export class AgentService {
     const channelDefaults = await this.channelDefaults(conversations.map((c) => c.id));
     // One small lookup per page: id→label + the default (REQ-260825 R6).
     const agentDisplay = await this.aiAgentDisplay(tenantId);
+    // One read per page, not per row: the "open in host system" template is
+    // tenant-wide; only the substituted hotel differs (REQ-261006 W6).
+    const hostTemplate = await this.hostLinkTemplate(tenantId);
     const items = conversations.map((conversation) => {
       const state = stateBySession.get(String(conversation.sessionId));
       const pinned = state?.aiAgentId ?? null;
@@ -432,9 +451,26 @@ export class AgentService {
             ? agentDisplay.byId.get(effectiveAgentId) ?? agentDisplay.defaultLabel
             : agentDisplay.defaultLabel,
         identityClaims: state?.identityClaims ?? null,
+        partnerLink: partnerLinkOf(hostTemplate, state?.identityClaims ?? null),
       };
     });
     return { items, total };
+  }
+
+  /**
+   * The tenant's `guest_guidance.hostLinkTemplate` (console › AI settings ›
+   * guest guidance), or null when unset. The sanitizer already required the
+   * `{hotelSn}` placeholder on write; checked again here so a hand-edited row
+   * cannot produce a link that opens the same page for every hotel.
+   */
+  private async hostLinkTemplate(tenantId: number): Promise<string | null> {
+    if (!this.aiConfigRepo) return null;
+    const row = await this.aiConfigRepo.findOne({
+      where: { tenantId },
+      select: { id: true, guestGuidance: true },
+    });
+    const template = row?.guestGuidance?.hostLinkTemplate;
+    return typeof template === 'string' && template.includes('{hotelSn}') ? template : null;
   }
 
   /**
@@ -551,8 +587,11 @@ export class AgentService {
     aiAgentName: string | null;
     /** Signed partner context (REQ-261006) for the console header; null = none. */
     identityClaims: IdentityClaims | null;
+    /** "Open in host system" link for that partner (W6); null without template/claims. */
+    partnerLink: string | null;
   }> {
     const state = (await this.sessionStates([sessionId])).get(String(sessionId));
+    const hostTemplate = tenantId != null ? await this.hostLinkTemplate(tenantId) : null;
     const mode = state?.autoReplyMode ?? AUTO_REPLY_MODE.INHERIT;
     const defaults = await this.channelDefaults([conversationId]);
     // Same effective-agent resolution as the queue rows (REQ-260825 R8).
@@ -573,6 +612,7 @@ export class AgentService {
           ? display.byId.get(effectiveAgentId) ?? display.defaultLabel
           : display.defaultLabel,
       identityClaims: state?.identityClaims ?? null,
+      partnerLink: partnerLinkOf(hostTemplate, state?.identityClaims ?? null),
     };
   }
 

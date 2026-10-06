@@ -310,7 +310,11 @@
     "displayNameHint": "Hiển thị cho khách trong widget. Bỏ trống = tên cửa hàng.",
     "greeting": "Tin nhắn phản hồi đầu tiên",
     "greetingPlaceholder": "Xin chào! Mình là Livy, mình giúp gì được?",
-    "greetingHint": "Bong bóng đầu tiên của phiên gắn agent này. Ngôn ngữ bỏ trống = tin nhắn chung của cửa hàng."
+    "greetingHint": "Bong bóng đầu tiên của phiên gắn agent này. Ngôn ngữ bỏ trống = tin nhắn chung của cửa hàng.",
+    "guestPolicy": "Khách chưa đăng nhập",
+    "guestPolicy_open": "Trả lời như bình thường",
+    "guestPolicy_login_guidance": "Chỉ hướng dẫn đăng nhập hoặc đăng ký",
+    "guestPolicyHint": "Khi chọn hướng dẫn đăng nhập, khách chưa đăng nhập chỉ được trả lời từ các phân loại đánh dấu \"Công khai cho khách\"; câu hỏi khác nhận lời nhắc đăng nhập (sửa ở mục Hướng dẫn khách bên dưới). Có hiệu lực từ tin nhắn tiếp theo — không cần deploy."
   },
   "agentScope": {
     "button": "Agent",
@@ -350,5 +354,22 @@
   "labelLanguage": "Ngôn ngữ của nhãn",
   "labelLanguageHint": "Nhãn nhập ở đây chỉ áp dụng cho ngôn ngữ đó; các ngôn ngữ khác giữ nguyên.",
   "buttonMessage": "Nội dung gửi đi",
-  "buttonMessageHint": "Để trống sẽ gửi nhãn làm câu hỏi."
+  "buttonMessageHint": "Để trống sẽ gửi nhãn làm câu hỏi.",
+  "audience": "Hiển thị cho",
+  "audience_all": "Tất cả",
+  "audience_guest": "Chưa đăng nhập",
+  "audience_verified": "Đã đăng nhập",
+  "guest": {
+    "title": "Hướng dẫn khách (chưa đăng nhập)",
+    "hint": "Những gì trợ lý đưa ra khi một trợ lý đặt \"chỉ hướng dẫn đăng nhập\" gặp khách chưa đăng nhập. Trợ lý nào áp dụng được chọn ở từng trợ lý phía trên.",
+    "loginUrl": "URL đăng nhập",
+    "signupUrl": "URL đăng ký",
+    "httpsOnly": "Phải bắt đầu bằng https://",
+    "notice": "Lời nhắc đăng nhập",
+    "noticePlaceholder": "Nội dung này dành cho đối tác đã đăng nhập. Vui lòng đăng nhập để tôi hướng dẫn chi tiết.",
+    "noticeHint": "Để trống = dùng lời mặc định theo ngôn ngữ.",
+    "hostLinkTemplate": "Mẫu link \"Mở trong hệ thống của bạn\"",
+    "hostLinkTemplateHint": "{hotelSn} được thay bằng mã khách sạn đã ký; console sẽ hiện nút \"Mở trong hệ thống\" ở hội thoại đối tác. Để trống = ẩn nút.",
+    "hostLinkTemplateInvalid": "Phải là URL https:// có chứa {hotelSn}."
+  }
 }

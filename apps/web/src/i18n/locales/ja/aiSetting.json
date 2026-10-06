@@ -310,7 +310,11 @@
     "displayNameHint": "ウィジェットで顧客に表示されます。空欄=ストア表示名。",
     "greeting": "最初の応答メッセージ",
     "greetingPlaceholder": "こんにちは！Livyです。ご用件をどうぞ。",
-    "greetingHint": "このエージェント担当セッションの最初の吹き出しです。空欄の言語はストア共通メッセージを使用します。"
+    "greetingHint": "このエージェント担当セッションの最初の吹き出しです。空欄の言語はストア共通メッセージを使用します。",
+    "guestPolicy": "未ログインの訪問者",
+    "guestPolicy_open": "通常どおり回答する",
+    "guestPolicy_login_guidance": "ログイン・登録の案内のみ",
+    "guestPolicyHint": "ログイン案内を選ぶと、未ログインの訪問者は「ゲストに公開」のカテゴリからのみ回答を受け、それ以外の質問にはログイン案内文が返ります（下のゲスト案内で編集）。次のメッセージから適用され、デプロイは不要です。"
   },
   "agentScope": {
     "button": "エージェント",
@@ -350,5 +354,22 @@
   "labelLanguage": "ラベルの言語",
   "labelLanguageHint": "ここで入力したラベルはその言語にのみ適用され、他の言語はそのままです。",
   "buttonMessage": "送信する文",
-  "buttonMessageHint": "空欄ならラベルをそのまま質問として送ります。"
+  "buttonMessageHint": "空欄ならラベルをそのまま質問として送ります。",
+  "audience": "表示対象",
+  "audience_all": "全員",
+  "audience_guest": "未ログイン",
+  "audience_verified": "ログイン済み",
+  "guest": {
+    "title": "ゲスト案内（未ログイン）",
+    "hint": "「ログイン案内のみ」に設定したエージェントが未ログインの訪問者に提示する内容です。どのエージェントがそうするかは上のエージェントごとに設定します。",
+    "loginUrl": "ログインURL",
+    "signupUrl": "登録URL",
+    "httpsOnly": "https:// で始まる必要があります",
+    "notice": "ログイン案内文",
+    "noticePlaceholder": "この内容はログイン済みのパートナー向けです。ログインしていただければ詳しくご案内します。",
+    "noticeHint": "空欄の場合はその言語の既定文を使います。",
+    "hostLinkTemplate": "「自社システムで開く」リンクのテンプレート",
+    "hostLinkTemplateHint": "{hotelSn} が署名済みのホテルキーに置き換わり、コンソールのパートナー会話に「ホストシステムで開く」ボタンが表示されます。空欄ならボタンなし。",
+    "hostLinkTemplateInvalid": "{hotelSn} を含む https:// のURLである必要があります。"
+  }
 }

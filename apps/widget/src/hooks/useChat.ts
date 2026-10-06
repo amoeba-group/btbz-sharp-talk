@@ -15,6 +15,12 @@ import type { ChatAttachment, ChatMessage, ChatReply, ScenarioPostAction } from 
 export interface SendResult {
   escalate: boolean;
   needsAuth: boolean;
+  /**
+   * Why `needsAuth` (PLN-261001): 'order' = the order gate (sign in or look an
+   * order up); 'login' = the agent's guest policy (sign in to the partner
+   * portal). Absent on an older API = 'order'.
+   */
+  authReason?: 'order' | 'login';
   /** Off-hours handoff with no address on file — ask the shopper for one. */
   needsContactEmail?: boolean;
 }
@@ -113,6 +119,7 @@ export function useChat(sessionToken: string | null) {
         return {
           escalate: res.escalate,
           needsAuth: res.needsAuth,
+          authReason: res.authReason,
           needsContactEmail: res.needsContactEmail,
         };
       } catch (e) {

@@ -455,5 +455,11 @@
     "write": "보드에 작성",
     "body": "소스에서 가져온 자산과 새 지식은 보드에 먼저 작성·게시하고, 시뮬레이션으로 확인한 뒤 지식베이스문서로 채택합니다.",
     "counts": "검토 대기 {{pending}}건 · 채택 {{promoted}}건"
-  }
+  },
+  "categoryGuestVisibleOnLabel": "게스트 공개",
+  "categoryGuestVisibleOffLabel": "로그인 전용",
+  "categoryGuestVisibleHint": "로그인 안내만 하는 에이전트가 미로그인 방문자에게 이 카테고리로 답변할 수 있는지 여부입니다.",
+  "categoryGuestVisibleConfirm": "문서 {{count}}건을 로그인 없이 볼 수 있게 할까요?",
+  "categoryGuestVisibleOn": "카테고리를 게스트에 공개했습니다.",
+  "categoryGuestVisibleOff": "카테고리를 로그인 전용으로 바꿨습니다."
 }

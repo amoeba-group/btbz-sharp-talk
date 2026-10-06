@@ -14,8 +14,17 @@ export interface AiAgentRow {
   greeting: Record<string, string>;
   active: boolean;
   isDefault: boolean;
+  /**
+   * What an unidentified visitor gets (PLN-261001 W1): `open` answers as
+   * usual; `login_guidance` grounds only on guest-visible categories and
+   * otherwise asks the visitor to sign in.
+   */
+  guestPolicy: GuestPolicy;
   updatedAt: string;
 }
+
+export type GuestPolicy = 'open' | 'login_guidance';
+export const GUEST_POLICIES: GuestPolicy[] = ['open', 'login_guidance'];
 
 export const aiAgentsService = {
   list: async (): Promise<AiAgentRow[]> => {
@@ -30,6 +39,7 @@ export const aiAgentsService = {
       active?: boolean;
       display_name?: string;
       greeting?: Record<string, string>;
+      guest_policy?: GuestPolicy;
     },
   ) => apiPatch<AiAgentRow>(`/ai-agents/${id}`, body),
   remove: (id: number) => apiDelete<{ deleted: true }>(`/ai-agents/${id}`),

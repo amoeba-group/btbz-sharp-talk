@@ -97,6 +97,46 @@ $hash = hash_hmac('sha256', (string)$user->id, getenv('SHOPTALK_EMBED_SECRET'));
 - 서명이 맞지 않으면 방문자는 **게스트로 계속 대화할 수 있습니다.** 로그인 실패가 문의 자체를
   막지 않습니다.
 
+### 3.4 v2 — 파트너 컨텍스트(호텔·역할)까지 서명하기 (선택)
+
+상담원 콘솔에 **"어느 호텔의 누구"**인지 보여주고 싶다면(파트너 포털·B2B 데스크) `claims`를 함께
+보내고, 해시는 `userId` 하나가 아니라 **`userId|hotelSn|role|iat`** 문자열을 서명합니다.
+`hotelName`·`hotelCode`는 표시용이며 서명하지 않습니다. `claims`가 있는데 v1 해시(`userId`만 서명)를
+보내면 **전체가 거부**됩니다(자가 신고 호텔이 서명된 것처럼 보이는 일을 막기 위해서입니다).
+
+```php
+// PHP — HA가 선택한 호텔로 서명 (호텔을 바꾸면 다시 identify)
+$iat   = time();                                  // 초 단위, 서버 시각 ±10분 안에 도착해야 함
+$role  = 'receptionist';                          // manager | receptionist | internal
+$canon = implode('|', [(string)$user->id, (string)$hotelSn, $role, (string)$iat]);
+$hash  = hash_hmac('sha256', $canon, getenv('SHOPTALK_EMBED_SECRET'));
+```
+
+```html
+<script>
+  ShopTalk.identify({
+    userId: "12345",
+    hash:   "<위 $hash>",
+    name:   "Nguyen T.",
+    claims: {
+      hotelSn:   "1721",                 // 서명 대상
+      role:      "receptionist",        // 서명 대상
+      iat:       1759734000,            // 서명 대상 (초)
+      hotelName: "A In Hotel Del Luna", // 표시용
+      hotelCode: "HCM_001_001721"       // 표시용
+    }
+  });
+</script>
+```
+
+- 로그인 사용자가 **다른 호텔로 전환**하면 새 `claims`로 `identify`를 다시 호출하세요. 로그아웃은
+  `ShopTalk.logout()`.
+- 콘솔(라이브 채팅·고객)에는 호텔명과 **서명된 hotelSn**이 함께 표시되고, 테넌트가 링크 템플릿을
+  설정했다면 "호스트 시스템에서 열기" 버튼이 붙습니다(AI 설정 → 게스트 안내).
+- 에이전트가 "로그인 안내만" 정책이면 identify 전의 방문자는 게스트 공개 카테고리로만 답을 받고,
+  그 밖의 질문에는 로그인 안내(설정한 로그인/가입 URL 카드)가 나갑니다. 위젯이 그 URL을 열 때
+  이 로더에 `ivy:open-url`을 보내며, 로더는 **위젯 iframe에서 온 https URL만** 따라갑니다.
+
 ## 4. 자바스크립트 API
 
 | 호출 | 동작 |
@@ -104,7 +144,7 @@ $hash = hash_hmac('sha256', (string)$user->id, getenv('SHOPTALK_EMBED_SECRET'));
 | `ShopTalk.init(options)` | 설치·부팅 |
 | `ShopTalk.open('chat' \| 'orders' \| 'notifications')` | 위젯 열기(탭 지정 가능) |
 | `ShopTalk.close()` / `ShopTalk.toggle()` | 닫기 / 토글 |
-| `ShopTalk.identify({ userId, hash, … })` | 로그인 사용자 전달 |
+| `ShopTalk.identify({ userId, hash, claims?, … })` | 로그인 사용자 전달 (`claims` = v2 호텔·역할 컨텍스트, §3.4) |
 | `ShopTalk.logout()` | 세션 해제 → 게스트로 |
 | `ShopTalk.setLocale('vi')` | 언어 변경 |
 | `ShopTalk.on(event, fn)` / `off` | 이벤트 구독 |

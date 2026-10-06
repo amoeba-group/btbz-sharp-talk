@@ -455,5 +455,11 @@
     "write": "Escribir en el tablero",
     "body": "Los activos importados y el conocimiento nuevo se escriben y publican primero en el tablero, se comprueban con una simulación y luego se adoptan como documentos KB.",
     "counts": "Pendientes de revisión {{pending}} · adoptados {{promoted}}"
-  }
+  },
+  "categoryGuestVisibleOnLabel": "Visible para invitados",
+  "categoryGuestVisibleOffLabel": "Solo con sesión",
+  "categoryGuestVisibleHint": "Si un agente que solo guía al inicio de sesión puede responder desde esta categoría a un visitante sin sesión.",
+  "categoryGuestVisibleConfirm": "¿Hacer legibles {{count}} documento(s) sin iniciar sesión?",
+  "categoryGuestVisibleOn": "La categoría ya es visible para invitados.",
+  "categoryGuestVisibleOff": "La categoría ahora es solo con sesión."
 }
