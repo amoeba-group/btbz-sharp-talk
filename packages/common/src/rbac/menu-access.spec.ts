@@ -51,6 +51,8 @@ const LEGACY_MENU_CAP: Record<MenuCode, string> = {
   live_chat: 'live_chat',
   issues: 'live_chat',
   history: 'history',
+  // Journey board (PLN-261006): a live-chat screen, same holders as the issue board.
+  journey: 'live_chat',
   work_log: 'work_log',
   statistics: 'statistics',
   ai_settings: 'ai_settings',

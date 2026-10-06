@@ -49,7 +49,7 @@ export const DEFAULT_ROLE_MENUS: Record<UserRank, readonly MenuCode[]> = {
     MENU.REVIEWS,
   ],
   // Staff only ever handled: chat and orders, and only with the matching label.
-  [USER_RANK.STAFF]: [MENU.DASHBOARD, MENU.LIVE_CHAT, MENU.ISSUES, MENU.ORDERS],
+  [USER_RANK.STAFF]: [MENU.DASHBOARD, MENU.LIVE_CHAT, MENU.ISSUES, MENU.JOURNEY, MENU.ORDERS],
 };
 
 /**
