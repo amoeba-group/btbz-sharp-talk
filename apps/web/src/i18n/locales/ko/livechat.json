@@ -394,5 +394,22 @@
     "addTo": "‘{{title}}’에 추가",
     "group": "타임라인으로 묶기",
     "dismiss": "이 대화에서 숨기기"
+  },
+  "partner": {
+    "filterLabel": "호텔로 필터",
+    "filterPlaceholder": "호텔 이름 또는 키",
+    "filterScope": "서명된 파트너 세션만 — 키는 정확히, 이름은 일부로 검색",
+    "signed": "서명됨",
+    "unsigned": "자가 신고",
+    "signedHint": "호스트 시스템이 이 호텔과 역할을 서명했습니다.",
+    "unsignedHint": "페이지가 신고한 값으로 서명되지 않았습니다 — 처리 전 확인하세요.",
+    "verifiedAt": "확인 시각",
+    "openInHost": "호스트 시스템에서 열기",
+    "briefingLine": "{{hotel}} 파트너 · {{role}}",
+    "role": {
+      "manager": "관리자",
+      "receptionist": "프런트",
+      "internal": "내부 직원"
+    }
   }
 }

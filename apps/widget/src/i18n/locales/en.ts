@@ -156,6 +156,11 @@ export const en = {
     lookupFailed: "We couldn't find an order matching that number and email. Please check both and try again.",
     lookupThrottled: 'Too many attempts. Please wait a few minutes and try again.',
     useGuestInstead: 'Look up by order number instead',
+    loginTitle: 'Sign in to continue',
+    loginBody: 'That answer is for signed-in partners. Sign in and ask again, or keep going as a guest with general questions.',
+    partnerSignIn: 'Sign in',
+    partnerSignUp: 'Create a partner account',
+    continueGuest: 'Continue as guest',
   },
 
   contact: {

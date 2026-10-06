@@ -5,7 +5,7 @@ import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
 import { Modal } from '@/components/Modal';
 import { FormRow, Input, Select } from '@/components/Field';
-import { Lock } from 'lucide-react';
+import { Globe, Lock } from 'lucide-react';
 import { useAiAgents } from '../ai-settings/ai-agents.hooks';
 import {
   useCategoryRows,
@@ -14,6 +14,7 @@ import {
   useMergeCategories,
   useRemoveCategory,
   useRenameCategory,
+  useSetCategoryGuestVisible,
   useSetCategoryHidden,
 } from './knowledge.hooks';
 import type { KbCategoryRow } from './knowledge.service';
@@ -42,6 +43,7 @@ export function CategoryManagerCard() {
   const renameCategory = useRenameCategory();
   const mergeCategories = useMergeCategories();
   const setHidden = useSetCategoryHidden();
+  const setGuestVisible = useSetCategoryGuestVisible();
   const setAgents = useSetCategoryAgents();
   // Only agents that can actually answer are offered: scoping a category to a
   // deactivated agent reads as a narrowing nobody satisfies.
@@ -75,6 +77,35 @@ export function CategoryManagerCard() {
       <Badge tone={c.documentCount ? 'gray' : 'warning'}>
         {t('categoryDocs', { count: c.documentCount })}
       </Badge>
+      {/* Guest visibility (PLN-261001 W3): the one axis a login-guidance agent
+          may answer an unidentified visitor from. Default off, and opening a
+          category that already holds documents asks first — those documents
+          become readable without signing in the moment this flips. */}
+      {!locked && !c.id.startsWith('unregistered:') ? (
+        <Button
+          size="sm"
+          variant="secondary"
+          disabled={setGuestVisible.isPending}
+          title={t('categoryGuestVisibleHint')}
+          aria-pressed={!!c.guestVisible}
+          onClick={() => {
+            const next = !c.guestVisible;
+            if (
+              next &&
+              c.documentCount > 0 &&
+              !window.confirm(t('categoryGuestVisibleConfirm', { count: c.documentCount }))
+            ) {
+              return;
+            }
+            setGuestVisible.mutate({ id: c.id, guestVisible: next });
+          }}
+        >
+          <Globe
+            className={`mr-1 inline h-3 w-3 ${c.guestVisible ? 'text-success' : 'text-gray-400'}`}
+          />
+          {c.guestVisible ? t('categoryGuestVisibleOnLabel') : t('categoryGuestVisibleOffLabel')}
+        </Button>
+      ) : null}
       {/* Agent scope (REQ-260826 R2). Hidden when the tenant runs a single
           agent — a choice with one option is noise, and most tenants have
           exactly one — but never hidden from a category that already carries a

@@ -85,11 +85,17 @@ export function useDraftActions(id: string | null) {
   return { approve, discard };
 }
 
-export const useSessions = (q = '', status = 'all', channel = 'all', aiAgentId = 'all') => {
+export const useSessions = (
+  q = '',
+  status = 'all',
+  channel = 'all',
+  aiAgentId = 'all',
+  hotel = '',
+) => {
   const tenantKey = useTenantKey();
   return useQuery({
-    queryKey: ['agent', tenantKey, 'sessions', q, status, channel, aiAgentId],
-    queryFn: () => liveChatService.sessions(q, status, channel, aiAgentId),
+    queryKey: ['agent', tenantKey, 'sessions', q, status, channel, aiAgentId, hotel],
+    queryFn: () => liveChatService.sessions(q, status, channel, aiAgentId, hotel),
     // 5s (was 15s): a new escalation should surface within a beat, not a
     // quarter-minute — the endpoint is a few ms (PLN-260804).
     refetchInterval: 5000,

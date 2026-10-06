@@ -32,16 +32,18 @@ import { AgentsSection } from './AgentsSection';
 import { AgentEffectiveSection } from './AgentEffectiveSection';
 import { ScriptLibrarySection } from './ScriptLibrarySection';
 import { AnswerFooterSection } from './AnswerFooterSection';
+import { GuestGuidanceSection } from './GuestGuidanceSection';
 import { useAiAgents } from './ai-agents.hooks';
 import type { AiAgentRow } from './ai-agents.service';
 import type {
   AiFunctionSetting,
   ModerationRule,
+  ScenarioAudience,
   ScenarioButton,
   ScenarioLang,
   ScenarioOverride,
 } from './ai-settings.service';
-import { scenarioLabelText } from './ai-settings.service';
+import { SCENARIO_AUDIENCES, scenarioLabelText } from './ai-settings.service';
 
 const FUNCTION_KEYS = new Set(['chat', 'rag', 'summary', 'assist', 'moderation', 'coach']);
 
@@ -85,6 +87,9 @@ export function AiSettingsPage() {
           <PersonaSection draft={restoreDraft?.persona} agent={selectedAgent} />
           <ResponseRulesSection draft={restoreDraft?.rules} agent={selectedAgent} />
           <ScenarioButtonsSection />
+          {/* What a signed-out visitor is told once an agent asks them to sign
+              in (PLN-261001 W2/W8); the per-agent switch is in AgentsSection. */}
+          <GuestGuidanceSection />
           <ScriptLibrarySection />
           <AnswerFooterSection />
           <AiFunctionsSection />
@@ -422,6 +427,23 @@ function ScenarioButtonsSection() {
                   <p className="mt-0.5 text-[11px] text-gray-400">{t('buttonMessageHint')}</p>
                 </div>
               )}
+              {/* Who sees the chip (PLN-261001 W4): the API filters by the
+                  session's identity, so a guest-only chip disappears the
+                  moment the visitor signs in — and vice versa. */}
+              <div className="min-w-[150px]">
+                <Label>{t('audience')}</Label>
+                <Select
+                  value={btn.audience ?? 'all'}
+                  aria-label={t('audience')}
+                  onChange={(e) => patch(i, { audience: e.target.value as ScenarioAudience })}
+                >
+                  {SCENARIO_AUDIENCES.map((a) => (
+                    <option key={a} value={a}>
+                      {t(`audience_${a}`)}
+                    </option>
+                  ))}
+                </Select>
+              </div>
               <label className="flex h-9 items-center gap-2 text-sm text-gray-700">
                 <input
                   type="checkbox"

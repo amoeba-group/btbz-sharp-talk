@@ -63,3 +63,43 @@
 | customers | last_claims | json | YES | NULL |
 
 → SQL thủ công cho staging/prod tương đương lược đồ entity; API đã dừng sau kiểm tra (port 3000 trả lại).
+
+## 5. S2 — Console + widget (PR #2, nhánh `feature/guest-login-gate-ui`) — 2026-10-06
+
+### 5.1 Đơn vị / kiểu / i18n
+| # | Kiểm tra | Kết quả |
+|---|---|---|
+| S2-T1 | `tsc --noEmit` apps/web (map `@sharptalk/*` → src) | PASS |
+| S2-T2 | `tsc --noEmit` apps/widget (map src) | PASS |
+| S2-T3 | `tsc --noEmit` apps/api (thêm `partnerLink` vào list/state/mapper) | PASS |
+| S2-T4 | `node --test` widget, 8 file: `embed-open-url` (4 ca mới: redirect / popup / sai source·origin / URL không http) + `host-bridge` (3 ca mới `openHostUrl`: frame → `ivy:open-url` kèm mode, native → cùng message, standalone → `window.open`, từ chối `javascript:`) | **50/50** |
+| S2-T5 | jest `src/domain/agent` (+ `partner-link.spec.ts` 4 ca: thay thế `{hotelSn}`, URL-encode, không ký → null, thiếu template → null) | 17 suite / 122 PASS |
+| S2-T6 | `npm run i18n:check` sau khi thêm 20 khóa aiSetting · 6 knowledge · 13 livechat · 6 customers · 5 widget `auth.*` | es/ko/vi/ja/zh **complete** |
+
+### 5.2 Trình duyệt (dev stack Docker + API/console/widget chạy từ worktree, đăng nhập seed master ivyusa)
+| # | Màn hình | Thao tác | Kết quả |
+|---|---|---|---|
+| S2-B1 | AI Settings › sửa trợ lý (W1) | Tạo trợ lý tạm `guest-test` → modal có fieldset "Visitors who are not signed in" (2 radio) → chọn "Only guide…" → Save | Toast "Agent saved." ; `/session/ensure` của phiên trên agent này trả `guestPolicy: login_guidance` |
+| S2-B2 | AI Settings › Guest guidance (W2 + W8) | Nhập login/signup URL UAT, lời nhắc VI, template `…?hotelSn={hotelSn}` → Save → reload | Toast "AI configuration saved." ; 4 giá trị giữ nguyên sau reload |
+| S2-B3 | AI Settings › Scenario buttons (W4) | 6 nút đều có select "Show to" (Everyone / Not signed in / Signed in) | Hiển thị đúng |
+| S2-B4 | Knowledge › Categories (W3) | Category mới "HA Login Test" có nút "Signed-in only" → bấm | Toast "Category is now visible to guests.", nút đổi "Visible to guests" (globe xanh). Category "chưa đăng ký" (faq/policy…) không có nút — giống các nút Rename/Hide hiện có |
+| S2-B5 | Widget (demo storefront localhost:5174, `?agent=guest-test`, phiên guest) (V1) | Hỏi "When is the reconciliation deadline for hotel partners?" | Trả lời **ngay** bằng system message "This information is for signed-in partners…" (không gọi LLM) + thẻ "Sign in to continue" với [Sign in] [Create a partner account] [Continue as guest] |
+| S2-B6 | Widget › bấm [Sign in] (V2) | Widget gửi `ivy:open-url` → embed.js của trang demo | Loader khởi tạo điều hướng tới `go2joy-ha-uat.go2joy.io/sign-in` (browser pane chặn điều hướng ngoài — ghi nhận ở thông báo popup); logic redirect/popup được pin bằng S2-T4 |
+| S2-B7 | identify v2 (H1/H7, qua `POST /public/embed/identify` với secret dev vừa tạo) | (a) claims + hash v1 → (b) claims + hash v2 canonical `userId\|1721\|receptionist\|iat` | (a) **401 E5048** (Q8) ; (b) **201** `authenticated: true`, `customerName`, `guestPolicy`, `guestGuidance` |
+| S2-B8 | Widget sau identify | Hỏi lại câu S2-B5 | Trả lời đầy đủ từ KB (cổng bỏ qua vì phiên đã xác thực) |
+| S2-B9 | Live chat (W6) | Danh sách: dòng phụ "A In Hotel Del Luna · HCM_001_001721 · signed"; mở phiên: header "Receptionist @ A In Hotel Del Luna · HCM_001_001721 · signed · 10/6/2026…" + nút "Open in host system" (title = `https://go2joy-ha-uat.go2joy.io/hotel-info-tabs?hotelSn=1721`); AI Briefing: "Partner of A In Hotel Del Luna · HCM_001_001721 · Receptionist" | Đúng |
+| S2-B10 | Live chat › lọc khách sạn (W6) | `1721` → chỉ phiên đối tác; `no-such-hotel` → "No active sessions." | Đúng |
+| S2-B11 | Customers (W7) | Cột "Hotel (latest)" = "A In Hotel Del Luna (1721) · Receptionist"; ô tìm `1721` → 1–1 of 1; tên lạ → "No customers found." | Đúng (API `POST /customers/search {hotel:'1721'}` → totalCount 1) |
+
+Dọn dữ liệu sau kiểm: xóa agent `guest-test`, category "HA Login Test", `guest_guidance = NULL`, `embed_secret = NULL`, bật lại `must_change_password` của seed master (SQL trên DB dev local).
+
+### 5.3 Chưa kiểm trên trình duyệt (để S4 staging)
+- V4 (refetch chip sau `ShopTalk.identify` từ trang host) — identify ở S2-B7 gọi thẳng API nên không đi qua `useEmbedCommands`; đường code được review, không có test tự động.
+- `audience` chip end-to-end (dev không cấu hình nút guest/verified) — lọc server đã có spec S1 (U2).
+- `ivy:open-url` trên Android/iOS native — hoãn theo Q6 (RN đã xử lý `Linking.openURL`).
+- Lời nhắc VI override: widget chạy EN trong phiên thử nên dùng lời mặc định EN; override theo ngôn ngữ có spec U3.
+
+### 5.4 Sai lệch so với PLN (ghi để duyệt)
+- **W8** (`hostLinkTemplate`) đặt trong card "Guest guidance" của AI Settings thay vì Settings › Embed: cùng JSON `guest_guidance`, cùng capability `AI_SETTINGS_MANAGE`, một đường lưu; Embed card nằm dưới `@RequireRank(master/director)` và không gọi `/ai-config`.
+- **W2** nằm trong AI Settings (sau Scenario buttons) chứ không "cạnh Handoff" vì HandoffSection đã chuyển sang Settings › Basic từ trước.
+- Backend thêm `partnerLink` (API tính từ template + claims đã ký) vào `/agent/sessions` và chi tiết hội thoại thay vì console tự ghép template — staff không có quyền đọc `/ai-config`.

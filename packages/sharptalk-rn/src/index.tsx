@@ -10,14 +10,30 @@ import {
 import { WebView } from 'react-native-webview';
 import type { WebViewMessageEvent } from 'react-native-webview';
 
+/**
+ * Signed partner context (identify v2, PLN-261001 §1.2b): the hotel and role
+ * the host's server put under the signature. `hotelName`/`hotelCode` are
+ * display only. With claims, `hash` must be HMAC-SHA256 of
+ * `userId|hotelSn|role|iat` — claims under a v1 hash are refused.
+ */
+export interface ShopTalkClaims {
+  hotelSn: string;
+  role: 'manager' | 'receptionist' | 'internal';
+  /** Unix seconds at signing; the API accepts ±10 minutes. */
+  iat: number;
+  hotelName?: string;
+  hotelCode?: string;
+}
+
 /** Identity the host app has already authenticated, signed by the host's server. */
 export interface ShopTalkUser {
   userId: string;
-  /** HMAC-SHA256 of `userId` with the tenant's embed secret — made server-side. */
+  /** HMAC-SHA256 of `userId` (v1) or `userId|hotelSn|role|iat` (v2) — made server-side. */
   hash: string;
   name?: string;
   email?: string;
   phone?: string;
+  claims?: ShopTalkClaims;
 }
 
 export interface ShopTalkChatProps {
@@ -37,6 +53,7 @@ interface BridgeMessage {
   type?: string;
   event?: string;
   ok?: boolean;
+  url?: string;
 }
 
 /**
@@ -106,6 +123,13 @@ export function ShopTalkChat({
       }
       if (data.type === 'ivy:close-request') {
         onClose?.();
+        return;
+      }
+      if (data.type === 'ivy:open-url') {
+        // A tenant-configured page (partner sign-in / registration, PLN-261001
+        // V2): the system browser, never this WebView — same rule as links.
+        const url = String(data.url || '');
+        if (/^https?:\/\//i.test(url)) void Linking.openURL(url);
         return;
       }
       if (data.type === 'ivy:event' && data.event === 'identified') {

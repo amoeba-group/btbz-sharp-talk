@@ -15,5 +15,13 @@
   "reveal": "全体を表示",
   "revealAudited": "顧客情報を表示しました。この閲覧は監査ログに記録されます。",
   "maskedHint": "顧客の識別情報はマスクされています。全体の表示はマスター・ディレクターのみ可能です。",
-  "maskedHintWithReveal": "顧客の識別情報はマスクされています。表示すると5分間だけ表示され、監査ログに記録されます。"
+  "maskedHintWithReveal": "顧客の識別情報はマスクされています。表示すると5分間だけ表示され、監査ログに記録されます。",
+  "hotel": "ホテル（最新）",
+  "searchHotelPlaceholder": "ホテル名またはキーで検索",
+  "unsigned": "自己申告",
+  "partnerRole": {
+    "manager": "マネージャー",
+    "receptionist": "フロント",
+    "internal": "社内スタッフ"
+  }
 }

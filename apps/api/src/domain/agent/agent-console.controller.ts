@@ -325,6 +325,7 @@ export class AgentConsoleController {
           aiAgentId,
           aiAgentName,
           identityClaims,
+          partnerLink,
         }) =>
           toSessionResponse(
             conversation,
@@ -334,6 +335,7 @@ export class AgentConsoleController {
             { mode: autoReplyMode, effective: autoReplyEffective },
             { id: aiAgentId, name: aiAgentName },
             identityClaims,
+            partnerLink,
           ),
       ),
       buildPagination(page, size, total),

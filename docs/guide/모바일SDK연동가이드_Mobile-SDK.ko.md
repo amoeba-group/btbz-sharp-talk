@@ -43,7 +43,7 @@ window.__shoptalkHost('{"type":"ivy:identify","user":{...}}')
 
 | 메시지 | 용도 |
 |---|---|
-| `{type:'ivy:identify', user:{userId, hash, name?, email?, phone?}}` | 로그인한 사용자 알려주기 |
+| `{type:'ivy:identify', user:{userId, hash, name?, email?, phone?, claims?}}` | 로그인한 사용자 알려주기 (`claims` = v2 호텔·역할 컨텍스트 — 임베드 가이드 §3.4, 해시는 `userId\|hotelSn\|role\|iat` 서명) |
 | `{type:'ivy:command', action:'open', tab:'chat'\|'orders'\|'notifications'}` | 특정 탭 열기 |
 | `{type:'ivy:command', action:'locale', locale:'VI'}` | 언어 변경 |
 | `{type:'ivy:command', action:'logout'}` | 로그아웃(게스트로 전환) |
@@ -58,6 +58,7 @@ window.__shoptalkHost('{"type":"ivy:identify","user":{...}}')
 | `{type:'ivy:ready'}` | 준비 완료 — 여기서 `identify`를 보내면 가장 빠릅니다 |
 | `{type:'ivy:close-request'}` | **상담 화면을 닫으세요** |
 | `{type:'ivy:event', event:'identified', ok:true\|false}` | 신원 연동 결과(실패해도 대화는 계속 가능) |
+| `{type:'ivy:open-url', url, mode}` | **시스템 브라우저로 `url`을 여세요** (파트너 포털 로그인/가입 카드, https만). RN 패키지는 `Linking.openURL`로 처리합니다; Android/iOS 네이티브는 추후 |
 
 수신 경로는 플랫폼마다 다릅니다:
 

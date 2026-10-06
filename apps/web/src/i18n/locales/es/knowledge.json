@@ -457,5 +457,11 @@
     "counts": "Pendientes de revisión {{pending}} · adoptados {{promoted}}"
   },
   "videoRef": "Video",
-  "videoRefHint": "Se muestra como «Ver video» bajo las respuestas que citan este documento. Un enlace https:// o notion:<id de bloque> para un video subido a Notion."
+  "videoRefHint": "Se muestra como «Ver video» bajo las respuestas que citan este documento. Un enlace https:// o notion:<id de bloque> para un video subido a Notion.",
+  "categoryGuestVisibleOnLabel": "Visible para invitados",
+  "categoryGuestVisibleOffLabel": "Solo con sesión",
+  "categoryGuestVisibleHint": "Si un agente que solo guía al inicio de sesión puede responder desde esta categoría a un visitante sin sesión.",
+  "categoryGuestVisibleConfirm": "¿Hacer legibles {{count}} documento(s) sin iniciar sesión?",
+  "categoryGuestVisibleOn": "La categoría ya es visible para invitados.",
+  "categoryGuestVisibleOff": "La categoría ahora es solo con sesión."
 }

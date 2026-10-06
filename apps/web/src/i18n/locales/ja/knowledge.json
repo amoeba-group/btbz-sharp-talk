@@ -457,5 +457,11 @@
     "counts": "レビュー待ち {{pending}} · 採用 {{promoted}}"
   },
   "videoRef": "動画",
-  "videoRefHint": "この文書を引用した回答の下に「動画を見る」として表示されます。https:// のリンク、またはNotionにアップロードした動画は notion:<ブロックID>。"
+  "videoRefHint": "この文書を引用した回答の下に「動画を見る」として表示されます。https:// のリンク、またはNotionにアップロードした動画は notion:<ブロックID>。",
+  "categoryGuestVisibleOnLabel": "ゲストに公開",
+  "categoryGuestVisibleOffLabel": "ログイン済みのみ",
+  "categoryGuestVisibleHint": "ログイン案内のみのエージェントが、未ログインの訪問者にこのカテゴリから回答してよいかどうか。",
+  "categoryGuestVisibleConfirm": "{{count}} 件の文書をログインなしで読めるようにしますか？",
+  "categoryGuestVisibleOn": "カテゴリをゲストに公開しました。",
+  "categoryGuestVisibleOff": "カテゴリをログイン済みのみに変更しました。"
 }
