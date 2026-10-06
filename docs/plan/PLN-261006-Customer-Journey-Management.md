@@ -1,7 +1,7 @@
 # PLN-261006 — 동일인 그룹 제안 + 고객여정관리
 
 - 근거: [REQ-261006-Customer-Journey-Management](../analysis/REQ-261006-Customer-Journey-Management.md) G1~G7
-- 상태: **승인 대기** — 아래 §1 결정 4건 확인 필요
+- 상태: **승인됨 (2026-10-06, 권장안 D1~D4)** — 구현 P1 #588, P2~P4 #589, TCR-261006
 
 ## 1. 결정 필요 (권장안 먼저)
 
