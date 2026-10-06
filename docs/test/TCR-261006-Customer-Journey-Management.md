@@ -23,7 +23,7 @@
 | J7 | 〃 | 보드: 단계 없는 그룹 포함, 미완료·기한 초과 집계, 삭제된 단계 → 미지정 표시, 기한 초과 필터 | ✅ |
 | J8 | 〃 | 타임라인: cjm + 대화 시작/종료/만족도 병합 최신순, chat_message 제외, payload 미노출 | ✅ |
 
-전체: API jest 2,085 ✅ · `@sharptalk/common` 메뉴 13 ✅ · tsc api/web/widget ✅ · 웹 빌드 ✅ · `i18n:check` 6개 언어 ✅
+전체: API jest 2,085 ✅ · `@sharptalk/common` 60 ✅(메뉴 회귀 게이트 포함 — journey는 staff·consult 기본 노출) · turbo typecheck 9/9 ✅ · tsc api/web/widget ✅ · 웹 빌드 ✅ · `i18n:check` 6개 언어 ✅
 
 ## 2. 통합
 
