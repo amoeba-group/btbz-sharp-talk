@@ -1204,11 +1204,14 @@ export class ChatService {
     // notice says so, instead of promising a reply we cannot deliver.
     const needsContactEmail =
       route.mode === 'email' && !(await this.hasContactEmail(tenantId, session));
+    // The notice says why: a shopper who asked for a person is told one is
+    // coming, not "I couldn't find a confident answer" (FIX-261007 G1 — the
+    // copy was the same for every reason).
     const body = needsContactEmail
       ? sysMsg('offHoursNeedEmail', session.language)
       : route.mode === 'email' && route.notice
         ? route.notice
-        : sysMsg('handoff', session.language);
+        : sysMsg(reason === 'user_request' ? 'connectingAgent' : 'handoff', session.language);
     await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, body, session.language, { reason });
     // Preview sandbox: show the real handoff notice but never page the agents —
     // no WAITING flip (the bot keeps answering for iterative testing), no alert

@@ -65,6 +65,12 @@ export function useChat(sessionToken: string | null) {
     },
     enabled: !!sessionToken,
     refetchInterval: POLL_MS,
+    // Polling pauses while the tab is hidden (React Query default) and the
+    // app-wide setting turns off refetch-on-focus, so a partner who switched
+    // tabs and came back waited up to another full interval for the answer
+    // (FIX-261007 R6, go2joy FAQ report). Coming back now fetches at once —
+    // the query's own setting overrides the global default.
+    refetchOnWindowFocus: 'always',
     retry: false,
   });
 

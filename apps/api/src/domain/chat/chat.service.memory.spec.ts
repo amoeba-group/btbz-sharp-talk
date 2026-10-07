@@ -1,6 +1,6 @@
 import { FindOperator, Repository } from 'typeorm';
 import { CONSENT_STATE, CONVERSATION_STATUS, MODERATION_DECISION } from '@sharptalk/types';
-import { ChatService } from './chat.service';
+import { ChatService, sysMsg } from './chat.service';
 import { Conversation } from './entity/conversation.entity';
 import { Message } from './entity/message.entity';
 import { Session } from '../session/entity/session.entity';
@@ -259,6 +259,15 @@ describe('ChatService — conversation memory', () => {
     expect(res.reply?.body.split(F)).toHaveLength(2); // exactly one occurrence
     const history = b.rag.answer.mock.calls[0][8] as Array<{ role: string; content: string }>;
     expect(history.find((m) => m.role === 'assistant')?.content).toBe('앞선 답변입니다.');
+  });
+
+  it('tells a shopper who asked for a person that one is coming, not that no answer was found (FIX-261007 G1)', async () => {
+    const b = build({ intent: 'agent_request', intentConfidence: 0.9 });
+
+    const res = await b.svc.handleUserMessage(b.session, '상담원 연결해 주세요');
+
+    expect(res.escalate).toBe(true);
+    expect(res.reply?.body).toBe(sysMsg('connectingAgent', 'KO'));
   });
 
   describe('out_of_scope second opinion (S6)', () => {

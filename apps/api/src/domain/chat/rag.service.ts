@@ -9,7 +9,7 @@ import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.se
 import { QdrantService } from '../../infrastructure/external/vector/qdrant.service';
 import { AiConfigService } from '../ai-engine/ai-config.service';
 import type { AiMessage } from '../../infrastructure/external/ai/ai-adapter.interface';
-import { capContext, selectPassages } from './passage.util';
+import { capContext, selectPassages, titleMatchScore } from './passage.util';
 import { AnswerFooter, footerFor } from '../ai-engine/answer-footer.util';
 import { envNumber } from '../../global/util/env-number.util';
 import { CONVERSATION_RULES, transcript, withCurrentTurn } from './conversation-history.util';
@@ -234,6 +234,18 @@ export class RagService {
       .map((e) => ({ ...e, rrf: biasedScore(e) }));
   }
 
+  /**
+   * A document whose title is (nearly) the question goes to the top
+   * (FIX-261007-FAQ-Title-Match). RRF scores sit around 0.016–0.033, so 0.05
+   * outranks any fusion result; a partial match gets a nudge only.
+   */
+  static titleBonus(title: string | null | undefined, query: string): number {
+    const s = titleMatchScore(title ?? '', query);
+    if (s >= 0.8) return 0.05;
+    if (s >= 0.6) return 0.004;
+    return 0;
+  }
+
   /** Results kept from the current-message search when it is merged with the contextual one. */
   private static readonly OWN_QUERY_RESERVE = 3;
 
@@ -353,7 +365,10 @@ export class RagService {
       .filter((e): e is { doc: KbDocument; rrf: number; similarity: number | null } => !!e.doc)
       .map((e) => ({
         ...e,
-        rrf: e.rrf + (e.doc.source === 'knowledge_store' ? RagService.SOURCE_BONUS : 0),
+        rrf:
+          e.rrf +
+          (e.doc.source === 'knowledge_store' ? RagService.SOURCE_BONUS : 0) +
+          RagService.titleBonus(e.doc.title, query),
       }));
     const ranked = RagService.rankWithPreference(scored, limit, preferGroup);
 
@@ -795,7 +810,9 @@ export class RagService {
           'of: order_status, delivery, cancel_refund, product_inquiry, ' +
           'agent_request, smalltalk, out_of_scope, unintelligible, other. ' +
           'agent_request only when the shopper is asking to reach a human, not ' +
-          'when they merely mention agents. smalltalk = greetings, thanks, ' +
+          'when they merely mention agents. Asking HOW to contact support (which ' +
+          'phone number, e-mail or channel, or "how do I reach technical support?") ' +
+          'is a question to answer — other, not agent_request. smalltalk = greetings, thanks, ' +
           'compliments, chat with nothing to answer. out_of_scope = a real ' +
           'question this shop cannot answer (weather, exchange rates, news). ' +
           'unintelligible = the message cannot be read as language. ' +
