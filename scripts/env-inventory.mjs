@@ -35,8 +35,10 @@ const fix = argv.includes('--fix');
  *  - VITE_* are build arguments for the browser bundles, not runtime config.
  *  - The MYSQL_* pair is consumed by the mysql image itself.
  *  - NODE_ENV/PORT are set by the compose file, not by an operator.
+ *  - SHARPTALK_CLI/GATE_LABEL are set by the CLI entrypoints and the deploy
+ *    script themselves (PLN-261008), never in an env file.
  */
-const NOT_OPERATOR_CONFIG = new Set(['NODE_ENV', 'PORT']);
+const NOT_OPERATOR_CONFIG = new Set(['NODE_ENV', 'PORT', 'SHARPTALK_CLI', 'GATE_LABEL']);
 const IGNORED_PREFIXES = ['VITE_', 'MYSQL_', 'npm_'];
 
 /** `config.get('X')`, `config.get<T>('X')`, `process.env.X`, `process.env['X']`, `envNumber('X', d)`. */

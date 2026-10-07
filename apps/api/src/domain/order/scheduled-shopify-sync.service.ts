@@ -2,6 +2,7 @@ import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/commo
 import { TenantService } from '../tenant/tenant.service';
 import { ShopifySyncService } from './shopify-sync.service';
 import { envNumber } from '../../global/util/env-number.util';
+import { isCliContext } from '../../global/util/cli-context.util';
 
 /**
  * Optional periodic Shopify sync. Disabled unless SHOPIFY_SYNC_INTERVAL_MIN > 0
@@ -20,6 +21,8 @@ export class ScheduledShopifySyncService implements OnModuleInit, OnModuleDestro
   ) {}
 
   onModuleInit(): void {
+    // A one-off CLI must not run a second copy of this scheduler (PLN-261008 D2).
+    if (isCliContext()) return;
     const minutes = envNumber('SHOPIFY_SYNC_INTERVAL_MIN', '0');
     if (!Number.isFinite(minutes) || minutes <= 0) {
       this.logger.log('Shopify auto-sync disabled (set SHOPIFY_SYNC_INTERVAL_MIN to enable)');

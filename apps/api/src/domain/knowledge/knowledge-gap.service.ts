@@ -14,6 +14,7 @@ import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { scrubPii } from '../../global/util/pii-scrub.util';
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
 import { envNumber } from '../../global/util/env-number.util';
+import { isCliContext } from '../../global/util/cli-context.util';
 
 const WINDOW_DAYS = 7;
 const MIN_ASKED = 3;
@@ -49,6 +50,8 @@ export class KnowledgeGapService implements OnModuleInit {
   ) {}
 
   onModuleInit(): void {
+    // A one-off CLI must not run a second copy of this scheduler (PLN-261008 D2).
+    if (isCliContext()) return;
     this.bus.subscribe(EVENTS.ISSUE_RESOLVED, async (payload: unknown) => {
       try {
         await this.proposeFromResolution((payload ?? {}) as IssueResolvedEvent);

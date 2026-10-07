@@ -12,6 +12,7 @@ import { AttachmentService } from '../attachment/attachment.service';
 import { AiUsageDaily } from '../ai-engine/entity/ai-usage-daily.entity';
 import { ModerationLog } from '../moderation/entity/moderation-log.entity';
 import { AgentAlert } from '../agent/entity/agent-alert.entity';
+import { isCliContext } from '../../global/util/cli-context.util';
 
 export interface RetentionPurgeResult {
   retentionDays: number;
@@ -63,6 +64,8 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
+    // A one-off CLI must not run a second copy of this scheduler (PLN-261008 D2).
+    if (isCliContext()) return;
     const raw = this.config.get<string | number>('RETENTION_PURGE_INTERVAL_HOURS', 24);
     const hours = Number(raw);
     if (!Number.isFinite(hours) || hours <= 0) {

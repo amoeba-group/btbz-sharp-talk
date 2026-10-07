@@ -12,6 +12,7 @@ import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.se
 import { scrubPii } from '../../global/util/pii-scrub.util';
 import { extractKeywords } from './keyword.util';
 import { toDateKey, utcDayBounds } from '../../global/util/date-range.util';
+import { isCliContext } from '../../global/util/cli-context.util';
 
 /** First run fires shortly after boot so restarts can't starve the snapshot. */
 const INITIAL_DELAY_MS = 10 * 60_000;
@@ -76,6 +77,8 @@ export class QuestionStatsService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
+    // A one-off CLI must not run a second copy of this scheduler (PLN-261008 D2).
+    if (isCliContext()) return;
     const hours = Number(this.config.get<string | number>('QUESTION_STATS_INTERVAL_HOURS', 24));
     if (!Number.isFinite(hours) || hours <= 0) {
       this.logger.log('Question stats scheduler disabled (QUESTION_STATS_INTERVAL_HOURS <= 0)');

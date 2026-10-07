@@ -23,6 +23,7 @@ import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.mod
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { envNumber } from '../../global/util/env-number.util';
+import { isCliContext } from '../../global/util/cli-context.util';
 
 /** Expo push tokens look like ExponentPushToken[xxxx] / ExpoPushToken[xxxx]. */
 const EXPO_TOKEN_RE = /^Expo(nent)?PushToken\[.+\]$/;
@@ -72,6 +73,8 @@ export class PushService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
+    // A one-off CLI must not run a second copy of this scheduler (PLN-261008 D2).
+    if (isCliContext()) return;
     this.bus.subscribe(EVENTS.PUSH_DISPATCH, async (payload: unknown) => {
       await this.dispatch(payload as PushDispatchPayload);
     });

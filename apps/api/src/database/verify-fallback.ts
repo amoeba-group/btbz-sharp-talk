@@ -1,3 +1,5 @@
+// Mark the process as a CLI before any module initialises: schedulers return early.
+process.env.SHARPTALK_CLI = '1';
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';

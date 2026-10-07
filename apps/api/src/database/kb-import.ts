@@ -1,3 +1,5 @@
+// Mark the process as a CLI before any module initialises: schedulers return early.
+process.env.SHARPTALK_CLI = '1';
 import 'reflect-metadata';
 import { readFileSync } from 'fs';
 import { join } from 'path';
