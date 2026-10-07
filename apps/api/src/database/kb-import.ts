@@ -4,6 +4,7 @@ import { join } from 'path';
 import { NestFactory } from '@nestjs/core';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../app.module';
+import { closeAndExit } from './cli-exit';
 import { KbDocument } from '../domain/knowledge/entity/kb-document.entity';
 import { KnowledgeService } from '../domain/knowledge/knowledge.service';
 import { QdrantService } from '../infrastructure/external/vector/qdrant.service';
@@ -108,7 +109,7 @@ async function main(): Promise<void> {
     }
     if (reindex.failed > 0) process.exitCode = 1;
   } finally {
-    await app.close();
+    await closeAndExit(app);
   }
 }
 

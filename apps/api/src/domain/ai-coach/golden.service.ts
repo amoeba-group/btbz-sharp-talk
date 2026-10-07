@@ -1,7 +1,7 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash } from 'crypto';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { AiConfigService } from '../ai-engine/ai-config.service';
 import { KnowledgeService } from '../knowledge/knowledge.service';
 import { BusinessException } from '../../global/exception/business.exception';
@@ -47,7 +47,7 @@ export interface CompareItem {
  * run kind exists so a human can measure that variance when they need to.
  */
 @Injectable()
-export class GoldenService {
+export class GoldenService implements OnModuleInit {
   private readonly logger = new Logger(GoldenService.name);
 
   constructor(
@@ -57,6 +57,24 @@ export class GoldenService {
     private readonly aiConfig: AiConfigService,
     private readonly knowledge: KnowledgeService,
   ) {}
+
+  /**
+   * A console run executes in the background (PLN-261007 R7); a restart kills
+   * it mid-way and the row would say "running" forever, keeping the screen
+   * polling and its buttons disabled. On boot, anything still running after
+   * an hour (a 60-question run takes ~10 minutes) is closed as aborted.
+   */
+  async onModuleInit(): Promise<void> {
+    try {
+      const res = await this.runRepo.update(
+        { status: 'running', createdAt: LessThan(new Date(Date.now() - 60 * 60_000)) },
+        { status: 'aborted', completedAt: new Date() },
+      );
+      if (res.affected) this.logger.warn(`closed ${res.affected} orphaned golden run(s) as aborted`);
+    } catch (e) {
+      this.logger.warn(`orphaned golden run sweep skipped: ${(e as Error).message}`);
+    }
+  }
 
   // ---- question set ----
 

@@ -282,7 +282,8 @@
     "regressed": "後退",
     "improved": "改善",
     "verdict_pass": "合格",
-    "verdict_fail": "不合格"
+    "verdict_fail": "不合格",
+    "aborted": "中断（サーバー再起動）"
   },
   "history": {
     "title": "変更履歴",

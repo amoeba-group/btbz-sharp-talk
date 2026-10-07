@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
+import { closeAndExit } from './cli-exit';
 import { KnowledgeService } from '../domain/knowledge/knowledge.service';
 
 /**
@@ -21,7 +22,7 @@ async function main(): Promise<void> {
     );
     if (result.failed > 0) process.exitCode = 1;
   } finally {
-    await app.close();
+    await closeAndExit(app);
   }
 }
 

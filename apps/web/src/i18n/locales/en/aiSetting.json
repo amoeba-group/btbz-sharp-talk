@@ -282,7 +282,8 @@
     "regressed": "Regressed",
     "improved": "Improved",
     "verdict_pass": "Pass",
-    "verdict_fail": "Fail"
+    "verdict_fail": "Fail",
+    "aborted": "Aborted (server restart)"
   },
   "history": {
     "title": "Change history",

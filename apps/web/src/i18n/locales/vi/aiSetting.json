@@ -282,7 +282,8 @@
     "regressed": "Thụt lùi",
     "improved": "Cải thiện",
     "verdict_pass": "Đạt",
-    "verdict_fail": "Không đạt"
+    "verdict_fail": "Không đạt",
+    "aborted": "Đã dừng (máy chủ khởi động lại)"
   },
   "history": {
     "title": "Lịch sử thay đổi",
