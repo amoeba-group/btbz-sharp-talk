@@ -583,13 +583,77 @@
       "model": "Không tìm thấy mô hình — hãy kiểm tra tên mô hình",
       "rate_limit": "Quá nhiều yêu cầu — hãy thử lại sau",
       "unreachable": "Không kết nối được nhà cung cấp — hãy kiểm tra endpoint",
-      "ok": "Bình thường"
+      "ok": "Bình thường",
+      "credit": "Hết tín dụng — hãy nạp tiền cho tài khoản nhà cung cấp"
     },
     "billingNote": "Các lệnh gọi bằng khóa của bạn sẽ được tính phí vào tài khoản của bạn tại nhà cung cấp đó.",
     "saved": "Đã lưu công cụ",
     "defaultSet": "Đã đặt công cụ mặc định",
     "removed": "Đã xóa công cụ",
-    "inUse": "Vẫn đang được dùng bởi: {{functions}}. Hãy chuyển các chức năng đó trước."
+    "inUse": "Vẫn đang được dùng bởi: {{functions}}. Hãy chuyển các chức năng đó trước.",
+    "applied": "Đã áp dụng engine cho tất cả chức năng AI",
+    "applyFailed": "Không thể áp dụng engine",
+    "applyConfirm": "Áp dụng \"{{name}}\" cho cả sáu chức năng AI? Engine đã chọn riêng cho từng chức năng sẽ bị thay thế.",
+    "applyAll": "Áp dụng cho mọi chức năng",
+    "useEngine": "Engine sử dụng",
+    "pickEngine": "Chọn engine…",
+    "choose": "Chọn",
+    "needsOperator": "Cần nhà vận hành cho phép",
+    "platformBilling": "Chi phí dùng engine nền tảng được tính vào tài khoản nhà vận hành. Chỉ chọn được engine mà nhà vận hành cho phép.",
+    "platformShort": "Nền tảng",
+    "mineShort": "Engine của tôi",
+    "keyPrefixWarn": "Khóa của nhà cung cấp này thường bắt đầu bằng \"{{prefix}}\". Hãy kiểm tra xem trình duyệt có tự điền mật khẩu đăng nhập không.",
+    "status": {
+      "title": "Trạng thái AI hiện tại",
+      "using": "Đang dùng: {{name}} · {{owner}} · {{model}}",
+      "lastOk": "thành công gần nhất {{at}}",
+      "lastError": "lỗi gần nhất {{at}}",
+      "today": "Hôm nay: {{calls}} lần gọi · {{failures}} lỗi",
+      "switchToPlatform": "Chuyển sang engine nền tảng",
+      "details": "Chi tiết theo chức năng",
+      "noEngine": "Không có engine (trả lời mặc định)",
+      "headline": {
+        "ok": "AI đang trả lời bình thường",
+        "unknown": "Chưa có lần gọi hay kiểm tra nào",
+        "no_key": "Thiếu khóa API — không thể trả lời",
+        "stub": "Chưa kết nối engine — chỉ gửi câu trả lời mặc định",
+        "disabled": "Engine đang bị tắt",
+        "credit": "Hết tín dụng — không tạo được câu trả lời cho khách",
+        "auth": "Lỗi xác thực — không tạo được câu trả lời cho khách",
+        "model": "Lỗi mô hình — không tạo được câu trả lời cho khách",
+        "rate_limit": "Vượt giới hạn yêu cầu — một số câu trả lời có thể chậm hoặc lỗi",
+        "unreachable": "Không kết nối được nhà cung cấp — không tạo được câu trả lời"
+      },
+      "action": {
+        "credit": "Nạp tín dụng cho tài khoản nhà cung cấp (Anthropic Console › Plans & Billing) hoặc chuyển sang engine của nền tảng.",
+        "auth": "Nhập lại khóa API hoặc chuyển sang engine của nền tảng.",
+        "no_key": "Thêm khóa API cho engine hoặc chuyển sang engine của nền tảng.",
+        "model": "Kiểm tra tên mô hình hoặc chuyển sang engine của nền tảng.",
+        "unreachable": "Kiểm tra endpoint (để trống để dùng mặc định) hoặc chuyển sang engine của nền tảng.",
+        "stub": "Chọn một engine và áp dụng.",
+        "default": "Kiểm tra cấu hình engine hoặc chuyển sang engine của nền tảng."
+      }
+    },
+    "functions": {
+      "chat": "Trả lời khách (phân loại)",
+      "rag": "Trả lời từ tri thức",
+      "summary": "Tóm tắt",
+      "assist": "Hỗ trợ nhân viên",
+      "moderation": "Kiểm duyệt",
+      "coach": "Huấn luyện"
+    },
+    "healthText": {
+      "ok": "Bình thường",
+      "unknown": "Chưa rõ",
+      "no_key": "Thiếu khóa",
+      "stub": "AI tắt (stub)",
+      "disabled": "Đã tắt",
+      "credit": "Hết tín dụng",
+      "auth": "Lỗi xác thực",
+      "model": "Lỗi mô hình",
+      "rate_limit": "Vượt giới hạn",
+      "unreachable": "Không kết nối được"
+    }
   },
   "aiUsage": {
     "title": "Mức dùng AI",

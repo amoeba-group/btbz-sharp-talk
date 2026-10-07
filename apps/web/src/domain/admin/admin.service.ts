@@ -33,17 +33,47 @@ export interface AiEngine {
   hasKey?: boolean;
   isDefault?: boolean;
   createdAt?: string;
+  /** null = platform engine; otherwise the owning tenant (PLN-261007). */
+  tenantId: string | null;
+  tenantSlug: string | null;
+  /** Platform engines: may tenants choose it (D1). */
+  tenantSelectable: boolean;
+  health: string;
+  lastOkAt: string | null;
+  lastErrorAt: string | null;
+  lastErrorReason: string | null;
+  lastErrorDetail: string | null;
+  todayCalls: number;
+  todayFailures: number;
 }
 
-// Raw backend catalog entry (AiEngineMapper.toEngine).
+/** Connection test outcome (PLN-261007 S4). */
+export interface AdminEngineTestResult {
+  ok: boolean;
+  reason: 'ok' | 'credit' | 'auth' | 'model' | 'rate_limit' | 'unreachable';
+  detail: string | null;
+  elapsedMs: number;
+}
+
+// Raw backend catalog entry (AiEngineMapper.toAdminEngine).
 interface BackendEngine {
   id: number | string;
+  tenantId?: number | string | null;
+  tenantSlug?: string | null;
   provider?: string;
   name: string;
   model?: string;
   hasKey?: boolean;
   status?: string;
   isDefault?: number;
+  tenantSelectable?: boolean;
+  health?: string;
+  lastOkAt?: string | null;
+  lastErrorAt?: string | null;
+  lastErrorReason?: string | null;
+  lastErrorDetail?: string | null;
+  todayCalls?: number;
+  todayFailures?: number;
   createdAt?: string;
 }
 
@@ -176,8 +206,19 @@ export const adminService = {
       hasKey: e.hasKey,
       isDefault: !!e.isDefault,
       createdAt: e.createdAt,
+      tenantId: e.tenantId != null ? String(e.tenantId) : null,
+      tenantSlug: e.tenantSlug ?? null,
+      tenantSelectable: !!e.tenantSelectable,
+      health: e.health ?? 'unknown',
+      lastOkAt: e.lastOkAt ?? null,
+      lastErrorAt: e.lastErrorAt ?? null,
+      lastErrorReason: e.lastErrorReason ?? null,
+      lastErrorDetail: e.lastErrorDetail ?? null,
+      todayCalls: e.todayCalls ?? 0,
+      todayFailures: e.todayFailures ?? 0,
     }));
   },
+  testEngine: (id: string) => apiPost<AdminEngineTestResult>(`/ai-engines/${id}/test`, {}),
   // Backend expects snake_case api_key.
   createEngine: (body: { name: string; provider: string; model: string; apiKey: string }) =>
     apiPost('/ai-engines', {
@@ -187,8 +228,16 @@ export const adminService = {
       api_key: body.apiKey,
     }),
   // Backend route is PATCH (not PUT); api_key is snake_case.
-  updateEngine: (id: string, body: { name?: string; model?: string; apiKey?: string }) =>
-    apiPatch(`/ai-engines/${id}`, { name: body.name, model: body.model, api_key: body.apiKey }),
+  updateEngine: (
+    id: string,
+    body: { name?: string; model?: string; apiKey?: string; tenantSelectable?: boolean },
+  ) =>
+    apiPatch(`/ai-engines/${id}`, {
+      name: body.name,
+      model: body.model,
+      api_key: body.apiKey,
+      tenant_selectable: body.tenantSelectable,
+    }),
   // Backend toggles via `status`, not `enabled`.
   setEngineEnabled: (id: string, enabled: boolean) =>
     apiPatch(`/ai-engines/${id}`, { status: enabled ? 'enabled' : 'disabled' }),

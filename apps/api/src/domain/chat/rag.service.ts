@@ -548,6 +548,15 @@ export class RagService {
       messages: withCurrentTurn(history, query),
     });
 
+    // The engine failed and the stub's canned text came back (PLN-261007 D4).
+    // Not an answer: zero confidence sends the turn to a person through the
+    // ordinary low-confidence path instead of delivering "Here's what I found
+    // for you: [category] title" as if it were one.
+    if (res.degraded) {
+      this.logger.warn(`answer withheld: engine degraded to stub (tenant ${tenantId})`);
+      return { text: '', confidence: 0, citations: [], tokensIn: res.tokensIn, tokensOut: res.tokensOut };
+    }
+
     // Show only what the answer stands on. The retrieved set is the top matches,
     // so recommending one cleanser used to surface a concealer and a night cream
     // next to it as "referenced" products (FIX-260806 §7-1). Matching the answer
@@ -680,6 +689,8 @@ export class RagService {
         `${instruction}\nReply in ${language.toUpperCase()}. Two sentences at most.`,
       messages: withCurrentTurn(history, query),
     });
+    // Empty = no reply could be written; the caller hands off (PLN-261007 D4).
+    if (res.degraded) return '';
     return res.text.trim();
   }
 
@@ -725,6 +736,8 @@ export class RagService {
       messages: [{ role: 'user', content: query }],
     });
     try {
+      // The stub's keyword guess is not a classification (PLN-261007 D4).
+      if (res.degraded) throw new Error('degraded');
       return JSON.parse(res.text);
     } catch {
       // The fallback label is 'product_inquiry', so an unparseable response

@@ -1,8 +1,10 @@
 import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CAPABILITY } from '@sharptalk/types';
+import { CAPABILITY, Principal } from '@sharptalk/types';
 import { AdminOnly, RequireCapability } from '../../global/decorator/auth.decorator';
+import { CurrentUser } from '../../global/decorator/current-user.decorator';
 import { AiEngineService } from './ai-engine.service';
+import { AuditService } from '../audit/audit.service';
 import { AiEngineMapper } from './ai-engine.mapper';
 import { CreateEngineRequest, UpdateEngineRequest } from './dto/request/ai-engine.request';
 
@@ -10,15 +12,41 @@ import { CreateEngineRequest, UpdateEngineRequest } from './dto/request/ai-engin
 @ApiTags('AI Engines')
 @Controller('ai-engines')
 export class AiEngineController {
-  constructor(private readonly aiEngineService: AiEngineService) {}
+  constructor(
+    private readonly aiEngineService: AiEngineService,
+    private readonly audit: AuditService,
+  ) {}
 
   @Get()
   @AdminOnly()
   @RequireCapability(CAPABILITY.AI_ENGINE_MANAGE)
   @ApiOperation({ summary: 'List all AI engines (API key masked as hasKey)' })
   async list() {
-    const engines = await this.aiEngineService.list();
-    return AiEngineMapper.toEngineList(engines);
+    return this.aiEngineService.listForAdmin();
+  }
+
+  /**
+   * Connection test (PLN-261007 S4). Audited: it spends one token on whoever
+   * owns the key, which for a tenant engine is not the operator.
+   */
+  @Post(':id/test')
+  @AdminOnly()
+  @RequireCapability(CAPABILITY.AI_ENGINE_MANAGE)
+  @ApiOperation({ summary: 'Test an engine against its provider (records its health)' })
+  async test(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    const { engine, result } = await this.aiEngineService.test(id);
+    await this.audit
+      .write({
+        tenantId: engine.tenantId ?? null,
+        actorType: 'admin',
+        actorId: user.actorType === 'admin' ? user.adminId : 0,
+        action: 'ai_engine.tested',
+        target: `ai_engine:${engine.id}`,
+        result: result.ok ? 'success' : 'error',
+        metadata: { reason: result.reason, elapsedMs: result.elapsedMs },
+      })
+      .catch(() => undefined);
+    return result;
   }
 
   @Post()

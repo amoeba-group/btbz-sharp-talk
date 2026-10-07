@@ -11,5 +11,60 @@
   "created": "Ngày tạo",
   "enable": "Bật",
   "disable": "Tắt",
-  "empty": "Chưa cấu hình công cụ nào."
+  "empty": "Chưa cấu hình công cụ nào.",
+  "health": {
+    "ok": "Bình thường",
+    "unknown": "Chưa rõ",
+    "no_key": "Thiếu khóa",
+    "stub": "AI tắt (stub)",
+    "disabled": "Đã tắt",
+    "credit": "Hết tín dụng",
+    "auth": "Lỗi xác thực",
+    "model": "Lỗi mô hình",
+    "rate_limit": "Vượt giới hạn",
+    "unreachable": "Không kết nối được"
+  },
+  "owner": {
+    "title": "Sở hữu",
+    "platform": "Nền tảng"
+  },
+  "default": "Mặc định",
+  "selectableBadge": "Cho phép tenant chọn",
+  "lastOk": "Thành công gần nhất",
+  "lastError": "Lỗi gần nhất",
+  "today": "Hôm nay (gọi/lỗi)",
+  "test": {
+    "button": "Kiểm tra kết nối",
+    "ok": "Kết nối thành công ({{ms}}ms)",
+    "fail": {
+      "credit": "Hết tín dụng — cần nạp tiền cho tài khoản nhà cung cấp",
+      "auth": "Xác thực thất bại — kiểm tra khóa API",
+      "model": "Không tìm thấy mô hình — kiểm tra tên mô hình",
+      "rate_limit": "Quá nhiều yêu cầu — thử lại sau",
+      "unreachable": "Không kết nối được nhà cung cấp — kiểm tra endpoint",
+      "ok": "Bình thường"
+    }
+  },
+  "banner": {
+    "credit": "{{count}} engine hết tín dụng — các chức năng dùng chúng đang lỗi",
+    "failing": "{{count}} engine không thể trả lời",
+    "creditAction": "Nạp tiền trong console của nhà cung cấp (vd. Anthropic Console › Plans & Billing) hoặc chuyển tenant sang engine nền tảng.",
+    "failingAction": "Kiểm tra khóa, mô hình, endpoint rồi xác nhận bằng kiểm tra kết nối."
+  },
+  "filter": {
+    "all": "Tất cả",
+    "platform": "Nền tảng",
+    "tenant": "Tenant",
+    "failingOnly": "Chỉ hiện lỗi"
+  },
+  "selectable": {
+    "label": "Tenant lựa chọn",
+    "toggle": "Cho phép tenant chọn engine này",
+    "hint": "Khi cho phép, tenant có thể áp dụng engine này và chi phí tính vào khóa của engine (tài khoản nhà vận hành)."
+  },
+  "toast": {
+    "added": "Đã thêm engine",
+    "updated": "Đã cập nhật engine",
+    "statusUpdated": "Đã đổi trạng thái engine"
+  }
 }

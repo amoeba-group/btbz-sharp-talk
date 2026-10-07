@@ -20,6 +20,12 @@ export interface AiCompletionResult {
   tokensOut: number;
   provider: string;
   model: string;
+  /**
+   * The engine that should have answered failed and this text came from the
+   * stub instead (PLN-261007 D4). Callers that reach a customer must not pass
+   * it off as an answer: RAG reports no confidence, moderation blocks.
+   */
+  degraded?: boolean;
 }
 
 /** Embedding request/response (KB vector retrieval — PLAN-KB-VectorHybrid-Qdrant). */

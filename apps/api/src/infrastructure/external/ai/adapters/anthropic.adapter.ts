@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { AiAdapter, AiCompletionRequest, AiCompletionResult } from '../ai-adapter.interface';
 import { redactSecrets } from '../../../../global/util/secret-redact.util';
+import { providerErrorSummary } from '../engine-health';
 
 /**
  * Anthropic Claude adapter (default real provider). Uses the Messages API via
@@ -43,7 +44,12 @@ export class AnthropicAdapter implements AiAdapter {
       this.logger.error(
         `Anthropic error ${res.status}: ${redactSecrets(detail, apiKey).slice(0, 300)}`,
       );
-      throw new Error(`Anthropic API error ${res.status}`);
+      // The provider's reason travels with the error (PLN-261007 S2): "credit
+      // balance is too low" used to be thrown away here and the connection
+      // test then called a funded-out account "unreachable".
+      throw new Error(
+        `Anthropic API error ${res.status}: ${redactSecrets(providerErrorSummary(detail), apiKey)}`,
+      );
     }
     const data: any = await res.json();
     const text = (data.content ?? []).map((c: any) => c.text ?? '').join('');

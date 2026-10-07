@@ -413,6 +413,11 @@ export const settingsService = {
     apiPut<TenantAiEngine>(`/tenants/me/ai-engines/${id}/default`, {}),
   testAiEngine: (id: string) =>
     apiPost<EngineTestResult>(`/tenants/me/ai-engines/${id}/test`, {}),
+  // What answers right now, per function (PLN-261007 S5).
+  aiStatus: () => apiGet<AiStatus>('/tenants/me/ai-engines/status'),
+  // One engine for every function (PLN-261007 S5).
+  applyAiEngine: (engineId: string) =>
+    apiPut<{ applied: number; engineId: string }>('/ai-settings', { engine_id: engineId }),
   deleteAiEngine: (id: string) =>
     apiDelete<{ removed: boolean; usedBy: string[] }>(`/tenants/me/ai-engines/${id}`),
   connectCafe24: (mallId: string) =>
@@ -446,6 +451,40 @@ export interface TenantAiEngine {
   /** Whether a key is stored — the key itself never leaves the server. */
   hasApiKey: boolean;
   platform: boolean;
+  /** May this tenant apply it — own enabled engine, or a platform one the operator opened (D1). */
+  selectable: boolean;
+  health: EngineHealth;
+  lastOkAt: string | null;
+  lastErrorAt: string | null;
+  lastErrorReason: string | null;
+  lastErrorDetail: string | null;
+}
+
+/** What a console shows for an engine (PLN-261007 §1). */
+export type EngineHealth =
+  | 'ok'
+  | 'unknown'
+  | 'no_key'
+  | 'stub'
+  | 'disabled'
+  | 'credit'
+  | 'auth'
+  | 'model'
+  | 'rate_limit'
+  | 'unreachable';
+
+export interface AiStatusFunction {
+  function: string;
+  source: string;
+  engine:
+    | (Pick<TenantAiEngine, 'id' | 'name' | 'provider' | 'model' | 'platform' | 'health' | 'lastOkAt' | 'lastErrorAt' | 'lastErrorReason' | 'lastErrorDetail'>)
+    | null;
+  todayCalls: number;
+  todayFailures: number;
+}
+
+export interface AiStatus {
+  functions: AiStatusFunction[];
 }
 
 export interface TenantAiEngineList {
@@ -457,7 +496,7 @@ export interface TenantAiEngineList {
 /** Why a connection test failed; the fixes differ per reason. */
 export interface EngineTestResult {
   ok: boolean;
-  reason: 'ok' | 'auth' | 'model' | 'rate_limit' | 'unreachable';
+  reason: 'ok' | 'credit' | 'auth' | 'model' | 'rate_limit' | 'unreachable';
   detail: string | null;
   elapsedMs: number;
 }

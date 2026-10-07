@@ -200,50 +200,70 @@ export function useEngines() {
   return useQuery({
     queryKey: ENGINES_KEY,
     queryFn: () => adminService.engines(),
+    // Health changes with traffic, not with this page (PLN-261007).
+    refetchInterval: 60_000,
   });
 }
 
 export function useCreateEngine() {
   const qc = useQueryClient();
+  const { t } = useTranslation('aiEngines');
   return useMutation({
     mutationFn: (body: { name: string; provider: string; model: string; apiKey: string }) =>
       adminService.createEngine(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ENGINES_KEY });
-      toast.success('Engine added');
+      toast.success(t('toast.added'));
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message, { sticky: true }),
   });
 }
 
 export function useUpdateEngine() {
   const qc = useQueryClient();
+  const { t } = useTranslation('aiEngines');
   return useMutation({
     mutationFn: ({
       id,
       body,
     }: {
       id: string;
-      body: { name?: string; model?: string; apiKey?: string };
+      body: { name?: string; model?: string; apiKey?: string; tenantSelectable?: boolean };
     }) => adminService.updateEngine(id, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ENGINES_KEY });
-      toast.success('Engine updated');
+      toast.success(t('toast.updated'));
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message, { sticky: true }),
   });
 }
 
 export function useSetEngineEnabled() {
   const qc = useQueryClient();
+  const { t } = useTranslation('aiEngines');
   return useMutation({
     mutationFn: ({ id, enabled }: { id: string; enabled: boolean }) =>
       adminService.setEngineEnabled(id, enabled),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ENGINES_KEY });
-      toast.success('Engine status updated');
+      toast.success(t('toast.statusUpdated'));
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message, { sticky: true }),
+  });
+}
+
+/** Connection test (PLN-261007 S4); the server records the result as the engine's health. */
+export function useTestEngine() {
+  const qc = useQueryClient();
+  const { t } = useTranslation('aiEngines');
+  return useMutation({
+    mutationFn: (id: string) => adminService.testEngine(id),
+    onSuccess: (r) => {
+      qc.invalidateQueries({ queryKey: ENGINES_KEY });
+      if (r.ok) toast.success(t('test.ok', { ms: r.elapsedMs }));
+      else toast.error(t(`test.fail.${r.reason}`), { sticky: true });
+    },
+    onError: (err: Error) => toast.error(err.message, { sticky: true }),
   });
 }
 

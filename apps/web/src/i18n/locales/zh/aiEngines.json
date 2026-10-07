@@ -11,5 +11,60 @@
   "created": "创建时间",
   "enable": "启用",
   "disable": "停用",
-  "empty": "尚未配置任何引擎。"
+  "empty": "尚未配置任何引擎。",
+  "health": {
+    "ok": "正常",
+    "unknown": "未确认",
+    "no_key": "无密钥",
+    "stub": "AI 关闭（桩）",
+    "disabled": "已停用",
+    "credit": "额度不足",
+    "auth": "认证错误",
+    "model": "模型错误",
+    "rate_limit": "请求受限",
+    "unreachable": "无法连接"
+  },
+  "owner": {
+    "title": "所属",
+    "platform": "平台"
+  },
+  "default": "默认",
+  "selectableBadge": "允许租户选择",
+  "lastOk": "最近成功",
+  "lastError": "最近失败",
+  "today": "今日（调用/失败）",
+  "test": {
+    "button": "测试连接",
+    "ok": "连接成功（{{ms}}ms）",
+    "fail": {
+      "credit": "额度不足 — 需要为服务商账户充值",
+      "auth": "认证失败 — 请检查 API 密钥",
+      "model": "找不到模型 — 请检查模型名称",
+      "rate_limit": "请求过多 — 请稍后再试",
+      "unreachable": "无法连接服务商 — 请检查端点",
+      "ok": "正常"
+    }
+  },
+  "banner": {
+    "credit": "{{count}} 个引擎额度不足 — 使用它们的功能正在失败",
+    "failing": "{{count}} 个引擎无法应答",
+    "creditAction": "请在服务商控制台充值（如 Anthropic Console › Plans & Billing），或将租户切换到平台引擎。",
+    "failingAction": "请检查密钥、模型和端点，并用连接测试确认恢复。"
+  },
+  "filter": {
+    "all": "全部",
+    "platform": "平台",
+    "tenant": "租户",
+    "failingOnly": "仅显示异常"
+  },
+  "selectable": {
+    "label": "租户选择",
+    "toggle": "允许租户选择此引擎",
+    "hint": "允许后，租户可将此引擎用于自己的 AI 功能，费用记入此引擎的密钥（运营方账户）。"
+  },
+  "toast": {
+    "added": "已添加引擎",
+    "updated": "已更新引擎",
+    "statusUpdated": "已更改引擎状态"
+  }
 }

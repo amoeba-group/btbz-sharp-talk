@@ -1,6 +1,9 @@
 import { Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsIn,
+  IsUrl,
+  ValidateIf,
   IsInt,
   IsObject,
   IsOptional,
@@ -18,7 +21,9 @@ export class CreateEngineRequest {
   @IsString() provider: string; // anthropic/openai/google/azure/custom
   @IsString() name: string;
   @IsString() model: string;
-  @IsOptional() @IsString() endpoint?: string;
+  // A URL or nothing (PLN-261007 S8): a browser autofill once saved the console
+  // login e-mail here and every call failed with "Failed to parse URL".
+  @IsOptional() @IsString() @ValidateIf((o) => o.endpoint != null && o.endpoint !== '') @IsUrl({ require_protocol: true, require_tld: false }) endpoint?: string;
   @IsOptional() @IsString() api_key?: string;
   @IsOptional() @IsString() capabilities?: string;
   @IsOptional() @IsInt() is_default?: number;
@@ -29,11 +34,13 @@ export class UpdateEngineRequest {
   @IsOptional() @IsString() provider?: string;
   @IsOptional() @IsString() name?: string;
   @IsOptional() @IsString() model?: string;
-  @IsOptional() @IsString() endpoint?: string;
+  @IsOptional() @IsString() @ValidateIf((o) => o.endpoint != null && o.endpoint !== '') @IsUrl({ require_protocol: true, require_tld: false }) endpoint?: string;
   @IsOptional() @IsString() api_key?: string;
   @IsOptional() @IsString() capabilities?: string;
   @IsOptional() @IsString() status?: string; // enabled/disabled
   @IsOptional() @IsInt() is_default?: number;
+  /** Platform engines: may tenants choose it (PLN-261007 D1). */
+  @IsOptional() @IsBoolean() tenant_selectable?: boolean;
 }
 
 // ---- Tenant AI settings ----
@@ -43,6 +50,11 @@ export class UpsertAiSettingRequest {
   // coerce before @IsInt so "3" doesn't 400.
   @Type(() => Number) @IsInt() engine_id: number;
   @IsOptional() @IsObject() params?: Record<string, unknown>;
+}
+
+/** PUT /ai-settings — one engine for every function at once (PLN-261007 S5). */
+export class ApplyAiEngineRequest {
+  @Type(() => Number) @IsInt() engine_id: number;
 }
 
 export class FunctionParam {
@@ -58,7 +70,7 @@ export class SaveTenantEngineRequest {
 
   @IsString() @MinLength(1) @MaxLength(64) model: string;
 
-  @IsOptional() @IsString() @MaxLength(255) endpoint?: string;
+  @IsOptional() @IsString() @MaxLength(255) @ValidateIf((o) => o.endpoint != null && o.endpoint !== '') @IsUrl({ require_protocol: true, require_tld: false }) endpoint?: string;
 
   /** Omitted on update means "keep the stored key", not "clear it". */
   @IsOptional() @IsString() @MaxLength(512) api_key?: string;
@@ -68,7 +80,7 @@ export class UpdateTenantEngineRequest {
   @IsOptional() @IsString() @MinLength(1) @MaxLength(64) name?: string;
   @IsOptional() @IsString() @MaxLength(24) provider?: string;
   @IsOptional() @IsString() @MinLength(1) @MaxLength(64) model?: string;
-  @IsOptional() @IsString() @MaxLength(255) endpoint?: string;
+  @IsOptional() @IsString() @MaxLength(255) @ValidateIf((o) => o.endpoint != null && o.endpoint !== '') @IsUrl({ require_protocol: true, require_tld: false }) endpoint?: string;
   @IsOptional() @IsString() @MaxLength(512) api_key?: string;
 }
 

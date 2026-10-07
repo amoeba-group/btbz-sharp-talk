@@ -583,13 +583,77 @@
       "model": "Modelo no encontrado — revisa el nombre",
       "rate_limit": "Límite de peticiones — inténtalo en un momento",
       "unreachable": "No se pudo contactar al proveedor — revisa el endpoint",
-      "ok": "Correcto"
+      "ok": "Correcto",
+      "credit": "Sin crédito — recarga la cuenta del proveedor"
     },
     "billingNote": "Las llamadas con tu propia clave se facturan a tu cuenta con ese proveedor.",
     "saved": "Motor guardado",
     "defaultSet": "Motor predeterminado establecido",
     "removed": "Motor eliminado",
-    "inUse": "Aún lo usan: {{functions}}. Cambia antes esas funciones."
+    "inUse": "Aún lo usan: {{functions}}. Cambia antes esas funciones.",
+    "applied": "Motor aplicado a todas las funciones de IA",
+    "applyFailed": "No se pudo aplicar el motor",
+    "applyConfirm": "¿Aplicar \"{{name}}\" a las seis funciones de IA? Se reemplazarán los motores elegidos por función.",
+    "applyAll": "Aplicar a todas las funciones",
+    "useEngine": "Motor a usar",
+    "pickEngine": "Elige un motor…",
+    "choose": "Elegir",
+    "needsOperator": "Requiere aprobación del operador",
+    "platformBilling": "El uso de motores de la plataforma se factura a la cuenta del operador. Solo se pueden elegir los que el operador haya habilitado.",
+    "platformShort": "Plataforma",
+    "mineShort": "Mi motor",
+    "keyPrefixWarn": "Las claves de este proveedor suelen empezar por \"{{prefix}}\". Comprueba que no se haya rellenado una contraseña guardada.",
+    "status": {
+      "title": "Estado actual de la IA",
+      "using": "En uso: {{name}} · {{owner}} · {{model}}",
+      "lastOk": "último éxito {{at}}",
+      "lastError": "último fallo {{at}}",
+      "today": "Hoy: {{calls}} llamadas · {{failures}} fallos",
+      "switchToPlatform": "Cambiar a motor de la plataforma",
+      "details": "Detalle por función",
+      "noEngine": "Sin motor (respuestas por defecto)",
+      "headline": {
+        "ok": "La IA responde con normalidad",
+        "unknown": "Aún no hay llamadas ni pruebas registradas",
+        "no_key": "Sin clave de API — no puede responder",
+        "stub": "No hay motor conectado — solo salen respuestas por defecto",
+        "disabled": "El motor está desactivado",
+        "credit": "Sin crédito — no se están generando respuestas a clientes",
+        "auth": "Error de autenticación — no se están generando respuestas",
+        "model": "Error de modelo — no se están generando respuestas",
+        "rate_limit": "Límite de solicitudes — algunas respuestas pueden fallar",
+        "unreachable": "Proveedor inaccesible — no se están generando respuestas"
+      },
+      "action": {
+        "credit": "Recarga la cuenta del proveedor (Anthropic Console › Plans & Billing) o cambia a un motor de la plataforma.",
+        "auth": "Vuelve a introducir la clave de API o cambia a un motor de la plataforma.",
+        "no_key": "Añade una clave de API al motor o cambia a un motor de la plataforma.",
+        "model": "Revisa el nombre del modelo o cambia a un motor de la plataforma.",
+        "unreachable": "Revisa el endpoint (déjalo vacío para el predeterminado) o cambia a un motor de la plataforma.",
+        "stub": "Elige un motor y aplícalo.",
+        "default": "Revisa la configuración del motor o cambia a un motor de la plataforma."
+      }
+    },
+    "functions": {
+      "chat": "Respuestas (clasificación)",
+      "rag": "Respuestas de conocimiento",
+      "summary": "Resumen",
+      "assist": "Asistencia al agente",
+      "moderation": "Moderación",
+      "coach": "Coaching"
+    },
+    "healthText": {
+      "ok": "Correcto",
+      "unknown": "Sin datos",
+      "no_key": "Sin clave",
+      "stub": "IA apagada (stub)",
+      "disabled": "Desactivado",
+      "credit": "Sin crédito",
+      "auth": "Error de autenticación",
+      "model": "Error de modelo",
+      "rate_limit": "Límite de solicitudes",
+      "unreachable": "Inaccesible"
+    }
   },
   "aiUsage": {
     "title": "Uso de IA",

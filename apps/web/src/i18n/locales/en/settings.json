@@ -583,13 +583,77 @@
       "model": "Model not found — check the model name",
       "rate_limit": "Rate limited — try again shortly",
       "unreachable": "Could not reach the provider — check the endpoint",
-      "ok": "OK"
+      "ok": "OK",
+      "credit": "Out of credit — top up the provider account"
     },
     "billingNote": "Calls made with your own key are billed to your account with that provider.",
     "saved": "Engine saved",
     "defaultSet": "Default engine set",
     "removed": "Engine deleted",
-    "inUse": "Still used by: {{functions}}. Point those functions elsewhere first."
+    "inUse": "Still used by: {{functions}}. Point those functions elsewhere first.",
+    "applied": "Engine applied to all AI functions",
+    "applyFailed": "Could not apply the engine",
+    "applyConfirm": "Apply \"{{name}}\" to all six AI functions? Engines chosen per function will be replaced.",
+    "applyAll": "Apply to all functions",
+    "useEngine": "Engine to use",
+    "pickEngine": "Choose an engine…",
+    "choose": "Choose",
+    "needsOperator": "Operator approval required",
+    "platformBilling": "Platform engine usage is billed to the service operator's account. Only platform engines the operator has opened can be chosen.",
+    "platformShort": "Platform",
+    "mineShort": "My engine",
+    "keyPrefixWarn": "Keys from this provider usually start with \"{{prefix}}\". Make sure a saved login password was not filled in.",
+    "status": {
+      "title": "Current AI status",
+      "using": "In use: {{name}} · {{owner}} · {{model}}",
+      "lastOk": "last success {{at}}",
+      "lastError": "last failure {{at}}",
+      "today": "Today: {{calls}} calls · {{failures}} failures",
+      "switchToPlatform": "Switch to platform engine",
+      "details": "Per-function detail",
+      "noEngine": "No engine (fallback replies)",
+      "headline": {
+        "ok": "AI is answering normally",
+        "unknown": "No calls or tests recorded yet",
+        "no_key": "No API key — it cannot answer",
+        "stub": "No engine connected — only fallback replies go out",
+        "disabled": "The engine is disabled",
+        "credit": "Out of credit — customer replies are not being produced",
+        "auth": "Authentication error — customer replies are not being produced",
+        "model": "Model error — customer replies are not being produced",
+        "rate_limit": "Rate limited — some replies may be delayed or fail",
+        "unreachable": "Provider unreachable — customer replies are not being produced"
+      },
+      "action": {
+        "credit": "Top up the provider account (Anthropic Console › Plans & Billing), or switch to a platform engine.",
+        "auth": "Re-enter the API key, or switch to a platform engine.",
+        "no_key": "Add an API key to the engine, or switch to a platform engine.",
+        "model": "Check the model name, or switch to a platform engine.",
+        "unreachable": "Check the endpoint (leave it empty for the default), or switch to a platform engine.",
+        "stub": "Choose an engine and apply it.",
+        "default": "Check the engine settings, or switch to a platform engine."
+      }
+    },
+    "functions": {
+      "chat": "Customer replies (classify)",
+      "rag": "Knowledge answers",
+      "summary": "Summary",
+      "assist": "Agent assist",
+      "moderation": "Moderation",
+      "coach": "Coaching"
+    },
+    "healthText": {
+      "ok": "OK",
+      "unknown": "Unknown",
+      "no_key": "No key",
+      "stub": "AI off (stub)",
+      "disabled": "Disabled",
+      "credit": "Out of credit",
+      "auth": "Auth error",
+      "model": "Model error",
+      "rate_limit": "Rate limited",
+      "unreachable": "Unreachable"
+    }
   },
   "aiUsage": {
     "title": "AI usage",

@@ -583,13 +583,77 @@
       "model": "找不到模型 — 请检查模型名称",
       "rate_limit": "请求过多 — 请稍后重试",
       "unreachable": "无法连接提供商 — 请检查端点",
-      "ok": "正常"
+      "ok": "正常",
+      "credit": "额度不足 — 请为服务商账户充值"
     },
     "billingNote": "使用你自己的密钥发出的调用，将由该提供商向你的账户计费。",
     "saved": "已保存引擎",
     "defaultSet": "已设置默认引擎",
     "removed": "已删除引擎",
-    "inUse": "仍被 {{functions}} 使用。请先将这些功能改用其他引擎。"
+    "inUse": "仍被 {{functions}} 使用。请先将这些功能改用其他引擎。",
+    "applied": "已将引擎应用到全部 AI 功能",
+    "applyFailed": "无法应用引擎",
+    "applyConfirm": "将“{{name}}”应用到全部六个 AI 功能？按功能单独指定的引擎将被替换。是否继续？",
+    "applyAll": "应用到全部功能",
+    "useEngine": "使用的引擎",
+    "pickEngine": "选择引擎…",
+    "choose": "选择",
+    "needsOperator": "需运营方批准",
+    "platformBilling": "平台引擎的使用费用记入服务运营方账户。只能选择运营方允许的平台引擎。",
+    "platformShort": "平台",
+    "mineShort": "我的引擎",
+    "keyPrefixWarn": "该服务商的密钥通常以“{{prefix}}”开头。请确认浏览器没有自动填入登录密码。",
+    "status": {
+      "title": "当前 AI 使用状态",
+      "using": "使用中：{{name}} · {{owner}} · {{model}}",
+      "lastOk": "最近成功 {{at}}",
+      "lastError": "最近失败 {{at}}",
+      "today": "今日：调用 {{calls}} · 失败 {{failures}}",
+      "switchToPlatform": "切换到平台引擎",
+      "details": "按功能查看",
+      "noEngine": "无引擎（默认回复）",
+      "headline": {
+        "ok": "AI 正常应答中",
+        "unknown": "尚无调用或测试记录",
+        "no_key": "缺少 API 密钥，无法应答",
+        "stub": "未连接引擎 — 只发送默认回复",
+        "disabled": "引擎已停用",
+        "credit": "额度不足 — 无法生成客户回复",
+        "auth": "认证错误 — 无法生成客户回复",
+        "model": "模型错误 — 无法生成客户回复",
+        "rate_limit": "请求受限 — 部分回复可能延迟或失败",
+        "unreachable": "无法连接服务商 — 无法生成客户回复"
+      },
+      "action": {
+        "credit": "请为服务商账户充值（Anthropic Console › Plans & Billing），或切换到平台引擎。",
+        "auth": "请重新输入 API 密钥，或切换到平台引擎。",
+        "no_key": "请为引擎填写 API 密钥，或切换到平台引擎。",
+        "model": "请检查模型名称，或切换到平台引擎。",
+        "unreachable": "请检查端点（留空使用默认值），或切换到平台引擎。",
+        "stub": "请选择并应用一个引擎。",
+        "default": "请检查引擎设置，或切换到平台引擎。"
+      }
+    },
+    "functions": {
+      "chat": "客户回复（分类）",
+      "rag": "知识回答",
+      "summary": "摘要",
+      "assist": "客服辅助",
+      "moderation": "内容审核",
+      "coach": "辅导"
+    },
+    "healthText": {
+      "ok": "正常",
+      "unknown": "未确认",
+      "no_key": "无密钥",
+      "stub": "AI 关闭（桩）",
+      "disabled": "已停用",
+      "credit": "额度不足",
+      "auth": "认证错误",
+      "model": "模型错误",
+      "rate_limit": "请求受限",
+      "unreachable": "无法连接"
+    }
   },
   "aiUsage": {
     "title": "AI 用量",
