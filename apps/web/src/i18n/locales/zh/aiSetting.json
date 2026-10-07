@@ -106,6 +106,16 @@
     "followUpsNone": "无"
   },
   "handoff": {
+    "teamTitle": "客户请求人工时询问所需团队",
+    "teamHint": "仅在客户请求人工后显示（按钮、快捷选项或输入）。每个选项通知持有该角色的客服；无人在线时通知所有客服，并在队列行标注团队。",
+    "teamEnable": "让客户选择团队",
+    "teamPrompt": "问题",
+    "teamBlankHint": "留空 = 使用默认文案",
+    "teamOptionId": "键",
+    "teamOptionLabel": "客户看到的名称",
+    "teamOptionRole": "转给角色",
+    "teamAdd": "+ 添加选项",
+    "teamMax": "最多 4 个选项",
     "title": "转接人工客服",
     "assignees": "指派的客服",
     "assigneesHint": "留空则通知全部客服——最先接单的人负责该会话。",

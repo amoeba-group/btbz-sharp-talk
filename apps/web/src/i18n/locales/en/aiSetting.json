@@ -106,6 +106,16 @@
     "followUpsNone": "none"
   },
   "handoff": {
+    "teamTitle": "Ask which team when the customer requests an agent",
+    "teamHint": "Shown only after the customer asks for a human (button, chip, or typed). Each option pages the agents holding that role; if none is online, every agent is alerted and the queue row is badged with the team.",
+    "teamEnable": "Ask the customer to choose a team",
+    "teamPrompt": "Question",
+    "teamBlankHint": "Blank = built-in wording",
+    "teamOptionId": "Key",
+    "teamOptionLabel": "Label shown to the customer",
+    "teamOptionRole": "Route to role",
+    "teamAdd": "+ Add option",
+    "teamMax": "Up to 4 options",
     "title": "Agent handoff",
     "assignees": "Assigned agents",
     "assigneesHint": "Leave empty to alert every agent — the first to accept takes the conversation.",

@@ -106,6 +106,16 @@
     "followUpsNone": "없음"
   },
   "handoff": {
+    "teamTitle": "상담원 연결 요청 시 담당 팀 선택",
+    "teamHint": "고객이 상담원을 요청한 뒤(버튼·칩·직접 입력)에만 표시됩니다. 각 선택지는 해당 역할의 상담원에게 알리고, 온라인 상담원이 없으면 전체에게 알리며 대기열 행에 팀 배지가 붙습니다.",
+    "teamEnable": "고객에게 팀을 선택하도록 묻기",
+    "teamPrompt": "질문",
+    "teamBlankHint": "비워두면 기본 문구",
+    "teamOptionId": "키",
+    "teamOptionLabel": "고객에게 보이는 이름",
+    "teamOptionRole": "전달 역할",
+    "teamAdd": "+ 선택지 추가",
+    "teamMax": "최대 4개",
     "title": "상담원 연결",
     "assignees": "담당 상담원",
     "assigneesHint": "비워두면 모든 상담원에게 알리고, 먼저 수락한 담당자가 응대합니다.",

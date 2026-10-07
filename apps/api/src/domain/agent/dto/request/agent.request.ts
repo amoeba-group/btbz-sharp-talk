@@ -24,6 +24,8 @@ export class ListSessionsQuery {
   @IsOptional() @IsString() channel?: string;
   /** AI-agent filter (REQ-260825 R7): agent id; omitted/'all' = every agent. */
   @IsOptional() @IsString() ai_agent_id?: string;
+  /** Team filter (PLN-261007 Team Routing): teamRouting option id; omitted/'all' = every team. */
+  @IsOptional() @IsString() support_type?: string;
 }
 
 /** Re-pin the session to another AI agent — applies from the next turn. */

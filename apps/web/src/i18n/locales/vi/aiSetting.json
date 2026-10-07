@@ -106,6 +106,16 @@
     "followUpsNone": "không có"
   },
   "handoff": {
+    "teamTitle": "Hỏi đội hỗ trợ khi khách yêu cầu gặp nhân viên",
+    "teamHint": "Chỉ hiện sau khi khách yêu cầu gặp người (nút, chip hoặc gõ tay). Mỗi lựa chọn báo cho nhân viên giữ vai trò đó; không ai online thì báo cho mọi nhân viên và hàng chờ gắn nhãn đội.",
+    "teamEnable": "Hỏi khách chọn đội",
+    "teamPrompt": "Câu hỏi",
+    "teamBlankHint": "Để trống = dùng câu mặc định",
+    "teamOptionId": "Mã",
+    "teamOptionLabel": "Tên hiển thị cho khách",
+    "teamOptionRole": "Chuyển tới vai trò",
+    "teamAdd": "+ Thêm lựa chọn",
+    "teamMax": "Tối đa 4 lựa chọn",
     "title": "Chuyển cho nhân viên",
     "assignees": "Nhân viên được phân công",
     "assigneesHint": "Để trống để báo cho tất cả nhân viên — ai nhận trước sẽ phụ trách cuộc hội thoại.",

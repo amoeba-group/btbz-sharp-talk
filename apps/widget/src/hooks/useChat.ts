@@ -108,6 +108,9 @@ export function useChat(sessionToken: string | null) {
             body: res.reply.body,
             createdAt: new Date().toISOString(),
             citations: res.reply.citations,
+            // The team question's chips (PLN-261007) — shown now rather than
+            // after the next poll brings the stored row.
+            quickReplies: res.followUps,
           });
         }
         return {
@@ -193,16 +196,51 @@ export function useChat(sessionToken: string | null) {
     [sessionToken, append, t],
   );
 
-  const escalate = useCallback(async () => {
-    if (!conversationId) return;
-    await escalateApi(sessionToken!, conversationId);
-    append({
-      id: `sys-${Date.now()}`,
-      senderType: 'system',
-      body: t('chat.connectingAgent'),
-      createdAt: new Date().toISOString(),
-    });
-  }, [conversationId, sessionToken, append, t]);
+  /**
+   * Ask for a human. With team routing on (PLN-261007) the first call brings
+   * back the team question instead of a handoff; a chip tap calls again with
+   * its option id and `label`, which is echoed as the shopper's own words.
+   */
+  const escalate = useCallback(
+    async (supportType?: string, label?: string): Promise<{ choose: boolean }> => {
+      if (!conversationId) return { choose: false };
+      if (label) {
+        append({
+          id: `local-${Date.now()}`,
+          senderType: 'user',
+          body: label,
+          createdAt: new Date().toISOString(),
+        });
+      }
+      try {
+        const res = await escalateApi(sessionToken!, conversationId, supportType);
+        if (res?.choose) {
+          append({
+            id: `ask-${Date.now()}`,
+            senderType: 'system',
+            body: res.body ?? '',
+            createdAt: new Date().toISOString(),
+            quickReplies: res.followUps,
+          });
+          return { choose: true };
+        }
+        // The server stores its own notice (connecting / off-hours) and says
+        // what it wrote, so the bubble shown now matches the row the next poll
+        // brings. An older API that returns nothing gets the local line.
+        append({
+          id: `sys-${Date.now()}`,
+          senderType: 'system',
+          body: res?.body || t('chat.connectingAgent'),
+          createdAt: new Date().toISOString(),
+        });
+        return { choose: false };
+      } finally {
+        // Rows were persisted past the cursor — full reconcile on the next poll.
+        lastServerId.current = null;
+      }
+    },
+    [conversationId, sessionToken, append, t],
+  );
 
   /**
    * Customer-side end chat (PLN-260808 Track B). The session (and sign-in)

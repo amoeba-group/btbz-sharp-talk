@@ -106,6 +106,16 @@
     "followUpsNone": "なし"
   },
   "handoff": {
+    "teamTitle": "担当者接続の要求時に担当チームを尋ねる",
+    "teamHint": "お客様が担当者を要求した後（ボタン・チップ・入力）にのみ表示されます。各選択肢はその役割の担当者に通知し、オンラインの担当者がいなければ全員に通知してキュー行にチームのバッジが付きます。",
+    "teamEnable": "お客様にチームを選んでもらう",
+    "teamPrompt": "質問",
+    "teamBlankHint": "空欄＝既定の文言",
+    "teamOptionId": "キー",
+    "teamOptionLabel": "お客様に表示する名前",
+    "teamOptionRole": "振り分け先の役割",
+    "teamAdd": "＋ 選択肢を追加",
+    "teamMax": "最大4件",
     "title": "担当者への引き継ぎ",
     "assignees": "担当に割り当てるメンバー",
     "assigneesHint": "空欄の場合は全担当者に通知し、最初に受け付けた人が会話を担当します。",

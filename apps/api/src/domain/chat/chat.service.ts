@@ -29,7 +29,8 @@ import type { ChatTurnResponse } from '@sharptalk/types';
 import { OrderService } from '../order/order.service';
 import { SessionService, sessionCacheKey } from '../session/session.service';
 import { CustomerService } from '../customer/customer.service';
-import { HandoffRouterService } from '../ai-engine/handoff-router.service';
+import { HandoffRouterService, TEAM_CHIP_PREFIX } from '../ai-engine/handoff-router.service';
+import type { TeamQuestion } from '../ai-engine/handoff-router.service';
 import { EventBusService, EVENTS, RedisService } from '../../infrastructure/infrastructure.module';
 import { AttachmentService } from '../attachment/attachment.service';
 import { MessageAttachment } from '../attachment/entity/message-attachment.entity';
@@ -205,6 +206,24 @@ export interface EscalationEvent {
   /** Issue type/label stamp from a deny rule (P2) — consumed by IssueService/alerts. */
   issueType?: string;
   issueLabel?: string;
+  /**
+   * The team the customer picked (PLN-261007 Team Routing): option id and
+   * its wording, for the alert channels. `issueLabel` carries the job label
+   * that actually routes it.
+   */
+  supportType?: string;
+  supportLabel?: string;
+}
+
+/** What `escalate` tells the widget (PLN-261007 Team Routing). */
+export interface EscalateOutcome {
+  /** True once the agents are paged. False while the team question is pending. */
+  escalated: boolean;
+  /** The team question was asked instead; its chips travel with the thread. */
+  choose: boolean;
+  /** Notice persisted for the customer this call (team question or off-hours), if any. */
+  body: string | null;
+  followUps?: Array<{ id: string; label: string }>;
 }
 
 /**
@@ -697,6 +716,20 @@ export class ChatService {
     if (this.wantsHuman(intent, egressText)) {
       if (queued) {
         return { conversationId: String(conversation.id), reply: null, escalate: false, needsAuth: false };
+      }
+      // Same question the "Talk to an agent" button asks (PLN-261007 Team
+      // Routing): a typed request must not skip the team choice, or typing
+      // would broadcast while the button routes.
+      const teams = await this.handoffRouter.teamQuestion(tenantId, session.language);
+      if (teams) {
+        const asked = await this.askTeam(conversation.id, tenantId, session.language, teams);
+        return {
+          conversationId: String(conversation.id),
+          reply: { senderType: 'system', body: asked.body },
+          escalate: false,
+          needsAuth: false,
+          followUps: asked.followUps,
+        };
       }
       const handoff = await this.handoff(conversation.id, session, tenantId, 'user_request', text);
       return {
@@ -1250,28 +1283,62 @@ export class ChatService {
    * caller's own session — a `@Public()` endpoint keyed on a raw, enumerable
    * conversation id must not let anyone force-escalate another visitor's chat.
    */
-  async escalate(session: Session, conversationId: number): Promise<void> {
+  async escalate(
+    session: Session,
+    conversationId: number,
+    /** Team option id echoed back from a chip (PLN-261007 Team Routing). */
+    supportType?: string,
+  ): Promise<EscalateOutcome> {
     const conversation = await this.convRepo.findOne({ where: { id: conversationId } });
     // Number() both sides: session.id is a bare bigint PK (hydrates as a string)
     // while conversation.sessionId goes through bigintTransformer (number).
     if (!conversation || Number(conversation.sessionId) !== Number(session.id)) {
       throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
-    if (session.channel === 'preview') return; // sandbox: never page the agents
+    const tenantId = session.tenantId ?? conversation.tenantId ?? 0;
+
+    // Team routing (PLN-261007): first call asks, second call (with the chip's
+    // option id) routes. A tenant that switched the question off in between
+    // simply hands off — the stale id is ignored, never an error.
+    const teams = await this.handoffRouter.teamQuestion(tenantId, session.language);
+    let chosen: TeamQuestion['options'][number] | null = null;
+    if (teams) {
+      if (!supportType) {
+        const asked = await this.askTeam(conversationId, tenantId, session.language, teams);
+        return { escalated: false, choose: true, body: asked.body, followUps: asked.followUps };
+      }
+      chosen = teams.options.find((o) => o.id === supportType) ?? null;
+      if (!chosen) {
+        this.logger.warn(`escalate: unknown support_type=${supportType} conversation=${conversationId}`);
+        throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.BAD_REQUEST);
+      }
+      // The choice goes into the thread as the customer's own words — an agent
+      // reading the transcript tomorrow sees what was asked for — and onto the
+      // conversation for the console's queue badge and filter.
+      await this.persist(tenantId, conversationId, SENDER_TYPE.USER, chosen.label, session.language, {
+        kind: 'team_choice',
+        supportType: chosen.id,
+      });
+      await this.convRepo.update({ id: conversationId }, { supportType: chosen.id });
+    }
+
+    if (session.channel === 'preview') return { escalated: true, choose: false, body: null }; // sandbox: never page the agents
     const lastUser = await this.msgRepo.findOne({
       where: { conversationId, senderType: SENDER_TYPE.USER },
       order: { id: 'DESC' },
     });
-    const tenantId = session.tenantId ?? conversation.tenantId ?? 0;
     // Same routing as the automatic handoff (PLN-AiSetting W3). Off hours the
     // widget's local "connecting you" line would be a lie, so persist the
     // off-hours notice — the conversation poll shows it to the customer.
     const route = await this.handoffRouter.route(tenantId, session.language);
-    if (route.mode === 'email' && route.notice) {
-      await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, route.notice, session.language, {
-        reason: 'user_request',
-      });
-    }
+    // In hours the "connecting you" line is stored too (PLN-261007): as a
+    // widget-local bubble it vanished on the poll after a team choice, and the
+    // transcript never said the customer had asked for a person.
+    const body =
+      route.mode === 'email' && route.notice ? route.notice : sysMsg('connectingAgent', session.language);
+    await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, body, session.language, {
+      reason: 'user_request',
+    });
     await this.markWaiting(conversationId);
     const event: EscalationEvent = {
       tenantId,
@@ -1281,8 +1348,32 @@ export class ChatService {
       preview: (lastUser?.body ?? '').slice(0, 300),
       targetUserIds: route.targetUserIds,
       offHoursEmail: route.mode === 'email' ? route.email : undefined,
+      ...(chosen
+        ? { issueLabel: chosen.jobLabel, supportType: chosen.id, supportLabel: chosen.label }
+        : {}),
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
+    return { escalated: true, choose: false, body };
+  }
+
+  /**
+   * Persist the team question with its chips (PLN-261007 Team Routing). The
+   * chips ride on the message trace exactly like scenario follow-ups, so they
+   * survive the poll and a reload; the conversation is NOT marked waiting and
+   * nobody is paged until the customer picks one.
+   */
+  private async askTeam(
+    conversationId: number,
+    tenantId: number,
+    language: string,
+    teams: TeamQuestion,
+  ): Promise<{ body: string; followUps: Array<{ id: string; label: string }> }> {
+    const followUps = teams.options.map((o) => ({ id: `${TEAM_CHIP_PREFIX}${o.id}`, label: o.label }));
+    await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, teams.prompt, language, {
+      kind: 'team_question',
+      followUps,
+    });
+    return { body: teams.prompt, followUps };
   }
 
   // ---- helpers ----

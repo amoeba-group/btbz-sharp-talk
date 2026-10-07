@@ -19,7 +19,7 @@ const { outputFiles } = buildSync({
   write: false,
   platform: 'neutral',
 });
-const { replyChips, NON_COMMERCE_REPLY_CHIPS } = await import(
+const { replyChips, NON_COMMERCE_REPLY_CHIPS, teamChoiceOf, TEAM_CHIP_PREFIX } = await import(
   `data:text/javascript,${encodeURIComponent(outputFiles[0].text)}`
 );
 
@@ -63,4 +63,16 @@ test('no scenario buttons → only the agent chip, never the store chips', () =>
 test('a disabled button is not offered', () => {
   const chips = replyChips(false, [{ ...PARTNER[0], enabled: false }, PARTNER[1]], LABELS);
   assert.deepEqual(ids(chips), ['partner_check_in', 'agent_connect']);
+});
+
+/**
+ * Team chips (PLN-261007 Team Routing): the server writes `team:<id>`, the
+ * widget sends `<id>` back as support_type. Anything else is a scenario chip.
+ */
+test('teamChoiceOf: strips the prefix and rejects other chips', () => {
+  assert.equal(teamChoiceOf(`${TEAM_CHIP_PREFIX}business`), 'business');
+  assert.equal(teamChoiceOf('team: cs '), 'cs');
+  assert.equal(teamChoiceOf('team:'), null);
+  assert.equal(teamChoiceOf('agent_connect'), null);
+  assert.equal(teamChoiceOf('shipping_policy'), null);
 });

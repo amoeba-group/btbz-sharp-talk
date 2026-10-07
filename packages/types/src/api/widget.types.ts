@@ -197,6 +197,22 @@ export interface ChatTurnResponse {
    * agent's reply has somewhere to go (PLN-260806).
    */
   needsContactEmail?: boolean;
+  /**
+   * Chips under the reply (PLN-261007 Team Routing): the team question asked
+   * in place of a handoff. Absent on ordinary turns — the RAG path has none.
+   */
+  followUps?: ScenarioFollowUpResponse[];
+}
+
+/** `POST /chat/escalate` (PLN-261007 Team Routing). */
+export interface EscalateResponse {
+  /** True once the agents are paged; false while the team question is pending. */
+  escalated: boolean;
+  /** The team question was asked instead of a handoff — render `body` + `followUps`. */
+  choose?: boolean;
+  /** Notice persisted for the customer by this call (team question or off-hours), if any. */
+  body?: string | null;
+  followUps?: ScenarioFollowUpResponse[];
 }
 
 /** Post-reply navigation the widget performs after a scripted answer (FR-003). */

@@ -26,6 +26,9 @@ import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/Button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ChannelBadge, CHANNEL_FILTERS, RECEIVE_ONLY_CHANNELS } from './ChannelBadge';
+
+/** Built-in team ids (PLN-261007 Team Routing); the API seeds the same pair. */
+const TEAM_FILTERS = ['cs', 'business'] as const;
 import { SessionAlias } from './SessionAlias';
 import { AutoReplyControl } from './AutoReplyControl';
 import { DraftPanel } from './DraftPanel';
@@ -185,6 +188,10 @@ export function LiveChatPage() {
   const [agentFilter, setAgentFilter] = useState('all');
   const { data: aiRoster } = useAiAgentRoster();
 
+  // Team filter (PLN-261007 Team Routing): the option the customer picked when
+  // asking for a human. Built-in ids; a tenant's custom id still badges by id.
+  const [teamFilter, setTeamFilter] = useState('all');
+
   // Detail-header controls (REQ-260825 R8).
   const [assignOpen, setAssignOpen] = useState(false);
   // Unified assign modal (REQ-260825 R2): AI agent for everyone, human agent
@@ -244,6 +251,7 @@ export function LiveChatPage() {
     scope === 'groups' ? 'all' : scope,
     channel,
     agentFilter,
+    teamFilter,
   );
   const { data: groups, isLoading: groupsLoading } = useGroups(scope === 'groups');
   const { data: convo, isLoading: convoLoading, isFetching: convoFetching, refetch: refetchConvo } =
@@ -570,6 +578,20 @@ export function LiveChatPage() {
                 </option>
               ))}
             </select>
+            {/* Team filter (PLN-261007 Team Routing). */}
+            <select
+              value={teamFilter}
+              onChange={(e) => setTeamFilter(e.target.value)}
+              aria-label={t('team.filterLabel')}
+              className="rounded-full border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 outline-none focus:border-primary-400"
+            >
+              <option value="all">{t('team.filterAll')}</option>
+              {TEAM_FILTERS.map((key) => (
+                <option key={key} value={key}>
+                  {t(`team.${key}`, { defaultValue: key })}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="border-b border-gray-100 p-2">
             <div className="relative">
@@ -745,6 +767,14 @@ export function LiveChatPage() {
                           {t('autoReply.offShort')}
                         </span>
                       )}
+                      {s.supportType && (
+                        <span
+                          className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700"
+                          title={t('team.badgeTitle')}
+                        >
+                          {t(`team.${s.supportType}`, { defaultValue: s.supportType })}
+                        </span>
+                      )}
                       <ChannelBadge channel={s.channel} />
                       <StatusBadge
                         status={s.status}
@@ -829,6 +859,11 @@ export function LiveChatPage() {
                   {/* Current owners as badges; changing them lives in [지정]. */}
                   {convo?.aiAgentName && (
                     <Badge tone="info">AI: {convo.aiAgentName}</Badge>
+                  )}
+                  {convo?.supportType && (
+                    <Badge tone="warning">
+                      {t('team.badgeTitle')}: {t(`team.${convo.supportType}`, { defaultValue: convo.supportType })}
+                    </Badge>
                   )}
                   {convo?.assignedTo && (
                     <Badge tone="primary">

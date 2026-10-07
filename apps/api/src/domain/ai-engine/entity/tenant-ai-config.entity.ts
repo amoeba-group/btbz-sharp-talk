@@ -98,6 +98,21 @@ export interface HandoffConfig {
   }>;
   /** SLA targets for the issue board (백로그 B2, 결정 5); defaults 24h/4h. */
   sla?: { normalHours?: number; urgentHours?: number };
+  /**
+   * Ask the customer which team they need when they ask for a human
+   * (PLN-261007-Handoff-Team-Routing). Absent or disabled = hand off straight
+   * away, exactly as before. Each option pages the agents holding `jobLabel`
+   * (consult = customer service, sales_admin = business support); with no
+   * such agent online the alarm falls back to the broadcast. Labels are per
+   * language; a blank one shows the built-in wording for that option id.
+   */
+  teamRouting?: {
+    enabled: boolean;
+    /** The question; blank = built-in wording. */
+    prompt?: LocalizedText;
+    /** 1..4 options in display order. Absent = the built-in CS / Business pair. */
+    options?: Array<{ id: string; jobLabel: string; label?: LocalizedText }>;
+  };
 }
 
 /**

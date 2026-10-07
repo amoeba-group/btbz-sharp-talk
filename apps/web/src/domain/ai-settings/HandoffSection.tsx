@@ -24,6 +24,19 @@ const TIMEZONES = Array.from(
 ).sort();
 const TZ_LABEL = new Map(LANGUAGE_TIMEZONES.map((z) => [z.zone, z.label]));
 
+/** One team the customer can pick (PLN-261007 Team Routing). */
+interface TeamRow {
+  id: string;
+  jobLabel: string;
+  label: Partial<Record<ScenarioLang, string>>;
+}
+const TEAM_OPTIONS_MAX = 4;
+/** Seed on first enable — the pair Go2Joy asked for; the API holds the wording. */
+const DEFAULT_TEAM_ROWS: TeamRow[] = [
+  { id: 'cs', jobLabel: 'consult', label: {} },
+  { id: 'business', jobLabel: 'sales_admin', label: {} },
+];
+
 /**
  * Escalation routing (PLN-AiSetting W3): who gets paged, when agents are on
  * duty, and what happens (plus what the shopper is told) outside those hours.
@@ -58,6 +71,11 @@ export function HandoffSection() {
   // Issue-board SLA targets (B2) — string state, validated on save (1..168h).
   const [slaNormal, setSlaNormal] = useState('24');
   const [slaUrgent, setSlaUrgent] = useState('4');
+  // Team question (PLN-261007 Team Routing): asked only after the customer
+  // requests a human. Rows are edited per language through the shared tab.
+  const [teamOn, setTeamOn] = useState(false);
+  const [teamPrompt, setTeamPrompt] = useState<Partial<Record<ScenarioLang, string>>>({});
+  const [teamRows, setTeamRows] = useState<TeamRow[]>([]);
 
   useEffect(() => {
     const h = config?.handoffConfig;
@@ -90,6 +108,15 @@ export function HandoffSection() {
     );
     if (h.sla?.normalHours != null) setSlaNormal(String(h.sla.normalHours));
     if (h.sla?.urgentHours != null) setSlaUrgent(String(h.sla.urgentHours));
+    setTeamOn(h.teamRouting?.enabled === true);
+    setTeamPrompt(h.teamRouting?.prompt ?? {});
+    setTeamRows(
+      (h.teamRouting?.options ?? []).map((o) => ({
+        id: o.id ?? '',
+        jobLabel: o.jobLabel ?? 'consult',
+        label: o.label ?? {},
+      })),
+    );
   }, [config]);
 
   // Only consult-label agents handle conversations, so only they can be assigned.
@@ -137,7 +164,23 @@ export function HandoffSection() {
       return Number.isFinite(n) && n >= 1 && n <= 168 ? n : fallback;
     };
     handoff.sla = { normalHours: clamp(slaNormal, 24), urgentHours: clamp(slaUrgent, 4) };
+    // Rows are kept even while disabled, so switching the question off and on
+    // again does not lose the labels a tenant translated.
+    const teamOptions = teamRows
+      .map((r) => ({ id: r.id.trim(), jobLabel: r.jobLabel, label: r.label }))
+      .filter((r) => r.id.length > 0)
+      .slice(0, TEAM_OPTIONS_MAX);
+    if (teamOn || teamOptions.length || Object.keys(teamPrompt).length) {
+      handoff.teamRouting = { enabled: teamOn, prompt: teamPrompt, options: teamOptions };
+    }
     updateConfig.mutate({ handoff_config: handoff });
+  };
+
+  const enableTeam = (on: boolean) => {
+    setTeamOn(on);
+    // First switch-on seeds the CS / Business pair the feature was built for;
+    // the labels stay blank so the API's built-in wording (six languages) shows.
+    if (on && teamRows.length === 0) setTeamRows(DEFAULT_TEAM_ROWS.map((r) => ({ ...r, label: {} })));
   };
 
   const smtpWarning = hoursOn && !email.trim();
@@ -401,6 +444,98 @@ export function HandoffSection() {
             >
               {t('handoff.denyAdd')}
             </Button>
+          </div>
+
+          {/* Team question (PLN-261007): asked only after the customer requests a human. */}
+          <div className="border-t border-gray-100 pt-4">
+            <Label>{t('handoff.teamTitle')}</Label>
+            <p className="mb-2 mt-0.5 text-[11px] text-gray-400">{t('handoff.teamHint')}</p>
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={teamOn}
+                onChange={(e) => enableTeam(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+              />
+              {t('handoff.teamEnable')}
+            </label>
+            {teamOn && (
+              <div className="mt-2 space-y-2 pl-6">
+                <div className="flex items-center gap-2">
+                  <Label>{t('handoff.teamPrompt')}</Label>
+                  <LanguageTabs value={lang} onChange={setLang} filled={teamPrompt} />
+                </div>
+                <Input
+                  value={teamPrompt[lang] ?? ''}
+                  onChange={(e) => setTeamPrompt((prev) => ({ ...prev, [lang]: e.target.value }))}
+                  placeholder={t('handoff.teamBlankHint')}
+                />
+                <div className="grid grid-cols-[6rem_1fr_10rem_auto] items-center gap-2 text-[11px] text-gray-400">
+                  <span>{t('handoff.teamOptionId')}</span>
+                  <span>{t('handoff.teamOptionLabel')}</span>
+                  <span>{t('handoff.teamOptionRole')}</span>
+                  <span />
+                </div>
+                {teamRows.map((row, i) => (
+                  <div key={i} className="grid grid-cols-[6rem_1fr_10rem_auto] items-center gap-2">
+                    <Input
+                      value={row.id}
+                      aria-label={t('handoff.teamOptionId')}
+                      onChange={(e) =>
+                        setTeamRows((rows) => rows.map((r, j) => (j === i ? { ...r, id: e.target.value } : r)))
+                      }
+                    />
+                    <Input
+                      value={row.label[lang] ?? ''}
+                      aria-label={t('handoff.teamOptionLabel')}
+                      placeholder={t('handoff.teamBlankHint')}
+                      onChange={(e) =>
+                        setTeamRows((rows) =>
+                          rows.map((r, j) =>
+                            j === i ? { ...r, label: { ...r.label, [lang]: e.target.value } } : r,
+                          ),
+                        )
+                      }
+                    />
+                    <Select
+                      value={row.jobLabel}
+                      aria-label={t('handoff.teamOptionRole')}
+                      onChange={(e) =>
+                        setTeamRows((rows) =>
+                          rows.map((r, j) => (j === i ? { ...r, jobLabel: e.target.value } : r)),
+                        )
+                      }
+                    >
+                      {['consult', 'sales_admin', 'accounting', 'operations'].map((v) => (
+                        <option key={v} value={v}>
+                          {t(`handoff.denyLabel.${v}`)}
+                        </option>
+                      ))}
+                    </Select>
+                    <button
+                      type="button"
+                      className="text-xs font-medium text-red-500 hover:underline"
+                      onClick={() => setTeamRows((rows) => rows.filter((_, j) => j !== i))}
+                    >
+                      {tc('delete')}
+                    </button>
+                  </div>
+                ))}
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={teamRows.length >= TEAM_OPTIONS_MAX}
+                    onClick={() =>
+                      setTeamRows((rows) => [...rows, { id: '', jobLabel: 'consult', label: {} }])
+                    }
+                  >
+                    {t('handoff.teamAdd')}
+                  </Button>
+                  <span className="text-[11px] text-gray-400">{t('handoff.teamMax')}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end">

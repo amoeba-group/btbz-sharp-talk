@@ -33,6 +33,8 @@ export class EscalateRequest {
   @IsString() session_token: string;
   // Widget echoes the id back as a string (bigint PKs serialize as strings).
   @Type(() => Number) @IsInt() conversation_id: number;
+  /** Team option id from the chip the customer tapped (PLN-261007 Team Routing). */
+  @IsOptional() @IsString() @MaxLength(32) support_type?: string;
 }
 
 export class ScenarioRequest {

@@ -106,6 +106,16 @@
     "followUpsNone": "ninguno"
   },
   "handoff": {
+    "teamTitle": "Preguntar el equipo cuando el cliente pide un agente",
+    "teamHint": "Se muestra solo después de que el cliente pide una persona (botón, chip o escrito). Cada opción avisa a los agentes con ese rol; si ninguno está en línea, se avisa a todos y la fila de la cola lleva la etiqueta del equipo.",
+    "teamEnable": "Pedir al cliente que elija un equipo",
+    "teamPrompt": "Pregunta",
+    "teamBlankHint": "Vacío = texto predeterminado",
+    "teamOptionId": "Clave",
+    "teamOptionLabel": "Etiqueta que ve el cliente",
+    "teamOptionRole": "Enviar al rol",
+    "teamAdd": "+ Añadir opción",
+    "teamMax": "Hasta 4 opciones",
     "title": "Transferencia a agente",
     "assignees": "Agentes asignados",
     "assigneesHint": "Déjalo vacío para avisar a todos los agentes; el primero en aceptar atiende la conversación.",

@@ -10,6 +10,21 @@ import type { ScenarioButton } from '../../lib/types';
  * so the operator configures the menu and these chips in one place. "Talk to
  * an agent" closes the row either way.
  */
+/**
+ * Chip id prefix of the team question (PLN-261007 Team Routing). The server
+ * writes `team:<optionId>`; the widget sends `<optionId>` back as
+ * `support_type`. Kept here, next to the other chip ids, so both sides of the
+ * contract are greppable from one place.
+ */
+export const TEAM_CHIP_PREFIX = 'team:';
+
+/** Option id behind a team chip, or null for any other chip. */
+export function teamChoiceOf(chipId: string): string | null {
+  if (!chipId.startsWith(TEAM_CHIP_PREFIX)) return null;
+  const id = chipId.slice(TEAM_CHIP_PREFIX.length).trim();
+  return id || null;
+}
+
 export interface ReplyChip {
   id: string;
   label: string;

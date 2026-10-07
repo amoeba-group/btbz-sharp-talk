@@ -137,6 +137,13 @@
     "cancel": "Cancel",
     "move": "Move…"
   },
+  "team": {
+    "filterLabel": "Filter by team",
+    "filterAll": "All teams",
+    "cs": "Customer Service",
+    "business": "Business",
+    "badgeTitle": "Team"
+  },
   "channel": {
     "filterLabel": "Filter by channel",
     "filterAll": "All channels",

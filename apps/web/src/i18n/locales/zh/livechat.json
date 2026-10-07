@@ -137,6 +137,13 @@
     "cancel": "取消",
     "move": "移动…"
   },
+  "team": {
+    "filterLabel": "按团队筛选",
+    "filterAll": "全部团队",
+    "cs": "客户服务",
+    "business": "商务",
+    "badgeTitle": "团队"
+  },
   "channel": {
     "filterLabel": "按渠道筛选",
     "filterAll": "全部渠道",

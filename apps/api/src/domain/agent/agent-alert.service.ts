@@ -23,6 +23,8 @@ interface EscalationPayload {
   offHoursEmail?: string;
   /** Label routing (P2, 결정 4): narrow the alarm to this label's available agents. */
   issueLabel?: string;
+  /** Team the customer picked (PLN-261007 Team Routing) — wording for the channels. */
+  supportLabel?: string;
 }
 
 const REASON_LABEL: Record<string, string> = {
@@ -73,13 +75,16 @@ export class AgentAlertService implements OnModuleInit {
         status: 'new',
       },
     });
-    // Label routing (P2): with no explicit assignee configured, address the
-    // alarm to the least-loaded available agent holding the issue's label.
-    // No eligible agent → NULL, i.e. the pre-P2 broadcast (alarms never drop).
-    let targetUserId = payload.targetUserIds?.[0] ?? null;
-    if (targetUserId == null && payload.issueLabel && payload.tenantId) {
+    // Label routing (P2, PLN-261007): an explicit label — a deny rule's stamp
+    // or the team the customer just picked — outranks the tenant's general
+    // assignee list, since it says who this conversation is FOR. Least-loaded
+    // available agent holding the label; nobody online → the configured
+    // assignee; none → NULL, i.e. the pre-P2 broadcast (alarms never drop).
+    let targetUserId: number | null = null;
+    if (payload.issueLabel && payload.tenantId) {
       targetUserId = await this.pickLabelAgent(payload.tenantId, payload.issueLabel);
     }
+    if (targetUserId == null) targetUserId = payload.targetUserIds?.[0] ?? null;
     const alert =
       existing ??
       (await this.alertRepo.save(
@@ -102,10 +107,13 @@ export class AgentAlertService implements OnModuleInit {
     // summary goes to the configured mailbox instead of paging the on-call
     // channels (PLN-AiSetting W3).
     if (payload.offHoursEmail) {
-      await this.notifyEmail(alert, payload.offHoursEmail);
+      await this.notifyEmail(alert, payload.offHoursEmail, payload.supportLabel);
       return;
     }
-    await Promise.allSettled([this.notifySlack(alert), this.notifyEmail(alert)]);
+    await Promise.allSettled([
+      this.notifySlack(alert, payload.supportLabel),
+      this.notifyEmail(alert, undefined, payload.supportLabel),
+    ]);
   }
 
   /**
@@ -177,21 +185,24 @@ export class AgentAlertService implements OnModuleInit {
 
   // ---- channels ----
 
-  private summary(alert: AgentAlert): string {
+  private summary(alert: AgentAlert, teamLabel?: string): string {
     const reason = REASON_LABEL[alert.reason] ?? alert.reason;
+    // The team the customer picked (PLN-261007) — so CS knows at a glance
+    // whether a Business Support request landed in the broadcast fallback.
+    const team = teamLabel?.trim() ? `\nTeam: ${teamLabel.trim()}` : '';
     const preview = alert.preview ? `\n> ${alert.preview}` : '';
-    return `Chat escalation — conversation #${alert.conversationId}\nReason: ${reason}${preview}`;
+    return `Chat escalation — conversation #${alert.conversationId}\nReason: ${reason}${team}${preview}`;
   }
 
   /** Slack incoming webhook (SLACK_WEBHOOK_URL; empty = disabled). */
-  private async notifySlack(alert: AgentAlert): Promise<void> {
+  private async notifySlack(alert: AgentAlert, teamLabel?: string): Promise<void> {
     const url = this.config.get<string>('SLACK_WEBHOOK_URL');
     if (!url) return;
     try {
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: `:rotating_light: ${this.summary(alert)}` }),
+        body: JSON.stringify({ text: `:rotating_light: ${this.summary(alert, teamLabel)}` }),
       });
       if (!res.ok) this.logger.warn(`Slack alert failed: HTTP ${res.status}`);
     } catch (e) {
@@ -200,13 +211,13 @@ export class AgentAlertService implements OnModuleInit {
   }
 
   /** Escalation summary to the ops mailbox (or the off-hours override). */
-  private async notifyEmail(alert: AgentAlert, overrideTo?: string): Promise<void> {
+  private async notifyEmail(alert: AgentAlert, overrideTo?: string, teamLabel?: string): Promise<void> {
     const to = overrideTo ?? this.config.get<string>('ALERT_EMAIL_TO');
     if (!to) return;
     await this.mailer.send({
       to,
       subject: `[IVY Chat] Escalation — conversation #${alert.conversationId}`,
-      text: this.summary(alert),
+      text: this.summary(alert, teamLabel),
     });
   }
 }

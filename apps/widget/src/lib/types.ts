@@ -17,6 +17,7 @@ import type {
   ChatAttachmentResponse,
   ChatMessageResponse,
   ChatTurnResponse,
+  EscalateResponse,
   ConversationResponse,
   NotificationPrefResponse,
   NotificationResponse,
@@ -80,6 +81,7 @@ export type ChatAttachment = ChatAttachmentResponse;
 
 export type Conversation = ConversationResponse;
 export type ChatReply = ChatTurnResponse;
+export type EscalateReply = EscalateResponse;
 export type ScenarioFollowUp = ScenarioFollowUpResponse;
 export type ScenarioReply = ScenarioTurnResponse;
 export type ScenarioPostAction = ScenarioPostActionResponse;

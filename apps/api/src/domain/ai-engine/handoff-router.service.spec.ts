@@ -211,3 +211,69 @@ describe('HandoffRouterService.denyMatch — per-rule mode (REQ-260826)', () => 
     });
   });
 });
+
+/**
+ * The team question (PLN-261007-Handoff-Team-Routing): asked only when the
+ * tenant switched it on, resolved to the customer's language, and tolerant of
+ * a half-filled console form — a typo must never leave a customer unable to
+ * reach anyone.
+ */
+describe('HandoffRouterService — teamQuestion', () => {
+  it('is null when the tenant has no config or left the question off', async () => {
+    expect(await routerFor(null).teamQuestion(1, 'EN')).toBeNull();
+    expect(await routerFor({ teamRouting: { enabled: false } }).teamQuestion(1, 'EN')).toBeNull();
+  });
+
+  it('enabled with nothing else configured → the built-in CS / Business pair', async () => {
+    const q = await routerFor({ teamRouting: { enabled: true } }).teamQuestion(1, 'VI');
+    expect(q?.prompt).toBe('Bạn cần hỗ trợ về việc gì?');
+    expect(q?.options).toEqual([
+      { id: 'cs', jobLabel: 'consult', label: 'Hỗ trợ khách hàng' },
+      { id: 'business', jobLabel: 'sales_admin', label: 'Hỗ trợ kinh doanh' },
+    ]);
+  });
+
+  it('uses the tenant wording for the session language, English when untranslated', async () => {
+    const router = routerFor({
+      teamRouting: {
+        enabled: true,
+        prompt: { EN: 'Who should help?', KO: '누가 도와드릴까요?' },
+        options: [
+          { id: 'cs', jobLabel: 'consult', label: { EN: 'Front desk' } },
+          { id: 'business', jobLabel: 'sales_admin' },
+        ],
+      },
+    });
+    const ko = await router.teamQuestion(1, 'KO');
+    expect(ko?.prompt).toBe('누가 도와드릴까요?');
+    expect(ko?.options[0].label).toBe('Front desk'); // EN fallback
+    expect(ko?.options[1].label).toBe('비즈니스 지원'); // built-in for the id
+    const es = await router.teamQuestion(1, 'ES');
+    expect(es?.prompt).toBe('Who should help?');
+  });
+
+  it('drops malformed or duplicate rows, caps at four, and is null with no usable row', async () => {
+    const q = await routerFor({
+      teamRouting: {
+        enabled: true,
+        options: [
+          { id: '', jobLabel: 'consult' },
+          { id: 'a', jobLabel: '' },
+          { id: 'b', jobLabel: 'consult' },
+          { id: 'b', jobLabel: 'operations' },
+          { id: 'c', jobLabel: 'consult' },
+          { id: 'd', jobLabel: 'consult' },
+          { id: 'e', jobLabel: 'consult' },
+          { id: 'f', jobLabel: 'consult' },
+        ],
+      },
+    }).teamQuestion(1, 'EN');
+    expect(q?.options.map((o) => o.id)).toEqual(['b', 'c', 'd', 'e']);
+    expect(q?.options[0]).toEqual({ id: 'b', jobLabel: 'consult', label: 'b' });
+
+    const none = await routerFor({
+      teamRouting: { enabled: true, options: [{ id: '', jobLabel: '' }] },
+    }).teamQuestion(1, 'EN');
+    expect(none).toBeNull();
+  });
+});

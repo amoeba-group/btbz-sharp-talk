@@ -127,6 +127,16 @@ export interface HandoffConfig {
   }>;
   /** Issue-board SLA targets (백로그 B2); defaults 24h/4h. */
   sla?: { normalHours?: number; urgentHours?: number };
+  /**
+   * Ask which team when the customer requests a human (PLN-261007 Team
+   * Routing). Absent/disabled = straight handoff. Blank labels fall back to
+   * the API's built-in wording for that option id.
+   */
+  teamRouting?: {
+    enabled: boolean;
+    prompt?: Partial<Record<ScenarioLang, string>>;
+    options?: Array<{ id: string; jobLabel: string; label?: Partial<Record<ScenarioLang, string>> }>;
+  };
 }
 
 /**

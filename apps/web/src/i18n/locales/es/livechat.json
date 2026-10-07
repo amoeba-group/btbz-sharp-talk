@@ -137,6 +137,13 @@
     "cancel": "Cancelar",
     "move": "Mover…"
   },
+  "team": {
+    "filterLabel": "Filtrar por equipo",
+    "filterAll": "Todos los equipos",
+    "cs": "Atención al cliente",
+    "business": "Comercial",
+    "badgeTitle": "Equipo"
+  },
   "channel": {
     "filterLabel": "Filtrar por canal",
     "filterAll": "Todos los canales",

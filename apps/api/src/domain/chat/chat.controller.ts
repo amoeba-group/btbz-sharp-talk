@@ -108,7 +108,8 @@ export class ChatController {
   @ApiOperation({ summary: 'Request a human agent (FR-015)' })
   async escalate(@Body() body: EscalateRequest) {
     const session = await this.sessionService.findByToken(body.session_token);
-    await this.chatService.escalate(session, body.conversation_id);
-    return { escalated: true };
+    // Team routing (PLN-261007): without `support_type` the tenant's team
+    // question may come back instead of a handoff — the widget renders it.
+    return this.chatService.escalate(session, body.conversation_id, body.support_type?.trim() || undefined);
   }
 }
