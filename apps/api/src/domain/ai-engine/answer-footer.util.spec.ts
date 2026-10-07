@@ -1,4 +1,11 @@
-import { footerFor, protectedValuesOf, sanitizeAnswerFooter, shieldProtected } from './answer-footer.util';
+import {
+  footerFor,
+  footerVariants,
+  protectedValuesOf,
+  sanitizeAnswerFooter,
+  shieldProtected,
+  stripFooters,
+} from './answer-footer.util';
 
 /** PLN-261007-Go2Joy-FAQ-Accuracy R2/R4. */
 const GO2JOY_VI =
@@ -55,5 +62,16 @@ describe('protectedValuesOf / shieldProtected', () => {
   it('is a no-op without values', () => {
     const s = shieldProtected('a@b.com', []);
     expect(s.text).toBe('a@b.com');
+  });
+});
+
+describe('footerVariants / stripFooters', () => {
+  it('lists the texts of an enabled footer only', () => {
+    expect(footerVariants({ enabled: true, text: { VI: ' a ', EN: 'b' }, protected: [] })).toEqual(['a', 'b']);
+    expect(footerVariants({ enabled: false, text: { VI: 'a' }, protected: [] })).toEqual([]);
+  });
+  it('removes verbatim copies and tidies blank lines', () => {
+    expect(stripFooters('Body.\n\nFOOT\n\nFOOT', ['FOOT'])).toBe('Body.');
+    expect(stripFooters('Body.', ['FOOT'])).toBe('Body.');
   });
 });

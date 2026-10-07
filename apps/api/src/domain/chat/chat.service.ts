@@ -45,6 +45,7 @@ import {
   replacePiiTokens,
   retrievalQuery,
 } from './conversation-history.util';
+import { footerFor, footerVariants, stripFooters } from '../ai-engine/answer-footer.util';
 
 const ESCALATION_CONFIDENCE = 0.45;
 
@@ -613,7 +614,11 @@ export class ChatService {
     // Loaded once and shared by the classifier, both answering paths and the
     // reuse gate — every model call used to see this turn alone, so the
     // assistant asked for a booking's details again right after receiving them.
-    const history = await this.conversationHistory(conversation.id, userTurn.id);
+    // The tenant footer's texts, stripped from earlier answers before they go
+    // back to the model (it copied the block and then the system added it again).
+    const footerCfg = (await this.rag.footerConfig?.(tenantId)) ?? null;
+    const variants = footerVariants(footerCfg);
+    const history = await this.conversationHistory(conversation.id, userTurn.id, variants);
 
     // Intent + scope check (FN-015): order data requires authentication first.
     const intent = await this.rag.classifyIntent(
@@ -941,8 +946,10 @@ export class ChatService {
 
     // The tenant's contact footer (PLN-261007 R4): fixed operator text, added
     // after moderation and never stored in the reuse cache with the answer.
-    const footer = await this.rag.footerText?.(tenantId, session.language);
-    const deliveredText = footer ? `${replyText}\n\n${footer}` : replyText;
+    const footer = footerFor(footerCfg, session.language);
+    // A copy the model wrote itself is removed so the block appears once.
+    const answerText = footer ? stripFooters(replyText, variants) : replyText;
+    const deliveredText = footer ? `${answerText}\n\n${footer}` : replyText;
 
     if (opts.draft) {
       // Approval mode: the answer is a proposal, not a message. Persisting it
@@ -977,7 +984,7 @@ export class ChatService {
         tenantId,
         lang: session.language,
         question: egressText,
-        answerText: replyText,
+        answerText,
         confidence: answer.confidence,
         citations: answer.citations,
         sourceMessageId: aiTurn.id,
@@ -1014,7 +1021,11 @@ export class ChatService {
    * The turns before `currentTurnId`, oldest first, shaped for the model
    * (PLN-260929 S1). One query per turn; `messages(conversation_id)` is indexed.
    */
-  private async conversationHistory(conversationId: number, currentTurnId: number): Promise<AiMessage[]> {
+  private async conversationHistory(
+    conversationId: number,
+    currentTurnId: number,
+    footerTexts: string[] = [],
+  ): Promise<AiMessage[]> {
     const rows = await this.msgRepo.find({
       where: {
         conversationId,
@@ -1025,7 +1036,15 @@ export class ChatService {
       take: HISTORY_MESSAGES,
       select: { id: true, senderType: true, body: true },
     });
-    return buildHistory(rows.reverse());
+    return buildHistory(
+      rows
+        .reverse()
+        .map((r) =>
+          r.senderType === SENDER_TYPE.AI && footerTexts.length
+            ? { ...r, body: stripFooters(r.body, footerTexts) }
+            : r,
+        ),
+    );
   }
 
   /**

@@ -112,3 +112,25 @@ export function shieldProtected(text: string, values: string[]): { text: string;
     restore: (s: string) => s.replace(/(\d+)/g, (_, i: string) => found[Number(i)] ?? ''),
   };
 }
+
+/** Every footer text of an enabled config — what to strip wherever it was copied. */
+export function footerVariants(footer: AnswerFooter | null | undefined): string[] {
+  if (!footer?.enabled) return [];
+  return Object.values(footer.text ?? {})
+    .filter((v): v is string => typeof v === 'string' && !!v.trim())
+    .map((v) => v.trim());
+}
+
+/**
+ * Remove verbatim copies of the footer from model text (staging re-measure,
+ * 2026-10-07): the model copied the appended block from earlier answers in
+ * the history — and the agent's own rules told it to end with the contact
+ * card — so customers got the block twice. The system appends it once.
+ */
+export function stripFooters(text: string, variants: string[]): string {
+  let out = text;
+  for (const v of variants) {
+    if (v && out.includes(v)) out = out.split(v).join('');
+  }
+  return out === text ? text : out.replace(/\n{3,}/g, '\n\n').trim();
+}
