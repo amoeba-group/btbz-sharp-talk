@@ -108,6 +108,7 @@ Dọn dữ liệu sau kiểm: xóa agent `guest-test`, category "HA Login Test",
 
 **Điều kiện tiên quyết** (theo thứ tự):
 1. PR #1 (`feature/guest-login-gate`) merge → `sql/261001-guest-login-gate.sql` áp lên DB staging **trước** khi deploy code (DB_SYNCHRONIZE=false).
+   → **Đã áp staging 2026-10-07** (người dùng chạy tay): 5 cột xác nhận qua information_schema; index `ft_kb_title_content` trên `kb_documents` có sẵn (leg từ khóa dùng FULLTEXT, không rơi về LIKE như dev).
 2. PR #2 (`feature/guest-login-gate-ui`) merge + deploy staging (console có card Guest guidance, toggle category, select audience; widget có thẻ đăng nhập đối tác).
 3. PR KB (`feature/go2joy-s3-guest-kb` = QW1 CSV + 4 tài liệu K1) merge để lấy `reference/go2joy-ha-policies-kb-260916.csv` (50 dòng, 25 chủ đề × VI/EN).
 4. Người có tài khoản console tenant **go2joy** đăng nhập trong browser pane (tôi không được nhập mật khẩu thay).
