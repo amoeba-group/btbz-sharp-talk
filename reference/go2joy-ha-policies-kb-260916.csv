@@ -327,3 +327,103 @@ Nguồn: Quản lý sản phẩm, Tin nhắn từ G2J và Báo cáo đặt phòn
 Money: add-on products are added to room revenue / total payment; commission on add-on products is 10% (see the commission formula); product prices appear as their own column in the Booking report.
 
 Source: Product management, Messages from G2J and Booking report, Hotel Admin v23.3.0 (2026-09-16).","GTJ-HA-POL-21-EN","https://ha.go2joy.vn/product"
+"HA · Đăng nhập & đăng ký đối tác","Đăng nhập Hotel Admin: tài khoản, mật khẩu, duy trì đăng nhập và lỗi thường gặp","Hotel Admin (HA) là trang quản trị dành cho khách sạn đối tác Go2Joy, dùng trên trình duyệt (bản chính thức tại ha.go2joy.vn). Trang đăng nhập (/sign-in) gồm:
+- Ô ""Tên đăng nhập hoặc Email"": nhập tài khoản (username) do khách sạn/chủ khách sạn tạo, hoặc email đã đăng ký.
+- Ô ""Nhập mật khẩu"".
+- Tùy chọn ""Duy trì đăng nhập"" để lần sau không phải nhập lại trên cùng trình duyệt.
+- Nút ""Đăng nhập""; bên dưới có liên kết ""Đăng ký trở thành đối tác Go2Joy"" cho khách sạn chưa có tài khoản.
+
+Thông báo lỗi thường gặp và cách xử lý:
+- ""Mật khẩu không đúng"": nhập lại mật khẩu; mật khẩu HA dài 8–32 ký tự, có chữ hoa, chữ thường, chữ số, không chứa khoảng trắng.
+- ""Tài khoản không tồn tại"": kiểm tra lại tên đăng nhập/email; tài khoản nhân viên do chủ khách sạn tạo trong mục Quản lý nhân viên của HA.
+- ""Tài khoản không được phân quyền sử dụng hệ thống"": liên hệ chủ khách sạn hoặc Bộ phận hỗ trợ Go2Joy để được phân quyền.
+- Lần đăng nhập đầu tiên với mật khẩu do hệ thống cấp: HA nhắc ""Đây là lần đăng nhập đầu tiên… vui lòng đổi mật khẩu"" — nên đổi ngay trong Hồ sơ cá nhân.
+- Thông báo ""Hệ thống đã có phiên bản mới"": tải lại trang, hoặc Đăng xuất rồi Đăng nhập lại để dùng bản mới.
+
+Khi quên mật khẩu: trang đăng nhập HA (bản 23.4.0) không có liên kết tự đặt lại mật khẩu; liên hệ Bộ phận hỗ trợ Go2Joy (hotline 1900 638 838) hoặc nhờ chủ khách sạn/quản trị viên đặt lại trong Quản lý nhân viên.
+
+Nguồn: Hotel Admin UAT v23.4.0, trang /sign-in và các chuỗi giao diện (đọc 01/10/2026).","GTJ-HA-POL-22-VI","https://ha.go2joy.vn/sign-in"
+"HA · Đăng nhập & đăng ký đối tác","Signing in to Hotel Admin: account, password, stay signed in and common errors","Hotel Admin (HA) is the management portal for Go2Joy partner hotels, used in a browser (production at ha.go2joy.vn). The sign-in page (/sign-in) has:
+- ""Username or Email"": the account (username) created by the hotel/hotel owner, or the registered e-mail.
+- ""Enter password"".
+- ""Stay signed in"" so the same browser does not ask again next time.
+- The ""Sign in"" button; below it, ""Become a Go2Joy partner – Register now!"" for hotels without an account.
+
+Common errors and what to do:
+- ""Incorrect password"": re-enter it; an HA password is 8–32 characters with upper-case, lower-case letters and digits, no spaces.
+- ""Account does not exist"": check the username/e-mail; staff accounts are created by the hotel owner under Staff management in HA.
+- ""This account is not authorized to use the system"": contact the hotel owner or the Go2Joy Support Team for access permission.
+- First sign-in with a system-issued password: HA shows ""This is your first sign-in… please change your password"" — change it right away under My profile.
+- ""The system has a new version"": reload the page, or sign out and sign in again to use it.
+
+Forgot your password: the HA sign-in page (v23.4.0) has no self-service reset link; contact Go2Joy Support (hotline 1900 638 838) or ask the hotel owner/administrator to reset it under Staff management.
+
+Source: Hotel Admin UAT v23.4.0, /sign-in page and UI strings (read 2026-10-01).","GTJ-HA-POL-22-EN","https://ha.go2joy.vn/sign-in"
+"HA · Đăng nhập & đăng ký đối tác","Đổi mật khẩu Hotel Admin, quy tắc mật khẩu và cảnh báo ""Mật khẩu có nguy cơ bị lộ""","Đổi mật khẩu trong Hotel Admin:
+- Vào Hồ sơ cá nhân (menu tài khoản → ""Hồ sơ cá nhân"", trang /profile) → mục ""Đổi mật khẩu"" (""Thay đổi mật khẩu đăng nhập cho tài khoản của bạn""): nhập Mật khẩu hiện hành, Mật khẩu mới, Xác nhận mật khẩu mới → Lưu.
+- Quy tắc: độ dài 8–32 ký tự, không chứa khoảng trắng, bao gồm chữ cái viết hoa, chữ cái viết thường và chữ số. Mật khẩu xác nhận phải trùng với mật khẩu mới.
+
+Các trường hợp HA chủ động nhắc đổi mật khẩu:
+- Lần đăng nhập đầu tiên bằng mật khẩu do hệ thống cấp: HA hiện nhắc đổi mật khẩu (có thể chọn ""Tôi sẽ thực hiện sau"").
+- Banner ""Mật khẩu của bạn có nguy cơ bị lộ!"" với nút ""Đổi mật khẩu ngay"": HA phát hiện mật khẩu không an toàn; bấm nút sẽ chuyển tới Hồ sơ cá nhân để đổi. Có thể kèm popup ""Yêu cầu thay đổi mật khẩu"".
+
+Quên mật khẩu (không đăng nhập được): trang đăng nhập không có chức năng tự đặt lại; liên hệ Bộ phận hỗ trợ Go2Joy (1900 638 838) hoặc chủ khách sạn/quản trị viên (tài khoản nhân viên được quản lý trong Quản lý nhân viên).
+
+Nguồn: Hotel Admin UAT v23.4.0, trang /profile và các chuỗi giao diện (đọc 01/10/2026).","GTJ-HA-POL-23-VI","https://ha.go2joy.vn/profile"
+"HA · Đăng nhập & đăng ký đối tác","Changing the Hotel Admin password, password rules and the ""password at risk"" warning","Changing your password in Hotel Admin:
+- Open My profile (account menu → ""My profile"", page /profile) → ""Change password"" (""Change the login password for your account""): enter the Current password, New password and Confirm new password → Save.
+- Rules: 8–32 characters, no spaces, including upper-case letters, lower-case letters and digits. The confirmation must match the new password.
+
+When HA itself asks you to change it:
+- First sign-in with a system-issued password: HA prompts for a change (you may choose ""I'll do it later"").
+- Banner ""Your password is at risk!"" with ""Change password now"": HA detected an unsafe password; the button opens My profile to change it. A ""Password change request"" popup may appear as well.
+
+Forgot password (cannot sign in): the sign-in page has no self-service reset; contact Go2Joy Support (1900 638 838) or the hotel owner/administrator (staff accounts are managed under Staff management).
+
+Source: Hotel Admin UAT v23.4.0, /profile page and UI strings (read 2026-10-01).","GTJ-HA-POL-23-EN","https://ha.go2joy.vn/profile"
+"HA · Đăng nhập & đăng ký đối tác","Đăng ký trở thành đối tác Go2Joy: tạo tài khoản, xác minh email và 5 bước tạo khách sạn","Khách sạn chưa có tài khoản đăng ký trực tiếp trên Hotel Admin (nút ""Đăng ký trở thành đối tác Go2Joy"" ở trang đăng nhập, trang /sign-up):
+1. Tạo tài khoản: nhập email của khách sạn, mật khẩu (8–32 ký tự, có chữ hoa, chữ thường, chữ số, không khoảng trắng) và ""Mã giới thiệu (nếu có)"" → ""Đăng ký"". Đã có tài khoản thì chọn ""Tôi đã có tài khoản"".
+2. Xác minh Email: nhập mã xác minh (OTP) gửi tới email đăng ký; chưa nhận được thì bấm ""Gửi lại mã"".
+3. ""Đăng ký thành công"" → chọn ""Tạo khách sạn ngay"" hoặc ""Tôi sẽ thực hiện sau"" (có thể vào lại sau; ""Xem hướng dẫn thiết lập"" có sẵn trong HA).
+4. Tạo khách sạn — ""Để bắt đầu, vui lòng nhập các thông tin bên dưới về khách sạn của bạn"", gồm 5 bước:
+   - Hình thức hợp tác: ""Khách sạn Listing"" (đăng ký online dễ dàng, không cần ký hợp đồng ràng buộc; khách sạn hiển thị trên app Go2Joy không tốn chi phí hoa hồng; nhận đặt phòng qua điện thoại, chủ động nhận/từ chối khách) hoặc ""Khách sạn Contract"" (Đối tác chính thức của Go2Joy: ưu tiên hiển thị, nhận đặt phòng Theo giờ/Qua đêm/Ngày đêm trên app, các công cụ khuyến mãi).
+   - Thông tin cơ bản: tên khách sạn, số điện thoại liên hệ đặt phòng, mô tả; thông tin doanh nghiệp/hộ kinh doanh.
+   - Hình ảnh khách sạn: ảnh khách sạn (ít nhất 1, JPG/PNG ≤ 3 MB) và ""Ảnh chụp biển hiệu khách sạn từ bên ngoài"" — ảnh biển hiệu chỉ dùng để Go2Joy kiểm duyệt địa chỉ, tên khách sạn, không hiển thị trên Go2Joy.
+   - Vị trí khách sạn: địa chỉ, tỉnh/quận và vị trí trên bản đồ (giúp khách tìm đường).
+   - Thêm loại phòng: tạo ít nhất 1 loại phòng (tên, số phòng, diện tích, loại giường, giá) — có thể ""Lưu nháp"" rồi ""Gửi duyệt"".
+5. Sau khi gửi: ""Go2Joy sẽ liên hệ với khách sạn để xác thực thông tin"". Thắc mắc trong lúc chờ: Hotline bộ phận CSKH 1900 638 838.
+
+Nguồn: Hotel Admin UAT v23.4.0, trang /sign-up và luồng tạo khách sạn (đọc 01/10/2026). Điều kiện hoa hồng/hợp đồng cụ thể do Go2Joy trao đổi trực tiếp khi xác thực.","GTJ-HA-POL-24-VI","https://ha.go2joy.vn/sign-up"
+"HA · Đăng nhập & đăng ký đối tác","Becoming a Go2Joy partner: creating the account, e-mail verification and the 5-step hotel setup","A hotel without an account registers directly in Hotel Admin (""Become a Go2Joy partner – Register now!"" on the sign-in page, page /sign-up):
+1. Create the account: enter the hotel's e-mail, a password (8–32 characters with upper-case, lower-case letters and digits, no spaces) and an optional Referral Code → ""Sign Up"". Already registered? Choose ""I already have an account"".
+2. E-mail verification: enter the verification code (OTP) sent to the registered e-mail; if it has not arrived, press ""Resend OTP"".
+3. ""Successfully registered"" → ""Create your hotel now"" or ""I'll do it later"" (you can come back; a ""View Setup guide"" is available in HA).
+4. Create the hotel — ""To get started, please enter the information below about your hotel"" — in 5 steps:
+   - Partnership model: ""Listing Hotel"" (easy online registration, no binding contract; your hotel is displayed on the Go2Joy app with no commission fee; bookings arrive by phone and the hotel accepts or declines guests) or ""Contract Hotel"" (Go2Joy's official partner: priority display, hourly/overnight/full-day bookings in the app, promotion tools).
+   - Basic information: hotel name, booking contact number, description; enterprise / household-business information.
+   - Hotel photos: hotel photos (at least 1, JPG/PNG ≤ 3 MB) and a ""photo of the hotel sign taken from outside"" — the sign photo is used only by Go2Joy to verify the address and hotel name and is never shown on Go2Joy.
+   - Hotel location: address, province/district and the position on the map (helps guests find the hotel).
+   - Add room type: create at least one room type (name, number of rooms, size, bed type, rates) — you may ""Save draft"" and then ""Submit for review"".
+5. After submission: ""Go2Joy will contact your hotel to verify the information"". Questions while waiting: Customer Service hotline 1900 638 838.
+
+Source: Hotel Admin UAT v23.4.0, /sign-up page and the hotel-creation flow (read 2026-10-01). Specific commission and contract terms are discussed directly by Go2Joy during verification.","GTJ-HA-POL-24-EN","https://ha.go2joy.vn/sign-up"
+"HA · Đăng nhập & đăng ký đối tác","Liên hệ Go2Joy khi chưa có tài khoản Hotel Admin (khách sạn mới, chờ xác thực, không đăng nhập được)","Nếu bạn chưa đăng nhập được Hotel Admin (khách sạn mới, đang chờ Go2Joy xác thực, quên mật khẩu, tài khoản chưa được phân quyền), các kênh liên hệ Go2Joy dành cho khách sạn:
+- Hotline hỗ trợ: 1900 638 838 (số được Hotel Admin nêu là ""Hotline bộ phận CSKH"").
+- Chuyên viên kinh doanh theo khu vực: 0931 836 836 (miền Nam), 0777 892 399 (miền Bắc) — theo các thông báo Go2Joy gửi khách sạn năm 2024.
+- Email: support@go2joy.vn.
+
+Nên chuẩn bị khi liên hệ: tên khách sạn, địa chỉ, email đã dùng để đăng ký (nếu có) và nội dung cần hỗ trợ (ví dụ: chưa nhận mã xác minh, đã gửi hồ sơ tạo khách sạn và chờ xác thực, cần đặt lại mật khẩu).
+
+Sau khi có tài khoản và đăng nhập, khách sạn gửi yêu cầu trực tiếp trong Hotel Admin ở mục Quản lý tin nhắn → Tin nhắn từ G2J → ""Tin nhắn mới"" (xem tài liệu ""Kênh liên hệ Go2Joy dành cho khách sạn đối tác"").
+
+Nguồn: Hotel Admin UAT v23.4.0 và các thông báo Go2Joy 2024–2026 (đọc 01/10/2026). Số điện thoại có thể thay đổi — ưu tiên số hiển thị trên Hotel Admin.","GTJ-HA-POL-25-VI","https://ha.go2joy.vn/sign-in"
+"HA · Đăng nhập & đăng ký đối tác","Contacting Go2Joy without a Hotel Admin account (new hotels, pending verification, cannot sign in)","If you cannot sign in to Hotel Admin yet (new hotel, pending Go2Joy verification, forgotten password, account not authorized), these are Go2Joy's channels for hotels:
+- Support hotline: 1900 638 838 (the number Hotel Admin calls the ""Customer Service hotline"").
+- Regional sales specialists: 0931 836 836 (South), 0777 892 399 (North) — per Go2Joy's 2024 notices to hotels.
+- E-mail: support@go2joy.vn.
+
+Have ready when you call: the hotel name, address, the e-mail used to register (if any) and what you need (e.g. no verification code received, hotel submitted and waiting for verification, password reset).
+
+Once you have an account and are signed in, send requests inside Hotel Admin under Message management → Messages from G2J → ""New message"" (see ""How partner hotels reach Go2Joy"").
+
+Source: Hotel Admin UAT v23.4.0 and Go2Joy notices 2024–2026 (read 2026-10-01). Phone numbers may change — prefer the number shown in Hotel Admin.","GTJ-HA-POL-25-EN","https://ha.go2joy.vn/sign-in"
