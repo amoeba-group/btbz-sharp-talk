@@ -9,8 +9,10 @@ import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.se
 import { QdrantService } from '../../infrastructure/external/vector/qdrant.service';
 import { AiConfigService } from '../ai-engine/ai-config.service';
 import type { AiMessage } from '../../infrastructure/external/ai/ai-adapter.interface';
-import { CONVERSATION_RULES, transcript, withCurrentTurn } from './conversation-history.util';
+import { capContext, selectPassages } from './passage.util';
+import { footerFor } from '../ai-engine/answer-footer.util';
 import { envNumber } from '../../global/util/env-number.util';
+import { CONVERSATION_RULES, transcript, withCurrentTurn } from './conversation-history.util';
 
 export interface RetrievedChunk {
   id: number;
@@ -118,6 +120,16 @@ export function splitCitedMarker(raw: string): { text: string; cited: number[] |
  * An answer may additionally be grounded in the signed-in customer's own order
  * facts, which no KB document can contain — see `answer`'s `orderContext`.
  */
+/**
+ * Added when the tenant's contact footer is on (PLN-261007 R4): the system
+ * appends it, so a contact block written by the model would be a duplicate —
+ * and the model's copy was where masking and token cut-offs did their damage.
+ */
+const FOOTER_RULE =
+  '\n- Do not end your reply with contact details (e-mail, phone, hotline, ' +
+  'Zalo, working hours): the system appends the official contact block. Give ' +
+  'contact details in the body only when the customer asks how to reach support.';
+
 @Injectable()
 export class RagService {
   private readonly logger = new Logger(RagService.name);
@@ -147,7 +159,6 @@ export class RagService {
   private static readonly UNBIASED_RESERVE = 3;
   /** Confidence when real embeddings are expected but missing — under escalation (FIX-260930). */
   private static readonly DEGRADED_CONFIDENCE = 0.2;
-  private static readonly SNIPPET_CHARS = 800;
   /**
    * Documents handed to the model per answer. Was 4, which is too few for this
    * KB: the policy import splits one topic across several short sections
@@ -248,6 +259,15 @@ export class RagService {
     return out;
   }
 
+  /**
+   * The contact footer to append to a knowledge answer in this language, or
+   * null (PLN-261007 R4). Operator-written fixed text — appended after
+   * moderation, the same standing as a scenario script.
+   */
+  async footerText(tenantId: number, language: string): Promise<string | null> {
+    return footerFor(await this.aiConfig.getAnswerFooter?.(tenantId), language);
+  }
+
   /** Who is answering, after inactive/unknown pins degrade to the default. */
   effectiveAgentId(tenantId: number, aiAgentId?: number | null): Promise<number | null> {
     return this.aiConfig.effectiveAgentId(tenantId, aiAgentId);
@@ -340,7 +360,8 @@ export class RagService {
       source: doc.source,
       group: doc.docGroup,
       url: productLinkFor(doc.docGroup, doc.sourceUrl, storefront),
-      snippet: (doc.content ?? '').slice(0, RagService.SNIPPET_CHARS),
+      // Whole document up to the budget, else the paragraphs matching the query (R3).
+      snippet: selectPassages(doc.content ?? '', query),
       similarity,
     }));
     return { chunks, vectorProvider: vec.provider };
@@ -541,6 +562,9 @@ export class RagService {
       chunks = await this.mergeCandidates(retrievalQuery?.trim() || query, chunks, extraCandidates);
     }
     // Numbered so the model can name the items it actually used (see CITED_LINE).
+    // Total prompt budget across documents (R3) — the numbering below must
+    // match what the model sees, so the cap is applied to `chunks` itself.
+    chunks = capContext(chunks);
     const context = chunks
       .map((c, i) => `[${i + 1}] [${c.category ?? 'general'}] ${c.title}: ${c.snippet}`)
       .join('\n');
@@ -567,12 +591,17 @@ export class RagService {
       : 'Answer ONLY from the context.';
     const hasHistory = !!history?.length;
 
+    // The tenant's contact footer is appended by the system (R4); the model is
+    // told not to write its own, which also frees the output budget.
+    const footerOn = !!footerFor(await this.aiConfig.getAnswerFooter?.(tenantId), language);
     const res = await this.ai.complete({
       tenantId,
       function: AI_FUNCTION.RAG,
       feature: 'chat_answer',
+      // Long Vietnamese answers hit 1,024 and stopped mid-sentence (REQ-261007 I-5).
+      maxTokens: envNumber('RAG_MAX_TOKENS', 2048),
       system:
-        `${persona}${rulesBlock}${hasHistory ? CONVERSATION_RULES : ''}\n` +
+        `${persona}${rulesBlock}${hasHistory ? CONVERSATION_RULES : ''}${footerOn ? FOOTER_RULE : ''}\n` +
         `${sourceRule} If the information is insufficient, apologize briefly and ` +
         `offer to connect a human agent. Reply in language code: ${language}.\n` +
         `The context items are numbered. After your reply, on its own final line, ` +

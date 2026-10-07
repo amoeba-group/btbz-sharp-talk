@@ -350,5 +350,18 @@
   "labelLanguage": "Ngôn ngữ của nhãn",
   "labelLanguageHint": "Nhãn nhập ở đây chỉ áp dụng cho ngôn ngữ đó; các ngôn ngữ khác giữ nguyên.",
   "buttonMessage": "Nội dung gửi đi",
-  "buttonMessageHint": "Để trống sẽ gửi nhãn làm câu hỏi."
+  "buttonMessageHint": "Để trống sẽ gửi nhãn làm câu hỏi.",
+  "answerFooter": {
+    "title": "Chân trang liên hệ cho câu trả lời",
+    "enabled": "Bật",
+    "hint": "Luôn gắn cùng một khối liên hệ vào cuối mỗi câu trả lời tri thức của AI. AI không tự viết thông tin liên hệ nữa nên số điện thoại không bị đổi hay che.",
+    "placeholder": "VD: 📞 Hỗ trợ: support@example.com · Hotline 1900 000 000 · T2–T6 8h30–17h30",
+    "fallback": "Nếu thiếu ngôn ngữ của khách: dùng EN, rồi ngôn ngữ nhập đầu tiên",
+    "protectedTitle": "Liên hệ chính thức (không che)",
+    "protectedHint": "Mỗi dòng một giá trị. Email và số điện thoại trong chân trang được tự động thêm. Quy tắc che dữ liệu cá nhân không che các giá trị này.",
+    "preview": "Xem trước",
+    "previewBody": "…nội dung câu trả lời…",
+    "saved": "Đã lưu chân trang câu trả lời",
+    "saveError": "Không lưu được chân trang câu trả lời"
+  }
 }

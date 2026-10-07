@@ -31,6 +31,7 @@ import {
 import { AgentsSection } from './AgentsSection';
 import { AgentEffectiveSection } from './AgentEffectiveSection';
 import { ScriptLibrarySection } from './ScriptLibrarySection';
+import { AnswerFooterSection } from './AnswerFooterSection';
 import { useAiAgents } from './ai-agents.hooks';
 import type { AiAgentRow } from './ai-agents.service';
 import type {
@@ -85,6 +86,7 @@ export function AiSettingsPage() {
           <ResponseRulesSection draft={restoreDraft?.rules} agent={selectedAgent} />
           <ScenarioButtonsSection />
           <ScriptLibrarySection />
+          <AnswerFooterSection />
           <AiFunctionsSection />
           <ModerationSection />
           <RegressionSection />

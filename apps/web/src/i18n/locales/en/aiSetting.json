@@ -350,5 +350,18 @@
   "labelLanguage": "Label language",
   "labelLanguageHint": "A label typed here applies to that language only; the rest keep theirs.",
   "buttonMessage": "Message to send",
-  "buttonMessageHint": "Leave empty to send the label as the question."
+  "buttonMessageHint": "Leave empty to send the label as the question.",
+  "answerFooter": {
+    "title": "Answer contact footer",
+    "enabled": "On",
+    "hint": "Appends the same contact block to every AI knowledge answer. The AI no longer writes contacts itself, so numbers are never altered or masked.",
+    "placeholder": "e.g. 📞 Support: support@example.com · +1 800 000 0000 · Mon–Fri 9–6",
+    "fallback": "If the customer language is empty: EN, then the first language written",
+    "protectedTitle": "Official contacts (masking exempt)",
+    "protectedHint": "One per line. E-mails and phone numbers in the footer are included automatically. PII masking rules never hide these values.",
+    "preview": "Preview",
+    "previewBody": "…answer text…",
+    "saved": "Answer footer saved",
+    "saveError": "Could not save the answer footer"
+  }
 }

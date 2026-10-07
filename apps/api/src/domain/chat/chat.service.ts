@@ -939,6 +939,11 @@ export class ChatService {
       };
     }
 
+    // The tenant's contact footer (PLN-261007 R4): fixed operator text, added
+    // after moderation and never stored in the reuse cache with the answer.
+    const footer = await this.rag.footerText?.(tenantId, session.language);
+    const deliveredText = footer ? `${replyText}\n\n${footer}` : replyText;
+
     if (opts.draft) {
       // Approval mode: the answer is a proposal, not a message. Persisting it
       // would deliver it — the widget poll and the channel outbox both read
@@ -947,7 +952,7 @@ export class ChatService {
         conversationId: String(conversation.id),
         reply: null,
         draft: {
-          body: replyText,
+          body: deliveredText,
           confidence: answer.confidence,
           citations: answer.citations,
         },
@@ -956,7 +961,7 @@ export class ChatService {
       };
     }
 
-    const aiTurn = await this.persist(tenantId, conversation.id, SENDER_TYPE.AI, replyText, session.language, {
+    const aiTurn = await this.persist(tenantId, conversation.id, SENDER_TYPE.AI, deliveredText, session.language, {
       citations: answer.citations,
       confidence: answer.confidence,
       // Console diagnostics: which answers came from the reuse store (D-C2:
@@ -993,7 +998,7 @@ export class ChatService {
       // confidence rides along for the admin preview diagnostics; widget ignores it.
       reply: {
         senderType: 'ai',
-        body: replyText,
+        body: deliveredText,
         citations: answer.citations,
         confidence: answer.confidence,
         // Lets the /ai-setting preview hand this exact turn to the coaching tab.

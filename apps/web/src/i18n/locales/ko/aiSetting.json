@@ -350,5 +350,18 @@
   "labelLanguage": "라벨 언어",
   "labelLanguageHint": "여기서 입력한 라벨은 해당 언어에만 적용되고, 나머지 언어는 그대로 유지됩니다.",
   "buttonMessage": "보낼 문장",
-  "buttonMessageHint": "비우면 라벨을 그대로 질문으로 보냅니다."
+  "buttonMessageHint": "비우면 라벨을 그대로 질문으로 보냅니다.",
+  "answerFooter": {
+    "title": "답변 연락처 꼬리말",
+    "enabled": "사용",
+    "hint": "AI 지식 답변 끝에 항상 같은 연락처를 붙입니다. AI가 연락처를 직접 쓰지 않으므로 번호가 바뀌거나 가려지지 않습니다.",
+    "placeholder": "예) 📞 고객지원: support@example.com · 1588-0000 · 평일 9–18시",
+    "fallback": "고객 언어의 문구가 없으면 EN → 처음 입력한 언어 순으로 씁니다",
+    "protectedTitle": "공식 연락처(마스킹 예외)",
+    "protectedHint": "한 줄에 하나. 꼬리말 안의 이메일·전화번호는 자동으로 포함됩니다. 개인정보 마스킹 규칙이 이 값들은 가리지 않습니다.",
+    "preview": "미리보기",
+    "previewBody": "…답변 본문…",
+    "saved": "답변 꼬리말을 저장했습니다",
+    "saveError": "답변 꼬리말을 저장하지 못했습니다"
+  }
 }

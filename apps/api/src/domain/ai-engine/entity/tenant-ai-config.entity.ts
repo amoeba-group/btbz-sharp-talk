@@ -1,3 +1,4 @@
+import type { AnswerFooter } from '../answer-footer.util';
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import type { LocalizedText } from '@sharptalk/types';
 import { bigintTransformer } from '../../../global/util/transformers';
@@ -162,6 +163,10 @@ export class TenantAiConfig {
   /** Who gets paged on escalation, when, and what happens after hours. */
   @Column({ name: 'handoff_config', type: 'json', nullable: true })
   handoffConfig: HandoffConfig | null;
+
+  /** Contact footer + masking-exempt values (PLN-261007-Go2Joy-FAQ-Accuracy R2/R4). */
+  @Column({ name: 'answer_footer', type: 'json', nullable: true })
+  answerFooter: AnswerFooter | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
