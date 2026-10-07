@@ -609,7 +609,7 @@
       "lastOk": "último éxito {{at}}",
       "lastError": "último fallo {{at}}",
       "today": "Hoy: {{calls}} llamadas · {{failures}} fallos",
-      "switchToPlatform": "Cambiar a motor de la plataforma",
+      "switchToPlatform": "Cambiar al motor predeterminado del sistema",
       "details": "Detalle por función",
       "noEngine": "Sin motor (respuestas por defecto)",
       "headline": {
@@ -625,14 +625,15 @@
         "unreachable": "Proveedor inaccesible — no se están generando respuestas"
       },
       "action": {
-        "credit": "Recarga la cuenta del proveedor (Anthropic Console › Plans & Billing) o cambia a un motor de la plataforma.",
-        "auth": "Vuelve a introducir la clave de API o cambia a un motor de la plataforma.",
-        "no_key": "Añade una clave de API al motor o cambia a un motor de la plataforma.",
-        "model": "Revisa el nombre del modelo o cambia a un motor de la plataforma.",
-        "unreachable": "Revisa el endpoint (déjalo vacío para el predeterminado) o cambia a un motor de la plataforma.",
+        "credit": "Recarga la cuenta del proveedor (Anthropic Console › Plans & Billing) o cambia al motor predeterminado del sistema.",
+        "auth": "Vuelve a introducir la clave de API o cambia al motor predeterminado del sistema.",
+        "no_key": "Añade una clave de API al motor o cambia al motor predeterminado del sistema.",
+        "model": "Revisa el nombre del modelo o cambia al motor predeterminado del sistema.",
+        "unreachable": "Revisa el endpoint (déjalo vacío para el predeterminado) o cambia al motor predeterminado del sistema.",
         "stub": "Elige un motor y aplícalo.",
-        "default": "Revisa la configuración del motor o cambia a un motor de la plataforma."
-      }
+        "default": "Revisa la configuración del motor o cambia al motor predeterminado del sistema."
+      },
+      "askOperator": "Pide al operador que permita elegir el motor predeterminado del sistema."
     },
     "functions": {
       "chat": "Respuestas (clasificación)",

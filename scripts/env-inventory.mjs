@@ -39,12 +39,14 @@ const fix = argv.includes('--fix');
 const NOT_OPERATOR_CONFIG = new Set(['NODE_ENV', 'PORT']);
 const IGNORED_PREFIXES = ['VITE_', 'MYSQL_', 'npm_'];
 
-/** `config.get('X')`, `config.get<T>('X')`, `process.env.X`, `process.env['X']`. */
+/** `config.get('X')`, `config.get<T>('X')`, `process.env.X`, `process.env['X']`, `envNumber('X', d)`. */
 const PATTERNS = [
   /config\.get(?:<[^>]*>)?\(\s*'([A-Z][A-Z0-9_]{2,})'/g,
   /configService\.get(?:<[^>]*>)?\(\s*'([A-Z][A-Z0-9_]{2,})'/g,
   /process\.env\.([A-Z][A-Z0-9_]{2,})/g,
   /process\.env\[\s*'([A-Z][A-Z0-9_]{2,})'\s*\]/g,
+  // Numeric settings go through envNumber('X', d) since FIX-260930.
+  /envNumber\(\s*'([A-Z][A-Z0-9_]{2,})'/g,
 ];
 
 async function sourceFiles(dir) {
