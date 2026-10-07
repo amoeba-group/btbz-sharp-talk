@@ -92,7 +92,14 @@ export function JourneyReportModal({
                   </Button>
                 </div>
               )}
-              <article data-color-mode="light" onMouseUp={capture} onKeyUp={capture}>
+              <article
+                data-color-mode="light"
+                // The preview's document-sized headings dwarf the summary above
+                // them inside a modal; a report reads as one page of sections.
+                className="[&_h1]:!text-lg [&_h1]:!border-0 [&_h2]:!text-base [&_h2]:!border-0 [&_h3]:!text-sm"
+                onMouseUp={capture}
+                onKeyUp={capture}
+              >
                 <MDEditor.Markdown
                   source={asPlainMarkdown(data.bodyMd ?? '')}
                   style={{ background: 'transparent', fontSize: 14 }}
