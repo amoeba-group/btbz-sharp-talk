@@ -155,3 +155,37 @@ Nút "Liên hệ Go2Joy" (guest) và "Gặp nhân viên" (verified) cùng action
 - G4-2 (REQ-261006): link mở khách sạn — HA `hotel-info-tabs?hotelSn=` hay admin PHP nội bộ? → quyết định `hostLinkTemplate`.
 - REQ-261001 §7-2: luồng quên mật khẩu — HA UAT 23.4.0 không có liên kết "Quên mật khẩu" trên trang đăng nhập; tài liệu `GTJ-HA-POL-23` hiện hướng dẫn liên hệ CSKH + "Yêu cầu thay đổi mật khẩu" trong Hồ sơ; cần Go2Joy xác nhận.
 - REQ-261001 §7-3/4: nội dung hợp tác nói được với người chưa là đối tác (hiện tài liệu công khai chỉ nêu những gì HA sign-up tự hiển thị: 2 hình thức Listing/Contract) và khách sạn chờ xác thực coi là guest hay verified.
+
+## 7. S3 — Kiểm chứng local (2026-10-07): nhập KB + K2–K5 trên tenant dev, và lỗi cổng phát hiện
+
+Môi trường: dev stack Docker, API/console/widget chạy từ worktree (nhánh UI), seed master ivyusa (tạm tắt `must_change_password`),
+AI adapter **stub**. Cấu hình áp qua chính các API console mà runbook §6 dùng (`s3_local.py` trong scratchpad; dọn sạch sau khi xong).
+
+| # | Bước | Kết quả |
+|---|---|---|
+| S3-L1 (K1) | `POST /knowledge/documents/import/bulk` (doc_group=counsel) với CSV 50 dòng | `parsed 50, created 50, embedded 50, embedFailed 0`; importer tự đăng ký 7 category "HA · …" |
+| S3-L2 (K2) | Category "HA · Đăng nhập & đăng ký đối tác" → `guest_visible = 1`, scope agent `hotel-partner`; 6 category còn lại scope cùng agent, giữ `guest_visible = 0` | 200 toàn bộ |
+| S3-L3 (K4) | `guest_guidance` = URL UAT + lời nhắc VI/EN + `hostLinkTemplate` | lưu OK, `/session/ensure` trả về |
+| S3-L4 (K5) | 14 nút: 6 nút cũ scope Default + 8 nút go2joy (3 guest / 5 verified) scope `hotel-partner` | Widget khách (VI) chỉ thấy **3 chip** [Đăng nhập Hotel Admin] [Đăng ký đối tác] [Liên hệ Go2Joy] |
+| S3-L5 (K3) | `hotel-partner.guest_policy = login_guidance` | `/session/ensure?agent=hotel-partner` → `guestPolicy: login_guidance` |
+| S3-L6 | Khách bấm chip "Đăng ký đối tác" | Trả lời từ category công khai, trích dẫn `GTJ-HA-POL-24` (+22/23/25) — **đúng** |
+| S3-L7 | Khách hỏi "Hạn hoàn tất đối soát là khi nào?" | **SAI (trước fix)**: được trả lời từ tài liệu đăng ký, không nhắc đăng nhập → xem §7.1 |
+| S3-L8 | identify v2 (hash canonical, secret dev) rồi hỏi lại câu S3-L7 | 201; trả lời trích `GTJ-HA-POL-01` "Lịch đối soát và hạn hoàn tất…" — cổng bỏ qua cho phiên đã ký, đúng |
+| S3-L9 | Sau fix §7.1, phiên khách mới hỏi "Flash Sale là gì?" | Vẫn được trả lời từ tài liệu công khai — **giới hạn môi trường dev** (§7.2), không phải lỗi logic |
+
+### 7.1 Lỗi phát hiện và sửa (commit `12306d4f` + `26875d33` trên `feature/guest-login-gate`, đã merge vào nhánh UI)
+Cổng S1 mở khi `retrieve(guestOnly)` trả về **≥ 1** tài liệu. Tìm kiếm lân cận gần nhất luôn trả top-k ngay khi có một tài liệu công khai,
+nên điều kiện này hầu như luôn đúng → khách chưa đăng nhập hỏi đối soát vẫn được trả lời (từ tài liệu đăng ký). Sửa: cổng dùng
+`rag.groundingConfidence(tenantId, query, agent, { guestOnly: true })` và chỉ mở khi `≥ GUEST_GATE_CONFIDENCE` (env, mặc định =
+`ESCALATION_CONFIDENCE` 0.45 — cùng thước đo với quyết định chuyển người; embedding thật dùng `RAG_MIN_SIMILARITY`).
+Spec mới `chat.service.guest-gate-flow.spec.ts` (4 ca): dưới ngưỡng → nhắc đăng nhập, không gọi LLM, đo trên scope guestOnly;
+trên ngưỡng → trả lời với `guestOnly`; phiên verified không bao giờ bị chặn; agent `open` không gọi thêm retrieval. Domain chat 216/216.
+
+### 7.2 Giới hạn của kiểm chứng local
+- Adapter stub: không có similarity thật, `confidence()` rơi về ước lượng theo số hit (`0.5 + n×0.12`), và DB dev chưa có FULLTEXT index nên
+  leg từ khóa quét `LIKE` (từ ngắn như "là" khớp mọi tài liệu VI) → mọi câu đều "có căn cứ" trong scope công khai → cổng mở. Ngưỡng theo
+  similarity **chỉ kiểm được trên staging** (voyage + Qdrant) — đưa vào S4: 6 ca cổng của §3 + đo `groundingConfidence(guestOnly)`
+  cho 10 câu đối tác / 5 câu công khai, chỉnh `GUEST_GATE_CONFIDENCE` nếu tài liệu công khai cùng miền vượt 0.45.
+- Trường hợp "không có tài liệu công khai nào" đã được chứng minh chặn đúng ở S2-B5 (trước khi nhập KB).
+- Chip fallback sau câu trả lời (Đơn hàng của tôi, Vận chuyển…) là của tenant thương mại ivyusa (`commerceEnabled`), không xuất hiện ở go2joy.
+
