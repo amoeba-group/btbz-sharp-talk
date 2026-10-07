@@ -1,7 +1,51 @@
 import { useTranslation } from 'react-i18next';
 import type { ChatMessage } from '../../lib/types';
 import { formatTime } from '../../lib/format';
+import { hasStructure, parseInline, parseReply } from '../../lib/reply-format';
 import { MessageAttachments } from './MessageAttachments';
+
+/**
+ * Bot/agent replies with lists or a bold lead-in are drawn as real lists
+ * (user feedback 2026-10-07: a paragraph of three facts looks like a wall of
+ * text; the same three as bullets look like help). Only the three shapes the
+ * model is asked for are understood — see lib/reply-format — and the user's own
+ * bubbles are always literal text.
+ */
+function StructuredBody({ body }: { body: string }) {
+  const inline = (text: string) =>
+    parseInline(text).map((run, i) =>
+      run.bold ? (
+        <strong key={i} className="font-semibold">
+          {run.text}
+        </strong>
+      ) : (
+        <span key={i}>{run.text}</span>
+      ),
+    );
+  return (
+    <>
+      {parseReply(body).map((block, i) =>
+        block.kind === 'p' ? (
+          <p key={i} className="whitespace-pre-wrap [&:not(:first-child)]:mt-1.5">
+            {inline(block.text)}
+          </p>
+        ) : block.kind === 'ul' ? (
+          <ul key={i} className="my-1 list-disc space-y-0.5 pl-4">
+            {block.items.map((item, j) => (
+              <li key={j}>{inline(item)}</li>
+            ))}
+          </ul>
+        ) : (
+          <ol key={i} className="my-1 list-decimal space-y-0.5 pl-4">
+            {block.items.map((item, j) => (
+              <li key={j}>{inline(item)}</li>
+            ))}
+          </ol>
+        ),
+      )}
+    </>
+  );
+}
 
 /**
  * Citation URLs come from tenant-editable KB sources — only allow http(s) so a
@@ -36,7 +80,11 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
               mine ? 'st-message-user bg-primary-500 text-on-primary' : 'st-message-bot bg-gray-100 text-gray-800',
             ].join(' ')}
           >
-            {message.body}
+            {!mine && hasStructure(message.body) ? (
+              <StructuredBody body={message.body} />
+            ) : (
+              message.body
+            )}
           </div>
         )}
         {message.attachments && message.attachments.length > 0 && (

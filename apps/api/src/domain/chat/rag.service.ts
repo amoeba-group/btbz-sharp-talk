@@ -118,6 +118,21 @@ export function splitCitedMarker(raw: string): { text: string; cited: number[] |
  * An answer may additionally be grounded in the signed-in customer's own order
  * facts, which no KB document can contain — see `answer`'s `orderContext`.
  */
+/**
+ * Shape of every grounded reply, regardless of tenant rules (user feedback
+ * 2026-10-07: a chat bubble is skimmed, and a paragraph of three facts reads
+ * as a wall of text). Fixed here rather than in the editable rules so a tenant
+ * cannot lose it by clearing its rule list. The widget draws `- ` bullets,
+ * `1. ` steps and `**label**` as real lists/bold and nothing else, so the model
+ * is asked for exactly those.
+ */
+const FORMAT_RULES =
+  '\nFormat: lead with the direct answer in one or two short sentences, then conditions or ' +
+  'exceptions. Keep the whole reply under about five sentences, or a list of at most five ' +
+  'items when there are several points or steps — one point per line, "- " for a list, ' +
+  '"1. " for ordered steps. Only "**label**" bold for a short lead-in; no headings, tables, ' +
+  'links in brackets or other markup. Do not restate the question or describe the sources.';
+
 @Injectable()
 export class RagService {
   private readonly logger = new Logger(RagService.name);
@@ -535,7 +550,7 @@ export class RagService {
       function: AI_FUNCTION.RAG,
       feature: 'chat_answer',
       system:
-        `${persona}${rulesBlock}${hasHistory ? CONVERSATION_RULES : ''}\n` +
+        `${persona}${rulesBlock}${FORMAT_RULES}${hasHistory ? CONVERSATION_RULES : ''}\n` +
         `${sourceRule} If the information is insufficient, apologize briefly and ` +
         `offer to connect a human agent. Reply in language code: ${language}.\n` +
         `The context items are numbered. After your reply, on its own final line, ` +
