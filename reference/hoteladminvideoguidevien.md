@@ -78,6 +78,18 @@
 | 48 | Quản lý nhân viên<br>*Staff management* | 72s | Tạo nhân viên mới — Lễ tân<br>*Creating a new staff member — front desk* |
 | 49 | Quản lý nhân viên<br>*Staff management* | 62s | Tạo nhân viên mới — Quản lý<br>*Creating a new staff member — manager* |
 | 50 | Quản lý nhân viên<br>*Staff management* | 14s | Xoá nhân viên<br>*Deleting a staff member* |
+| 51 | Quản lý tin nhắn<br>*Messaging* | 29s | Gửi tin nhắn cho Go2Joy<br>*Sending a message to Go2Joy* |
+| 52 | Quản lý tin nhắn<br>*Messaging* | 17s | Trả lời tin nhắn của Go2Joy<br>*Replying to a Go2Joy message* |
+| 53 | Quản lý tin nhắn<br>*Messaging* | 45s | Chat với khách (Mới)<br>*Chatting with guests (new)* |
+| 54 | Thiết lập<br>*Settings* | 49s | Sửa thông tin chung và chính sách khách sạn<br>*Editing general information and hotel policy* |
+| 55 | Thiết lập<br>*Settings* | 107s | Tạo loại phòng mới<br>*Creating a new room type* |
+| 56 | Thiết lập<br>*Settings* | 11s | Ngừng kinh doanh loại phòng<br>*Stopping sales of a room type* |
+| 57 | Thiết lập<br>*Settings* | 25s | Mở lại kinh doanh loại phòng<br>*Reopening sales of a room type* |
+| 58 | Thiết lập<br>*Settings* | 68s | Tạo chính sách huỷ phòng<br>*Creating a cancellation policy* |
+| 59 | Thiết lập<br>*Settings* | 20s | Sửa chính sách huỷ phòng<br>*Editing a cancellation policy* |
+| 60 | Thiết lập<br>*Settings* | 11s | Dừng chính sách huỷ phòng<br>*Stopping a cancellation policy* |
+| 61 | Thiết lập<br>*Settings* | 17s | Kết nối kênh đối tác<br>*Connecting a partner channel* |
+| 62 | Thiết lập<br>*Settings* | 13s | Ngưng kết nối kênh đối tác<br>*Disconnecting a partner channel* |
 
 > Lưu ý: Các mục **Quản lý tin nhắn (`Tin nhắn từ G2J`, `Chat với khách`)**, **3 mục Cài đặt**, **Quản lý kênh đối tác**, **Quản lý tem (stamp)** trong mục lục gốc không có video nào được nhúng.<br>*Note: the sections **message management (`Tin nhắn từ G2J`, `Chat với khách`)**, **the three settings items**, **partner channel management** and **stamp management** in the original table of contents have no videos embedded.*
 
@@ -951,6 +963,155 @@
 - **Kết quả / Result**: Với cùng điều kiện tìm kiếm, danh sách chuyển thành `Total 0` / `No Data`, xác nhận việc xoá đã được phản ánh<br>*Under the same search condition the list turns into `Total 0` / `No Data`, confirming the deletion was applied*
 - **Không đọc được / Not verifiable**: Việc có hay không hộp thoại xác nhận (confirm) xoá và nội dung của nó — chỉ bắt được khung hình khi việc xoá đã được xử lý nên hộp thoại xác nhận không được ghi lại<br>*Whether a delete confirmation dialog exists and what it says — only frames after the deletion had already been processed were captured, so the confirmation dialog was not recorded*
 
+
+## Quản lý tin nhắn · Thiết lập khách sạn · Chính sách huỷ phòng · Kênh đối tác (Video 51~62, bổ sung 2026-10-08) / Messaging · Hotel settings · Cancellation policy · Partner channels (Videos 51–62, added 2026-10-08)
+
+> Các video này được thêm vào trang Notion sau lần phân tích đầu tiên (51 video). Số thứ tự Video 51~53 là video thứ 18~20 trên trang (mục `Quản lý tin nhắn`), Video 54~62 là 9 video cuối trang (mục `Thiết lập`).<br>*These videos were added to the Notion page after the first analysis (51 videos). Videos 51–53 are the 18th–20th videos on the page (the `Quản lý tin nhắn` section) and Videos 54–62 are the last nine videos on the page (the `Thiết lập` section).*
+
+### Video 51 — Gửi tin nhắn cho Go2Joy (`Tin nhắn từ G2J` → `Thêm`) / Video 51 — Sending a message to Go2Joy (`Tin nhắn từ G2J` → `Thêm`)
+- **Thời lượng / Duration**: 29.5s
+- **Đường dẫn màn hình / Screen path**: Thanh bên `Tin nhắn từ G2J` → nút `+ Thêm` ở danh sách → biểu mẫu soạn tin nhắn<br>*Sidebar `Tin nhắn từ G2J` (Messages from G2J) → the `+ Thêm` (Add) button on the list → the message form*
+- **Các bước / Steps**:
+  1) Biểu mẫu có 2 trường bắt buộc: `Chủ đề *` (gợi ý mẫu: `Chào Go2Joy, tôi muốn thêm mới loại sản phẩm:`) và `Chi tiết *` (trình soạn thảo văn bản có thanh công cụ định dạng)<br>*The form has two required fields: `Chủ đề *` (Subject, with the sample placeholder `Chào Go2Joy, tôi muốn thêm mới loại sản phẩm:` = "Hello Go2Joy, I would like to add a new product type:") and `Chi tiết *` (Details, a rich-text editor with a formatting toolbar)*
+  2) Nhập chủ đề, sau đó nhập nội dung vào khung `Chi tiết` (bộ đếm `Characters` tăng theo)<br>*Enter the subject, then type the content into the `Chi tiết` box (the `Characters` counter goes up)*
+  3) Nhấn `Thêm` (nút `Trở về` để quay lại mà không gửi)<br>*Click `Thêm` (Add); `Trở về` (Back) returns without sending*
+- **Trường & tuỳ chọn / Fields & options**:
+  - Danh sách tin nhắn: cột `Chủ đề`, `Loại tin nhắn` (`Thông báo` / `Chức năng`), `Cập nhật cuối`, `Thời gian tạo`, `Operation` (nút `Trả lời`)<br>*Message list: columns `Chủ đề` (Subject), `Loại tin nhắn` (Message type: `Thông báo` = notice / `Chức năng` = feature), `Cập nhật cuối` (Last updated), `Thời gian tạo` (Created), `Operation` (the `Trả lời` = Reply button)*
+  - Dòng tô hồng = `Chưa đọc`; bộ lọc `Loại tin nhắn`, `Chọn tất cả`, `Tìm kiếm`<br>*Pink rows = `Chưa đọc` (unread); filters `Loại tin nhắn`, `Chọn tất cả` (Select all) and `Tìm kiếm` (Search)*
+- **Kết quả / Result**: Thông báo nhanh màu xanh `Thêm thành công`, tin nhắn mới xuất hiện ở dòng đầu danh sách (loại `Thông báo`)<br>*A green toast `Thêm thành công` (Added successfully); the new message appears in the first row of the list (type `Thông báo`)*
+- **Không đọc được / Not verifiable**: Thao tác nhấn `+ Thêm` không được ghi lại (khung hình đầu đã ở biểu mẫu). Ghi bằng giao diện console phiên bản cũ<br>*The click on `+ Thêm` is not captured (the first frame is already on the form). Recorded on an older console UI*
+
+### Video 52 — Trả lời tin nhắn của Go2Joy (`Trả lời`) / Video 52 — Replying to a Go2Joy message (`Trả lời`)
+- **Thời lượng / Duration**: 16.8s
+- **Đường dẫn màn hình / Screen path**: `Tin nhắn từ G2J` → nút `Trả lời` ở cột `Operation` → trang chi tiết tin nhắn → khung `Nội Dung Q&A`<br>*`Tin nhắn từ G2J` → the `Trả lời` (Reply) button in the `Operation` column → the message detail page → the `Nội Dung Q&A` (Q&A content) box*
+- **Các bước / Steps**:
+  1) Nhấn `Trả lời` trên dòng tin nhắn cần trả lời<br>*Click `Trả lời` on the message row to answer*
+  2) Trang chi tiết hiển thị `Loại tin nhắn`, `Cập nhật cuối`, `Thời gian tạo`, `Chủ đề` và `Chi tiết` của tin nhắn từ Go2Joy<br>*The detail page shows the Go2Joy message's `Loại tin nhắn`, `Cập nhật cuối`, `Thời gian tạo`, `Chủ đề` and `Chi tiết`*
+  3) Nhập nội dung trả lời vào ô dưới `Nội Dung Q&A` rồi nhấn nút `Trả lời` màu xanh<br>*Type the reply into the box under `Nội Dung Q&A` and click the green `Trả lời` button*
+- **Trường & tuỳ chọn / Fields & options**: Một ô nhập văn bản thuần (không có thanh định dạng) và nút `Trả lời`<br>*One plain text box (no formatting toolbar) and the `Trả lời` button*
+- **Kết quả / Result**: Quay lại danh sách, cột `Cập nhật cuối` của tin nhắn đó được cập nhật thời gian mới<br>*Returns to the list, and that message's `Cập nhật cuối` (Last updated) shows the new time*
+- **Không đọc được / Not verifiable**: Thông báo nhanh thành công và việc câu trả lời hiển thị trong khung Q&A không được ghi lại<br>*No success toast is captured, nor whether the reply then shows inside the Q&A box*
+
+### Video 53 — Chat với khách (Mới) / Video 53 — Chatting with guests (new)
+- **Thời lượng / Duration**: 45.5s
+- **Đường dẫn màn hình / Screen path**: Thanh bên `Quản lý tin nhắn` → `Chat với khách` (huy hiệu số tin chưa đọc) → chọn khách sạn → chọn cuộc hội thoại<br>*Sidebar `Quản lý tin nhắn` (Message management) → `Chat với khách` (Chat with guests, with an unread-count badge) → pick a hotel → pick a conversation*
+- **Các bước / Steps**:
+  1) Ở trang `Chat với khách`, mở danh sách khách sạn ở phía trên (khách sạn có tin chưa đọc hiện huy hiệu đỏ) và chọn khách sạn<br>*On the `Chat với khách` page, open the hotel list at the top (a hotel with unread messages shows a red badge) and pick the hotel*
+  2) Cột bên trái là danh sách hội thoại (tên khách, tin nhắn cuối, thời gian, huy hiệu chưa đọc) với ô `Tìm theo tên khách hàng` và tab `Tất cả` / `Chưa đọc` / `Đã đọc`; bên phải hiển thị `Chọn 1 cuộc hội thoại để bắt đầu`<br>*The left column is the conversation list (guest name, last message, time, unread badge) with a `Tìm theo tên khách hàng` (Search by guest name) box and `Tất cả` (All) / `Chưa đọc` (Unread) / `Đã đọc` (Read) tabs; the right side shows `Chọn 1 cuộc hội thoại để bắt đầu` (Pick a conversation to start)*
+  3) Chọn một hội thoại: khách có thể gửi kèm thẻ đặt phòng `Tôi đang yêu cầu thông tin về đặt phòng này` (mã đặt phòng, loại phòng, loại đặt phòng và giờ nhận–trả)<br>*Pick a conversation: the guest can attach a booking card `Tôi đang yêu cầu thông tin về đặt phòng này` (I am asking about this booking — booking number, room type, booking type and check-in–check-out time)*
+  4) Nhập câu trả lời vào ô `Nhập tin nhắn...` và nhấn biểu tượng gửi → tin nhắn hiện bên phải kèm giờ gửi, hội thoại được đưa lên đầu danh sách<br>*Type the reply into the `Nhập tin nhắn...` (Type a message) box and click the send icon → the message appears on the right with its time, and the conversation moves to the top of the list*
+  5) Khi chuyển sang khách sạn khác: có khách sạn hiện thông báo tính năng đang bị tạm dừng (`Tính năng này bị tạm dừng vào lúc …`, kèm liên kết `Xem lý do` và hướng dẫn liên hệ Go2Joy để mở lại); khách sạn chưa có tin nhắn hiện `Khách sạn này hiện không có tin nhắn nào`<br>*When switching to another hotel: one hotel shows that the feature is paused (`Tính năng này bị tạm dừng vào lúc …` = this feature was paused at …, with a `Xem lý do` (See reason) link and a note to contact Go2Joy to reopen it); a hotel with no messages shows `Khách sạn này hiện không có tin nhắn nào` (This hotel has no messages)*
+- **Trường & tuỳ chọn / Fields & options**: Bộ chọn khách sạn, ô tìm kiếm theo tên khách, 3 tab lọc, ô nhập tin nhắn và nút gửi<br>*Hotel selector, guest-name search, three filter tabs, a message box and a send button*
+- **Kết quả / Result**: Tin nhắn trả lời hiển thị trong hội thoại và ở dòng xem trước của danh sách<br>*The reply shows in the conversation and in the list's preview line*
+- **Không đọc được / Not verifiable**: Lý do tạm dừng cụ thể và cách mở lại chỉ đọc được một phần; không xác nhận được khách nhận tin qua kênh nào<br>*The specific pause reason and how to reopen are only partly legible; the channel through which the guest receives the reply is not shown*
+
+### Video 54 — Sửa thông tin chung của khách sạn và chính sách khách sạn / Video 54 — Editing the hotel's general information and hotel policy
+- **Thời lượng / Duration**: 48.6s
+- **Đường dẫn màn hình / Screen path**: Thanh bên `Thiết lập` → `Thông tin khách sạn` → `Sửa` → trang `Cập nhật thông tin`<br>*Sidebar `Thiết lập` (Settings) → `Thông tin khách sạn` (Hotel information) → `Sửa` (Edit) → the `Cập nhật thông tin` (Update information) page*
+- **Các bước / Steps**:
+  1) Chọn `Thông tin khách sạn` trong `Thiết lập`, sau đó nhấn `Sửa`<br>*Choose `Thông tin khách sạn` under `Thiết lập`, then click `Sửa`*
+  2) Ở trang `Cập nhật thông tin`, cuộn qua các trường; sửa nội dung trong `Chính sách khách sạn tiếng Việt` và `Chính sách khách sạn tiếng Anh`<br>*On the `Cập nhật thông tin` page, scroll through the fields and edit the text of `Chính sách khách sạn tiếng Việt` (hotel policy, Vietnamese) and `Chính sách khách sạn tiếng Anh` (hotel policy, English)*
+  3) Lưu thay đổi và đợi thông báo thành công<br>*Save the changes and wait for the success message*
+- **Trường & tuỳ chọn / Fields & options**:
+  - Không sửa được (màu xám): `Tên khách sạn *`, `Tình trạng` (ví dụ `Hợp đồng`), `Địa chỉ`<br>*Locked (greyed out): `Tên khách sạn *` (Hotel name), `Tình trạng` (Status, e.g. `Hợp đồng` = contracted), `Địa chỉ` (Address)*
+  - Sửa được: `Điện thoại *`, `Mô tả tiếng việt`, `Mô tả tiếng anh`, `Chính sách khách sạn tiếng Việt`, `Chính sách khách sạn tiếng Anh` (trình soạn thảo có bộ đếm ký tự)<br>*Editable: `Điện thoại *` (Phone), `Mô tả tiếng việt` / `Mô tả tiếng anh` (descriptions) and the two hotel-policy editors (rich text with a character counter)*
+  - Ảnh: `Hình 1`~`Hình 10`, mỗi ô có `Chọn tệp`, tuỳ chọn `Hình 360` và nút `Xóa`<br>*Photos: `Hình 1`–`Hình 10`, each with `Chọn tệp` (Choose file), a `Hình 360` (360° image) option and a `Xóa` (Delete) button*
+- **Kết quả / Result**: Thông báo nhanh `Cập nhật thành công`, quay lại trang `Thông tin khách sạn`<br>*A `Cập nhật thành công` (Updated successfully) toast, back on the `Thông tin khách sạn` page*
+- **Không đọc được / Not verifiable**: Nút lưu ở cuối trang không được ghi lại. Ghi bằng giao diện phiên bản cũ (v0.12.0); theo tài liệu, từ 10/10/2023 người dùng có quyền sửa chính sách khách sạn (Việt/Anh)<br>*The save button at the bottom of the page is not captured. Recorded on an older UI (v0.12.0); per the guide, users may edit the hotel policy (Vietnamese/English) since 10 Oct 2023*
+
+### Video 55 — Tạo loại phòng mới (`Tạo loại phòng` → `Gửi duyệt`) / Video 55 — Creating a new room type (`Tạo loại phòng` → `Gửi duyệt`)
+- **Thời lượng / Duration**: 107.5s
+- **Đường dẫn màn hình / Screen path**: `Thiết lập` → `Thông tin khách sạn` → tab `Loại phòng` → `+ Tạo loại phòng` → trang `Tạo loại phòng`<br>*`Thiết lập` → `Thông tin khách sạn` → the `Loại phòng` (Room types) tab → `+ Tạo loại phòng` (Create room type) → the `Tạo loại phòng` page*
+- **Các bước / Steps**:
+  1) Mục `Thông tin phòng`: nhập `Tên loại phòng *`, `Số lượng phòng bán *`, `Diện tích *` (m²), chọn `Loại giường` và `Hướng phòng` (chọn được nhiều), nhập `Mô tả phòng` (tối đa 3000 ký tự)<br>*`Thông tin phòng` (Room information): enter `Tên loại phòng *` (room type name), `Số lượng phòng bán *` (rooms for sale), `Diện tích *` (area, m²), choose `Loại giường` (bed type) and `Hướng phòng` (view, multi-select), and enter `Mô tả phòng` (description, up to 3000 characters)*
+  2) Mục `Tiện ích và hình ảnh`: chọn tiện ích ở ô `Thêm tiện ích` (ví dụ `Bữa sáng đơn giản (tùy chọn)`), thêm ảnh ở `Thêm ảnh phòng *` → xem trước rồi nhấn `Xác nhận`; ảnh đầu tiên được đánh dấu `Ảnh đại diện`<br>*`Tiện ích và hình ảnh` (Amenities and photos): pick amenities in `Thêm tiện ích` (e.g. `Bữa sáng đơn giản (tùy chọn)` = simple breakfast, optional), add photos under `Thêm ảnh phòng *` → preview and click `Xác nhận` (Confirm); the first photo is marked `Ảnh đại diện` (cover photo)*
+  3) Mục `Giá phòng`: với `Giá phòng Theo giờ` nhập `Giá giờ đầu *` + số giờ đầu, `Giá giờ thêm` + số giờ thêm và `Số giờ tối đa khách có thể đặt *`; nhập `Giá 1 đêm *` cho `Giá phòng Qua đêm` và `Giá 1 ngày *` cho `Giá phòng Theo ngày`<br>*`Giá phòng` (Room prices): for `Giá phòng Theo giờ` (hourly) enter `Giá giờ đầu *` (first-hours price) with the number of first hours, `Giá giờ thêm` (extra-hour price) with the number of extra hours, and `Số giờ tối đa khách có thể đặt *` (maximum bookable hours); enter `Giá 1 đêm *` (price per night) for `Giá phòng Qua đêm` and `Giá 1 ngày *` (price per day) for `Giá phòng Theo ngày`*
+  4) Nhấn `Gửi duyệt` (hoặc `Lưu nháp` để lưu tạm)<br>*Click `Gửi duyệt` (Submit for approval), or `Lưu nháp` (Save draft) to keep it as a draft*
+- **Trường & tuỳ chọn / Fields & options**:
+  - `Loại giường`: `1 giường đơn`, `1 giường đôi`, `2 giường đơn`, `2 giường đôi`, `1 giường tròn`, `Giường đôi cỡ nhỏ (1m5 × 2m)`, `Giường Queen-size (1m6 × 2m)`, `Giường King-size (1m8 × 2m)`…<br>*`Loại giường` (bed type): single, double, two singles, two doubles, round bed, small double (1.5 m × 2 m), Queen (1.6 m × 2 m), King (1.8 m × 2 m)…*
+  - Ảnh phòng: định dạng JPG hoặc PNG, dung lượng không quá 3MB<br>*Room photos: JPG or PNG, no larger than 3 MB*
+  - Mỗi loại giá có hộp kiểm `Không kinh doanh` để không bán theo hình thức đó<br>*Each price type has a `Không kinh doanh` (Not offered) checkbox to stop selling that booking type*
+- **Kết quả / Result**: Thông báo `Loại phòng này đã được tạo thành công và gửi lên G2J để chờ duyệt`; `Danh sách loại phòng` hiển thị loại phòng mới với trạng thái `Chờ duyệt`. Các tab trạng thái: `Tất cả`, `Đang hoạt động`, `Chờ duyệt`, `Bị từ chối`, `Nháp`, `Ngừng kinh doanh`<br>*The message `Loại phòng này đã được tạo thành công và gửi lên G2J để chờ duyệt` (created and sent to G2J for approval); `Danh sách loại phòng` (Room type list) shows the new room type as `Chờ duyệt` (Pending approval). Status tabs: `Tất cả` (All), `Đang hoạt động` (Active), `Chờ duyệt` (Pending), `Bị từ chối` (Rejected), `Nháp` (Draft), `Ngừng kinh doanh` (Stopped)*
+- **Không đọc được / Not verifiable**: Thời gian Go2Joy duyệt và điều gì xảy ra khi bị từ chối không có trong video<br>*How long Go2Joy takes to approve, and what happens on rejection, are not in the video*
+
+### Video 56 — Ngừng kinh doanh một loại phòng / Video 56 — Stopping sales of a room type
+- **Thời lượng / Duration**: 10.8s
+- **Đường dẫn màn hình / Screen path**: `Thông tin khách sạn` → tab `Loại phòng` → `Danh sách loại phòng` → menu `Thao tác` của dòng → `Ngừng kinh doanh`<br>*`Thông tin khách sạn` → `Loại phòng` tab → `Danh sách loại phòng` → the row's `Thao tác` (Actions) menu → `Ngừng kinh doanh` (Stop selling)*
+- **Các bước / Steps**:
+  1) Mở menu `Thao tác` trên dòng loại phòng đang hoạt động (các mục: `Chỉnh sửa`, `Nhân bản`, `Ngừng kinh doanh`)<br>*Open the `Thao tác` menu on an active room type (items: `Chỉnh sửa` = Edit, `Nhân bản` = Duplicate, `Ngừng kinh doanh` = Stop selling)*
+  2) Chọn `Ngừng kinh doanh`<br>*Choose `Ngừng kinh doanh`*
+- **Trường & tuỳ chọn / Fields & options**: Không có biểu mẫu<br>*No form*
+- **Kết quả / Result**: Trạng thái dòng đổi thành `Ngừng kinh doanh`; số đếm tab `Đang hoạt động` giảm 1 và `Ngừng kinh doanh` tăng 1<br>*The row's status becomes `Ngừng kinh doanh`; the `Đang hoạt động` tab count drops by one and `Ngừng kinh doanh` rises by one*
+- **Không đọc được / Not verifiable**: Có hộp thoại xác nhận hay không — khung hình chỉ bắt được lúc đang tải<br>*Whether a confirmation dialog appears — the frames only catch the loading state*
+
+### Video 57 — Mở lại kinh doanh loại phòng / Video 57 — Reopening sales of a room type
+- **Thời lượng / Duration**: 24.9s
+- **Đường dẫn màn hình / Screen path**: `Danh sách loại phòng` → menu `Thao tác` của loại phòng đang `Ngừng kinh doanh` → `Mở kinh doanh`<br>*`Danh sách loại phòng` → the `Thao tác` menu of a room type in `Ngừng kinh doanh` → `Mở kinh doanh` (Reopen sales)*
+- **Các bước / Steps**:
+  1) Mở menu `Thao tác` (các mục: `Chỉnh sửa`, `Nhân bản`, `Mở kinh doanh`) và chọn `Mở kinh doanh`<br>*Open the `Thao tác` menu (items: `Chỉnh sửa`, `Nhân bản`, `Mở kinh doanh`) and choose `Mở kinh doanh`*
+- **Trường & tuỳ chọn / Fields & options**: Không có biểu mẫu<br>*No form*
+- **Kết quả / Result**: Thông báo `Thông tin loại phòng đã được cập nhật và gửi lên G2J để chờ duyệt`; trạng thái chuyển sang `Chờ duyệt` (không trở lại `Đang hoạt động` ngay) — việc mở lại cần Go2Joy duyệt<br>*The message `Thông tin loại phòng đã được cập nhật và gửi lên G2J để chờ duyệt` (updated and sent to G2J for approval); the status becomes `Chờ duyệt`, not `Đang hoạt động` right away — reopening needs Go2Joy's approval*
+- **Không đọc được / Not verifiable**: Thời điểm loại phòng trở lại `Đang hoạt động` sau khi được duyệt không có trong video<br>*When the room type becomes `Đang hoạt động` again after approval is not in the video*
+
+### Video 58 — Tạo chính sách huỷ phòng / Video 58 — Creating a cancellation policy
+- **Thời lượng / Duration**: 68.2s
+- **Đường dẫn màn hình / Screen path**: `Thiết lập` → `Chính sách huỷ phòng` → `+ Tạo chính sách` → trang `Tạo chính sách`<br>*`Thiết lập` → `Chính sách huỷ phòng` (Cancellation policy) → `+ Tạo chính sách` (Create policy) → the `Tạo chính sách` page*
+- **Các bước / Steps**:
+  1) Danh sách chính sách theo khách sạn luôn có `Chính sách mặc định`; nhấn `+ Tạo chính sách`<br>*The per-hotel policy list always contains `Chính sách mặc định` (the default policy); click `+ Tạo chính sách`*
+  2) `Thông tin cơ bản`: nhập `Tên chính sách`, chọn `Áp dụng cho khách sạn`, `Áp dụng cho loại phòng` (`Tất cả loại phòng` hoặc từng loại phòng) và `Áp dụng khi thanh toán`<br>*`Thông tin cơ bản` (Basic information): enter `Tên chính sách` (policy name), choose `Áp dụng cho khách sạn` (hotel), `Áp dụng cho loại phòng` (room types: `Tất cả loại phòng` = all, or specific ones) and `Áp dụng khi thanh toán` (payment method)*
+  3) `Giờ nhận phòng áp dụng chính sách`: với đặt phòng theo giờ chọn `Từ giờ`–`Đến giờ` hàng ngày; qua đêm/theo ngày áp dụng `Theo thời gian kinh doanh`<br>*`Giờ nhận phòng áp dụng chính sách` (check-in hours covered): for hourly bookings pick a daily `Từ giờ`–`Đến giờ` (from–to) window; overnight/daily bookings follow `Theo thời gian kinh doanh` (business hours)*
+  4) `Ngày nhận phòng áp dụng chính sách`: chọn `Khoảng ngày` trên lịch và đánh dấu các ngày trong tuần (`Thứ 2` … `Chủ nhật`)<br>*`Ngày nhận phòng áp dụng chính sách` (check-in dates covered): choose a `Khoảng ngày` (date range) on the calendar and tick the weekdays (`Thứ 2` Monday … `Chủ nhật` Sunday)*
+  5) `Nội dung chính sách`: bật từng loại đặt phòng (`Đặt phòng Theo giờ`, `Qua đêm`, `Theo ngày`) và chọn `Không thể huỷ` hoặc `Huỷ miễn phí` [số tiếng] `trước giờ nhận phòng`<br>*`Nội dung chính sách` (policy content): switch on each booking type (`Đặt phòng Theo giờ` hourly, `Qua đêm` overnight, `Theo ngày` daily) and choose `Không thể huỷ` (non-cancellable) or `Huỷ miễn phí` (free cancellation) [N hours] `trước giờ nhận phòng` (before check-in)*
+  6) Nhấn `Lưu chính sách`<br>*Click `Lưu chính sách` (Save policy)*
+- **Trường & tuỳ chọn / Fields & options**:
+  - `Áp dụng khi thanh toán`: `Trả trước` / `Trả tại khách sạn` / `Cả hai PTTT` (trong video chỉ chọn `Trả trước`)<br>*`Áp dụng khi thanh toán`: `Trả trước` (prepaid) / `Trả tại khách sạn` (pay at hotel) / `Cả hai PTTT` (both) — only `Trả trước` is chosen in the video*
+  - `Lưu ý` trên biểu mẫu: có thể huỷ miễn phí trong vòng 5 phút kể từ khi đặt phòng thành công nhưng không quá giờ nhận phòng; không cho phép huỷ phòng Flash Sale và ưu đãi không hoàn huỷ<br>*The form's `Lưu ý` (Note): free cancellation is possible within 5 minutes of a successful booking as long as check-in time has not passed; Flash Sale rooms and non-refundable deals cannot be cancelled*
+  - Cột danh sách: `Chính sách`, `Thời gian áp dụng`, `Ngày áp dụng`, `PT thanh toán`, `Trạng thái` (`Đang hiệu lực` / `Hết hiệu lực` / `Đã dừng`), `Theo giờ`, `Qua đêm`, `Theo ngày`, `Thao tác`<br>*List columns: `Chính sách`, `Thời gian áp dụng` (hours), `Ngày áp dụng` (dates), `PT thanh toán` (payment), `Trạng thái` (`Đang hiệu lực` active / `Hết hiệu lực` expired / `Đã dừng` stopped), `Theo giờ`, `Qua đêm`, `Theo ngày`, `Thao tác`*
+- **Kết quả / Result**: Thông báo `Tạo chính sách thành công. Bạn có thể chỉnh sửa chính sách Đang hiệu lực.` và chính sách mới xuất hiện trong danh sách<br>*The message `Tạo chính sách thành công. Bạn có thể chỉnh sửa chính sách Đang hiệu lực.` (Policy created; you can edit an active policy) and the new policy appears in the list*
+- **Không đọc được / Not verifiable**: Nội dung đầy đủ của `Chính sách mặc định` không hiển thị trong video<br>*The full content of `Chính sách mặc định` is not shown in the video*
+
+### Video 59 — Sửa nội dung chính sách huỷ phòng / Video 59 — Editing a cancellation policy's content
+- **Thời lượng / Duration**: 20.5s
+- **Đường dẫn màn hình / Screen path**: `Chính sách huỷ phòng` → biểu tượng bút chì ở cột `Thao tác` → trang `Chỉnh sửa chính sách`<br>*`Chính sách huỷ phòng` → the pencil icon in the `Thao tác` column → the `Chỉnh sửa chính sách` (Edit policy) page*
+- **Các bước / Steps**:
+  1) Nhấn biểu tượng bút chì trên dòng chính sách<br>*Click the pencil icon on the policy row*
+  2) Trang sửa chỉ có phần `Nội dung chính sách` — đổi lựa chọn `Không thể huỷ` / `Huỷ miễn phí` và số tiếng cho từng loại đặt phòng<br>*The edit page only has `Nội dung chính sách` — change `Không thể huỷ` / `Huỷ miễn phí` and the hours for each booking type*
+  3) Nhấn `Lưu chính sách`<br>*Click `Lưu chính sách`*
+- **Trường & tuỳ chọn / Fields & options**: Chỉ cho phép sửa nội dung chính sách; tên, khách sạn, loại phòng, thời gian và ngày áp dụng không sửa được<br>*Only the policy content can be edited; name, hotel, room types, hours and dates cannot*
+- **Kết quả / Result**: Danh sách hiển thị nội dung mới (ví dụ theo giờ `Không thể huỷ`, qua đêm huỷ miễn phí trước 2 tiếng, theo ngày trước 4 tiếng)<br>*The list shows the new content (e.g. hourly `Không thể huỷ`, overnight free cancellation 2 hours before check-in, daily 4 hours before)*
+- **Không đọc được / Not verifiable**: Thông báo nhanh sau khi lưu không được ghi lại<br>*The toast after saving is not captured*
+
+### Video 60 — Dừng chính sách huỷ phòng / Video 60 — Stopping a cancellation policy
+- **Thời lượng / Duration**: 10.6s
+- **Đường dẫn màn hình / Screen path**: `Chính sách huỷ phòng` → biểu tượng dừng (màu đỏ) ở cột `Thao tác` → hộp thoại `Xác nhận dừng chính sách`<br>*`Chính sách huỷ phòng` → the red stop icon in the `Thao tác` column → the `Xác nhận dừng chính sách` (Confirm stopping the policy) dialog*
+- **Các bước / Steps**:
+  1) Nhấn biểu tượng dừng trên dòng chính sách<br>*Click the stop icon on the policy row*
+  2) Hộp thoại hỏi `Bạn có chắc muốn dừng chính sách …?` và cảnh báo chính sách sẽ không còn được áp dụng khi khách đặt phòng kể từ thời điểm dừng → nhấn `Xác nhận dừng`<br>*The dialog asks `Bạn có chắc muốn dừng chính sách …?` (Stop this policy?) and warns that it will no longer apply to bookings from the moment it is stopped → click `Xác nhận dừng` (Confirm stop)*
+- **Trường & tuỳ chọn / Fields & options**: Nút `Hủy` / `Xác nhận dừng`<br>*Buttons `Hủy` (Cancel) / `Xác nhận dừng`*
+- **Kết quả / Result**: Thông báo `Cập nhật thành công`, trạng thái chính sách thành `Đã dừng`<br>*A `Cập nhật thành công` toast; the policy's status becomes `Đã dừng` (Stopped)*
+- **Không đọc được / Not verifiable**: Có thể bật lại chính sách đã dừng hay không không có trong video<br>*Whether a stopped policy can be switched back on is not in the video*
+
+### Video 61 — Kết nối kênh đối tác (PMS) / Video 61 — Connecting a partner channel (PMS)
+- **Thời lượng / Duration**: 17.1s
+- **Đường dẫn màn hình / Screen path**: `Thiết lập` → `Quản lý kênh đối tác` → `Danh sách kênh đối tác` → công tắc `Trạng thái kết nối`<br>*`Thiết lập` → `Quản lý kênh đối tác` (Partner channel management) → `Danh sách kênh đối tác` (Partner channel list) → the `Trạng thái kết nối` (Connection status) switch*
+- **Các bước / Steps**:
+  1) Mở `Quản lý kênh đối tác` trong `Thiết lập`<br>*Open `Quản lý kênh đối tác` under `Thiết lập`*
+  2) Bật công tắc `Trạng thái kết nối` của kênh cần kết nối<br>*Switch on `Trạng thái kết nối` for the channel to connect*
+  3) Hộp thoại `Xác nhận kết nối` cảnh báo mọi thay đổi trên kênh đối tác sẽ ảnh hưởng đến dữ liệu hiển thị tại trang Hotel Admin → nhấn `Kết nối`<br>*The `Xác nhận kết nối` (Confirm connection) dialog warns that every change made on the partner channel will affect the data shown in Hotel Admin → click `Kết nối` (Connect)*
+- **Trường & tuỳ chọn / Fields & options**: Cột `Tên kênh` (ví dụ `Ezcloud`, `Cozrum`, `Oxu`), `Hotel ID`, `Cập nhật lần cuối`, `Thực hiện bởi`, `Trạng thái kết nối`<br>*Columns `Tên kênh` (channel name, e.g. `Ezcloud`, `Cozrum`, `Oxu`), `Hotel ID`, `Cập nhật lần cuối` (last updated), `Thực hiện bởi` (done by), `Trạng thái kết nối`*
+- **Kết quả / Result**: Công tắc của kênh chuyển sang bật, `Cập nhật lần cuối` và `Thực hiện bởi` được ghi lại<br>*The channel's switch turns on, and `Cập nhật lần cuối` and `Thực hiện bởi` are filled in*
+- **Không đọc được / Not verifiable**: Theo tài liệu, khách sạn không thể kết nối kênh đối tác khác cho đến khi ngưng kết nối kênh hiện tại — điều này không được trình bày trong video<br>*Per the guide, a hotel cannot connect another partner channel until it disconnects the current one — this is not demonstrated in the video*
+
+### Video 62 — Ngưng kết nối kênh đối tác / Video 62 — Disconnecting a partner channel
+- **Thời lượng / Duration**: 12.9s
+- **Đường dẫn màn hình / Screen path**: `Quản lý kênh đối tác` → tắt công tắc `Trạng thái kết nối` → hộp thoại `Xác nhận dừng kết nối`<br>*`Quản lý kênh đối tác` → switch off `Trạng thái kết nối` → the `Xác nhận dừng kết nối` (Confirm disconnection) dialog*
+- **Các bước / Steps**:
+  1) Tắt công tắc `Trạng thái kết nối` của kênh đang kết nối<br>*Switch off `Trạng thái kết nối` for the connected channel*
+  2) Hộp thoại cảnh báo sau khi dừng, dữ liệu tại trang Hotel Admin sẽ không còn bị ảnh hưởng bởi các thay đổi từ kênh đối tác → nhấn `Xác nhận dừng`<br>*The dialog warns that after disconnecting, Hotel Admin data will no longer be affected by changes on the partner channel → click `Xác nhận dừng` (Confirm stop)*
+- **Trường & tuỳ chọn / Fields & options**: Nút `Huỷ` / `Xác nhận dừng`<br>*Buttons `Huỷ` (Cancel) / `Xác nhận dừng`*
+- **Kết quả / Result**: Thông báo `Đã ngắt kết nối kênh đối tác thành công`, công tắc chuyển sang tắt và `Cập nhật lần cuối` được cập nhật<br>*The toast `Đã ngắt kết nối kênh đối tác thành công` (Partner channel disconnected); the switch turns off and `Cập nhật lần cuối` is updated*
+- **Không đọc được / Not verifiable**: Dữ liệu đã đồng bộ trước đó có bị giữ lại hay không không có trong video<br>*Whether data synced earlier is kept is not in the video*
+
 ---
 
-*Ngày phân tích: 2026-08-29 · Nguồn: 51 video nhúng trong tài liệu Hướng dẫn sử dụng Hotel Admin của Go2Joy (Notion)*<br>*Analysis date: 2026-08-29 · Source: 51 videos embedded in the Go2Joy Hotel Admin user guide (Notion)*
+*Ngày phân tích: 2026-08-29 (Video 0~50) · 2026-10-08 (Video 51~62, 12 video được thêm sau) · Nguồn: 63 video nhúng trong tài liệu Hướng dẫn sử dụng Hotel Admin của Go2Joy (Notion)*<br>*Analysis date: 2026-08-29 (Videos 0–50) · 2026-10-08 (Videos 51–62, twelve videos added later) · Source: 63 videos embedded in the Go2Joy Hotel Admin user guide (Notion)*

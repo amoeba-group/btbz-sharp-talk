@@ -1,5 +1,5 @@
 {
-  "_about": "Go2Joy Hotel Admin Notion page — video blocks in page order (PLN-261006-KB-Video-Links). Read from the Notion API on 2026-10-06 (63 video blocks, all Notion-hosted files). `video` = the Video N of reference/hoteladminvideoguidevien.md (51 analysed); null = added to the page after that analysis. Mapping: N<=16 -> same position, N>=17 -> position N+3 (positions 17-19 were inserted).",
+  "_about": "Go2Joy Hotel Admin Notion page — video blocks in page order (PLN-261006-KB-Video-Links). Read from the Notion API on 2026-10-06 (63 video blocks, all Notion-hosted files). `video` = the Video N of reference/hoteladminvideoguidevien.md (51 analysed); Videos 51–62 (analysed 2026-10-08) are the twelve added later: positions 17–19 → Videos 51–53, positions 54–62 → Videos 54–62. Mapping: N<=16 -> same position, N>=17 -> position N+3 (positions 17-19 were inserted).",
   "pageId": "8968fee0bb548347a35e01756b4cc89c",
   "blocks": [
     {
@@ -108,19 +108,19 @@
       "position": 17,
       "blockId": "e568fee0bb54826d9395813284c8f10f",
       "heading": "Tin nhắn từ G2J",
-      "video": null
+      "video": 51
     },
     {
       "position": 18,
       "blockId": "19c8fee0bb548299a02d8125515fc7b7",
       "heading": "Tin nhắn từ G2J",
-      "video": null
+      "video": 52
     },
     {
       "position": 19,
       "blockId": "b1c8fee0bb5482c4b03d01a3eb58bb7e",
       "heading": "Chat với khách (Mới)",
-      "video": null
+      "video": 53
     },
     {
       "position": 20,
@@ -330,55 +330,55 @@
       "position": 54,
       "blockId": "7258fee0bb5482d5906c015c7cf42b85",
       "heading": "Thiết lập thông tin chung",
-      "video": null
+      "video": 54
     },
     {
       "position": 55,
       "blockId": "1558fee0bb548244a45a0196472bee6a",
       "heading": "Thiết lập thông tin loại phòng (Mới)",
-      "video": null
+      "video": 55
     },
     {
       "position": 56,
       "blockId": "c748fee0bb5483ca8280016d3b921997",
       "heading": "Thiết lập thông tin loại phòng (Mới)",
-      "video": null
+      "video": 56
     },
     {
       "position": 57,
       "blockId": "92a8fee0bb5482118f9001c67bdc40d1",
       "heading": "Thiết lập thông tin loại phòng (Mới)",
-      "video": null
+      "video": 57
     },
     {
       "position": 58,
       "blockId": "9d18fee0bb548246aef401584ef1048c",
       "heading": "Thiết lập chính sách huỷ phòng",
-      "video": null
+      "video": 58
     },
     {
       "position": 59,
       "blockId": "c768fee0bb5483fc8c5601bfbccdc495",
       "heading": "Thiết lập chính sách huỷ phòng",
-      "video": null
+      "video": 59
     },
     {
       "position": 60,
       "blockId": "b278fee0bb5483fdbe6801839f3a1eeb",
       "heading": "Thiết lập chính sách huỷ phòng",
-      "video": null
+      "video": 60
     },
     {
       "position": 61,
       "blockId": "3b88fee0bb5483e3833a0141a9e7c5d0",
       "heading": "Quản lý kênh đối tác",
-      "video": null
+      "video": 61
     },
     {
       "position": 62,
       "blockId": "8008fee0bb548262a83e0182f0e6d84f",
       "heading": "Quản lý kênh đối tác",
-      "video": null
+      "video": 62
     }
   ]
 }
