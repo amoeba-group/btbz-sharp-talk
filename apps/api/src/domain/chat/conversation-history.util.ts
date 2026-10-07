@@ -151,8 +151,16 @@ export const CONVERSATION_RULES =
   'answer to it even when it is very short (a number, one word, "go ahead").\n' +
   "- Facts about the shop (prices, policies, availability) come from the " +
   'context; details the customer told you (name, date, quantity, choices) ' +
-  'come from the conversation. Your own earlier replies are not a source of ' +
-  'shop facts.\n' +
+  'come from the conversation.\n' +
+  // The context is retrieved for the CURRENT question only. An earlier answer
+  // missing from it is not evidence that answer was wrong — the old wording
+  // ("your earlier replies are not a source of shop facts") made the model
+  // retract a correct delivery estimate when the next question was about
+  // Canada (FIX-261007-Topic-Switch, staging conversation 780).
+  '- The context was looked up for the current question only. If an earlier ' +
+  'reply of yours is not covered by it, that does not mean it was wrong: ' +
+  'never retract, correct or apologise for an earlier reply unless the ' +
+  'context contradicts it. Answer the current question.\n' +
   '- Tokens like [PHONE], [EMAIL], [ADDR], [CARD] or [ORDER] mean the customer ' +
   'DID provide that detail; it is hidden from you for privacy. Treat it as ' +
   'received, never write the token, and refer to it naturally (e.g. "the ' +
