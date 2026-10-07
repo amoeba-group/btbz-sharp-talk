@@ -196,3 +196,84 @@ describe('GoldenService.compare', () => {
     expect(byQ['배송은?'].confidenceDelta).toBeNull();
   });
 });
+
+describe('GoldenService — graded runs (PLN-261007 R7)', () => {
+  const graded = (id: number, question: string, expected: string[]) => ({ ...q(id, question), expected, forbidden: null });
+
+  it('grades each answer against its expected facts and counts the run', async () => {
+    const { service, savedItems, savedRuns } = serviceFor({
+      questions: [graded(1, 'D3', ['19133261136016']), graded(2, 'E1', ['Chờ nhận phòng']), q(3, 'H2')],
+      ask: async (question) => ({
+        answer: question === 'D3' ? 'STK **19133261136016**' : question === 'E1' ? 'Email ▇▇▇' : 'anything',
+        confidence: 0.7,
+        blocked: false,
+        sources: [],
+      }),
+    });
+    await service.run(1, 9, GOLDEN_RUN_KIND.MANUAL);
+    expect(savedItems.map((i) => i.verdict)).toEqual(['pass', 'fail', null]);
+    expect(savedItems[1].failedChecks).toEqual(['missing: Chờ nhận phòng', 'forbidden: ▇▇▇']);
+    const done = savedRuns[savedRuns.length - 1];
+    expect([done.passCount, done.failCount, done.status]).toEqual([1, 1, 'done']);
+  });
+
+  it('asks as the chosen agent', async () => {
+    const seen: unknown[] = [];
+    const { service } = serviceFor({ questions: [q(1, 'x')] });
+    (service as unknown as { knowledge: { ask: (...a: unknown[]) => Promise<unknown> } }).knowledge.ask = async (...a) => {
+      seen.push(a[4]);
+      return { answer: 'a', confidence: 0.5, blocked: false, sources: [] };
+    };
+    await service.run(1, 9, GOLDEN_RUN_KIND.MANUAL, { aiAgentId: 10 });
+    expect(seen).toEqual([10]);
+  });
+
+  it('returns a running row at once in background mode and finishes afterwards', async () => {
+    const { service, savedRuns } = serviceFor({ questions: [q(1, 'x')] });
+    const run = await service.run(1, 9, GOLDEN_RUN_KIND.MANUAL, { background: true });
+    expect(run.status).toBe('running');
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+    expect(savedRuns[savedRuns.length - 1].status).toBe('done');
+  });
+
+  it('lists regressions (pass → fail) first in a comparison', async () => {
+    const { service } = serviceFor({
+      runs: [
+        { id: 1, configHash: 'a' },
+        { id: 2, configHash: 'a' },
+      ],
+      items: [
+        { runId: 1, question: 'A', answer: 'a', verdict: 'pass', citations: [] },
+        { runId: 1, question: 'B', answer: 'b', verdict: 'fail', citations: [] },
+        { runId: 2, question: 'A', answer: 'a', verdict: 'fail', failedChecks: ['missing: x'], citations: [] },
+        { runId: 2, question: 'B', answer: 'b', verdict: 'pass', citations: [] },
+      ],
+    });
+    const c = await service.compare(1, 1, 2);
+    expect(c.items[0]).toMatchObject({ question: 'A', regressed: true, targetFailedChecks: ['missing: x'] });
+    expect(c.items.find((i) => i.question === 'B')?.improved).toBe(true);
+  });
+});
+
+describe('GoldenService.bulkImport', () => {
+  it('creates new questions and only updates the facts of existing ones', async () => {
+    const rows: Array<Record<string, unknown>> = [{ id: 1, tenantId: 1, question: 'Hoa hồng bao nhiêu?', expected: null }];
+    const questionRepo = {
+      find: async () => rows,
+      create: (v: Record<string, unknown>) => v,
+      save: async (v: Record<string, unknown>) => {
+        if (!rows.includes(v)) rows.push({ id: rows.length + 1, ...v });
+        return v;
+      },
+    };
+    const svc = new GoldenService(questionRepo as never, {} as never, {} as never, {} as never, {} as never);
+    const res = await svc.bulkImport(1, 9, {
+      text: 'Hoa hồng bao nhiêu?\t15%|10%\nTôi có thể thanh toán cho Go2Joy như nào?\tTechcombank',
+      language: 'vi',
+    });
+    expect(res).toEqual({ created: 1, updated: 1, skipped: 0 });
+    expect(rows[0].expected).toEqual(['15%', '10%']);
+    expect(rows[1]).toMatchObject({ question: 'Tôi có thể thanh toán cho Go2Joy như nào?', expected: ['Techcombank'], language: 'VI' });
+  });
+});

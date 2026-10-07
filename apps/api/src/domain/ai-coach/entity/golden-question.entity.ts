@@ -32,6 +32,14 @@ export class GoldenQuestion {
   @Column({ type: 'tinyint', default: 1 })
   active: number;
 
+  /** Facts the answer must contain; NULL = no verdict (PLN-261007 R7). */
+  @Column({ type: 'json', nullable: true })
+  expected: string[] | null;
+
+  /** Text the answer must not contain, on top of the built-in masks. */
+  @Column({ type: 'json', nullable: true })
+  forbidden: string[] | null;
+
   @Column({ name: 'created_by', type: 'bigint', nullable: true, transformer: bigintTransformer })
   createdBy: number | null;
 

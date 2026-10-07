@@ -52,9 +52,37 @@ export function ComparisonModal({ comparison, onClose }: ComparisonModalProps) {
           </p>
         )}
 
+        {/* Graded questions (PLN-261007 R7): regressions come first from the server. */}
+        {comparison.items.some((i) => i.regressed || i.improved) && (
+          <p className="text-xs">
+            <span className="font-semibold text-red-700">
+              {t('regression.regressedCount', { count: comparison.items.filter((i) => i.regressed).length })}
+            </span>
+            {' · '}
+            <span className="text-green-700">
+              {t('regression.improvedCount', { count: comparison.items.filter((i) => i.improved).length })}
+            </span>
+          </p>
+        )}
+
         {comparison.items.map((item, i) => (
-          <div key={i} className="rounded-lg border border-gray-200 p-3">
-            <p className="mb-1.5 text-sm font-medium text-gray-800">{item.question}</p>
+          <div
+            key={i}
+            className={`rounded-lg border p-3 ${item.regressed ? 'border-red-300 bg-red-50/40' : 'border-gray-200'}`}
+          >
+            <p className="mb-1.5 flex items-center gap-2 text-sm font-medium text-gray-800">
+              {item.regressed && <Badge tone="error">{t('regression.regressed')}</Badge>}
+              {item.improved && <Badge tone="success">{t('regression.improved')}</Badge>}
+              {!item.regressed && !item.improved && item.targetVerdict && (
+                <Badge tone={item.targetVerdict === 'pass' ? 'success' : 'error'}>
+                  {t(`regression.verdict_${item.targetVerdict}`)}
+                </Badge>
+              )}
+              {item.question}
+            </p>
+            {item.targetFailedChecks.length > 0 && (
+              <p className="mb-1.5 text-[11px] text-red-700">{item.targetFailedChecks.join(' · ')}</p>
+            )}
 
             <div className="mb-2 flex flex-wrap items-center gap-1.5 text-[11px]">
               {item.confidenceDelta !== null && (

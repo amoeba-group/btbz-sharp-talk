@@ -65,6 +65,8 @@ export class AiCoachMapper {
       language: q.language,
       note: q.note,
       active: q.active === 1,
+      expected: q.expected ?? [],
+      forbidden: q.forbidden ?? [],
       createdAt: q.createdAt,
     };
   }
@@ -79,6 +81,9 @@ export class AiCoachMapper {
       questionCount: r.questionCount,
       truncated: r.truncated === 1,
       status: r.status,
+      aiAgentId: r.aiAgentId != null ? Number(r.aiAgentId) : null,
+      passCount: r.passCount ?? 0,
+      failCount: r.failCount ?? 0,
       createdAt: r.createdAt,
       completedAt: r.completedAt,
     };

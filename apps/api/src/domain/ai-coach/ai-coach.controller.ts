@@ -29,6 +29,7 @@ import {
 } from './dto/request/ai-coach.request';
 import {
   CompareRunsQuery,
+  BulkGoldenQuestionsRequest,
   CreateGoldenQuestionRequest,
   CreateGoldenRunRequest,
   UpdateGoldenQuestionRequest,
@@ -201,6 +202,15 @@ export class AiCoachController {
     return AiCoachMapper.toGoldenQuestion(row);
   }
 
+  /** Paste many questions with their expected facts (PLN-261007 R7). Declared before `:id`. */
+  @Post('golden/questions/bulk')
+  @RequireCapability(CAPABILITY.AI_SETTINGS_MANAGE)
+  @ApiOperation({ summary: 'Bulk add/update regression questions from a TSV paste' })
+  async bulkGolden(@CurrentUser() user: Principal, @Body() body: BulkGoldenQuestionsRequest) {
+    const { tenantId, userId } = this.tenantUser(user);
+    return this.golden.bulkImport(tenantId, userId, body);
+  }
+
   @Patch('golden/questions/:id')
   @RequireCapability(CAPABILITY.AI_SETTINGS_MANAGE)
   @ApiOperation({ summary: 'Edit a regression question' })
@@ -230,7 +240,8 @@ export class AiCoachController {
       tenantId,
       userId,
       (body.kind as GoldenRunKind) ?? GOLDEN_RUN_KIND.MANUAL,
-      { label: body.label },
+      // Background: up to 60 questions outlast the proxy timeout; the screen polls.
+      { label: body.label, aiAgentId: body.ai_agent_id ?? null, background: true },
     );
     return AiCoachMapper.toGoldenRun(run);
   }
