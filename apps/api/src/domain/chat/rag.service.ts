@@ -270,6 +270,12 @@ export class RagService {
     tenantId: number,
     query: string,
     aiAgentId?: number | null,
+    /**
+     * Same scope switches as `retrieve()` (PLN-261001): `guestOnly` measures
+     * how well the GUEST-VISIBLE categories alone cover the query — the guest
+     * gate's question, asked on the same scale the handoff decision uses.
+     */
+    opts?: RetrievalOpts,
   ): Promise<number> {
     const { chunks, vectorProvider } = await this.retrieveHybrid(
       tenantId,
@@ -277,6 +283,7 @@ export class RagService {
       RagService.TOP_K,
       undefined,
       aiAgentId ?? null,
+      opts,
     );
     return this.confidence(chunks, vectorProvider);
   }
