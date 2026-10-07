@@ -8,6 +8,9 @@ export interface GoldenQuestion {
   language: string;
   note: string | null;
   active: boolean;
+  /** Facts the answer must contain (PLN-261007 R7); empty = not graded. */
+  expected: string[];
+  forbidden: string[];
   createdAt: string;
 }
 
@@ -20,6 +23,9 @@ export interface GoldenRun {
   questionCount: number;
   truncated: boolean;
   status: string;
+  aiAgentId: number | null;
+  passCount: number;
+  failCount: number;
   createdAt: string;
   completedAt: string | null;
 }
@@ -39,6 +45,11 @@ export interface CompareItem {
   lengthDelta: number | null;
   citationsChanged: boolean;
   textChanged: boolean;
+  baseVerdict: string | null;
+  targetVerdict: string | null;
+  regressed: boolean;
+  improved: boolean;
+  targetFailedChecks: string[];
 }
 
 export interface Comparison {
@@ -51,15 +62,21 @@ export interface Comparison {
 
 export const goldenService = {
   listQuestions: () => apiGet<{ items: GoldenQuestion[]; max: number }>('/ai-coach/golden/questions'),
-  addQuestion: (body: { question: string; language?: string; note?: string }) =>
+  addQuestion: (body: { question: string; language?: string; note?: string; expected?: string[] }) =>
     apiPost<GoldenQuestion>('/ai-coach/golden/questions', body),
-  updateQuestion: (id: number, body: { question?: string; active?: number }) =>
+  bulkImport: (body: { text: string; language?: string }) =>
+    apiPost<{ created: number; updated: number; skipped: number }>('/ai-coach/golden/questions/bulk', body),
+  updateQuestion: (id: number, body: { question?: string; active?: number; expected?: string[] }) =>
     apiPatch<GoldenQuestion>(`/ai-coach/golden/questions/${id}`, body),
   removeQuestion: (id: number) => apiDelete<{ removed: boolean }>(`/ai-coach/golden/questions/${id}`),
 
   listRuns: () => apiGet<{ items: GoldenRun[] }>('/ai-coach/golden/runs'),
-  createRun: (kind: 'manual' | 'noise', label?: string) =>
-    apiPost<GoldenRun>('/ai-coach/golden/runs', { kind, label }),
+  createRun: (kind: 'manual' | 'noise', aiAgentId?: number | null, label?: string) =>
+    apiPost<GoldenRun>('/ai-coach/golden/runs', {
+      kind,
+      label,
+      ...(aiAgentId ? { ai_agent_id: aiAgentId } : {}),
+    }),
   compare: (base: number, target: number) =>
     apiGet<Comparison>('/ai-coach/golden/compare', { base, target }),
 

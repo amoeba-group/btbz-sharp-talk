@@ -55,6 +55,16 @@ export class GoldenRun {
   @Column({ type: 'varchar', length: 16, default: 'running' })
   status: string;
 
+  /** Which AI agent the run asked as (persona + knowledge scope); NULL = no scope. */
+  @Column({ name: 'ai_agent_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
+  aiAgentId: number | null;
+
+  @Column({ name: 'pass_count', type: 'int', default: 0 })
+  passCount: number;
+
+  @Column({ name: 'fail_count', type: 'int', default: 0 })
+  failCount: number;
+
   @Column({ name: 'created_by', type: 'bigint', nullable: true, transformer: bigintTransformer })
   createdBy: number | null;
 
@@ -97,6 +107,13 @@ export class GoldenRunItem {
 
   @Column({ type: 'json', nullable: true })
   citations: Array<{ id: number; title: string; similarity: number | null }> | null;
+
+  /** pass / fail against the question's expected facts; NULL = not graded. */
+  @Column({ type: 'varchar', length: 8, nullable: true })
+  verdict: string | null;
+
+  @Column({ name: 'failed_checks', type: 'json', nullable: true })
+  failedChecks: string[] | null;
 
   /** A question that failed does not abort the run; it is recorded and skipped. */
   @Column({ type: 'varchar', length: 300, nullable: true })
