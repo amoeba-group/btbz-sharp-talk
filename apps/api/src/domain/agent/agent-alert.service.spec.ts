@@ -164,3 +164,25 @@ describe('AgentAlertService — label routing precedence', () => {
     expect(h.mailer.send.mock.calls[0][0].text).not.toContain('Team:');
   });
 });
+
+/**
+ * Integration of two features that both add a line to the escalation text
+ * (REQ-261006 partner line + PLN-261007 team line): both show, in a fixed
+ * order, and each stays absent when its input is.
+ */
+describe('AgentAlertService.summary — partner and team lines together', () => {
+  const svc = Object.create(AgentAlertService.prototype) as AgentAlertService;
+  const alert = { conversationId: 7, reason: 'user_request', preview: 'Hoa hồng?' } as AgentAlert;
+
+  it('shows the team then the partner, before the preview', () => {
+    expect(svc.summary(alert, 'A In Hotel Del Luna (1721) · manager', 'Business Support')).toBe(
+      'Chat escalation — conversation #7\nReason: Customer asked for a human agent' +
+        '\nTeam: Business Support\nPartner: A In Hotel Del Luna (1721) · manager\n> Hoa hồng?',
+    );
+  });
+
+  it('keeps each line independent of the other', () => {
+    expect(svc.summary(alert, undefined, 'Customer Service Support')).not.toContain('Partner:');
+    expect(svc.summary(alert, 'Hotel X (1)', undefined)).not.toContain('Team:');
+  });
+});
