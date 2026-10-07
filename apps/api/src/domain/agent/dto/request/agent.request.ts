@@ -28,6 +28,8 @@ export class ListSessionsQuery {
   @IsOptional() @IsString() @MaxLength(120) hotel?: string;
   /** Team filter (PLN-261007 Team Routing): teamRouting option id; omitted/'all' = every team. */
   @IsOptional() @IsString() support_type?: string;
+  /** Regional-team filter (PLN-261007): north | south | none; omitted/'all' = every region. */
+  @IsOptional() @IsString() support_region?: string;
 }
 
 /** Re-pin the session to another AI agent — applies from the next turn. */

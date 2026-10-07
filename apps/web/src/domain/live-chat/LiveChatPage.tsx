@@ -32,6 +32,8 @@ import { ChannelBadge, CHANNEL_FILTERS, RECEIVE_ONLY_CHANNELS } from './ChannelB
 
 /** Built-in team ids (PLN-261007 Team Routing); the API seeds the same pair. */
 const TEAM_FILTERS = ['cs', 'business'] as const;
+/** Regional-team filter values (PLN-261007 Hotel Region Routing); 'none' = region unknown. */
+const REGION_FILTERS = ['north', 'south', 'none'] as const;
 import { SessionAlias } from './SessionAlias';
 import { AutoReplyControl } from './AutoReplyControl';
 import { DraftPanel } from './DraftPanel';
@@ -203,6 +205,8 @@ export function LiveChatPage() {
   // Team filter (PLN-261007 Team Routing): the option the customer picked when
   // asking for a human. Built-in ids; a tenant's custom id still badges by id.
   const [teamFilter, setTeamFilter] = useState('all');
+  // Regional-team filter (PLN-261007 Hotel Region Routing): north | south | none.
+  const [regionFilter, setRegionFilter] = useState('all');
 
   // Detail-header controls (REQ-260825 R8).
   const [assignOpen, setAssignOpen] = useState(false);
@@ -265,6 +269,7 @@ export function LiveChatPage() {
     agentFilter,
     hotelFilter,
     teamFilter,
+    regionFilter,
   );
   const { data: groups, isLoading: groupsLoading } = useGroups(scope === 'groups');
   const { data: convo, isLoading: convoLoading, isFetching: convoFetching, refetch: refetchConvo } =
@@ -605,6 +610,20 @@ export function LiveChatPage() {
                 </option>
               ))}
             </select>
+            {/* Regional-team filter (PLN-261007 Hotel Region Routing). */}
+            <select
+              value={regionFilter}
+              onChange={(e) => setRegionFilter(e.target.value)}
+              aria-label={t('region.filterLabel')}
+              className="rounded-full border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 outline-none focus:border-primary-400"
+            >
+              <option value="all">{t('region.filterAll')}</option>
+              {REGION_FILTERS.map((key) => (
+                <option key={key} value={key}>
+                  {t(`region.${key}`)}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="space-y-1.5 border-b border-gray-100 p-2">
             <div className="relative">
@@ -804,6 +823,14 @@ export function LiveChatPage() {
                           {t(`team.${s.supportType}`, { defaultValue: s.supportType })}
                         </span>
                       )}
+                      {s.supportRegion && (
+                        <span
+                          className="rounded-full bg-sky-50 px-1.5 py-0.5 text-[10px] font-medium text-sky-700"
+                          title={t('region.badgeTitle')}
+                        >
+                          {t(`region.${s.supportRegion}`, { defaultValue: s.supportRegion })}
+                        </span>
+                      )}
                       <ChannelBadge channel={s.channel} />
                       <StatusBadge
                         status={s.status}
@@ -893,6 +920,11 @@ export function LiveChatPage() {
                   {convo?.supportType && (
                     <Badge tone="warning">
                       {t('team.badgeTitle')}: {t(`team.${convo.supportType}`, { defaultValue: convo.supportType })}
+                    </Badge>
+                  )}
+                  {convo?.supportRegion && (
+                    <Badge tone="info">
+                      {t('region.badgeTitle')}: {t(`region.${convo.supportRegion}`, { defaultValue: convo.supportRegion })}
                     </Badge>
                   )}
                   {convo?.assignedTo && (

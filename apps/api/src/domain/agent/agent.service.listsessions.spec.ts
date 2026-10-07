@@ -291,3 +291,69 @@ describe('listSessions — team filter', () => {
     expect(none.supportType).toBeNull();
   });
 });
+
+/**
+ * Regional-team filter (PLN-261007 Hotel Region Routing): north | south, and
+ * 'none' for threads whose region could not be determined.
+ */
+describe('listSessions — region filter', () => {
+  function buildRegion() {
+    const wheres: Array<{ clause: string; params?: Record<string, unknown> }> = [];
+    const qb: Record<string, unknown> = {
+      where: jest.fn(() => qb),
+      andWhere: jest.fn((clause: string, params?: Record<string, unknown>) => {
+        wheres.push({ clause, params });
+        return qb;
+      }),
+      orderBy: jest.fn(() => qb),
+      addOrderBy: jest.fn(() => qb),
+      skip: jest.fn(() => qb),
+      take: jest.fn(() => qb),
+      getManyAndCount: jest.fn(async () => [[], 0]),
+    };
+    const svc = new AgentService(
+      { createQueryBuilder: () => qb } as never,
+      { createQueryBuilder: () => ({ select: () => ({ where: () => ({ getMany: async () => [] }) }) }) } as never,
+      {} as never,
+      { find: jest.fn(async () => []) } as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      { contactsByIds: jest.fn(async () => new Map()) } as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+    return { svc, wheres };
+  }
+  const list = (svc: AgentService, region?: string) =>
+    svc.listSessions(1, 1, 50, undefined, 'queue', 'all', undefined, undefined, undefined, region);
+
+  it('filters by the regional team', async () => {
+    const { svc, wheres } = buildRegion();
+    await list(svc, 'south');
+    expect(wheres.find((w) => w.clause.includes('c.support_region ='))?.params).toEqual({ supportRegion: 'south' });
+  });
+
+  it("'none' selects the un-regioned threads", async () => {
+    const { svc, wheres } = buildRegion();
+    await list(svc, 'none');
+    expect(wheres.some((w) => w.clause === 'c.support_region IS NULL')).toBe(true);
+  });
+
+  it('adds no region clause for "all", blank or omitted', async () => {
+    for (const region of ['all', '  ', undefined]) {
+      const { svc, wheres } = buildRegion();
+      await list(svc, region);
+      expect(wheres.some((w) => w.clause.includes('support_region'))).toBe(false);
+    }
+  });
+
+  it('carries the regional team on the queue row', () => {
+    expect(toSessionResponse({ id: 1, sessionId: 2, supportRegion: 'north' } as Conversation, null).supportRegion).toBe('north');
+    expect(toSessionResponse({ id: 1, sessionId: 2 } as Conversation, null).supportRegion).toBeNull();
+  });
+});

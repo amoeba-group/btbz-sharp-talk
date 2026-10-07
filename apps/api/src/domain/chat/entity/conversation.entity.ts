@@ -55,6 +55,16 @@ export class Conversation {
   supportType: string | null;
 
   /**
+   * The team (north | south, the `users.region` values) that looks after the
+   * hotel's region, resolved from the signed province claim when the thread was
+   * handed to a person (PLN-261007 Hotel Region Routing). Null when region
+   * routing is off or the region could not be determined. The queue badges and
+   * filters on it.
+   */
+  @Column({ name: 'support_region', type: 'varchar', length: 8, nullable: true })
+  supportRegion: string | null;
+
+  /**
    * When the "anything else?" check was sent (PLN-260810 P1). Doubles as the
    * idempotency guard — a non-null value means the question already went out,
    * so a sweep that runs every 30 seconds cannot ask twice.

@@ -92,7 +92,7 @@ describe('AgentAlertService.summary — partner line (REQ-261006 H4)', () => {
   const alert = { conversationId: 4820, reason: 'low_confidence', preview: 'Hạn đối soát?' } as AgentAlert;
 
   it('appends the signed partner label when the escalating session carried one', () => {
-    const text = svc.summary(alert, 'A In Hotel Del Luna (1721) · receptionist');
+    const text = svc.summary(alert, { partnerLabel: 'A In Hotel Del Luna (1721) · receptionist' });
     expect(text).toContain('Partner: A In Hotel Del Luna (1721) · receptionist');
     expect(text).toContain('conversation #4820');
     expect(text.endsWith('> Hạn đối soát?')).toBe(true);
@@ -102,7 +102,7 @@ describe('AgentAlertService.summary — partner line (REQ-261006 H4)', () => {
     expect(svc.summary(alert)).toBe(
       'Chat escalation — conversation #4820\nReason: AI could not answer from the knowledge base\n> Hạn đối soát?',
     );
-    expect(svc.summary(alert, '  ')).not.toContain('Partner');
+    expect(svc.summary(alert, { partnerLabel: '  ' })).not.toContain('Partner');
   });
 });
 
@@ -174,15 +174,127 @@ describe('AgentAlertService.summary — partner and team lines together', () => 
   const svc = Object.create(AgentAlertService.prototype) as AgentAlertService;
   const alert = { conversationId: 7, reason: 'user_request', preview: 'Hoa hồng?' } as AgentAlert;
 
-  it('shows the team then the partner, before the preview', () => {
-    expect(svc.summary(alert, 'A In Hotel Del Luna (1721) · manager', 'Business Support')).toBe(
+  it('shows team, region and partner in a fixed order, before the preview', () => {
+    expect(
+      svc.summary(alert, {
+        partnerLabel: 'A In Hotel Del Luna (1721) · manager',
+        teamLabel: 'Business Support',
+        regionLabel: 'South (South Central)',
+      }),
+    ).toBe(
       'Chat escalation — conversation #7\nReason: Customer asked for a human agent' +
-        '\nTeam: Business Support\nPartner: A In Hotel Del Luna (1721) · manager\n> Hoa hồng?',
+        '\nTeam: Business Support\nRegion: South (South Central)' +
+        '\nPartner: A In Hotel Del Luna (1721) · manager\n> Hoa hồng?',
     );
   });
 
-  it('keeps each line independent of the other', () => {
-    expect(svc.summary(alert, undefined, 'Customer Service Support')).not.toContain('Partner:');
-    expect(svc.summary(alert, 'Hotel X (1)', undefined)).not.toContain('Team:');
+  it('keeps each line independent of the others', () => {
+    expect(svc.summary(alert, { teamLabel: 'Customer Service Support' })).not.toContain('Partner:');
+    const partnerOnly = svc.summary(alert, { partnerLabel: 'Hotel X (1)' });
+    expect(partnerOnly).not.toContain('Team:');
+    expect(partnerOnly).not.toContain('Region:');
+    expect(svc.summary(alert, { regionLabel: 'North' })).toContain('\nRegion: North');
+  });
+});
+
+/**
+ * Regional team routing (PLN-261007 Hotel Region Routing). The hotel's own
+ * region is asked first; nationwide staff (region empty) are the second round;
+ * staff of the OTHER region are never picked here. Nobody → the caller's
+ * existing fallback (configured assignee, then broadcast).
+ */
+describe('AgentAlertService — regional ladder', () => {
+  type StaffRow = { id: number; region: string | null; status?: string };
+
+  function build(staff: StaffRow[], online: number[]) {
+    const saved: Array<Partial<AgentAlert>> = [];
+    const alertRepo = {
+      findOne: jest.fn(async () => null),
+      save: jest.fn(async (a: Partial<AgentAlert>) => {
+        saved.push(a);
+        return { id: 1, ...a } as AgentAlert;
+      }),
+      create: jest.fn((a: Partial<AgentAlert>) => a as AgentAlert),
+    };
+    const labelFinds: unknown[] = [];
+    const svc = new AgentAlertService(
+      alertRepo as never,
+      {
+        find: jest.fn(async (q: unknown) => {
+          labelFinds.push(q);
+          return [{ id: 3, tenantId: 1, code: 'consult' }];
+        }),
+      } as never,
+      { find: jest.fn(async () => staff.map((s) => ({ userId: s.id, jobLabelId: 3 }))) } as never,
+      {
+        find: jest.fn(async (q: { where: { userId: { _value: number[] } } }) => {
+          const asked = (q.where.userId as unknown as { _value: number[] })._value;
+          return online
+            .filter((id) => asked.includes(id))
+            .map((userId) => ({ tenantId: 1, userId, status: 'online', maxConcurrent: 5 }));
+        }),
+      } as never,
+      { count: jest.fn(async () => 0) } as never,
+      { subscribe: jest.fn() } as never,
+      { get: jest.fn(() => undefined) } as never,
+      { send: jest.fn() } as never,
+      { find: jest.fn(async () => staff) } as never, // userRepo
+    );
+    return { svc, saved, labelFinds };
+  }
+
+  const base = { tenantId: 1, conversationId: 50, reason: 'user_request', targetUserIds: [9] };
+  const STAFF: StaffRow[] = [
+    { id: 11, region: 'north' },
+    { id: 12, region: 'north' },
+    { id: 21, region: 'south' },
+    { id: 31, region: null }, // nationwide
+    { id: 41, region: 'south', status: 'inactive' },
+  ];
+
+  it('picks an online agent of the hotel region, not of the other one', async () => {
+    const h = build(STAFF, [12, 21, 31]);
+    await h.svc.onEscalation({ ...base, issueLabel: 'consult', supportRegion: 'north', regionLabel: 'North' });
+    expect(h.saved[0].targetUserId).toBe(12);
+  });
+
+  it('asks nationwide staff next when nobody of that region is online', async () => {
+    const h = build(STAFF, [21, 31]); // both north agents offline
+    await h.svc.onEscalation({ ...base, issueLabel: 'consult', supportRegion: 'north' });
+    expect(h.saved[0].targetUserId).toBe(31);
+  });
+
+  it('never picks the other region: falls to the configured assignee, then the broadcast', async () => {
+    const h = build(STAFF, [21]); // only a SOUTH agent is online, hotel is north
+    await h.svc.onEscalation({ ...base, issueLabel: 'consult', supportRegion: 'north' });
+    expect(h.saved[0].targetUserId).toBe(9);
+
+    const none = build(STAFF, [21]);
+    await none.svc.onEscalation({
+      tenantId: 1,
+      conversationId: 51,
+      reason: 'low_confidence',
+      supportRegion: 'north',
+    });
+    expect(none.saved[0].targetUserId).toBeNull();
+  });
+
+  it('skips deactivated staff', async () => {
+    const h = build(STAFF, [41]);
+    await h.svc.onEscalation({ ...base, issueLabel: 'consult', supportRegion: 'south' });
+    expect(h.saved[0].targetUserId).toBe(9);
+  });
+
+  it('a region with no label (AI-triggered hand-off) searches the consult label', async () => {
+    const h = build(STAFF, [11]);
+    await h.svc.onEscalation({ tenantId: 1, conversationId: 52, reason: 'low_confidence', supportRegion: 'north' });
+    expect(h.saved[0].targetUserId).toBe(11);
+    expect(JSON.stringify(h.labelFinds[0])).toContain('consult');
+  });
+
+  it('without a region the search ignores region entirely, as before', async () => {
+    const h = build(STAFF, [21]);
+    await h.svc.onEscalation({ ...base, issueLabel: 'consult' });
+    expect(h.saved[0].targetUserId).toBe(21);
   });
 });

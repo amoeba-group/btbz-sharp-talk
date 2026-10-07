@@ -4,7 +4,7 @@
 - Phạm vi: identify v2 (thêm tỉnh), cấu hình tenant, định tuyến cảnh báo, hàng chờ console. Không đổi giao diện widget của khách. Có 1 migration.
 - Phụ thuộc: `feature/user-role-region` (vùng nhân viên), `feature/handoff-team-routing` (chọn đội), `feature/guest-login-gate-ui` (identify v2). Đây là giai đoạn B đã hứa trong `PLN-261007-User-Role-Region` §3.3.
 - ⚠️ **File đính kèm định nghĩa vùng chưa tới tay tôi.** Bảng tỉnh → vùng trong PLN này chỉ là cấu trúc; nội dung lấy từ file đính kèm khi nhận, nhập qua console, không cần sửa mã.
-- Trạng thái: **đề xuất, chờ duyệt** (gồm AS-IS/TO-BE, không tách REQ riêng).
+- Trạng thái: **đã duyệt 2026-10-07, R1 đã làm xong** (xem RPT/TCR-261007-Hotel-Region-Routing); R2 và R3 chưa làm.
 
 ## 1. Tóm tắt quyết định
 

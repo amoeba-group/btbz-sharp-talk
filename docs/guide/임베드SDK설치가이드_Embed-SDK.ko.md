@@ -108,7 +108,9 @@ $hash = hash_hmac('sha256', (string)$user->id, getenv('SHOPTALK_EMBED_SECRET'));
 // PHP — HA가 선택한 호텔로 서명 (호텔을 바꾸면 다시 identify)
 $iat   = time();                                  // 초 단위, 서버 시각 ±10분 안에 도착해야 함
 $role  = 'receptionist';                          // manager | receptionist | internal
-$canon = implode('|', [(string)$user->id, (string)$hotelSn, $role, (string)$iat]);
+$parts = [(string)$user->id, (string)$hotelSn, $role, (string)$iat];
+if (!empty($province)) { $parts[] = (string)$province; }   // province를 보낼 때만, 보내는 문자열 그대로
+$canon = implode('|', $parts);
 $hash  = hash_hmac('sha256', $canon, getenv('SHOPTALK_EMBED_SECRET'));
 ```
 
@@ -123,12 +125,18 @@ $hash  = hash_hmac('sha256', $canon, getenv('SHOPTALK_EMBED_SECRET'));
       role:      "receptionist",        // 서명 대상
       iat:       1759734000,            // 서명 대상 (초)
       hotelName: "A In Hotel Del Luna", // 표시용
-      hotelCode: "HCM_001_001721"       // 표시용
+      hotelCode: "HCM_001_001721",      // 표시용
+      province:  "Đà Nẵng"              // 선택 — 있으면 서명 대상 (아래 참고)
     }
   });
 </script>
 ```
 
+- **호텔 지역 라우팅(선택)**: 호텔의 시/도를 `province`로 함께 보내면, 테넌트가 지역 라우팅을 켠 경우
+  해당 지역을 담당하는 팀(북부 / 남부)에게 대화가 전달됩니다. `province`를 보낼 때는 서명 문자열 끝에
+  `|province`를 **보내는 문자열 그대로** 붙이고, 보내지 않을 때는 붙이지 않습니다. 비어 있는 값은 보내지
+  말고 항목 자체를 빼세요. `province`를 보내면서 기존 공식(`userId|hotelSn|role|iat`)으로 서명하면
+  서명이 맞지 않아 거부(E5048)되고 방문자는 게스트로 남습니다. 두 쪽(발급 서버와 `claims`)을 함께 바꾸세요.
 - 로그인 사용자가 **다른 호텔로 전환**하면 새 `claims`로 `identify`를 다시 호출하세요. 로그아웃은
   `ShopTalk.logout()`.
 - 콘솔(라이브 채팅·고객)에는 호텔명과 **서명된 hotelSn**이 함께 표시되고, 테넌트가 링크 템플릿을

@@ -265,6 +265,13 @@ export interface EscalationEvent {
    */
   supportType?: string;
   supportLabel?: string;
+  /**
+   * The regional team (north | south) that looks after the hotel, from the
+   * signed province claim (PLN-261007 Hotel Region Routing). The alert prefers
+   * agents of that team; `regionLabel` is the wording for the channels.
+   */
+  supportRegion?: string;
+  regionLabel?: string;
 }
 
 /** What `escalate` tells the widget (PLN-261007 Team Routing). */
@@ -1351,6 +1358,7 @@ export class ChatService {
     // fan-out, no console-queue entry.
     if (session.channel === 'preview') return { body, needsContactEmail: false };
     await this.markWaiting(conversationId);
+    const region = await this.stampRegion(conversationId, tenantId, session);
     // Remember how this thread must be answered: an agent replying tomorrow has
     // no one in the widget to read it (see AgentService.sendMessage).
     if (route.mode === 'email') {
@@ -1367,6 +1375,7 @@ export class ChatService {
       issueType: stamp?.issueType,
       issueLabel: stamp?.issueLabel,
       partnerLabel: partnerLabelOf(session),
+      ...(region ? { supportRegion: region.team, regionLabel: region.label } : {}),
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
     return { body, needsContactEmail };
@@ -1468,6 +1477,7 @@ export class ChatService {
       reason: 'user_request',
     });
     await this.markWaiting(conversationId);
+    const region = await this.stampRegion(conversationId, tenantId, session);
     const event: EscalationEvent = {
       tenantId,
       conversationId,
@@ -1480,9 +1490,32 @@ export class ChatService {
       ...(chosen
         ? { issueLabel: chosen.jobLabel, supportType: chosen.id, supportLabel: chosen.label }
         : {}),
+      ...(region ? { supportRegion: region.team, regionLabel: region.label } : {}),
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
     return { escalated: true, choose: false, body };
+  }
+
+  /**
+   * Resolve the hotel's regional team and stamp it on the conversation for the
+   * queue badge and filter (PLN-261007 Hotel Region Routing). Never throws: a
+   * region lookup that fails must not stop a customer reaching a person, it only
+   * means this hand-off is routed by label alone.
+   */
+  private async stampRegion(
+    conversationId: number,
+    tenantId: number,
+    session: Session,
+  ): Promise<{ team: string; label: string } | null> {
+    try {
+      const region = await this.handoffRouter.regionOf(tenantId, session.identityClaims);
+      if (!region) return null;
+      await this.convRepo.update({ id: conversationId }, { supportRegion: region.team });
+      return { team: region.team, label: region.label };
+    } catch (e) {
+      this.logger.warn(`region lookup failed (conversation ${conversationId}): ${(e as Error).message}`);
+      return null;
+    }
   }
 
   /**

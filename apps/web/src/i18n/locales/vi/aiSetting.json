@@ -107,6 +107,30 @@
     "followUpsNone": "không có"
   },
   "handoff": {
+    "regionTitle": "Chuyển theo vùng của khách sạn",
+    "regionHint": "Sau khi khách chọn đội, hội thoại được chuyển cho nhân viên phụ trách vùng của khách sạn.",
+    "regionEnable": "Chuyển hội thoại cho đội phụ trách vùng của khách sạn",
+    "regionNeeds": "Cần hệ thống của đối tác gửi tỉnh của khách sạn, có chữ ký, khi đối tác đăng nhập vào trợ lý.",
+    "regionCategoryCol": "Vùng",
+    "regionTeamCol": "Đội phụ trách",
+    "regionProvincesCol": "Tỉnh/thành (mỗi dòng một tỉnh hoặc cách nhau bằng dấu phẩy)",
+    "regionProvincesPh": "ví dụ: Hà Nội, Hải Phòng",
+    "regionCategory": {
+      "north": "Miền Bắc",
+      "north_central": "Bắc Trung Bộ",
+      "south_central": "Nam Trung Bộ",
+      "south": "Miền Nam"
+    },
+    "regionTeam": {
+      "north": "Đội Bắc",
+      "south": "Đội Nam"
+    },
+    "regionDuplicate": "Có trong nhiều vùng (vùng đứng trước được dùng): {{list}}",
+    "regionProbe": "Thử một tỉnh",
+    "regionProbePh": "Thử một tỉnh, ví dụ: Đà Nẵng",
+    "regionProbeHit": "{{category}} · {{team}}",
+    "regionProbeMiss": "Chưa có trong bảng, nên các khách sạn này chỉ được chuyển theo đội.",
+    "regionFallbackHint": "Báo trước cho nhân viên của vùng khách sạn, rồi đến nhân viên chưa gán vùng, cuối cùng là mọi nhân viên. Khách sạn chưa xác định được tỉnh chỉ được chuyển theo đội.",
     "teamTitle": "Hỏi đội hỗ trợ khi khách yêu cầu gặp nhân viên",
     "teamHint": "Chỉ hiện sau khi khách yêu cầu gặp người (nút, chip hoặc gõ tay). Mỗi lựa chọn báo cho nhân viên giữ vai trò đó; không ai online thì báo cho mọi nhân viên và hàng chờ gắn nhãn đội.",
     "teamEnable": "Hỏi khách chọn đội",

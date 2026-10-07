@@ -1,6 +1,6 @@
 import type { AnswerFooter } from '../answer-footer.util';
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
-import type { GuestGuidance, LocalizedText } from '@sharptalk/types';
+import type { GuestGuidance, LocalizedText, RegionRoutingConfig } from '@sharptalk/types';
 import { bigintTransformer } from '../../../global/util/transformers';
 
 /** Scenario button shown in the widget menu (FR-003 / FN-009). */
@@ -120,6 +120,15 @@ export interface HandoffConfig {
     /** 1..4 options in display order. Absent = the built-in CS / Business pair. */
     options?: Array<{ id: string; jobLabel: string; label?: LocalizedText }>;
   };
+  /**
+   * Hand the conversation to the team that looks after the hotel's region
+   * (PLN-261007 Hotel Region Routing). Off by default. The hotel's province
+   * arrives signed in the identify claims; this table maps it to one of four
+   * regional categories, each owned by the north or south team (`users.region`).
+   * A visitor with no signed province, or one the table does not list, is
+   * routed by label alone, exactly as before.
+   */
+  regionRouting?: RegionRoutingConfig;
 }
 
 /**

@@ -42,7 +42,8 @@ export function reportPanelOpened(sessionToken: string): void {
 /**
  * Signed partner context (identify v2, PLN-261001 §1.2b): the hotel and role the
  * host's server put under the signature. `hotelName`/`hotelCode` are display
- * only. Passed through untouched — the widget never computes a hash.
+ * only. `province` (PLN-261007) is signed WHEN SENT: it becomes a fifth field of
+ * the signed string. Passed through untouched — the widget never computes a hash.
  */
 export interface IdentifyClaims {
   hotelSn: string;
@@ -51,6 +52,8 @@ export interface IdentifyClaims {
   iat: number;
   hotelName?: string;
   hotelCode?: string;
+  /** Province of the hotel; decides the regional support team. Omit when unknown. */
+  province?: string;
 }
 
 export interface IdentifyUser {
@@ -84,6 +87,7 @@ export function identify(sessionToken: string, user: IdentifyUser): Promise<Sess
           iat: c.iat,
           hotel_name: c.hotelName,
           hotel_code: c.hotelCode,
+          province: c.province,
         }
       : undefined,
   });

@@ -107,6 +107,30 @@
     "followUpsNone": "none"
   },
   "handoff": {
+    "regionTitle": "Route by the hotel's region",
+    "regionHint": "After the customer picks a team, the conversation goes to the staff who look after the hotel's region.",
+    "regionEnable": "Hand the conversation to the hotel's regional team",
+    "regionNeeds": "Needs the host to send the hotel's province, signed, when a partner signs in to the assistant.",
+    "regionCategoryCol": "Region",
+    "regionTeamCol": "Responsible team",
+    "regionProvincesCol": "Provinces (one per line or comma separated)",
+    "regionProvincesPh": "e.g. Ha Noi, Hai Phong",
+    "regionCategory": {
+      "north": "North",
+      "north_central": "North Central",
+      "south_central": "South Central",
+      "south": "South"
+    },
+    "regionTeam": {
+      "north": "North team",
+      "south": "South team"
+    },
+    "regionDuplicate": "Listed under more than one region (the first one wins): {{list}}",
+    "regionProbe": "Try a province",
+    "regionProbePh": "Try a province, e.g. Da Nang",
+    "regionProbeHit": "{{category}} · {{team}}",
+    "regionProbeMiss": "Not in the table, so these hotels are routed by team only.",
+    "regionFallbackHint": "Staff of the hotel's region are paged first, then staff with no region set, then every agent. A hotel whose province is unknown is routed by team alone.",
     "teamTitle": "Ask which team when the customer requests an agent",
     "teamHint": "Shown only after the customer asks for a human (button, chip, or typed). Each option pages the agents holding that role; if none is online, every agent is alerted and the queue row is badged with the team.",
     "teamEnable": "Ask the customer to choose a team",

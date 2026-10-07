@@ -107,6 +107,30 @@
     "followUpsNone": "无"
   },
   "handoff": {
+    "regionTitle": "按酒店所在地区分配",
+    "regionHint": "客户选择团队后，会话会转给负责该酒店所在地区的客服。",
+    "regionEnable": "把会话转给酒店所在地区的负责团队",
+    "regionNeeds": "需要合作方系统在伙伴登录助手时，带签名发送酒店所在的省/市。",
+    "regionCategoryCol": "地区",
+    "regionTeamCol": "负责团队",
+    "regionProvincesCol": "省/市（每行一个，或用逗号分隔）",
+    "regionProvincesPh": "例如：Ha Noi, Hai Phong",
+    "regionCategory": {
+      "north": "北部",
+      "north_central": "中北部",
+      "south_central": "中南部",
+      "south": "南部"
+    },
+    "regionTeam": {
+      "north": "北部团队",
+      "south": "南部团队"
+    },
+    "regionDuplicate": "出现在多个地区中（以靠前的地区为准）：{{list}}",
+    "regionProbe": "试一个省份",
+    "regionProbePh": "输入省/市试一下，例如：Da Nang",
+    "regionProbeHit": "{{category}} · {{team}}",
+    "regionProbeMiss": "不在表中，这些酒店将只按团队分配。",
+    "regionFallbackHint": "先通知酒店所在地区的客服，其次是未设置地区的客服，最后是所有客服。省份未知的酒店只按团队分配。",
     "teamTitle": "客户请求人工时询问所需团队",
     "teamHint": "仅在客户请求人工后显示（按钮、快捷选项或输入）。每个选项通知持有该角色的客服；无人在线时通知所有客服，并在队列行标注团队。",
     "teamEnable": "让客户选择团队",

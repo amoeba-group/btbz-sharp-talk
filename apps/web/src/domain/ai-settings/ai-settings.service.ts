@@ -1,3 +1,4 @@
+import type { RegionRoutingConfig } from '../../../../../packages/types/src/common/region';
 import type { SessionLanguage } from '@sharptalk/types';
 import { apiGet, apiPut, apiPost, apiDelete } from '@/lib/api-client';
 
@@ -158,6 +159,13 @@ export interface HandoffConfig {
     prompt?: Partial<Record<ScenarioLang, string>>;
     options?: Array<{ id: string; jobLabel: string; label?: Partial<Record<ScenarioLang, string>> }>;
   };
+  /**
+   * Hand the conversation to the team that looks after the hotel's region
+   * (PLN-261007 Hotel Region Routing). Absent/disabled = route by label alone.
+   * The province → region table is edited here; the API resolves a hotel's
+   * signed province against it.
+   */
+  regionRouting?: RegionRoutingConfig;
 }
 
 /**

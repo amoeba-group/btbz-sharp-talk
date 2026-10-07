@@ -233,6 +233,12 @@ export interface IdentityClaims {
   role: IdentityRole;
   hotelName?: string | null;
   hotelCode?: string | null;
+  /**
+   * Province of the hotel as the host's server sent it, under the signature
+   * when present (PLN-261007 Hotel Region Routing). Maps to a region through
+   * the tenant's `handoff_config.regionRouting` table.
+   */
+  province?: string | null;
   signed: boolean;
   /** ISO 8601 — when the signature was verified; stale claims are visible as such. */
   verifiedAt: string;

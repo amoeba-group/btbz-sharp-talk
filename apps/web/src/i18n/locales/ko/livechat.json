@@ -144,6 +144,14 @@
     "business": "비즈니스",
     "badgeTitle": "팀"
   },
+  "region": {
+    "filterLabel": "지역 필터",
+    "filterAll": "전체 지역",
+    "north": "북부",
+    "south": "남부",
+    "none": "지역 미확인",
+    "badgeTitle": "지역"
+  },
   "channel": {
     "filterLabel": "채널 필터",
     "filterAll": "전체 채널",
@@ -405,6 +413,7 @@
     "dismiss": "이 대화에서 숨기기"
   },
   "partner": {
+    "province": "시/도",
     "filterLabel": "호텔로 필터",
     "filterPlaceholder": "호텔 이름 또는 키",
     "filterScope": "서명된 파트너 세션만 — 키는 정확히, 이름은 일부로 검색",

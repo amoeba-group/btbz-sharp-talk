@@ -66,6 +66,8 @@ export function toSessionResponse(
     channel: c.channel || 'widget',
     /** Team the customer picked when asking for a human (PLN-261007 Team Routing). */
     supportType: c.supportType ?? null,
+    /** Regional team of the hotel, north | south (PLN-261007 Hotel Region Routing). */
+    supportRegion: c.supportRegion ?? null,
     /** Team pin (PLN-260826) — pinned rows sort first in the queue. */
     pinned: c.pinnedAt != null,
     pinnedAt: c.pinnedAt ?? null,

@@ -312,6 +312,11 @@ export class AgentService {
     hotel?: string,
     /** Team filter (PLN-261007 Team Routing): teamRouting option id; 'all'/omitted = every team. */
     supportType?: string,
+    /**
+     * Regional-team filter (PLN-261007 Hotel Region Routing): north | south, or
+     * 'none' for threads whose region could not be determined. 'all'/omitted = every region.
+     */
+    supportRegion?: string,
   ): Promise<{
     items: Array<{
       conversation: Conversation;
@@ -366,6 +371,15 @@ export class AgentService {
     const teamFilter = supportType?.trim();
     if (teamFilter && teamFilter !== 'all') {
       qb.andWhere('c.support_type = :supportType', { supportType: teamFilter });
+    }
+
+    // Regional-team filter (PLN-261007 Hotel Region Routing). 'none' is the
+    // un-regioned threads — guests, tenants with the table off, unlisted provinces.
+    const regionFilter = supportRegion?.trim();
+    if (regionFilter === 'none') {
+      qb.andWhere('c.support_region IS NULL');
+    } else if (regionFilter && regionFilter !== 'all') {
+      qb.andWhere('c.support_region = :supportRegion', { supportRegion: regionFilter });
     }
 
     // AI-agent filter (REQ-260825 R7). Filtering by the DEFAULT agent must also

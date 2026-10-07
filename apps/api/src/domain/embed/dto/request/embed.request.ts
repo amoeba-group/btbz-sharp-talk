@@ -6,6 +6,10 @@ import { IDENTITY_ROLE, type IdentityRole } from '@sharptalk/types';
  * identify v2 claims (PLN-261001 v1.1 H1 / REQ-261006). `hotel_sn`, `role` and
  * `iat` are covered by `hash` — HMAC over `user_id|hotel_sn|role|iat`; the
  * name and code are display text and are not signed.
+ *
+ * `province` (PLN-261007 Hotel Region Routing) is optional and, WHEN SENT, is
+ * covered too: the string becomes a fifth field, `user_id|hotel_sn|role|iat|province`.
+ * Omit it when unknown — an empty value is treated as absent.
  */
 export class EmbedIdentifyClaimsRequest {
   @IsString() @MaxLength(32) hotel_sn: string;
@@ -18,6 +22,9 @@ export class EmbedIdentifyClaimsRequest {
   @IsOptional() @IsString() @MaxLength(200) hotel_name?: string;
 
   @IsOptional() @IsString() @MaxLength(64) hotel_code?: string;
+
+  /** Province of the hotel, exactly as signed. Decides the support region. */
+  @IsOptional() @IsString() @MaxLength(64) province?: string;
 }
 
 /** Request DTOs — snake_case (amoeba_code_convention). */
@@ -27,7 +34,7 @@ export class EmbedIdentifyRequest {
   @IsString() @MaxLength(120) user_id: string;
   /**
    * Hex HMAC-SHA256 with the tenant's embed secret: over `user_id` alone (v1),
-   * or over `user_id|hotel_sn|role|iat` when `claims` is present (v2).
+   * or over `user_id|hotel_sn|role|iat[|province]` when `claims` is present (v2).
    */
   @IsString() @MaxLength(128) hash: string;
 

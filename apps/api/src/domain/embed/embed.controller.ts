@@ -40,6 +40,7 @@ export class EmbedController {
             iat: body.claims.iat,
             hotelName: body.claims.hotel_name ?? null,
             hotelCode: body.claims.hotel_code ?? null,
+            province: body.claims.province ?? null,
           }
         : null,
       name: body.name ?? null,

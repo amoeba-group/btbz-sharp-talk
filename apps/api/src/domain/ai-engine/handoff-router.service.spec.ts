@@ -277,3 +277,48 @@ describe('HandoffRouterService — teamQuestion', () => {
     expect(none).toBeNull();
   });
 });
+
+/**
+ * The hotel's regional team (PLN-261007 Hotel Region Routing): resolved only
+ * from a SIGNED province, only when the tenant switched the table on, and never
+ * allowed to throw its way into a hand-off.
+ */
+describe('HandoffRouterService — regionOf', () => {
+  const routing: HandoffConfig = {
+    regionRouting: {
+      enabled: true,
+      categories: [
+        { id: 'north', team: 'north', provinces: ['Hà Nội'] },
+        { id: 'south_central', team: 'south', label: { EN: 'Central coast' }, provinces: ['Đà Nẵng'] },
+      ],
+    },
+  };
+  const signed = (province?: string | null) => ({ province, signed: true as const });
+
+  it('resolves a listed province to its team with a channel label', async () => {
+    const r = await routerFor(routing).regionOf(1, signed('đà nẵng'));
+    expect(r).toEqual({ category: 'south_central', team: 'south', label: 'South (Central coast)' });
+    expect((await routerFor(routing).regionOf(1, signed('TP. Hà Nội')))?.label).toBe('North');
+  });
+
+  it('is null for a guest, v1 identity, blank province or unlisted province', async () => {
+    const router = routerFor(routing);
+    expect(await router.regionOf(1, null)).toBeNull();
+    expect(await router.regionOf(1, undefined)).toBeNull();
+    expect(await router.regionOf(1, signed(null))).toBeNull();
+    expect(await router.regionOf(1, signed('  '))).toBeNull();
+    expect(await router.regionOf(1, signed('Vientiane'))).toBeNull();
+  });
+
+  it('never trusts an unsigned province', async () => {
+    const r = await routerFor(routing).regionOf(1, { province: 'Hà Nội', signed: false });
+    expect(r).toBeNull();
+  });
+
+  it('is null when the tenant has the table off or no config at all', async () => {
+    expect(await routerFor(null).regionOf(1, signed('Hà Nội'))).toBeNull();
+    expect(await routerFor({}).regionOf(1, signed('Hà Nội'))).toBeNull();
+    const off: HandoffConfig = { regionRouting: { ...routing.regionRouting!, enabled: false } };
+    expect(await routerFor(off).regionOf(1, signed('Hà Nội'))).toBeNull();
+  });
+});

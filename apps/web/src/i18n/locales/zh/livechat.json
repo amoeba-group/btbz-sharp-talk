@@ -144,6 +144,14 @@
     "business": "商务",
     "badgeTitle": "团队"
   },
+  "region": {
+    "filterLabel": "按地区筛选",
+    "filterAll": "全部地区",
+    "north": "北部",
+    "south": "南部",
+    "none": "地区未知",
+    "badgeTitle": "地区"
+  },
   "channel": {
     "filterLabel": "按渠道筛选",
     "filterAll": "全部渠道",
@@ -405,6 +413,7 @@
     "dismiss": "在此对话中隐藏"
   },
   "partner": {
+    "province": "省/市",
     "filterLabel": "按酒店筛选",
     "filterPlaceholder": "酒店名称或键",
     "filterScope": "仅限已签名的合作伙伴会话 — 键需完全匹配，名称可部分匹配",

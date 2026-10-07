@@ -43,7 +43,7 @@ window.__shoptalkHost('{"type":"ivy:identify","user":{...}}')
 
 | 메시지 | 용도 |
 |---|---|
-| `{type:'ivy:identify', user:{userId, hash, name?, email?, phone?, claims?}}` | 로그인한 사용자 알려주기 (`claims` = v2 호텔·역할 컨텍스트 — 임베드 가이드 §3.4, 해시는 `userId\|hotelSn\|role\|iat` 서명) |
+| `{type:'ivy:identify', user:{userId, hash, name?, email?, phone?, claims?}}` | 로그인한 사용자 알려주기 (`claims` = v2 호텔·역할 컨텍스트 — 임베드 가이드 §3.4, 해시는 `userId\|hotelSn\|role\|iat` 서명, `claims.province`를 보내면 끝에 `\|province`를 그대로 덧붙여 서명 — 임베드 가이드 §3.4) |
 | `{type:'ivy:command', action:'open', tab:'chat'\|'orders'\|'notifications'}` | 특정 탭 열기 |
 | `{type:'ivy:command', action:'locale', locale:'VI'}` | 언어 변경 |
 | `{type:'ivy:command', action:'logout'}` | 로그아웃(게스트로 전환) |

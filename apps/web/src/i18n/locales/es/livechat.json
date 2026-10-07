@@ -144,6 +144,14 @@
     "business": "Comercial",
     "badgeTitle": "Equipo"
   },
+  "region": {
+    "filterLabel": "Filtrar por región",
+    "filterAll": "Todas las regiones",
+    "north": "Norte",
+    "south": "Sur",
+    "none": "Región desconocida",
+    "badgeTitle": "Región"
+  },
   "channel": {
     "filterLabel": "Filtrar por canal",
     "filterAll": "Todos los canales",
@@ -405,6 +413,7 @@
     "dismiss": "Ocultar en esta conversación"
   },
   "partner": {
+    "province": "Provincia",
     "filterLabel": "Filtrar por hotel",
     "filterPlaceholder": "Nombre o clave del hotel",
     "filterScope": "Solo sesiones de socios firmadas: clave exacta o parte del nombre",

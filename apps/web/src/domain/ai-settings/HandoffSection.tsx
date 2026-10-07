@@ -11,6 +11,13 @@ import { DENY_MODE } from './ai-settings.service';
 import type { DenyMode, HandoffConfig, ScenarioLang } from './ai-settings.service';
 // Source-path import: a value import of the package entry point breaks the browser build (CJS).
 import { LANGUAGE_TIMEZONES } from '../../../../../packages/types/src/common/language';
+import {
+  REGION_CATEGORIES,
+  REGION_CATEGORY_DEFAULT_TEAM,
+  duplicateProvinces,
+  resolveHotelRegion,
+} from '../../../../../packages/types/src/common/region';
+import type { RegionCategory, RegionRoutingConfig } from '../../../../../packages/types/src/common/region';
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6];
 /**
@@ -31,6 +38,41 @@ interface TeamRow {
   label: Partial<Record<ScenarioLang, string>>;
 }
 const TEAM_OPTIONS_MAX = 4;
+
+/** One regional category row of the province table (PLN-261007 Hotel Region Routing). */
+interface RegionRow {
+  id: RegionCategory;
+  team: 'north' | 'south';
+  /** One province per line or comma separated, as typed. */
+  provinces: string;
+}
+
+/** Province text → list: line breaks, commas and semicolons all separate entries. */
+function splitProvinces(text: string): string[] {
+  return text
+    .split(/[\n,;]+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+}
+
+/** The four rows in a fixed order, filling any category a stored config lacks. */
+function regionRowsFrom(stored: RegionRoutingConfig['categories']): RegionRow[] {
+  return REGION_CATEGORIES.map((id) => {
+    const rule = stored?.find((c) => c.id === id);
+    return {
+      id,
+      team: rule?.team === 'north' || rule?.team === 'south' ? rule.team : REGION_CATEGORY_DEFAULT_TEAM[id],
+      provinces: (rule?.provinces ?? []).join('\n'),
+    };
+  });
+}
+
+function regionConfigFrom(rows: RegionRow[], enabled: boolean): RegionRoutingConfig {
+  return {
+    enabled,
+    categories: rows.map((r) => ({ id: r.id, team: r.team, provinces: splitProvinces(r.provinces) })),
+  };
+}
 /** Seed on first enable — the pair Go2Joy asked for; the API holds the wording. */
 const DEFAULT_TEAM_ROWS: TeamRow[] = [
   { id: 'cs', jobLabel: 'consult', label: {} },
@@ -76,6 +118,11 @@ export function HandoffSection() {
   const [teamOn, setTeamOn] = useState(false);
   const [teamPrompt, setTeamPrompt] = useState<Partial<Record<ScenarioLang, string>>>({});
   const [teamRows, setTeamRows] = useState<TeamRow[]>([]);
+  // Hotel region table (PLN-261007 Hotel Region Routing): which team looks after
+  // each region, and which provinces belong to it.
+  const [regionOn, setRegionOn] = useState(false);
+  const [regionRows, setRegionRows] = useState<RegionRow[]>(() => regionRowsFrom(undefined));
+  const [regionProbe, setRegionProbe] = useState('');
 
   useEffect(() => {
     const h = config?.handoffConfig;
@@ -108,6 +155,8 @@ export function HandoffSection() {
     );
     if (h.sla?.normalHours != null) setSlaNormal(String(h.sla.normalHours));
     if (h.sla?.urgentHours != null) setSlaUrgent(String(h.sla.urgentHours));
+    setRegionOn(h.regionRouting?.enabled === true);
+    setRegionRows(regionRowsFrom(h.regionRouting?.categories));
     setTeamOn(h.teamRouting?.enabled === true);
     setTeamPrompt(h.teamRouting?.prompt ?? {});
     setTeamRows(
@@ -172,6 +221,12 @@ export function HandoffSection() {
       .slice(0, TEAM_OPTIONS_MAX);
     if (teamOn || teamOptions.length || Object.keys(teamPrompt).length) {
       handoff.teamRouting = { enabled: teamOn, prompt: teamPrompt, options: teamOptions };
+    }
+    // Same rule for the province table: kept while disabled so a typed list of
+    // provinces survives a switch off and on.
+    const regionConfig = regionConfigFrom(regionRows, regionOn);
+    if (regionOn || regionConfig.categories?.some((c) => c.provinces.length)) {
+      handoff.regionRouting = regionConfig;
     }
     updateConfig.mutate({ handoff_config: handoff });
   };
@@ -534,6 +589,93 @@ export function HandoffSection() {
                   </Button>
                   <span className="text-[11px] text-gray-400">{t('handoff.teamMax')}</span>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Hotel region table (PLN-261007 Hotel Region Routing): which team looks after
+              each region, and which provinces belong to it. */}
+          <div className="border-t border-gray-100 pt-4">
+            <Label>{t('handoff.regionTitle')}</Label>
+            <p className="mb-2 mt-0.5 text-[11px] text-gray-400">{t('handoff.regionHint')}</p>
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={regionOn}
+                onChange={(e) => setRegionOn(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
+              />
+              {t('handoff.regionEnable')}
+            </label>
+            {regionOn && (
+              <div className="mt-2 space-y-2 pl-6">
+                <p className="text-[11px] text-gray-400">{t('handoff.regionNeeds')}</p>
+                <div className="grid grid-cols-[8rem_7rem_1fr] items-center gap-2 text-[11px] text-gray-400">
+                  <span>{t('handoff.regionCategoryCol')}</span>
+                  <span>{t('handoff.regionTeamCol')}</span>
+                  <span>{t('handoff.regionProvincesCol')}</span>
+                </div>
+                {regionRows.map((row, i) => (
+                  <div key={row.id} className="grid grid-cols-[8rem_7rem_1fr] items-start gap-2">
+                    <span className="pt-2 text-sm text-gray-700">{t(`handoff.regionCategory.${row.id}`)}</span>
+                    <Select
+                      value={row.team}
+                      aria-label={t('handoff.regionTeamCol')}
+                      onChange={(e) =>
+                        setRegionRows((rows) =>
+                          rows.map((r, j) => (j === i ? { ...r, team: e.target.value as 'north' | 'south' } : r)),
+                        )
+                      }
+                    >
+                      <option value="north">{t('handoff.regionTeam.north')}</option>
+                      <option value="south">{t('handoff.regionTeam.south')}</option>
+                    </Select>
+                    <textarea
+                      rows={2}
+                      value={row.provinces}
+                      aria-label={t('handoff.regionProvincesCol')}
+                      placeholder={t('handoff.regionProvincesPh')}
+                      onChange={(e) =>
+                        setRegionRows((rows) =>
+                          rows.map((r, j) => (j === i ? { ...r, provinces: e.target.value } : r)),
+                        )
+                      }
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500"
+                    />
+                  </div>
+                ))}
+                {duplicateProvinces(regionConfigFrom(regionRows, true)).length > 0 && (
+                  <p className="text-[11px] text-warning">
+                    {t('handoff.regionDuplicate', {
+                      list: duplicateProvinces(regionConfigFrom(regionRows, true)).join(', '),
+                    })}
+                  </p>
+                )}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="w-56">
+                    <Input
+                      value={regionProbe}
+                      aria-label={t('handoff.regionProbe')}
+                      placeholder={t('handoff.regionProbePh')}
+                      onChange={(e) => setRegionProbe(e.target.value)}
+                    />
+                  </div>
+                  {regionProbe.trim() &&
+                    (() => {
+                      const hit = resolveHotelRegion(regionConfigFrom(regionRows, true), regionProbe);
+                      return hit ? (
+                        <span className="text-xs text-success">
+                          {t('handoff.regionProbeHit', {
+                            category: t(`handoff.regionCategory.${hit.category}`),
+                            team: t(`handoff.regionTeam.${hit.team}`),
+                          })}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-warning">{t('handoff.regionProbeMiss')}</span>
+                      );
+                    })()}
+                </div>
+                <p className="text-[11px] text-gray-400">{t('handoff.regionFallbackHint')}</p>
               </div>
             )}
           </div>

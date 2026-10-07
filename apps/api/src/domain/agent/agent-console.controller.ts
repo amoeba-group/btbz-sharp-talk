@@ -313,6 +313,7 @@ export class AgentConsoleController {
       Number.isFinite(agentFilter) ? agentFilter : undefined,
       query.hotel,
       query.support_type,
+      query.support_region,
     );
     return new Paginated(
       items.map(
@@ -540,6 +541,8 @@ export class AgentConsoleController {
       status: conversation.status,
       // Team the customer picked when asking for a human (PLN-261007 Team Routing).
       supportType: conversation.supportType ?? null,
+      // Regional team of the hotel (PLN-261007 Hotel Region Routing).
+      supportRegion: conversation.supportRegion ?? null,
       // Current human owner, for the detail header (REQ-260825 R8-②).
       assignedTo:
         conversation.agentId != null

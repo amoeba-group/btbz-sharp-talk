@@ -82,6 +82,12 @@ export function PartnerHeader({
         {roleLabel(claims.role, t) ? ' @ ' : ''}
         {hotelLabel(claims)}
         <span className="text-gray-400"> (hotelSn {claims.hotelSn})</span>
+        {claims.province?.trim() && (
+          <span className="text-gray-500" title={t('partner.province')}>
+            {' · '}
+            {claims.province.trim()}
+          </span>
+        )}
       </span>
       <SignedMark claims={claims} />
       {verifiedAt && (

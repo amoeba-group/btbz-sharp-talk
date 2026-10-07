@@ -144,6 +144,14 @@
     "business": "Business",
     "badgeTitle": "Team"
   },
+  "region": {
+    "filterLabel": "Filter by region",
+    "filterAll": "All regions",
+    "north": "North",
+    "south": "South",
+    "none": "Unknown region",
+    "badgeTitle": "Region"
+  },
   "channel": {
     "filterLabel": "Filter by channel",
     "filterAll": "All channels",
@@ -405,6 +413,7 @@
     "dismiss": "Hide for this conversation"
   },
   "partner": {
+    "province": "Province",
     "filterLabel": "Filter by hotel",
     "filterPlaceholder": "Hotel name or key",
     "filterScope": "Signed partner sessions only — exact key, or part of the name",

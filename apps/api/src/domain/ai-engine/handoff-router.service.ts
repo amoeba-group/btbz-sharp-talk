@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
-import { localized } from '@sharptalk/types';
-import type { LocalizedText } from '@sharptalk/types';
+import { Injectable, Logger } from '@nestjs/common';
+import { localized, regionLabelOf, resolveHotelRegion } from '@sharptalk/types';
+import type { HotelRegion, IdentityClaims, LocalizedText } from '@sharptalk/types';
 import { AiConfigService } from './ai-config.service';
 import { DENY_MODE } from './entity/tenant-ai-config.entity';
 import type { DenyMode, HandoffConfig } from './entity/tenant-ai-config.entity';
@@ -93,7 +93,38 @@ const DEFAULT_TEAM_OPTIONS: Array<{ id: string; jobLabel: string; label: Localiz
  */
 @Injectable()
 export class HandoffRouterService {
+  private readonly logger = new Logger(HandoffRouterService.name);
+
   constructor(private readonly aiConfig: AiConfigService) {}
+
+  /**
+   * The regional team that looks after this visitor's hotel, or null when the
+   * tenant has region routing off, the visitor carries no signed province, or
+   * the table does not list it (PLN-261007 Hotel Region Routing).
+   *
+   * Only SIGNED claims count: an unsigned province is display text a visitor
+   * could type, and the whole point of putting it under the signature is that
+   * routing may rely on it. A province the table misses is logged once per call
+   * so an operator can see which spellings to add — silence here would just look
+   * like "region routing does nothing".
+   */
+  async regionOf(
+    tenantId: number | null,
+    claims: Pick<IdentityClaims, 'province' | 'signed'> | null | undefined,
+  ): Promise<(HotelRegion & { label: string }) | null> {
+    const province = claims?.signed ? claims.province?.trim() : '';
+    if (!province) return null;
+    const config = await this.aiConfig.getHandoffConfig(tenantId);
+    const routing = config?.regionRouting;
+    if (!routing?.enabled) return null;
+    const region = resolveHotelRegion(routing, province);
+    if (!region) {
+      this.logger.warn(`region routing: province "${province}" is not in the table (tenant ${tenantId})`);
+      return null;
+    }
+    const rule = routing.categories?.find((c) => c.id === region.category);
+    return { ...region, label: regionLabelOf(region, localized(rule?.label, 'EN')) };
+  }
 
   /**
    * The team question for this tenant in the customer's language, or null

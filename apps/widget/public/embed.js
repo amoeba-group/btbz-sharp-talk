@@ -1155,9 +1155,10 @@
    * the host's OWN server — this loader never sees the secret, and a hash built
    * in the browser would prove nothing.
    *
-   * v2 (PLN-261001 §1.2b): `claims: { hotelSn, role, iat, hotelName?, hotelCode? }`
+   * v2 (PLN-261001 §1.2b): `claims: { hotelSn, role, iat, hotelName?, hotelCode?, province? }`
    * travels through untouched; the hash is then the server's signature over
-   * `userId|hotelSn|role|iat`. Claims under a v1 hash are refused by the API.
+   * `userId|hotelSn|role|iat`, plus `|province` when a province is sent
+   * (PLN-261007). Claims under a v1 hash are refused by the API.
    */
   api.identify = function (user) {
     boot();

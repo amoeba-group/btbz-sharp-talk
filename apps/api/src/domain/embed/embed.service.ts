@@ -20,6 +20,8 @@ export interface IdentifyClaimsInput {
   iat: number;
   hotelName?: string | null;
   hotelCode?: string | null;
+  /** Hotel province (PLN-261007). When non-empty it is part of the signature. */
+  province?: string | null;
 }
 
 /** What the customer's own server signs, and what the SDK forwards. */
@@ -84,15 +86,37 @@ export class EmbedService {
     return createHmac('sha256', secret).update(userId).digest('hex');
   }
 
-  /** v2 canonical string — the exact bytes the host must sign (Q7). */
-  static canonicalV2(userId: string, hotelSn: string, role: string, iat: number): string {
-    return `${userId}|${hotelSn}|${role}|${iat}`;
+  /**
+   * v2 canonical string — the exact bytes the host must sign (Q7).
+   *
+   * `province` (PLN-261007) is appended ONLY when present. The string being
+   * signed therefore depends on whether the field travels, so a province can
+   * neither be added to nor stripped from a signed identify without breaking
+   * the signature: the one signature a host produced fits exactly one of the
+   * two shapes.
+   */
+  static canonicalV2(
+    userId: string,
+    hotelSn: string,
+    role: string,
+    iat: number,
+    province?: string | null,
+  ): string {
+    const base = `${userId}|${hotelSn}|${role}|${iat}`;
+    return typeof province === 'string' && province.length > 0 ? `${base}|${province}` : base;
   }
 
-  /** v2 signature: HMAC over `user_id|hotel_sn|role|iat` (REQ-261006 §3.1). */
-  static signV2(secret: string, userId: string, hotelSn: string, role: string, iat: number): string {
+  /** v2 signature: HMAC over `user_id|hotel_sn|role|iat[|province]` (REQ-261006 §3.1). */
+  static signV2(
+    secret: string,
+    userId: string,
+    hotelSn: string,
+    role: string,
+    iat: number,
+    province?: string | null,
+  ): string {
     return createHmac('sha256', secret)
-      .update(EmbedService.canonicalV2(userId, hotelSn, role, iat))
+      .update(EmbedService.canonicalV2(userId, hotelSn, role, iat, province))
       .digest('hex');
   }
 
@@ -134,7 +158,7 @@ export class EmbedService {
       }
     }
     const expected = claims
-      ? EmbedService.signV2(secret, input.userId, claims.hotelSn, claims.role, claims.iat)
+      ? EmbedService.signV2(secret, input.userId, claims.hotelSn, claims.role, claims.iat, claims.province)
       : EmbedService.sign(secret, input.userId);
     if (!safeEquals(expected, input.hash)) {
       this.logger.warn(
@@ -153,6 +177,7 @@ export class EmbedService {
           role: claims.role,
           hotelName: claims.hotelName?.trim() || null,
           hotelCode: claims.hotelCode?.trim() || null,
+          province: claims.province?.trim() || null,
           signed: true,
           verifiedAt: new Date().toISOString(),
         }

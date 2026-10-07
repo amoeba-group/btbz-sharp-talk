@@ -14,7 +14,8 @@ import type { WebViewMessageEvent } from 'react-native-webview';
  * Signed partner context (identify v2, PLN-261001 §1.2b): the hotel and role
  * the host's server put under the signature. `hotelName`/`hotelCode` are
  * display only. With claims, `hash` must be HMAC-SHA256 of
- * `userId|hotelSn|role|iat` — claims under a v1 hash are refused.
+ * `userId|hotelSn|role|iat` — plus `|province` when `province` is sent
+ * (PLN-261007) — and claims under a v1 hash are refused.
  */
 export interface ShopTalkClaims {
   hotelSn: string;
@@ -23,6 +24,12 @@ export interface ShopTalkClaims {
   iat: number;
   hotelName?: string;
   hotelCode?: string;
+  /**
+   * Province of the hotel, signed as the string you send. Decides which regional
+   * support team takes the conversation. Omit it when unknown — never send an
+   * empty string.
+   */
+  province?: string;
 }
 
 /** Identity the host app has already authenticated, signed by the host's server. */

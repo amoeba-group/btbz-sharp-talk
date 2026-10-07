@@ -144,6 +144,14 @@
     "business": "Kinh doanh",
     "badgeTitle": "Đội"
   },
+  "region": {
+    "filterLabel": "Lọc theo vùng",
+    "filterAll": "Tất cả vùng",
+    "north": "Bắc",
+    "south": "Nam",
+    "none": "Chưa xác định vùng",
+    "badgeTitle": "Vùng"
+  },
   "channel": {
     "filterLabel": "Lọc theo kênh",
     "filterAll": "Tất cả các kênh",
@@ -405,6 +413,7 @@
     "dismiss": "Ẩn trong cuộc trò chuyện này"
   },
   "partner": {
+    "province": "Tỉnh",
     "filterLabel": "Lọc theo khách sạn",
     "filterPlaceholder": "Tên hoặc mã khách sạn",
     "filterScope": "Chỉ phiên đối tác đã ký — mã chính xác hoặc một phần tên",

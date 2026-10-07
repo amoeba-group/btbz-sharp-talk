@@ -107,6 +107,30 @@
     "followUpsNone": "ninguno"
   },
   "handoff": {
+    "regionTitle": "Enrutar por la región del hotel",
+    "regionHint": "Cuando el cliente elige un equipo, la conversación va al personal que atiende la región del hotel.",
+    "regionEnable": "Pasar la conversación al equipo regional del hotel",
+    "regionNeeds": "Requiere que el sistema anfitrión envíe, firmada, la provincia del hotel cuando un socio entra al asistente.",
+    "regionCategoryCol": "Región",
+    "regionTeamCol": "Equipo responsable",
+    "regionProvincesCol": "Provincias (una por línea o separadas por comas)",
+    "regionProvincesPh": "p. ej. Ha Noi, Hai Phong",
+    "regionCategory": {
+      "north": "Norte",
+      "north_central": "Centro-norte",
+      "south_central": "Centro-sur",
+      "south": "Sur"
+    },
+    "regionTeam": {
+      "north": "Equipo Norte",
+      "south": "Equipo Sur"
+    },
+    "regionDuplicate": "Aparece en más de una región (gana la primera): {{list}}",
+    "regionProbe": "Probar una provincia",
+    "regionProbePh": "Prueba una provincia, p. ej. Da Nang",
+    "regionProbeHit": "{{category}} · {{team}}",
+    "regionProbeMiss": "No está en la tabla, así que estos hoteles se enrutan solo por equipo.",
+    "regionFallbackHint": "Se avisa primero al personal de la región del hotel, luego al personal sin región y por último a todos los agentes. Un hotel con provincia desconocida se enruta solo por equipo.",
     "teamTitle": "Preguntar el equipo cuando el cliente pide un agente",
     "teamHint": "Se muestra solo después de que el cliente pide una persona (botón, chip o escrito). Cada opción avisa a los agentes con ese rol; si ninguno está en línea, se avisa a todos y la fila de la cola lleva la etiqueta del equipo.",
     "teamEnable": "Pedir al cliente que elija un equipo",

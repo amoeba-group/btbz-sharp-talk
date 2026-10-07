@@ -144,6 +144,14 @@
     "business": "ビジネス",
     "badgeTitle": "チーム"
   },
+  "region": {
+    "filterLabel": "地域で絞り込む",
+    "filterAll": "全地域",
+    "north": "北",
+    "south": "南",
+    "none": "地域不明",
+    "badgeTitle": "地域"
+  },
   "channel": {
     "filterLabel": "チャネルで絞り込み",
     "filterAll": "すべてのチャネル",
@@ -405,6 +413,7 @@
     "dismiss": "この会話では非表示"
   },
   "partner": {
+    "province": "省・市",
     "filterLabel": "ホテルで絞り込み",
     "filterPlaceholder": "ホテル名またはキー",
     "filterScope": "署名済みパートナーセッションのみ — キーは完全一致、名前は部分一致",

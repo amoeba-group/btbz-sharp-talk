@@ -107,6 +107,30 @@
     "followUpsNone": "なし"
   },
   "handoff": {
+    "regionTitle": "ホテルの地域で振り分け",
+    "regionHint": "お客様がチームを選んだ後、そのホテルの地域を担当するスタッフに会話をつなぎます。",
+    "regionEnable": "ホテルの地域担当チームに会話を渡す",
+    "regionNeeds": "パートナーがアシスタントにサインインする際、ホスト側がホテルの省・市を署名付きで送る必要があります。",
+    "regionCategoryCol": "地域",
+    "regionTeamCol": "担当チーム",
+    "regionProvincesCol": "省・市（1行に1つ、またはカンマ区切り）",
+    "regionProvincesPh": "例: Ha Noi, Hai Phong",
+    "regionCategory": {
+      "north": "北部",
+      "north_central": "北中部",
+      "south_central": "南中部",
+      "south": "南部"
+    },
+    "regionTeam": {
+      "north": "北チーム",
+      "south": "南チーム"
+    },
+    "regionDuplicate": "複数の地域に登録されています（先に出る地域を適用）: {{list}}",
+    "regionProbe": "省・市を試す",
+    "regionProbePh": "省・市を入力して確認、例: Da Nang",
+    "regionProbeHit": "{{category}} · {{team}}",
+    "regionProbeMiss": "表にありません。これらのホテルはチームのみで振り分けます。",
+    "regionFallbackHint": "ホテルの地域のスタッフに最初に通知し、次に地域未設定のスタッフ、最後に全スタッフへ通知します。省・市が不明なホテルはチームのみで振り分けます。",
     "teamTitle": "担当者接続の要求時に担当チームを尋ねる",
     "teamHint": "お客様が担当者を要求した後（ボタン・チップ・入力）にのみ表示されます。各選択肢はその役割の担当者に通知し、オンラインの担当者がいなければ全員に通知してキュー行にチームのバッジが付きます。",
     "teamEnable": "お客様にチームを選んでもらう",
