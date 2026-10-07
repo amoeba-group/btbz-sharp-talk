@@ -282,7 +282,8 @@
     "regressed": "Regresión",
     "improved": "Mejora",
     "verdict_pass": "Aprobado",
-    "verdict_fail": "Fallo"
+    "verdict_fail": "Fallo",
+    "aborted": "Interrumpida (reinicio del servidor)"
   },
   "history": {
     "title": "Historial de cambios",

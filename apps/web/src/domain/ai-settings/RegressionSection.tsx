@@ -266,6 +266,8 @@ export function RegressionSection() {
                   <span>{t('regression.itemCount', { count: r.questionCount })}</span>
                   {r.status === 'running' ? (
                     <Badge tone="info">{t('regression.running')}</Badge>
+                  ) : r.status === 'aborted' ? (
+                    <Badge tone="warning">{t('regression.aborted')}</Badge>
                   ) : graded > 0 ? (
                     <span>
                       <span className="text-green-700">✓ {r.passCount}</span>

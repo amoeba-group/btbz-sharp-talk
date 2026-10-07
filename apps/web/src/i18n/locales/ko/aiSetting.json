@@ -282,7 +282,8 @@
     "regressed": "회귀",
     "improved": "개선",
     "verdict_pass": "통과",
-    "verdict_fail": "실패"
+    "verdict_fail": "실패",
+    "aborted": "중단됨(서버 재시작)"
   },
   "history": {
     "title": "변경 이력",

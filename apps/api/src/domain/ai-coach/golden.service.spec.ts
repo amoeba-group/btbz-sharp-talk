@@ -277,3 +277,21 @@ describe('GoldenService.bulkImport', () => {
     expect(rows[1]).toMatchObject({ question: 'Tôi có thể thanh toán cho Go2Joy như nào?', expected: ['Techcombank'], language: 'VI' });
   });
 });
+
+describe('GoldenService.onModuleInit — orphaned background runs', () => {
+  it('closes runs still "running" after an hour as aborted', async () => {
+    const calls: Array<{ where: Record<string, unknown>; set: Record<string, unknown> }> = [];
+    const runRepo = { update: async (where: Record<string, unknown>, set: Record<string, unknown>) => { calls.push({ where, set }); return { affected: 2 }; } };
+    const svc = new GoldenService({} as never, runRepo as never, {} as never, {} as never, {} as never);
+    await svc.onModuleInit();
+    expect(calls[0].where.status).toBe('running');
+    expect(calls[0].set.status).toBe('aborted');
+    const cutoff = (calls[0].where.createdAt as { value: Date }).value.getTime();
+    expect(Date.now() - cutoff).toBeGreaterThanOrEqual(60 * 60_000 - 1000);
+  });
+
+  it('never throws on boot', async () => {
+    const svc = new GoldenService({} as never, { update: async () => { throw new Error('db down'); } } as never, {} as never, {} as never, {} as never);
+    await expect(svc.onModuleInit()).resolves.toBeUndefined();
+  });
+});

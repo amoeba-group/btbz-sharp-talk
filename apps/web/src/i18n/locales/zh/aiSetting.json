@@ -282,7 +282,8 @@
     "regressed": "退步",
     "improved": "改进",
     "verdict_pass": "通过",
-    "verdict_fail": "失败"
+    "verdict_fail": "失败",
+    "aborted": "已中断（服务器重启）"
   },
   "history": {
     "title": "变更历史",
