@@ -47,8 +47,18 @@ import {
   replacePiiTokens,
   retrievalQuery,
 } from './conversation-history.util';
+import { envNumber } from '../../global/util/env-number.util';
 
 const ESCALATION_CONFIDENCE = 0.45;
+/**
+ * Guest gate bar (PLN-261001): how confidently the GUEST-VISIBLE categories
+ * must ground a question before a signed-out visitor is answered from them.
+ * Defaults to the handoff bar; an operator can raise it per environment when
+ * domain-near public documents (same product, same vocabulary) clear 0.45 for
+ * questions that should have asked for a sign-in. Only meaningful with real
+ * embeddings — the stub's count estimate never falls below it.
+ */
+const GUEST_GATE_CONFIDENCE = envNumber('GUEST_GATE_CONFIDENCE', ESCALATION_CONFIDENCE);
 
 /**
  * How sure the classifier must be before a message counts as "get me a person"
@@ -850,7 +860,7 @@ export class ChatService {
         effectiveAgentId,
         { guestOnly: true },
       );
-      if (grounded < ESCALATION_CONFIDENCE) {
+      if (grounded < GUEST_GATE_CONFIDENCE) {
         if (denyAnswersFirst) return denyHandoffNow();
         const body = await this.loginRequiredMessage(tenantId, session.language);
         await this.persist(tenantId, conversation.id, SENDER_TYPE.SYSTEM, body, session.language);
