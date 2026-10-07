@@ -60,6 +60,7 @@ export class AiConfigController {
         // Shape is pruned/validated in the service (sanitizeOverrides).
         scenarioOverrides: body.scenario_overrides as Record<string, ScenarioOverride> | undefined,
         handoffConfig: body.handoff_config as HandoffConfig | undefined,
+        answerFooter: body.answer_footer,
       },
       { kind: CONFIG_REVISION_KIND.MANUAL, actorUserId: user.userId, note: body.note ?? null },
       body.ai_agent_id ?? null,

@@ -42,6 +42,7 @@ describe('ChatService — conversation memory', () => {
       answerText?: string;
       grounding?: number;
       reuseHit?: boolean;
+      footer?: string;
     } = {},
   ) => {
     const conversation = {
@@ -106,6 +107,7 @@ describe('ChatService — conversation memory', () => {
       answerWithoutKnowledge: jest.fn(async () => '연락처 [PHONE]로 안내드릴게요.'),
       answer: jest.fn(async () => ({ text: answerText, confidence: 0.9, citations: [{ id: 3340 }] })),
       groundingConfidence: jest.fn(async () => opts.grounding ?? 0.2),
+      footerText: jest.fn(async () => opts.footer ?? null),
       effectiveAgentId: jest.fn(async () => null),
     };
     const moderation = {
@@ -231,6 +233,17 @@ describe('ChatService — conversation memory', () => {
 
     expect(b.rag.answer.mock.calls[0][8]).toEqual([]);
     expect(b.answerReuse.recordAiAnswer).toHaveBeenCalled();
+  });
+
+  it('appends the tenant contact footer after moderation, and keeps it out of the reuse store (PLN-261007 R4)', async () => {
+    const b = build({ prior: [], footer: '📞 support@go2joy.vn · 1900 638 838' });
+
+    const res = await b.svc.handleUserMessage(b.session, 'Hoa hồng bao nhiêu?');
+
+    expect(res.reply?.body).toMatch(/\n\n📞 support@go2joy\.vn · 1900 638 838$/);
+    expect(b.saved[b.saved.length - 1].body).toContain('📞 support@go2joy.vn');
+    const stored = (b.answerReuse.recordAiAnswer as jest.Mock).mock.calls[0][0] as { answerText: string };
+    expect(stored.answerText).not.toContain('📞');
   });
 
   describe('out_of_scope second opinion (S6)', () => {

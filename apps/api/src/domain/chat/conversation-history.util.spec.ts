@@ -58,6 +58,20 @@ describe('buildHistory (PLN-260929 S1)', () => {
     expect(out[0].content).toContain('[EMAIL]');
   });
 
+  it('passes the AI’s own replies as written — a KB hotline must survive the next turn (REQ-261007 R1)', () => {
+    const out = buildHistory([
+      { senderType: 'user', body: 'số hotline?' },
+      { senderType: 'ai', body: 'Zalo/Hotline 077 789 2399 (miền Bắc), email support@go2joy.vn' },
+      { senderType: 'agent', body: 'Khách gọi 077 111 2222 nhé' },
+    ]);
+    // AI and agent turns are both `assistant`, so they merge into one message.
+    expect(out[1].content).toContain('077 789 2399');
+    expect(out[1].content).toContain('support@go2joy.vn');
+    // What the agent typed is still scrubbed.
+    expect(out[1].content).toContain('[Agent] ');
+    expect(out[1].content).not.toContain('077 111 2222');
+  });
+
   it('keeps the newest turns within the budget and trims the oldest kept one from the front', () => {
     const out = buildHistory(
       [

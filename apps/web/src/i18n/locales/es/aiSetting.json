@@ -350,5 +350,18 @@
   "labelLanguage": "Idioma de la etiqueta",
   "labelLanguageHint": "La etiqueta escrita aquí se aplica solo a ese idioma; los demás conservan la suya.",
   "buttonMessage": "Mensaje a enviar",
-  "buttonMessageHint": "Déjalo vacío para enviar la etiqueta como pregunta."
+  "buttonMessageHint": "Déjalo vacío para enviar la etiqueta como pregunta.",
+  "answerFooter": {
+    "title": "Pie de contacto en respuestas",
+    "enabled": "Activo",
+    "hint": "Añade el mismo bloque de contacto al final de cada respuesta de conocimiento. La IA ya no escribe los contactos, así que no se alteran ni se ocultan.",
+    "placeholder": "p. ej. 📞 Soporte: support@example.com · 900 000 000 · L–V 9–18",
+    "fallback": "Si falta el idioma del cliente: EN y luego el primero escrito",
+    "protectedTitle": "Contactos oficiales (sin enmascarar)",
+    "protectedHint": "Uno por línea. Los correos y teléfonos del pie se incluyen automáticamente. Las reglas de datos personales no ocultan estos valores.",
+    "preview": "Vista previa",
+    "previewBody": "…texto de la respuesta…",
+    "saved": "Pie de respuesta guardado",
+    "saveError": "No se pudo guardar el pie de respuesta"
+  }
 }

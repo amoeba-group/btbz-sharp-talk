@@ -350,5 +350,18 @@
   "labelLanguage": "ラベルの言語",
   "labelLanguageHint": "ここで入力したラベルはその言語にのみ適用され、他の言語はそのままです。",
   "buttonMessage": "送信する文",
-  "buttonMessageHint": "空欄ならラベルをそのまま質問として送ります。"
+  "buttonMessageHint": "空欄ならラベルをそのまま質問として送ります。",
+  "answerFooter": {
+    "title": "回答の連絡先フッター",
+    "enabled": "使用",
+    "hint": "AIのナレッジ回答の末尾に常に同じ連絡先を付けます。AIが連絡先を自分で書かないため、番号が変わったり伏せられたりしません。",
+    "placeholder": "例) 📞 サポート: support@example.com · 0120-000-000 · 平日9–18時",
+    "fallback": "お客様の言語の文言がない場合は EN → 最初に入力した言語の順に使います",
+    "protectedTitle": "公式連絡先（マスキング対象外）",
+    "protectedHint": "1行に1つ。フッター内のメールと電話番号は自動で含まれます。個人情報のマスキングルールはこれらの値を伏せません。",
+    "preview": "プレビュー",
+    "previewBody": "…回答本文…",
+    "saved": "回答フッターを保存しました",
+    "saveError": "回答フッターを保存できませんでした"
+  }
 }

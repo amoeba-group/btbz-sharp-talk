@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AI_FUNCTION, MODERATION_ACTION, MODERATION_DECISION, ModerationDecision } from '@sharptalk/types';
@@ -8,6 +8,12 @@ import { ModerationLog } from './entity/moderation-log.entity';
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { scrubPii } from '../../global/util/pii-scrub.util';
+import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
+import {
+  moderationProtectedCacheKey,
+  protectedValuesOf,
+  shieldProtected,
+} from '../ai-engine/answer-footer.util';
 
 /** TTL for the per-tenant active-rules cache (PERF-11). */
 const MOD_RULES_CACHE_TTL_SEC = 60;
@@ -48,7 +54,29 @@ export class ModerationService {
     @InjectRepository(ModerationLog) private readonly logRepo: Repository<ModerationLog>,
     private readonly ai: AiGatewayService,
     private readonly redis: RedisService,
+    // Appended and optional so positional test doubles that predate it stay valid.
+    @Optional()
+    @InjectRepository(TenantAiConfig)
+    private readonly configRepo?: Repository<TenantAiConfig>,
   ) {}
+
+  /**
+   * Values this tenant published (contact footer + explicit list) that mask
+   * rules must not touch (PLN-261007 R2). Cached like the rules; ai-config
+   * deletes the key when the footer is saved.
+   */
+  private async protectedValues(tenantId: number): Promise<string[]> {
+    if (!this.configRepo) return [];
+    const key = moderationProtectedCacheKey(tenantId);
+    if (this.redis.available()) {
+      const hit = await this.redis.get(key);
+      if (hit) return JSON.parse(hit) as string[];
+    }
+    const row = await this.configRepo.findOne({ where: { tenantId } });
+    const values = protectedValuesOf(row?.answerFooter ?? null);
+    await this.redis.set(key, JSON.stringify(values), MOD_RULES_CACHE_TTL_SEC);
+    return values;
+  }
 
   /**
    * Active rules per tenant, Redis-cached for 60s (PERF-11) — moderation runs
@@ -72,8 +100,12 @@ export class ModerationService {
   async moderate(input: ModerateInput): Promise<ModerateResult> {
     try {
       const rules = await this.activeRules(input.tenantId, input.scope);
+      // Published contacts (support e-mail, hotline, the account customers pay
+      // into) are shielded from word/regex rules: the e-mail rule masked
+      // support@go2joy.vn in 48 of 50 answers (REQ-261007 I-1).
+      const shield = shieldProtected(input.text, await this.protectedValues(input.tenantId));
 
-      let working = input.text;
+      let working = shield.text;
       let warnedRuleId: number | undefined;
       for (const rule of rules) {
         const hit = this.matches(rule, working);
@@ -95,17 +127,18 @@ export class ModerationService {
           working = this.mask(rule, working);
         }
         if (action === MODERATION_ACTION.REPHRASE) {
-          working = await this.rephrase(input.tenantId, working);
+          working = await this.rephrase(input.tenantId, shield.restore(working));
           return this.finalize(input, MODERATION_DECISION.EDITED, action, working, rule.id);
         }
       }
 
       // Context classifier (LLM) — only if a context-type rule exists.
       if (rules.some((r) => r.type === 'context')) {
-        const flagged = await this.contextFlagged(input.tenantId, working);
+        const flagged = await this.contextFlagged(input.tenantId, shield.restore(working));
         if (flagged) return this.finalize(input, MODERATION_DECISION.BLOCKED, 'block', '');
       }
 
+      working = shield.restore(working);
       const decision = working === input.text ? MODERATION_DECISION.DELIVERED : MODERATION_DECISION.EDITED;
       // A warn that fired but changed nothing is still logged, with its rule,
       // so "this nearly tripped a rule" stays visible in moderation_logs.

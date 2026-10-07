@@ -6,7 +6,7 @@ import { RagService } from './rag.service';
  * they were — that half is pinned as carefully as the new behaviour.
  */
 describe('RagService — conversation memory at the model seam', () => {
-  function build(reply = 'ok') {
+  function build(reply = 'ok', footer: unknown = null) {
     const complete = jest.fn(async () => ({ text: reply, tokensIn: 1, tokensOut: 1, provider: 'stub' }));
     const svc = new RagService(
       { createQueryBuilder: () => ({}) } as never,
@@ -16,6 +16,7 @@ describe('RagService — conversation memory at the model seam', () => {
       {
         getPersonaRules: jest.fn(async () => ({ persona: 'P', rules: [] })),
         effectiveAgentId: jest.fn(async () => 1),
+        getAnswerFooter: jest.fn(async () => footer),
       } as never,
     );
     (svc as unknown as { retrieveHybrid: unknown }).retrieveHybrid = async () => ({
@@ -23,7 +24,9 @@ describe('RagService — conversation memory at the model seam', () => {
       vectorProvider: null,
     });
     const call = () =>
-      (complete.mock.calls[0] as unknown as [{ system: string; messages: Array<{ role: string; content: string }> }])[0];
+      (complete.mock.calls[0] as unknown as [
+        { system: string; maxTokens?: number; messages: Array<{ role: string; content: string }> },
+      ])[0];
     return { svc, call };
   }
 
@@ -54,6 +57,21 @@ describe('RagService — conversation memory at the model seam', () => {
 
       expect(call().messages).toEqual([{ role: 'user', content: 'refund?' }]);
       expect(call().system).not.toContain('Conversation rules');
+    });
+  });
+
+  describe('answer() — footer and output budget (PLN-261007 R4)', () => {
+    it('tells the model not to write a contact block when the footer is on, and allows 2,048 tokens', async () => {
+      const { svc, call } = build('ok', { enabled: true, text: { VI: 'Hỗ trợ: 1900 638 838' }, protected: [] });
+      await svc.answer(4, 'Hoa hồng?', 'VI');
+      expect(call().system).toContain('the system appends the official contact block');
+      expect(call().maxTokens).toBe(2048);
+    });
+
+    it('adds no footer rule when the footer is off', async () => {
+      const { svc, call } = build('ok', null);
+      await svc.answer(4, 'Hoa hồng?', 'VI');
+      expect(call().system).not.toContain('official contact block');
     });
   });
 

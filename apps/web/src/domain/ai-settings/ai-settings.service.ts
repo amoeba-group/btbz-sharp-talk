@@ -162,6 +162,14 @@ export interface AiConfig {
   scenarioButtons: ScenarioButton[];
   scenarioOverrides?: Record<string, ScenarioOverride>;
   handoffConfig?: HandoffConfig | null;
+  answerFooter?: AnswerFooter | null;
+}
+
+/** Contact footer appended to knowledge answers + masking-exempt values (PLN-261007 R4). */
+export interface AnswerFooter {
+  enabled: boolean;
+  text: Partial<Record<string, string>>;
+  protected: string[];
 }
 
 // Backend returns { settings: [{function, engineId, effective*, source, ...}], availableEngines: [...] }.
@@ -209,6 +217,7 @@ export const aiSettingsService = {
     scenario_buttons?: ScenarioButton[];
     scenario_overrides?: Record<string, ScenarioOverride>;
     handoff_config?: HandoffConfig;
+    answer_footer?: AnswerFooter;
     /** Why this change was made — recorded on the config revision. */
     note?: string;
     /** Which AI agent a persona/rules write targets (PLN-260820); omitted = default. */

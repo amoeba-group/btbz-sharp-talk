@@ -12,8 +12,10 @@ import { scrubPii } from '../../global/util/pii-scrub.util';
  * earlier turns only ever reached the retrieval query (FIX-260806 A2).
  *
  * Pure: the caller loads the rows, this shapes them. Everything that leaves
- * here goes to an AI provider, so every body is scrubbed exactly like the
- * current message (PRV Stage 5) — the model sees `[PHONE]`, never the number.
+ * here goes to an AI provider, so what a person typed (customer and agent
+ * turns) is scrubbed exactly like the current message (PRV Stage 5) — the
+ * model sees `[PHONE]`, never the customer's number. The AI's own replies are
+ * passed as written (REQ-261007 R1).
  */
 
 /** Most recent messages replayed to the answering model. */
@@ -32,7 +34,8 @@ export interface HistoryRow {
 }
 
 /**
- * Rows oldest → newest in, provider-safe messages out.
+ * Rows oldest → newest in, provider-safe messages out. Customer and agent
+ * turns are PII-scrubbed; the AI's own turns are passed as written.
  *
  * - system turns are dropped: consent notices and handoff copy are fixed text
  *   the model must not imitate or answer;
@@ -47,7 +50,14 @@ export function buildHistory(rows: HistoryRow[], maxChars = HISTORY_CHARS): AiMe
   const shaped: AiMessage[] = [];
   for (const row of rows) {
     if (row.senderType === SENDER_TYPE.SYSTEM) continue;
-    const text = scrubPii(row.body ?? '').text.trim();
+    // Only what a person typed is masked (customer and agent turns). The AI's
+    // own replies are not personal data — they only ever saw scrubbed customer
+    // text, and the numbers in them come from the knowledge base. Masking them
+    // turned go2joy's northern hotline into [PHONE] in the history, the model
+    // copied the token, and customers read "the phone number you provided"
+    // (REQ-261007 I-2, conversation 786: 21 + 19 answers).
+    const raw = (row.body ?? '').trim();
+    const text = row.senderType === SENDER_TYPE.AI ? raw : scrubPii(raw).text.trim();
     if (!text) continue;
     if (row.senderType === SENDER_TYPE.USER) {
       shaped.push({ role: 'user', content: text });

@@ -350,5 +350,18 @@
   "labelLanguage": "标签语言",
   "labelLanguageHint": "此处输入的标签仅适用于该语言，其他语言保持不变。",
   "buttonMessage": "发送的内容",
-  "buttonMessageHint": "留空则直接把标签作为问题发送。"
+  "buttonMessageHint": "留空则直接把标签作为问题发送。",
+  "answerFooter": {
+    "title": "回答联系信息页脚",
+    "enabled": "启用",
+    "hint": "在每条 AI 知识回答末尾附上相同的联系信息。AI 不再自行书写联系方式，号码不会被改写或遮盖。",
+    "placeholder": "例：📞 客服：support@example.com · 400-000-0000 · 工作日 9–18 点",
+    "fallback": "若无客户语言的文案：依次使用 EN、最先填写的语言",
+    "protectedTitle": "官方联系方式（不遮盖）",
+    "protectedHint": "每行一个。页脚中的邮箱和电话会自动加入。个人信息遮盖规则不会遮盖这些值。",
+    "preview": "预览",
+    "previewBody": "…回答正文…",
+    "saved": "已保存回答页脚",
+    "saveError": "无法保存回答页脚"
+  }
 }

@@ -1,3 +1,8 @@
+import {
+  AnswerFooter,
+  moderationProtectedCacheKey,
+  sanitizeAnswerFooter,
+} from './answer-footer.util';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -177,6 +182,7 @@ export interface AiConfigResponse {
   scenarioButtons: ScenarioButton[];
   scenarioOverrides: Record<string, ScenarioOverride>;
   handoffConfig: HandoffConfig | null;
+  answerFooter: AnswerFooter | null;
 }
 
 export interface AiConfigInput {
@@ -185,6 +191,7 @@ export interface AiConfigInput {
   scenarioButtons?: ScenarioButton[];
   scenarioOverrides?: Record<string, ScenarioOverride>;
   handoffConfig?: HandoffConfig | null;
+  answerFooter?: unknown;
 }
 
 /** Tenant AI behavior config (FR-047 / FN-040): persona, response rules, scenario buttons. */
@@ -214,7 +221,15 @@ export class AiConfigService {
       scenarioButtons: row?.scenarioButtons ?? DEFAULT_SCENARIO_BUTTONS,
       scenarioOverrides: row?.scenarioOverrides ?? {},
       handoffConfig: row?.handoffConfig ?? null,
+      answerFooter: row?.answerFooter ?? null,
     };
+  }
+
+  /** The tenant's contact footer config, or null (PLN-261007 R4). One indexed row read. */
+  async getAnswerFooter(tenantId: number | null): Promise<AnswerFooter | null> {
+    if (tenantId == null) return null;
+    const row = await this.configRepo.findOne({ where: { tenantId } });
+    return row?.answerFooter ?? null;
   }
 
   /** Handoff routing for a tenant, or null when it has never been configured. */
@@ -312,7 +327,10 @@ export class AiConfigService {
       row.scenarioOverrides = this.sanitizeOverrides(input.scenarioOverrides);
     }
     if (input.handoffConfig !== undefined) row.handoffConfig = input.handoffConfig;
+    if (input.answerFooter !== undefined) row.answerFooter = sanitizeAnswerFooter(input.answerFooter);
     await this.configRepo.save(row);
+    // Moderation caches the protected values derived from the footer.
+    if (input.answerFooter !== undefined) await this.redis.del(moderationProtectedCacheKey(tenantId));
 
     await this.redis.del(personaCacheKey(tenantId, aiAgentId ?? null));
     if (agent) {
