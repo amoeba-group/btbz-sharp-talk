@@ -60,6 +60,12 @@ const CATEGORY_RANGES = [
   { to: 41, vi: 'Quản lý khuyến mãi', en: 'Promotions & Coupons' },
   { to: 45, vi: 'Chiến dịch quảng cáo', en: 'Ad Campaigns' },
   { to: 50, vi: 'Quản lý nhân viên', en: 'Staff Management' },
+  // Videos 51–62 were added to the Notion page after the first analysis
+  // (PLN-261006-KB-Video-Links P4).
+  { to: 53, vi: 'Quản lý tin nhắn', en: 'Messaging' },
+  { to: 57, vi: 'Thiết lập thông tin khách sạn', en: 'Hotel Settings' },
+  { to: 60, vi: 'Chính sách huỷ phòng', en: 'Cancellation Policy' },
+  { to: 62, vi: 'Quản lý kênh đối tác', en: 'Partner Channels' },
 ];
 const REFERENCE_CATEGORY = { vi: 'Tài liệu tham khảo', en: 'Reference' };
 const categoryFor = (n) => {
@@ -212,7 +218,7 @@ for (const line of lines) {
 }
 flush();
 
-if (articles.length !== 51) throw new Error(`expected 51 video articles, found ${articles.length}`);
+if (articles.length !== 63) throw new Error(`expected 63 video articles, found ${articles.length}`);
 
 // ---- reference article: analysis method + the divergence table ----------
 const sectionAt = (prefix) => lines.findIndex((l) => l.startsWith(prefix));
