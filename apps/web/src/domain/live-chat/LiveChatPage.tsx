@@ -1631,6 +1631,10 @@ export function LiveChatPage() {
                 .map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name || u.email}
+                    {/* Role + region beside the name (PLN-261007), so the
+                        assigner picks the SA in the right area at a glance. */}
+                    {u.labelCodes?.length ? ` · ${u.labelCodes.join('/')}` : ''}
+                    {u.region ? ` · ${t(`agentControls.region_${u.region}`, { defaultValue: u.region })}` : ''}
                   </option>
                 ))}
             </select>

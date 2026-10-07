@@ -147,7 +147,8 @@
     "denyLabel": {
       "consult": "Consulta",
       "accounting": "Contabilidad",
-      "operations": "Operaciones"
+      "operations": "Operaciones",
+      "sales_admin": "Admin. de ventas"
     },
     "slaTitle": "Objetivos SLA del tablero",
     "slaNormal": "Normal (horas)",

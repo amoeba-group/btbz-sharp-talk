@@ -27,6 +27,15 @@ export class User {
   @Column({ type: 'varchar', length: 16, default: 'active' })
   status: string; // invited/active/suspended
 
+  /**
+   * Operational region (PLN-261007): north | south; NULL = nationwide. Rank is
+   * the permission level, labels the role — this is only where they work.
+   * Explicit `type`: a nullable union without it makes TypeORM infer Object
+   * and the API fails to boot (dev-kit lesson A-1).
+   */
+  @Column({ type: 'varchar', length: 8, nullable: true })
+  region: string | null;
+
   @Column({ name: 'must_change_password', type: 'tinyint', width: 1, default: 1 })
   mustChangePassword: number;
 

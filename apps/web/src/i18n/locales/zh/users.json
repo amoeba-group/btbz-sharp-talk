@@ -31,5 +31,16 @@
   "tempPwConfirm": "为以下用户发放临时密码：",
   "tempPwSendEmail": "同时通过邮件发送给用户",
   "tempPwEmailSent": "已通过邮件发送给用户。",
-  "tempPwEmailFailed": "邮件发送失败 — 请手动转交密码。"
+  "tempPwEmailFailed": "邮件发送失败 — 请手动转交密码。",
+  "roles": "角色",
+  "rolesHint": "未选择角色 = 其他（不参与会话分配，不开放角色页面）。",
+  "roleOthers": "其他",
+  "region": "区域",
+  "region_all": "全国",
+  "region_north": "北部",
+  "region_south": "南部",
+  "filterRole": "按角色筛选",
+  "filterRoleAll": "所有角色",
+  "filterRegion": "按区域筛选",
+  "filterRegionAll": "所有区域"
 }

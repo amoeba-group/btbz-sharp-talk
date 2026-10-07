@@ -22,6 +22,8 @@ const LABEL_CAPS: Record<string, Capability[]> = {
   consult: ['live_chat', 'history'],
   operations: ['orders', 'customers', 'campaigns', 'reviews', 'knowledge'],
   accounting: ['affiliates'],
+  // Sales Admin (PLN-261007): the consult screens plus the partner's record.
+  sales_admin: ['live_chat', 'history', 'customers', 'orders'],
 };
 
 // Rank → which capabilities it may reach when granted by a label, plus admin-ish extras.

@@ -8,13 +8,15 @@ import {
   IsString,
   MinLength,
 } from 'class-validator';
-import { USER_RANK } from '@sharptalk/types';
+import { USER_RANK, USER_REGION } from '@sharptalk/types';
 import { IsStrongPassword } from '../../../../global/util/password-policy.util';
 import { PASSWORD_MIN_LENGTH } from '../../../../global/constant/security.constant';
 
 /** Request DTOs — snake_case (amoeba_code_convention). */
 
 const RANK_VALUES = Object.values(USER_RANK);
+/** '' clears the region (nationwide) — a select has no "null" option. */
+const REGION_VALUES = [...Object.values(USER_REGION), ''];
 
 export class InviteUserRequest {
   @IsEmail()
@@ -29,6 +31,27 @@ export class InviteUserRequest {
   @ArrayUnique()
   @IsString({ each: true })
   label_codes?: string[];
+
+  /** Operational region (PLN-261007): north | south; omit or '' = nationwide. */
+  @IsOptional()
+  @IsString()
+  @IsIn(REGION_VALUES)
+  region?: string;
+}
+
+export class ListUsersQuery {
+  @IsOptional() @IsString() page?: string;
+  @IsOptional() @IsString() size?: string;
+  /** Filter by held role label code (PLN-261007). */
+  @IsOptional() @IsString() label?: string;
+  /** Filter by region; 'none' = nationwide only. */
+  @IsOptional() @IsString() @IsIn([...REGION_VALUES, 'none']) region?: string;
+}
+
+export class UpdateRegionRequest {
+  @IsString()
+  @IsIn(REGION_VALUES)
+  region: string;
 }
 
 export class AcceptInviteRequest {

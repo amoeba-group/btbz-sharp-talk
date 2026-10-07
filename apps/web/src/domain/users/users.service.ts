@@ -10,21 +10,36 @@ export interface TenantUser {
   email: string;
   name?: string | null;
   rank: string;
+  /** Role labels held (PLN-261007 calls them roles in the UI). */
   labelCodes?: string[];
+  /** Operational region: 'north' | 'south' | null = nationwide (PLN-261007). */
+  region?: string | null;
   status?: string;
   createdAt?: string;
 }
+
+export const USER_REGIONS = ['north', 'south'] as const;
 
 export interface InviteUserBody {
   email: string;
   rank: string;
   label_codes: string[];
+  /** '' = nationwide. */
+  region?: string;
 }
 
 export interface UpdateUserBody {
   rank?: string;
   label_codes?: string[];
+  /** '' clears to nationwide. */
+  region?: string;
   status?: string;
+}
+
+/** List filters (PLN-261007); region 'none' = nationwide only. */
+export interface UserListFilter {
+  label?: string;
+  region?: string;
 }
 
 export interface InviteResult {
@@ -42,7 +57,11 @@ export interface TempPasswordResult {
 }
 
 export const usersService = {
-  list: () => apiGet<TenantUser[]>('/users'),
+  list: (filter: UserListFilter = {}) =>
+    apiGet<TenantUser[]>('/users', {
+      ...(filter.label ? { label: filter.label } : {}),
+      ...(filter.region ? { region: filter.region } : {}),
+    }),
   jobLabels: () => apiGet<JobLabel[]>('/job-labels'),
   invite: (body: InviteUserBody) => apiPost<InviteResult>('/users/invite', body),
   // The API exposes per-field endpoints with distinct RBAC (rank/labels/status),
@@ -53,6 +72,9 @@ export const usersService = {
     }
     if (body.label_codes !== undefined) {
       await apiPatch<TenantUser>(`/users/${id}/labels`, { label_codes: body.label_codes });
+    }
+    if (body.region !== undefined) {
+      await apiPatch<TenantUser>(`/users/${id}/region`, { region: body.region });
     }
     if (body.status !== undefined) {
       await apiPatch<TenantUser>(`/users/${id}/status`, { status: body.status });

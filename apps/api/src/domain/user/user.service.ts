@@ -54,13 +54,26 @@ export class UserService {
     tenantId: number,
     page: number,
     size: number,
+    /** Role/region filters (PLN-261007): label code; region 'north'|'south'|'none' (nationwide). */
+    filter: { label?: string; region?: string } = {},
   ): Promise<{ items: UserResponse[]; total: number }> {
-    const [users, total] = await this.userRepo.findAndCount({
-      where: { tenantId },
-      order: { id: 'ASC' },
-      skip: (page - 1) * size,
-      take: size,
-    });
+    const qb = this.userRepo
+      .createQueryBuilder('u')
+      .where('u.tenantId = :tenantId', { tenantId })
+      .orderBy('u.id', 'ASC')
+      .skip((page - 1) * size)
+      .take(size);
+    if (filter.region === 'none') qb.andWhere('u.region IS NULL');
+    else if (filter.region) qb.andWhere('u.region = :region', { region: filter.region });
+    if (filter.label) {
+      // Held-label filter through the join tables, tenant-fenced on the label row.
+      qb.andWhere(
+        `EXISTS (SELECT 1 FROM user_job_labels ujl JOIN job_labels jl ON jl.id = ujl.job_label_id
+                 WHERE ujl.user_id = u.id AND jl.tenant_id = :tenantId AND jl.code = :label)`,
+        { label: filter.label },
+      );
+    }
+    const [users, total] = await qb.getManyAndCount();
 
     const labelsByUser = await this.loadLabelCodes(users.map((u) => u.id));
     const items = users.map((u) => UserMapper.toResponse(u, labelsByUser.get(String(u.id)) ?? []));
@@ -74,6 +87,8 @@ export class UserService {
     rank: string,
     labelCodes: string[] = [],
     actorType: 'user' | 'admin' = 'user',
+    /** Operational region (PLN-261007); ''/undefined = nationwide. */
+    region?: string | null,
   ): Promise<InviteUserResponse> {
     const existing = await this.userRepo.findOne({ where: { tenantId, email } });
     if (existing) {
@@ -93,6 +108,7 @@ export class UserService {
         status: 'invited',
         mustChangePassword: 1,
         invitedAt: now,
+        region: region || null,
       }),
     );
 
@@ -233,6 +249,14 @@ export class UserService {
     );
     await this.userLabelRepo.delete({ userId: user.id });
     await this.assignLabels(tenantId, user.id, labelCodes);
+    return this.toResponseWithLabels(user);
+  }
+
+  /** Operational region (PLN-261007): '' clears it (nationwide). */
+  async updateRegion(tenantId: number, userId: number, region: string): Promise<UserResponse> {
+    const user = await this.getTenantUser(tenantId, userId);
+    user.region = region || null;
+    await this.userRepo.save(user);
     return this.toResponseWithLabels(user);
   }
 

@@ -11,6 +11,8 @@ export interface UserResponse {
   status: string;
   mustChangePassword: boolean;
   labelCodes: string[];
+  /** Operational region (PLN-261007); null = nationwide. */
+  region: string | null;
   invitedAt: Date | null;
   createdAt: Date;
 }
@@ -40,6 +42,7 @@ export class UserMapper {
       status: user.status,
       mustChangePassword: user.mustChangePassword === 1,
       labelCodes,
+      region: user.region ?? null,
       invitedAt: user.invitedAt,
       createdAt: user.createdAt,
     };

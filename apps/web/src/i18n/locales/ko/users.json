@@ -31,5 +31,16 @@
   "tempPwConfirm": "임시비밀번호를 발급합니다:",
   "tempPwSendEmail": "사용자 이메일로도 발송",
   "tempPwEmailSent": "사용자 이메일로 발송되었습니다.",
-  "tempPwEmailFailed": "이메일 발송에 실패했습니다 — 비밀번호를 직접 전달하세요."
+  "tempPwEmailFailed": "이메일 발송에 실패했습니다 — 비밀번호를 직접 전달하세요.",
+  "roles": "역할",
+  "rolesHint": "역할을 선택하지 않으면 \"기타\"입니다 (대화 배정·역할 화면 없음).",
+  "roleOthers": "기타",
+  "region": "지역",
+  "region_all": "전국",
+  "region_north": "북부",
+  "region_south": "남부",
+  "filterRole": "역할 필터",
+  "filterRoleAll": "모든 역할",
+  "filterRegion": "지역 필터",
+  "filterRegionAll": "모든 지역"
 }

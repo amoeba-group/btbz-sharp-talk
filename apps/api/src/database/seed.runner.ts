@@ -121,7 +121,12 @@ export async function runSeed(ds: DataSource, opts: SeedOptions = {}): Promise<v
   // Job labels + assign all to master
   const labelRepo = ds.getRepository(JobLabel);
   const ujlRepo = ds.getRepository(UserJobLabel);
-  for (const [code, name] of [['consult', '상담'], ['accounting', '회계'], ['operations', '운영']]) {
+  for (const [code, name] of [
+    ['consult', '상담'],
+    ['accounting', '회계'],
+    ['operations', '운영'],
+    ['sales_admin', '영업관리'], // PLN-261007
+  ]) {
     let label = await labelRepo.findOne({ where: { tenantId: tenant.id, code } });
     if (!label) label = await labelRepo.save(labelRepo.create({ tenantId: tenant.id, code, name }));
     if (!(await ujlRepo.findOne({ where: { userId: master.id, jobLabelId: label.id } }))) {

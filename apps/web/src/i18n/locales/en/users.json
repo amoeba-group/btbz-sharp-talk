@@ -31,5 +31,16 @@
   "tempPwConfirm": "Issue a temporary password for",
   "tempPwSendEmail": "Also send it to the user by email",
   "tempPwEmailSent": "Sent to the user by email.",
-  "tempPwEmailFailed": "Email delivery failed — hand the password over manually."
+  "tempPwEmailFailed": "Email delivery failed — hand the password over manually.",
+  "roles": "Roles",
+  "rolesHint": "No role selected = Others (no conversation routing, no role-gated screens).",
+  "roleOthers": "Others",
+  "region": "Region",
+  "region_all": "Nationwide",
+  "region_north": "North",
+  "region_south": "South",
+  "filterRole": "Filter by role",
+  "filterRoleAll": "All roles",
+  "filterRegion": "Filter by region",
+  "filterRegionAll": "All regions"
 }

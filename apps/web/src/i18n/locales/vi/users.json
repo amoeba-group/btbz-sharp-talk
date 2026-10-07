@@ -31,5 +31,16 @@
   "tempPwConfirm": "Cấp mật khẩu tạm thời cho",
   "tempPwSendEmail": "Đồng thời gửi cho người dùng qua email",
   "tempPwEmailSent": "Đã gửi cho người dùng qua email.",
-  "tempPwEmailFailed": "Gửi email thất bại — hãy chuyển mật khẩu trực tiếp."
+  "tempPwEmailFailed": "Gửi email thất bại — hãy chuyển mật khẩu trực tiếp.",
+  "roles": "Vai trò",
+  "rolesHint": "Không chọn vai trò = Khác (không nhận hội thoại chuyển người, không mở màn hình theo vai trò).",
+  "roleOthers": "Khác",
+  "region": "Khu vực",
+  "region_all": "Toàn quốc",
+  "region_north": "Miền Bắc",
+  "region_south": "Miền Nam",
+  "filterRole": "Lọc theo vai trò",
+  "filterRoleAll": "Mọi vai trò",
+  "filterRegion": "Lọc theo khu vực",
+  "filterRegionAll": "Mọi khu vực"
 }

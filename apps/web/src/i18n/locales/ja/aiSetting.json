@@ -147,7 +147,8 @@
     "denyLabel": {
       "consult": "相談",
       "accounting": "経理",
-      "operations": "運用"
+      "operations": "運用",
+      "sales_admin": "セールス管理"
     },
     "slaTitle": "問い合わせボードのSLA目標",
     "slaNormal": "通常（時間）",

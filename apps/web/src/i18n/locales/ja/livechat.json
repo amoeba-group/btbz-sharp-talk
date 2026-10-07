@@ -360,7 +360,9 @@
     "issueTargetLabel": "対象メッセージ",
     "issueMemo": "メモ（任意）",
     "issueMemoPlaceholder": "課題ボード用のメモ — 例: 3回目の同じ問い合わせ",
-    "issueAppendHint": "この会話に既に課題がある場合はメモとして追加されます。"
+    "issueAppendHint": "この会話に既に課題がある場合はメモとして追加されます。",
+    "region_north": "北部",
+    "region_south": "南部"
   },
   "pin": {
     "pin": "ピン留め",

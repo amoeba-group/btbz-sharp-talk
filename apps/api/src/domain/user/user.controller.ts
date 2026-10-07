@@ -22,8 +22,10 @@ import {
   AcceptInviteRequest,
   InviteUserRequest,
   IssueTempPasswordRequest,
+  ListUsersQuery,
   UpdateLabelsRequest,
   UpdateRankRequest,
+  UpdateRegionRequest,
   UpdateStatusRequest,
 } from './dto/request/user.request';
 
@@ -40,14 +42,13 @@ export class UserController {
   @Get()
   @RequireRank(USER_RANK.MASTER, USER_RANK.DIRECTOR, USER_RANK.MANAGER)
   @ApiOperation({ summary: 'List tenant users (paginated) with their job-label codes' })
-  async list(
-    @CurrentUser() user: Principal,
-    @Query('page') page?: string,
-    @Query('size') size?: string,
-  ) {
+  async list(@CurrentUser() user: Principal, @Query() query: ListUsersQuery) {
     const principal = asTenantUser(user);
-    const { page: p, size: s } = normalizePage(page, size);
-    const { items, total } = await this.userService.listUsers(principal.tenantId, p, s);
+    const { page: p, size: s } = normalizePage(query.page, query.size);
+    const { items, total } = await this.userService.listUsers(principal.tenantId, p, s, {
+      label: query.label,
+      region: query.region,
+    });
     return new Paginated(items, buildPagination(p, s, total));
   }
 
@@ -62,6 +63,8 @@ export class UserController {
       body.email,
       body.rank,
       body.label_codes,
+      'user',
+      body.region,
     );
   }
 
@@ -114,6 +117,18 @@ export class UserController {
     @Body() body: UpdateLabelsRequest,
   ) {
     return this.userService.updateLabels(asTenantUser(user).tenantId, id, body.label_codes);
+  }
+
+  @Patch(':id/region')
+  // Same holders as label assignment: region is operational scope, not permission.
+  @RequireCapability(CAPABILITY.LABEL_ASSIGN)
+  @ApiOperation({ summary: 'Set a user operational region (north/south; empty = nationwide)' })
+  updateRegion(
+    @CurrentUser() user: Principal,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateRegionRequest,
+  ) {
+    return this.userService.updateRegion(asTenantUser(user).tenantId, id, body.region);
   }
 
   @Patch(':id/status')

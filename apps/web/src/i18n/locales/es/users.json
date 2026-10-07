@@ -31,5 +31,16 @@
   "tempPwConfirm": "Emitir una contraseña temporal para",
   "tempPwSendEmail": "Enviarla también al usuario por correo",
   "tempPwEmailSent": "Enviada al usuario por correo.",
-  "tempPwEmailFailed": "Falló el envío del correo — entrega la contraseña manualmente."
+  "tempPwEmailFailed": "Falló el envío del correo — entrega la contraseña manualmente.",
+  "roles": "Roles",
+  "rolesHint": "Sin rol = Otros (sin asignación de conversaciones ni pantallas por rol).",
+  "roleOthers": "Otros",
+  "region": "Región",
+  "region_all": "Todo el país",
+  "region_north": "Norte",
+  "region_south": "Sur",
+  "filterRole": "Filtrar por rol",
+  "filterRoleAll": "Todos los roles",
+  "filterRegion": "Filtrar por región",
+  "filterRegionAll": "Todas las regiones"
 }

@@ -147,7 +147,8 @@
     "denyLabel": {
       "consult": "咨询",
       "accounting": "财务",
-      "operations": "运营"
+      "operations": "运营",
+      "sales_admin": "销售管理"
     },
     "slaTitle": "问题看板 SLA 目标",
     "slaNormal": "普通（小时）",

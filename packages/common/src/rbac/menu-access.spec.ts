@@ -244,3 +244,31 @@ describe('DEFAULT_ROLE_MENUS', () => {
     expect(DEFAULT_ROLE_MENUS.staff).not.toContain(MENU.USERS);
   });
 });
+
+describe('sales_admin label (PLN-261007)', () => {
+  const provided = resolveProvidedMenus(null);
+  const menusFor = (rank: UserRank, labels: JobLabel[]) =>
+    resolveEffectiveMenus({ provided, rank, labels });
+
+  it('opens the consult screens plus customers and orders for staff', () => {
+    const menus = menusFor(USER_RANK.STAFF, [JOB_LABEL.SALES_ADMIN]);
+    expect(menus).toEqual(expect.arrayContaining([MENU.LIVE_CHAT, MENU.ISSUES, MENU.JOURNEY, MENU.ORDERS]));
+    // Staff never reached customers before; the rank matrix still says no.
+    expect(menus).not.toContain(MENU.CUSTOMERS);
+  });
+
+  it('opens customers and orders for a manager without widening to campaigns/knowledge', () => {
+    const menus = menusFor(USER_RANK.MANAGER, [JOB_LABEL.SALES_ADMIN]);
+    expect(menus).toEqual(expect.arrayContaining([MENU.LIVE_CHAT, MENU.HISTORY, MENU.CUSTOMERS, MENU.ORDERS]));
+    expect(menus).not.toContain(MENU.CAMPAIGNS);
+    expect(menus).not.toContain(MENU.KNOWLEDGE);
+    expect(menus).not.toContain(MENU.REVIEWS);
+  });
+
+  it('is a superset of consult for a manager', () => {
+    const consult = menusFor(USER_RANK.MANAGER, [JOB_LABEL.CONSULT]);
+    const sales = menusFor(USER_RANK.MANAGER, [JOB_LABEL.SALES_ADMIN]);
+    for (const m of consult) expect(sales).toContain(m);
+  });
+});
+

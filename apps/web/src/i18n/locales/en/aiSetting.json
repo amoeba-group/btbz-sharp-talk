@@ -147,7 +147,8 @@
     "denyLabel": {
       "consult": "Consult",
       "accounting": "Accounting",
-      "operations": "Operations"
+      "operations": "Operations",
+      "sales_admin": "Sales Admin"
     },
     "slaTitle": "Issue board SLA targets",
     "slaNormal": "Normal (hours)",

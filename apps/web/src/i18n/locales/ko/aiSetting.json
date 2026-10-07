@@ -147,7 +147,8 @@
     "denyLabel": {
       "consult": "상담",
       "accounting": "회계",
-      "operations": "운영"
+      "operations": "운영",
+      "sales_admin": "영업관리"
     },
     "slaTitle": "이슈 보드 SLA 목표시간",
     "slaNormal": "일반 (시간)",

@@ -147,7 +147,8 @@
     "denyLabel": {
       "consult": "Tư vấn",
       "accounting": "Kế toán",
-      "operations": "Vận hành"
+      "operations": "Vận hành",
+      "sales_admin": "Sales Admin"
     },
     "slaTitle": "Mục tiêu SLA của bảng yêu cầu",
     "slaNormal": "Thông thường (giờ)",

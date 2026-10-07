@@ -1827,6 +1827,7 @@ CREATE TABLE `users` (
   `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `rank` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'staff',
   `status` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'active',
+  `region` varchar(8) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `must_change_password` tinyint(1) NOT NULL DEFAULT '1',
   `invited_at` datetime DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),

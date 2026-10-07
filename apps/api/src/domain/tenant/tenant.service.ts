@@ -36,6 +36,8 @@ const DEFAULT_JOB_LABELS: ReadonlyArray<{ code: string; name: string }> = [
   { code: 'consult', name: '상담' },
   { code: 'accounting', name: '회계' },
   { code: 'operations', name: '운영' },
+  // Sales Admin (PLN-261007): partner/contract desk — consult screens + customers/orders.
+  { code: 'sales_admin', name: '영업관리' },
 ];
 import { IntegrationService } from '../integration/integration.service';
 import { BusinessException } from '../../global/exception/business.exception';
