@@ -7,6 +7,8 @@ export interface PreviewCitation {
   id: number | string;
   title: string;
   similarity?: number | null;
+  /** "Watch video" API path when the document explains a video (PLN-261006). */
+  videoUrl?: string | null;
 }
 
 export interface PreviewReply {

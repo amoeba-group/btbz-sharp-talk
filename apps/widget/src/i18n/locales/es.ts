@@ -49,6 +49,7 @@ export const es: Translation = {
     aiDisclosure:
       'Este chat funciona con IA. Los mensajes que envías son procesados por un proveedor externo de IA en {{region}} para generar respuestas.',
     citations: 'Conocimiento consultado',
+    watchVideo: 'Ver video',
     inputPlaceholder: 'Escribe un mensaje…',
     send: 'Enviar',
     sendFailed: 'Lo sentimos, no se pudo enviar. Inténtalo de nuevo.',

@@ -76,7 +76,8 @@
     "agentBadge": "상담원 (미리보기)",
     "escalated": "상담 이관",
     "agentMode": "(봇 대기 — 상담원이 담당 중인 대화)",
-    "coachThis": "코칭하기"
+    "coachThis": "코칭하기",
+    "watchVideo": "영상 보기"
   },
   "editReply": "답변 편집",
   "postAction_none": "채팅 유지",

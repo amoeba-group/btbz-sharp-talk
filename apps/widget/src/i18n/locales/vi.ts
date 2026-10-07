@@ -49,6 +49,7 @@ export const vi: Translation = {
     aiDisclosure:
       'Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại {{region}} để tạo câu trả lời.',
     citations: 'Nguồn tham khảo',
+    watchVideo: 'Xem video',
     inputPlaceholder: 'Nhập tin nhắn…',
     send: 'Gửi',
     sendFailed: 'Rất tiếc, tin nhắn chưa gửi được. Vui lòng thử lại.',

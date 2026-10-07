@@ -455,5 +455,7 @@
     "write": "在看板上撰写",
     "body": "来自来源的资产和新知识先在看板上撰写并发布，经模拟验证后采纳为知识库文档。",
     "counts": "待审核 {{pending}} · 已采纳 {{promoted}}"
-  }
+  },
+  "videoRef": "视频",
+  "videoRefHint": "在引用此文档的回答下显示为“观看视频”。填写 https:// 链接，或上传到 Notion 的视频填写 notion:<区块 ID>。"
 }

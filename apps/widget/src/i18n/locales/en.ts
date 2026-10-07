@@ -47,6 +47,7 @@ export const en = {
     aiDisclosure:
       'This chat is AI-powered. Messages you send are processed by a third-party AI service provider in {{region}} to generate responses.',
     citations: 'Knowledge referenced',
+    watchVideo: 'Watch video',
     inputPlaceholder: 'Type a message…',
     send: 'Send',
     sendFailed: "Sorry, that didn't go through. Please try again.",

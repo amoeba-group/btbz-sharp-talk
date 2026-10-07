@@ -249,6 +249,8 @@ export function KnowledgePage() {
   const [editCategory, setEditCategory] = useState('');
   const [editContent, setEditContent] = useState('');
   const [editSourceUrl, setEditSourceUrl] = useState('');
+  // The video this document explains (PLN-261006-KB-Video-Links).
+  const [editVideoRef, setEditVideoRef] = useState('');
   const [editEffectiveFrom, setEditEffectiveFrom] = useState('');
   const [editReviewDays, setEditReviewDays] = useState('');
 
@@ -259,6 +261,7 @@ export function KnowledgePage() {
       setEditCategory(detail.data.category ?? '');
       setEditContent(detail.data.content ?? '');
       setEditSourceUrl(detail.data.sourceUrl ?? '');
+      setEditVideoRef(detail.data.videoRef ?? '');
       setEditEffectiveFrom(detail.data.effectiveFrom ?? '');
       setEditReviewDays(
         detail.data.reviewIntervalDays == null ? '' : String(detail.data.reviewIntervalDays),
@@ -296,6 +299,7 @@ export function KnowledgePage() {
           // Empty input clears the field rather than leaving a stale value —
           // null is a meaningful state for all three.
           source_url: editSourceUrl.trim() || null,
+          video_ref: editVideoRef.trim() || null,
           effective_from: editEffectiveFrom || null,
           review_interval_days: editReviewDays.trim() === '' ? null : Number(editReviewDays),
         },
@@ -1989,6 +1993,14 @@ export function KnowledgePage() {
                     onChange={(e) => setEditSourceUrl(e.target.value)}
                   />
                 </FormRow>
+                <FormRow label={t('videoRef')}>
+                  <Input
+                    value={editVideoRef}
+                    placeholder="https://…  |  notion:<block id>"
+                    onChange={(e) => setEditVideoRef(e.target.value)}
+                  />
+                </FormRow>
+                <p className="-mt-2 mb-2 text-xs text-gray-400">{t('videoRefHint')}</p>
                 <div className="grid grid-cols-2 gap-2">
                   <FormRow label={t('effectiveFrom')}>
                     <Input

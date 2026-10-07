@@ -78,6 +78,7 @@ export class KnowledgeMapper {
       // Provenance & staleness (PLN D7). `stale` is derived rather than stored
       // so it cannot drift out of date between writes.
       sourceUrl: d.sourceUrl ?? null,
+      videoRef: d.videoRef ?? null,
       ownerUserId: d.ownerUserId ?? null,
       effectiveFrom: d.effectiveFrom ?? null,
       reviewIntervalDays: d.reviewIntervalDays ?? null,

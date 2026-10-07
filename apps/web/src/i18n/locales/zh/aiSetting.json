@@ -76,7 +76,8 @@
     "agentBadge": "客服（预览）",
     "escalated": "已升级",
     "agentMode": "（机器人静默——该会话由人工客服负责）",
-    "coachThis": "指导这条回答"
+    "coachThis": "指导这条回答",
+    "watchVideo": "观看视频"
   },
   "editReply": "编辑回复",
   "postAction_none": "留在聊天中",

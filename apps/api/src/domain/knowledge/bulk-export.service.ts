@@ -12,7 +12,7 @@ import { toCsv } from './csv.util';
  * edited rows updating. Internal fields (id, status, source) would ride along
  * as dead columns the importer ignores, and invite edits that do nothing.
  */
-const EXPORT_COLUMNS = ['category', 'title', 'content', 'external_key', 'source_url'] as const;
+const EXPORT_COLUMNS = ['category', 'title', 'content', 'external_key', 'source_url', 'video_ref'] as const;
 
 /** Bulk document export for the download → edit → re-upload loop (PLN-260903). */
 @Injectable()
@@ -36,6 +36,7 @@ export class BulkExportService {
       d.content ?? '',
       d.externalKey ?? '',
       d.sourceUrl ?? '',
+      d.videoRef ?? '',
     ]);
   }
 

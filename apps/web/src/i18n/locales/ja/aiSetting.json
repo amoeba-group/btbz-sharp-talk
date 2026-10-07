@@ -76,7 +76,8 @@
     "agentBadge": "担当者（プレビュー）",
     "escalated": "エスカレーション済み",
     "agentMode": "（ボットは沈黙中 — 会話は担当者が対応しています）",
-    "coachThis": "この回答をコーチング"
+    "coachThis": "この回答をコーチング",
+    "watchVideo": "動画を見る"
   },
   "editReply": "返信を編集",
   "postAction_none": "チャットにとどまる",

@@ -235,4 +235,51 @@ describe('BulkImportService', () => {
     expect(result).toMatchObject({ parsed: 1, created: 1, invalid: 0 });
     expect(saved[0]).toMatchObject({ title: '대시보드 조회', externalKey: 'GTJ-DSH-01' });
   });
+
+  describe('video_ref (PLN-261006-KB-Video-Links)', () => {
+    const VHEADER = `${HEADER},video_ref`;
+    const BLOCK = 'notion:4648fee0bb548292bc6381250b79b647';
+    const existingDoc = (over: Partial<KbDocument> = {}): Partial<KbDocument> => ({
+      id: 5,
+      tenantId: 1,
+      docGroup: 'operation',
+      externalKey: 'GTJ-REV-01',
+      category: '리뷰 관리',
+      title: '리뷰 답글 등록',
+      content: '하나의 리뷰당 답글은 1회만 등록 가능하다.',
+      sourceUrl: null,
+      videoRef: null,
+      status: 'embedded',
+      ...over,
+    });
+
+    it('sets the video on create when the column is present', async () => {
+      await importCsv(`${VHEADER}\n${row()},${BLOCK}`);
+      expect(saved[0].videoRef).toBe(BLOCK);
+    });
+
+    it('a video-only change updates the link without re-embedding', async () => {
+      const { result, touchedIds } = await importCsv(`${VHEADER}\n${row()},${BLOCK}`, 'operation', [existingDoc()]);
+      expect(result).toMatchObject({ updated: 1, skipped: 0 });
+      expect(saved[0]).toMatchObject({ videoRef: BLOCK, status: 'embedded' });
+      expect(touchedIds).toHaveLength(0);
+      expect(recorded).toHaveLength(0);
+    });
+
+    it('an older file without the column leaves an existing link alone', async () => {
+      const { result } = await importCsv(`${HEADER}\n${row()}`, 'operation', [existingDoc({ videoRef: BLOCK })]);
+      expect(result).toMatchObject({ skipped: 1 });
+      expect(saved).toHaveLength(0);
+    });
+
+    it('an empty cell in a file WITH the column clears the link', async () => {
+      await importCsv(`${VHEADER}\n${row()},`, 'operation', [existingDoc({ videoRef: BLOCK })]);
+      expect(saved[0].videoRef).toBeNull();
+    });
+
+    it('rejects anything but https:// or notion:<32 hex>', async () => {
+      const { result } = await importCsv(`${VHEADER}\n${row({ key: 'A' })},javascript:alert(1)\n${row({ key: 'B', title: 'b' })},notion:xyz`);
+      expect(result).toMatchObject({ invalid: 2, created: 0 });
+    });
+  });
 });

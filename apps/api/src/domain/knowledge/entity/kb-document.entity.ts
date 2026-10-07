@@ -114,6 +114,16 @@ export class KbDocument {
   @Column({ name: 'source_url', type: 'varchar', length: 512, nullable: true })
   sourceUrl: string | null;
 
+  /**
+   * The video this document explains (PLN-261006-KB-Video-Links): an
+   * `https://` URL played as is, or `notion:<blockId>` for a file uploaded to
+   * Notion, whose signed URL expires within the hour and is fetched fresh on
+   * click. Answers citing the document get a "watch video" link; nothing else
+   * reads this.
+   */
+  @Column({ name: 'video_ref', type: 'varchar', length: 255, nullable: true })
+  videoRef: string | null;
+
   /** Staff member accountable for keeping this accurate. */
   @Column({ name: 'owner_user_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
   ownerUserId: number | null;

@@ -112,6 +112,11 @@ export interface ChatCitation {
   group?: string;
   /** Present only for a product on the tenant's own storefront; null otherwise. */
   url?: string | null;
+  /**
+   * "Watch video" link when the cited document explains a video
+   * (PLN-261006-KB-Video-Links) — an API path, resolve against the API origin.
+   */
+  videoUrl?: string | null;
 }
 
 /** Scenario follow-up chip (FR-S1). */

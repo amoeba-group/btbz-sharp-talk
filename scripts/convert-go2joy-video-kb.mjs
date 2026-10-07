@@ -31,6 +31,17 @@ const output = positional[1] ?? `go2joy-video-kb.${lang}.csv`;
 if (!['vi', 'en'].includes(lang)) throw new Error(`unknown --lang "${lang}" (vi|en)`);
 
 /**
+ * Video N → its Notion block (PLN-261006-KB-Video-Links). Emitted as the
+ * `video_ref` column so answers citing the article get a "watch video" link,
+ * and so a regenerated CSV keeps those links instead of dropping them.
+ */
+const VIDEO_BLOCKS = new Map(
+  JSON.parse(readFileSync('reference/go2joy-hotel-admin-video-blocks.json', 'utf8'))
+    .blocks.filter((b) => b.video != null)
+    .map((b) => [b.video, `notion:${b.blockId}`]),
+);
+
+/**
  * Category per video number (PLN D3). Deliberately a table of explicit ranges
  * rather than "read the first backticked menu of the screen path": video 25
  * starts from `Trang chủ` on its way to reconciliation and video 39 starts
@@ -186,6 +197,7 @@ for (const line of lines) {
     const en = video[2].slice(split + ` / Video ${n} — `.length);
     current = {
       key: `GTJ-VID-${String(n).padStart(2, '0')}-${lang.toUpperCase()}`,
+      videoRef: VIDEO_BLOCKS.get(n) ?? '',
       title: `Video ${n} — ${pick(vi, en)}`,
       category: categoryFor(n),
       body: [],
@@ -232,8 +244,8 @@ articles.push({
 // ---- CSV ---------------------------------------------------------------
 const esc = (v) => (/[",\n]/.test(v) ? `"${v.replaceAll('"', '""')}"` : v);
 const rows = [
-  'category,title,content,external_key',
-  ...articles.map((a) => [a.category, a.title, a.content, a.key].map(esc).join(',')),
+  'category,title,content,external_key,source_url,video_ref',
+  ...articles.map((a) => [a.category, a.title, a.content, a.key, '', a.videoRef ?? ''].map(esc).join(',')),
 ];
 writeFileSync(output, '﻿' + rows.join('\n') + '\n', 'utf8');
 

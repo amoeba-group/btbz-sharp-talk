@@ -85,6 +85,22 @@ function fileUrlKey(): Buffer {
 
 export type FileVariant = 'full' | 'thumb';
 
+/**
+ * Signature for a KB video link (PLN-261006-KB-Video-Links D2). Unlike file
+ * URLs it does not expire: it sits in a stored answer a customer may reopen
+ * days later. It still names exactly one document of one tenant, so a link
+ * cannot be edited into another video. Domain-separated from file signatures.
+ */
+export function signKbVideo(tenantId: number, docId: number): string {
+  return createHmac('sha256', fileUrlKey()).update(`kb-video|${tenantId}|${docId}`).digest('hex').slice(0, 32);
+}
+
+export function verifyKbVideo(tenantId: number, docId: number, signature: string): boolean {
+  const want = Buffer.from(signKbVideo(tenantId, docId), 'utf8');
+  const given = Buffer.from(signature ?? '', 'utf8');
+  return given.length === want.length && timingSafeEqual(given, want);
+}
+
 /** Hex HMAC over uuid|variant|expiry — the exact tuple the URL carries. */
 export function signFileUrl(uuid: string, variant: FileVariant, expiresAt: number): string {
   return createHmac('sha256', fileUrlKey())

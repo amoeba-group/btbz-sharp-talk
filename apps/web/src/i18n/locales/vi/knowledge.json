@@ -455,5 +455,7 @@
     "write": "Viết lên bảng",
     "body": "Tài sản từ nguồn và tri thức mới được viết và đăng trên bảng trước, kiểm tra bằng mô phỏng rồi chấp nhận thành tài liệu KB.",
     "counts": "Chờ duyệt {{pending}} · đã chấp nhận {{promoted}}"
-  }
+  },
+  "videoRef": "Video",
+  "videoRefHint": "Hiển thị là “Xem video” dưới các câu trả lời trích dẫn tài liệu này. Liên kết https:// hoặc notion:<block id> cho video tải lên Notion."
 }

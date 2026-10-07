@@ -455,5 +455,7 @@
     "write": "Write on board",
     "body": "Sourced assets and new knowledge are written and published on the board first, checked with a simulation, then adopted as KB-Documents.",
     "counts": "Waiting for review {{pending}} · adopted {{promoted}}"
-  }
+  },
+  "videoRef": "Video",
+  "videoRefHint": "Shown as “Watch video” under answers that cite this document. An https:// link, or notion:<block id> for a video uploaded to Notion."
 }

@@ -12,6 +12,8 @@ import type { AiMessage } from '../../infrastructure/external/ai/ai-adapter.inte
 import { capContext, selectPassages, titleMatchScore } from './passage.util';
 import { AnswerFooter, footerFor } from '../ai-engine/answer-footer.util';
 import { envNumber } from '../../global/util/env-number.util';
+import { signKbVideo } from '../../global/util/crypto.util';
+import { kbVideoPath, parseVideoRef } from '../knowledge/video-ref.util';
 import { CONVERSATION_RULES, transcript, withCurrentTurn } from './conversation-history.util';
 
 export interface RetrievedChunk {
@@ -28,6 +30,12 @@ export interface RetrievedChunk {
    * a shopper's conversation.
    */
   url: string | null;
+  /**
+   * "Watch video" link for a document that explains a video
+   * (PLN-261006-KB-Video-Links): a signed path on our API, resolved by the
+   * client against its API origin. Added by code, never by the model.
+   */
+  videoUrl?: string | null;
   snippet: string;
   /** Dense similarity (dot, normalized vectors) when the vector leg saw this doc. */
   similarity: number | null;
@@ -380,6 +388,9 @@ export class RagService {
       source: doc.source,
       group: doc.docGroup,
       url: productLinkFor(doc.docGroup, doc.sourceUrl, storefront),
+      videoUrl: parseVideoRef(doc.videoRef)
+        ? kbVideoPath(Number(doc.id), tenantId, signKbVideo(tenantId, Number(doc.id)))
+        : null,
       // Whole document up to the budget, else the paragraphs matching the query (R3).
       snippet: selectPassages(doc.content ?? '', query),
       similarity,

@@ -49,6 +49,7 @@ export const ja: Translation = {
     aiDisclosure:
       'このチャットはAIを利用しています。送信されたメッセージは、回答生成のため{{region}}の第三者AIサービス提供者によって処理されます。',
     citations: '参照した情報',
+    watchVideo: '動画を見る',
     inputPlaceholder: 'メッセージを入力…',
     send: '送信',
     sendFailed: '申し訳ございません。送信できませんでした。もう一度お試しください。',

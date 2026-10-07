@@ -36,6 +36,8 @@ import { AiAgent } from '../ai-engine/entity/ai-agent.entity';
 import { UsageTypeService } from './usage-type.service';
 import { KbCategoryService } from './kb-category.service';
 import { NotionClient } from './notion.client';
+import { KbVideoService } from './kb-video.service';
+import { KbVideoController } from './kb-video.controller';
 import { NotionCredentialService } from './notion-credential.service';
 import { IntegrationCredential } from '../tenant/entity/integration-credential.entity';
 import { AuditModule } from '../audit/audit.module';
@@ -86,7 +88,7 @@ import { ModerationModule } from '../moderation/moderation.module';
     // Knowledge edits were the one privileged action leaving no audit trail.
     AuditModule,
   ],
-  controllers: [KnowledgeController, AgentKnowledgeController, BoardReviewController],
+  controllers: [KnowledgeController, AgentKnowledgeController, BoardReviewController, KbVideoController],
   providers: [
     KnowledgeService,
     BoardReviewService,
@@ -111,6 +113,7 @@ import { ModerationModule } from '../moderation/moderation.module';
     KbCategoryService,
     NotionClient,
     NotionCredentialService,
+    KbVideoService,
   ],
   exports: [KnowledgeService, KbConflictService, KbRevisionService],
 })

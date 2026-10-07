@@ -76,7 +76,8 @@
     "agentBadge": "Nhân viên (xem thử)",
     "escalated": "Đã chuyển tiếp",
     "agentMode": "(bot im lặng — cuộc hội thoại đang do nhân viên phụ trách)",
-    "coachThis": "Huấn luyện câu này"
+    "coachThis": "Huấn luyện câu này",
+    "watchVideo": "Xem video"
   },
   "editReply": "Sửa câu trả lời",
   "postAction_none": "Ở lại trong hội thoại",

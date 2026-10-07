@@ -130,6 +130,26 @@ export class NotionClient {
     if (ms > 0) await new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  /**
+   * A playable URL for one video (or file) block (PLN-261006-KB-Video-Links).
+   * Notion-hosted files come back as signed URLs with an expiry — the caller
+   * caches until shortly before it. External videos never expire.
+   */
+  async videoUrl(token: string, blockId: string): Promise<{ url: string; expiresAt: Date | null } | null> {
+    const block = await this.request<Record<string, unknown>>(token, `/blocks/${blockId}`);
+    const type = typeof block.type === 'string' ? block.type : '';
+    if (type !== 'video' && type !== 'file') return null;
+    const body = block[type] as
+      | { type?: string; external?: { url?: string }; file?: { url?: string; expiry_time?: string } }
+      | undefined;
+    if (body?.type === 'external' && body.external?.url) return { url: body.external.url, expiresAt: null };
+    if (body?.type === 'file' && body.file?.url) {
+      const exp = body.file.expiry_time ? new Date(body.file.expiry_time) : null;
+      return { url: body.file.url, expiresAt: exp && !Number.isNaN(exp.getTime()) ? exp : null };
+    }
+    return null;
+  }
+
   /** Token check. Cheap, and the only call that works with nothing shared. */
   async me(token: string): Promise<{ name: string }> {
     const bot = await this.request<Record<string, unknown>>(token, '/users/me');
