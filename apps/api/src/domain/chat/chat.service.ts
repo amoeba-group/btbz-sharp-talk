@@ -838,14 +838,19 @@ export class ChatService {
       session.identityLevel !== SESSION_IDENTITY.VERIFIED &&
       (await this.rag.agentGuestPolicy(tenantId, effectiveAgentId)) === GUEST_POLICY.LOGIN_GUIDANCE;
     if (guestGated) {
-      const evidence = await this.rag.retrieve(
+      // Same bar as the handoff decision below (ESCALATION_CONFIDENCE), measured
+      // on the guest-visible categories alone. "Any hit at all" was the first
+      // cut and it never closed: a nearest-neighbour search returns its top-k
+      // for every query once a single public document exists, so a partner
+      // asking about reconciliation was answered from the sign-up guide instead
+      // of being asked to sign in (found in the S3 local run, TCR-261006 §7).
+      const grounded = await this.rag.groundingConfidence(
         tenantId,
         retrievalQuery(history, egressText),
-        undefined,
         effectiveAgentId,
         { guestOnly: true },
       );
-      if (!evidence.length) {
+      if (grounded < ESCALATION_CONFIDENCE) {
         if (denyAnswersFirst) return denyHandoffNow();
         const body = await this.loginRequiredMessage(tenantId, session.language);
         await this.persist(tenantId, conversation.id, SENDER_TYPE.SYSTEM, body, session.language);
