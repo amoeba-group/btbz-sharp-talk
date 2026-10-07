@@ -41,6 +41,10 @@ describe('RagService — conversation memory at the model seam', () => {
       expect(call().messages).toEqual([...HISTORY, { role: 'user', content: '김익용, [PHONE]' }]);
       expect(call().system).toContain('Never ask again for information the customer already gave');
       expect(call().system).toContain('[PHONE]');
+      // An earlier answer outside this turn's context must not be retracted
+      // (staging conversation 780 apologised for a correct delivery estimate).
+      expect(call().system).toContain('never retract');
+      expect(call().system).not.toContain('not a source of shop facts');
     });
 
     it('leaves the single-question prompt untouched without history (console paths)', async () => {
