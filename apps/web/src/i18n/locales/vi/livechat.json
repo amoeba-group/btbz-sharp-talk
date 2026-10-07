@@ -137,6 +137,13 @@
     "cancel": "Hủy",
     "move": "Chuyển…"
   },
+  "team": {
+    "filterLabel": "Lọc theo đội",
+    "filterAll": "Tất cả đội",
+    "cs": "Hỗ trợ khách hàng",
+    "business": "Kinh doanh",
+    "badgeTitle": "Đội"
+  },
   "channel": {
     "filterLabel": "Lọc theo kênh",
     "filterAll": "Tất cả các kênh",

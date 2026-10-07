@@ -230,3 +230,64 @@ describe('toSessionResponse — channel', () => {
     expect(row.channel).toBe('widget');
   });
 });
+
+/**
+ * Team filter (PLN-261007 Team Routing): the option the customer picked when
+ * asking for a human. Rows that never chose only show under "all".
+ */
+describe('listSessions — team filter', () => {
+  function buildTeam() {
+    const wheres: Array<{ clause: string; params?: Record<string, unknown> }> = [];
+    const qb: Record<string, unknown> = {
+      where: jest.fn(() => qb),
+      andWhere: jest.fn((clause: string, params?: Record<string, unknown>) => {
+        wheres.push({ clause, params });
+        return qb;
+      }),
+      orderBy: jest.fn(() => qb),
+      addOrderBy: jest.fn(() => qb),
+      skip: jest.fn(() => qb),
+      take: jest.fn(() => qb),
+      getManyAndCount: jest.fn(async () => [[], 0]),
+    };
+    const svc = new AgentService(
+      { createQueryBuilder: () => qb } as never,
+      { createQueryBuilder: () => ({ select: () => ({ where: () => ({ getMany: async () => [] }) }) }) } as never,
+      {} as never,
+      { find: jest.fn(async () => []) } as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      { contactsByIds: jest.fn(async () => new Map()) } as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+    return { svc, wheres };
+  }
+
+  it('filters by the chosen team', async () => {
+    const { svc, wheres } = buildTeam();
+    await svc.listSessions(1, 1, 50, undefined, 'queue', 'all', undefined, 'business');
+    const clause = wheres.find((w) => w.clause.includes('c.support_type'));
+    expect(clause?.params).toEqual({ supportType: 'business' });
+  });
+
+  it('adds no team clause for "all" or when omitted', async () => {
+    for (const team of ['all', undefined, '  ']) {
+      const { svc, wheres } = buildTeam();
+      await svc.listSessions(1, 1, 50, undefined, 'queue', 'all', undefined, team);
+      expect(wheres.some((w) => w.clause.includes('c.support_type'))).toBe(false);
+    }
+  });
+
+  it('carries the chosen team on the queue row', () => {
+    const row = toSessionResponse({ id: 1, sessionId: 2, supportType: 'cs' } as Conversation, null);
+    expect(row.supportType).toBe('cs');
+    const none = toSessionResponse({ id: 1, sessionId: 2 } as Conversation, null);
+    expect(none.supportType).toBeNull();
+  });
+});

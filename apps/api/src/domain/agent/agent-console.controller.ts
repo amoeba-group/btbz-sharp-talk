@@ -311,6 +311,7 @@ export class AgentConsoleController {
       scope,
       query.channel,
       Number.isFinite(agentFilter) ? agentFilter : undefined,
+      query.support_type,
     );
     return new Paginated(
       items.map(
@@ -532,6 +533,8 @@ export class AgentConsoleController {
       // and the composer needs the channel to know whether a reply is possible.
       channel: conversation.channel || 'widget',
       status: conversation.status,
+      // Team the customer picked when asking for a human (PLN-261007 Team Routing).
+      supportType: conversation.supportType ?? null,
       // Current human owner, for the detail header (REQ-260825 R8-②).
       assignedTo:
         conversation.agentId != null

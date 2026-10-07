@@ -53,6 +53,8 @@ export function toSessionResponse(
     // The console badges it so an agent knows what they are replying into —
     // an SMS thread cannot be answered at all (PLN-260810 PR-M4).
     channel: c.channel || 'widget',
+    /** Team the customer picked when asking for a human (PLN-261007 Team Routing). */
+    supportType: c.supportType ?? null,
     /** Team pin (PLN-260826) — pinned rows sort first in the queue. */
     pinned: c.pinnedAt != null,
     pinnedAt: c.pinnedAt ?? null,

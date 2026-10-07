@@ -136,6 +136,8 @@ describe('ChatService — conversation memory', () => {
       {
         route: jest.fn(async () => ({ mode: 'agents', targetUserIds: [] })),
         denyMatch: jest.fn(async () => null),
+        // No team routing configured: a typed request goes straight to the agent.
+        teamQuestion: jest.fn(async () => null),
       } as unknown as HandoffRouterService,
       bus,
       {} as never,

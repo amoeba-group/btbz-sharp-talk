@@ -26,7 +26,7 @@ import { AuthGate } from './AuthGate';
 import { ContactCard } from './ContactCard';
 import { AffiliateCard } from './AffiliateCard';
 import { InlineOrdersAnswer } from './InlineOrderCard';
-import { replyChips } from './reply-chips';
+import { replyChips, teamChoiceOf } from './reply-chips';
 
 type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'orders' | null;
 
@@ -293,6 +293,14 @@ export function ChatTab() {
 
   /** Scenario follow-up chip clicks: control actions or another script. */
   function handleQuickReply(id: string, label: string) {
+    // Team chip (PLN-261007 Team Routing): the shopper picked who should
+    // answer; this is the second half of the "talk to an agent" request.
+    const team = teamChoiceOf(id);
+    if (team) {
+      setShowEscalate(false);
+      void escalate(team, label);
+      return;
+    }
     switch (id) {
       case 'agent_connect':
         setShowEscalate(false);
@@ -528,7 +536,11 @@ export function ChatTab() {
             onChatAgent={() => {
               setInline(null);
               setShowEscalate(true);
-              void escalate();
+              // With the team question pending (PLN-261007) the bar would only
+              // ask again — the chips are the way forward.
+              void escalate().then((r) => {
+                if (r.choose) setShowEscalate(false);
+              });
             }}
           />
         )}

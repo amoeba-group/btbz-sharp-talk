@@ -613,6 +613,7 @@ CREATE TABLE `conversations` (
   `escalated` tinyint(1) NOT NULL DEFAULT '0',
   `agent_id` bigint DEFAULT NULL,
   `reply_channel` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `support_type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `ended_at` datetime DEFAULT NULL,
   `idle_prompt_at` datetime DEFAULT NULL COMMENT 'when the idle check was sent; also the ask-once latch',

@@ -66,6 +66,7 @@
 261007-ai-engine-health.sql	column	ai_engines	last_error_detail
 261007-ai-engine-health.sql	column	ai_engines	tenant_selectable
 261007-answer-footer.sql	column	tenant_ai_config	answer_footer
+261007-conversation-support-type.sql	column	conversations	support_type
 261007-user-role-region.sql	column	users	region
 261008-golden-graded.sql	column	golden_questions	expected
 261008-golden-graded.sql	column	golden_questions	forbidden

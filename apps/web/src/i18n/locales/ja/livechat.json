@@ -137,6 +137,13 @@
     "cancel": "キャンセル",
     "move": "移動…"
   },
+  "team": {
+    "filterLabel": "チームで絞り込む",
+    "filterAll": "全チーム",
+    "cs": "カスタマーサポート",
+    "business": "ビジネス",
+    "badgeTitle": "チーム"
+  },
   "channel": {
     "filterLabel": "チャネルで絞り込み",
     "filterAll": "すべてのチャネル",

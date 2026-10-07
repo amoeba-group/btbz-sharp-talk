@@ -27,6 +27,65 @@ const DEFAULT_OFF_HOURS_NOTICE: LocalizedText = {
   ZH: '现在是客服工作时间之外。我已将您的留言转交给我们的团队，他们上班后会尽快通过电子邮件回复您。',
 };
 
+/** One team the customer can pick, resolved to the session language. */
+export interface TeamOption {
+  id: string;
+  /** JobLabel whose agents get paged (consult | sales_admin | …). */
+  jobLabel: string;
+  label: string;
+}
+
+/** The team question as the chat pipeline asks it (PLN-261007 Team Routing). */
+export interface TeamQuestion {
+  prompt: string;
+  options: TeamOption[];
+}
+
+/** Chip id prefix the widget sends back as `support_type` (minus the prefix). */
+export const TEAM_CHIP_PREFIX = 'team:';
+export const TEAM_OPTIONS_MAX = 4;
+
+const DEFAULT_TEAM_PROMPT: LocalizedText = {
+  EN: 'What do you need help with?',
+  ES: '¿Con qué necesitas ayuda?',
+  KO: '어떤 도움이 필요하신가요?',
+  VI: 'Bạn cần hỗ trợ về việc gì?',
+  JA: 'どのようなご用件でしょうか？',
+  ZH: '您需要哪方面的帮助？',
+};
+
+/**
+ * Built-in options and wording. Keyed by option id so a tenant that enables
+ * the feature without editing anything gets the CS / Business pair, and a
+ * tenant that keeps the ids but blanks a label still shows sensible text.
+ */
+const DEFAULT_TEAM_OPTIONS: Array<{ id: string; jobLabel: string; label: LocalizedText }> = [
+  {
+    id: 'cs',
+    jobLabel: 'consult',
+    label: {
+      EN: 'Customer Service Support',
+      ES: 'Atención al cliente',
+      KO: '고객 서비스 지원',
+      VI: 'Hỗ trợ khách hàng',
+      JA: 'カスタマーサポート',
+      ZH: '客户服务支持',
+    },
+  },
+  {
+    id: 'business',
+    jobLabel: 'sales_admin',
+    label: {
+      EN: 'Business Support',
+      ES: 'Soporte comercial',
+      KO: '비즈니스 지원',
+      VI: 'Hỗ trợ kinh doanh',
+      JA: 'ビジネスサポート',
+      ZH: '商务支持',
+    },
+  },
+];
+
 /**
  * Decides who to notify on escalation and what to tell the customer.
  * Kept separate from AgentAlertService so the chat pipeline can pick the
@@ -35,6 +94,36 @@ const DEFAULT_OFF_HOURS_NOTICE: LocalizedText = {
 @Injectable()
 export class HandoffRouterService {
   constructor(private readonly aiConfig: AiConfigService) {}
+
+  /**
+   * The team question for this tenant in the customer's language, or null
+   * when the tenant does not ask (PLN-261007 Team Routing). Malformed rows are
+   * dropped rather than failing the handoff: a typo in the console must never
+   * leave a customer unable to reach anyone. No usable row → null, i.e. the
+   * pre-feature straight handoff.
+   */
+  async teamQuestion(tenantId: number | null, language: string): Promise<TeamQuestion | null> {
+    const config = await this.aiConfig.getHandoffConfig(tenantId);
+    const routing = config?.teamRouting;
+    if (!routing?.enabled) return null;
+    const rows = Array.isArray(routing.options) && routing.options.length ? routing.options : DEFAULT_TEAM_OPTIONS;
+    const seen = new Set<string>();
+    const options: TeamOption[] = [];
+    for (const row of rows) {
+      const id = String(row?.id ?? '').trim();
+      const jobLabel = String(row?.jobLabel ?? '').trim();
+      if (!id || !jobLabel || seen.has(id)) continue;
+      seen.add(id);
+      const builtIn = DEFAULT_TEAM_OPTIONS.find((d) => d.id === id);
+      const label =
+        localized(row.label, language).trim() || localized(builtIn?.label, language).trim() || id;
+      options.push({ id, jobLabel, label });
+      if (options.length >= TEAM_OPTIONS_MAX) break;
+    }
+    if (!options.length) return null;
+    const prompt = localized(routing.prompt, language).trim() || localized(DEFAULT_TEAM_PROMPT, language);
+    return { prompt, options };
+  }
 
   /**
    * Policy deny-list check (PLN-260808-Issue-Workflow-P2): does this customer
