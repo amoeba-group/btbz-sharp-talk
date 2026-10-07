@@ -84,3 +84,26 @@ export function capContext<T extends { snippet: string }>(chunks: T[], cap = con
   }
   return out;
 }
+
+/**
+ * How closely a document title matches the question (FIX-261007-FAQ-Title-Match).
+ *
+ * FAQ entries are titled with the question itself. go2joy's "Tôi (khách sạn)
+ * có thể thanh toán cho Go2Joy như nào?" ranked 2nd by vector for exactly that
+ * question but fell out after fusion with the Vietnamese full-text leg, and
+ * the answer said the account details were not in the documents. Share of the
+ * title's words found in the query; titles under 4 words score 0 (too easy to
+ * match by accident).
+ */
+export function titleMatchScore(title: string, query: string): number {
+  const norm = (s: string) =>
+    s
+      .toLowerCase()
+      .replace(/^câu hỏi:\s*/u, '')
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter((t) => t.length > 0);
+  const t = [...new Set(norm(title))];
+  if (t.length < 4) return 0;
+  const q = new Set(norm(query));
+  return t.filter((w) => q.has(w)).length / t.length;
+}
