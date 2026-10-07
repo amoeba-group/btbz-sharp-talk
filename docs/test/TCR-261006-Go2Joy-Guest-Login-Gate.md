@@ -103,3 +103,55 @@ Dọn dữ liệu sau kiểm: xóa agent `guest-test`, category "HA Login Test",
 - **W8** (`hostLinkTemplate`) đặt trong card "Guest guidance" của AI Settings thay vì Settings › Embed: cùng JSON `guest_guidance`, cùng capability `AI_SETTINGS_MANAGE`, một đường lưu; Embed card nằm dưới `@RequireRank(master/director)` và không gọi `/ai-config`.
 - **W2** nằm trong AI Settings (sau Scenario buttons) chứ không "cạnh Handoff" vì HandoffSection đã chuyển sang Settings › Basic từ trước.
 - Backend thêm `partnerLink` (API tính từ template + claims đã ký) vào `/agent/sessions` và chi tiết hội thoại thay vì console tự ghép template — staff không có quyền đọc `/ai-config`.
+
+## 6. S3 — Cấu hình tenant go2joy trên staging (runbook, thực hiện sau khi deploy PR #1 + #2)
+
+**Điều kiện tiên quyết** (theo thứ tự):
+1. PR #1 (`feature/guest-login-gate`) merge → `sql/261001-guest-login-gate.sql` áp lên DB staging **trước** khi deploy code (DB_SYNCHRONIZE=false).
+2. PR #2 (`feature/guest-login-gate-ui`) merge + deploy staging (console có card Guest guidance, toggle category, select audience; widget có thẻ đăng nhập đối tác).
+3. PR KB (`feature/go2joy-s3-guest-kb` = QW1 CSV + 4 tài liệu K1) merge để lấy `reference/go2joy-ha-policies-kb-260916.csv` (50 dòng, 25 chủ đề × VI/EN).
+4. Người có tài khoản console tenant **go2joy** đăng nhập trong browser pane (tôi không được nhập mật khẩu thay).
+
+**Thứ tự thao tác** — K3 là bước **cuối** và chỉ sau khi Go2Joy xác nhận identify v2 chạy trên HA UAT (G3), vì bật `login_guidance` trước đó sẽ chặn mọi đối tác (PLN §5 rủi ro 1).
+
+| Bước | Màn hình console | Thao tác | Giá trị | Kiểm chứng |
+|---|---|---|---|---|
+| S3-1 (K1) | Knowledge › Nhập hàng loạt (CSV) | Nhập `reference/go2joy-ha-policies-kb-260916.csv`; importer upsert theo `external_key` | 50 dòng; 4 chủ đề mới `GTJ-HA-POL-22..25` ở category "HA · Đăng nhập & đăng ký đối tác" | Knowledge list hiện 8 category HA; embedding xong (không còn "pending") |
+| S3-2 (K2) | Knowledge › Categories (tab CounselInfo) | Dòng "HA · Đăng nhập & đăng ký đối tác": bấm **Signed-in only → Visible to guests** (confirm vì có 8 tài liệu); **Agents** = Hotel Partner (10) + Admin Staff (9) | `guest_visible = 1`, `agent_ids = [9,10]` | Toast "Category is now visible to guests."; 7 category HA còn lại giữ **Signed-in only**, scope 9·10 |
+| S3-3 (K4 + W8) | AI Settings › Guest guidance | Sign-in URL · Registration URL · Sign-in prompt VI/EN · "Open in your system" template → Save | **Staging (đích tích hợp = HA UAT)**: `https://go2joy-ha-uat.go2joy.io/sign-in`, `…/sign-up`, template `https://go2joy-ha-uat.go2joy.io/hotel-info-tabs?hotelSn={hotelSn}` · **Prod sau này**: `https://ha.go2joy.vn/sign-in`, `…/sign-up`, `https://ha.go2joy.vn/hotel-info-tabs?hotelSn={hotelSn}` (xác nhận route với Go2Joy — G4 câu 2) · Prompt VI: "Nội dung này dành cho đối tác đã đăng nhập Hotel Admin. Vui lòng đăng nhập để tôi hướng dẫn chi tiết — nếu chưa là đối tác, bạn có thể đăng ký ngay bên dưới." · EN: "This information is for partners signed in to Hotel Admin. Please sign in and I will walk you through it — not a partner yet? You can register below." | Toast "AI configuration saved."; reload giữ giá trị; `POST /session/ensure` với `agent_code=hotel-partner` trả `guestGuidance.loginUrl` |
+| S3-4 (K5) | AI Settings › Scenario buttons | Thêm 3 nút audience **Not signed in**, scope agent Hotel Partner; bộ nghiệp vụ hiện có (RPT-260916 §4) đặt audience **Signed in** | JSON tham chiếu ở §6.1 | Widget guest trên agent 10 chỉ thấy 3 chip; sau identify thấy bộ nghiệp vụ |
+| S3-5 (K3, **cuối**) | AI Settings › Agents › sửa Hotel Partner (10) và Admin Staff (9) | "Visitors who are not signed in" = **Only guide them to sign in or register** → Save | Landing Guest (8) và Default (5) giữ **Answer as usual** | Toast "Agent saved."; chạy S4 (TCR §3 S1–S9). **Rollback tức thì**: đổi lại "Answer as usual" (không cần deploy) |
+
+### 6.1 JSON tham chiếu cho nút kịch bản agent 10 (dán tay vào console; `agentIds` = id thật trên staging, kiểm tra ở AI Settings › Agents trước)
+```json
+[
+  {"id":"g2j_login","action":"message","audience":"guest","agentIds":[10],"enabled":true,
+   "label":{"VI":"Đăng nhập Hotel Admin","EN":"Sign in to Hotel Admin","KO":"호텔 어드민 로그인"},
+   "message":{"VI":"Làm sao đăng nhập Hotel Admin?","EN":"How do I sign in to Hotel Admin?"}},
+  {"id":"g2j_signup","action":"message","audience":"guest","agentIds":[10],"enabled":true,
+   "label":{"VI":"Đăng ký đối tác","EN":"Become a partner","KO":"파트너 등록"},
+   "message":{"VI":"Làm sao đăng ký trở thành đối tác Go2Joy?","EN":"How do I register as a Go2Joy partner?"}},
+  {"id":"g2j_contact","action":"contact_support","audience":"guest","agentIds":[10],"enabled":true,
+   "label":{"VI":"Liên hệ Go2Joy","EN":"Contact Go2Joy","KO":"고투조이 문의"}},
+  {"id":"g2j_recon","action":"message","audience":"verified","agentIds":[10],"enabled":true,
+   "label":{"VI":"Đối soát & thanh toán","EN":"Reconciliation & payment","KO":"정산·지급"},
+   "message":{"VI":"Tôi cần hỏi về kỳ đối soát và thanh toán công nợ.","EN":"I have a question about the reconciliation period and debt payment."}},
+  {"id":"g2j_cancel","action":"message","audience":"verified","agentIds":[10],"enabled":true,
+   "label":{"VI":"Hủy phòng / Khách không đến","EN":"Cancel / No-show","KO":"취소·노쇼"},
+   "message":{"VI":"Tôi cần hướng dẫn hủy đặt phòng hoặc báo khách không đến.","EN":"I need help cancelling a booking or reporting a no-show."}},
+  {"id":"g2j_rooms","action":"message","audience":"verified","agentIds":[10],"enabled":true,
+   "label":{"VI":"Loại phòng & giá","EN":"Room types & rates","KO":"객실·요금"},
+   "message":{"VI":"Tôi cần hướng dẫn tạo loại phòng, giá, Flash Sale hoặc khóa phòng.","EN":"I need help with room types, rates, Flash Sale or room locks."}},
+  {"id":"g2j_promo","action":"message","audience":"verified","agentIds":[10],"enabled":true,
+   "label":{"VI":"Khuyến mãi & chiến dịch","EN":"Promotions & campaigns","KO":"프로모션·캠페인"},
+   "message":{"VI":"Tôi muốn hỏi về coupon, Hotel CRM hoặc chiến dịch quảng cáo.","EN":"I have a question about coupons, Hotel CRM or ad campaigns."}},
+  {"id":"g2j_staff","action":"contact_support","audience":"verified","agentIds":[10],"enabled":true,
+   "label":{"VI":"Gặp nhân viên Go2Joy","EN":"Talk to Go2Joy staff","KO":"고투조이 담당자 연결"}}
+]
+```
+Nút "Liên hệ Go2Joy" (guest) và "Gặp nhân viên" (verified) cùng action `contact_support`: khách chưa đăng nhập vẫn được chuyển người (wantsHuman đứng trước cổng).
+
+### 6.2 Câu trả lời cần từ Go2Joy trước S3-3/S3-5 (G4)
+- G4-2 (REQ-261006): link mở khách sạn — HA `hotel-info-tabs?hotelSn=` hay admin PHP nội bộ? → quyết định `hostLinkTemplate`.
+- REQ-261001 §7-2: luồng quên mật khẩu — HA UAT 23.4.0 không có liên kết "Quên mật khẩu" trên trang đăng nhập; tài liệu `GTJ-HA-POL-23` hiện hướng dẫn liên hệ CSKH + "Yêu cầu thay đổi mật khẩu" trong Hồ sơ; cần Go2Joy xác nhận.
+- REQ-261001 §7-3/4: nội dung hợp tác nói được với người chưa là đối tác (hiện tài liệu công khai chỉ nêu những gì HA sign-up tự hiển thị: 2 hình thức Listing/Contract) và khách sạn chờ xác thực coi là guest hay verified.
