@@ -38,6 +38,18 @@ Cả hai cùng tồn tại mới gây lỗi: sửa một đầu là đủ chặn
 - `tsc --noEmit` apps/api và apps/widget: pass. `node --test apps/widget/test/*.test.mjs` (embed loader, host bridge): 24/24 pass.
 - Staging (sau deploy): mở `/widget/?shop=<ivyusa>` rồi `/widget/?shop=<go2joy>` cùng trình duyệt → hai phiên khác `session_token`, KB/trợ lý đúng tenant; log API có dòng `session token of tenant … presented for shop … — not resumed` đúng một lần cho lượt đầu (fallback khóa cũ), sau đó `localStorage` có hai khóa `ivy_session:<shop>`.
 
+## Kiểm chứng live ở local (2026-10-07, dev stack Docker, API + widget chạy từ worktree, commit 8f95f03)
+
+| # | Ca | Thao tác | Kết quả |
+|---|---|---|---|
+| L1 | API: resume cùng shop | `POST /session/ensure` token A + `shop_domain` ivyusa | Trả lại đúng token A |
+| L2 | API: token đưa sang tenant khác | token A (ivyusa, tenant 1) + `shop_domain` amoeba-9004 (tenant 2) | **Không resume**: cấp token mới của tenant 2 |
+| L3 | API: resume shop B | token B + shop B | Giữ nguyên token B |
+| L4 | Widget: hai shop trong một trình duyệt | mở `/widget/?embed=1&shop=ivyusa…` rồi `…&shop=amoeba-9004…` | `localStorage` có hai khóa `ivy_session:ivyusa.myshopify.com` và `ivy_session:amoeba-9004.myshopify.com`, token khác nhau |
+| L5 | Widget: quay lại shop A | mở lại shop ivyusa | Dùng lại đúng token A (không bị token B đè) |
+
+Cách chạy lại: `node --test apps/widget/test/*.test.mjs` cho phần loader; API/widget như trên với hai tenant seed (`tenants.shop_domain`).
+
 ## Giới hạn còn lại
 - Mobile/PWA dùng kho riêng (`ivy_session_token`, SecureStore/localStorage của app) nên không bị; app nhúng nhiều tenant qua **một** WebView vẫn dựa vào guard API (đúng vì `shop` đi trong `widgetUrl`).
 - Phiên legacy `tenant_id NULL` vẫn resume — theo dữ liệu hiện tại không còn phiên như vậy được tạo mới.
