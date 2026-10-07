@@ -6,8 +6,18 @@ import {
   PLAN_MENUS,
   USER_RANK,
   UserRank,
+  JOB_LABEL,
   JobLabel,
+  hasLabelFor,
 } from '@sharptalk/types';
+
+/**
+ * Screens a Sales Admin reaches on top of the consult ones (PLN-261007): the
+ * partner's customer record and orders, so a contract question can be answered
+ * with the account in front of them. Not the whole operations set — campaigns,
+ * reviews and the knowledge editor stay with operations.
+ */
+const SALES_ADMIN_EXTRA_MENUS: readonly MenuCode[] = [MENU.CUSTOMERS, MENU.ORDERS];
 
 /**
  * Menu access resolution — PLN-260812-Menu-Provisioning-Access.
@@ -118,7 +128,8 @@ export function labelAllows(rank: UserRank, menu: MenuCode, labels: readonly Job
   const required = REQUIRED_LABEL.get(menu);
   if (!required) return true;
   if (RANK_LABEL_EXEMPT_MENUS[rank]?.includes(menu)) return true;
-  return labels.includes(required);
+  if (hasLabelFor(required, labels)) return true;
+  return labels.includes(JOB_LABEL.SALES_ADMIN) && SALES_ADMIN_EXTRA_MENUS.includes(menu);
 }
 
 export interface EffectiveMenuInput {

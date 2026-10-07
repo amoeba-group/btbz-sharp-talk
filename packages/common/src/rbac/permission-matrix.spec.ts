@@ -44,6 +44,15 @@ describe('permission-matrix — userCan', () => {
     expect(userCan(USER_RANK.STAFF, [JOB_LABEL.CONSULT], CAPABILITY.CONVERSATION_HANDLE)).toBe(true);
   });
 
+  it('sales_admin satisfies the consult-gated conversation capabilities (PLN-261007)', () => {
+    expect(userCan(USER_RANK.STAFF, [JOB_LABEL.SALES_ADMIN], CAPABILITY.CONVERSATION_HANDLE)).toBe(true);
+    expect(userCan(USER_RANK.STAFF, [JOB_LABEL.SALES_ADMIN], CAPABILITY.MODULE_CONSULT)).toBe(true);
+    expect(userCan(USER_RANK.MANAGER, [JOB_LABEL.SALES_ADMIN], CAPABILITY.CONVERSATION_ASSIGN)).toBe(true);
+    // Not a superset of operations: campaigns stay with the operations label.
+    expect(userCan(USER_RANK.MANAGER, [JOB_LABEL.SALES_ADMIN], CAPABILITY.CAMPAIGN_SEND)).toBe(false);
+    expect(userCan(USER_RANK.MANAGER, [JOB_LABEL.SALES_ADMIN], CAPABILITY.MODULE_OPERATIONS)).toBe(false);
+  });
+
   it('staff with consult label may NOT send campaigns (not in staff rank grant)', () => {
     expect(userCan(USER_RANK.STAFF, [JOB_LABEL.CONSULT], CAPABILITY.CAMPAIGN_SEND)).toBe(false);
   });

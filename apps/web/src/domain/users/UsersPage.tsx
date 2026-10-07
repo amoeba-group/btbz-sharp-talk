@@ -19,10 +19,26 @@ import {
   useIssueTempPassword,
   useResetUserMfa,
 } from './users.hooks';
+import { USER_REGIONS } from './users.service';
 import type { JobLabel, TenantUser, UpdateUserBody } from './users.service';
 
 const RANKS = ['master', 'director', 'manager', 'staff'] as const;
 const STATUSES = ['active', 'suspended'] as const;
+
+/** Region select (PLN-261007): '' = nationwide, which the API stores as NULL. */
+function RegionSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { t } = useTranslation('users');
+  return (
+    <Select value={value} onChange={(e) => onChange(e.target.value)} aria-label={t('region')}>
+      <option value="">{t('region_all')}</option>
+      {USER_REGIONS.map((r) => (
+        <option key={r} value={r}>
+          {t(`region_${r}`)}
+        </option>
+      ))}
+    </Select>
+  );
+}
 
 function fmtDate(value?: string): string {
   if (!value) return '—';
@@ -56,6 +72,8 @@ function LabelCheckboxes({
           {l.name}
         </label>
       ))}
+      {/* "Others" is the absence of a role (PLN-261007) — said, not left to guess. */}
+      <p className="text-xs text-gray-400">{t('rolesHint')}</p>
     </div>
   );
 }
@@ -63,7 +81,10 @@ function LabelCheckboxes({
 export function UsersPage() {
   const { t } = useTranslation('users');
   const { t: tc } = useTranslation('common');
-  const { data: users, isLoading, error } = useUsers();
+  // Role/region filters (PLN-261007) — server-side, so they work past page one.
+  const [filterLabel, setFilterLabel] = useState('');
+  const [filterRegion, setFilterRegion] = useState('');
+  const { data: users, isLoading, error } = useUsers({ label: filterLabel, region: filterRegion });
   const { data: jobLabels } = useJobLabels();
   const inviteUser = useInviteUser();
   const updateUser = useUpdateUser();
@@ -116,10 +137,12 @@ export function UsersPage() {
   const [email, setEmail] = useState('');
   const [inviteRank, setInviteRank] = useState<string>('staff');
   const [inviteCodes, setInviteCodes] = useState<string[]>([]);
+  const [inviteRegion, setInviteRegion] = useState<string>('');
 
   const [editing, setEditing] = useState<TenantUser | null>(null);
   const [editRank, setEditRank] = useState<string>('staff');
   const [editCodes, setEditCodes] = useState<string[]>([]);
+  const [editRegion, setEditRegion] = useState<string>('');
   const [editStatus, setEditStatus] = useState<string>('active');
 
   const toggle = (codes: string[], code: string): string[] =>
@@ -129,11 +152,17 @@ export function UsersPage() {
     setEmail('');
     setInviteRank('staff');
     setInviteCodes([]);
+    setInviteRegion('');
     setInviteOpen(true);
   };
 
   const onInvite = async () => {
-    const res = await inviteUser.mutateAsync({ email, rank: inviteRank, label_codes: inviteCodes });
+    const res = await inviteUser.mutateAsync({
+      email,
+      rank: inviteRank,
+      label_codes: inviteCodes,
+      region: inviteRegion,
+    });
     setInviteOpen(false);
     // Show the generated temp password so the admin can relay it (besides email).
     setCopied(false);
@@ -163,6 +192,7 @@ export function UsersPage() {
     setEditing(u);
     setEditRank(u.rank);
     setEditCodes(u.labelCodes ?? []);
+    setEditRegion(u.region ?? '');
     setEditStatus(u.status ?? 'active');
   };
 
@@ -175,6 +205,7 @@ export function UsersPage() {
     const body: UpdateUserBody = {};
     if (editRank !== editing.rank) body.rank = editRank;
     if (codesChanged) body.label_codes = editCodes;
+    if (editRegion !== (editing.region ?? '')) body.region = editRegion;
     if (editStatus !== (editing.status ?? 'active')) body.status = editStatus;
     if (Object.keys(body).length > 0) {
       await updateUser.mutateAsync({ id: editing.id, body });
@@ -187,10 +218,10 @@ export function UsersPage() {
     { key: 'rank', header: t('rank'), render: (u) => <Badge tone="primary">{u.rank}</Badge> },
     {
       key: 'labels',
-      header: t('labels'),
+      header: t('roles'),
       render: (u) => {
         const codes = u.labelCodes ?? [];
-        if (codes.length === 0) return '—';
+        if (codes.length === 0) return <span className="text-gray-400">{t('roleOthers')}</span>;
         return (
           <div className="flex flex-wrap gap-1">
             {codes.map((c) => (
@@ -199,6 +230,11 @@ export function UsersPage() {
           </div>
         );
       },
+    },
+    {
+      key: 'region',
+      header: t('region'),
+      render: (u) => (u.region ? t(`region_${u.region}`, { defaultValue: u.region }) : t('region_all')),
     },
     { key: 'status', header: t('status'), render: (u) => <StatusBadge status={u.status} /> },
     { key: 'createdAt', header: t('created'), render: (u) => fmtDate(u.createdAt) },
@@ -249,6 +285,38 @@ export function UsersPage() {
       />
 
       <Card>
+        {/* Role / region filters (PLN-261007). */}
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="w-48">
+            <Select
+              value={filterLabel}
+              onChange={(e) => setFilterLabel(e.target.value)}
+              aria-label={t('filterRole')}
+            >
+              <option value="">{t('filterRoleAll')}</option>
+              {labels.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="w-48">
+            <Select
+              value={filterRegion}
+              onChange={(e) => setFilterRegion(e.target.value)}
+              aria-label={t('filterRegion')}
+            >
+              <option value="">{t('filterRegionAll')}</option>
+              <option value="none">{t('region_all')}</option>
+              {USER_REGIONS.map((r) => (
+                <option key={r} value={r}>
+                  {t(`region_${r}`)}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
         <Table<TenantUser>
           columns={columns}
           data={users}
@@ -291,12 +359,15 @@ export function UsersPage() {
             ))}
           </Select>
         </FormRow>
-        <FormRow label={t('jobLabels')}>
+        <FormRow label={t('roles')}>
           <LabelCheckboxes
             labels={labels}
             selected={inviteCodes}
             onToggle={(code) => setInviteCodes((prev) => toggle(prev, code))}
           />
+        </FormRow>
+        <FormRow label={t('region')}>
+          <RegionSelect value={inviteRegion} onChange={setInviteRegion} />
         </FormRow>
       </Modal>
 
@@ -324,12 +395,15 @@ export function UsersPage() {
             ))}
           </Select>
         </FormRow>
-        <FormRow label={t('jobLabels')}>
+        <FormRow label={t('roles')}>
           <LabelCheckboxes
             labels={labels}
             selected={editCodes}
             onToggle={(code) => setEditCodes((prev) => toggle(prev, code))}
           />
+        </FormRow>
+        <FormRow label={t('region')}>
+          <RegionSelect value={editRegion} onChange={setEditRegion} />
         </FormRow>
         <FormRow label={t('status')}>
           <Select value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>

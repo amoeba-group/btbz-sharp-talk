@@ -19,6 +19,17 @@ function repo(overrides: Record<string, unknown> = {}): never {
   } as never;
 }
 
+/**
+ * listUsers builds a query (role/region filters, PLN-261007); the chain is
+ * inert here and only the final page matters to these tests.
+ */
+function listQb(result: [unknown[], number]) {
+  const qb: Record<string, unknown> = {};
+  for (const m of ['where', 'andWhere', 'orderBy', 'skip', 'take']) qb[m] = () => qb;
+  qb.getManyAndCount = async () => result;
+  return qb;
+}
+
 describe('UserService.listUsers — job-label codes join (bigint id string vs number)', () => {
   // id as a STRING — the bigint PK representation TypeORM actually returns for User.id
   // (the outer half of the join trap: result Map keyed by numeric userId vs string id).
@@ -35,7 +46,7 @@ describe('UserService.listUsers — job-label codes join (bigint id string vs nu
   };
 
   it('maps codes when JobLabel.id is a string and jobLabelId is a number', async () => {
-    const userRepo = repo({ findAndCount: jest.fn(async () => [[user], 1]) });
+    const userRepo = repo({ createQueryBuilder: () => listQb([[user], 1]) });
     // JobLabel.id as TypeORM actually returns a BIGINT PK: a STRING.
     const labelRepo = repo({
       find: jest.fn(async () => [{ id: '1', tenantId: 1, code: 'consult', name: '상담' }]),
@@ -53,7 +64,7 @@ describe('UserService.listUsers — job-label codes join (bigint id string vs nu
   });
 
   it('returns empty labelCodes when the user has no assignments', async () => {
-    const userRepo = repo({ findAndCount: jest.fn(async () => [[user], 1]) });
+    const userRepo = repo({ createQueryBuilder: () => listQb([[user], 1]) });
     const userLabelRepo = repo({ find: jest.fn(async () => []) });
     const svc = new UserService(userRepo, repo(), userLabelRepo, repo(), repo(), {
       clearAccountLock: jest.fn(),

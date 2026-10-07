@@ -1,14 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { usersService } from './users.service';
-import type { InviteUserBody, UpdateUserBody } from './users.service';
+import type { InviteUserBody, UpdateUserBody, UserListFilter } from './users.service';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
 
-export const useUsers = () => {
+/** Tenant users; optional role/region filter (PLN-261007). Unfiltered callers keep the old key. */
+export const useUsers = (filter?: UserListFilter) => {
   const tenantKey = useTenantKey();
+  const active = filter && (filter.label || filter.region) ? filter : undefined;
   return useQuery({
-    queryKey: ['users', tenantKey],
-    queryFn: () => usersService.list(),
+    queryKey: active ? ['users', tenantKey, active] : ['users', tenantKey],
+    queryFn: () => usersService.list(active),
   });
 };
 

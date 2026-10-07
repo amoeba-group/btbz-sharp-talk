@@ -31,5 +31,16 @@
   "tempPwConfirm": "仮パスワードを発行します：",
   "tempPwSendEmail": "ユーザーのメールにも送信する",
   "tempPwEmailSent": "ユーザーのメールに送信しました。",
-  "tempPwEmailFailed": "メール送信に失敗しました — パスワードを手動で伝えてください。"
+  "tempPwEmailFailed": "メール送信に失敗しました — パスワードを手動で伝えてください。",
+  "roles": "役割",
+  "rolesHint": "役割を選ばない場合は「その他」になります（会話の割り当てや役割画面なし）。",
+  "roleOthers": "その他",
+  "region": "地域",
+  "region_all": "全国",
+  "region_north": "北部",
+  "region_south": "南部",
+  "filterRole": "役割で絞り込み",
+  "filterRoleAll": "すべての役割",
+  "filterRegion": "地域で絞り込み",
+  "filterRegionAll": "すべての地域"
 }
