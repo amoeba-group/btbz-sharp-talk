@@ -1,8 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MoreThan, Repository } from 'typeorm';
 import {
   CHANNEL_DIRECTION,
+  CJM_STAGE,
   CONSENT_STATE,
   CONVERSATION_STATUS,
   MESSENGER_CONSENT_MODE,
@@ -30,6 +31,7 @@ import { AdapterRegistry } from './adapter/adapter.registry';
 import { decryptChannelSecret } from './messenger-secret.util';
 import { AttachmentService } from '../attachment/attachment.service';
 import { REPLY_MODE, resolveReplyMode } from './auto-reply.util';
+import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
 
 /**
  * Privacy notice sent on first contact for `consent_mode='notice'` channels.
@@ -101,7 +103,34 @@ export class MessengerIngestService {
     /** Files delivered with an inbound message (PLN-260814 S5). */
     private readonly attachments?: AttachmentService,
     private readonly registry?: AdapterRegistry,
+    @Optional() private readonly bus?: EventBusService,
   ) {}
+
+  /**
+   * The journey step for a message stored without the chat pipeline.
+   *
+   * Auto and approve modes go through `handleUserMessage`, which records it;
+   * this branch did not, so relay rooms left at "off" read as if the customer
+   * never asked (kakao 18 of 74 rooms on staging — REQ-261008 F3). Same rule as
+   * the chat path: an analytics event only under an effective consent.
+   */
+  private async recordInquiry(session: Session): Promise<void> {
+    if (!this.bus) return;
+    try {
+      const consent = await this.sessionService.effectiveConsentFor(session.id, session.tenantId);
+      if (consent !== CONSENT_STATE.GRANTED) return;
+      await this.bus.publish(EVENTS.CJM, {
+        tenantId: session.tenantId,
+        sessionId: session.id,
+        customerId: session.customerId,
+        stage: CJM_STAGE.INQUIRY,
+        eventType: 'relay_message',
+      });
+    } catch (e) {
+      // A lost analytics event must never cost the message.
+      this.logger.warn(`journey event failed for session ${session.id}: ${(e as Error).message}`);
+    }
+  }
 
   /** Ingest a batch; one bad message never blocks the rest of the delivery. */
   async ingestBatch(channel: MessengerChannel, inbounds: NormalizedInbound[]): Promise<void> {
@@ -212,6 +241,7 @@ export class MessengerIngestService {
           })
           .catch((e: Error) => this.logger.warn(`attachment claim failed: ${e.message}`));
       }
+      await this.recordInquiry(session);
       // Escalate once per conversation, not once per message. Calling it on
       // every inbound paged the agents again for a thread already sitting in
       // their queue — 400 messages across 37 conversations on staging.

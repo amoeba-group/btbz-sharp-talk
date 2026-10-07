@@ -131,5 +131,60 @@
     "inUseHint": "Không thể xoá giai đoạn còn hành trình — hãy chuyển các thẻ trước.",
     "saved": "Đã lưu giai đoạn.",
     "saveError": "Không lưu được giai đoạn."
+  },
+  "summary": {
+    "label": "Số liệu báo cáo",
+    "conversations": "Hội thoại",
+    "primaryChannel": "{{channel}} {{pct}}%",
+    "messages": "Tin nhắn",
+    "messageSplit": "Khách {{customer}} · AI {{ai}} · Nhân viên {{human}}",
+    "messageSplitLegacy": "Khách {{customer}} · Hỗ trợ {{agent}}",
+    "resolutionRate": "Tỷ lệ giải quyết",
+    "unresolvedCount": "Chưa giải quyết {{count}}",
+    "resolvedCount": "Đã giải quyết {{count}}",
+    "avgLoops": "Vòng TB",
+    "handoffs": "Chuyển tiếp",
+    "medianResolution": "Trung vị giải quyết",
+    "minutes": "{{count}} phút",
+    "noneResolved": "Chưa có hội thoại được giải quyết",
+    "path": "Hành trình khách hàng (5A) — sự kiện điểm chạm",
+    "resolution": "Giải quyết",
+    "reasonCount": "{{reason}} {{count}}",
+    "events": "Sự kiện {{count}}",
+    "noEvents": "Không có sự kiện",
+    "advocateCandidate": "Đánh giá — ứng viên"
+  },
+  "valueState": {
+    "measured": {
+      "label": "Đã đo",
+      "hint": "Được đếm từ các hội thoại."
+    },
+    "not_applicable": {
+      "label": "Không áp dụng",
+      "hint": "Không có gì để tính — ví dụ thời gian giải quyết khi chưa hội thoại nào được giải quyết."
+    },
+    "not_measured": {
+      "label": "Chưa đo",
+      "hint": "Có thể tồn tại, nhưng dữ liệu để tính chưa được ghi lại."
+    },
+    "not_observable": {
+      "label": "Không quan sát được",
+      "hint": "Xảy ra trước khi khách nhắn tin nên hội thoại hỗ trợ không thấy được."
+    }
+  },
+  "reason": {
+    "csat_answered": "Đã đánh giá CSAT",
+    "agent_closed": "Nhân viên đóng",
+    "prompted_closed": "Đóng sau khi hỏi lại",
+    "open": "Đang mở",
+    "abandoned": "Bỏ dở",
+    "customer_last": "Khách nói sau cùng"
+  },
+  "fiveA": {
+    "aware": "Nhận biết",
+    "appeal": "Thu hút",
+    "ask": "Hỏi",
+    "act": "Hành động",
+    "advocate": "Giới thiệu"
   }
 }

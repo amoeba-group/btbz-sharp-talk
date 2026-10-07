@@ -131,5 +131,60 @@
     "inUseHint": "仍有旅程的阶段无法删除——请先移动这些卡片。",
     "saved": "已保存旅程阶段。",
     "saveError": "无法保存阶段。"
+  },
+  "summary": {
+    "label": "报告数据",
+    "conversations": "对话",
+    "primaryChannel": "{{channel}} {{pct}}%",
+    "messages": "消息",
+    "messageSplit": "客户 {{customer}} · AI {{ai}} · 客服 {{human}}",
+    "messageSplitLegacy": "客户 {{customer}} · 支持 {{agent}}",
+    "resolutionRate": "解决率",
+    "unresolvedCount": "未解决 {{count}}",
+    "resolvedCount": "已解决 {{count}}",
+    "avgLoops": "平均轮次",
+    "handoffs": "转接",
+    "medianResolution": "解决时长中位数",
+    "minutes": "{{count}} 分钟",
+    "noneResolved": "尚无已解决对话",
+    "path": "客户路径(5A) — 触点事件",
+    "resolution": "解决情况",
+    "reasonCount": "{{reason}} {{count}}",
+    "events": "事件 {{count}}",
+    "noEvents": "无记录",
+    "advocateCandidate": "评价 — 候选"
+  },
+  "valueState": {
+    "measured": {
+      "label": "已测量",
+      "hint": "根据对话统计。"
+    },
+    "not_applicable": {
+      "label": "不适用",
+      "hint": "没有可计算的对象——例如没有已解决对话时的解决时长。"
+    },
+    "not_measured": {
+      "label": "未测量",
+      "hint": "该值可能存在,但计算所需的数据未被记录。"
+    },
+    "not_observable": {
+      "label": "无法观测",
+      "hint": "发生在客户发起咨询之前,客服对话无法看到。"
+    }
+  },
+  "reason": {
+    "csat_answered": "已回复满意度",
+    "agent_closed": "客服关闭",
+    "prompted_closed": "确认后关闭",
+    "open": "进行中",
+    "abandoned": "已搁置",
+    "customer_last": "客户最后发言"
+  },
+  "fiveA": {
+    "aware": "认知",
+    "appeal": "吸引",
+    "ask": "询问",
+    "act": "行动",
+    "advocate": "推荐"
   }
 }

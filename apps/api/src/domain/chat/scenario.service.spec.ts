@@ -1,5 +1,6 @@
 import { Repository } from 'typeorm';
-import { CONSENT_STATE, MODERATION_DECISION } from '@sharptalk/types';
+import { CJM_STAGE, CONSENT_STATE, MODERATION_DECISION } from '@sharptalk/types';
+import type { EventBusService } from '../../infrastructure/infrastructure.module';
 import { ScenarioService } from './scenario.service';
 import { ChatService } from './chat.service';
 import { Message } from './entity/message.entity';
@@ -18,6 +19,7 @@ describe('ScenarioService consent gate', () => {
   let getOrCreateConversation: jest.Mock;
   let moderate: jest.Mock;
   let effectiveConsentFor: jest.Mock;
+  let publish: jest.Mock;
   let svc: ScenarioService;
 
   const session = {
@@ -33,6 +35,7 @@ describe('ScenarioService consent gate', () => {
     getOrCreateConversation = jest.fn(async () => ({ id: 42, sessionId: 9 }));
     moderate = jest.fn(async () => ({ decision: MODERATION_DECISION.DELIVERED, text: 'ok' }));
     effectiveConsentFor = jest.fn();
+    publish = jest.fn(async () => undefined);
 
     const msgRepo = {
       save: msgSave,
@@ -46,6 +49,7 @@ describe('ScenarioService consent gate', () => {
       { effectiveConsentFor } as unknown as SessionService,
       // No tenant overrides in these cases — the built-in script is used.
       { getScenarioOverride: jest.fn().mockResolvedValue(null) } as unknown as AiConfigService,
+      { publish } as unknown as EventBusService,
     );
   });
 
@@ -64,6 +68,8 @@ describe('ScenarioService consent gate', () => {
     expect(getOrCreateConversation).not.toHaveBeenCalled();
     expect(msgSave).not.toHaveBeenCalled();
     expect(moderate).not.toHaveBeenCalled();
+    // Nothing was asked on the record, so no journey step either.
+    expect(publish).not.toHaveBeenCalled();
     // Gate consulted the fresh (DB) consent read, tenant-scoped.
     expect(effectiveConsentFor).toHaveBeenCalledWith(9, 1);
   });
@@ -78,5 +84,20 @@ describe('ScenarioService consent gate', () => {
     expect(msgSave).toHaveBeenCalledTimes(2); // echoed user turn + script AI turn
     expect(moderate).toHaveBeenCalledTimes(1);
     expect(result.followUps.length).toBeGreaterThan(0);
+  });
+
+  it('records the tapped chip as an Inquiry step, like a typed message (REQ-261008 F3)', async () => {
+    effectiveConsentFor.mockResolvedValue(CONSENT_STATE.GRANTED);
+    await svc.handle(session, 'shipping_policy');
+    expect(publish).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        tenantId: 1,
+        sessionId: 9,
+        stage: CJM_STAGE.INQUIRY,
+        eventType: 'scenario_button',
+        payload: { action: 'shipping_policy' },
+      }),
+    );
   });
 });

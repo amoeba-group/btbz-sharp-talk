@@ -7,6 +7,14 @@ export interface SampleUtterance {
   text: string;
 }
 
+/** Appended to a sample cut at `quote_max_chars` (REQ-261008 F2). */
+export const TRUNCATION_MARK = '…';
+
+/** Cut to `max` characters, marking the cut so nobody reads it as the whole message. */
+export function clip(text: string, max: number): string {
+  return text.length > max ? `${text.slice(0, max)}${TRUNCATION_MARK}` : text;
+}
+
 /**
  * The instruction that keeps the model out of the arithmetic.
  *
@@ -18,7 +26,8 @@ const GROUND_RULES = [
   'Every number you print must be copied from the METRICS block. Do not compute, estimate, or round any figure yourself.',
   'If a figure you want is not in METRICS, say it was not measured rather than supplying one.',
   'Quote only from the SAMPLES block, verbatim and in its original language.',
-  'Kotler 5A: Aware and Appeal are not observable from support conversations. State that instead of guessing them.',
+  `A sample ending in ${TRUNCATION_MARK} was cut short. Quote it with the mark and never present it as a complete sentence.`,
+  'Kotler 5A: Aware and Appeal are not observable from support conversations alone. Use the touchpoint event counts in METRICS.stages5a where they exist; otherwise state that they were not observable instead of guessing them.',
   'Maslow: never assert a level. Give a quoted utterance, the hypothesis it suggests, and what would disprove it.',
 ];
 

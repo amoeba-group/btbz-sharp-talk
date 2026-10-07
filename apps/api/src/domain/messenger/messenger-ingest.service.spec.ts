@@ -37,6 +37,8 @@ describe('MessengerIngestService', () => {
     openConversation?: Partial<Conversation> | null;
     /** Stubbed AttachmentService.store — present only for the attachment cases. */
     attachmentStore?: jest.Mock;
+    /** Effective consent the journey event checks (REQ-261008 F3). */
+    consent?: string;
   }) {
     const channel = {
       id: 10,
@@ -133,6 +135,7 @@ describe('MessengerIngestService', () => {
     } as unknown as ChatService;
 
     const sessionService = {
+      effectiveConsentFor: jest.fn(async () => opts.consent ?? 'granted'),
       effectiveNoticeVersion: jest.fn(async () => '2026-07'),
       // Channel AI-agent binding (PLN-260820): unset in these fixtures → default.
       resolveAiAgentId: jest.fn(async () => null),
@@ -140,6 +143,8 @@ describe('MessengerIngestService', () => {
         (hint ?? '').toLowerCase().startsWith('ko') ? 'KO' : 'EN',
       ),
     } as unknown as SessionService;
+
+    const bus = { publish: jest.fn(async () => undefined) };
 
     const outbox = { flushThread: jest.fn(async () => undefined) } as unknown as MessengerOutboxService;
 
@@ -163,8 +168,11 @@ describe('MessengerIngestService', () => {
       sessionService,
       outbox,
       attachments,
+      undefined,
+      bus as never,
     );
     return {
+      bus,
       service,
       channel,
       chatService,
@@ -231,6 +239,29 @@ describe('MessengerIngestService', () => {
     expect(h.chatService.handleUserMessage).not.toHaveBeenCalled();
     expect(h.savedMessages.some((m) => m.senderType === 'user')).toBe(true);
     expect(h.chatService.escalate).toHaveBeenCalled();
+  });
+
+  it('records the stored message as an Inquiry step, which the chat pipeline would have (REQ-261008 F3)', async () => {
+    const h = build({ channel: { replyMode: 'off' } });
+    await h.service.ingestOne(h.channel, inbound);
+    expect(h.bus.publish).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ sessionId: 90, stage: 'Inquiry', eventType: 'relay_message' }),
+    );
+  });
+
+  it('records no journey step without an effective consent', async () => {
+    const h = build({ channel: { replyMode: 'off' }, consent: 'pending' });
+    await h.service.ingestOne(h.channel, inbound);
+    expect(h.bus.publish).not.toHaveBeenCalled();
+    // The message itself is still kept for the agent.
+    expect(h.savedMessages.some((m) => m.senderType === 'user')).toBe(true);
+  });
+
+  it('leaves the event to the chat pipeline when the AI answers', async () => {
+    const h = build({});
+    await h.service.ingestOne(h.channel, inbound);
+    expect(h.bus.publish).not.toHaveBeenCalled();
   });
 
   // PLN-260909: the privacy notice precedes the first AI processing of a room,

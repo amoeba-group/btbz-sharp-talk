@@ -1,9 +1,18 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListPlus } from 'lucide-react';
+import MDEditor from '@uiw/react-md-editor';
+import '@uiw/react-md-editor/markdown-editor.css';
 import { Modal } from '@/components/Modal';
 import { Button } from '@/components/Button';
 import { useJourneyActions, useJourneyReport } from './journey.hooks';
+import { JourneyReportSummaryView } from './report/JourneyReportSummaryView';
+
+/**
+ * The body is model output that quotes shoppers, and the preview renders raw
+ * HTML. A report needs none, so every `<` is shown as text rather than parsed.
+ */
+const asPlainMarkdown = (md: string) => md.replace(/</g, '&lt;');
 
 /**
  * The report, with the conditions it was written under at the top.
@@ -55,6 +64,9 @@ export function JourneyReportModal({
               model: data.model ?? '—',
             })}
           </div>
+          {data.status !== 'failed' && data.metrics && (
+            <JourneyReportSummaryView metrics={data.metrics} states={data.metricStates} />
+          )}
           {data.status === 'failed' ? (
             <p className="text-sm text-red-600">{data.error}</p>
           ) : (
@@ -80,12 +92,11 @@ export function JourneyReportModal({
                   </Button>
                 </div>
               )}
-              <article
-                className="prose prose-sm max-w-none whitespace-pre-wrap"
-                onMouseUp={capture}
-                onKeyUp={capture}
-              >
-                {data.bodyMd}
+              <article data-color-mode="light" onMouseUp={capture} onKeyUp={capture}>
+                <MDEditor.Markdown
+                  source={asPlainMarkdown(data.bodyMd ?? '')}
+                  style={{ background: 'transparent', fontSize: 14 }}
+                />
               </article>
             </>
           )}

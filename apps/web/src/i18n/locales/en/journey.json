@@ -131,5 +131,60 @@
     "inUseHint": "A stage that still holds journeys cannot be removed — move those cards first.",
     "saved": "Journey stages saved.",
     "saveError": "Could not save the stages."
+  },
+  "summary": {
+    "label": "Report figures",
+    "conversations": "Conversations",
+    "primaryChannel": "{{channel}} {{pct}}%",
+    "messages": "Messages",
+    "messageSplit": "Customer {{customer}} · AI {{ai}} · Agent {{human}}",
+    "messageSplitLegacy": "Customer {{customer}} · Support {{agent}}",
+    "resolutionRate": "Resolution rate",
+    "unresolvedCount": "Unresolved {{count}}",
+    "resolvedCount": "Resolved {{count}}",
+    "avgLoops": "Avg. loops",
+    "handoffs": "Handoffs",
+    "medianResolution": "Median resolution",
+    "minutes": "{{count}} min",
+    "noneResolved": "Nothing resolved yet",
+    "path": "Customer path (5A) — touchpoint events",
+    "resolution": "Resolution",
+    "reasonCount": "{{reason}} {{count}}",
+    "events": "Events {{count}}",
+    "noEvents": "No events",
+    "advocateCandidate": "Review — candidate"
+  },
+  "valueState": {
+    "measured": {
+      "label": "Measured",
+      "hint": "Counted from the conversations."
+    },
+    "not_applicable": {
+      "label": "N/A",
+      "hint": "Nothing to compute from — for example a resolution time when no conversation was resolved."
+    },
+    "not_measured": {
+      "label": "Not measured",
+      "hint": "Could exist, but what it is computed from was not recorded."
+    },
+    "not_observable": {
+      "label": "Not observable",
+      "hint": "Happens before the customer writes in, so support conversations cannot see it."
+    }
+  },
+  "reason": {
+    "csat_answered": "CSAT answered",
+    "agent_closed": "Agent closed",
+    "prompted_closed": "Closed after check-in",
+    "open": "Open",
+    "abandoned": "Abandoned",
+    "customer_last": "Customer spoke last"
+  },
+  "fiveA": {
+    "aware": "Aware",
+    "appeal": "Appeal",
+    "ask": "Ask",
+    "act": "Act",
+    "advocate": "Advocate"
   }
 }
