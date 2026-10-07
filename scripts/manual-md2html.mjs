@@ -32,6 +32,11 @@ const DOC_META = {
     en: { eyebrow: 'SharpTalk User Guides · Custom widgets', title: 'SharpTalk Custom Widget Manual', next: '<a href="user-manual.en.html">Complete User Manual</a> Ch. 14 (tenant settings) · Ch. 16 (platform admin), <a href="quick-setup.en.html">Quick Setup Manual</a> Ch. 5 (widget install · theme).' },
     vi: { eyebrow: 'Tài liệu SharpTalk · Widget tùy chỉnh', title: 'Sổ tay tạo widget tùy chỉnh SharpTalk', next: '<a href="user-manual.vi.html">Sổ tay tổng hợp</a> chương 14 (cài đặt tenant) · chương 16 (quản trị nền tảng), <a href="quick-setup.vi.html">Sổ tay cài đặt nhanh</a> chương 5 (cài widget · chủ đề).' },
   },
+  'cafe24-integration': {
+    ko: { eyebrow: 'SharpTalk 사용자설명서 · 카페24 연동', title: '샵톡 카페24 연동 작업 가이드', next: '<a href="platform-integration.ko.html">커머스 연동 자격증명 가이드</a>(값 발급 위치), <a href="quick-setup.ko.html">간단 세팅 매뉴얼</a>(테넌트 개설·위젯 설치), <a href="knowledge-ai.ko.html">지식 등록·AI 설정 매뉴얼</a>(카탈로그 동기화 이후).' },
+    en: { eyebrow: 'SharpTalk User Guides · Cafe24 integration', title: 'SharpTalk Cafe24 Integration Guide', next: '<a href="platform-integration.en.html">Commerce Integration Credentials</a> (where values come from), <a href="quick-setup.en.html">Quick Setup Manual</a> (tenant creation · widget install), <a href="knowledge-ai.en.html">Knowledge &amp; AI Settings Manual</a> (after catalog sync).' },
+    vi: { eyebrow: 'Tài liệu SharpTalk · Tích hợp Cafe24', title: 'Hướng dẫn tích hợp Cafe24 cho SharpTalk', next: '<a href="platform-integration.vi.html">Hướng dẫn thông tin xác thực</a> (nơi lấy các giá trị), <a href="quick-setup.vi.html">Sổ tay cài đặt nhanh</a> (tạo tenant · cài widget), <a href="knowledge-ai.vi.html">Sổ tay tri thức &amp; AI</a> (sau khi đồng bộ catalog).' },
+  },
 };
 const nav = NAV[lang];
 const meta = DOC_META[doc]?.[lang];
