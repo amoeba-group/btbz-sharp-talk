@@ -76,6 +76,8 @@ export interface KnowledgeDocument {
   updatedAt?: string;
   // Provenance & staleness (PLN D7). `stale`/`reviewDueAt` are derived server-side.
   sourceUrl?: string | null;
+  /** `https://…` or `notion:<block id>` (PLN-261006-KB-Video-Links). */
+  videoRef?: string | null;
   ownerUserId?: string | null;
   effectiveFrom?: string | null;
   reviewIntervalDays?: number | null;
@@ -424,6 +426,7 @@ export const knowledgeService = {
       active?: number;
       // snake_case: request DTOs are snake_case by convention.
       source_url?: string | null;
+      video_ref?: string | null;
       effective_from?: string | null;
       review_interval_days?: number | null;
     },

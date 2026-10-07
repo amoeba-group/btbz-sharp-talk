@@ -76,7 +76,8 @@
     "agentBadge": "Agente (vista previa)",
     "escalated": "Escalado",
     "agentMode": "(bot en silencio — la conversación está con un agente)",
-    "coachThis": "Entrenar"
+    "coachThis": "Entrenar",
+    "watchVideo": "Ver video"
   },
   "editReply": "Editar respuesta",
   "postAction_none": "Seguir en el chat",

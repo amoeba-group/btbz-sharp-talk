@@ -455,5 +455,7 @@
     "write": "Escribir en el tablero",
     "body": "Los activos importados y el conocimiento nuevo se escriben y publican primero en el tablero, se comprueban con una simulación y luego se adoptan como documentos KB.",
     "counts": "Pendientes de revisión {{pending}} · adoptados {{promoted}}"
-  }
+  },
+  "videoRef": "Video",
+  "videoRefHint": "Se muestra como «Ver video» bajo las respuestas que citan este documento. Un enlace https:// o notion:<id de bloque> para un video subido a Notion."
 }

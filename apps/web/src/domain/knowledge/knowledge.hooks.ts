@@ -283,6 +283,7 @@ export function useUpdateDocument() {
         content?: string;
         active?: number;
         source_url?: string | null;
+        video_ref?: string | null;
         effective_from?: string | null;
         review_interval_days?: number | null;
       };

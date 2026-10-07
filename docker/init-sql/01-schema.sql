@@ -1133,6 +1133,7 @@ CREATE TABLE `kb_documents` (
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `source_url` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `video_ref` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `owner_user_id` bigint DEFAULT NULL,
   `effective_from` date DEFAULT NULL,
   `review_interval_days` int DEFAULT NULL,

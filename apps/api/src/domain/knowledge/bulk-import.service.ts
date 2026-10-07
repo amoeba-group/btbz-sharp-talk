@@ -10,16 +10,17 @@ import { parseCsvRecords } from './csv.util';
 import { parseXlsxRecords } from './xlsx.util';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { VIDEO_REF_PATTERN } from './video-ref.util';
 
 /** Lower-cased on both sides so `Title` / `TITLE` from a spreadsheet still match. */
 const REQUIRED_COLUMNS = ['category', 'title', 'content'] as const;
-const OPTIONAL_COLUMNS = ['external_key', 'source_url'] as const;
+const OPTIONAL_COLUMNS = ['external_key', 'source_url', 'video_ref'] as const;
 /** Same ceiling as the product importer — refuse absurd files before the row loop. */
 const MAX_ROWS = 5_000;
 
 /** Column limits mirrored from KbDocument — a too-long value is a row error the
  * operator can fix, not a MySQL 1406 that aborts the whole import. */
-const LIMITS = { category: 64, title: 255, external_key: 255, source_url: 512 } as const;
+const LIMITS = { category: 64, title: 255, external_key: 255, source_url: 512, video_ref: 255 } as const;
 
 export interface BulkImportResult {
   parsed: number;
@@ -96,6 +97,7 @@ export class BulkImportService {
       throw new BusinessException(ERROR_CODE.BULK_IMPORT_TOO_MANY_ROWS, HttpStatus.BAD_REQUEST);
     }
 
+    const hasVideoColumn = headerMap.has('video_ref');
     const col = (rec: Record<string, string>, name: string): string => {
       const key = headerMap.get(name);
       return key ? (rec[key] ?? '').trim() : '';
@@ -135,8 +137,11 @@ export class BulkImportService {
       const content = col(rec, 'content');
       const externalKey = col(rec, 'external_key') || null;
       const sourceUrl = col(rec, 'source_url') || null;
+      // Only a file that HAS the column speaks about videos: an older export
+      // re-uploaded without it must not wipe links set since.
+      const videoRef = hasVideoColumn ? col(rec, 'video_ref') || null : undefined;
 
-      const problem = this.rowProblem({ category, title, content, externalKey, sourceUrl });
+      const problem = this.rowProblem({ category, title, content, externalKey, sourceUrl, videoRef: videoRef ?? null });
       if (problem) {
         result.invalid += 1;
         result.errors.push({ row: rowNo, reason: problem });
@@ -179,6 +184,7 @@ export class BulkImportService {
             title,
             content,
             sourceUrl,
+            videoRef: videoRef ?? null,
             active: 1,
             status: 'pending',
             embeddingRef: null,
@@ -192,12 +198,20 @@ export class BulkImportService {
         continue;
       }
 
-      const unchanged =
+      const textUnchanged =
         found.title === title &&
         (found.content ?? '') === content &&
         (found.category ?? null) === category &&
         (found.sourceUrl ?? null) === sourceUrl;
-      if (unchanged) {
+      const videoChanged = videoRef !== undefined && (found.videoRef ?? null) !== videoRef;
+      if (textUnchanged && videoChanged) {
+        // A video link alone changes nothing the search reads — no re-embed.
+        found.videoRef = videoRef ?? null;
+        await this.docRepo.save(found);
+        result.updated += 1;
+        continue;
+      }
+      if (textUnchanged) {
         // Unchanged content is not the same as "already searchable" — a row
         // from a partial earlier run that never embedded must be re-queued.
         if (found.status !== 'embedded') touchedIds.push(Number(found.id));
@@ -210,6 +224,7 @@ export class BulkImportService {
       found.category = category;
       found.content = content;
       found.sourceUrl = sourceUrl;
+      if (videoRef !== undefined) found.videoRef = videoRef;
       // A row matched by title adopts the file's external_key so the NEXT
       // upload matches it by the stable key instead.
       if (externalKey) found.externalKey = externalKey;
@@ -241,6 +256,7 @@ export class BulkImportService {
     content: string;
     externalKey: string | null;
     sourceUrl: string | null;
+    videoRef: string | null;
   }): string | null {
     if (!v.title) return 'title is empty';
     if (!v.content) return 'content is empty';
@@ -251,6 +267,8 @@ export class BulkImportService {
       return `external_key exceeds ${LIMITS.external_key} characters`;
     if (v.sourceUrl && v.sourceUrl.length > LIMITS.source_url)
       return `source_url exceeds ${LIMITS.source_url} characters`;
+    if (v.videoRef && (v.videoRef.length > LIMITS.video_ref || !VIDEO_REF_PATTERN.test(v.videoRef)))
+      return 'video_ref must be an https:// URL or notion:<block id>';
     return null;
   }
 }

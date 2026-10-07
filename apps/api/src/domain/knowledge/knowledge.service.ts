@@ -422,6 +422,7 @@ export class KnowledgeService {
       title: body.title,
       content: body.content,
       sourceUrl: body.source_url ?? null,
+      videoRef: body.video_ref || null,
       active: 1,
       status: 'pending',
       embeddingRef: null,
@@ -445,6 +446,8 @@ export class KnowledgeService {
     // Provenance/staleness fields (PLN D7). `null` is meaningful — clearing a
     // review cadence is a real edit — so only `undefined` means "not sent".
     if (body.source_url !== undefined) doc.sourceUrl = body.source_url;
+    // A video link changes nothing the search reads, so it never re-embeds.
+    if (body.video_ref !== undefined) doc.videoRef = body.video_ref || null;
     if (body.effective_from !== undefined) doc.effectiveFrom = body.effective_from;
     if (body.review_interval_days !== undefined) doc.reviewIntervalDays = body.review_interval_days;
     if (body.owner_user_id !== undefined) doc.ownerUserId = body.owner_user_id;

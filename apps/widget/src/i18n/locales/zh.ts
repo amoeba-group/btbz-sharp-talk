@@ -49,6 +49,7 @@ export const zh: Translation = {
     aiDisclosure:
       '本聊天由 AI 提供支持。您发送的消息将由{{region}}的第三方 AI 服务提供商处理以生成回复。',
     citations: '参考资料',
+    watchVideo: '观看视频',
     inputPlaceholder: '输入消息…',
     send: '发送',
     sendFailed: '抱歉，消息发送失败。请重试。',

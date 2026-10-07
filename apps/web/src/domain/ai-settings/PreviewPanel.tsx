@@ -13,6 +13,7 @@ import type { PreviewReply } from './preview.service';
 import { LANGUAGES } from '../../../../../packages/types/src/common/language';
 import { scenarioLabelText } from './ai-settings.service';
 import type { ScenarioLang } from './ai-settings.service';
+import { resolveFileUrl } from '@/lib/api-client';
 
 type Role = 'user' | 'ai' | 'system' | 'agent';
 
@@ -24,7 +25,7 @@ interface PreviewMessage {
   messageId?: string;
   meta?: {
     confidence?: number;
-    citations?: { title: string }[];
+    citations?: { title: string; videoUrl?: string | null }[];
     escalate?: boolean;
   };
 }
@@ -112,7 +113,7 @@ export function PreviewPanel({ agentId, onCoach, replayQuestion, onReplayed }: P
   function replyMeta(reply: PreviewReply, escalate: boolean) {
     return {
       confidence: reply.confidence,
-      citations: reply.citations?.map((c) => ({ title: c.title })),
+      citations: reply.citations?.map((c) => ({ title: c.title, videoUrl: c.videoUrl ?? null })),
       escalate,
     };
   }
@@ -276,6 +277,17 @@ export function PreviewPanel({ agentId, onCoach, replayQuestion, onReplayed }: P
                 {m.meta.citations?.map((c, i) => (
                   <Badge key={i} tone="info">
                     {c.title.length > 28 ? `${c.title.slice(0, 28)}…` : c.title}
+                    {/* The same link a customer gets under the answer (PLN-261006). */}
+                    {c.videoUrl && (
+                      <a
+                        href={resolveFileUrl(c.videoUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-1 underline"
+                      >
+                        ▶ {t('preview.watchVideo')}
+                      </a>
+                    )}
                   </Badge>
                 ))}
               </div>

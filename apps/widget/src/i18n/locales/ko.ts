@@ -49,6 +49,7 @@ export const ko: Translation = {
     aiDisclosure:
       '이 채팅은 AI 기반으로 운영됩니다. 보내신 메시지는 응답 생성을 위해 {{region}}에 있는 외부 AI 서비스 제공업체에서 처리됩니다.',
     citations: '지식참조',
+    watchVideo: '영상 보기',
     inputPlaceholder: '메시지를 입력하세요…',
     send: '보내기',
     sendFailed: '전송하지 못했습니다. 다시 시도해 주세요.',

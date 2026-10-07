@@ -76,7 +76,8 @@
     "agentBadge": "Agent (preview)",
     "escalated": "Escalated",
     "agentMode": "(bot silent — thread is with an agent)",
-    "coachThis": "Coach this"
+    "coachThis": "Coach this",
+    "watchVideo": "Watch video"
   },
   "editReply": "Edit reply",
   "postAction_none": "Stay in chat",

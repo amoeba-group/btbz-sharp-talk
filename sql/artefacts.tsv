@@ -73,6 +73,7 @@
 261008-golden-graded.sql	column	golden_runs	fail_count
 261008-golden-graded.sql	column	golden_run_items	verdict
 261008-golden-graded.sql	column	golden_run_items	failed_checks
+261008-kb-documents-video-ref.sql	column	kb_documents	video_ref
 migration_agent_coaching.sql	table	agent_coaching_threads	-
 migration_agent_coaching.sql	table	agent_coaching_messages	-
 migration_agent_coaching.sql	table	agent_coaching_proposals	-

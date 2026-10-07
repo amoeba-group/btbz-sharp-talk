@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import type { ChatMessage } from '../../lib/types';
 import { formatTime } from '../../lib/format';
 import { MessageAttachments } from './MessageAttachments';
+import { resolveFileUrl } from '../../lib/api-client';
 
 /**
  * Citation URLs come from tenant-editable KB sources — only allow http(s) so a
@@ -46,14 +47,33 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
           <div className="mt-1.5 border-t border-gray-200 pt-1.5">
             <p className="mb-0.5 text-[10px] font-medium text-gray-500">{t('chat.citations')}</p>
             <ul className="space-y-0.5">
-              {message.citations.map((c, i) => {
+              {/* Sources with a video first — it is the most direct help there
+                  is (PLN-261006-KB-Video-Links). Stable otherwise. */}
+              {[...message.citations]
+                .sort((a, b) => Number(!!b.videoUrl) - Number(!!a.videoUrl))
+                .map((c, i) => {
                 // The server only fills `url` for a product on this tenant's own
                 // storefront, so anything with a link is a product to recommend
                 // and everything else stays plain reference text.
                 const href = c.url ? safeHttpUrl(c.url) : null;
+                // A path on our API, signed per document; resolved against the
+                // API origin like an attachment link.
+                const video = c.videoUrl ? safeHttpUrl(resolveFileUrl(c.videoUrl)) : null;
                 return (
                   <li key={i} className="text-xs text-primary-600">
-                    {href ? (
+                    {video ? (
+                      <span className="block">
+                        <span className="text-gray-500">· {c.title}</span>{' '}
+                        <a
+                          href={video}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="ml-0.5 inline-flex items-center gap-0.5 rounded-full border border-primary-200 bg-primary-50 px-2 py-0.5 font-medium text-primary-700 no-underline hover:bg-primary-100"
+                        >
+                          ▶ {t('chat.watchVideo')}
+                        </a>
+                      </span>
+                    ) : href ? (
                       <a
                         href={href}
                         target="_blank"

@@ -7,9 +7,12 @@ import {
   IsObject,
   IsOptional,
   IsString,
+  Matches,
   MaxLength,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
+import { VIDEO_REF_PATTERN } from '../../video-ref.util';
 
 /**
  * Knowledge source ingestion modes (FR-064). board/repository were removed
@@ -90,6 +93,8 @@ export class CreateDocumentRequest {
    * later asks why a document says what it says.
    */
   @IsOptional() @IsString() @MaxLength(512) source_url?: string;
+  /** `https://…` or `notion:<block id>` — the video this document explains. */
+  @IsOptional() @IsString() @MaxLength(255) @Matches(VIDEO_REF_PATTERN) video_ref?: string;
 }
 
 /** Multipart form fields riding along the bulk-import file (PLN-260828 D3). */
@@ -144,6 +149,12 @@ export class UpdateDocumentRequest {
   // Provenance & staleness (PLN D7). Nullable on purpose: clearing a review
   // cadence is a legitimate edit, so `null` is distinct from "not sent".
   @IsOptional() @IsString() source_url?: string | null;
+  // Empty string or null clears it (PLN-261006-KB-Video-Links).
+  @ValidateIf((_o, v) => v !== undefined && v !== null && v !== '')
+  @IsString()
+  @MaxLength(255)
+  @Matches(VIDEO_REF_PATTERN)
+  video_ref?: string | null;
   @IsOptional() @IsString() effective_from?: string | null;
   @IsOptional() @IsInt() review_interval_days?: number | null;
   @IsOptional() @IsInt() owner_user_id?: number | null;

@@ -1,0 +1,384 @@
+{
+  "_about": "Go2Joy Hotel Admin Notion page — video blocks in page order (PLN-261006-KB-Video-Links). Read from the Notion API on 2026-10-06 (63 video blocks, all Notion-hosted files). `video` = the Video N of reference/hoteladminvideoguidevien.md (51 analysed); null = added to the page after that analysis. Mapping: N<=16 -> same position, N>=17 -> position N+3 (positions 17-19 were inserted).",
+  "pageId": "8968fee0bb548347a35e01756b4cc89c",
+  "blocks": [
+    {
+      "position": 0,
+      "blockId": "4648fee0bb548292bc6381250b79b647",
+      "heading": "Trang chủ",
+      "video": 0
+    },
+    {
+      "position": 1,
+      "blockId": "3ac8fee0bb548208aca3817093a010d5",
+      "heading": "Quản lý đánh giá",
+      "video": 1
+    },
+    {
+      "position": 2,
+      "blockId": "c118fee0bb548237907b811490142c9b",
+      "heading": "1. Tạo hoặc Sửa chương trình",
+      "video": 2
+    },
+    {
+      "position": 3,
+      "blockId": "d378fee0bb54826087a501d00a08c1cc",
+      "heading": "1. Tạo hoặc Sửa chương trình",
+      "video": 3
+    },
+    {
+      "position": 4,
+      "blockId": "5278fee0bb54825b8c0181f91d54e2a9",
+      "heading": "1. Tạo hoặc Sửa chương trình",
+      "video": 4
+    },
+    {
+      "position": 5,
+      "blockId": "4288fee0bb54835e8201819155c16ac0",
+      "heading": "1. Tạo hoặc Sửa chương trình",
+      "video": 5
+    },
+    {
+      "position": 6,
+      "blockId": "7168fee0bb54827d8d7f814090cb2e5f",
+      "heading": "2. Tìm chương trình giảm giá trực tiếp",
+      "video": 6
+    },
+    {
+      "position": 7,
+      "blockId": "fe68fee0bb5482349e49018853fd3468",
+      "heading": "2. Tìm chương trình giảm giá trực tiếp",
+      "video": 7
+    },
+    {
+      "position": 8,
+      "blockId": "9588fee0bb5482b2910d01f099bdf875",
+      "heading": "1. Thiết lập Flash Sale",
+      "video": 8
+    },
+    {
+      "position": 9,
+      "blockId": "7a08fee0bb54829aad028195e5197507",
+      "heading": "1. Thiết lập Flash Sale",
+      "video": 9
+    },
+    {
+      "position": 10,
+      "blockId": "6378fee0bb548322ad37813d0825d810",
+      "heading": "2. Dừng Giảm sốc",
+      "video": 10
+    },
+    {
+      "position": 11,
+      "blockId": "0bf8fee0bb5482cda3c501e5bc26fad1",
+      "heading": "1. Thiết lập Phụ thu",
+      "video": 11
+    },
+    {
+      "position": 12,
+      "blockId": "f028fee0bb5482008ee48196f3653a22",
+      "heading": "2. Xoá Phụ thu",
+      "video": 12
+    },
+    {
+      "position": 13,
+      "blockId": "7ab8fee0bb548238b11d8133a2631b94",
+      "heading": "1. Thiết lập khoá phòng",
+      "video": 13
+    },
+    {
+      "position": 14,
+      "blockId": "d678fee0bb5482538ce981ca65942ef3",
+      "heading": "1. Thiết lập khoá phòng",
+      "video": 14
+    },
+    {
+      "position": 15,
+      "blockId": "ec58fee0bb5482a0b190813110190e9b",
+      "heading": "1. Thiết lập khoá phòng",
+      "video": 15
+    },
+    {
+      "position": 16,
+      "blockId": "b748fee0bb5482798dc10139399da4fa",
+      "heading": "2. Xoá thiết lập khoá phòng",
+      "video": 16
+    },
+    {
+      "position": 17,
+      "blockId": "e568fee0bb54826d9395813284c8f10f",
+      "heading": "Tin nhắn từ G2J",
+      "video": null
+    },
+    {
+      "position": 18,
+      "blockId": "19c8fee0bb548299a02d8125515fc7b7",
+      "heading": "Tin nhắn từ G2J",
+      "video": null
+    },
+    {
+      "position": 19,
+      "blockId": "b1c8fee0bb5482c4b03d01a3eb58bb7e",
+      "heading": "Chat với khách (Mới)",
+      "video": null
+    },
+    {
+      "position": 20,
+      "blockId": "82a8fee0bb54836a9d218108a4db98b3",
+      "heading": "1. Tất cả đặt phòng đều được huỷ phòng khi chọn lý do",
+      "video": 17
+    },
+    {
+      "position": 21,
+      "blockId": "3818fee0bb54824fa96a01855cca7c28",
+      "heading": "2. Đối với các lý do còn lại",
+      "video": 18
+    },
+    {
+      "position": 22,
+      "blockId": "7138fee0bb548204b5a68111a39fdbe1",
+      "heading": "2. Đối với các lý do còn lại",
+      "video": 19
+    },
+    {
+      "position": 23,
+      "blockId": "72f8fee0bb54838fb93b01574c7251ab",
+      "heading": "2. Đối với các lý do còn lại",
+      "video": 20
+    },
+    {
+      "position": 24,
+      "blockId": "8188fee0bb54824bbe4e0129344fac12",
+      "heading": "2. Đối với các lý do còn lại",
+      "video": 21
+    },
+    {
+      "position": 25,
+      "blockId": "dab8fee0bb54834795e001304c3ed4f1",
+      "heading": "2. Đối với các lý do còn lại",
+      "video": 22
+    },
+    {
+      "position": 26,
+      "blockId": "1de8fee0bb548242b9e0815df30d63b7",
+      "heading": "2. Đối với các lý do còn lại",
+      "video": 23
+    },
+    {
+      "position": 27,
+      "blockId": "cba8fee0bb5483c7b45381a7ea779bf2",
+      "heading": "Báo cáo đặt phòng",
+      "video": 24
+    },
+    {
+      "position": 28,
+      "blockId": "c328fee0bb548264a0ea81ad27bb0b2a",
+      "heading": "Quản lý đối soát",
+      "video": 25
+    },
+    {
+      "position": 29,
+      "blockId": "e198fee0bb548344bffb81debe69b831",
+      "heading": "Quản lý đối soát",
+      "video": 26
+    },
+    {
+      "position": 30,
+      "blockId": "8e18fee0bb5483d09ce10171442d3485",
+      "heading": "Quản lý đối soát",
+      "video": 27
+    },
+    {
+      "position": 31,
+      "blockId": "8a78fee0bb5482de9e78815ba58be66a",
+      "heading": "Quản lý đối soát",
+      "video": 28
+    },
+    {
+      "position": 32,
+      "blockId": "2ba8fee0bb5482dd9c3b0138128ee370",
+      "heading": "Quản lý đối soát",
+      "video": 29
+    },
+    {
+      "position": 33,
+      "blockId": "c438fee0bb5482ea88688166a715b128",
+      "heading": "Quản lý đối soát",
+      "video": 30
+    },
+    {
+      "position": 34,
+      "blockId": "ad78fee0bb548239b9f081fff5bedb03",
+      "heading": "Quản lý đối soát",
+      "video": 31
+    },
+    {
+      "position": 35,
+      "blockId": "cd18fee0bb54827692778183b52b0f53",
+      "heading": "Quản lý sản phẩm",
+      "video": 32
+    },
+    {
+      "position": 36,
+      "blockId": "2898fee0bb54821fbd1d01ed78dd9993",
+      "heading": "Quản lý sản phẩm",
+      "video": 33
+    },
+    {
+      "position": 37,
+      "blockId": "2978fee0bb54838e984c81973e2ee3d0",
+      "heading": "1. Xem Danh sách coupon",
+      "video": 34
+    },
+    {
+      "position": 38,
+      "blockId": "88b8fee0bb548306bef501390c6f30ae",
+      "heading": "1. Đăng ký tại trang Danh sách coupon",
+      "video": 35
+    },
+    {
+      "position": 39,
+      "blockId": "05e8fee0bb54823986d7013f7951ab00",
+      "heading": "2. Đăng ký tại trang Chi tiết coupon",
+      "video": 36
+    },
+    {
+      "position": 40,
+      "blockId": "f278fee0bb5483079f9a8114326db532",
+      "heading": "2. Đăng ký tại trang Chi tiết coupon",
+      "video": 37
+    },
+    {
+      "position": 41,
+      "blockId": "78e8fee0bb5483a585bb8192ef6d9b91",
+      "heading": "2. Đăng ký tại trang Chi tiết coupon",
+      "video": 38
+    },
+    {
+      "position": 42,
+      "blockId": "96d8fee0bb548285af2801121c1e93bd",
+      "heading": "2. Đăng ký tại trang Chi tiết coupon",
+      "video": 39
+    },
+    {
+      "position": 43,
+      "blockId": "c918fee0bb5482cf9746814d8ab9edbd",
+      "heading": "2. Đăng ký tại trang Chi tiết coupon",
+      "video": 40
+    },
+    {
+      "position": 44,
+      "blockId": "2d58fee0bb548322954981351858e43e",
+      "heading": "2. Đăng ký tại trang Chi tiết coupon",
+      "video": 41
+    },
+    {
+      "position": 45,
+      "blockId": "0dc8fee0bb5482a99350810f3833c60c",
+      "heading": "Chiến dịch quảng cáo",
+      "video": 42
+    },
+    {
+      "position": 46,
+      "blockId": "4ee8fee0bb548341bb1f0177682d11df",
+      "heading": "Chiến dịch quảng cáo",
+      "video": 43
+    },
+    {
+      "position": 47,
+      "blockId": "bad8fee0bb5482628f1e01579a3ee2c7",
+      "heading": "Chiến dịch quảng cáo",
+      "video": 44
+    },
+    {
+      "position": 48,
+      "blockId": "32f8fee0bb548321adbb017cdea916b3",
+      "heading": "Chiến dịch quảng cáo",
+      "video": 45
+    },
+    {
+      "position": 49,
+      "blockId": "70a8fee0bb5483b0a5e301eb1bca48d2",
+      "heading": "Quản lý nhân viên",
+      "video": 46
+    },
+    {
+      "position": 50,
+      "blockId": "6de8fee0bb548248973581cc781729c9",
+      "heading": "Quản lý nhân viên",
+      "video": 47
+    },
+    {
+      "position": 51,
+      "blockId": "dc88fee0bb548355bd08817fc4a8c07e",
+      "heading": "1. Tạo tài khoản cho Lễ tân",
+      "video": 48
+    },
+    {
+      "position": 52,
+      "blockId": "f1b8fee0bb5483fc95848100d2bd7be0",
+      "heading": "2. Tạo tài khoản cho Quản lý",
+      "video": 49
+    },
+    {
+      "position": 53,
+      "blockId": "f338fee0bb548282bf030189f14e8d05",
+      "heading": "2. Tạo tài khoản cho Quản lý",
+      "video": 50
+    },
+    {
+      "position": 54,
+      "blockId": "7258fee0bb5482d5906c015c7cf42b85",
+      "heading": "Thiết lập thông tin chung",
+      "video": null
+    },
+    {
+      "position": 55,
+      "blockId": "1558fee0bb548244a45a0196472bee6a",
+      "heading": "Thiết lập thông tin loại phòng (Mới)",
+      "video": null
+    },
+    {
+      "position": 56,
+      "blockId": "c748fee0bb5483ca8280016d3b921997",
+      "heading": "Thiết lập thông tin loại phòng (Mới)",
+      "video": null
+    },
+    {
+      "position": 57,
+      "blockId": "92a8fee0bb5482118f9001c67bdc40d1",
+      "heading": "Thiết lập thông tin loại phòng (Mới)",
+      "video": null
+    },
+    {
+      "position": 58,
+      "blockId": "9d18fee0bb548246aef401584ef1048c",
+      "heading": "Thiết lập chính sách huỷ phòng",
+      "video": null
+    },
+    {
+      "position": 59,
+      "blockId": "c768fee0bb5483fc8c5601bfbccdc495",
+      "heading": "Thiết lập chính sách huỷ phòng",
+      "video": null
+    },
+    {
+      "position": 60,
+      "blockId": "b278fee0bb5483fdbe6801839f3a1eeb",
+      "heading": "Thiết lập chính sách huỷ phòng",
+      "video": null
+    },
+    {
+      "position": 61,
+      "blockId": "3b88fee0bb5483e3833a0141a9e7c5d0",
+      "heading": "Quản lý kênh đối tác",
+      "video": null
+    },
+    {
+      "position": 62,
+      "blockId": "8008fee0bb548262a83e0182f0e6d84f",
+      "heading": "Quản lý kênh đối tác",
+      "video": null
+    }
+  ]
+}
