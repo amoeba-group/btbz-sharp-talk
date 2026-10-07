@@ -223,6 +223,31 @@ export class RagService {
       .map((e) => ({ ...e, rrf: biasedScore(e) }));
   }
 
+  /** Results kept from the current-message search when it is merged with the contextual one. */
+  private static readonly OWN_QUERY_RESERVE = 3;
+
+  /**
+   * The current message's best hits first (up to OWN_QUERY_RESERVE), then the
+   * contextual search's, then the rest of the current message's — deduplicated
+   * by document, capped at `limit` (FIX-261007-Topic-Switch). A topic switch
+   * keeps its own documents; a topic-less follow-up still gets the context's,
+   * because its own search finds little and the context fills the slots.
+   */
+  static mergeOwnFirst<T extends { id: number }>(own: T[], contextual: T[], limit: number): T[] {
+    const out: T[] = [];
+    const seen = new Set<number>();
+    const take = (c: T) => {
+      if (out.length < limit && !seen.has(Number(c.id))) {
+        seen.add(Number(c.id));
+        out.push(c);
+      }
+    };
+    own.slice(0, RagService.OWN_QUERY_RESERVE).forEach(take);
+    contextual.forEach(take);
+    own.slice(RagService.OWN_QUERY_RESERVE).forEach(take);
+    return out;
+  }
+
   /** Who is answering, after inactive/unknown pins degrade to the default. */
   effectiveAgentId(tenantId: number, aiAgentId?: number | null): Promise<number | null> {
     return this.aiConfig.effectiveAgentId(tenantId, aiAgentId);
@@ -496,6 +521,18 @@ export class RagService {
       // be retrieved as well (REQ-260826 R2).
       scopeAgentId,
     );
+    // The current message searched on its own as well (FIX-261007-Topic-Switch).
+    // Prepending the earlier turns rescues a follow-up with no topic words of
+    // its own, but it also drags a NEW question back to the old topic: go2joy
+    // "How do I process a guest check-in?" right after a staff-account answer
+    // retrieved only staff documents (context query) while the check-in guide
+    // was the top hit for the question alone — and the model said it had no
+    // information, at 0.77. Both searches now contribute.
+    if (retrievalQuery?.trim() && retrievalQuery.trim() !== query.trim()) {
+      const own = await this.retrieveHybrid(tenantId, query, RagService.TOP_K, preferGroup, scopeAgentId);
+      chunks = RagService.mergeOwnFirst(own.chunks, chunks, RagService.TOP_K);
+      vectorProvider = vectorProvider ?? own.vectorProvider;
+    }
     // Simulation candidates (B2): scored in the same embedding space and merged
     // by similarity, but NEVER written to Qdrant — a document an operator is
     // still judging must not be reachable from a real customer turn. Absent the
