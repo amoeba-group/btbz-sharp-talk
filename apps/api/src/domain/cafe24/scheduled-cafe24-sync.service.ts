@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { TenantService } from '../tenant/tenant.service';
 import { Cafe24SyncService } from './cafe24-sync.service';
+import { isCliContext } from '../../global/util/cli-context.util';
 
 /**
  * Optional periodic Cafe24 sync. Disabled unless CAFE24_SYNC_INTERVAL_MIN > 0.
@@ -19,6 +20,8 @@ export class ScheduledCafe24SyncService implements OnModuleInit, OnModuleDestroy
   ) {}
 
   onModuleInit(): void {
+    // A one-off CLI must not run a second copy of this scheduler (PLN-261008 D2).
+    if (isCliContext()) return;
     const minutes = Number(process.env.CAFE24_SYNC_INTERVAL_MIN ?? '0');
     if (!Number.isFinite(minutes) || minutes <= 0) {
       this.logger.log('Cafe24 auto-sync disabled (set CAFE24_SYNC_INTERVAL_MIN to enable)');

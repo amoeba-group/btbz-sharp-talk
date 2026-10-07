@@ -8,6 +8,7 @@
     "start": "node dist/main.js",
     "seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
     "kb:reindex": "ts-node --files -r tsconfig-paths/register src/database/kb-reindex.ts",
+    "golden:gate": "ts-node --files -r tsconfig-paths/register src/database/golden-gate.ts",
     "kb:import": "ts-node --files -r tsconfig-paths/register src/database/kb-import.ts",
     "migrate-pii": "ts-node -r tsconfig-paths/register src/database/migrate-encrypt-pii.ts",
     "typecheck": "tsc --noEmit",

@@ -9,6 +9,7 @@ import { Session } from '../session/entity/session.entity';
 import { Assignment } from '../agent/entity/assignment.entity';
 import { AuditService } from '../audit/audit.service';
 import { envNumber } from '../../global/util/env-number.util';
+import { isCliContext } from '../../global/util/cli-context.util';
 
 /** How often the sweep runs. 0 disables it. */
 const SWEEP_INTERVAL_SEC = envNumber('IDLE_SWEEP_INTERVAL_SEC', '30');
@@ -74,6 +75,8 @@ export class IdleConversationService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
+    // A one-off CLI must not run a second copy of this scheduler (PLN-261008 D2).
+    if (isCliContext()) return;
     if (!Number.isFinite(SWEEP_INTERVAL_SEC) || SWEEP_INTERVAL_SEC <= 0) {
       this.logger.warn('Idle conversation sweep DISABLED (IDLE_SWEEP_INTERVAL_SEC=0)');
       return;

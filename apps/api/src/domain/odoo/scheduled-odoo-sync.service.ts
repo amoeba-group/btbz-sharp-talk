@@ -3,6 +3,7 @@ import { TenantService } from '../tenant/tenant.service';
 import { OdooProductSyncService } from './odoo-product-sync.service';
 import { OdooSyncService } from './odoo-sync.service';
 import { envNumber } from '../../global/util/env-number.util';
+import { isCliContext } from '../../global/util/cli-context.util';
 
 /**
  * Optional periodic Odoo sync. Disabled unless ODOO_SYNC_INTERVAL_MIN > 0.
@@ -23,6 +24,8 @@ export class ScheduledOdooSyncService implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   onModuleInit(): void {
+    // A one-off CLI must not run a second copy of this scheduler (PLN-261008 D2).
+    if (isCliContext()) return;
     const minutes = envNumber('ODOO_SYNC_INTERVAL_MIN', '0');
     if (!Number.isFinite(minutes) || minutes <= 0) {
       this.logger.log('Odoo auto-sync disabled (set ODOO_SYNC_INTERVAL_MIN to enable)');
