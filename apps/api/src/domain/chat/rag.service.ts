@@ -10,7 +10,7 @@ import { QdrantService } from '../../infrastructure/external/vector/qdrant.servi
 import { AiConfigService } from '../ai-engine/ai-config.service';
 import type { AiMessage } from '../../infrastructure/external/ai/ai-adapter.interface';
 import { capContext, selectPassages } from './passage.util';
-import { footerFor } from '../ai-engine/answer-footer.util';
+import { AnswerFooter, footerFor } from '../ai-engine/answer-footer.util';
 import { envNumber } from '../../global/util/env-number.util';
 import { CONVERSATION_RULES, transcript, withCurrentTurn } from './conversation-history.util';
 
@@ -266,6 +266,11 @@ export class RagService {
    */
   async footerText(tenantId: number, language: string): Promise<string | null> {
     return footerFor(await this.aiConfig.getAnswerFooter?.(tenantId), language);
+  }
+
+  /** The tenant's footer config (null = none) — the chat strips copies of it. */
+  async footerConfig(tenantId: number): Promise<AnswerFooter | null> {
+    return (await this.aiConfig.getAnswerFooter?.(tenantId)) ?? null;
   }
 
   /** Who is answering, after inactive/unknown pins degrade to the default. */

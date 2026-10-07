@@ -107,7 +107,7 @@ describe('ChatService — conversation memory', () => {
       answerWithoutKnowledge: jest.fn(async () => '연락처 [PHONE]로 안내드릴게요.'),
       answer: jest.fn(async () => ({ text: answerText, confidence: 0.9, citations: [{ id: 3340 }] })),
       groundingConfidence: jest.fn(async () => opts.grounding ?? 0.2),
-      footerText: jest.fn(async () => opts.footer ?? null),
+      footerConfig: jest.fn(async () => (opts.footer ? { enabled: true, text: { KO: opts.footer }, protected: [] } : null)),
       effectiveAgentId: jest.fn(async () => null),
     };
     const moderation = {
@@ -244,6 +244,21 @@ describe('ChatService — conversation memory', () => {
     expect(b.saved[b.saved.length - 1].body).toContain('📞 support@go2joy.vn');
     const stored = (b.answerReuse.recordAiAnswer as jest.Mock).mock.calls[0][0] as { answerText: string };
     expect(stored.answerText).not.toContain('📞');
+  });
+
+  it('appends the footer once even when the model already wrote it, and strips it from earlier answers in the history', async () => {
+    const F = '📞 support@go2joy.vn · 1900 638 838';
+    const b = build({
+      prior: [{ id: '17697', senderType: 'ai', body: `앞선 답변입니다.\n\n${F}` }, { id: '17696', senderType: 'user', body: '질문' }],
+      footer: F,
+      answerText: `답변 본문입니다.\n\n${F}`,
+    });
+
+    const res = await b.svc.handleUserMessage(b.session, '다음 질문');
+
+    expect(res.reply?.body.split(F)).toHaveLength(2); // exactly one occurrence
+    const history = b.rag.answer.mock.calls[0][8] as Array<{ role: string; content: string }>;
+    expect(history.find((m) => m.role === 'assistant')?.content).toBe('앞선 답변입니다.');
   });
 
   describe('out_of_scope second opinion (S6)', () => {
