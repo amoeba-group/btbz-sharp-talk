@@ -15,6 +15,7 @@ import {
   classifyOutcome,
   lastNonSystemSender,
 } from '../../global/util/resolution.util';
+import { FiveA, toFiveA } from './journey-stage-map';
 
 // Re-exported so the report's own module and its spec keep one import path.
 export { RESOLUTION_REASON, UNRESOLVED_REASON, classifyOutcome };
@@ -28,9 +29,13 @@ export interface JourneyMetrics {
   conversations: number;
   messages: number;
   customerMessages: number;
+  /** AI + human together — kept for past reports and the comparison prompt. */
   agentMessages: number;
-  /** Speaker changes per conversation, averaged. Where delay shows up. */
-  avgLoops: number;
+  /** Split, because "we answered" means something different from each (REQ-261008 F6). */
+  aiMessages: number;
+  humanMessages: number;
+  /** Speaker changes per conversation, averaged. Where delay shows up. Null with no conversation. */
+  avgLoops: number | null;
   handoffs: number;
   resolved: number;
   resolvedBy: Record<string, number>;
@@ -42,6 +47,8 @@ export interface JourneyMetrics {
   csatResponses: number;
   stages: Array<{ stage: string; events: number }>;
   latestStage: string | null;
+  /** `stages` re-counted on Kotler's 5A through one fixed table. */
+  stages5a: Array<{ stage: FiveA; events: number }>;
   languages: Array<{ language: string; sessions: number }>;
 }
 
@@ -138,9 +145,9 @@ export class JourneyMetricsService {
       : 0;
 
     const customerMessages = messages.filter((m) => m.senderType === SENDER_TYPE.USER).length;
-    const agentMessages = messages.filter(
-      (m) => m.senderType === SENDER_TYPE.AGENT || m.senderType === SENDER_TYPE.AI,
-    ).length;
+    const aiMessages = messages.filter((m) => m.senderType === SENDER_TYPE.AI).length;
+    const humanMessages = messages.filter((m) => m.senderType === SENDER_TYPE.AGENT).length;
+    const stages = countBy(cjm, (e) => e.stage).map((c) => ({ stage: c.channel, events: c.sessions }));
 
     const csatRated = conversations.filter((c) => c.csatRating != null);
 
@@ -152,7 +159,9 @@ export class JourneyMetricsService {
       conversations: conversations.length,
       messages: messages.length,
       customerMessages,
-      agentMessages,
+      agentMessages: aiMessages + humanMessages,
+      aiMessages,
+      humanMessages,
       avgLoops: average(conversations.map((c) => loopsIn(byConv.get(Number(c.id)) ?? []))),
       handoffs,
       resolved: sum(Object.values(resolvedBy)),
@@ -164,8 +173,9 @@ export class JourneyMetricsService {
         ? round(sum(csatRated.map((c) => Number(c.csatRating))) / csatRated.length, 2)
         : null,
       csatResponses: csatRated.length,
-      stages: countBy(cjm, (e) => e.stage).map((c) => ({ stage: c.channel, events: c.sessions })),
+      stages,
       latestStage: cjm.length ? cjm[cjm.length - 1].stage : null,
+      stages5a: toFiveA(stages),
       languages: languages.map((c) => ({ language: c.channel, sessions: c.sessions })),
     };
   }
@@ -226,8 +236,10 @@ function countBy<T>(rows: T[], key: (row: T) => string): Array<{ channel: string
 }
 
 const sum = (values: number[]): number => values.reduce((a, b) => a + b, 0);
-const average = (values: number[]): number =>
-  values.length ? round(sum(values) / values.length, 1) : 0;
+// Null, not 0, over nothing: zero loops is a fact about conversations, and
+// with none there is no fact to state (REQ-261008 F7).
+const average = (values: number[]): number | null =>
+  values.length ? round(sum(values) / values.length, 1) : null;
 const round = (v: number, digits: number): number => Number(v.toFixed(digits));
 const earliest = (dates: Date[]): string | null =>
   dates.length ? new Date(Math.min(...dates.map((d) => d.getTime()))).toISOString() : null;
@@ -242,7 +254,9 @@ function emptyMetrics(): JourneyMetrics {
     messages: 0,
     customerMessages: 0,
     agentMessages: 0,
-    avgLoops: 0,
+    aiMessages: 0,
+    humanMessages: 0,
+    avgLoops: null,
     handoffs: 0,
     resolved: 0,
     resolvedBy: {},
@@ -253,6 +267,7 @@ function emptyMetrics(): JourneyMetrics {
     csatResponses: 0,
     stages: [],
     latestStage: null,
+    stages5a: toFiveA([]),
     languages: [],
   };
 }

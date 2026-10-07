@@ -131,5 +131,60 @@
     "inUseHint": "여정이 남아 있는 단계는 삭제할 수 없습니다 — 카드를 먼저 옮기세요.",
     "saved": "고객여정 단계를 저장했습니다.",
     "saveError": "단계를 저장하지 못했습니다."
+  },
+  "summary": {
+    "label": "리포트 수치",
+    "conversations": "대화",
+    "primaryChannel": "{{channel}} {{pct}}%",
+    "messages": "메시지",
+    "messageSplit": "고객 {{customer}} · AI {{ai}} · 상담원 {{human}}",
+    "messageSplitLegacy": "고객 {{customer}} · 상담 {{agent}}",
+    "resolutionRate": "해결률",
+    "unresolvedCount": "미해결 {{count}}",
+    "resolvedCount": "해결 {{count}}",
+    "avgLoops": "평균 루프",
+    "handoffs": "핸드오프",
+    "medianResolution": "해결 중앙값",
+    "minutes": "{{count}}분",
+    "noneResolved": "해결된 대화 없음",
+    "path": "고객 경로(5A) — 접점 이벤트",
+    "resolution": "해결 상태",
+    "reasonCount": "{{reason}} {{count}}",
+    "events": "이벤트 {{count}}",
+    "noEvents": "기록 없음",
+    "advocateCandidate": "리뷰 — 후보"
+  },
+  "valueState": {
+    "measured": {
+      "label": "측정",
+      "hint": "대화에서 센 값입니다."
+    },
+    "not_applicable": {
+      "label": "해당 없음",
+      "hint": "계산할 대상이 없습니다 — 예: 해결된 대화가 없을 때의 해결 시간."
+    },
+    "not_measured": {
+      "label": "미측정",
+      "hint": "있을 수 있는 값이지만 계산 근거가 기록되지 않았습니다."
+    },
+    "not_observable": {
+      "label": "관측 불가",
+      "hint": "고객이 말을 걸기 전 단계라 상담 대화로는 볼 수 없습니다."
+    }
+  },
+  "reason": {
+    "csat_answered": "만족도 응답",
+    "agent_closed": "상담원 종료",
+    "prompted_closed": "확인 후 종료",
+    "open": "열림",
+    "abandoned": "방치",
+    "customer_last": "고객 발화로 끝남"
+  },
+  "fiveA": {
+    "aware": "인지",
+    "appeal": "호감",
+    "ask": "문의",
+    "act": "행동",
+    "advocate": "추천"
   }
 }

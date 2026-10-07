@@ -18,10 +18,42 @@ export interface JourneyReportSummary {
   finishedAt: string | null;
 }
 
+/** Why a figure looks the way it does — judged by the API, never by the model (REQ-261008 D3). */
+export type ValueState = 'measured' | 'not_applicable' | 'not_measured' | 'not_observable';
+
+export type FiveAStage = 'aware' | 'appeal' | 'ask' | 'act' | 'advocate';
+
+/**
+ * What the code counted. Fields added later (the AI/human split, 5A) are
+ * optional: a report keeps the metrics it was written with.
+ */
+export interface JourneyReportMetrics {
+  sessionCount: number;
+  channels: Array<{ channel: string; sessions: number }>;
+  primaryChannel: string | null;
+  conversations: number;
+  messages: number;
+  customerMessages: number;
+  agentMessages: number;
+  aiMessages?: number;
+  humanMessages?: number;
+  avgLoops: number | null;
+  handoffs: number;
+  resolved: number;
+  resolvedBy: Record<string, number>;
+  unresolved: number;
+  unresolvedBy: Record<string, number>;
+  medianResolutionMinutes: number | null;
+  csatAverage: number | null;
+  csatResponses: number;
+  stages5a: Array<{ stage: FiveAStage; events: number }>;
+}
+
 export interface JourneyReportDetail extends JourneyReportSummary {
   bodyMd: string | null;
   /** What the code counted. The body is written from this — never instead. */
-  metrics: Record<string, unknown> | null;
+  metrics: JourneyReportMetrics | null;
+  metricStates: Record<string, ValueState> | null;
 }
 
 export interface JourneyCriteria {

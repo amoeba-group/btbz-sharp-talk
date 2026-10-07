@@ -131,5 +131,60 @@
     "inUseHint": "ジャーニーが残っている段階は削除できません — 先にカードを移動してください。",
     "saved": "段階を保存しました。",
     "saveError": "段階を保存できませんでした。"
+  },
+  "summary": {
+    "label": "レポートの数値",
+    "conversations": "会話",
+    "primaryChannel": "{{channel}} {{pct}}%",
+    "messages": "メッセージ",
+    "messageSplit": "顧客 {{customer}} · AI {{ai}} · 担当者 {{human}}",
+    "messageSplitLegacy": "顧客 {{customer}} · サポート {{agent}}",
+    "resolutionRate": "解決率",
+    "unresolvedCount": "未解決 {{count}}",
+    "resolvedCount": "解決 {{count}}",
+    "avgLoops": "平均ループ",
+    "handoffs": "引き継ぎ",
+    "medianResolution": "解決時間の中央値",
+    "minutes": "{{count}}分",
+    "noneResolved": "解決済みの会話なし",
+    "path": "顧客の経路(5A) — タッチポイントイベント",
+    "resolution": "解決状況",
+    "reasonCount": "{{reason}} {{count}}",
+    "events": "イベント {{count}}",
+    "noEvents": "記録なし",
+    "advocateCandidate": "レビュー — 候補"
+  },
+  "valueState": {
+    "measured": {
+      "label": "計測済み",
+      "hint": "会話から数えた値です。"
+    },
+    "not_applicable": {
+      "label": "該当なし",
+      "hint": "計算する対象がありません。例: 解決した会話がない場合の解決時間。"
+    },
+    "not_measured": {
+      "label": "未計測",
+      "hint": "存在し得る値ですが、計算の元になる記録がありません。"
+    },
+    "not_observable": {
+      "label": "観測不可",
+      "hint": "顧客が問い合わせる前の段階のため、サポート会話からは見えません。"
+    }
+  },
+  "reason": {
+    "csat_answered": "CSAT回答",
+    "agent_closed": "担当者が終了",
+    "prompted_closed": "確認後に終了",
+    "open": "対応中",
+    "abandoned": "放置",
+    "customer_last": "顧客の発言で終了"
+  },
+  "fiveA": {
+    "aware": "認知",
+    "appeal": "訴求",
+    "ask": "調査",
+    "act": "行動",
+    "advocate": "推奨"
   }
 }

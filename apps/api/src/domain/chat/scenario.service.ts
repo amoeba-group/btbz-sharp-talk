@@ -1,7 +1,7 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CONSENT_STATE, MODERATION_DECISION, SENDER_TYPE, languageBySession } from '@sharptalk/types';
+import { CJM_STAGE, CONSENT_STATE, MODERATION_DECISION, SENDER_TYPE, languageBySession } from '@sharptalk/types';
 import type {
   ScenarioFollowUpResponse,
   ScenarioTurnResponse,
@@ -13,6 +13,7 @@ import { ChatService, sysMsg } from './chat.service';
 import { ModerationService } from '../moderation/moderation.service';
 import { SessionService } from '../session/session.service';
 import { AiConfigService } from '../ai-engine/ai-config.service';
+import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
 import type {
   ScenarioOverride,
   ScenarioPostAction,
@@ -49,6 +50,9 @@ export class ScenarioService {
     private readonly moderation: ModerationService,
     private readonly sessionService: SessionService,
     private readonly aiConfig: AiConfigService,
+    // Optional so the existing positional-constructor specs keep compiling;
+    // Nest always supplies it.
+    @Optional() private readonly bus?: EventBusService,
   ) {}
 
   isScenarioAction(action: string): boolean {
@@ -154,6 +158,18 @@ export class ScenarioService {
         retrievalTrace: { scenario: action, kind: 'button' },
       }),
     );
+
+    // A tapped chip is the shopper asking, the same as a typed message. Only
+    // the chat path published this, so a conversation started from a chip read
+    // as "Awareness only" in the journey report (REQ-261008 F3).
+    await this.bus?.publish(EVENTS.CJM, {
+      tenantId: session.tenantId,
+      sessionId: session.id,
+      customerId: session.customerId,
+      stage: CJM_STAGE.INQUIRY,
+      eventType: 'scenario_button',
+      payload: { action },
+    });
 
     // Non-bypassable moderation gate (FR-069) — scripts are trusted copy, but
     // the gate stays in the path so tenant rules always apply. A blocked script

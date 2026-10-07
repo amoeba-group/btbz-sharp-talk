@@ -131,5 +131,60 @@
     "inUseHint": "No se puede eliminar una etapa con recorridos; mueve antes esas tarjetas.",
     "saved": "Etapas guardadas.",
     "saveError": "No se pudieron guardar las etapas."
+  },
+  "summary": {
+    "label": "Cifras del informe",
+    "conversations": "Conversaciones",
+    "primaryChannel": "{{channel}} {{pct}}%",
+    "messages": "Mensajes",
+    "messageSplit": "Cliente {{customer}} · IA {{ai}} · Agente {{human}}",
+    "messageSplitLegacy": "Cliente {{customer}} · Soporte {{agent}}",
+    "resolutionRate": "Tasa de resolución",
+    "unresolvedCount": "Sin resolver {{count}}",
+    "resolvedCount": "Resueltas {{count}}",
+    "avgLoops": "Bucles prom.",
+    "handoffs": "Derivaciones",
+    "medianResolution": "Resolución mediana",
+    "minutes": "{{count}} min",
+    "noneResolved": "Aún nada resuelto",
+    "path": "Recorrido del cliente (5A) — eventos de contacto",
+    "resolution": "Resolución",
+    "reasonCount": "{{reason}} {{count}}",
+    "events": "Eventos {{count}}",
+    "noEvents": "Sin eventos",
+    "advocateCandidate": "Reseña — candidato"
+  },
+  "valueState": {
+    "measured": {
+      "label": "Medido",
+      "hint": "Contado a partir de las conversaciones."
+    },
+    "not_applicable": {
+      "label": "N/A",
+      "hint": "No hay de qué calcularlo; por ejemplo, el tiempo de resolución cuando no se resolvió ninguna conversación."
+    },
+    "not_measured": {
+      "label": "No medido",
+      "hint": "Podría existir, pero no se registró aquello de lo que se calcula."
+    },
+    "not_observable": {
+      "label": "No observable",
+      "hint": "Ocurre antes de que el cliente escriba, así que las conversaciones de soporte no lo ven."
+    }
+  },
+  "reason": {
+    "csat_answered": "CSAT respondida",
+    "agent_closed": "Cerrada por agente",
+    "prompted_closed": "Cerrada tras consulta",
+    "open": "Abierta",
+    "abandoned": "Abandonada",
+    "customer_last": "El cliente habló último"
+  },
+  "fiveA": {
+    "aware": "Conocer",
+    "appeal": "Atracción",
+    "ask": "Preguntar",
+    "act": "Actuar",
+    "advocate": "Recomendar"
   }
 }

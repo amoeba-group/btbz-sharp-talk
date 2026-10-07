@@ -5,6 +5,8 @@ import { Journey } from './entity/journey.entity';
 import { JourneyTask } from './entity/journey-task.entity';
 import type { BoardCard, TimelineItem } from './journey-manage.service';
 import type { AuditLogWithActor } from '../audit/audit.service';
+import { toFiveA } from './journey-stage-map';
+import { metricStates } from './journey-value-state';
 
 export class JourneyMapper {
   /**
@@ -28,7 +30,20 @@ export class JourneyMapper {
       sourceReportIds: r.sourceReportIds?.map(String) ?? null,
       createdAt: r.createdAt,
       finishedAt: r.finishedAt,
-      ...(withBody ? { bodyMd: r.bodyMd, metrics: r.metricsJson } : {}),
+      ...(withBody ? { bodyMd: r.bodyMd, ...JourneyMapper.metricsOf(r.metricsJson) } : {}),
+    };
+  }
+
+  /**
+   * Metrics with the reading aids the screen needs, computed at read time so a
+   * report written before they existed gets them too (REQ-261008 P1).
+   */
+  private static metricsOf(stored: Record<string, unknown> | null) {
+    if (!stored) return { metrics: null, metricStates: null };
+    const stages = stored.stages as Array<{ stage: string; events: number }> | undefined;
+    return {
+      metrics: { ...stored, stages5a: stored.stages5a ?? toFiveA(stages) },
+      metricStates: metricStates(stored),
     };
   }
 

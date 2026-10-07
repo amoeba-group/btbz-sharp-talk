@@ -5,7 +5,7 @@ import { MODERATION_DECISION, SENDER_TYPE } from '@sharptalk/types';
 import { JourneyReport, REPORT_KIND, REPORT_STATUS } from './entity/journey-report.entity';
 import { JourneyMetricsService, JourneyWindow } from './journey-metrics.service';
 import { JourneyCriteriaService } from './journey-criteria.service';
-import { buildComparisonPrompt, buildJourneyPrompt, SampleUtterance } from './journey-prompt';
+import { buildComparisonPrompt, buildJourneyPrompt, clip, SampleUtterance } from './journey-prompt';
 import { Message } from '../chat/entity/message.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
@@ -292,7 +292,9 @@ export class JourneyReportService implements OnModuleInit {
         // not, and it is the path that asks the model to write a "contact"
         // section (PLN-260920 P4). Quotes come back scrubbed, which is what
         // the report needs — the pattern of what shoppers ask, not who asked.
-        text: scrubPii((m.body ?? '').slice(0, maxChars)).text,
+        // Cut with a visible mark: a 278-character answer cut silently at 200
+        // was quoted back as a sentence that ends mid-way (REQ-261008 F2).
+        text: scrubPii(clip(m.body ?? '', maxChars)).text,
       }));
   }
 
