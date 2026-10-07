@@ -609,7 +609,7 @@
       "lastOk": "最近成功 {{at}}",
       "lastError": "最近失败 {{at}}",
       "today": "今日：调用 {{calls}} · 失败 {{failures}}",
-      "switchToPlatform": "切换到平台引擎",
+      "switchToPlatform": "切换到系统默认引擎",
       "details": "按功能查看",
       "noEngine": "无引擎（默认回复）",
       "headline": {
@@ -625,14 +625,15 @@
         "unreachable": "无法连接服务商 — 无法生成客户回复"
       },
       "action": {
-        "credit": "请为服务商账户充值（Anthropic Console › Plans & Billing），或切换到平台引擎。",
-        "auth": "请重新输入 API 密钥，或切换到平台引擎。",
-        "no_key": "请为引擎填写 API 密钥，或切换到平台引擎。",
-        "model": "请检查模型名称，或切换到平台引擎。",
-        "unreachable": "请检查端点（留空使用默认值），或切换到平台引擎。",
+        "credit": "请为服务商账户充值（Anthropic Console › Plans & Billing），或切换到系统默认引擎。",
+        "auth": "请重新输入 API 密钥，或切换到系统默认引擎。",
+        "no_key": "请为引擎填写 API 密钥，或切换到系统默认引擎。",
+        "model": "请检查模型名称，或切换到系统默认引擎。",
+        "unreachable": "请检查端点（留空使用默认值），或切换到系统默认引擎。",
         "stub": "请选择并应用一个引擎。",
-        "default": "请检查引擎设置，或切换到平台引擎。"
-      }
+        "default": "请检查引擎设置，或切换到系统默认引擎。"
+      },
+      "askOperator": "请联系运营方允许选择系统默认引擎。"
     },
     "functions": {
       "chat": "客户回复（分类）",

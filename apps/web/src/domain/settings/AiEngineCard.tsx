@@ -90,12 +90,16 @@ export function AiEngineCard() {
     if (!choice && current && selectable.some((e) => e.id === current.id)) setChoice(current.id);
   }, [choice, current, selectable]);
 
-  const switchToPlatform = () => {
-    const p = selectable.find((e) => e.platform && e.health !== 'credit');
-    if (p) setChoice(p.id);
-    const el = document.getElementById('ai-engine-choice');
-    el?.focus();
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // The system default engine — the platform engine routing falls back to
+  // (PLN-261007-AI-Credit-Alert S4). The operator mail points here.
+  const systemDefault = (engines.data?.platform ?? []).find((e) => e.isDefault && e.provider !== 'stub');
+  const canSwitchToDefault = !!systemDefault?.selectable && current?.id !== systemDefault?.id;
+
+  const switchToSystemDefault = () => {
+    if (!systemDefault?.selectable) return;
+    setChoice(systemDefault.id);
+    if (!window.confirm(t('aiEngines.applyConfirm', { name: systemDefault.name }))) return;
+    apply.mutate(systemDefault.id);
   };
 
   const applyChoice = () => {
@@ -216,10 +220,12 @@ export function AiEngineCard() {
             {isEngineFailing(currentHealth) || currentHealth === 'stub' ? (
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-red-700">
                 <span>{t(`aiEngines.status.action.${currentHealth}`, { defaultValue: t('aiEngines.status.action.default') })}</span>
-                {selectable.some((e) => e.platform) ? (
-                  <Button size="sm" variant="secondary" onClick={switchToPlatform}>
+                {canSwitchToDefault ? (
+                  <Button size="sm" variant="secondary" disabled={apply.isPending} onClick={switchToSystemDefault}>
                     {t('aiEngines.status.switchToPlatform')}
                   </Button>
+                ) : systemDefault && !systemDefault.selectable ? (
+                  <span className="text-gray-600">{t('aiEngines.status.askOperator')}</span>
                 ) : null}
               </div>
             ) : null}

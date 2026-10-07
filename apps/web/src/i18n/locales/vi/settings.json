@@ -609,7 +609,7 @@
       "lastOk": "thành công gần nhất {{at}}",
       "lastError": "lỗi gần nhất {{at}}",
       "today": "Hôm nay: {{calls}} lần gọi · {{failures}} lỗi",
-      "switchToPlatform": "Chuyển sang engine nền tảng",
+      "switchToPlatform": "Chuyển sang engine mặc định của hệ thống",
       "details": "Chi tiết theo chức năng",
       "noEngine": "Không có engine (trả lời mặc định)",
       "headline": {
@@ -625,14 +625,15 @@
         "unreachable": "Không kết nối được nhà cung cấp — không tạo được câu trả lời"
       },
       "action": {
-        "credit": "Nạp tín dụng cho tài khoản nhà cung cấp (Anthropic Console › Plans & Billing) hoặc chuyển sang engine của nền tảng.",
-        "auth": "Nhập lại khóa API hoặc chuyển sang engine của nền tảng.",
-        "no_key": "Thêm khóa API cho engine hoặc chuyển sang engine của nền tảng.",
-        "model": "Kiểm tra tên mô hình hoặc chuyển sang engine của nền tảng.",
-        "unreachable": "Kiểm tra endpoint (để trống để dùng mặc định) hoặc chuyển sang engine của nền tảng.",
+        "credit": "Nạp tín dụng cho tài khoản nhà cung cấp (Anthropic Console › Plans & Billing) hoặc chuyển sang engine mặc định của hệ thống.",
+        "auth": "Nhập lại khóa API hoặc chuyển sang engine mặc định của hệ thống.",
+        "no_key": "Thêm khóa API cho engine hoặc chuyển sang engine mặc định của hệ thống.",
+        "model": "Kiểm tra tên mô hình hoặc chuyển sang engine mặc định của hệ thống.",
+        "unreachable": "Kiểm tra endpoint (để trống để dùng mặc định) hoặc chuyển sang engine mặc định của hệ thống.",
         "stub": "Chọn một engine và áp dụng.",
-        "default": "Kiểm tra cấu hình engine hoặc chuyển sang engine của nền tảng."
-      }
+        "default": "Kiểm tra cấu hình engine hoặc chuyển sang engine mặc định của hệ thống."
+      },
+      "askOperator": "Hãy đề nghị nhà vận hành cho phép chọn engine mặc định của hệ thống."
     },
     "functions": {
       "chat": "Trả lời khách (phân loại)",

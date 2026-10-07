@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { AiFunction } from '@sharptalk/types';
@@ -13,7 +13,8 @@ import {
   AiMessage,
 } from './ai-adapter.interface';
 import { StubAdapter } from './adapters/stub.adapter';
-import { classifyEngineFailure } from './engine-health';
+import { ENGINE_FAILURE, classifyEngineFailure } from './engine-health';
+import { AiCreditAlertService } from './ai-credit-alert.service';
 import { AnthropicAdapter } from './adapters/anthropic.adapter';
 import { OpenAiAdapter } from './adapters/openai.adapter';
 import { VoyageAdapter } from './adapters/voyage.adapter';
@@ -89,6 +90,8 @@ export class AiGatewayService {
     openai: OpenAiAdapter,
     voyage: VoyageAdapter,
     private readonly usage: AiUsageService,
+    // Appended and optional so positional test doubles that predate it stay valid.
+    @Optional() private readonly creditAlert?: AiCreditAlertService,
   ) {
     this.adapters = new Map<string, AiAdapter>([
       [stub.provider, stub],
@@ -167,15 +170,21 @@ export class AiGatewayService {
       if (now.getTime() - last < AiGatewayService.HEALTH_OK_THROTTLE_MS) return;
       this.lastOkWrite.set(id, now.getTime());
       patch = { lastOkAt: now };
+      // First success after a credit alert sends the recovery mail (no-op otherwise).
+      void this.creditAlert?.onRecovered(id, now);
     } else {
       // A failure must be visible on the next read, so the throttle is reset:
       // the first success after it is written immediately.
       this.lastOkWrite.delete(id);
+      const reason = classifyEngineFailure(error);
       patch = {
         lastErrorAt: now,
-        lastErrorReason: classifyEngineFailure(error),
+        lastErrorReason: reason,
         lastErrorDetail: error.slice(0, 255),
       };
+      // Out of credit: mail the operator (PLN-261007-AI-Credit-Alert), at most
+      // once per engine per window — the service keeps the count, not us.
+      if (reason === ENGINE_FAILURE.CREDIT) void this.creditAlert?.onCredit(id, error, now);
     }
     void this.engineRepo
       .update({ id }, patch)

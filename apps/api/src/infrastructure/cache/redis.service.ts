@@ -53,6 +53,19 @@ export class RedisService implements OnModuleDestroy {
     }
   }
 
+  /**
+   * SET NX with a TTL — true when this call created the key, false when it
+   * already existed, null when Redis cannot answer (caller picks a fallback).
+   */
+  async setIfAbsent(key: string, value: string, ttlSec: number): Promise<boolean | null> {
+    if (!this.available()) return null;
+    try {
+      return (await this.client!.set(key, value, 'EX', ttlSec, 'NX')) === 'OK';
+    } catch {
+      return null;
+    }
+  }
+
   async incr(key: string): Promise<number> {
     try {
       return (await this.client?.incr(key)) ?? 0;

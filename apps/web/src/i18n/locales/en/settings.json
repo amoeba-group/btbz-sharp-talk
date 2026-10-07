@@ -609,7 +609,7 @@
       "lastOk": "last success {{at}}",
       "lastError": "last failure {{at}}",
       "today": "Today: {{calls}} calls · {{failures}} failures",
-      "switchToPlatform": "Switch to platform engine",
+      "switchToPlatform": "Switch to system default engine",
       "details": "Per-function detail",
       "noEngine": "No engine (fallback replies)",
       "headline": {
@@ -625,14 +625,15 @@
         "unreachable": "Provider unreachable — customer replies are not being produced"
       },
       "action": {
-        "credit": "Top up the provider account (Anthropic Console › Plans & Billing), or switch to a platform engine.",
-        "auth": "Re-enter the API key, or switch to a platform engine.",
-        "no_key": "Add an API key to the engine, or switch to a platform engine.",
-        "model": "Check the model name, or switch to a platform engine.",
-        "unreachable": "Check the endpoint (leave it empty for the default), or switch to a platform engine.",
+        "credit": "Top up the provider account (Anthropic Console › Plans & Billing), or switch to the system default engine.",
+        "auth": "Re-enter the API key, or switch to the system default engine.",
+        "no_key": "Add an API key to the engine, or switch to the system default engine.",
+        "model": "Check the model name, or switch to the system default engine.",
+        "unreachable": "Check the endpoint (leave it empty for the default), or switch to the system default engine.",
         "stub": "Choose an engine and apply it.",
-        "default": "Check the engine settings, or switch to a platform engine."
-      }
+        "default": "Check the engine settings, or switch to the system default engine."
+      },
+      "askOperator": "Ask the operator to allow selecting the system default engine."
     },
     "functions": {
       "chat": "Customer replies (classify)",
