@@ -1,12 +1,16 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Not, Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { AiEngine } from './entity/ai-engine.entity';
 import { TenantAiSetting } from './entity/tenant-ai-setting.entity';
 import { encryptSecret, decryptSecret } from '../../global/util/crypto.util';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
+import {
+  ENGINE_FAILURE,
+  classifyEngineFailure,
+} from '../../infrastructure/external/ai/engine-health';
 
 /**
  * Providers a tenant may pick (PLN-260824 D6).
@@ -18,14 +22,12 @@ import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.se
 export const TENANT_PROVIDERS = ['anthropic', 'openai'] as const;
 export type TenantProvider = (typeof TENANT_PROVIDERS)[number];
 
-/** Why a connection test failed, kept apart because the fixes differ. */
-export const ENGINE_TEST_REASON = {
-  OK: 'ok',
-  AUTH: 'auth',
-  MODEL: 'model',
-  RATE_LIMIT: 'rate_limit',
-  UNREACHABLE: 'unreachable',
-} as const;
+/**
+ * Why a connection test failed, kept apart because the fixes differ. The
+ * failure vocabulary lives in engine-health so the gateway records real-call
+ * failures with the same words (PLN-261007 S2) — `credit` joined it there.
+ */
+export const ENGINE_TEST_REASON = { OK: 'ok', ...ENGINE_FAILURE } as const;
 export type EngineTestReason = (typeof ENGINE_TEST_REASON)[keyof typeof ENGINE_TEST_REASON];
 
 export interface EngineTestResult {
@@ -65,6 +67,21 @@ export class TenantAiEngineService {
   /** The tenant's own engines, newest first. */
   async listOwn(tenantId: number): Promise<AiEngine[]> {
     return this.engineRepo.find({ where: { tenantId }, order: { id: 'DESC' } });
+  }
+
+  /**
+   * Engines by id that this tenant may see: its own and the platform's. Used to
+   * describe what serves it — another tenant's engine is never returned even
+   * if an id points at one.
+   */
+  async findVisible(tenantId: number, ids: number[]): Promise<AiEngine[]> {
+    if (!ids.length) return [];
+    return this.engineRepo.find({
+      where: [
+        { id: In(ids), tenantId },
+        { id: In(ids), tenantId: IsNull() },
+      ],
+    });
   }
 
   /** Platform engines, shown read-only beside the tenant's own. */
@@ -169,34 +186,7 @@ export class TenantAiEngineService {
    * them into "connection failed" sends people to check a server that is fine.
    */
   async test(tenantId: number, id: number): Promise<EngineTestResult> {
-    const engine = await this.findOwn(tenantId, id);
-    const adapter = this.gateway.adapterFor(engine.provider);
-    if (!adapter) {
-      return { ok: false, reason: ENGINE_TEST_REASON.UNREACHABLE, detail: 'no adapter', elapsedMs: 0 };
-    }
-    if (!engine.apiKeyEncrypted) {
-      return { ok: false, reason: ENGINE_TEST_REASON.AUTH, detail: 'no API key', elapsedMs: 0 };
-    }
-    const started = Date.now();
-    try {
-      await adapter.complete({
-        model: engine.model,
-        endpoint: engine.endpoint ?? undefined,
-        apiKey: decryptSecret(engine.apiKeyEncrypted),
-        messages: [{ role: 'user', content: 'ping' }],
-        // Smallest call that still proves the credentials and the model name.
-        maxTokens: 1,
-      });
-      return { ok: true, reason: ENGINE_TEST_REASON.OK, detail: null, elapsedMs: Date.now() - started };
-    } catch (e) {
-      const detail = (e as Error).message ?? '';
-      return {
-        ok: false,
-        reason: classifyTestFailure(detail),
-        detail: detail.slice(0, 200),
-        elapsedMs: Date.now() - started,
-      };
-    }
+    return runEngineTest(this.gateway, await this.findOwn(tenantId, id));
   }
 
   private assertProvider(provider: string): void {
@@ -217,17 +207,46 @@ export class TenantAiEngineService {
   }
 }
 
-/** Provider messages differ; the status code in them does not. */
-export function classifyTestFailure(message: string): EngineTestReason {
-  const m = message.toLowerCase();
-  if (/\b(401|403)\b|unauthorized|invalid[_ ]api[_ ]key|authentication/.test(m)) {
-    return ENGINE_TEST_REASON.AUTH;
+/** Kept for existing callers; the rule itself is `classifyEngineFailure`. */
+export const classifyTestFailure = classifyEngineFailure;
+
+/**
+ * Ask the provider one small question, so a wrong key, model or empty credit
+ * balance is found here rather than in a customer's conversation half a day
+ * later. Shared by the tenant and admin consoles (PLN-261007 S4), and the
+ * outcome is recorded as the engine's last health, same as a real call.
+ */
+export async function runEngineTest(
+  gateway: AiGatewayService,
+  engine: AiEngine,
+): Promise<EngineTestResult> {
+  const adapter = gateway.adapterFor(engine.provider);
+  if (!adapter) {
+    return { ok: false, reason: ENGINE_TEST_REASON.UNREACHABLE, detail: 'no adapter', elapsedMs: 0 };
   }
-  if (/\b404\b|not[_ ]found|unknown model|model.*does not exist/.test(m)) {
-    return ENGINE_TEST_REASON.MODEL;
+  if (!engine.apiKeyEncrypted) {
+    return { ok: false, reason: ENGINE_TEST_REASON.AUTH, detail: 'no API key', elapsedMs: 0 };
   }
-  if (/\b429\b|rate[_ ]limit|too many requests|overloaded/.test(m)) {
-    return ENGINE_TEST_REASON.RATE_LIMIT;
+  const started = Date.now();
+  try {
+    await adapter.complete({
+      model: engine.model,
+      endpoint: engine.endpoint ?? undefined,
+      apiKey: decryptSecret(engine.apiKeyEncrypted),
+      messages: [{ role: 'user', content: 'ping' }],
+      // Smallest call that still proves the credentials and the model name.
+      maxTokens: 1,
+    });
+    gateway.recordHealth?.(engine.id, null);
+    return { ok: true, reason: ENGINE_TEST_REASON.OK, detail: null, elapsedMs: Date.now() - started };
+  } catch (e) {
+    const detail = (e as Error).message ?? '';
+    gateway.recordHealth?.(engine.id, detail || 'unknown error');
+    return {
+      ok: false,
+      reason: classifyEngineFailure(detail),
+      detail: detail.slice(0, 200),
+      elapsedMs: Date.now() - started,
+    };
   }
-  return ENGINE_TEST_REASON.UNREACHABLE;
 }

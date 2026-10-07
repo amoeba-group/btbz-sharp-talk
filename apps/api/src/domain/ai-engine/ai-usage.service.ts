@@ -106,6 +106,32 @@ export class AiUsageService {
     );
   }
 
+  /**
+   * Today's calls and failures per engine (PLN-261007 S4). UTC day, the same
+   * one `record` writes under. Failures are the calls the stub had to catch.
+   */
+  async todayByEngine(today = new Date()): Promise<Map<number, { calls: number; failures: number }>> {
+    const rows: Array<{ engine_id: string | number; calls: string; failures: string }> = await this.repo.query(
+      `SELECT engine_id, SUM(calls) calls, SUM(failures) failures
+         FROM ai_usage_daily WHERE stat_date = ? AND engine_id IS NOT NULL GROUP BY engine_id`,
+      [today.toISOString().slice(0, 10)],
+    );
+    return new Map(rows.map((r) => [Number(r.engine_id), { calls: Number(r.calls), failures: Number(r.failures) }]));
+  }
+
+  /** Today's calls and failures per AI function for one tenant (PLN-261007 S5). */
+  async todayByFunction(
+    tenantId: number,
+    today = new Date(),
+  ): Promise<Map<string, { calls: number; failures: number }>> {
+    const rows: Array<{ ai_function: string; calls: string; failures: string }> = await this.repo.query(
+      `SELECT ai_function, SUM(calls) calls, SUM(failures) failures
+         FROM ai_usage_daily WHERE tenant_id = ? AND stat_date = ? GROUP BY ai_function`,
+      [tenantId, today.toISOString().slice(0, 10)],
+    );
+    return new Map(rows.map((r) => [r.ai_function, { calls: Number(r.calls), failures: Number(r.failures) }]));
+  }
+
   /** Usage over a date range, grouped on one axis. Days, weeks and months are all sums of rows. */
   async summarize(tenantId: number, q: UsageQuery): Promise<UsageSummary> {
     const rows = await this.repo.find({

@@ -1,6 +1,7 @@
 import { AiEngine } from './entity/ai-engine.entity';
 import { TenantAiSetting } from './entity/tenant-ai-setting.entity';
 import type { AiSettingView } from './ai-setting.service';
+import { engineHealth } from '../../infrastructure/external/ai/engine-health';
 
 /** Entity -> camelCase response mapping. NEVER exposes encrypted API keys. */
 export class AiEngineMapper {
@@ -17,12 +18,50 @@ export class AiEngineMapper {
       capabilities: e.capabilities,
       status: e.status,
       isDefault: e.isDefault,
+      tenantSelectable: e.tenantSelectable === 1,
+      ...this.healthOf(e),
       createdAt: e.createdAt,
     };
   }
 
   static toEngineList(engines: AiEngine[]) {
     return engines.map((e) => this.toEngine(e));
+  }
+
+  /**
+   * Last observed health (PLN-261007). `lastErrorDetail` is the provider's own
+   * wording, already secret-redacted where it was produced; the key itself is
+   * never part of it.
+   */
+  static healthOf(e: AiEngine) {
+    return {
+      health: engineHealth({
+        provider: e.provider,
+        status: e.status,
+        hasKey: e.apiKeyEncrypted != null,
+        lastOkAt: e.lastOkAt ?? null,
+        lastErrorAt: e.lastErrorAt ?? null,
+        lastErrorReason: e.lastErrorReason ?? null,
+      }),
+      lastOkAt: e.lastOkAt ?? null,
+      lastErrorAt: e.lastErrorAt ?? null,
+      lastErrorReason: e.lastErrorReason ?? null,
+      lastErrorDetail: e.lastErrorDetail ?? null,
+    };
+  }
+
+  /** Admin catalog row: the engine plus whose it is and today's traffic. */
+  static toAdminEngine(
+    e: AiEngine,
+    tenantSlug: string | null,
+    today: { calls: number; failures: number } | undefined,
+  ) {
+    return {
+      ...this.toEngine(e),
+      tenantSlug,
+      todayCalls: today?.calls ?? 0,
+      todayFailures: today?.failures ?? 0,
+    };
   }
 
   /** Compact engine descriptor used in the tenant settings chooser. */
@@ -88,6 +127,15 @@ export class AiEngineMapper {
       hasApiKey: !!e.apiKeyEncrypted,
       /** Read-only here: platform engines are the admin's to change. */
       platform: e.tenantId == null,
+      /**
+       * May this tenant apply it (PLN-261007 D1): its own enabled engine, or a
+       * platform engine the operator opened for selection. Never the stub.
+       */
+      selectable:
+        e.provider !== 'stub' &&
+        e.status === 'enabled' &&
+        (e.tenantId != null || e.tenantSelectable === 1),
+      ...this.healthOf(e),
     };
   }
 

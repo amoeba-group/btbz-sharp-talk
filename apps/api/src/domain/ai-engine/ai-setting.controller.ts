@@ -8,7 +8,11 @@ import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { AiSettingService } from './ai-setting.service';
 import { AiEngineService } from './ai-engine.service';
 import { AiEngineMapper } from './ai-engine.mapper';
-import { FunctionParam, UpsertAiSettingRequest } from './dto/request/ai-engine.request';
+import {
+  ApplyAiEngineRequest,
+  FunctionParam,
+  UpsertAiSettingRequest,
+} from './dto/request/ai-engine.request';
 
 /** Tenant AI settings: per-function engine selection (FR-070). AI_SETTINGS_MANAGE. */
 @ApiTags('AI Settings')
@@ -39,6 +43,15 @@ export class AiSettingController {
       settings: settings.map((view) => AiEngineMapper.toSettingView(view)),
       availableEngines: AiEngineMapper.toEngineOptionList(engines),
     };
+  }
+
+  /** One engine for all functions (PLN-261007 S5). Declared before `:function`. */
+  @Put()
+  @RequireCapability(CAPABILITY.AI_SETTINGS_MANAGE)
+  @ApiOperation({ summary: 'Apply one engine to every AI function' })
+  async applyToAll(@CurrentUser() user: Principal, @Body() body: ApplyAiEngineRequest) {
+    const rows = await this.aiSettingService.applyToAll(this.tenantId(user), body.engine_id);
+    return { applied: rows.length, engineId: String(body.engine_id) };
   }
 
   @Put(':function')

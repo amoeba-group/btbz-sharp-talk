@@ -19,6 +19,7 @@ import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { TenantAiEngineService, TENANT_PROVIDERS } from './tenant-ai-engine.service';
 import { AiUsageService } from './ai-usage.service';
+import { AiSettingService } from './ai-setting.service';
 import { AiEngineMapper } from './ai-engine.mapper';
 import {
   AiUsageQueryRequest,
@@ -36,6 +37,7 @@ export class TenantAiEngineController {
   constructor(
     private readonly service: TenantAiEngineService,
     private readonly usage: AiUsageService,
+    private readonly settings: AiSettingService,
   ) {}
 
   private tenantId(user: Principal): number {
@@ -70,6 +72,50 @@ export class TenantAiEngineController {
    * capability — seeing what was spent is not the same authority as changing
    * the key that spends it.
    */
+  /**
+   * What answers this tenant right now and whether it works (PLN-261007 S5):
+   * per function, the engine that actually runs (after inheritance and
+   * defaults), its last health and today's calls/failures. Read-only, so the
+   * read capability.
+   */
+  @Get('status')
+  @RequireCapability(CAPABILITY.AI_SETTINGS_MANAGE)
+  @ApiOperation({ summary: 'Effective engine and health per AI function' })
+  async status(@CurrentUser() user: Principal) {
+    const tenantId = this.tenantId(user);
+    const [views, today] = await Promise.all([
+      this.settings.list(tenantId),
+      this.usage.todayByFunction(tenantId),
+    ]);
+    const engines = await this.service.findVisible(
+      tenantId,
+      views.map((v) => v.effectiveEngineId).filter((id): id is number => id != null),
+    );
+    const byId = new Map(engines.map((e) => [Number(e.id), e] as const));
+    return {
+      functions: views.map((v) => {
+        const e = v.effectiveEngineId != null ? byId.get(Number(v.effectiveEngineId)) : undefined;
+        const t = today.get(v.func);
+        return {
+          function: v.func,
+          source: v.source,
+          engine: e
+            ? {
+                id: String(e.id),
+                name: e.name,
+                provider: e.provider,
+                model: e.model,
+                platform: e.tenantId == null,
+                ...AiEngineMapper.healthOf(e),
+              }
+            : null,
+          todayCalls: t?.calls ?? 0,
+          todayFailures: t?.failures ?? 0,
+        };
+      }),
+    };
+  }
+
   @Get('usage')
   @RequireCapability(CAPABILITY.AI_SETTINGS_MANAGE)
   @ApiOperation({ summary: 'AI token usage for a date range, grouped on one axis' })

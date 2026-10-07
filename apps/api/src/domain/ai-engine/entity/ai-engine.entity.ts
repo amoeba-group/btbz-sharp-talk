@@ -36,6 +36,28 @@ export class AiEngine {
   @Column({ name: 'is_default', type: 'tinyint', width: 1, default: 0 })
   isDefault: number;
 
+  /**
+   * Platform engines only: may a tenant choose it (PLN-261007 D1)? Choosing one
+   * bills the operator's key, so it is opt-in per engine.
+   */
+  @Column({ name: 'tenant_selectable', type: 'tinyint', width: 1, default: 0 })
+  tenantSelectable: number;
+
+  // ---- Last observed health (PLN-261007 S1) — written by the gateway and the
+  // connection test, never by a form. Explicit `type` on every nullable column:
+  // a union type alone makes TypeORM infer Object and the API fails to boot.
+  @Column({ name: 'last_ok_at', type: 'datetime', nullable: true })
+  lastOkAt: Date | null;
+
+  @Column({ name: 'last_error_at', type: 'datetime', nullable: true })
+  lastErrorAt: Date | null;
+
+  @Column({ name: 'last_error_reason', type: 'varchar', length: 24, nullable: true })
+  lastErrorReason: string | null;
+
+  @Column({ name: 'last_error_detail', type: 'varchar', length: 255, nullable: true })
+  lastErrorDetail: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

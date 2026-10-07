@@ -6,6 +6,11 @@ import { CreateEngineRequest, UpdateEngineRequest } from './dto/request/ai-engin
 import { encryptSecret } from '../../global/util/crypto.util';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
+import { Tenant } from '../tenant/entity/tenant.entity';
+import { AiUsageService } from './ai-usage.service';
+import { AiEngineMapper } from './ai-engine.mapper';
+import { EngineTestResult, runEngineTest } from './tenant-ai-engine.service';
 
 /**
  * Platform AI engine catalog management (FR-070). Admin-managed; engines may be
@@ -14,7 +19,40 @@ import { ERROR_CODE } from '../../global/constant/error-code.constant';
  */
 @Injectable()
 export class AiEngineService {
-  constructor(@InjectRepository(AiEngine) private readonly engineRepo: Repository<AiEngine>) {}
+  constructor(
+    @InjectRepository(AiEngine) private readonly engineRepo: Repository<AiEngine>,
+    @InjectRepository(Tenant) private readonly tenantRepo: Repository<Tenant>,
+    private readonly gateway: AiGatewayService,
+    private readonly usage: AiUsageService,
+  ) {}
+
+  /**
+   * The admin catalog with each engine's owner, health and today's traffic
+   * (PLN-261007 S4). Tenant engines are included on purpose: the go2joy credit
+   * outage was a tenant engine, and the operator had no screen that showed it.
+   */
+  async listForAdmin() {
+    const engines = await this.list();
+    const tenantIds = [...new Set(engines.map((e) => e.tenantId).filter((v): v is number => v != null))];
+    const tenants = tenantIds.length
+      ? await this.tenantRepo.find({ where: { id: In(tenantIds) }, select: { id: true, slug: true } })
+      : [];
+    const slugById = new Map(tenants.map((t) => [Number(t.id), t.slug] as const));
+    const today = await this.usage.todayByEngine();
+    return engines.map((e) =>
+      AiEngineMapper.toAdminEngine(
+        e,
+        e.tenantId != null ? (slugById.get(Number(e.tenantId)) ?? null) : null,
+        today.get(Number(e.id)),
+      ),
+    );
+  }
+
+  /** Connection test from the admin console — platform and tenant engines alike. */
+  async test(id: number): Promise<{ engine: AiEngine; result: EngineTestResult }> {
+    const engine = await this.findEngine(id);
+    return { engine, result: await runEngineTest(this.gateway, engine) };
+  }
 
   async list(): Promise<AiEngine[]> {
     return this.engineRepo.find({ order: { id: 'DESC' } });
@@ -70,7 +108,9 @@ export class AiEngineService {
     if (body.capabilities !== undefined) engine.capabilities = body.capabilities;
     if (body.status !== undefined) engine.status = body.status;
     if (body.is_default !== undefined) engine.isDefault = body.is_default;
-    if (body.api_key !== undefined) engine.apiKeyEncrypted = encryptSecret(body.api_key);
+    if (body.tenant_selectable !== undefined) engine.tenantSelectable = body.tenant_selectable ? 1 : 0;
+    // An empty box means "keep the stored key" — the form never shows it.
+    if (body.api_key) engine.apiKeyEncrypted = encryptSecret(body.api_key);
     return this.engineRepo.save(engine);
   }
 

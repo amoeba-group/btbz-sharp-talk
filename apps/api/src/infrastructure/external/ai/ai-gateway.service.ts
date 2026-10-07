@@ -13,6 +13,7 @@ import {
   AiMessage,
 } from './ai-adapter.interface';
 import { StubAdapter } from './adapters/stub.adapter';
+import { classifyEngineFailure } from './engine-health';
 import { AnthropicAdapter } from './adapters/anthropic.adapter';
 import { OpenAiAdapter } from './adapters/openai.adapter';
 import { VoyageAdapter } from './adapters/voyage.adapter';
@@ -125,9 +126,12 @@ export class AiGatewayService {
         endpoint: engine?.endpoint ?? undefined,
       });
       this.meter(req, engine, res, { stub: adapter.provider === 'stub' });
+      if (engine && adapter.provider !== 'stub') this.recordHealth(engine.id, null);
       return res;
     } catch (e) {
-      this.logger.warn(`Adapter ${adapter.provider} failed, falling back to stub: ${(e as Error).message}`);
+      const message = (e as Error).message ?? '';
+      this.logger.warn(`Adapter ${adapter.provider} failed, falling back to stub: ${message}`);
+      if (engine && adapter.provider !== 'stub') this.recordHealth(engine.id, message);
       const res = await this.adapters.get('stub')!.complete({
         system: req.system,
         messages: req.messages,
@@ -137,8 +141,45 @@ export class AiGatewayService {
       // the stub that caught it — otherwise a failing engine shows no usage and
       // no failures, and looks simply unused.
       this.meter(req, engine, res, { stub: true, failed: true });
-      return res;
+      // Marked so nothing customer-facing mistakes the stub's canned text for
+      // an answer (PLN-261007 D4) — on 2026-10-06 it reached 39 go2joy
+      // conversations 121 times, and the stub's moderation verdict ("not
+      // flagged") stood in for the real one.
+      return { ...res, degraded: adapter.provider !== 'stub' };
     }
+  }
+
+  /** Successes are written at most this often per engine; failures always. */
+  private static readonly HEALTH_OK_THROTTLE_MS = 60_000;
+  private readonly lastOkWrite = new Map<number, number>();
+
+  /**
+   * Remember what an engine last did (PLN-261007 S3). Not awaited, never
+   * throws: this is on the path that answers a customer, and a health column
+   * is not worth delaying or breaking that for. `error` null = success.
+   */
+  recordHealth(engineId: number | string, error: string | null, now = new Date()): void {
+    const id = Number(engineId);
+    if (!Number.isFinite(id)) return;
+    let patch: Partial<AiEngine>;
+    if (error === null) {
+      const last = this.lastOkWrite.get(id) ?? 0;
+      if (now.getTime() - last < AiGatewayService.HEALTH_OK_THROTTLE_MS) return;
+      this.lastOkWrite.set(id, now.getTime());
+      patch = { lastOkAt: now };
+    } else {
+      // A failure must be visible on the next read, so the throttle is reset:
+      // the first success after it is written immediately.
+      this.lastOkWrite.delete(id);
+      patch = {
+        lastErrorAt: now,
+        lastErrorReason: classifyEngineFailure(error),
+        lastErrorDetail: error.slice(0, 255),
+      };
+    }
+    void this.engineRepo
+      .update({ id }, patch)
+      .catch((e) => this.logger.warn(`engine health not recorded: ${(e as Error).message}`));
   }
 
   /**

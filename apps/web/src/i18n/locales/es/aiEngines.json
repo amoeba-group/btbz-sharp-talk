@@ -11,5 +11,60 @@
   "created": "Creado",
   "enable": "Activar",
   "disable": "Desactivar",
-  "empty": "No hay motores configurados."
+  "empty": "No hay motores configurados.",
+  "health": {
+    "ok": "Correcto",
+    "unknown": "Sin datos",
+    "no_key": "Sin clave",
+    "stub": "IA apagada (stub)",
+    "disabled": "Desactivado",
+    "credit": "Sin crédito",
+    "auth": "Error de autenticación",
+    "model": "Error de modelo",
+    "rate_limit": "Límite de solicitudes",
+    "unreachable": "Inaccesible"
+  },
+  "owner": {
+    "title": "Propietario",
+    "platform": "Plataforma"
+  },
+  "default": "Predeterminado",
+  "selectableBadge": "Seleccionable por inquilinos",
+  "lastOk": "Último éxito",
+  "lastError": "Último fallo",
+  "today": "Hoy (llamadas/fallos)",
+  "test": {
+    "button": "Probar conexión",
+    "ok": "Conectado ({{ms}} ms)",
+    "fail": {
+      "credit": "Sin crédito — hay que recargar la cuenta del proveedor",
+      "auth": "Autenticación fallida — revisa la clave de API",
+      "model": "Modelo no encontrado — revisa el nombre",
+      "rate_limit": "Demasiadas solicitudes — inténtalo en breve",
+      "unreachable": "No se pudo contactar al proveedor — revisa el endpoint",
+      "ok": "Correcto"
+    }
+  },
+  "banner": {
+    "credit": "{{count}} motor(es) sin crédito — las funciones que los usan están fallando",
+    "failing": "{{count}} motor(es) no pueden responder",
+    "creditAction": "Recarga en la consola del proveedor (p. ej. Anthropic Console › Plans & Billing) o pasa al inquilino a un motor de la plataforma.",
+    "failingAction": "Revisa clave, modelo y endpoint, y confirma con una prueba de conexión."
+  },
+  "filter": {
+    "all": "Todos",
+    "platform": "Plataforma",
+    "tenant": "Inquilino",
+    "failingOnly": "Solo problemas"
+  },
+  "selectable": {
+    "label": "Selección por inquilinos",
+    "toggle": "Permitir que los inquilinos elijan este motor",
+    "hint": "Si se permite, los inquilinos pueden aplicar este motor y el uso se factura a la clave de este motor (cuenta del operador)."
+  },
+  "toast": {
+    "added": "Motor añadido",
+    "updated": "Motor actualizado",
+    "statusUpdated": "Estado del motor actualizado"
+  }
 }

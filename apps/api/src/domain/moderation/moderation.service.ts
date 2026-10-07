@@ -155,6 +155,8 @@ export class ModerationService {
       system: 'Rephrase the assistant message to be polite and policy-compliant. Keep meaning.',
       messages: [{ role: 'user', content: text }],
     });
+    // Fail-safe (FR-069): a rephrase the engine could not write is not one.
+    if (res.degraded) throw new Error('moderation engine degraded to stub');
     return res.text || text;
   }
 
@@ -167,6 +169,10 @@ export class ModerationService {
         'JSON_MODE:moderation. Decide if the message violates safety/policy. Return {"flagged":boolean,"reason":string}.',
       messages: [{ role: 'user', content: text }],
     });
+    // The stub always says "not flagged". On 2026-10-06 that verdict stood in
+    // for go2joy's real classifier through a credit outage (PLN-261007 D4).
+    // Thrown, so `moderate` blocks — fail-safe, as FR-069 requires.
+    if (res.degraded) throw new Error('moderation engine degraded to stub');
     try {
       return JSON.parse(res.text).flagged === true;
     } catch {

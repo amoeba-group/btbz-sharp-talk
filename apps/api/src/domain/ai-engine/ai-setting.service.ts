@@ -77,17 +77,56 @@ export class AiSettingService {
     );
   }
 
+  /**
+   * The engine a tenant may point a function at (PLN-261007 D1): its own, or a
+   * platform engine the operator opened for selection — never another tenant's,
+   * never a disabled one, never the stub (choosing it is switching the AI off).
+   * A platform engine bills the operator's key, which is why it is opt-in.
+   */
+  private async assertSelectable(tenantId: number, engineId: number): Promise<AiEngine> {
+    const engine = await this.engineRepo.findOne({ where: { id: engineId } });
+    if (!engine || (engine.tenantId != null && Number(engine.tenantId) !== Number(tenantId))) {
+      throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+    const platformClosed = engine.tenantId == null && engine.tenantSelectable !== 1;
+    if (engine.provider === 'stub' || engine.status !== 'enabled' || platformClosed) {
+      throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.BAD_REQUEST);
+    }
+    return engine;
+  }
+
+  /**
+   * One engine for every function (PLN-261007 S5) — what an operator means by
+   * "use this engine". Per-function choices made earlier are replaced; the
+   * console says so before calling.
+   */
+  async applyToAll(tenantId: number, engineId: number): Promise<TenantAiSetting[]> {
+    const engine = await this.assertSelectable(tenantId, engineId);
+    const out: TenantAiSetting[] = [];
+    await this.settingRepo.manager.transaction(async (m) => {
+      const repo = m.getRepository(TenantAiSetting);
+      for (const func of AI_FUNCTIONS) {
+        const existing = await repo.findOne({ where: { tenantId, func } });
+        if (existing) {
+          existing.engineId = Number(engine.id);
+          out.push(await repo.save(existing));
+        } else {
+          out.push(
+            await repo.save(repo.create({ tenantId, func, engineId: Number(engine.id), paramsJson: null })),
+          );
+        }
+      }
+    });
+    return out;
+  }
+
   /** Upsert the engine assigned to a tenant's AI function. */
   async upsert(
     tenantId: number,
     func: string,
     body: UpsertAiSettingRequest,
   ): Promise<TenantAiSetting> {
-    // Engine must exist and be usable by this tenant (platform-wide or own).
-    const engine = await this.engineRepo.findOne({ where: { id: body.engine_id } });
-    if (!engine || (engine.tenantId != null && engine.tenantId !== tenantId)) {
-      throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
-    }
+    await this.assertSelectable(tenantId, body.engine_id);
 
     const existing = await this.settingRepo.findOne({ where: { tenantId, func } });
     if (existing) {

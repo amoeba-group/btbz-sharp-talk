@@ -8,6 +8,7 @@ import { AiAgent } from './entity/ai-agent.entity';
 import { Session } from '../session/entity/session.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { SessionModule } from '../session/session.module';
+import { AuditModule } from '../audit/audit.module';
 import { AiEngineService } from './ai-engine.service';
 import { TenantAiEngineService } from './tenant-ai-engine.service';
 import { AiSettingService } from './ai-setting.service';
@@ -33,6 +34,7 @@ import { AiAgentController } from './ai-agent.controller';
       Tenant,
     ]),
     SessionModule,
+    AuditModule,
   ],
   controllers: [
     AiEngineController,

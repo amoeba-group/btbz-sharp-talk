@@ -11,5 +11,60 @@
   "created": "생성일",
   "enable": "활성화",
   "disable": "비활성화",
-  "empty": "구성된 엔진이 없습니다."
+  "empty": "구성된 엔진이 없습니다.",
+  "health": {
+    "ok": "정상",
+    "unknown": "미확인",
+    "no_key": "키 없음",
+    "stub": "AI 꺼짐(스텁)",
+    "disabled": "비활성",
+    "credit": "크레딧 부족",
+    "auth": "인증 오류",
+    "model": "모델 오류",
+    "rate_limit": "한도 초과",
+    "unreachable": "연결 불가"
+  },
+  "owner": {
+    "title": "소유",
+    "platform": "플랫폼"
+  },
+  "default": "기본",
+  "selectableBadge": "테넌트 선택 허용",
+  "lastOk": "마지막 성공",
+  "lastError": "마지막 실패",
+  "today": "오늘(호출/실패)",
+  "test": {
+    "button": "연결 테스트",
+    "ok": "연결 성공 ({{ms}}ms)",
+    "fail": {
+      "credit": "크레딧 부족 — 프로바이더 계정의 크레딧을 충전해야 합니다",
+      "auth": "인증 실패 — API 키를 확인하십시오",
+      "model": "모델을 찾을 수 없음 — 모델명을 확인하십시오",
+      "rate_limit": "요청이 많습니다 — 잠시 후 다시 시도하십시오",
+      "unreachable": "프로바이더에 연결하지 못했습니다 — 엔드포인트를 확인하십시오",
+      "ok": "정상"
+    }
+  },
+  "banner": {
+    "credit": "크레딧 부족 엔진 {{count}}개 — 해당 엔진을 쓰는 기능의 응답이 실패하고 있습니다",
+    "failing": "응답하지 못하는 엔진 {{count}}개",
+    "creditAction": "프로바이더 콘솔(예: Anthropic Console › Plans & Billing)에서 충전하거나, 테넌트를 플랫폼 엔진으로 전환하세요.",
+    "failingAction": "키·모델·엔드포인트를 확인하고 연결 테스트로 복구를 확인하세요."
+  },
+  "filter": {
+    "all": "전체",
+    "platform": "플랫폼",
+    "tenant": "테넌트",
+    "failingOnly": "이상만 보기"
+  },
+  "selectable": {
+    "label": "테넌트 선택",
+    "toggle": "테넌트가 이 엔진을 선택할 수 있도록 허용",
+    "hint": "허용하면 테넌트가 자기 AI 기능에 이 엔진을 적용할 수 있고, 사용료는 이 엔진의 키(운영자 계정)로 청구됩니다."
+  },
+  "toast": {
+    "added": "엔진을 추가했습니다",
+    "updated": "엔진을 수정했습니다",
+    "statusUpdated": "엔진 상태를 변경했습니다"
+  }
 }

@@ -732,6 +732,22 @@ export class ChatService {
         session.aiAgentId ?? null,
         history,
       );
+      // No reply could be written — the engine is down (PLN-261007 D4). A
+      // person answers instead of the stub's canned line.
+      if (!drafted) {
+        if (queued) {
+          return { conversationId: String(conversation.id), reply: null, escalate: false, needsAuth: false };
+        }
+        this.logger.warn(`no-knowledge reply unavailable (engine degraded) conversation=${conversation.id}`);
+        const handoff = await this.handoff(conversation.id, session, tenantId, 'low_confidence', text, denyStamp);
+        return {
+          conversationId: String(conversation.id),
+          reply: { senderType: 'system', body: handoff.body },
+          escalate: true,
+          needsAuth: false,
+          needsContactEmail: handoff.needsContactEmail,
+        };
+      }
       // Same gate as any other AI egress (FR-069, non-bypassable).
       const checked = await this.moderation.moderate({
         tenantId,

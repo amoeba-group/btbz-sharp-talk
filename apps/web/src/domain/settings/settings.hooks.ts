@@ -592,6 +592,7 @@ function useAiEngineInvalidator() {
   const tenantKey = useTenantKey();
   return () => {
     qc.invalidateQueries({ queryKey: ['settings', tenantKey, 'ai-engines'] });
+    qc.invalidateQueries({ queryKey: ['settings', tenantKey, 'ai-status'] });
     // The AI settings screen lists these as choices and shows which one is
     // actually answering; leaving it stale would contradict this page.
     qc.invalidateQueries({ queryKey: ['ai-settings'] });
@@ -627,10 +628,46 @@ export function useSetAiEngineDefault() {
   });
 }
 
-/** Not silent: an untested key looks exactly like a working one until a customer asks. */
+/**
+ * Not silent: an untested key looks exactly like a working one until a
+ * customer asks. The result is recorded as the engine's health server-side,
+ * so the lists refresh to show it (PLN-261007).
+ */
 export function useTestAiEngine() {
+  const invalidate = useAiEngineInvalidator();
+  const { t } = useTranslation('settings');
   return useMutation({
     mutationFn: (id: string) => settingsService.testAiEngine(id),
+    onSuccess: (r) => {
+      invalidate();
+      if (r.ok) toast.success(t('aiEngines.testOk', { ms: r.elapsedMs }));
+      else toast.error(t(`aiEngines.testFail.${r.reason}`), { sticky: true });
+    },
+    onError: (e: Error) => toast.error(e.message, { sticky: true }),
+  });
+}
+
+/** What answers right now, per function (PLN-261007 S5). Refreshes every minute. */
+export function useAiStatus() {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['settings', tenantKey, 'ai-status'],
+    queryFn: () => settingsService.aiStatus(),
+    refetchInterval: 60_000,
+  });
+}
+
+/** Apply one engine to every AI function (PLN-261007 S5). */
+export function useApplyAiEngine() {
+  const invalidate = useAiEngineInvalidator();
+  const { t } = useTranslation('settings');
+  return useMutation({
+    mutationFn: (engineId: string) => settingsService.applyAiEngine(engineId),
+    onSuccess: () => {
+      invalidate();
+      toast.success(t('aiEngines.applied'));
+    },
+    onError: (e: Error) => toast.error(e.message || t('aiEngines.applyFailed'), { sticky: true }),
   });
 }
 

@@ -11,5 +11,60 @@
   "created": "Created",
   "enable": "Enable",
   "disable": "Disable",
-  "empty": "No engines configured."
+  "empty": "No engines configured.",
+  "health": {
+    "ok": "OK",
+    "unknown": "Unknown",
+    "no_key": "No key",
+    "stub": "AI off (stub)",
+    "disabled": "Disabled",
+    "credit": "Out of credit",
+    "auth": "Auth error",
+    "model": "Model error",
+    "rate_limit": "Rate limited",
+    "unreachable": "Unreachable"
+  },
+  "owner": {
+    "title": "Owner",
+    "platform": "Platform"
+  },
+  "default": "Default",
+  "selectableBadge": "Tenant-selectable",
+  "lastOk": "Last success",
+  "lastError": "Last failure",
+  "today": "Today (calls/failures)",
+  "test": {
+    "button": "Test connection",
+    "ok": "Connected ({{ms}}ms)",
+    "fail": {
+      "credit": "Out of credit — the provider account needs a top-up",
+      "auth": "Authentication failed — check the API key",
+      "model": "Model not found — check the model name",
+      "rate_limit": "Too many requests — try again shortly",
+      "unreachable": "Could not reach the provider — check the endpoint",
+      "ok": "OK"
+    }
+  },
+  "banner": {
+    "credit": "{{count}} engine(s) out of credit — functions using them are failing",
+    "failing": "{{count}} engine(s) cannot answer",
+    "creditAction": "Top up in the provider console (e.g. Anthropic Console › Plans & Billing), or move the tenant to a platform engine.",
+    "failingAction": "Check key, model and endpoint, then confirm with a connection test."
+  },
+  "filter": {
+    "all": "All",
+    "platform": "Platform",
+    "tenant": "Tenant",
+    "failingOnly": "Problems only"
+  },
+  "selectable": {
+    "label": "Tenant selection",
+    "toggle": "Allow tenants to choose this engine",
+    "hint": "When allowed, tenants can apply this engine to their AI functions and usage is billed to this engine's key (the operator account)."
+  },
+  "toast": {
+    "added": "Engine added",
+    "updated": "Engine updated",
+    "statusUpdated": "Engine status updated"
+  }
 }
