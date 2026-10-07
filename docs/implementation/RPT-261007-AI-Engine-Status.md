@@ -32,7 +32,7 @@ PLN과의 차이: 상태 API 경로를 `/tenants/me/ai-status` 대신 기존 컨
 | PR | #593(REQ/PLN), #594(구현, squash `7905ef3`) |
 | 스키마 | `sql/261007-ai-engine-health.sql` |
 | 스테이징 | ✅ SQL 선적용 → 배포(2026-10-07 09:31 KST), 부팅 로그 정상, 신규 라우트 401, 상태 기록 동작 확인(TCR §2) |
-| 프로덕션 | ⏳ 대기 — SQL 선적용 후 `deploy-self-hosted.sh` |
+| 프로덕션 | ✅ 2026-10-07 10:56 KST — SQL 선적용(열 5개 확인) → `production` ff `f47f0a4..bbdbea3` → `check-migrations` OK → `deploy-self-hosted.sh`. api/web/widget 재생성, 부팅 로그 정상(ERROR 0), 신규 라우트 401, dist에 `engine-health.js`, 공개 health 200. 프로덕션 Anthropic 엔진은 여전히 키가 없다(P3 미결) — 화면에는 `키 없음`으로 표시된다 |
 
 ## 4. 후속
 - 화면 육안 확인(테넌트 카드·어드민 페이지) — 사람 확인 필요(TCR §3)
