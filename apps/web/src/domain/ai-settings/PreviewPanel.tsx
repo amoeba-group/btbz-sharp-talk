@@ -1,3 +1,4 @@
+import { MessageBody } from '../../components/RichText';
 import { useEffect, useRef, useState } from 'react';
 import { GraduationCap, RotateCcw, Send } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -237,7 +238,7 @@ export function PreviewPanel({ agentId, onCoach, replayQuestion, onReplayed }: P
           <div key={m.id} className="group flex flex-col">
             <div
               className={cn(
-                'max-w-[85%] whitespace-pre-wrap rounded-xl px-3 py-2 text-sm',
+                'max-w-[85%] rounded-xl px-3 py-2 text-sm',
                 bubbleStyle[m.role],
               )}
             >
@@ -246,7 +247,7 @@ export function PreviewPanel({ agentId, onCoach, replayQuestion, onReplayed }: P
                   {t('preview.agentBadge')}
                 </span>
               )}
-              {m.body}
+              <MessageBody text={m.body} raw={m.role === 'user'} />
             </div>
 
             {/* Hand this exact answer to the coaching tab. Only AI turns that

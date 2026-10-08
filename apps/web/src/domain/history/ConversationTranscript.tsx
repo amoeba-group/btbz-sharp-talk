@@ -1,3 +1,4 @@
+import { MessageBody } from '../../components/RichText';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/Badge';
 import { useConversationDetail } from './history.hooks';
@@ -92,7 +93,9 @@ function MessageBubble({
         <span>{fmtTime(message.createdAt)}</span>
         {message.trace?.reason && <Badge tone="warning">{message.trace.reason}</Badge>}
       </div>
-      <p className="whitespace-pre-wrap text-sm text-gray-800">{message.body}</p>
+      <div className="text-sm text-gray-800">
+        <MessageBody text={message.body} raw={message.senderType === 'user'} />
+      </div>
 
       {(citations.length > 0 || confidence !== undefined) && (
         <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-white/60 pt-2">

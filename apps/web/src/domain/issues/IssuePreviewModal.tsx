@@ -1,3 +1,4 @@
+import { MessageBody } from '../../components/RichText';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -98,14 +99,14 @@ export function IssuePreviewModal({ card, onClose }: { card: IssueCard | null; o
                   {m.senderName && <span>· {m.senderName}</span>}
                   <span className="ml-auto">{clockTime(m.createdAt)}</span>
                 </div>
-                <p
+                <div
                   className={cn(
-                    'whitespace-pre-wrap rounded-lg px-2.5 py-1.5 text-sm',
+                    'rounded-lg px-2.5 py-1.5 text-sm',
                     SENDER_TONE[m.senderType] ?? 'bg-gray-100 text-gray-800',
                   )}
                 >
-                  {m.body}
-                </p>
+                  <MessageBody text={m.body} raw={m.senderType === 'user'} />
+                </div>
               </div>
             ))}
           </div>

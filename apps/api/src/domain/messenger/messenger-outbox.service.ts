@@ -1,3 +1,4 @@
+import { stripLiteMarkdown } from '@sharptalk/types';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, LessThanOrEqual, MoreThan, Or, Repository } from 'typeorm';
@@ -272,7 +273,11 @@ export class MessengerOutboxService {
       // the text, which is a delivery the customer can act on rather than a
       // failure they never hear about (PLN-260814 FR-7).
       const native = adapter.supportsAttachments === true;
-      const text = native ? message.body : appendLinks(message.body, files);
+      // Channels here show plain text only, so markdown goes out as structure
+      // without markers — "- **Email:** a@b" arrives as "• Email: a@b"
+      // instead of literal asterisks (PLN-261008 S5). The stored body is unchanged.
+      const plain = stripLiteMarkdown(message.body ?? '');
+      const text = native ? plain : appendLinks(plain, files);
       const result = await adapter.send(
         { channel, secret },
         thread,

@@ -205,6 +205,20 @@ describe('MessengerOutboxService', () => {
       expect(h.outboxUpdates[0]).toMatchObject({ status: 'sent' });
     });
 
+    it('sends markdown as plain text — channels cannot show ** (PLN-261008 S5)', async () => {
+      const h = build({
+        outboxRows: [row],
+        messages: [{ id: 502, senderType: 'ai', body: 'Liên hệ:\n- **Email:** support@go2joy.vn\n- `Hotline` 1900 638 838' }],
+      });
+
+      await h.service.deliverDue();
+
+      const sent = JSON.stringify((h.adapter.send as jest.Mock).mock.calls[0]);
+      expect(sent).toContain('• Email: support@go2joy.vn');
+      expect(sent).toContain('• Hotline 1900 638 838');
+      expect(sent).not.toContain('**');
+    });
+
     it('marks unconfirmed when the provider cannot prove delivery', async () => {
       const h = build({
         outboxRows: [row],
