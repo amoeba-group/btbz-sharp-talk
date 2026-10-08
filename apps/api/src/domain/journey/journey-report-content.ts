@@ -63,7 +63,7 @@ export const CONTENT_SCHEMA_HINT = `{
   "subline": "one sentence: what comes first, and what cannot be judged" | null,
   "narrative": { "<section key>": "a short paragraph" },
   "quotes": [ { "id": 1, "sample": <the #number of a SAMPLES line> } ],
-  "questions": [ { "text": "the question, in the report language", "quoteIds": [1], "answered": "answered" | "unanswered" | "escalated" } ],
+  "questions": [ { "text": "a question the CUSTOMER asked, in the report language", "quoteIds": [<quotes of the customer asking it>], "answered": "whether WE answered the customer: answered" | "unanswered" | "escalated" } ],
   "stages": [ { "key": "aware" | "appeal" | "ask" | "act" | "advocate", "customer": string | null, "response": string | null, "pain": string | null, "opportunity": string | null } ],
   "hypotheses": [ { "layer": "Maslow layer", "quoteId": 1, "hypothesis": string, "disproveIf": string } ],
   "dataFlags": [ { "text": "a data quality problem you noticed", "section": "<section key>" | null } ],
