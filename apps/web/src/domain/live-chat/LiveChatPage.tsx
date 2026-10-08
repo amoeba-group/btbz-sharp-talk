@@ -777,11 +777,13 @@ export function LiveChatPage() {
                   </div>
                   {/* Which hotel this partner acts for (REQ-261006 W6). */}
                   {s.identityClaims && <PartnerLine claims={s.identityClaims} />}
-                  <div className="mt-0.5 flex items-center justify-between gap-2">
-                    <span className="shrink-0 text-[11px] text-gray-400">
+                  {/* Badges wrap onto a second line: a thread can carry team, region,
+                      channel and status at once, and one row ran past the list edge. */}
+                  <div className="mt-0.5 flex items-start justify-between gap-2">
+                    <span className="shrink-0 pt-0.5 text-[11px] text-gray-400">
                       {t('sessionLabel', { id: s.id.slice(0, 6) })}
                     </span>
-                    <div className="flex shrink-0 items-center gap-1">
+                    <div className="flex min-w-0 flex-wrap items-center justify-end gap-1">
                       {/* Team pin (PLN-260826 R1): filled and always visible
                           when pinned; appears on hover to pin. Server keeps
                           pinned rows on top and enforces the 3-per-store cap. */}

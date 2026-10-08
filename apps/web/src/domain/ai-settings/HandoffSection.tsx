@@ -159,12 +159,18 @@ export function HandoffSection() {
     setRegionRows(regionRowsFrom(h.regionRouting?.categories));
     setTeamOn(h.teamRouting?.enabled === true);
     setTeamPrompt(h.teamRouting?.prompt ?? {});
+    // Enabled with no options of its own means the built-in CS / Business pair is
+    // what customers see (the API's default), so the table shows that pair rather
+    // than looking empty while the feature is clearly on.
+    const storedOptions = (h.teamRouting?.options ?? []).map((o) => ({
+      id: o.id ?? '',
+      jobLabel: o.jobLabel ?? 'consult',
+      label: o.label ?? {},
+    }));
     setTeamRows(
-      (h.teamRouting?.options ?? []).map((o) => ({
-        id: o.id ?? '',
-        jobLabel: o.jobLabel ?? 'consult',
-        label: o.label ?? {},
-      })),
+      storedOptions.length === 0 && h.teamRouting?.enabled === true
+        ? DEFAULT_TEAM_ROWS.map((r) => ({ ...r, label: {} }))
+        : storedOptions,
     );
   }, [config]);
 
