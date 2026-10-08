@@ -69,7 +69,7 @@ footer{margin-top:48px;color:var(--muted);font-size:13px}
   <div>
     <div class="eyebrow" data-i18n="eyebrow">샵톡 사용자설명서</div>
     <h1 data-i18n="title">샵톡 매뉴얼</h1>
-    <p class="sub" data-i18n="sub">개설부터 운영까지 — 5권으로 안내합니다. 각 매뉴얼은 HTML과 Markdown 원문으로 제공됩니다.</p>
+    <p class="sub" data-i18n="sub">개설부터 운영까지 — 6권으로 안내합니다. 각 매뉴얼은 HTML과 Markdown 원문으로 제공됩니다.</p>
   </div>
   <div class="langbar" role="group" aria-label="Language">
     <button type="button" data-lang="ko" aria-pressed="true">한국어</button>
@@ -132,6 +132,17 @@ footer{margin-top:48px;color:var(--muted);font-size:13px}
     </div>
   </article>
 
+  <article class="card">
+    <span class="no">06</span>
+    <h2 data-i18n="c6t">카페24 연동 작업 가이드</h2>
+    <p data-i18n="c6d">개발자센터 앱·서버 설정 → 스토어 도메인 → 몰 OAuth 연결 → 주문 동기화 → 상품→지식 변환 → 스마트디자인 위젯 설치 → 회원 로그인·내 주문. 카페24 몰 하나를 붙이는 전체 순서와 문제 해결.</p>
+    <div class="aud" data-i18n="c6a">플랫폼 관리자(1장) · 테넌트 운영자(master)</div>
+    <div class="links">
+      <a class="btn primary" data-doc="cafe24-integration" data-fmt="html" href="cafe24-integration.ko.html" data-i18n="html">HTML 보기</a>
+      <a class="btn ghost" data-doc="cafe24-integration" data-fmt="md" href="cafe24-integration.ko.md" data-i18n="md">MD 원문</a>
+    </div>
+  </article>
+
 </div>
 
 <p class="notice" id="mtNotice" data-i18n="notice"></p>
@@ -143,7 +154,7 @@ footer{margin-top:48px;color:var(--muted);font-size:13px}
   var STR = {
     ko: {
       eyebrow:"샵톡 사용자설명서", title:"샵톡 매뉴얼",
-      sub:"개설부터 운영까지 — 5권으로 안내합니다. 각 매뉴얼은 HTML과 Markdown 원문으로 제공됩니다.",
+      sub:"개설부터 운영까지 — 6권으로 안내합니다. 각 매뉴얼은 HTML과 Markdown 원문으로 제공됩니다.",
       c1t:"간단 세팅 매뉴얼",
       c1d:"테넌트 개설 → 관리자 초대·임시 비밀번호 → 첫 로그인 → 플랫폼 연동(Cafe24·Shopify·Odoo) → 위젯 설치 → AI·지식 최소 설정, 첫 상담까지의 최단 경로.",
       c1a:"플랫폼 관리자 · 신규 테넌트 관리자",
@@ -159,12 +170,15 @@ footer{margin-top:48px;color:var(--muted);font-size:13px}
       c5t:"커스텀 위젯 만들기 매뉴얼",
       c5d:"디자인 파일 → 커스텀 위젯 만들기 → 미리보기 → 사용함/기본 복귀 → 이력·패키지·스냅샷으로 되돌리기 → 정제 CSS(애드온). 테넌트별 위젯 디자인의 전 과정.",
       c5a:"테넌트 운영자(master/director) · 6장은 플랫폼 관리자",
+      c6t:"카페24 연동 작업 가이드",
+      c6d:"개발자센터 앱·서버 설정 → 스토어 도메인 → 몰 OAuth 연결 → 주문 동기화 → 상품→지식 변환 → 스마트디자인 위젯 설치 → 회원 로그인·내 주문. 카페24 몰 하나를 붙이는 전체 순서와 문제 해결.",
+      c6a:"플랫폼 관리자(1장) · 테넌트 운영자(master)",
       html:"HTML 보기", md:"MD 원문", notice:"",
       footer:"SharpTalk · shoptalk.amoeba.site", docLang:"ko"
     },
     en: {
       eyebrow:"SharpTalk User Guides", title:"SharpTalk Manuals",
-      sub:"From setup to daily operations — five guides. Each manual is available as HTML and raw Markdown.",
+      sub:"From setup to daily operations — six guides. Each manual is available as HTML and raw Markdown.",
       c1t:"Quick Setup Manual",
       c1d:"Create a tenant → invite an admin with a temporary password → first login → connect your platform (Cafe24·Shopify·Odoo) → install the widget → minimal AI & knowledge setup, all the way to the first chat.",
       c1a:"Platform admins · new tenant admins",
@@ -180,13 +194,16 @@ footer{margin-top:48px;color:var(--muted);font-size:13px}
       c5t:"Custom Widget Manual",
       c5d:"Design files → create a custom widget → preview → use / back to basic → undo with history, packages and snapshots → sanitized CSS (add-on). The whole per-tenant widget design workflow.",
       c5a:"Tenant operators (master/director) · Ch. 6 for platform admins",
+      c6t:"Cafe24 Integration Guide",
+      c6d:"Developer Center app & server settings → store domain → mall OAuth connection → order sync → products to knowledge → Smart Design widget install → member sign-in & my orders. The full sequence for connecting one Cafe24 mall, with troubleshooting.",
+      c6a:"Platform admins (Ch. 1) · tenant operators (master)",
       html:"View HTML", md:"Raw MD",
       notice:"⚠ The English and Vietnamese editions are AI-translated drafts pending native review. Where they disagree, the Korean edition is authoritative.",
       footer:"SharpTalk · shoptalk.amoeba.site", docLang:"en"
     },
     vi: {
       eyebrow:"Tài liệu hướng dẫn SharpTalk", title:"Sổ tay SharpTalk",
-      sub:"Từ khởi tạo đến vận hành hằng ngày — gồm 5 quyển. Mỗi sổ tay có bản HTML và bản Markdown gốc.",
+      sub:"Từ khởi tạo đến vận hành hằng ngày — gồm 6 quyển. Mỗi sổ tay có bản HTML và bản Markdown gốc.",
       c1t:"Sổ tay cài đặt nhanh",
       c1d:"Tạo tenant → mời quản trị viên với mật khẩu tạm → đăng nhập lần đầu → kết nối nền tảng (Cafe24·Shopify·Odoo) → cài widget → thiết lập AI & tri thức tối thiểu, cho đến phiên chat đầu tiên.",
       c1a:"Quản trị nền tảng · quản trị tenant mới",
@@ -202,6 +219,9 @@ footer{margin-top:48px;color:var(--muted);font-size:13px}
       c5t:"Sổ tay tạo widget tùy chỉnh",
       c5d:"Tệp thiết kế → tạo widget tùy chỉnh → xem trước → dùng / về cơ bản → hoàn tác bằng lịch sử, gói và ảnh chụp → CSS đã lọc (tiện ích). Toàn bộ quy trình thiết kế widget theo tenant.",
       c5a:"Người vận hành tenant (master/director) · chương 6 cho quản trị nền tảng",
+      c6t:"Hướng dẫn tích hợp Cafe24",
+      c6d:"Ứng dụng Developer Center & cấu hình máy chủ → tên miền cửa hàng → kết nối OAuth → đồng bộ đơn hàng → chuyển sản phẩm thành tri thức → cài widget bằng Smart Design → đăng nhập thành viên & đơn hàng của tôi. Toàn bộ trình tự kết nối một cửa hàng Cafe24, kèm xử lý sự cố.",
+      c6a:"Quản trị nền tảng (chương 1) · người vận hành tenant (master)",
       html:"Xem HTML", md:"Bản MD",
       notice:"⚠ Bản tiếng Anh và tiếng Việt là bản dịch AI, đang chờ hiệu đính bởi người bản ngữ. Nếu có khác biệt, bản tiếng Hàn là bản chuẩn.",
       footer:"SharpTalk · shoptalk.amoeba.site", docLang:"vi"

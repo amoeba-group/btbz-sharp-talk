@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hướng dẫn tích hợp Cafe24 cho SharpTalk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --accent:#2B7FFF; --accent-deep:#1D5FD6; --accent-tint:#EAF2FF;
+  --ink:#1B2430; --muted:#5C6675; --line:#E3E8F0;
+  --bg:#FAFBFD; --card:#FFFFFF; --soft:#F1F5FB;
+  --tip-bg:#EAF2FF; --tip-edge:#2B7FFF;
+  --warn-bg:#FFF7E6; --warn-edge:#D97706; --warn-ink:#8A4B04;
+  --code-bg:#EEF2F8; --mono-ink:#31435E;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --accent:#5C9BFF; --accent-deep:#82B4FF; --accent-tint:#16243C;
+    --ink:#E6EBF3; --muted:#93A0B4; --line:#28313F;
+    --bg:#0F141B; --card:#161C25; --soft:#1B222D;
+    --tip-bg:#152238; --tip-edge:#5C9BFF;
+    --warn-bg:#2A2010; --warn-edge:#E8A23D; --warn-ink:#EFC584;
+    --code-bg:#1E2632; --mono-ink:#B9C7DC;
+  }
+}
+:root[data-theme="dark"]{
+  --accent:#5C9BFF; --accent-deep:#82B4FF; --accent-tint:#16243C;
+  --ink:#E6EBF3; --muted:#93A0B4; --line:#28313F;
+  --bg:#0F141B; --card:#161C25; --soft:#1B222D;
+  --tip-bg:#152238; --tip-edge:#5C9BFF;
+  --warn-bg:#2A2010; --warn-edge:#E8A23D; --warn-ink:#EFC584;
+  --code-bg:#1E2632; --mono-ink:#B9C7DC;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Segoe UI",sans-serif;
+  font-size:16px;line-height:1.75}
+.shell{max-width:1120px;margin:0 auto;padding:0 24px 96px;
+  display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+@media(max-width:860px){.shell{display:block}}
+header.hero{grid-column:1/-1;padding:56px 0 8px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+h1{font-family:"Gothic A1",sans-serif;font-weight:800;font-size:clamp(28px,4.5vw,40px);
+  line-height:1.25;margin:10px 0 12px;text-wrap:balance}
+.meta{color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.lead{max-width:68ch;color:var(--muted);margin-top:14px}
+nav.toc{position:sticky;top:24px;align-self:start;font-size:13.5px;padding-top:24px}
+@media(max-width:860px){nav.toc{position:static;border:1px solid var(--line);border-radius:10px;
+  background:var(--card);padding:14px 16px;margin:20px 0}}
+nav.toc .toc-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+nav.toc a{display:flex;gap:8px;color:var(--muted);text-decoration:none;padding:4px 0;line-height:1.4}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent)}
+nav.toc a .n{font-family:"IBM Plex Mono",monospace;color:var(--accent);font-size:12px;min-width:18px;padding-top:1px}
+main{min-width:0;max-width:74ch}
+section{padding-top:40px}
+.ch{display:flex;align-items:baseline;gap:12px;border-top:2px solid var(--ink);padding-top:14px}
+.ch .num{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;color:var(--accent)}
+h2{font-family:"Gothic A1",sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.35;text-wrap:balance}
+.actor{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 12px;
+  background:var(--accent-tint);color:var(--accent-deep);margin-top:10px}
+h3{font-family:"Gothic A1",sans-serif;font-weight:700;font-size:17.5px;margin:30px 0 8px}
+p{margin:10px 0;max-width:68ch}
+a{color:var(--accent-deep)}
+strong{font-weight:700}
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:14px 0}
+th{font-size:12.5px;letter-spacing:.04em;color:var(--muted);text-align:left;font-weight:700;
+  border-bottom:2px solid var(--line);padding:7px 12px 7px 0}
+td{border-bottom:1px solid var(--line);padding:8px 12px 8px 0;vertical-align:top}
+.tablewrap{overflow-x:auto}
+.terms{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 18px 14px;margin:16px 0}
+.terms .t-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:12px 0 2px}
+.terms td:first-child{font-weight:700;white-space:nowrap;padding-right:18px}
+.callout{border-left:3px solid var(--tip-edge);background:var(--tip-bg);border-radius:0 10px 10px 0;
+  padding:12px 18px;margin:16px 0;font-size:14.5px}
+.callout .c-label{font-weight:700;color:var(--accent-deep)}
+.callout.warn{border-left-color:var(--warn-edge);background:var(--warn-bg);color:var(--warn-ink)}
+.callout.warn .c-label{color:var(--warn-ink)}
+.callout p{margin:6px 0}
+.callout ul{margin:6px 0}
+code,kbd{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--code-bg);
+  color:var(--mono-ink);border-radius:5px;padding:1px 6px}
+pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+  overflow-x:auto;font-size:13px;line-height:1.6}
+pre code{background:none;padding:0;color:var(--mono-ink)}
+ol.steps{padding-left:0;margin:14px 0;list-style:none;counter-reset:st}
+ol.steps>li{counter-increment:st;position:relative;padding:0 0 14px 40px}
+ol.steps>li::before{content:counter(st);position:absolute;left:0;top:1px;width:24px;height:24px;
+  border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;font-family:"IBM Plex Mono",monospace}
+ul{margin:10px 0;padding-left:22px}
+li{margin:4px 0}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:30px;position:relative}
+.check li::before{content:"";position:absolute;left:2px;top:6px;width:14px;height:14px;
+  border:2px solid var(--accent);border-radius:4px}
+.faq dt{font-weight:700;margin-top:18px}
+.faq dd{margin:4px 0 0;color:var(--muted)}
+.next{margin-top:56px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:20px 24px}
+.pagenav{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;padding-top:18px;color:var(--muted)}
+.pagenav a{color:var(--muted);text-decoration:none}
+.pagenav a:hover,.pagenav a:focus-visible{color:var(--accent)}
+.pagenav .cur{color:var(--accent-deep);font-weight:700}
+figure.shot{margin:18px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+figure.shot img{display:block;width:100%}
+figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+<nav class="pagenav" aria-label="Điều hướng sổ tay"><a href="./">← Danh sách sổ tay</a><span>·</span><a href="cafe24-integration.ko.html">한국어</a><a href="cafe24-integration.en.html">English</a><span class="cur">Tiếng Việt</span><span>·</span><a href="cafe24-integration.vi.md">Bản MD</a></nav>
+<header class="hero">
+  <div class="eyebrow">Tài liệu SharpTalk · Tích hợp Cafe24</div>
+  <h1>Hướng dẫn tích hợp Cafe24 cho SharpTalk</h1>
+  <div class="meta"><span>Phiên bản 1.0 · phát hành lần đầu 2026-10-08 · viết theo mã nguồn</span><span>Đối tượng: quản trị viên nền tảng (chương 1 — một lần cho mỗi bản triển khai) · người vận hành tenant (master — chương 2~7)</span></div>
+  <p class="lead">Đây là hướng dẫn thực hành sắp xếp <strong>theo thứ tự</strong> toàn bộ công việc gắn một gian hàng Cafe24 vào SharpTalk. Mỗi chương theo thứ tự <strong>làm gì → các bước → 💡 mẹo vận hành</strong>, và danh sách kiểm tra ở chương 8 dùng để xác minh đến cùng.</p>
+</header>
+
+<nav class="toc" aria-label="Mục lục">
+  <div class="toc-label">Mục lục</div>
+  <a href="#ch0"><span class="n">0</span>Tổng quan</a>
+  <a href="#ch1"><span class="n">1</span>Quản trị viên nền tảng</a>
+  <a href="#ch2"><span class="n">2</span>Cài đặt cơ bản của tenant</a>
+  <a href="#ch3"><span class="n">3</span>Kết nối gian hàng</a>
+  <a href="#ch4"><span class="n">4</span>Đồng bộ đơn hàng</a>
+  <a href="#ch5"><span class="n">5</span>Sản phẩm → tri thức</a>
+  <a href="#ch6"><span class="n">6</span>Cài widget</a>
+  <a href="#ch7"><span class="n">7</span>Đăng nhập thành viên · đơn hàng của tôi</a>
+  <a href="#ch8"><span class="n">8</span>Danh sách kiểm tra công việc</a>
+  <a href="#ch9"><span class="n">9</span>FAQ / xử lý sự cố</a>
+</nav>
+
+<main>
+
+<section id="ch0">
+  <div class="ch"><span class="num">00</span><h2>Tổng quan</h2></div>
+  <p>Tích hợp Cafe24 gồm <strong>ba kết nối</strong>. Ba kết nối này độc lập với nhau, nên chỉ cần bật những gì bạn cần.</p>
+  <pre><code>① Kết nối quản trị (OAuth, chương 3)     cửa hàng → SharpTalk   đọc đơn hàng · sản phẩm (chỉ đọc)
+      ├─ Đồng bộ đơn hàng (chương 4)      → AI trả lời "đơn của tôi đến đâu?" bằng đơn hàng thật
+      └─ Nhập sản phẩm (chương 5)         → chuyển thành tri thức → AI trích dẫn · gắn liên kết sản phẩm
+② Cài widget (Smart Design, chương 6)    SharpTalk → cửa hàng   widget trò chuyện trên mọi trang
+③ Đăng nhập thành viên (chương 7)       thành viên ↔ phiên widget   hiện 'Đơn hàng của tôi' trong widget</code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>Thuật ngữ</th><th>Ý nghĩa</th></tr>
+    <tr><td>Mall ID</td><td>ID gian hàng Cafe24. Là phần <code>yourmall</code> trong <code>yourmall.cafe24.com</code></td></tr>
+    <tr><td>Ứng dụng Developers</td><td>Ứng dụng dành cho SharpTalk đăng ký tại developers.cafe24.com. Dùng <strong>1 ứng dụng cho mỗi bản triển khai (staging·production)</strong>, và mọi tenant đều kết nối gian hàng của mình qua ứng dụng này</td></tr>
+    <tr><td>Kết nối quản trị</td><td>Quy trình người vận hành chính của gian hàng đồng ý cấp quyền cho ứng dụng. Token nhận được sẽ được mã hóa và lưu riêng cho từng tenant</td></tr>
+    <tr><td>Đăng nhập thành viên</td><td>Tính năng gắn hội thoại widget với thành viên khi khách hàng (thành viên) của cửa hàng đăng nhập trong widget, dựa trên ID thành viên do Cafe24 xác nhận</td></tr>
+  </table></div>
+  <div class="tablewrap"><table>
+    <tr><th>Chương</th><th>Ai</th><th>Màn hình</th></tr>
+    <tr><td>1</td><td>Quản trị viên nền tảng</td><td>Cafe24 Developers · biến môi trường máy chủ</td></tr>
+    <tr><td>2~3</td><td>Master của tenant</td><td>Cài đặt gian hàng &gt; Cài đặt cơ bản · Cài đặt gian hàng &gt; Tích hợp nền tảng</td></tr>
+    <tr><td>4~5</td><td>Master của tenant</td><td>Cài đặt gian hàng &gt; Tích hợp nền tảng · Kho tri thức</td></tr>
+    <tr><td>6</td><td>Master của tenant + người phụ trách thiết kế gian hàng</td><td>Cài đặt gian hàng &gt; Cài đặt widget · quản trị Cafe24</td></tr>
+    <tr><td>7</td><td>Master của tenant</td><td>Cài đặt gian hàng &gt; Cài đặt widget</td></tr>
+  </table></div>
+  <div class="callout warn"><span class="c-label">⚠️ Kết nối chỉ có quyền đọc.</span>
+    <p>SharpTalk chỉ đọc đơn hàng · sản phẩm · danh mục và không sửa dữ liệu của gian hàng.</p></div>
+</section>
+
+<section id="ch1">
+  <div class="ch"><span class="num">01</span><h2>Quản trị viên nền tảng — ứng dụng Developers và cấu hình máy chủ</h2></div>
+  <p>Chương này chỉ làm <strong>một lần cho mỗi bản triển khai</strong>. Nếu đã có tenant khác đang dùng kết nối Cafe24 thì bỏ qua và chuyển sang chương 2.</p>
+  <h3>1.1 Đăng ký ứng dụng Developers</h3>
+  <ol class="steps">
+    <li>Đăng nhập developers.cafe24.com → tạo ứng dụng cho SharpTalk bằng <strong>Tạo ứng dụng</strong>.</li>
+    <li>Trong thông tin ứng dụng, xác nhận <strong>Client ID</strong> và <strong>Client Secret</strong> (sẽ điền vào biến môi trường ở mục 1.3).</li>
+    <li>Ở <strong>Redirect URI</strong>, đăng ký <strong>đúng một</strong> địa chỉ callback của tên miền console. Staging <code>https://shoptalk.amoeba.site/api/v1/auth/cafe24/callback</code> · Production <code>https://sharptalk.amoeba.site/api/v1/auth/cafe24/callback</code></li>
+    <li>Thêm 4 quyền dưới đây vào <strong>Quyền (Scope)</strong>. Tất cả đều là quyền đọc.</li>
+  </ol>
+  <div class="tablewrap"><table>
+    <tr><th>Quyền</th><th>Dùng ở đâu</th></tr>
+    <tr><td><code>mall.read_order</code></td><td>Đồng bộ đơn hàng (chương 4)</td></tr>
+    <tr><td><code>mall.read_product</code></td><td>Nhập sản phẩm (chương 5)</td></tr>
+    <tr><td><code>mall.read_category</code></td><td>Tên danh mục của sản phẩm (chương 5) — thiếu quyền này thì danh mục của tài liệu tri thức sẽ bị trống</td></tr>
+    <tr><td><code>mall.read_customer_identifier</code></td><td>Đăng nhập thành viên (chương 7)</td></tr>
+  </table></div>
+  <div class="callout warn"><span class="c-label">⚠️ Cafe24 chỉ nhận một Redirect URI cho mỗi ứng dụng.</span>
+    <p>Vì vậy kết nối quản trị và đăng nhập thành viên dùng chung một callback (<code>/auth/cafe24/callback</code>), và SharpTalk tự phân biệt loại yêu cầu ở bên trong. Staging và production có địa chỉ callback khác nhau, nên hãy <strong>tạo ứng dụng riêng</strong>.</p></div>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p><strong>Không cần</strong> quyền thông tin cá nhân của thành viên (<code>mall.read_personal</code>). ID thành viên đã có trong phản hồi token đăng nhập thành viên nên không phải đọc tài nguyên thông tin cá nhân. Càng ít quyền thì việc Cafe24 duyệt và người vận hành gian hàng đồng ý càng dễ.</p></div>
+  <h3>1.2 Nếu thêm quyền về sau</h3>
+  <p>Thêm quyền <strong>không áp dụng cho các gian hàng đã kết nối.</strong> Vì token được cấp theo quyền tại thời điểm đồng ý. Sau khi thêm quyền, từng tenant phải <strong>bấm lại [Kết nối Cafe24] ở chương 3 để đồng ý lại</strong>. Nếu chạy tính năng dùng quyền mới mà chưa đồng ý lại, Cafe24 sẽ từ chối với <code>insufficient_scope</code>.</p>
+  <h3>1.3 Biến môi trường máy chủ</h3>
+  <p>Đặt trong tệp env của container API (<code>env/backend/.env.{môi_trường}</code>).</p>
+  <div class="tablewrap"><table>
+    <tr><th>Biến</th><th>Giá trị</th><th>Ghi chú</th></tr>
+    <tr><td><code>CAFE24_CLIENT_ID</code></td><td>Client ID của ứng dụng</td><td><strong>Bắt buộc</strong> — để trống thì khi kết nối sẽ báo E5010</td></tr>
+    <tr><td><code>CAFE24_CLIENT_SECRET</code></td><td>Client Secret của ứng dụng</td><td><strong>Bắt buộc</strong></td></tr>
+    <tr><td><code>CAFE24_REDIRECT_URI</code></td><td><strong>Giống đến từng ký tự</strong> với địa chỉ callback ở 1.1</td><td>Khác thì trao đổi token sẽ thất bại</td></tr>
+    <tr><td><code>CAFE24_CONSOLE_RETURN_URL</code></td><td>Địa chỉ console (ví dụ: <code>https://sharptalk.amoeba.site</code>)</td><td>Nơi người vận hành quay về sau khi kết nối</td></tr>
+    <tr><td><code>CAFE24_SCOPES</code></td><td><code>mall.read_order,mall.read_product,mall.read_category</code></td><td>Quyền của kết nối quản trị</td></tr>
+    <tr><td><code>CAFE24_CUSTOMER_SCOPES</code></td><td><code>mall.read_customer_identifier</code></td><td>Quyền của đăng nhập thành viên</td></tr>
+    <tr><td><code>CAFE24_SYNC_INTERVAL_MIN</code></td><td>Ví dụ: <code>30</code></td><td>Chu kỳ tự động đồng bộ đơn hàng (phút). <code>0</code> là tắt</td></tr>
+    <tr><td><code>CAFE24_LOGIN_SYNC_LOOKBACK_DAYS</code></td><td>Mặc định <code>30</code> (tối đa 90)</td><td>Phạm vi đồng bộ bổ sung ngay sau khi thành viên đăng nhập</td></tr>
+  </table></div>
+  <div class="callout warn"><span class="c-label">⚠️ Đừng để lại dòng có giá trị trống (`CAFE24_SCOPES=`).</span>
+    <p>Dòng trống không được hiểu là "dùng giá trị mặc định" mà là "giá trị rỗng" — màn hình đồng ý sẽ mở với quyền rỗng, hoặc sau khi kết nối không quay về được console. Biến không dùng thì xóa cả dòng, biến có dùng thì ghi rõ giá trị như bảng trên. <code>CAFE24_CUSTOMER_REDIRECT_URI</code>·<code>CAFE24_API_HOST_TEMPLATE</code>·<code>CAFE24_AUTH_HOST_TEMPLATE</code>·<code>CAFE24_API_VERSION</code> nếu không có lý do đặc biệt thì xóa cả dòng.</p></div>
+  <div class="callout warn"><span class="c-label">⚠️</span>
+    <p>Sau khi đổi env, hãy khởi động lại container API và kiểm tra log khởi động có in <code>Cafe24 auto-sync enabled — every N min</code> (hoặc <code>disabled</code>) đúng như ý định.</p></div>
+</section>
+
+<section id="ch2">
+  <div class="ch"><span class="num">02</span><h2>Cài đặt cơ bản của tenant — tên miền cửa hàng · URL cửa hàng</h2></div>
+  <p>Trước tiên hãy lưu hai giá trị trong thẻ <strong>Cài đặt gian hàng &gt; Cài đặt cơ bản &gt; Cửa hàng</strong>. Lý do phải làm trước khi kết nối là SharpTalk dùng các giá trị này để <strong>kiểm tra "gian hàng này có thực sự là của tenant này không"</strong>.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Trường</th><th>Giá trị cần nhập</th><th>Dùng ở đâu</th></tr>
+    <tr><td>Tên miền cửa hàng</td><td><code>yourmall.cafe24.com</code></td><td>Căn cứ để widget tìm ra tenant này · kiểm tra khớp gian hàng khi kết nối/đồng bộ</td></tr>
+    <tr><td>URL cửa hàng</td><td><code>https://yourmall.cafe24.com</code></td><td>Căn cứ để biến liên kết sản phẩm trong trò chuyện thành liên kết bấm được</td></tr>
+  </table></div>
+  <p><strong>Kiểm tra khớp gian hàng</strong>: Nếu tên miền cửa hàng (hoặc URL cửa hàng) là <code>*.cafe24.com</code>, khi ở chương 3 bạn nhập một Mall ID khác để kết nối thì sẽ bị từ chối (E5045), và kết nối đã lưu mà khác gian hàng thì việc đồng bộ đơn hàng cũng bị từ chối. Đây là cơ chế ngăn <strong>sự cố đơn hàng của cửa hàng khác lẫn vào</strong> chỉ vì gõ sai một ký tự.</p>
+  <div class="callout warn"><span class="c-label">⚠️</span>
+    <p>Nếu hai giá trị trỏ tới <strong>hai gian hàng Cafe24 khác nhau</strong> thì không thể tin bên nào, nên cả kết nối lẫn đồng bộ đều bị từ chối. Hãy đặt cả hai cùng một gian hàng.</p></div>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>Gian hàng dùng tên miền riêng của thương hiệu (ví dụ: <code>www.brand.co.kr</code>) vẫn kết nối được — nhưng vì không có căn cứ để so sánh nên bước kiểm tra khớp gian hàng bị bỏ qua và chỉ ghi cảnh báo vào log máy chủ. Trường hợp này hãy kiểm tra Mall ID thật kỹ. Đăng nhập thành viên (chương 7) chỉ hoạt động trên địa chỉ <code>*.cafe24.com</code>.</p></div>
+</section>
+
+<section id="ch3">
+  <div class="ch"><span class="num">03</span><h2>Kết nối gian hàng — đồng ý OAuth</h2></div>
+  <p>Thực hiện ở thẻ <strong>Cafe24 (OAuth)</strong> trong <strong>Cài đặt gian hàng &gt; Tích hợp nền tảng</strong>. Chỉ cấp master mới làm được.</p>
+  <ol class="steps">
+    <li>Nhập ID gian hàng vào ô <strong>Mall ID</strong> (<code>yourmall</code>). Dán <code>yourmall.cafe24.com</code> hay <code>https://yourmall.cafe24.com/</code> cũng được, hệ thống tự chỉ lấy Mall ID.</li>
+    <li>Bấm <strong>[Kết nối Cafe24]</strong> để chuyển sang màn hình đồng ý của Cafe24.</li>
+    <li>Đăng nhập bằng <strong>tài khoản vận hành chính của gian hàng</strong> và đồng ý cấp quyền.</li>
+    <li>Khi quay về console, toast 「Đã kết nối Cafe24: yourmall」 hiện ra và trạng thái chuyển thành <strong>Đã kết nối</strong>. Từ lúc này các nút <strong>[Đồng bộ ngay]</strong>·<strong>[Nhập sản phẩm]</strong> xuất hiện.</li>
+  </ol>
+  <div class="tablewrap"><table>
+    <tr><th>Hiển thị khi quay về</th><th>Ý nghĩa · cách xử lý</th></tr>
+    <tr><td>Đã kết nối Cafe24: {gian hàng}</td><td>Thành công</td></tr>
+    <tr><td>Cafe24 từ chối các quyền được yêu cầu (invalid_scope)</td><td>Ứng dụng Developers chưa có quyền đó → thêm 4 quyền ở 1.1 rồi kết nối lại</td></tr>
+    <tr><td>Cafe24 đã từ chối cấp quyền (access_denied)</td><td>Đã hủy ở màn hình đồng ý hoặc tài khoản không có quyền → thử lại bằng tài khoản vận hành chính</td></tr>
+    <tr><td>Kết nối Cafe24 thất bại</td><td>Một trong các nguyên nhân dưới đây — xem FAQ chương 9</td></tr>
+  </table></div>
+  <p>Nguyên nhân thường gặp của 「Kết nối Cafe24 thất bại」:</p>
+  <ul>
+    <li>Mall ID khác với gian hàng của tên miền cửa hàng (E5045) → kiểm tra tên miền cửa hàng ở chương 2</li>
+    <li>Gian hàng đó <strong>đã được kết nối với tenant khác</strong> (E5046) → một gian hàng chỉ kết nối với một tenant</li>
+    <li>Ở màn hình đồng ý quá 10 phút (E5011) → làm lại từ đầu</li>
+    <li>Máy chủ thiếu giá trị ứng dụng (E5010) → yêu cầu quản trị viên nền tảng làm mục 1.3</li>
+  </ul>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>Cùng một tenant <strong>kết nối lại cùng gian hàng</strong> lúc nào cũng an toàn. Khi đã thêm quyền (mục 1.2) hoặc token hết hạn (mục 4.3), chỉ cần bấm lại [Kết nối Cafe24] là token mới sẽ thay thế.</p></div>
+  <div class="callout warn"><span class="c-label">⚠️</span>
+    <p>Console <strong>không có nút ngắt kết nối.</strong> Nếu lỡ kết nối sai gian hàng, hãy kết nối lại với gian hàng đúng (cùng tenant thì sẽ được thay thế), hoặc yêu cầu quản trị viên nền tảng xóa thông tin xác thực.</p></div>
+</section>
+
+<section id="ch4">
+  <div class="ch"><span class="num">04</span><h2>Đồng bộ đơn hàng</h2></div>
+  <p>Cafe24 không có webhook thời gian thực như Shopify, nên SharpTalk <strong>lấy đơn hàng theo định kỳ.</strong> Đơn hàng lấy về được dùng cho tư vấn AI (hỏi về giao hàng v.v.) và 'đơn hàng của tôi' trong widget (chương 7).</p>
+  <h3>4.1 Ba đường đồng bộ</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Đường</th><th>Phạm vi</th><th>Khi nào</th></tr>
+    <tr><td>Nút <strong>[Đồng bộ ngay]</strong></td><td><strong>7 ngày</strong> gần nhất · tối đa 2.000 đơn</td><td>Khi người vận hành bấm</td></tr>
+    <tr><td>Đồng bộ tự động</td><td>7 ngày gần nhất</td><td>Mỗi <code>CAFE24_SYNC_INTERVAL_MIN</code> phút, cho mọi tenant đã kết nối</td></tr>
+    <tr><td>Bổ sung khi thành viên đăng nhập</td><td><strong>30 ngày</strong> gần nhất (tối đa 90 ngày nếu cấu hình)</td><td>Ngay sau khi thành viên đăng nhập trong widget</td></tr>
+  </table></div>
+  <h3>4.2 Các bước</h3>
+  <ol class="steps">
+    <li>Bấm <strong>[Đồng bộ ngay]</strong>.</li>
+    <li>Kết quả hiển thị trên toast (ví dụ: <code>Synced 12 order(s)</code>).</li>
+    <li>Kiểm tra đơn hàng Cafe24 có hiện trong menu <strong>Đơn hàng</strong> của console không.</li>
+  </ol>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>Truy vấn đơn hàng của Cafe24 chỉ cho phép phạm vi <strong>tối đa 3 tháng mỗi lần</strong>. Vì vậy không đường nào lấy quá 90 ngày. Với câu hỏi về đơn hàng cũ, nhân viên tư vấn hãy kiểm tra trực tiếp trong quản trị Cafe24.</p></div>
+  <h3>4.3 Duy trì token</h3>
+  <p>Token kết nối gồm <strong>access token 2 giờ + refresh token 14 ngày</strong>, và SharpTalk tự làm mới mỗi lần sử dụng. Nếu đồng bộ tự động đang bật, việc làm mới diễn ra liên tục nên token không bao giờ hết hạn.</p>
+  <div class="callout warn"><span class="c-label">⚠️</span>
+    <p>Ở bản triển khai tắt đồng bộ tự động, nếu <strong>không đồng bộ gì quá 14 ngày</strong> thì refresh token sẽ hết hạn. Khi đó kết quả đồng bộ hiển thị <code>Cafe24 store is not connected — reconnect the mall</code>, và làm lại [Kết nối Cafe24] ở chương 3 là khôi phục được.</p></div>
+</section>
+
+<section id="ch5">
+  <div class="ch"><span class="num">05</span><h2>Sản phẩm → tri thức</h2></div>
+  <p>Thông tin sản phẩm trở thành tri thức qua <strong>hai bước</strong>. Đặt bước xem trước ở giữa là để việc cập nhật danh sách sản phẩm không âm thầm thay đổi kho tri thức.</p>
+  <pre><code>[Nhập sản phẩm] (Cài đặt gian hàng &gt; Tích hợp nền tảng)   sản phẩm Cafe24 → danh sách sản phẩm SharpTalk
+        │
+        ▼
+[Đồng bộ từ danh mục sản phẩm] (Kho tri thức)            xem trước → [Chạy đồng bộ] → mỗi sản phẩm 1 tài liệu tri thức + chỉ mục</code></pre>
+  <h3>5.1 Nhập sản phẩm</h3>
+  <ol class="steps">
+    <li>Bấm <strong>[Nhập sản phẩm]</strong> ở <strong>Cài đặt gian hàng &gt; Tích hợp nền tảng &gt; Cafe24 (OAuth)</strong>.</li>
+    <li>Nếu hiện 「Đã đồng bộ N sản phẩm, M đã lưu trữ — hãy chạy chuyển đổi ở trang Kho tri thức」 là thành công.</li>
+  </ol>
+  <ul>
+    <li><strong>Đã lưu trữ</strong>: sản phẩm lần này không tìm thấy trên gian hàng (đã xóa · không hiển thị). Chỉ lưu trữ khi lần nhập chạy hoàn tất đến cuối; lần chạy bị ngắt giữa chừng không lưu trữ gì cả.</li>
+    <li>Lấy tên sản phẩm · giá · danh mục · giá trị tùy chọn · thẻ sản phẩm. Sản phẩm có mô tả ngắn (dưới 80 ký tự) sẽ được truy vấn thêm mô tả chi tiết.</li>
+  </ul>
+  <h3>5.2 Chuyển thành tri thức</h3>
+  <ol class="steps">
+    <li>Trong menu <strong>Kho tri thức</strong>, bấm <strong>[Đồng bộ từ danh mục sản phẩm]</strong>.</li>
+    <li>Ở phần xem trước, kiểm tra số lượng mới · cập nhật · gộp · giữ lại.</li>
+    <li><strong>[Chạy đồng bộ]</strong> → ghi tài liệu → lập chỉ mục (embedding) xong là hoàn tất. Mất vài phút, và vẫn tiếp tục dù đóng cửa sổ.</li>
+  </ol>
+  <div class="tablewrap"><table>
+    <tr><th>Mục xem trước</th><th>Ý nghĩa</th></tr>
+    <tr><td>Tài liệu mới / Tài liệu đã cập nhật</td><td>Mỗi sản phẩm 1 tài liệu. Chạy lại cũng không tạo bản trùng</td></tr>
+    <tr><td>Biến thể được gộp</td><td>Các biến thể màu sắc · dung tích của cùng sản phẩm được gộp vào một tài liệu</td></tr>
+    <tr><td>Giữ nguyên bản viết tay</td><td>Tài liệu do người chỉnh sửa không bị ghi đè nội dung, chỉ làm mới liên kết · trạng thái bán</td></tr>
+    <tr><td>Được giữ lại</td><td>Sản phẩm có mô tả và thẻ <strong>đều</strong> trống nên không thể làm căn cứ trả lời</td></tr>
+  </table></div>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>Cửa hàng Hàn Quốc thường đăng mô tả chi tiết <strong>chỉ bằng hình ảnh</strong> nên hầu như không có mô tả dạng văn bản. Vì vậy SharpTalk luôn điền danh mục · giá trị tùy chọn · thẻ sản phẩm vào thẻ, để sản phẩm không bị giữ lại dù không có mô tả. Để nâng chất lượng câu trả lời, hãy điền <strong>từ khóa tìm kiếm (thẻ)</strong> và <strong>mô tả ngắn</strong> dạng văn bản cho sản phẩm Cafe24.</p></div>
+  <div class="callout warn"><span class="c-label">⚠️</span>
+    <p>Dù tri thức đã được tạo, nếu <strong>URL cửa hàng (chương 2)</strong> trống thì trích dẫn sản phẩm trong trò chuyện chỉ hiện dạng chữ không có liên kết. Liên kết sản phẩm Cafe24 được tạo theo dạng <code>https://yourmall.cafe24.com/product/detail.html?product_no={số}</code>.</p></div>
+</section>
+
+<section id="ch6">
+  <div class="ch"><span class="num">06</span><h2>Cài widget — Smart Design</h2></div>
+  <h3>6.1 Sao chép đoạn mã</h3>
+  <ol class="steps">
+    <li>Ở thẻ <strong>Cài đặt gian hàng &gt; Cài đặt widget &gt; Cài đặt lên cửa hàng của bạn</strong>, chọn nền tảng <strong>Cafe24</strong>.</li>
+    <li>Sao chép đoạn mã hiển thị. Tên miền cửa hàng (chương 2) đã được điền sẵn.</li>
+  </ol>
+  <pre><code>&lt;!-- SharpTalk widget (Cafe24) --&gt;
+&lt;script&gt;
+  window.SHARPTALK_WIDGET_CONFIG = {
+    shop: "yourmall.cafe24.com",
+    locale: "ko",
+    widgetUrl: "https://shoptalk.amoeba.site/widget",
+    loginPath: "/member/login.html",
+    loginReturnParam: "returnUrl"
+  };
+&lt;/script&gt;
+&lt;script src="https://shoptalk.amoeba.site/widget/embed.js" defer&gt;&lt;/script&gt;</code></pre>
+  <h3>6.2 Dán vào quản trị Cafe24</h3>
+  <ol class="steps">
+    <li>Quản trị Cafe24 → mở <strong>Thiết kế (PC/Mobile) → chỉnh sửa Smart Design</strong>.</li>
+    <li>Mở HTML layout (layout chung) của <strong>thiết kế đang dùng</strong>.</li>
+    <li>Dán đoạn mã ngay trước <code>&lt;/body&gt;</code> rồi <strong>lưu/triển khai</strong>.</li>
+    <li><strong>Nếu thiết kế PC và thiết kế mobile tách riêng thì dán vào cả hai</strong>.</li>
+  </ol>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>Hãy <strong>sao chép nguyên văn</strong> đoạn mã từ console. Nếu sửa tay mà làm mất đường dẫn <code>/widget</code>, thay vì widget thì màn hình console sẽ phản hồi (mã trạng thái 200) và widget không hiện mà không có lỗi nào.</p></div>
+  <div class="callout warn"><span class="c-label">⚠️</span>
+    <p>Khi tạo thiết kế mới hoặc đổi thiết kế đang dùng, <strong>thiết kế mới không có đoạn mã.</strong> Sau khi đổi thiết kế nhất định phải dán lại.</p></div>
+</section>
+
+<section id="ch7">
+  <div class="ch"><span class="num">07</span><h2>Đăng nhập thành viên · đơn hàng của tôi</h2></div>
+  <p>Cafe24 không có kênh nào báo cho widget biết "thành viên đang đăng nhập là ai". Vì vậy SharpTalk dùng <strong>xác thực khách hàng (OAuth thành viên)</strong> của Cafe24 để gắn hội thoại widget với thành viên bằng ID thành viên do chính Cafe24 xác nhận.</p>
+  <h3>7.1 Luồng khách hàng nhìn thấy</h3>
+  <ol class="steps">
+    <li>Trong tab <strong>Đơn hàng</strong> của widget, bấm <strong>[Đăng nhập]</strong>.</li>
+    <li>Đăng nhập Cafe24 (bỏ qua nếu đã đăng nhập) → qua màn hình đồng ý của gian hàng.</li>
+    <li>Widget mở lại ở tab đơn hàng và hiển thị <strong>tối đa 10 đơn hàng trong 30 ngày gần nhất</strong>.</li>
+    <li>Đơn hàng cũ hơn được dẫn qua <strong>[Xem thêm]</strong> → trang tra cứu đơn hàng trong trang của tôi của gian hàng (<code>/myshop/order/list.html</code>).</li>
+  </ol>
+  <h3>7.2 Cài đặt của người vận hành</h3>
+  <p>Chọn <strong>Đăng nhập khách hàng mở bằng</strong> trong <strong>Cài đặt gian hàng &gt; Cài đặt widget &gt; Hành vi của widget</strong>.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Cách</th><th>Hoạt động</th><th>Khi nào</th></tr>
+    <tr><td>Toàn trang (khuyến nghị)</td><td>Đăng nhập trong cùng tab rồi quay lại trang ban đầu, widget tự mở lại</td><td>Mặc định · ổn định nhất</td></tr>
+    <tr><td>Cửa sổ popup</td><td>Đăng nhập trong cửa sổ nhỏ, xong thì cửa sổ tự đóng và trang giữ nguyên</td><td>Khi muốn tránh chuyển trang như ở giỏ hàng</td></tr>
+  </table></div>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>Nếu popup bị trình duyệt chặn, hệ thống tự chuyển sang cách toàn trang và việc đăng nhập vẫn tiếp tục.</p></div>
+  <h3>7.3 Bảo mật · giới hạn</h3>
+  <ul>
+    <li>Token Cafe24 không được chuyển tới widget. Sau khi máy chủ xác nhận xong, chỉ trả về trang gian hàng một <strong>vé dùng một lần (60 giây)</strong>, và widget đổi vé này lấy phiên hội thoại.</li>
+    <li>Địa chỉ quay về sau khi đăng nhập **chỉ được phép là địa chỉ <code>*.cafe24.com</code> của gian hàng đó**.</li>
+    <li>⚠️ <strong>Khách truy cập qua tên miền riêng không dùng được đăng nhập thành viên.</strong> Vì địa chỉ duy nhất mà widget có thể suy ra Mall ID là <code>yourmall.cafe24.com</code>. Trên gian hàng dùng tên miền riêng, tư vấn qua widget vẫn bình thường nhưng 'đơn hàng của tôi' không hiển thị.</li>
+    <li>Nếu một gian hàng đang kết nối với hai tenant thì không thể quyết định cho đăng nhập vào tenant nào nên <strong>đăng nhập bị từ chối</strong> (E5046 ở chương 3 ngăn trạng thái này).</li>
+  </ul>
+</section>
+
+<section id="ch8">
+  <div class="ch"><span class="num">08</span><h2>Danh sách kiểm tra công việc</h2></div>
+  <p><strong>Quản trị viên nền tảng (một lần cho mỗi bản triển khai)</strong></p>
+  <ul class="check">
+    <li>Tạo ứng dụng Developers, Redirect URI = <code>/api/v1/auth/cafe24/callback</code> của bản triển khai này</li>
+    <li>4 quyền: <code>mall.read_order</code> · <code>mall.read_product</code> · <code>mall.read_category</code> · <code>mall.read_customer_identifier</code></li>
+    <li>Trong env có Client ID/Secret · Redirect URI · địa chỉ console · quyền · chu kỳ đồng bộ tự động — <strong>không có dòng trống</strong></li>
+    <li>Sau khi khởi động lại API, kiểm tra dòng <code>Cafe24 auto-sync</code> trong log khởi động</li>
+  </ul>
+  <p><strong>Master của tenant (cho từng gian hàng)</strong></p>
+  <ul class="check">
+    <li>Cài đặt gian hàng &gt; Cài đặt cơ bản: tên miền cửa hàng <code>yourmall.cafe24.com</code>, URL cửa hàng <code>https://yourmall.cafe24.com</code></li>
+    <li>Cài đặt gian hàng &gt; Tích hợp nền tảng: nhập Mall ID → [Kết nối Cafe24] → toast 「Đã kết nối」</li>
+    <li>[Đồng bộ ngay] → đơn hàng Cafe24 hiện trong menu Đơn hàng</li>
+    <li>[Nhập sản phẩm] → Kho tri thức &gt; [Đồng bộ từ danh mục sản phẩm] → xem trước → [Chạy đồng bộ]</li>
+    <li>Cài đặt gian hàng &gt; Cài đặt widget: dán đoạn mã của Cài đặt lên cửa hàng của bạn (Cafe24) vào trước <code>&lt;/body&gt;</code> của layout Smart Design PC·mobile</li>
+    <li>Widget hiện trên gian hàng, và câu hỏi về sản phẩm nhận được câu trả lời kèm liên kết sản phẩm</li>
+    <li>Dùng thành viên thử nghiệm bấm [Đăng nhập] trong widget → tab đơn hàng hiện đơn hàng của thành viên đó</li>
+  </ul>
+</section>
+
+<section id="ch9">
+  <div class="ch"><span class="num">09</span><h2>FAQ / xử lý sự cố</h2></div>
+  <dl class="faq">
+    <dt>Q. Bấm [Kết nối Cafe24] thì 「Kết nối Cafe24 thất bại」 hiện ngay.</dt>
+    <dd>Đây là trường hợp thất bại <strong>trước khi</strong> sang màn hình đồng ý. Là một trong: ① Mall ID khác với gian hàng của tên miền cửa hàng (E5045) ② gian hàng đó đã kết nối với tenant khác (E5046) ③ máy chủ thiếu giá trị ứng dụng (E5010). Với ① hãy kiểm tra cài đặt ở chương 2; với ②·③ hãy liên hệ quản trị viên nền tảng.</dd>
+    <dt>Q. Đã đồng ý xong nhưng quay về console lại hiện 「Kết nối Cafe24 thất bại」.</dt>
+    <dd>Đây là trường hợp trao đổi token thất bại. Nguyên nhân phổ biến nhất là <code>CAFE24_REDIRECT_URI</code> trong env khác với địa chỉ đã đăng ký trong Developers (kể cả <code>/</code> ở cuối, <code>http</code>/<code>https</code>). Nếu đã ở màn hình đồng ý quá 10 phút thì hãy làm lại từ đầu.</dd>
+    <dt>Q. Hiện 「Cafe24 từ chối các quyền được yêu cầu (invalid_scope)」.</dt>
+    <dd>Quyền mà SharpTalk yêu cầu chưa được đăng ký trong ứng dụng Developers. Phía SharpTalk không cần sửa gì; hãy thêm các quyền ở mục 1.1 vào ứng dụng rồi kết nối lại.</dd>
+    <dt>Q. Kết quả [Đồng bộ ngay] là <code>refusing to sync: tenant runs on A.cafe24.com but the stored credential is for "B"</code>.</dt>
+    <dd>Kết nối đã lưu không phải gian hàng của tenant này. Đồng bộ đang bị chặn để đơn hàng của cửa hàng khác không lẫn vào. Hãy làm lại [Kết nối Cafe24] với Mall ID đúng. Nếu báo <code>names two malls</code> thì tên miền cửa hàng và URL cửa hàng đang trỏ tới hai gian hàng khác nhau, hãy chỉnh cho khớp ở chương 2.</dd>
+    <dt>Q. Kết quả đồng bộ là <code>Cafe24 store is not connected — reconnect the mall</code>.</dt>
+    <dd>Là trường hợp chưa từng kết nối, hoặc không dùng quá 14 ngày nên refresh token đã hết hạn (mục 4.3). Hãy làm lại [Kết nối Cafe24].</dd>
+    <dt>Q. Đã nhập sản phẩm nhưng AI không biết sản phẩm.</dt>
+    <dd>[Nhập sản phẩm] chỉ điền danh sách sản phẩm. Phải làm tiếp <strong>Kho tri thức &gt; [Đồng bộ từ danh mục sản phẩm] → [Chạy đồng bộ]</strong> thì mới được dùng trong câu trả lời (mục 5.2).</dd>
+    <dt>Q. Danh mục của tài liệu tri thức bị trống.</dt>
+    <dd>Gian hàng được kết nối khi chưa có quyền <code>mall.read_category</code>. Hãy thêm quyền vào ứng dụng (mục 1.1), đồng ý lại bằng [Kết nối Cafe24], rồi chạy lại [Nhập sản phẩm] và đồng bộ danh mục sản phẩm.</dd>
+    <dt>Q. Trích dẫn sản phẩm trong trò chuyện không có liên kết.</dt>
+    <dd><strong>URL cửa hàng</strong> trong Cài đặt gian hàng &gt; Cài đặt cơ bản đang trống hoặc khác địa chỉ gian hàng. Hãy lưu thành <code>https://yourmall.cafe24.com</code>.</dd>
+    <dt>Q. Widget không hiện trên gian hàng.</dt>
+    <dd>Hãy kiểm tra ① đoạn mã có nằm trong layout của <strong>thiết kế đang dùng hiện tại</strong> không (sẽ mất khi đổi thiết kế) ② có ở cả thiết kế PC lẫn mobile không ③ <code>shop</code> trong đoạn mã có giống tên miền cửa hàng ở Cài đặt gian hàng &gt; Cài đặt cơ bản không. Cách nhanh là xem trong tab Network của công cụ dành cho nhà phát triển của trình duyệt xem <code>embed.js</code> có được tải về dưới dạng JavaScript không (nếu là HTML thì địa chỉ sai).</dd>
+    <dt>Q. Thành viên đã đăng nhập nhưng widget vẫn ở trạng thái chưa đăng nhập.</dt>
+    <dd>Hãy kiểm tra ① nếu khách đang truy cập qua tên miền riêng thì đăng nhập thành viên không hoạt động (mục 7.3) ② ứng dụng có quyền <code>mall.read_customer_identifier</code> không ③ gian hàng chỉ kết nối với tenant này không. Dù thất bại, khách vẫn lặng lẽ quay về trang ban đầu, nên lý do phải xem ở các dòng <code>Cafe24 customer-auth … failed</code> / <code>Cafe24 member sign-in callback failed</code> trong log máy chủ.</dd>
+    <dt>Q. Đăng nhập được nhưng 'đơn hàng của tôi' trống.</dt>
+    <dd>Là trường hợp trong 30 ngày gần nhất không có đơn hàng nào bằng ID thành viên đó, hoặc chưa được đồng bộ. Ngay sau khi đăng nhập, đồng bộ bổ sung phạm vi 30 ngày chạy tự động, nhưng nếu không có quyền tra cứu đơn hàng (<code>mall.read_order</code>) thì sẽ thất bại. Đơn hàng của khách không phải thành viên không có ID thành viên nên không hiển thị.</dd>
+    <dt>Q. Staging và production có dùng chung một ứng dụng Developers được không?</dt>
+    <dd>Không được. Ứng dụng Cafe24 chỉ nhận một Redirect URI nên không thể đồng thời hỗ trợ hai bản triển khai có địa chỉ callback khác nhau. Hãy tạo mỗi bản triển khai một ứng dụng.</dd>
+  </dl>
+</section>
+
+<div class="next">
+  <strong>Xem thêm →</strong> <a href="platform-integration.vi.html">Hướng dẫn thông tin xác thực</a> (nơi lấy các giá trị), <a href="quick-setup.vi.html">Sổ tay cài đặt nhanh</a> (tạo tenant · cài widget), <a href="knowledge-ai.vi.html">Sổ tay tri thức &amp; AI</a> (sau khi đồng bộ catalog).
+</div>
+
+</main>
+</div>
+
+</body>
+</html>
