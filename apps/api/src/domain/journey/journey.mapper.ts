@@ -30,7 +30,9 @@ export class JourneyMapper {
       sourceReportIds: r.sourceReportIds?.map(String) ?? null,
       createdAt: r.createdAt,
       finishedAt: r.finishedAt,
-      ...(withBody ? { bodyMd: r.bodyMd, ...JourneyMapper.metricsOf(r.metricsJson) } : {}),
+      ...(withBody
+        ? { bodyMd: r.bodyMd, content: r.contentJson ?? null, ...JourneyMapper.metricsOf(r.metricsJson) }
+        : {}),
     };
   }
 

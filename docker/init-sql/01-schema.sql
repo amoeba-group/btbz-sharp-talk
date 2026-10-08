@@ -1005,6 +1005,7 @@ CREATE TABLE `journey_reports` (
   `criteria_version` int NOT NULL,
   `session_ids_json` json NOT NULL,
   `metrics_json` json DEFAULT NULL,
+  `content_json` json DEFAULT NULL,
   `body_md` mediumtext COLLATE utf8mb4_unicode_ci,
   `language` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL,
   `status` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',

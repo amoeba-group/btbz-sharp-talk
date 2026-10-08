@@ -186,5 +186,38 @@
     "ask": "調査",
     "act": "行動",
     "advocate": "推奨"
+  },
+  "diagnosis": {
+    "dropped": "根拠を確認できない {{count}} 件は表示していません。",
+    "questions": "質問と回答",
+    "inSamples": "サンプル内で同じ文 {{count}}回",
+    "hypotheses": "ニーズの仮説",
+    "hypothesesNote": "断定ではありません",
+    "hypothesis": "仮説 {{n}}",
+    "evidence": "根拠の発言",
+    "hypothesisLabel": "仮説",
+    "disproveIf": "反証条件",
+    "dataFlags": "データ品質の注意点",
+    "actions": "次のアクション",
+    "success": "成功基準: {{criterion}}",
+    "addTask": "タスクに追加",
+    "added": "追加済み",
+    "original": "全文を表示",
+    "truncated": "途中で切れています",
+    "answered": {
+      "answered": "回答済み",
+      "unanswered": "未回答",
+      "escalated": "エスカレーション"
+    },
+    "urgency": {
+      "now": "緊急",
+      "week": "今週",
+      "improve": "改善"
+    },
+    "who": {
+      "user": "顧客",
+      "ai": "AI",
+      "agent": "担当者"
+    }
   }
 }

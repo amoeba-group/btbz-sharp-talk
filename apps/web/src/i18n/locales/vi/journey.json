@@ -186,5 +186,38 @@
     "ask": "Hỏi",
     "act": "Hành động",
     "advocate": "Giới thiệu"
+  },
+  "diagnosis": {
+    "dropped": "Không hiển thị {{count}} mục không tìm thấy căn cứ.",
+    "questions": "Câu hỏi và trả lời",
+    "inSamples": "cùng câu ×{{count}} trong mẫu",
+    "hypotheses": "Nhu cầu — giả thuyết",
+    "hypothesesNote": "không phải kết luận",
+    "hypothesis": "Giả thuyết {{n}}",
+    "evidence": "Căn cứ",
+    "hypothesisLabel": "Giả thuyết",
+    "disproveIf": "Bác bỏ nếu",
+    "dataFlags": "Cảnh báo chất lượng dữ liệu",
+    "actions": "Hành động tiếp theo",
+    "success": "Thành công: {{criterion}}",
+    "addTask": "Thêm thành việc cần làm",
+    "added": "Đã thêm",
+    "original": "Xem toàn văn",
+    "truncated": "bị cắt",
+    "answered": {
+      "answered": "Đã trả lời",
+      "unanswered": "Chưa trả lời",
+      "escalated": "Đã chuyển tiếp"
+    },
+    "urgency": {
+      "now": "Khẩn",
+      "week": "Tuần này",
+      "improve": "Cải thiện"
+    },
+    "who": {
+      "user": "Khách",
+      "ai": "AI",
+      "agent": "Nhân viên"
+    }
   }
 }

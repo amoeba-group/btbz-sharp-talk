@@ -186,5 +186,38 @@
     "ask": "询问",
     "act": "行动",
     "advocate": "推荐"
+  },
+  "diagnosis": {
+    "dropped": "有 {{count}} 项无法找到依据,未显示。",
+    "questions": "问题与回答",
+    "inSamples": "样本中相同语句 {{count}} 次",
+    "hypotheses": "需求假设",
+    "hypothesesNote": "并非结论",
+    "hypothesis": "假设 {{n}}",
+    "evidence": "依据发言",
+    "hypothesisLabel": "假设",
+    "disproveIf": "证伪条件",
+    "dataFlags": "数据质量提示",
+    "actions": "下一步行动",
+    "success": "成功标准:{{criterion}}",
+    "addTask": "添加为待办",
+    "added": "已添加",
+    "original": "查看全文",
+    "truncated": "已截断",
+    "answered": {
+      "answered": "已回答",
+      "unanswered": "未回答",
+      "escalated": "已转接"
+    },
+    "urgency": {
+      "now": "紧急",
+      "week": "本周",
+      "improve": "改进"
+    },
+    "who": {
+      "user": "客户",
+      "ai": "AI",
+      "agent": "客服"
+    }
   }
 }
