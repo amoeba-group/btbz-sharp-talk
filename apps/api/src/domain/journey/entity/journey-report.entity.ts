@@ -79,6 +79,15 @@ export class JourneyReport {
   @Column({ name: 'metrics_json', type: 'json', nullable: true })
   metricsJson: Record<string, unknown> | null;
 
+  /**
+   * The report as data (PLN-261008 P2): headline, questions with their quotes,
+   * hypotheses, actions. Null for reports written before it existed and for
+   * ones whose structured reply did not hold up — the screen then shows the
+   * Markdown body, which is always written.
+   */
+  @Column({ name: 'content_json', type: 'json', nullable: true })
+  contentJson: Record<string, unknown> | null;
+
   @Column({ name: 'body_md', type: 'mediumtext', nullable: true })
   bodyMd: string | null;
 

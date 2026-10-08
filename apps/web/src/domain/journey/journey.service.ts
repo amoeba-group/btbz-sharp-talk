@@ -49,8 +49,43 @@ export interface JourneyReportMetrics {
   stages5a: Array<{ stage: FiveAStage; events: number }>;
 }
 
+/**
+ * The report as data (PLN-261008 P2). Quotes are copied from the samples by the
+ * API and counts recounted there — nothing here is the model's own evidence.
+ */
+export interface JourneyReportContent {
+  headline: string;
+  subline: string | null;
+  narrative: Record<string, string>;
+  questions: Array<{
+    text: string;
+    count: number | null;
+    quoteIds: number[];
+    answered: 'answered' | 'unanswered' | 'escalated';
+  }>;
+  quotes: Array<{ id: number; sampleIndex: number; text: string; who: string; at: string; truncated: boolean }>;
+  stages: Array<{
+    key: FiveAStage;
+    customer: string | null;
+    response: string | null;
+    pain: string | null;
+    opportunity: string | null;
+  }>;
+  hypotheses: Array<{ layer: string; quoteId: number; hypothesis: string; disproveIf: string }>;
+  dataFlags: Array<{ text: string; section: string | null }>;
+  actions: Array<{
+    title: string;
+    successCriterion: string | null;
+    section: string | null;
+    urgency: 'now' | 'week' | 'improve';
+  }>;
+  dropped: number;
+}
+
 export interface JourneyReportDetail extends JourneyReportSummary {
   bodyMd: string | null;
+  /** Null for reports written before P2, or whose structured reply failed validation. */
+  content: JourneyReportContent | null;
   /** What the code counted. The body is written from this — never instead. */
   metrics: JourneyReportMetrics | null;
   metricStates: Record<string, ValueState> | null;

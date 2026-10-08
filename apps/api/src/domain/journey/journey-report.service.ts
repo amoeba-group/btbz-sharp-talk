@@ -5,7 +5,21 @@ import { MODERATION_DECISION, SENDER_TYPE } from '@sharptalk/types';
 import { JourneyReport, REPORT_KIND, REPORT_STATUS } from './entity/journey-report.entity';
 import { JourneyMetricsService, JourneyWindow } from './journey-metrics.service';
 import { JourneyCriteriaService } from './journey-criteria.service';
-import { buildComparisonPrompt, buildJourneyPrompt, clip, SampleUtterance } from './journey-prompt';
+import {
+  buildComparisonPrompt,
+  buildJourneyPrompt,
+  clip,
+  SampleUtterance,
+  SECTION_ORDER,
+} from './journey-prompt';
+import {
+  contentTexts,
+  contentToMarkdown,
+  extractJson,
+  groundContent,
+  JourneyReportContent,
+  withContentTexts,
+} from './journey-report-content';
 import { Message } from '../chat/entity/message.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
@@ -23,6 +37,25 @@ import { scrubPii } from '../../global/util/pii-scrub.util';
  * would otherwise sit in the list forever looking like it is still thinking.
  */
 const STALE_PENDING_MIN = 30;
+
+/** Structured attempts before falling back to the Markdown report (PLN-261008 D1). */
+const JSON_ATTEMPTS = 2;
+
+/**
+ * Joins the report's text fields for one moderation pass. A rule that rewrites
+ * across it (rephrase) breaks the count, and the fields are then moderated one
+ * by one instead.
+ */
+const FIELD_SEPARATOR = '\n\n§§§\n\n';
+
+type Criteria = Awaited<ReturnType<JourneyCriteriaService['current']>>;
+
+interface Written {
+  body: string;
+  content: JourneyReportContent | null;
+  provider: string;
+  model: string;
+}
 
 @Injectable()
 export class JourneyReportService implements OnModuleInit {
@@ -173,39 +206,22 @@ export class JourneyReportService implements OnModuleInit {
         (await this.criteria.version(report.tenantId, report.criteriaVersion)) ??
         (await this.criteria.current(report.tenantId, report.createdBy));
 
-      const prompt =
+      const written =
         report.kind === REPORT_KIND.COMPARISON
-          ? await this.comparisonPrompt(report, criteria)
-          : await this.journeyPrompt(report, criteria);
-
-      const res = await this.ai.complete({
-        tenantId: report.tenantId,
-        function: 'summary',
-        // Its own label: one report is a large call, and folding it into
-        // `summary` would hide it among the agent briefings.
-        feature: 'journey_report',
-        system: prompt.system,
-        messages: [{ role: 'user', content: prompt.user }],
-        maxTokens: 4000,
-      });
-
+          ? await this.writeComparison(report, criteria)
+          : await this.writeJourney(report, criteria);
       // Generated text is outbound like any other (FR-069). A blocked report is
       // a failure with a reason, not a report with holes in it.
-      const verdict = await this.moderation.moderate({
-        tenantId: report.tenantId,
-        scope: 'ai',
-        authorType: 'ai',
-        text: res.text,
-      });
-      if (verdict.decision === MODERATION_DECISION.BLOCKED || !verdict.text) {
+      if (!written) {
         await this.fail(report, 'blocked by moderation');
         return;
       }
 
-      report.bodyMd = verdict.text;
+      report.bodyMd = written.body;
+      report.contentJson = written.content as unknown as Record<string, unknown> | null;
       report.status = REPORT_STATUS.READY;
-      report.provider = res.provider;
-      report.model = res.model;
+      report.provider = written.provider;
+      report.model = written.model;
       report.finishedAt = new Date();
       await this.repo.save(report);
 
@@ -215,14 +231,19 @@ export class JourneyReportService implements OnModuleInit {
         actorId: report.createdBy,
         action: 'journey.report_created',
         target: `report:${report.id}`,
-        metadata: { kind: report.kind, criteriaVersion: report.criteriaVersion },
+        metadata: { kind: report.kind, criteriaVersion: report.criteriaVersion, structured: !!written.content },
       });
     } catch (e) {
       await this.fail(report, (e as Error).message);
     }
   }
 
-  private async journeyPrompt(report: JourneyReport, criteria: Awaited<ReturnType<JourneyCriteriaService['current']>>) {
+  /**
+   * The structured report first; the prose report when the structure does not
+   * hold up twice. Either way the Markdown body is written — comparisons, old
+   * screens and exports read it.
+   */
+  private async writeJourney(report: JourneyReport, criteria: Criteria): Promise<Written | null> {
     const metrics = await this.metrics.compute(report.tenantId, report.sessionIdsJson);
     const samples = await this.sampleUtterances(
       report.sessionIdsJson,
@@ -231,16 +252,100 @@ export class JourneyReportService implements OnModuleInit {
     );
     report.metricsJson = metrics as unknown as Record<string, unknown>;
     await this.repo.save(report);
-    return buildJourneyPrompt({
+
+    const base = {
       criteria,
       metrics,
       samples,
       language: report.language,
       period: { from: report.periodFrom, to: report.periodTo },
+    };
+    const sectionKeys = SECTION_ORDER.filter((k) => criteria.sectionsJson[k]);
+
+    for (let attempt = 1; attempt <= JSON_ATTEMPTS; attempt++) {
+      const res = await this.complete(report, buildJourneyPrompt({ ...base, format: 'json' }));
+      const grounded = groundContent(extractJson(res.text), samples, sectionKeys, criteria.topQuestionsN);
+      if (!grounded) {
+        this.logger.warn(`journey report ${report.id}: structured reply unusable (attempt ${attempt})`);
+        continue;
+      }
+      if (grounded.dropped) {
+        this.logger.log(`journey report ${report.id}: dropped ${grounded.dropped} item(s) without evidence`);
+      }
+      const content = await this.moderateContent(report.tenantId, grounded);
+      if (!content) return null;
+      return {
+        content,
+        body: contentToMarkdown(content, report.language),
+        provider: res.provider,
+        model: res.model,
+      };
+    }
+
+    const res = await this.complete(report, buildJourneyPrompt({ ...base, format: 'markdown' }));
+    const body = await this.moderateText(report.tenantId, res.text);
+    return body == null ? null : { body, content: null, provider: res.provider, model: res.model };
+  }
+
+  private async writeComparison(report: JourneyReport, criteria: Criteria): Promise<Written | null> {
+    const res = await this.complete(report, await this.comparisonPrompt(report, criteria));
+    const body = await this.moderateText(report.tenantId, res.text);
+    return body == null ? null : { body, content: null, provider: res.provider, model: res.model };
+  }
+
+  private complete(report: JourneyReport, prompt: { system: string; user: string }) {
+    return this.ai.complete({
+      tenantId: report.tenantId,
+      function: 'summary',
+      // Its own label: one report is a large call, and folding it into
+      // `summary` would hide it among the agent briefings.
+      feature: 'journey_report',
+      system: prompt.system,
+      messages: [{ role: 'user', content: prompt.user }],
+      maxTokens: 4000,
     });
   }
 
-  private async comparisonPrompt(report: JourneyReport, criteria: Awaited<ReturnType<JourneyCriteriaService['current']>>) {
+  /** The moderated text, or null when the gate blocked it. */
+  private async moderateText(tenantId: number, text: string): Promise<string | null> {
+    const verdict = await this.moderation.moderate({ tenantId, scope: 'ai', authorType: 'ai', text });
+    return verdict.decision === MODERATION_DECISION.BLOCKED || !verdict.text ? null : verdict.text;
+  }
+
+  /**
+   * Every text field through the gate (FR-069), in one pass when possible.
+   *
+   * Field by field would write a moderation log row per sentence; joined, the
+   * gate sees the report the way it saw the Markdown body. A block anywhere
+   * blocks the report, as before.
+   */
+  async moderateContent(
+    tenantId: number,
+    content: JourneyReportContent,
+  ): Promise<JourneyReportContent | null> {
+    const texts = contentTexts(content);
+    const joined = texts.join(FIELD_SEPARATOR);
+    const whole = await this.moderateText(tenantId, joined);
+    if (whole == null) return null;
+    if (whole === joined) return content;
+
+    const parts = whole.split(FIELD_SEPARATOR);
+    if (parts.length === texts.length) return withContentTexts(content, parts);
+
+    const each: string[] = [];
+    for (const t of texts) {
+      if (!t) {
+        each.push('');
+        continue;
+      }
+      const moderated = await this.moderateText(tenantId, t);
+      if (moderated == null) return null;
+      each.push(moderated);
+    }
+    return withContentTexts(content, each);
+  }
+
+  private async comparisonPrompt(report: JourneyReport, criteria: Criteria) {
     const sources = await this.repo.find({ where: { id: In(report.sourceReportIds ?? []) } });
     const [older, newer] = [...sources].sort(
       (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),

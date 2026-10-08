@@ -1,19 +1,11 @@
 import type { JourneyMetrics } from './journey-metrics.service';
 import type { JourneyReportCriteria } from './entity/journey-report-criteria.entity';
+import { TRUNCATION_MARK, type SampleUtterance } from './journey-sample';
+import { CONTENT_SCHEMA_HINT } from './journey-report-content';
 
-export interface SampleUtterance {
-  at: string;
-  who: string;
-  text: string;
-}
+// Kept importable from here — the service and specs already do.
+export { TRUNCATION_MARK, clip, type SampleUtterance } from './journey-sample';
 
-/** Appended to a sample cut at `quote_max_chars` (REQ-261008 F2). */
-export const TRUNCATION_MARK = '…';
-
-/** Cut to `max` characters, marking the cut so nobody reads it as the whole message. */
-export function clip(text: string, max: number): string {
-  return text.length > max ? `${text.slice(0, max)}${TRUNCATION_MARK}` : text;
-}
 
 /**
  * The instruction that keeps the model out of the arithmetic.
@@ -48,8 +40,14 @@ export function buildJourneyPrompt(input: {
   samples: SampleUtterance[];
   language: string;
   period: { from: string | null; to: string | null };
+  /**
+   * `json` asks for the structured report (PLN-261008 P2); `markdown` is the
+   * original prose report, kept as the fallback when the JSON does not hold up.
+   */
+  format?: 'markdown' | 'json';
 }): { system: string; user: string } {
   const { criteria, metrics, samples, language, period } = input;
+  const json = input.format === 'json';
   const sections = SECTION_ORDER.filter((key) => criteria.sectionsJson[key]).map(
     (key, i) => `${i + 1}. [${key}] ${criteria.sectionsJson[key]}`,
   );
@@ -58,9 +56,22 @@ export function buildJourneyPrompt(input: {
     : '';
 
   const system = [
-    'You write a customer journey report for a support team, in Markdown.',
+    json
+      ? 'You write a customer journey report for a support team as ONE JSON object and nothing else — no Markdown, no code fence.'
+      : 'You write a customer journey report for a support team, in Markdown.',
     `Write in the tenant's language: ${language}. Keep quoted utterances in their original language.`,
     ...GROUND_RULES,
+    ...(json
+      ? [
+          // The code copies each quote from the numbered sample and drops any
+          // item that points nowhere; retyping a quote gains nothing.
+          'Quote by reference: list a quote as {"id", "sample"} where sample is the #number of a SAMPLES line. Never retype the words.',
+          'Every hypothesis must cite a quoteId from your quotes. A hypothesis without one is discarded.',
+          `At most ${criteria.topQuestionsN} questions. "narrative" uses the section keys given in SECTIONS, one short paragraph each.`,
+          'Do not put figures in JSON fields of their own — the figures are shown from METRICS. Mention them in sentences only, copied exactly.',
+          `JSON shape:\n${CONTENT_SCHEMA_HINT}`,
+        ]
+      : []),
     criteria.tone ? `Tone: ${criteria.tone}.` : '',
     banned,
   ]
@@ -77,7 +88,9 @@ export function buildJourneyPrompt(input: {
     JSON.stringify(metrics, null, 2),
     '',
     `SAMPLES (${samples.length} utterances, the only source of quotes):`,
-    ...samples.map((s) => `- [${s.at}] ${s.who}: ${s.text}`),
+    ...samples.map((s, i) =>
+      json ? `#${i + 1} [${s.at}] ${s.who}: ${s.text}` : `- [${s.at}] ${s.who}: ${s.text}`,
+    ),
   ].join('\n');
 
   return { system, user };

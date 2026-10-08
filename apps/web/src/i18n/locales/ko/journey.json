@@ -186,5 +186,38 @@
     "ask": "문의",
     "act": "행동",
     "advocate": "추천"
+  },
+  "diagnosis": {
+    "dropped": "근거를 확인할 수 없는 항목 {{count}}개는 표시하지 않았습니다.",
+    "questions": "질문과 응답",
+    "inSamples": "샘플 내 같은 문장 {{count}}회",
+    "hypotheses": "니즈 가설",
+    "hypothesesNote": "단정하지 않음",
+    "hypothesis": "가설 {{n}}",
+    "evidence": "근거 발화",
+    "hypothesisLabel": "가설",
+    "disproveIf": "반증 조건",
+    "dataFlags": "데이터 품질 플래그",
+    "actions": "다음 조치",
+    "success": "성공 기준: {{criterion}}",
+    "addTask": "할 일로 추가",
+    "added": "추가됨",
+    "original": "원문 보기",
+    "truncated": "잘림",
+    "answered": {
+      "answered": "답변함",
+      "unanswered": "미답변",
+      "escalated": "이관됨"
+    },
+    "urgency": {
+      "now": "긴급",
+      "week": "이번 주",
+      "improve": "개선"
+    },
+    "who": {
+      "user": "고객",
+      "ai": "AI",
+      "agent": "상담원"
+    }
   }
 }

@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ListPlus } from 'lucide-react';
 import MDEditor from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
 import { Modal } from '@/components/Modal';
 import { Button } from '@/components/Button';
-import { useJourneyActions, useJourneyReport } from './journey.hooks';
+import { useJourneyActions, useJourneyCard, useJourneyReport } from './journey.hooks';
 import { JourneyReportSummaryView } from './report/JourneyReportSummaryView';
+import { JourneyReportDiagnosis } from './report/JourneyReportDiagnosis';
 
 /**
  * The body is model output that quotes shoppers, and the preview renders raw
@@ -35,6 +36,18 @@ export function JourneyReportModal({
   const { t: tc } = useTranslation('common');
   const { data, isLoading } = useJourneyReport(reportId);
   const actions = useJourneyActions(groupId ?? null);
+  const card = useJourneyCard(groupId ?? null);
+  // An action already on the journey from THIS report shows as added, so a
+  // second click does not file it twice. Matched by title — no extra column.
+  const addedTitles = useMemo(
+    () =>
+      new Set(
+        (card.data?.tasks ?? [])
+          .filter((task) => task.reportId != null && task.reportId === data?.id)
+          .map((task) => task.title),
+      ),
+    [card.data, data?.id],
+  );
   // The sentence the operator selected in the report. The report is prose in
   // the tenant's language, so a person picks the next action rather than a
   // parser guessing which lines are one (PLN-261006 P2).
@@ -71,40 +84,64 @@ export function JourneyReportModal({
             <p className="text-sm text-red-600">{data.error}</p>
           ) : (
             <>
-              {groupId && (
-                <div className="mb-2 flex items-center gap-2 rounded-lg border border-dashed border-gray-200 p-2 text-xs text-gray-500">
-                  <span className="min-w-0 flex-1 truncate">
-                    {picked ? `“${picked}”` : t('tasks.pickHint')}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={!picked || actions.addTask.isPending}
-                    onClick={() =>
-                      actions.addTask.mutate(
-                        { title: picked, source: 'report', report_id: Number(data.id) },
-                        { onSuccess: () => setPicked('') },
-                      )
-                    }
-                  >
-                    <ListPlus className="mr-1 h-3.5 w-3.5" />
-                    {t('tasks.fromSelection')}
-                  </Button>
-                </div>
-              )}
-              <article
-                data-color-mode="light"
-                // The preview's document-sized headings dwarf the summary above
-                // them inside a modal; a report reads as one page of sections.
-                className="[&_h1]:!text-lg [&_h1]:!border-0 [&_h2]:!text-base [&_h2]:!border-0 [&_h3]:!text-sm"
-                onMouseUp={capture}
-                onKeyUp={capture}
-              >
-                <MDEditor.Markdown
-                  source={asPlainMarkdown(data.bodyMd ?? '')}
-                  style={{ background: 'transparent', fontSize: 14 }}
+              {data.content && (
+                <JourneyReportDiagnosis
+                  content={data.content}
+                  addedTitles={addedTitles}
+                  adding={actions.addTask.isPending}
+                  onAddAction={
+                    groupId
+                      ? (title) =>
+                          actions.addTask.mutate({ title, source: 'report', report_id: Number(data.id) })
+                      : undefined
+                  }
                 />
-              </article>
+              )}
+              {/* The prose stays one click away: it is what comparisons read,
+                  and selecting a sentence still turns it into a next action. */}
+              <details className="group mt-4" open={!data.content}>
+                {data.content && (
+                  <summary className="cursor-pointer select-none text-xs font-medium text-gray-500 hover:text-gray-700">
+                    {t('diagnosis.original')}
+                  </summary>
+                )}
+                <div className={data.content ? 'mt-2' : ''}>
+                  {groupId && (
+                    <div className="mb-2 flex items-center gap-2 rounded-lg border border-dashed border-gray-200 p-2 text-xs text-gray-500">
+                      <span className="min-w-0 flex-1 truncate">
+                        {picked ? `“${picked}”` : t('tasks.pickHint')}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        disabled={!picked || actions.addTask.isPending}
+                        onClick={() =>
+                          actions.addTask.mutate(
+                            { title: picked, source: 'report', report_id: Number(data.id) },
+                            { onSuccess: () => setPicked('') },
+                          )
+                        }
+                      >
+                        <ListPlus className="mr-1 h-3.5 w-3.5" />
+                        {t('tasks.fromSelection')}
+                      </Button>
+                    </div>
+                  )}
+                  <article
+                    data-color-mode="light"
+                    // The preview's document-sized headings dwarf the summary above
+                    // them inside a modal; a report reads as one page of sections.
+                    className="[&_h1]:!text-lg [&_h1]:!border-0 [&_h2]:!text-base [&_h2]:!border-0 [&_h3]:!text-sm"
+                    onMouseUp={capture}
+                    onKeyUp={capture}
+                  >
+                    <MDEditor.Markdown
+                      source={asPlainMarkdown(data.bodyMd ?? '')}
+                      style={{ background: 'transparent', fontSize: 14 }}
+                    />
+                  </article>
+                </div>
+              </details>
             </>
           )}
         </>

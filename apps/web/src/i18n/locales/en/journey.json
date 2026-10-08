@@ -186,5 +186,38 @@
     "ask": "Ask",
     "act": "Act",
     "advocate": "Advocate"
+  },
+  "diagnosis": {
+    "dropped": "{{count}} item(s) whose evidence could not be found are not shown.",
+    "questions": "Questions and answers",
+    "inSamples": "same words ×{{count}} in samples",
+    "hypotheses": "Needs — hypotheses",
+    "hypothesesNote": "not conclusions",
+    "hypothesis": "Hypothesis {{n}}",
+    "evidence": "Evidence",
+    "hypothesisLabel": "Hypothesis",
+    "disproveIf": "Disproved if",
+    "dataFlags": "Data quality flags",
+    "actions": "Next actions",
+    "success": "Success: {{criterion}}",
+    "addTask": "Add as next action",
+    "added": "Added",
+    "original": "Show the full text",
+    "truncated": "cut short",
+    "answered": {
+      "answered": "Answered",
+      "unanswered": "Unanswered",
+      "escalated": "Escalated"
+    },
+    "urgency": {
+      "now": "Urgent",
+      "week": "This week",
+      "improve": "Improvement"
+    },
+    "who": {
+      "user": "Customer",
+      "ai": "AI",
+      "agent": "Agent"
+    }
   }
 }

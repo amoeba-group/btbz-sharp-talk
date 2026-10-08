@@ -186,5 +186,38 @@
     "ask": "Preguntar",
     "act": "Actuar",
     "advocate": "Recomendar"
+  },
+  "diagnosis": {
+    "dropped": "No se muestran {{count}} elemento(s) cuya evidencia no se pudo encontrar.",
+    "questions": "Preguntas y respuestas",
+    "inSamples": "mismas palabras ×{{count}} en las muestras",
+    "hypotheses": "Necesidades — hipótesis",
+    "hypothesesNote": "no son conclusiones",
+    "hypothesis": "Hipótesis {{n}}",
+    "evidence": "Evidencia",
+    "hypothesisLabel": "Hipótesis",
+    "disproveIf": "Se refuta si",
+    "dataFlags": "Alertas de calidad de datos",
+    "actions": "Próximas acciones",
+    "success": "Éxito: {{criterion}}",
+    "addTask": "Añadir como acción",
+    "added": "Añadida",
+    "original": "Ver el texto completo",
+    "truncated": "recortado",
+    "answered": {
+      "answered": "Respondida",
+      "unanswered": "Sin respuesta",
+      "escalated": "Escalada"
+    },
+    "urgency": {
+      "now": "Urgente",
+      "week": "Esta semana",
+      "improve": "Mejora"
+    },
+    "who": {
+      "user": "Cliente",
+      "ai": "IA",
+      "agent": "Agente"
+    }
   }
 }
