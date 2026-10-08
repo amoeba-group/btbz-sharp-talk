@@ -219,5 +219,25 @@
       "ai": "AI",
       "agent": "Agent"
     }
+  },
+  "tabs": {
+    "label": "Report views",
+    "report": "Report",
+    "map": "Journey map"
+  },
+  "map": {
+    "noContent": "This report was written before structured reports — only the touchpoint events are shown.",
+    "observed": "Observed",
+    "legend": "Observed = touchpoint events counted by the system. Other lanes are the report's own sentences, not measurements. Hypotheses are in the Report tab.",
+    "lane": {
+      "customer": "Customer said",
+      "response": "We answered",
+      "pain": "Pain",
+      "opportunity": "Opportunity"
+    }
+  },
+  "print": {
+    "action": "Print / PDF",
+    "printedAt": "printed {{at}}"
   }
 }

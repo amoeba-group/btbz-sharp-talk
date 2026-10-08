@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ListPlus } from 'lucide-react';
+import { ListPlus, Printer } from 'lucide-react';
 import MDEditor from '@uiw/react-md-editor';
 import '@uiw/react-md-editor/markdown-editor.css';
 import { Modal } from '@/components/Modal';
@@ -8,6 +8,8 @@ import { Button } from '@/components/Button';
 import { useJourneyActions, useJourneyCard, useJourneyReport } from './journey.hooks';
 import { JourneyReportSummaryView } from './report/JourneyReportSummaryView';
 import { JourneyReportDiagnosis } from './report/JourneyReportDiagnosis';
+import { JourneyMapTable } from './report/JourneyMapTable';
+import { JourneyReportPrint } from './report/JourneyReportPrint';
 
 /**
  * The body is model output that quotes shoppers, and the preview renders raw
@@ -52,6 +54,8 @@ export function JourneyReportModal({
   // the tenant's language, so a person picks the next action rather than a
   // parser guessing which lines are one (PLN-261006 P2).
   const [picked, setPicked] = useState('');
+  const [tab, setTab] = useState<'report' | 'map'>('report');
+  const printable = !!data && data.status === 'ready';
   const capture = () => {
     const text = window.getSelection()?.toString().replace(/\s+/g, ' ').trim() ?? '';
     setPicked(text.slice(0, 300));
@@ -63,7 +67,17 @@ export function JourneyReportModal({
       onClose={onClose}
       size="lg"
       title={t('title')}
-      footer={<Button variant="secondary" onClick={onClose}>{tc('close')}</Button>}
+      footer={
+        <>
+          {printable && (
+            <Button variant="secondary" onClick={() => window.print()}>
+              <Printer className="mr-1 h-4 w-4" />
+              {t('print.action')}
+            </Button>
+          )}
+          <Button variant="secondary" onClick={onClose}>{tc('close')}</Button>
+        </>
+      }
     >
       {isLoading || !data ? (
         <p className="text-sm text-gray-500">{tc('loading')}</p>
@@ -77,10 +91,33 @@ export function JourneyReportModal({
               model: data.model ?? '—',
             })}
           </div>
+          {printable && <JourneyReportPrint report={data} />}
           {data.status !== 'failed' && data.metrics && (
             <JourneyReportSummaryView metrics={data.metrics} states={data.metricStates} />
           )}
-          {data.status === 'failed' ? (
+          {data.status !== 'failed' && data.metrics && (
+            <div role="tablist" aria-label={t('tabs.label')} className="mb-3 flex gap-1 border-b border-gray-200">
+              {(['report', 'map'] as const).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === key}
+                  onClick={() => setTab(key)}
+                  className={`-mb-px border-b-2 px-3 py-1.5 text-sm ${
+                    tab === key
+                      ? 'border-indigo-500 font-medium text-indigo-700'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  {t(`tabs.${key}`)}
+                </button>
+              ))}
+            </div>
+          )}
+          {data.status !== 'failed' && data.metrics && tab === 'map' ? (
+            <JourneyMapTable metrics={data.metrics} states={data.metricStates} content={data.content} />
+          ) : data.status === 'failed' ? (
             <p className="text-sm text-red-600">{data.error}</p>
           ) : (
             <>
