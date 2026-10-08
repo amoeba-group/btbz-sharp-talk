@@ -1,3 +1,5 @@
+import { stripLiteMarkdown } from '../../../../../packages/types/src/common/markdown-lite';
+import { MessageBody } from '../../components/RichText';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -753,7 +755,8 @@ export function LiveChatPage() {
                     </div>
                   </div>
                   <p className="mt-1 truncate text-xs text-gray-500">
-                    {s.lastMessagePreview ?? '—'}
+                    {/* One line, markers removed (PLN-261008 S4). */}
+                    {s.lastMessagePreview ? stripLiteMarkdown(s.lastMessagePreview).replace(/\s+/g, ' ') : '—'}
                   </p>
                   <p
                     className="mt-0.5 text-[11px] text-gray-400"
@@ -994,7 +997,7 @@ export function LiveChatPage() {
                             <User className="h-3 w-3" /> {m.senderName ?? t('agent')}
                           </span>
                         )}
-                        {m.body}
+                        <MessageBody text={m.body} raw={m.senderType === 'user'} />
                         {m.attachments && m.attachments.length > 0 && (
                           <MessageAttachments attachments={m.attachments} outbound={outbound} />
                         )}

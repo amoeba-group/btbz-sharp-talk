@@ -1,3 +1,4 @@
+import { RichText } from './RichText';
 import { useTranslation } from 'react-i18next';
 import type { ChatMessage } from '../../lib/types';
 import { formatTime } from '../../lib/format';
@@ -33,11 +34,14 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
             className={[
               // Evenly rounded on all four corners: the Master Shots drop the
               // speech-bubble tail entirely (frames 53/57/61).
-              'st-message whitespace-pre-wrap break-words rounded-st-lg px-3.5 py-2.5 text-sm',
+              'st-message break-words rounded-st-lg px-3.5 py-2.5 text-sm',
+              mine ? 'whitespace-pre-wrap' : '',
               mine ? 'st-message-user bg-primary-500 text-on-primary' : 'st-message-bot bg-gray-100 text-gray-800',
             ].join(' ')}
           >
-            {message.body}
+            {/* The shopper's own words stay exactly as typed (PLN-261008 D1);
+                AI, agent and system messages show their markdown as formatting. */}
+            {mine ? message.body : <RichText text={message.body} />}
           </div>
         )}
         {message.attachments && message.attachments.length > 0 && (
