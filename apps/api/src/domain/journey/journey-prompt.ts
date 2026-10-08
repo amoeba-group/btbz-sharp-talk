@@ -27,7 +27,7 @@ const GROUND_RULES = [
   // The code already knows why a figure is empty; left to itself the model
   // called "nothing was resolved" "not measured" — the opposite next step
   // (REQ-261008 F1, seen again on the first structured report).
-  'When a figure is null or zero, explain it with its state from VALUE STATES: not_applicable = there was nothing to compute it from (e.g. nothing was resolved), not_measured = it was not recorded, not_observable = support conversations cannot see it. Never call a not_applicable figure "not measured".',
+  'When a figure is null or zero, explain it with its state from VALUE STATES: not_applicable = there was nothing to compute it from (e.g. nothing was resolved), not_measured = it was not recorded, not_observable = support conversations cannot see it. Never call a not_applicable figure "not measured", and never print the state names themselves — say it in plain words ("nothing was resolved, so there is no resolution time").',
   'Quote only from the SAMPLES block, verbatim and in its original language.',
   `A sample ending in ${TRUNCATION_MARK} ${CUT_NOTE_RULE} Quote it with the mark and never present it as a complete sentence. The cut is not a data problem and not a service problem: do not flag it or propose an action about it.`,
   'Kotler 5A: Aware and Appeal are not observable from support conversations alone. Use the touchpoint event counts in METRICS.stages5a where they exist; otherwise state that they were not observable instead of guessing them.',
@@ -90,6 +90,9 @@ export function buildJourneyPrompt(input: {
           // item that points nowhere; retyping a quote gains nothing.
           'Quote by reference: list a quote as {"id", "sample"} where sample is the #number of a SAMPLES line. Never retype the words.',
           'Every hypothesis must cite a quoteId from your quotes. A hypothesis without one is discarded.',
+          // Staging report #10 filled this with its own analysis questions
+          // ("why did it recur?") and marked them unanswered.
+          '"questions" are what the customer asked, each with the quotes where they asked it — not questions for the support team. Analysis goes in narrative, dataFlags or actions.',
           `At most ${criteria.topQuestionsN} questions. "narrative" uses the section keys given in SECTIONS, one short paragraph each.`,
           'Do not put figures in JSON fields of their own — the figures are shown from METRICS. Mention them in sentences only, copied exactly.',
           `JSON shape:\n${CONTENT_SCHEMA_HINT}`,

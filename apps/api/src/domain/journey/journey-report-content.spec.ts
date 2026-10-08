@@ -141,6 +141,7 @@ describe('journey prompt, JSON format', () => {
     });
     expect(system).toContain('ONE JSON object');
     expect(system).toContain('Never retype the words');
+    expect(system).toContain('"questions" are what the customer asked');
     expect(user).toContain('#1 [2026-08-25] user: How long does shipping take?');
   });
 
