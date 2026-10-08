@@ -92,7 +92,7 @@ export function buildJourneyPrompt(input: {
           'Every hypothesis must cite a quoteId from your quotes. A hypothesis without one is discarded.',
           // Staging report #10 filled this with its own analysis questions
           // ("why did it recur?") and marked them unanswered.
-          '"questions" are what the customer asked, each with the quotes where they asked it — not questions for the support team. Analysis goes in narrative, dataFlags or actions.',
+          '"questions" are what the customer asked, each with the quotes where the CUSTOMER (user) asked it — not questions for the support team, and never supported by an ai/agent quote alone. A question with no customer quote is discarded. Analysis goes in narrative, dataFlags or actions.',
           `At most ${criteria.topQuestionsN} questions. "narrative" uses the section keys given in SECTIONS, one short paragraph each.`,
           'Do not put figures in JSON fields of their own — the figures are shown from METRICS. Mention them in sentences only, copied exactly.',
           `JSON shape:\n${CONTENT_SCHEMA_HINT}`,

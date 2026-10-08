@@ -76,9 +76,27 @@ describe('groundContent (PLN-261008 P2)', () => {
     expect(q.count).toBe(2); // the same words on 08-25 and 08-26, not 40
   });
 
-  it('leaves the count unknown when a question cites no quote', () => {
+  it('drops a question that cites no quote', () => {
     const c = ground(reply({ questions: [{ text: 'Refunds', quoteIds: [] }] }));
-    expect(c.questions[0].count).toBeNull();
+    expect(c.questions).toHaveLength(0);
+  });
+
+  it('keeps only customer quotes as a question’s evidence (staging #11)', () => {
+    const c = ground(
+      reply({
+        quotes: [
+          { id: 1, sample: 1 }, // user
+          { id: 4, sample: 4 }, // agent: early check-in
+        ],
+        questions: [
+          { text: 'Shipping time', quoteIds: [1, 4] },
+          { text: 'Is early check-in possible?', quoteIds: [4] },
+        ],
+      }),
+    );
+    expect(c.questions.map((q) => q.text)).toEqual(['Shipping time']);
+    expect(c.questions[0].quoteIds).toEqual([1]);
+    expect(c.dropped).toBe(2); // the agent-only question + the hypothesis citing quote 7
   });
 
   it('keeps only 5A stages and hypotheses with a real quote', () => {
@@ -95,7 +113,7 @@ describe('groundContent (PLN-261008 P2)', () => {
   });
 
   it('caps questions at the criteria’s top-N', () => {
-    const many = Array.from({ length: 8 }, (_, i) => ({ text: `Q${i}`, quoteIds: [] }));
+    const many = Array.from({ length: 8 }, (_, i) => ({ text: `Q${i}`, quoteIds: [1] }));
     expect(groundContent(reply({ questions: many }), SAMPLES, SECTIONS, 3)!.questions).toHaveLength(3);
   });
 
@@ -142,6 +160,7 @@ describe('journey prompt, JSON format', () => {
     expect(system).toContain('ONE JSON object');
     expect(system).toContain('Never retype the words');
     expect(system).toContain('"questions" are what the customer asked');
+    expect(system).toContain('never supported by an ai/agent quote alone');
     expect(user).toContain('#1 [2026-08-25] user: How long does shipping take?');
   });
 
