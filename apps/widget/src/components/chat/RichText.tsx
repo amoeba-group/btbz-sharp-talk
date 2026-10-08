@@ -22,7 +22,7 @@ function inline(nodes: MdInline[], key = ''): ReactNode[] {
         return <em key={k}>{inline(n.c, `${k}-`)}</em>;
       case 'code':
         return (
-          <code key={k} className="rounded bg-black/10 px-1 py-0.5 font-mono text-[0.92em]">
+          <code key={k} className="rounded-st-xs bg-black/10 px-1 py-0.5 font-mono text-[0.92em]">
             {n.v}
           </code>
         );
