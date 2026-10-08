@@ -38,6 +38,13 @@ import { scrubPii } from '../../global/util/pii-scrub.util';
  */
 const STALE_PENDING_MIN = 30;
 
+/**
+ * The JSON reply repeats keys and quote references the prose did not, and a
+ * reply cut at the limit is unparseable — a wasted call and a retry. The first
+ * structured report (2 sessions) used 2,032 of 4,000; billed by use, not cap.
+ */
+const JSON_MAX_TOKENS = 6000;
+
 /** Structured attempts before falling back to the Markdown report (PLN-261008 D1). */
 const JSON_ATTEMPTS = 2;
 
@@ -263,7 +270,7 @@ export class JourneyReportService implements OnModuleInit {
     const sectionKeys = SECTION_ORDER.filter((k) => criteria.sectionsJson[k]);
 
     for (let attempt = 1; attempt <= JSON_ATTEMPTS; attempt++) {
-      const res = await this.complete(report, buildJourneyPrompt({ ...base, format: 'json' }));
+      const res = await this.complete(report, buildJourneyPrompt({ ...base, format: 'json' }), JSON_MAX_TOKENS);
       const grounded = groundContent(extractJson(res.text), samples, sectionKeys, criteria.topQuestionsN);
       if (!grounded) {
         this.logger.warn(`journey report ${report.id}: structured reply unusable (attempt ${attempt})`);
@@ -293,7 +300,7 @@ export class JourneyReportService implements OnModuleInit {
     return body == null ? null : { body, content: null, provider: res.provider, model: res.model };
   }
 
-  private complete(report: JourneyReport, prompt: { system: string; user: string }) {
+  private complete(report: JourneyReport, prompt: { system: string; user: string }, maxTokens = 4000) {
     return this.ai.complete({
       tenantId: report.tenantId,
       function: 'summary',
@@ -302,7 +309,7 @@ export class JourneyReportService implements OnModuleInit {
       feature: 'journey_report',
       system: prompt.system,
       messages: [{ role: 'user', content: prompt.user }],
-      maxTokens: 4000,
+      maxTokens,
     });
   }
 

@@ -142,6 +142,20 @@ describe('journey prompt, JSON format', () => {
     expect(system).toContain('Never retype the words');
     expect(user).toContain('#1 [2026-08-25] user: How long does shipping take?');
   });
+
+  it('hands the model the value states and says what each one means (REQ-261008 F1)', () => {
+    const { system, user } = buildJourneyPrompt({
+      criteria: { sectionsJson: { summary: 'x' }, bannedJson: [], tone: null, topQuestionsN: 5 } as unknown as JourneyReportCriteria,
+      metrics: { conversations: 2, resolved: 0, medianResolutionMinutes: null } as unknown as JourneyMetrics,
+      samples: SAMPLES,
+      language: 'EN',
+      period: { from: null, to: null },
+    });
+    expect(user).toContain('VALUE STATES');
+    expect(user).toContain('"medianResolutionMinutes": "not_applicable"');
+    expect(system).toContain('Never call a not_applicable figure "not measured"');
+    expect(system).toContain('do not report the cut as a data problem');
+  });
 });
 
 describe('JourneyReportService — structured generation', () => {
@@ -201,6 +215,7 @@ describe('JourneyReportService — structured generation', () => {
     expect((h.report.contentJson as { headline: string }).headline).toContain('Answered');
     expect(h.report.bodyMd).toContain('# Answered');
     expect(h.ai.complete).toHaveBeenCalledTimes(1);
+    expect(h.ai.complete.mock.calls[0][0].maxTokens).toBe(6000);
   });
 
   it('retries once, then falls back to the Markdown report', async () => {

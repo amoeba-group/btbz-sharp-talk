@@ -2,6 +2,7 @@ import type { JourneyMetrics } from './journey-metrics.service';
 import type { JourneyReportCriteria } from './entity/journey-report-criteria.entity';
 import { TRUNCATION_MARK, type SampleUtterance } from './journey-sample';
 import { CONTENT_SCHEMA_HINT } from './journey-report-content';
+import { metricStates } from './journey-value-state';
 
 // Kept importable from here — the service and specs already do.
 export { TRUNCATION_MARK, clip, type SampleUtterance } from './journey-sample';
@@ -17,8 +18,12 @@ export { TRUNCATION_MARK, clip, type SampleUtterance } from './journey-sample';
 const GROUND_RULES = [
   'Every number you print must be copied from the METRICS block. Do not compute, estimate, or round any figure yourself.',
   'If a figure you want is not in METRICS, say it was not measured rather than supplying one.',
+  // The code already knows why a figure is empty; left to itself the model
+  // called "nothing was resolved" "not measured" — the opposite next step
+  // (REQ-261008 F1, seen again on the first structured report).
+  'When a figure is null or zero, explain it with its state from VALUE STATES: not_applicable = there was nothing to compute it from (e.g. nothing was resolved), not_measured = it was not recorded, not_observable = support conversations cannot see it. Never call a not_applicable figure "not measured".',
   'Quote only from the SAMPLES block, verbatim and in its original language.',
-  `A sample ending in ${TRUNCATION_MARK} was cut short. Quote it with the mark and never present it as a complete sentence.`,
+  `A sample ending in ${TRUNCATION_MARK} was cut short by this report's own length limit. Quote it with the mark, never present it as a complete sentence, and do not report the cut as a data problem.`,
   'Kotler 5A: Aware and Appeal are not observable from support conversations alone. Use the touchpoint event counts in METRICS.stages5a where they exist; otherwise state that they were not observable instead of guessing them.',
   'Maslow: never assert a level. Give a quoted utterance, the hypothesis it suggests, and what would disprove it.',
 ];
@@ -86,6 +91,9 @@ export function buildJourneyPrompt(input: {
     '',
     'METRICS (the only source of figures):',
     JSON.stringify(metrics, null, 2),
+    '',
+    'VALUE STATES (why a figure looks the way it does — decided by the code):',
+    JSON.stringify(metricStates(metrics), null, 2),
     '',
     `SAMPLES (${samples.length} utterances, the only source of quotes):`,
     ...samples.map((s, i) =>
