@@ -6,7 +6,8 @@ import {
   groundContent,
   withContentTexts,
 } from './journey-report-content';
-import { buildJourneyPrompt } from './journey-prompt';
+import { buildJourneyPrompt, CUT_NOTE, RESOLUTION_RULE } from './journey-prompt';
+import { RESOLUTION_REASON, UNRESOLVED_REASON } from '../../global/util/resolution.util';
 import { JourneyReportService } from './journey-report.service';
 import { REPORT_STATUS } from './entity/journey-report.entity';
 import type { SampleUtterance } from './journey-sample';
@@ -154,7 +155,27 @@ describe('journey prompt, JSON format', () => {
     expect(user).toContain('VALUE STATES');
     expect(user).toContain('"medianResolutionMinutes": "not_applicable"');
     expect(system).toContain('Never call a not_applicable figure "not measured"');
-    expect(system).toContain('do not report the cut as a data problem');
+    expect(system).toContain('do not flag it or propose an action about it');
+  });
+
+  it('labels a cut sample on its own line and gives the resolution rule', () => {
+    const { user } = buildJourneyPrompt({
+      criteria: { sectionsJson: { resolution: 'x' }, bannedJson: [], tone: null, topQuestionsN: 5 } as unknown as JourneyReportCriteria,
+      metrics: {} as JourneyMetrics,
+      samples: SAMPLES,
+      language: 'EN',
+      period: { from: null, to: null },
+      format: 'json',
+    });
+    expect(user).toContain(`#2 [2026-08-25] ai: Orders ship within 1–2 business days… ${CUT_NOTE}`);
+    expect(user).not.toContain(`take? ${CUT_NOTE}`);
+    expect(user).toContain(RESOLUTION_RULE);
+  });
+
+  it('names every resolution reason the code can produce', () => {
+    for (const reason of [...Object.values(RESOLUTION_REASON), ...Object.values(UNRESOLVED_REASON)]) {
+      expect(RESOLUTION_RULE).toContain(`(${reason})`);
+    }
   });
 });
 
