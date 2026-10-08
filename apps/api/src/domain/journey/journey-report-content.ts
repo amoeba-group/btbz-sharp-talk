@@ -1,3 +1,4 @@
+import { SENDER_TYPE } from '@sharptalk/types';
 import { FIVE_A, FiveA } from './journey-stage-map';
 import { TRUNCATION_MARK, type SampleUtterance } from './journey-sample';
 
@@ -17,7 +18,10 @@ export interface JourneyReportContent {
   narrative: Record<string, string>;
   questions: Array<{
     text: string;
-    /** Times the quoted utterance itself recurs among the samples; null with no quote. */
+    /**
+     * Times the quoted utterance itself recurs among the samples. Null only in
+     * reports stored before questions required a customer quote.
+     */
     count: number | null;
     quoteIds: number[];
     answered: Answered;
@@ -63,7 +67,7 @@ export const CONTENT_SCHEMA_HINT = `{
   "subline": "one sentence: what comes first, and what cannot be judged" | null,
   "narrative": { "<section key>": "a short paragraph" },
   "quotes": [ { "id": 1, "sample": <the #number of a SAMPLES line> } ],
-  "questions": [ { "text": "a question the CUSTOMER asked, in the report language", "quoteIds": [<quotes of the customer asking it>], "answered": "whether WE answered the customer: answered" | "unanswered" | "escalated" } ],
+  "questions": [ { "text": "a question the CUSTOMER asked, in the report language", "quoteIds": [<quotes of the CUSTOMER asking it — never ai/agent quotes>], "answered": "whether WE answered the customer: answered" | "unanswered" | "escalated" } ],
   "stages": [ { "key": "aware" | "appeal" | "ask" | "act" | "advocate", "customer": string | null, "response": string | null, "pain": string | null, "opportunity": string | null } ],
   "hypotheses": [ { "layer": "Maslow layer", "quoteId": 1, "hypothesis": string, "disproveIf": string } ],
   "dataFlags": [ { "text": "a data quality problem you noticed", "section": "<section key>" | null } ],
@@ -131,19 +135,25 @@ export function groundContent(
   }
   const quoteById = new Map(quotes.map((q) => [q.id, q]));
 
+  // A question is something the customer asked, so its evidence is the
+  // customer's own words. Staging report #11 listed "is early check-in
+  // possible?" on the strength of the agent's reply alone; an agent quote is
+  // dropped from a question, and a question left with no customer quote is
+  // dropped with it (REQ-261008, follow-up).
   const questions: JourneyReportContent['questions'] = [];
-  for (const q of list(raw.questions).slice(0, Math.max(1, topQuestionsN))) {
+  for (const q of list(raw.questions)) {
+    if (questions.length >= Math.max(1, topQuestionsN)) break;
     const t = text(q?.text);
-    if (!t) {
+    const ids = list(q?.quoteIds)
+      .map(int)
+      .filter((id): id is number => id != null && quoteById.get(id)?.who === SENDER_TYPE.USER);
+    if (!t || !ids.length) {
       dropped += 1;
       continue;
     }
-    const ids = list(q?.quoteIds)
-      .map(int)
-      .filter((id): id is number => id != null && quoteById.has(id));
     questions.push({
       text: t,
-      count: ids.length ? recurrence(ids.map((id) => quoteById.get(id)!.text), samples) : null,
+      count: recurrence(ids.map((id) => quoteById.get(id)!.text), samples),
       quoteIds: ids,
       answered: oneOf(q?.answered, ANSWERED, 'answered'),
     });
