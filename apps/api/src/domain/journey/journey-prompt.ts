@@ -8,6 +8,9 @@ import { metricStates } from './journey-value-state';
 export { TRUNCATION_MARK, clip, type SampleUtterance } from './journey-sample';
 
 
+/** Follows a cut sample in the prompt — never stored, never shown. */
+export const CUT_NOTE = '[cut by this report; the full message was delivered]';
+
 /**
  * The instruction that keeps the model out of the arithmetic.
  *
@@ -15,6 +18,9 @@ export { TRUNCATION_MARK, clip, type SampleUtterance } from './journey-sample';
  * a model produces numbers that are plausible, wrong, and — because they sit in
  * a report — read as evidence.
  */
+const CUT_NOTE_RULE =
+  'was cut short by this report\'s own length limit — the customer received the whole message.';
+
 const GROUND_RULES = [
   'Every number you print must be copied from the METRICS block. Do not compute, estimate, or round any figure yourself.',
   'If a figure you want is not in METRICS, say it was not measured rather than supplying one.',
@@ -23,10 +29,22 @@ const GROUND_RULES = [
   // (REQ-261008 F1, seen again on the first structured report).
   'When a figure is null or zero, explain it with its state from VALUE STATES: not_applicable = there was nothing to compute it from (e.g. nothing was resolved), not_measured = it was not recorded, not_observable = support conversations cannot see it. Never call a not_applicable figure "not measured".',
   'Quote only from the SAMPLES block, verbatim and in its original language.',
-  `A sample ending in ${TRUNCATION_MARK} was cut short by this report's own length limit. Quote it with the mark, never present it as a complete sentence, and do not report the cut as a data problem.`,
+  `A sample ending in ${TRUNCATION_MARK} ${CUT_NOTE_RULE} Quote it with the mark and never present it as a complete sentence. The cut is not a data problem and not a service problem: do not flag it or propose an action about it.`,
   'Kotler 5A: Aware and Appeal are not observable from support conversations alone. Use the touchpoint event counts in METRICS.stages5a where they exist; otherwise state that they were not observable instead of guessing them.',
   'Maslow: never assert a level. Give a quoted utterance, the hypothesis it suggests, and what would disprove it.',
 ];
+
+/**
+ * How `resolved` and the median were counted, in words — the resolution
+ * section is asked to print it verbatim, and until now nothing gave it the
+ * rule, so the model reported the rule as missing. Mirrors `classifyOutcome`
+ * and `JourneyMetricsService.compute`; the spec pins the wording to the reasons.
+ */
+export const RESOLUTION_RULE = [
+  'Resolved: the customer answered the satisfaction survey (csat_answered); or an agent closed the conversation (agent_closed); or it was closed after an "anything else?" prompt and the last word before the silence was ours (prompted_closed).',
+  'Unresolved: still open (open); ended with no close and no prompt (abandoned); or closed after the prompt while the customer had spoken last — they were still asking (customer_last).',
+  'Resolution time: median minutes from the first message to the recorded end, over resolved conversations. A resolved conversation without a recorded end time is counted as resolved but excluded from the median.',
+].join('\n');
 
 /** Sections in report order; the criteria supply the instruction for each. */
 export const SECTION_ORDER = [
@@ -92,13 +110,20 @@ export function buildJourneyPrompt(input: {
     'METRICS (the only source of figures):',
     JSON.stringify(metrics, null, 2),
     '',
+    'RESOLUTION RULE (print verbatim where the resolution section asks for the rule):',
+    RESOLUTION_RULE,
+    '',
     'VALUE STATES (why a figure looks the way it does — decided by the code):',
     JSON.stringify(metricStates(metrics), null, 2),
     '',
     `SAMPLES (${samples.length} utterances, the only source of quotes):`,
-    ...samples.map((s, i) =>
-      json ? `#${i + 1} [${s.at}] ${s.who}: ${s.text}` : `- [${s.at}] ${s.who}: ${s.text}`,
-    ),
+    ...samples.map((s, i) => {
+      // Said on the line itself: told only in the rules, the model still read
+      // a cut sample as an answer the customer received half of, and proposed
+      // fixing it (staging report #9).
+      const cut = s.text.endsWith(TRUNCATION_MARK) ? ` ${CUT_NOTE}` : '';
+      return json ? `#${i + 1} [${s.at}] ${s.who}: ${s.text}${cut}` : `- [${s.at}] ${s.who}: ${s.text}${cut}`;
+    }),
   ].join('\n');
 
   return { system, user };
