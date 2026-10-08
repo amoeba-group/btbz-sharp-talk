@@ -219,5 +219,25 @@
       "ai": "IA",
       "agent": "Agente"
     }
+  },
+  "tabs": {
+    "label": "Vistas del informe",
+    "report": "Informe",
+    "map": "Mapa del recorrido"
+  },
+  "map": {
+    "noContent": "Este informe es anterior a los informes estructurados: solo se muestran los eventos de contacto.",
+    "observed": "Observado",
+    "legend": "Observado = eventos de contacto contados por el sistema. Las demás filas son frases del informe, no mediciones. Las hipótesis están en la pestaña Informe.",
+    "lane": {
+      "customer": "El cliente dijo",
+      "response": "Respondimos",
+      "pain": "Problema",
+      "opportunity": "Oportunidad"
+    }
+  },
+  "print": {
+    "action": "Imprimir / PDF",
+    "printedAt": "impreso {{at}}"
   }
 }

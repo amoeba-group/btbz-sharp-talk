@@ -219,5 +219,25 @@
       "ai": "AI",
       "agent": "客服"
     }
+  },
+  "tabs": {
+    "label": "报告视图",
+    "report": "报告",
+    "map": "旅程地图"
+  },
+  "map": {
+    "noContent": "此报告写于结构化报告之前,仅显示触点事件。",
+    "observed": "观测状态",
+    "legend": "观测状态 = 系统统计的触点事件。其余各行是报告的描述,不是测量值。需求假设在报告标签页中。",
+    "lane": {
+      "customer": "客户发言",
+      "response": "我们的回答",
+      "pain": "痛点",
+      "opportunity": "机会"
+    }
+  },
+  "print": {
+    "action": "打印 / PDF",
+    "printedAt": "打印于 {{at}}"
   }
 }

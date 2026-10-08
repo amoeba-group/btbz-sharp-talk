@@ -219,5 +219,25 @@
       "ai": "AI",
       "agent": "Nhân viên"
     }
+  },
+  "tabs": {
+    "label": "Cách xem báo cáo",
+    "report": "Báo cáo",
+    "map": "Bản đồ hành trình"
+  },
+  "map": {
+    "noContent": "Báo cáo này được viết trước khi có báo cáo cấu trúc — chỉ hiển thị sự kiện điểm chạm.",
+    "observed": "Quan sát",
+    "legend": "Quan sát = sự kiện điểm chạm do hệ thống đếm. Các dòng khác là câu chữ của báo cáo, không phải số đo. Giả thuyết nằm ở tab Báo cáo.",
+    "lane": {
+      "customer": "Khách nói",
+      "response": "Chúng tôi trả lời",
+      "pain": "Điểm đau",
+      "opportunity": "Cơ hội"
+    }
+  },
+  "print": {
+    "action": "In / PDF",
+    "printedAt": "in lúc {{at}}"
   }
 }

@@ -219,5 +219,25 @@
       "ai": "AI",
       "agent": "상담원"
     }
+  },
+  "tabs": {
+    "label": "리포트 보기 방식",
+    "report": "리포트",
+    "map": "여정 맵"
+  },
+  "map": {
+    "noContent": "구조화 이전에 작성된 리포트라 접점 이벤트만 표시합니다.",
+    "observed": "관측 상태",
+    "legend": "관측 상태 = 시스템이 센 접점 이벤트. 나머지 칸은 리포트의 서술이며 측정값이 아닙니다. 니즈 가설은 리포트 탭에 있습니다.",
+    "lane": {
+      "customer": "고객 발화",
+      "response": "응답",
+      "pain": "페인",
+      "opportunity": "기회"
+    }
+  },
+  "print": {
+    "action": "인쇄 / PDF",
+    "printedAt": "출력 {{at}}"
   }
 }

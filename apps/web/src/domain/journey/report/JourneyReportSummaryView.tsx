@@ -121,7 +121,7 @@ function KpiTile({
       <div className="mt-0.5 min-h-[28px] text-lg font-semibold text-gray-900">
         {shown ? value : <ValueStateChip state={state} />}
       </div>
-      {note && <p className="mt-0.5 truncate text-[11px] text-gray-500" title={note}>{note}</p>}
+      {note && <p className="mt-0.5 truncate text-[11px] text-gray-500 print:overflow-visible print:whitespace-normal" title={note}>{note}</p>}
     </div>
   );
 }

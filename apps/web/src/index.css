@@ -23,3 +23,35 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/*
+ * Journey report printing (PLN-261008 P3). The print copy is portalled into
+ * <body> and hidden on screen; when printing, it is the only thing shown — the
+ * modal behind it is capped at 70vh and would cut the report at the fold.
+ */
+.journey-print-root {
+  display: none;
+}
+@media print {
+  body:has(> .journey-print-root) > *:not(.journey-print-root) {
+    display: none !important;
+  }
+  .journey-print-root {
+    display: block;
+    /* The resolution bar and state chips are background colour; browsers drop
+       backgrounds when printing unless told otherwise. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .journey-print-root section,
+  .journey-print-root li,
+  .journey-print-root tr {
+    break-inside: avoid;
+  }
+  .journey-print-break {
+    break-before: page;
+  }
+  @page {
+    margin: 14mm;
+  }
+}
