@@ -360,7 +360,9 @@
     "issueTargetLabel": "Target message",
     "issueMemo": "Memo (optional)",
     "issueMemoPlaceholder": "Context for the issue board, e.g. third time asking",
-    "issueAppendHint": "If this conversation already has an issue, this is added to it as a memo."
+    "issueAppendHint": "If this conversation already has an issue, this is added to it as a memo.",
+    "region_north": "North",
+    "region_south": "South"
   },
   "pin": {
     "pin": "Pin",

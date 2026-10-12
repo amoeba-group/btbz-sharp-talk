@@ -360,7 +360,9 @@
     "issueTargetLabel": "Mensaje objetivo",
     "issueMemo": "Nota (opcional)",
     "issueMemoPlaceholder": "Contexto para el tablero, p. ej., tercera consulta igual",
-    "issueAppendHint": "Si esta conversación ya tiene una incidencia, se añadirá como nota."
+    "issueAppendHint": "Si esta conversación ya tiene una incidencia, se añadirá como nota.",
+    "region_north": "Norte",
+    "region_south": "Sur"
   },
   "pin": {
     "pin": "Fijar",

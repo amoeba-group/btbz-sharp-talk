@@ -356,7 +356,7 @@ export function HandoffSection() {
                       )
                     }
                   >
-                    {['consult', 'accounting', 'operations'].map((v) => (
+                    {['consult', 'sales_admin', 'accounting', 'operations'].map((v) => (
                       <option key={v} value={v}>
                         {t(`handoff.denyLabel.${v}`)}
                       </option>

@@ -360,7 +360,9 @@
     "issueTargetLabel": "目标消息",
     "issueMemo": "备注（可选）",
     "issueMemoPlaceholder": "供工单看板参考的备注，例如：第三次相同咨询",
-    "issueAppendHint": "若该会话已有工单，将作为备注追加。"
+    "issueAppendHint": "若该会话已有工单，将作为备注追加。",
+    "region_north": "北部",
+    "region_south": "南部"
   },
   "pin": {
     "pin": "置顶",

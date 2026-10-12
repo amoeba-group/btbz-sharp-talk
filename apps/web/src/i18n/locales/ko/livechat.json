@@ -360,7 +360,9 @@
     "issueTargetLabel": "대상 메시지",
     "issueMemo": "메모 (선택)",
     "issueMemoPlaceholder": "이슈 보드에서 볼 맥락 메모 — 예: 3회째 동일 문의",
-    "issueAppendHint": "이 대화에 이미 이슈가 있으면 메모로 추가됩니다."
+    "issueAppendHint": "이 대화에 이미 이슈가 있으면 메모로 추가됩니다.",
+    "region_north": "북부",
+    "region_south": "남부"
   },
   "pin": {
     "pin": "핀 고정",

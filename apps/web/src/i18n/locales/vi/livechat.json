@@ -360,7 +360,9 @@
     "issueTargetLabel": "Tin nhắn được chọn",
     "issueMemo": "Ghi chú (tùy chọn)",
     "issueMemoPlaceholder": "Bối cảnh cho bảng sự cố, ví dụ: hỏi lần thứ ba",
-    "issueAppendHint": "Nếu cuộc trò chuyện đã có sự cố, nội dung này sẽ được thêm làm ghi chú."
+    "issueAppendHint": "Nếu cuộc trò chuyện đã có sự cố, nội dung này sẽ được thêm làm ghi chú.",
+    "region_north": "Miền Bắc",
+    "region_south": "Miền Nam"
   },
   "pin": {
     "pin": "Ghim",

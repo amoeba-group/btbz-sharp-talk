@@ -7,6 +7,7 @@ import {
   JobLabel,
   CAPABILITY,
   Capability,
+  hasLabelFor,
 } from '@sharptalk/types';
 
 /**
@@ -124,7 +125,8 @@ export function userCan(rank: UserRank, labels: JobLabel[], capability: Capabili
   if (rank === USER_RANK.MASTER) return true;
   const requiredLabel = CAP_REQUIRED_LABEL[capability];
   if (!requiredLabel) return true;
-  return labels.includes(requiredLabel);
+  // Sales Admin satisfies the consult-gated capabilities (PLN-261007).
+  return hasLabelFor(requiredLabel, labels);
 }
 
 export { ADMIN_CAPS, RANK_CAPS, CAP_REQUIRED_LABEL };

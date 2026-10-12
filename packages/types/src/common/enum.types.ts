@@ -17,8 +17,30 @@ export const JOB_LABEL = {
   CONSULT: 'consult',
   ACCOUNTING: 'accounting',
   OPERATIONS: 'operations',
+  /** Sales Admin (PLN-261007): handles partner/contract conversations — consult screens + customers/orders. */
+  SALES_ADMIN: 'sales_admin',
 } as const;
 export type JobLabel = (typeof JOB_LABEL)[keyof typeof JOB_LABEL];
+
+/**
+ * Which held labels satisfy a screen/capability that requires `required`
+ * (PLN-261007). Sales Admin is a superset of consult for conversation work, so
+ * a requirement for `consult` is met by either; the other labels are exact.
+ */
+export const JOB_LABEL_SATISFIED_BY: Record<JobLabel, readonly JobLabel[]> = {
+  [JOB_LABEL.CONSULT]: [JOB_LABEL.CONSULT, JOB_LABEL.SALES_ADMIN],
+  [JOB_LABEL.ACCOUNTING]: [JOB_LABEL.ACCOUNTING],
+  [JOB_LABEL.OPERATIONS]: [JOB_LABEL.OPERATIONS],
+  [JOB_LABEL.SALES_ADMIN]: [JOB_LABEL.SALES_ADMIN],
+};
+
+export function hasLabelFor(required: JobLabel, labels: readonly string[]): boolean {
+  return (JOB_LABEL_SATISFIED_BY[required] ?? [required]).some((l) => labels.includes(l));
+}
+
+/** Operational region of a tenant user (PLN-261007); null = nationwide. */
+export const USER_REGION = { NORTH: 'north', SOUTH: 'south' } as const;
+export type UserRegion = (typeof USER_REGION)[keyof typeof USER_REGION];
 
 export const ACTOR_TYPE = { ADMIN: 'admin', USER: 'user' } as const;
 export type ActorType = (typeof ACTOR_TYPE)[keyof typeof ACTOR_TYPE];
