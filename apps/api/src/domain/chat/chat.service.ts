@@ -210,6 +210,20 @@ export function partnerLabelOf(session: Pick<Session, 'identityClaims'>): string
   return `${name} (${claims.hotelSn}) · ${claims.role}`;
 }
 
+/**
+ * The region fields of an escalation event from what `stampRegion` found: the
+ * hotel's team and wording, or — region routing on, province not in the table —
+ * the unmapped province for the alert line; nothing otherwise.
+ */
+export function regionEventFields(
+  region: { team: string; label: string } | { unmapped: string } | null,
+): Pick<EscalationEvent, 'supportRegion' | 'regionLabel' | 'regionUnmapped'> {
+  if (!region) return {};
+  return 'unmapped' in region
+    ? { regionUnmapped: region.unmapped }
+    : { supportRegion: region.team, regionLabel: region.label };
+}
+
 export function sysMsg(key: keyof typeof SYSTEM_MESSAGES, lang: string): string {
   return localized(SYSTEM_MESSAGES[key], lang);
 }
@@ -272,6 +286,11 @@ export interface EscalationEvent {
    */
   supportRegion?: string;
   regionLabel?: string;
+  /**
+   * Set when region routing is on and the signed province is not in the table
+   * (PLN-261012 SG-61): the alert says so instead of silently showing no region.
+   */
+  regionUnmapped?: string;
 }
 
 /** What `escalate` tells the widget (PLN-261007 Team Routing). */
@@ -1375,7 +1394,7 @@ export class ChatService {
       issueType: stamp?.issueType,
       issueLabel: stamp?.issueLabel,
       partnerLabel: partnerLabelOf(session),
-      ...(region ? { supportRegion: region.team, regionLabel: region.label } : {}),
+      ...regionEventFields(region),
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
     return { body, needsContactEmail };
@@ -1490,7 +1509,7 @@ export class ChatService {
       ...(chosen
         ? { issueLabel: chosen.jobLabel, supportType: chosen.id, supportLabel: chosen.label }
         : {}),
-      ...(region ? { supportRegion: region.team, regionLabel: region.label } : {}),
+      ...regionEventFields(region),
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
     return { escalated: true, choose: false, body };
@@ -1506,10 +1525,10 @@ export class ChatService {
     conversationId: number,
     tenantId: number,
     session: Session,
-  ): Promise<{ team: string; label: string } | null> {
+  ): Promise<{ team: string; label: string } | { unmapped: string } | null> {
     try {
-      const region = await this.handoffRouter.regionOf(tenantId, session.identityClaims);
-      if (!region) return null;
+      const { region, unmapped } = await this.handoffRouter.regionLookup(tenantId, session.identityClaims);
+      if (!region) return unmapped ? { unmapped } : null;
       await this.convRepo.update({ id: conversationId }, { supportRegion: region.team });
       return { team: region.team, label: region.label };
     } catch (e) {

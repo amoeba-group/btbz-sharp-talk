@@ -194,7 +194,11 @@
       "answer_then_handoff": "Answer, then hand off"
     },
     "denyModeHint": "\"No answer\" hands the thread to a person without replying. \"Answer, then hand off\" replies from the knowledge base first and still hands it over — the agent is paged either way.",
-    "denyModeLabel": "What the customer hears"
+    "denyModeLabel": "What the customer hears",
+    "regionPresetLoad": "Load Vietnam preset",
+    "regionPresetHint": "The 63 provinces before July 2025 and the 34 merged units after it, with common spellings. Review, then Save.",
+    "regionPresetConfirm": "This replaces the provinces and teams in all four regions with the Vietnam preset. Nothing is stored until you press Save. Continue?",
+    "regionPresetLoaded": "Vietnam preset loaded ({{count}} names). Review it, then press Save."
   },
   "coach": {
     "title": "Agent coaching",

@@ -18,6 +18,8 @@ import {
   resolveHotelRegion,
 } from '../../../../../packages/types/src/common/region';
 import type { RegionCategory, RegionRoutingConfig } from '../../../../../packages/types/src/common/region';
+import { vnRegionPresetRules } from '../../../../../packages/types/src/common/region-vn';
+import { toast } from '@/store/toast-store';
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6];
 /**
@@ -242,6 +244,19 @@ export function HandoffSection() {
     // First switch-on seeds the CS / Business pair the feature was built for;
     // the labels stay blank so the API's built-in wording (six languages) shows.
     if (on && teamRows.length === 0) setTeamRows(DEFAULT_TEAM_ROWS.map((r) => ({ ...r, label: {} })));
+  };
+
+  /**
+   * Fill the four rows with the Vietnam preset (PLN-261012 SG-61). It only fills the
+   * form — nothing is stored until Save — but it REPLACES what is typed, so a table
+   * that already lists provinces asks first instead of being overwritten silently.
+   */
+  const loadVnPreset = () => {
+    const typed = regionRows.some((r) => splitProvinces(r.provinces).length > 0);
+    if (typed && !window.confirm(t('handoff.regionPresetConfirm'))) return;
+    const rules = vnRegionPresetRules();
+    setRegionRows(regionRowsFrom(rules));
+    toast.success(t('handoff.regionPresetLoaded', { count: rules.reduce((n, r) => n + r.provinces.length, 0) }));
   };
 
   const smtpWarning = hoursOn && !email.trim();
@@ -616,6 +631,12 @@ export function HandoffSection() {
             {regionOn && (
               <div className="mt-2 space-y-2 pl-6">
                 <p className="text-[11px] text-gray-400">{t('handoff.regionNeeds')}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button type="button" size="sm" variant="secondary" onClick={loadVnPreset}>
+                    {t('handoff.regionPresetLoad')}
+                  </Button>
+                  <span className="text-[11px] text-gray-400">{t('handoff.regionPresetHint')}</span>
+                </div>
                 <div className="grid grid-cols-[8rem_7rem_1fr] items-center gap-2 text-[11px] text-gray-400">
                   <span>{t('handoff.regionCategoryCol')}</span>
                   <span>{t('handoff.regionTeamCol')}</span>

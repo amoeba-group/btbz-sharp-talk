@@ -194,7 +194,11 @@
       "answer_then_handoff": "先回答再转接"
     },
     "denyModeHint": "\"不回答\"直接转给人工，不作回复。\"先回答再转接\"先用知识库回答，然后照常转接——两种方式都会呼叫客服。",
-    "denyModeLabel": "客户看到的内容"
+    "denyModeLabel": "客户看到的内容",
+    "regionPresetLoad": "加载越南预设表",
+    "regionPresetHint": "包含2025年7月前的63个省市和合并后的34个行政单位，并附常见写法。请检查后保存。",
+    "regionPresetConfirm": "这将用越南预设表替换四个地区的省市和负责团队。点击保存前不会生效。是否继续？",
+    "regionPresetLoaded": "已加载越南预设表（{{count}}个名称）。请检查后点击保存。"
   },
   "coach": {
     "title": "客服助手教练",

@@ -298,3 +298,52 @@ describe('AgentAlertService — regional ladder', () => {
     expect(h.saved[0].targetUserId).toBe(21);
   });
 });
+
+/**
+ * An unmapped province (PLN-261012 SG-61): region routing is on, the hotel's
+ * province is not in the table. The alert says so instead of showing no region.
+ */
+describe('AgentAlertService.summary — unmapped province', () => {
+  const svc = Object.create(AgentAlertService.prototype) as AgentAlertService;
+  const alert = { conversationId: 9, reason: 'user_request', preview: 'Hoa hồng?' } as AgentAlert;
+
+  it('prints "Region: ? (unmapped: <province>)" in the region slot', () => {
+    expect(svc.summary(alert, { teamLabel: 'Business Support', regionUnmapped: 'Tp Quy Nhơn', partnerLabel: 'Hotel X (1)' })).toBe(
+      'Chat escalation — conversation #9\nReason: Customer asked for a human agent' +
+        '\nTeam: Business Support\nRegion: ? (unmapped: Tp Quy Nhơn)' +
+        '\nPartner: Hotel X (1)\n> Hoa hồng?',
+    );
+  });
+
+  it('a resolved region wins over the marker, and no marker keeps the old text byte for byte', () => {
+    expect(svc.summary(alert, { regionLabel: 'North', regionUnmapped: 'X' })).toContain('\nRegion: North');
+    expect(svc.summary(alert, { regionLabel: 'North', regionUnmapped: 'X' })).not.toContain('unmapped');
+    expect(svc.summary(alert, {})).toBe(
+      'Chat escalation — conversation #9\nReason: Customer asked for a human agent\n> Hoa hồng?',
+    );
+    expect(svc.summary(alert, { regionUnmapped: '   ' })).not.toContain('Region');
+  });
+
+  it('keeps the province on one bounded line', () => {
+    const text = svc.summary(alert, { regionUnmapped: 'Pleiku\n:rotating_light: injected\n' + 'x'.repeat(200) });
+    expect(text.split('\n').filter((l) => l.startsWith('Region:'))).toHaveLength(1);
+    expect(text).not.toContain('\n:rotating_light:');
+    expect(text.split('\n').find((l) => l.startsWith('Region:'))!.length).toBeLessThanOrEqual('Region: ? (unmapped: )'.length + 80);
+  });
+
+  it('flows from the escalation payload to the channels', async () => {
+    const mailer = { send: jest.fn() };
+    const svc2 = new AgentAlertService(
+      { findOne: jest.fn(async () => null), save: jest.fn(async (a: unknown) => ({ id: 1, ...(a as object) })), create: jest.fn((a: unknown) => a) } as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      { subscribe: jest.fn() } as never,
+      { get: jest.fn((k: string) => (k === 'ALERT_EMAIL_TO' ? 'ops@example.com' : undefined)) } as never,
+      mailer as never,
+    );
+    await svc2.onEscalation({ tenantId: 1, conversationId: 9, reason: 'user_request', regionUnmapped: 'Tp Quy Nhơn' });
+    expect(mailer.send.mock.calls[0][0].text).toContain('Region: ? (unmapped: Tp Quy Nhơn)');
+  });
+});

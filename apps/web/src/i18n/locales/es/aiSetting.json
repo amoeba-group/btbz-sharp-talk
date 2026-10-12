@@ -194,7 +194,11 @@
       "answer_then_handoff": "Responder y derivar"
     },
     "denyModeHint": "\"Sin respuesta\" deriva a una persona sin contestar. \"Responder y derivar\" contesta desde la base de conocimiento y deriva igualmente: el agente recibe el aviso en ambos casos.",
-    "denyModeLabel": "Qué escucha el cliente"
+    "denyModeLabel": "Qué escucha el cliente",
+    "regionPresetLoad": "Cargar la tabla de Vietnam",
+    "regionPresetHint": "Las 63 provincias anteriores a julio de 2025 y las 34 unidades fusionadas posteriores, con grafías habituales. Revisa y guarda.",
+    "regionPresetConfirm": "Esto reemplaza las provincias y los equipos de las cuatro regiones por la tabla de Vietnam. No se guarda nada hasta que pulses Guardar. ¿Continuar?",
+    "regionPresetLoaded": "Tabla de Vietnam cargada ({{count}} nombres). Revísala y pulsa Guardar."
   },
   "coach": {
     "title": "Entrenamiento del agente",

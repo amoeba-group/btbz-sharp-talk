@@ -41,6 +41,8 @@ interface EscalationPayload {
    */
   supportRegion?: string;
   regionLabel?: string;
+  /** Region routing is on but the hotel's province is not in the table (PLN-261012 SG-61). */
+  regionUnmapped?: string;
 }
 
 /** The extra lines an alert text carries beyond the reason and the preview. */
@@ -51,6 +53,18 @@ export interface AlertContext {
   teamLabel?: string;
   /** Regional team of the hotel (PLN-261007 Hotel Region Routing). */
   regionLabel?: string;
+  /** The province the table did not list; shown as "Region: ? (unmapped: …)" (PLN-261012 SG-61). */
+  regionUnmapped?: string;
+}
+
+/**
+ * "? (unmapped: Tp Quy Nhơn)" for a province the table does not list, or '' when
+ * there is none. The province is signed partner data, but it is still free text
+ * on its way into a Slack line and a mail body: one line, bounded.
+ */
+function unmappedRegion(province?: string): string {
+  const clean = (province ?? '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  return clean ? `? (unmapped: ${clean})` : '';
 }
 
 const REASON_LABEL: Record<string, string> = {
@@ -141,6 +155,7 @@ export class AgentAlertService implements OnModuleInit {
       partnerLabel: payload.partnerLabel,
       teamLabel: payload.supportLabel,
       regionLabel: payload.regionLabel,
+      regionUnmapped: payload.regionUnmapped,
     };
 
     // Off hours: the shopper has already been told to expect an email, so the
@@ -288,8 +303,10 @@ export class AgentAlertService implements OnModuleInit {
    * exists: the partner line (REQ-261006 H4) when the escalating session carried
    * signed claims, the team line (PLN-261007) when the customer picked a team,
    * the region line (PLN-261007 Hotel Region Routing) when the hotel's province
-   * resolved. Tenants with none of them get the exact text they always got.
-   * Order is fixed: Reason, Team, Region, Partner, preview.
+   * resolved — or, when region routing is on and the province is not in the table,
+   * "Region: ? (unmapped: <province>)" so the person paged sees why no regional
+   * team was asked (PLN-261012 SG-61). Tenants with none of them get the exact text
+   * they always got. Order is fixed: Reason, Team, Region, Partner, preview.
    */
   summary(alert: AgentAlert, ctx: AlertContext = {}): string {
     const reason = REASON_LABEL[alert.reason] ?? alert.reason;
@@ -298,7 +315,7 @@ export class AgentAlertService implements OnModuleInit {
     return (
       `Chat escalation — conversation #${alert.conversationId}\nReason: ${reason}` +
       line('Team', ctx.teamLabel) +
-      line('Region', ctx.regionLabel) +
+      line('Region', ctx.regionLabel?.trim() ? ctx.regionLabel : unmappedRegion(ctx.regionUnmapped)) +
       line('Partner', ctx.partnerLabel) +
       preview
     );
