@@ -139,6 +139,14 @@ $hash  = hash_hmac('sha256', $canon, getenv('SHOPTALK_EMBED_SECRET'));
   서명이 맞지 않아 거부(E5048)되고 방문자는 게스트로 남습니다. 두 쪽(발급 서버와 `claims`)을 함께 바꾸세요.
 - 로그인 사용자가 **다른 호텔로 전환**하면 새 `claims`로 `identify`를 다시 호출하세요. 로그아웃은
   `ShopTalk.logout()`.
+- **세션 분리**: 이미 다른 사용자·호텔·역할로 연결된 세션에 `identify`를 호출하면 서버가 **새 세션을
+  만들고 새 세션 토큰을 돌려줍니다.** 위젯이 그 토큰으로 자동 전환하므로 호스트가 할 일은 없고,
+  이전 사용자의 대화는 이어지지 않습니다. 같은 사용자·호텔·역할로 다시 호출하거나 게스트에서 로그인으로
+  바뀌는 경우에는 같은 세션이 유지됩니다. 로그인 중이던 세션에서 `identify`가 실패하면(서명 오류 등)
+  위젯은 새 게스트 세션으로 초기화됩니다.
+- `ShopTalk.logout()`은 위젯만 비우던 것에서 한 단계 더 나아가 **서버의 로그인 연결(호텔·역할 포함)도
+  해제**하고, AI가 진행 중이던 대화를 종료한 뒤 새 게스트 세션을 엽니다. 상담원이 맡았거나 상담원
+  대기 중인 대화는 닫지 않고 로그인 연결만 해제합니다.
 - 콘솔(라이브 채팅·고객)에는 호텔명과 **서명된 hotelSn**이 함께 표시되고, 테넌트가 링크 템플릿을
   설정했다면 "호스트 시스템에서 열기" 버튼이 붙습니다(AI 설정 → 게스트 안내).
 - 에이전트가 "로그인 안내만" 정책이면 identify 전의 방문자는 게스트 공개 카테고리로만 답을 받고,
@@ -153,7 +161,7 @@ $hash  = hash_hmac('sha256', $canon, getenv('SHOPTALK_EMBED_SECRET'));
 | `ShopTalk.open('chat' \| 'orders' \| 'notifications')` | 위젯 열기(탭 지정 가능) |
 | `ShopTalk.close()` / `ShopTalk.toggle()` | 닫기 / 토글 |
 | `ShopTalk.identify({ userId, hash, claims?, … })` | 로그인 사용자 전달 (`claims` = v2 호텔·역할 컨텍스트, §3.4) |
-| `ShopTalk.logout()` | 세션 해제 → 게스트로 |
+| `ShopTalk.logout()` | 서버의 로그인 연결 해제 + 새 게스트 세션 (§3.4) |
 | `ShopTalk.setLocale('vi')` | 언어 변경 |
 | `ShopTalk.on(event, fn)` / `off` | 이벤트 구독 |
 
