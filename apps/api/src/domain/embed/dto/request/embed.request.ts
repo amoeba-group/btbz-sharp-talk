@@ -50,3 +50,8 @@ export class EmbedIdentifyRequest {
   @IsOptional() @IsEmail() @MaxLength(320) email?: string;
   @IsOptional() @IsString() @MaxLength(40) phone?: string;
 }
+
+/** `POST /public/embed/logout` — the widget session whose identity binding ends. */
+export class EmbedLogoutRequest {
+  @IsString() session_token: string;
+}

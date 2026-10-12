@@ -2,7 +2,7 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { EmbedService } from './embed.service';
-import { EmbedIdentifyRequest } from './dto/request/embed.request';
+import { EmbedIdentifyRequest, EmbedLogoutRequest } from './dto/request/embed.request';
 import { SessionService } from '../session/session.service';
 import { SessionMapper } from '../session/session.mapper';
 import { Public } from '../../global/decorator/public.decorator';
@@ -53,5 +53,13 @@ export class EmbedController {
       notice,
       await this.sessionService.customerDisplayName(session),
     );
+  }
+
+  @Post('logout')
+  @Public()
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @ApiOperation({ summary: 'End the identity binding of a widget session (SDK logout)' })
+  async logout(@Body() body: EmbedLogoutRequest) {
+    return this.embedService.logout(body.session_token);
   }
 }

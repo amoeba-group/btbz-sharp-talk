@@ -93,6 +93,17 @@ export function identify(sessionToken: string, user: IdentifyUser): Promise<Sess
   });
 }
 
+/**
+ * End the identity binding of a session on the server (PLN-261012 SG-02). The
+ * host's `ShopTalk.logout()` used to stop at forgetting the token locally, which
+ * left the claims and the open AI conversation on the old session.
+ */
+export function logoutSession(sessionToken: string): Promise<{ loggedOut: boolean }> {
+  return apiClient.post<{ loggedOut: boolean }>('/public/embed/logout', {
+    session_token: sessionToken,
+  });
+}
+
 export function setConsent(
   sessionToken: string,
   granted: boolean,

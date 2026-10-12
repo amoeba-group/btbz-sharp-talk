@@ -2,11 +2,13 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { Repository } from 'typeorm';
-import { SESSION_IDENTITY } from '@sharptalk/types';
+import { CONVERSATION_STATUS, SESSION_IDENTITY } from '@sharptalk/types';
 import type { IdentityClaims, IdentityRole } from '@sharptalk/types';
+import { generateToken } from '@sharptalk/common';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { Session } from '../session/entity/session.entity';
+import { Conversation } from '../chat/entity/conversation.entity';
 import { sessionCacheKey } from '../session/session.service';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { BusinessException } from '../../global/exception/business.exception';
@@ -66,6 +68,9 @@ export class EmbedService {
     @InjectRepository(Customer) private readonly customerRepo: Repository<Customer>,
     @InjectRepository(Session) private readonly sessionRepo: Repository<Session>,
     private readonly redis: RedisService,
+    // Appended last so positional test doubles that predate logout stay valid.
+    // Only `logout()` reads it, `?.`-guarded.
+    @InjectRepository(Conversation) private readonly convRepo?: Repository<Conversation>,
   ) {}
 
   /** New secret, stored encrypted. Returned in full exactly once, to the caller. */
@@ -127,6 +132,11 @@ export class EmbedService {
    * caller cannot tell the difference and should not be able to probe it. The
    * widget stays usable as a guest either way: identity gates order history, not
    * the ability to ask a question.
+   *
+   * The returned session is NOT always the one passed in: when the session is
+   * already bound to someone else (another user, hotel or role) a new session is
+   * created and returned, and the caller must adopt its token. Failures are
+   * decided before anything is written, so a rejected identify changes nothing.
    */
   async identify(input: IdentifyInput): Promise<Session> {
     const session = await this.sessionRepo.findOne({
@@ -182,21 +192,96 @@ export class EmbedService {
           verifiedAt: new Date().toISOString(),
         }
       : null;
-    session.identityClaims = identityClaims;
-    session.customerId = Number(customer.id);
-    session.identityLevel = SESSION_IDENTITY.VERIFIED;
-    const saved = await this.sessionRepo.save(session);
+
+    // One session = one (person, hotel, role) (PLN-261012 SG-02, REQ D-02).
+    // Conversations hang off the session, so rebinding it to someone else would
+    // hand the new person the previous one's thread, open queue entry and consent
+    // — and feed that history into the prompt. A different principal therefore
+    // gets a NEW session; the old one is left exactly as it was.
+    const rebinds = principalChanged(session, Number(customer.id), identityClaims);
+
+    let saved: Session;
+    if (rebinds) {
+      saved = await this.sessionRepo.save(
+        this.sessionRepo.create({
+          ...carriedOver(session),
+          sessionToken: generateToken(),
+          customerId: Number(customer.id),
+          identityLevel: SESSION_IDENTITY.VERIFIED,
+          identityClaims,
+        }),
+      );
+    } else {
+      // Guest → user upgrade (no customer yet), or the same principal again:
+      // same session, claims and verifiedAt refreshed.
+      session.identityClaims = identityClaims;
+      session.customerId = Number(customer.id);
+      session.identityLevel = SESSION_IDENTITY.VERIFIED;
+      saved = await this.sessionRepo.save(session);
+    }
     if (identityClaims) {
       await this.customerRepo.update({ id: customer.id }, { lastClaims: identityClaims });
     }
-    // The token→session cache would keep serving the guest view otherwise.
-    await this.redis.del(sessionCacheKey(input.sessionToken));
+    // The token→session cache would keep serving the guest view otherwise. A
+    // forked session is brand new, so only the in-place path has an entry to
+    // drop; the old session is untouched and its cache entry stays correct.
+    if (!rebinds) await this.redis.del(sessionCacheKey(input.sessionToken));
     // hotelSn is a business key, not PII — logged in clear so support can grep it.
     this.logger.log(
-      `identify ok (tenant ${session.tenantId}, customer ${customer.id}, user ${maskId(input.userId)}` +
+      `identify ${rebinds ? `forked session ${session.id} → ${saved.id}` : 'ok'} ` +
+        `(tenant ${session.tenantId}, customer ${customer.id}, user ${maskId(input.userId)}` +
         (identityClaims ? `, hotel ${identityClaims.hotelSn}, role ${identityClaims.role})` : ')'),
     );
     return saved;
+  }
+
+  /**
+   * End the host user's binding to a widget session (PLN-261012 SG-02, REQ D-03).
+   *
+   * Until now `ShopTalk.logout()` only made the widget forget the token; the
+   * session on the server kept the claims and the open conversation. Here the
+   * server side is closed too:
+   *
+   *  - an AI-owned open conversation is ended — it belongs to the person who just
+   *    left. One a human is on (`agent`) or that is queued for a human (`waiting`)
+   *    is NOT closed: ending it would silently drop a support request somebody is
+   *    handling. Only the identity is unbound from it.
+   *  - customer, claims and identity level go back to guest.
+   *
+   * Idempotent: a session that is already a guest just reports success. The token
+   * is the credential, as on every other widget-session endpoint; an unknown one
+   * answers like `identify` does.
+   */
+  async logout(sessionToken: string): Promise<{ loggedOut: true }> {
+    const session = await this.sessionRepo.findOne({ where: { sessionToken } });
+    if (!session) {
+      throw new BusinessException(ERROR_CODE.SESSION_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+
+    const wasBound = session.customerId != null;
+
+    // Conversation first: if this throws the binding is still intact and the
+    // caller can simply retry; the reverse order could strand an open AI thread
+    // on a session that no longer says whose it was.
+    let endedConversations = 0;
+    if (this.convRepo) {
+      const res = await this.convRepo.update(
+        { sessionId: session.id, status: CONVERSATION_STATUS.AI_ACTIVE },
+        { status: CONVERSATION_STATUS.ENDED, endedAt: new Date() },
+      );
+      endedConversations = res?.affected ?? 0;
+    }
+
+    await this.sessionRepo.update(
+      { id: session.id },
+      { customerId: null, identityClaims: null, identityLevel: SESSION_IDENTITY.GUEST },
+    );
+    await this.redis.del(sessionCacheKey(sessionToken));
+    this.logger.log(
+      `logout ok (tenant ${session.tenantId}, session ${session.id}, ` +
+        `was ${wasBound ? 'bound' : 'guest'}, ended ${endedConversations} AI conversation(s))`,
+    );
+    return { loggedOut: true };
   }
 
   /**
@@ -240,6 +325,51 @@ export class EmbedService {
       throw err;
     }
   }
+}
+
+/**
+ * Would binding `customerId` + `claims` to this session change who it speaks for?
+ *
+ * A principal is the bound customer plus the signed hotel and role. A session
+ * with no customer is not bound to anyone yet — a guest can become anyone, so
+ * that upgrade keeps the session. Once bound, a different customer, hotel or
+ * role is a different principal. Absent claims (v1) count as "no hotel, no
+ * role", which keeps a tenant that never sends claims on one session for as long
+ * as the same user signs in, and means a user who starts sending claims — or
+ * stops — gets a clean session instead of a mixed-context thread.
+ */
+export function principalChanged(
+  session: Pick<Session, 'customerId' | 'identityClaims'>,
+  customerId: number,
+  claims: Pick<IdentityClaims, 'hotelSn' | 'role'> | null,
+): boolean {
+  if (session.customerId == null) return false;
+  if (Number(session.customerId) !== Number(customerId)) return true;
+  const had = session.identityClaims;
+  return (had?.hotelSn ?? null) !== (claims?.hotelSn ?? null) || (had?.role ?? null) !== (claims?.role ?? null);
+}
+
+/**
+ * What a forked session inherits: the visitor's browser-level context, never
+ * the previous person's identity or operator notes. `alias` is an operator-set
+ * name for the old person (PII), `auto_reply_mode` an operator override aimed at
+ * that conversation, and the open counters belong to the old row's impression.
+ */
+function carriedOver(s: Session): Partial<Session> {
+  return {
+    tenantId: s.tenantId,
+    aiAgentId: s.aiAgentId,
+    channel: s.channel,
+    landingPath: s.landingPath,
+    language: s.language,
+    languageLocked: s.languageLocked,
+    // Consent was given in this browser against the current notice. Carrying it
+    // over is what keeps the next person's first message from being refused as
+    // "consent required" on a session they never saw a banner for.
+    consentState: s.consentState,
+    consentAt: s.consentAt,
+    consentVersion: s.consentVersion,
+  };
 }
 
 /** MySQL duplicate-entry, whichever driver shape it arrives in. */
