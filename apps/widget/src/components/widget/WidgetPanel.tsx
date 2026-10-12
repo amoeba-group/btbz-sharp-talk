@@ -59,6 +59,11 @@ export function WidgetPanel() {
   const logo = theme?.logo && !customerName ? logoUrl(theme.logo) : null;
   const visibleTabs = useWidgetStore((s) => s.visibleTabs);
   const tabPosition = useWidgetStore((s) => s.tabPosition);
+  // Every tab's local state (the chat thread and its chips, the order opened, a
+  // draft) belongs to ONE session. Keying the panels on the token makes a session
+  // swap — logout, or the host identifying someone else — start them over instead
+  // of showing the previous person's thread under the new person's token.
+  const sessionToken = useWidgetStore((s) => s.sessionToken);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Tabs the shopper has opened at least once — mounted from then on.
@@ -178,7 +183,7 @@ export function WidgetPanel() {
         <div className={showSettings ? 'hidden' : 'h-full'}>
           {mounted.map((key) => (
             <div
-              key={key}
+              key={`${key}:${sessionToken ?? ''}`}
               role="tabpanel"
               id={`ivy-tabpanel-${key}`}
               aria-labelledby={`ivy-tab-${key}`}

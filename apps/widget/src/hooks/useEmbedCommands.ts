@@ -4,11 +4,25 @@ import { useWidgetStore, type TabKey } from '../store/widgetStore';
 import {
   ensureSession,
   identify as identifyRequest,
+  logoutSession,
   setSessionLanguage,
   type IdentifyUser,
 } from '../services/sessionService';
-import { getParentOrigin, getShopDomain } from './useSession';
+import {
+  adoptSessionConsent,
+  getAccessKey,
+  getAgentCode,
+  getLandingPath,
+  getParentOrigin,
+  getShopDomain,
+} from './useSession';
 import { hostPresent, onHostMessage, postToHost } from '../lib/host-bridge';
+import {
+  adoptForkedSession,
+  isForkedSession,
+  resetToGuest,
+  type SessionSwapPorts,
+} from '../lib/session-swap';
 import i18n, { LANG_STORAGE_KEY, SUPPORTED_LANGUAGES } from '../i18n/i18n';
 
 const TABS: TabKey[] = ['chat', 'orders', 'notifications'];
@@ -36,20 +50,80 @@ export function useEmbedCommands(): void {
     let pendingIdentify: IdentifyUser | null = null;
     let pendingSessionLocale: string | null = null;
 
+    // How the widget lets go of one session and takes up another (PLN-261012
+    // SG-02). The order of the steps is in lib/session-swap.ts; this only wires
+    // it to the real store, cache and API.
+    const swap: SessionSwapPorts = {
+      clearCache: () => queryClient.clear(),
+      detach: () => {
+        const s = useWidgetStore.getState();
+        s.setSessionToken(null);
+        s.setAuthenticated(false);
+        s.setCustomerName(null);
+        s.resetSessionScopedState();
+      },
+      adopt: (res) => {
+        const s = useWidgetStore.getState();
+        s.setAuthenticated(!!res.authenticated);
+        s.setCustomerName(res.customerName ?? null);
+        // A fresh guest session starts consent 'pending' and the first message
+        // would be refused as "consent required": replay the choice made in this
+        // browser, exactly as the first ensure does. A forked session already
+        // carries the consent from the server and just reports it.
+        adoptSessionConsent(res);
+        // Token last: it re-keys the panels, which must find the rest in place.
+        s.setSessionToken(res.sessionToken);
+      },
+      // The same inputs the first ensure sends. Leaving out the agent code, the
+      // page and the access key meant a guest session opened after logout was
+      // pinned to the default agent and could be refused on a restricted widget.
+      startGuest: () =>
+        ensureSession(
+          null,
+          useWidgetStore.getState().language,
+          getShopDomain(),
+          getParentOrigin(),
+          getAgentCode(),
+          getLandingPath(),
+          getAccessKey(),
+        ),
+      endBinding: (token) => logoutSession(token),
+    };
+
     async function runIdentify(token: string, user: IdentifyUser) {
-      const store = useWidgetStore.getState();
       try {
         const res = await identifyRequest(token, user);
-        store.setAuthenticated(res.authenticated);
-        // The menu is audience-filtered server-side (PLN-261001 V4): a
-        // signed-in partner gets the business chips, not the sign-in ones. The
-        // list was fetched once for a guest, so ask again now.
-        void queryClient.invalidateQueries({ queryKey: ['scenario', token] });
+        // The widget moved to another session while this was in flight (the host
+        // logged out, or identified someone else): the answer belongs to a
+        // session nobody is looking at.
+        if (useWidgetStore.getState().sessionToken !== token) return;
+        if (isForkedSession(token, res)) {
+          // A different person or hotel than the one this session was bound to:
+          // the API opened a new session for them. Adopt it and start the panels
+          // over — the old thread stays with the old identity.
+          adoptForkedSession(res, swap);
+        } else {
+          const store = useWidgetStore.getState();
+          store.setAuthenticated(res.authenticated);
+          // Asked once per token elsewhere (useSessionProfile); the answer
+          // already carries it, and it must follow the identity.
+          store.setCustomerName(res.customerName ?? null);
+          // The menu is audience-filtered server-side (PLN-261001 V4): a
+          // signed-in partner gets the business chips, not the sign-in ones. The
+          // list was fetched once for a guest, so ask again now.
+          void queryClient.invalidateQueries({ queryKey: ['scenario', token] });
+        }
         postToHost({ type: 'ivy:event', event: 'identified', ok: true });
       } catch {
-        // A rejected signature leaves the visitor a guest: they can still ask
-        // a question, which is the part that must never depend on identity.
         postToHost({ type: 'ivy:event', event: 'identified', ok: false });
+        // A rejected signature on a GUEST session leaves the visitor a guest:
+        // they can still ask a question, which is the part that must never
+        // depend on identity. On a session that is already signed in it is the
+        // opposite — the host has moved on to someone this session was never
+        // bound to (or to nobody) while the widget keeps showing the previous
+        // person's thread. Fail closed: start over as a guest.
+        const now = useWidgetStore.getState();
+        if (now.sessionToken === token && now.authenticated) await resetToGuest(token, swap);
       }
     }
 
@@ -116,21 +190,17 @@ export function useEmbedCommands(): void {
             return;
           }
           case 'logout': {
-            // Clearing the token is not enough: useEnsureSession runs once on
-            // mount, so nothing would re-open a session and the widget would sit
-            // there unable to send anything. Open the guest session here.
-            store.setSessionToken(null);
-            store.setAuthenticated(false);
-            store.setCustomerName(null);
-            const fresh = await ensureSession(
-              null,
-              useWidgetStore.getState().language,
-              getShopDomain(),
-              getParentOrigin(),
-            ).catch(() => null);
-            // Tenant config (theme, tabs, copy) does not change on logout, so it
-            // is deliberately not re-applied — only the identity is reset.
-            if (fresh?.sessionToken) store.setSessionToken(fresh.sessionToken);
+            // An identify still waiting for a token must not outlive the logout
+            // that came after it — it would sign the visitor back in.
+            pendingIdentify = null;
+            // The server binding ends too, not only the local token (PLN-261012
+            // SG-02): the session would otherwise keep its claims and open
+            // conversation. The widget side is reset synchronously inside
+            // resetToGuest, so an identify that follows straight away finds no
+            // token and is parked until the fresh guest session exists. Tenant
+            // config (theme, tabs, copy) does not change on logout and is
+            // deliberately not re-applied.
+            await resetToGuest(useWidgetStore.getState().sessionToken, swap);
             return;
           }
           default:

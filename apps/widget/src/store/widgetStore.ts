@@ -144,6 +144,13 @@ interface WidgetState {
   bumpChatUnread: (n: number) => void;
   queueChatMessage: (m: string) => void;
   consumeChatMessage: () => string | null;
+  /**
+   * Forget what only made sense for the session that just ended: the unread tally
+   * and a message queued for it. Called when the session is replaced (logout, a
+   * different person identified) so the next one does not inherit a badge or send
+   * a question somebody else asked.
+   */
+  resetSessionScopedState: () => void;
 }
 
 export const useWidgetStore = create<WidgetState>()((set, get) => ({
@@ -236,4 +243,5 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
     if (m) set({ pendingChatMessage: null });
     return m;
   },
+  resetSessionScopedState: () => set({ chatUnread: 0, pendingChatMessage: null }),
 }));
