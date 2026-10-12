@@ -60,6 +60,27 @@ export interface ScenarioButton {
   agentIds?: number[];
   /** Question a "send a message" button asks; empty = use the label. */
   message?: string | Partial<Record<ScenarioLang, string>>;
+  /**
+   * Who sees the chip (PLN-261001 W4): everyone, unidentified visitors only, or
+   * identified (signed-in) visitors only. Absent = all, as before the field.
+   */
+  audience?: ScenarioAudience;
+}
+
+export const SCENARIO_AUDIENCES = ['all', 'guest', 'verified'] as const;
+export type ScenarioAudience = (typeof SCENARIO_AUDIENCES)[number];
+
+/**
+ * What the widget tells an unidentified visitor when an agent runs the
+ * `login_guidance` policy (PLN-261001 W2/W8). URLs must be https; `notice`
+ * overrides the built-in prompt per language; `hostLinkTemplate` builds the
+ * console's "open in host system" link from the signed hotel key.
+ */
+export interface GuestGuidance {
+  loginUrl?: string | null;
+  signupUrl?: string | null;
+  notice?: Partial<Record<ScenarioLang, string>>;
+  hostLinkTemplate?: string | null;
 }
 
 /** Session language the console edits copy for — one source of truth with the API. */
@@ -163,6 +184,7 @@ export interface AiConfig {
   scenarioOverrides?: Record<string, ScenarioOverride>;
   handoffConfig?: HandoffConfig | null;
   answerFooter?: AnswerFooter | null;
+  guestGuidance?: GuestGuidance | null;
 }
 
 /** Contact footer appended to knowledge answers + masking-exempt values (PLN-261007 R4). */
@@ -218,6 +240,8 @@ export const aiSettingsService = {
     scenario_overrides?: Record<string, ScenarioOverride>;
     handoff_config?: HandoffConfig;
     answer_footer?: AnswerFooter;
+    /** Guest sign-in guidance + host link template (PLN-261001 W2/W8). */
+    guest_guidance?: GuestGuidance;
     /** Why this change was made — recorded on the config revision. */
     note?: string;
     /** Which AI agent a persona/rules write targets (PLN-260820); omitted = default. */

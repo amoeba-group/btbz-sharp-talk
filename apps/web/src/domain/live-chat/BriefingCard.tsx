@@ -4,14 +4,26 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/Button';
 import { LANGUAGES } from '../../../../../packages/types/src/common/language';
 import { useBriefing, useGenerateBriefing, useTranslateBriefing } from './live-chat.hooks';
+import type { IdentityClaims } from './live-chat.service';
+import { hotelLabel, roleLabel } from './PartnerContext';
 
 /**
  * On-demand AI briefing (REQ-260824 R3). Opening a conversation only reads the
  * stored briefing; the model runs when the operator asks — generate, or
  * translate into one of the system languages. Both results are persisted, so
  * re-opening the thread later shows them instantly.
+ *
+ * `claims` (REQ-261006 W6) adds one fixed line above the generated text: the
+ * hotel the partner acts for. Fixed rather than generated, so it is there before
+ * anyone presses "generate" and does not depend on the model noticing it.
  */
-export function BriefingCard({ conversationId }: { conversationId: string | null }) {
+export function BriefingCard({
+  conversationId,
+  claims = null,
+}: {
+  conversationId: string | null;
+  claims?: IdentityClaims | null;
+}) {
   const { t, i18n } = useTranslation('livechat');
   const { data, isLoading } = useBriefing(conversationId);
   const generate = useGenerateBriefing(conversationId);
@@ -52,6 +64,15 @@ export function BriefingCard({ conversationId }: { conversationId: string | null
         )}
       </div>
 
+      {conversationId && claims && (
+        <p className="mb-2 text-xs text-gray-600">
+          {t('partner.briefingLine', {
+            hotel: hotelLabel(claims),
+            role: roleLabel(claims.role, t),
+          })}
+          {!claims.signed ? ` (${t('partner.unsigned')})` : ''}
+        </p>
+      )}
       {!conversationId ? (
         <p className="text-sm text-gray-600">{t('selectConversation')}</p>
       ) : isLoading ? (

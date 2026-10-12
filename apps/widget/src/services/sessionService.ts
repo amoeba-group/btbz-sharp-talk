@@ -40,14 +40,36 @@ export function reportPanelOpened(sessionToken: string): void {
 }
 
 /**
+ * Signed partner context (identify v2, PLN-261001 §1.2b): the hotel and role the
+ * host's server put under the signature. `hotelName`/`hotelCode` are display
+ * only. Passed through untouched — the widget never computes a hash.
+ */
+export interface IdentifyClaims {
+  hotelSn: string;
+  role: string;
+  /** Unix seconds at signing; the API accepts ±10 minutes. */
+  iat: number;
+  hotelName?: string;
+  hotelCode?: string;
+}
+
+export interface IdentifyUser {
+  userId: string;
+  hash: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  claims?: IdentifyClaims;
+}
+
+/**
  * Bind this session to a user the host application has already authenticated
  * (PLN-260819 S2). The hash is produced by the customer's own server; the widget
- * only carries it.
+ * only carries it. With `claims` the hash must be the v2 signature over
+ * `userId|hotelSn|role|iat` — the API refuses claims under a v1 hash (Q8).
  */
-export function identify(
-  sessionToken: string,
-  user: { userId: string; hash: string; name?: string; email?: string; phone?: string },
-): Promise<SessionResponse> {
+export function identify(sessionToken: string, user: IdentifyUser): Promise<SessionResponse> {
+  const c = user.claims;
   return apiClient.post<SessionResponse>('/public/embed/identify', {
     session_token: sessionToken,
     user_id: user.userId,
@@ -55,6 +77,15 @@ export function identify(
     name: user.name,
     email: user.email,
     phone: user.phone,
+    claims: c
+      ? {
+          hotel_sn: c.hotelSn,
+          role: c.role,
+          iat: c.iat,
+          hotel_name: c.hotelName,
+          hotel_code: c.hotelCode,
+        }
+      : undefined,
   });
 }
 

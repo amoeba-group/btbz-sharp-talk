@@ -8,6 +8,8 @@ export interface AiAgentResponse {
   persona: string | null;
   rules: string[];
   greeting: Record<string, string>;
+  /** `open` | `login_guidance` (PLN-261001 v1.1). */
+  guestPolicy: string;
   active: boolean;
   isDefault: boolean;
   updatedAt: Date;
@@ -23,6 +25,9 @@ export class AiAgentMapper {
       persona: row.persona,
       rules: row.rules ?? [],
       greeting: row.greeting ?? {},
+      // A row written before the column existed reads as `open` on a dev DB
+      // that synchronized the default — and as `open` everywhere else too.
+      guestPolicy: row.guestPolicy || 'open',
       active: row.active === 1,
       isDefault: row.isDefault === 1,
       updatedAt: row.updatedAt,

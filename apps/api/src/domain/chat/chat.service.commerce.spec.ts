@@ -74,6 +74,8 @@ describe('ChatService — commerce_enabled order gate', () => {
         citations: [{ id: 2600, title: 'Video 0 — Trang chủ' }],
       })),
       effectiveAgentId: jest.fn(async () => 21),
+      // Guest gate (PLN-261001 v1.1): every agent is open unless a test says otherwise.
+      agentGuestPolicy: jest.fn(async () => 'open'),
     } as unknown as RagService;
     const svc = new ChatService(
       convRepo,

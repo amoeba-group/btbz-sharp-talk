@@ -86,3 +86,22 @@ describe('AgentAlertService — tenancy', () => {
     expect(where.conversationId).toBe(42);
   });
 });
+
+describe('AgentAlertService.summary — partner line (REQ-261006 H4)', () => {
+  const svc = Object.create(AgentAlertService.prototype) as AgentAlertService;
+  const alert = { conversationId: 4820, reason: 'low_confidence', preview: 'Hạn đối soát?' } as AgentAlert;
+
+  it('appends the signed partner label when the escalating session carried one', () => {
+    const text = svc.summary(alert, 'A In Hotel Del Luna (1721) · receptionist');
+    expect(text).toContain('Partner: A In Hotel Del Luna (1721) · receptionist');
+    expect(text).toContain('conversation #4820');
+    expect(text.endsWith('> Hạn đối soát?')).toBe(true);
+  });
+
+  it('is byte-identical to the pre-v1.1 text without a label', () => {
+    expect(svc.summary(alert)).toBe(
+      'Chat escalation — conversation #4820\nReason: AI could not answer from the knowledge base\n> Hạn đối soát?',
+    );
+    expect(svc.summary(alert, '  ')).not.toContain('Partner');
+  });
+});

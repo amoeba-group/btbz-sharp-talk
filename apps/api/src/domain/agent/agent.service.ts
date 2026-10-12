@@ -10,7 +10,7 @@ import {
   isSupportedLanguage,
   localized,
 } from '@sharptalk/types';
-import type { LocalizedText } from '@sharptalk/types';
+import type { IdentityClaims, LocalizedText } from '@sharptalk/types';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Message } from '../chat/entity/message.entity';
 import { AiAgent } from '../ai-engine/entity/ai-agent.entity';
@@ -64,6 +64,20 @@ const CSAT_NOT_PREVIEW =
 const MESSAGE_PAGE_SIZE = 30;
 /** Operator alias length — matches sessions.alias (PLN-260812). */
 export const SESSION_ALIAS_MAX = 60;
+
+/**
+ * "Open in host system" link for a signed partner session (REQ-261006 W6):
+ * the tenant's template with `{hotelSn}` substituted. Only SIGNED claims earn
+ * a link — a self-declared hotel must not become a one-click jump into the
+ * wrong hotel's record. Null when either side is missing.
+ */
+export function partnerLinkOf(
+  template: string | null,
+  claims: IdentityClaims | null | undefined,
+): string | null {
+  if (!template || !claims?.signed || !claims.hotelSn) return null;
+  return template.split('{hotelSn}').join(encodeURIComponent(claims.hotelSn));
+}
 /** Identical agent reply inside this window counts as a double submission. */
 const DUPLICATE_REPLY_WINDOW_MS = 10_000;
 
@@ -294,6 +308,8 @@ export class AgentService {
     scope: 'all' | 'queue' | 'ended' = 'all',
     channel?: string,
     aiAgentId?: number,
+    /** Partner-hotel filter (REQ-261006 H3): exact hotelSn, or a name fragment. */
+    hotel?: string,
   ): Promise<{
     items: Array<{
       conversation: Conversation;
@@ -308,6 +324,10 @@ export class AgentService {
       /** Effective AI agent of the session (NULL pin = tenant default). */
       aiAgentId: number | null;
       aiAgentName: string | null;
+      /** Signed partner context of the session (REQ-261006); null for guests/v1. */
+      identityClaims: IdentityClaims | null;
+      /** Deep link into the tenant's own system for that partner (W6); null = no template/claims. */
+      partnerLink: string | null;
     }>;
     total: number;
   }> {
@@ -352,6 +372,22 @@ export class AgentService {
       );
     }
 
+    // Partner-hotel filter (REQ-261006 H3). hotelSn is the signed key and is
+    // matched exactly; the name is unsigned display text, matched loosely so a
+    // CS agent can type what the hotel calls itself. JSON_EXTRACT on sessions
+    // scoped to the tenant — measured on staging before a generated column is
+    // added (PLN-261001 v1.1 Q9).
+    const hotelFilter = hotel?.trim();
+    if (hotelFilter) {
+      qb.andWhere(
+        `c.session_id IN (SELECT s.id FROM sessions s WHERE s.tenant_id = :tenantId
+           AND s.identity_claims IS NOT NULL
+           AND (JSON_UNQUOTE(JSON_EXTRACT(s.identity_claims, '$.hotelSn')) = :hotelSn
+                OR LOWER(JSON_UNQUOTE(JSON_EXTRACT(s.identity_claims, '$.hotelName'))) LIKE :hotelName))`,
+        { hotelSn: hotelFilter, hotelName: `%${hotelFilter.toLowerCase()}%` },
+      );
+    }
+
     if (q?.trim()) {
       // Customer name/email filter. Names are encrypted at rest, so matching
       // reuses the bounded decrypt-then-filter search (PRV-M6 — recent-customer
@@ -391,6 +427,9 @@ export class AgentService {
     const channelDefaults = await this.channelDefaults(conversations.map((c) => c.id));
     // One small lookup per page: id→label + the default (REQ-260825 R6).
     const agentDisplay = await this.aiAgentDisplay(tenantId);
+    // One read per page, not per row: the "open in host system" template is
+    // tenant-wide; only the substituted hotel differs (REQ-261006 W6).
+    const hostTemplate = await this.hostLinkTemplate(tenantId);
     const items = conversations.map((conversation) => {
       const state = stateBySession.get(String(conversation.sessionId));
       const pinned = state?.aiAgentId ?? null;
@@ -411,9 +450,27 @@ export class AgentService {
           effectiveAgentId != null
             ? agentDisplay.byId.get(effectiveAgentId) ?? agentDisplay.defaultLabel
             : agentDisplay.defaultLabel,
+        identityClaims: state?.identityClaims ?? null,
+        partnerLink: partnerLinkOf(hostTemplate, state?.identityClaims ?? null),
       };
     });
     return { items, total };
+  }
+
+  /**
+   * The tenant's `guest_guidance.hostLinkTemplate` (console › AI settings ›
+   * guest guidance), or null when unset. The sanitizer already required the
+   * `{hotelSn}` placeholder on write; checked again here so a hand-edited row
+   * cannot produce a link that opens the same page for every hotel.
+   */
+  private async hostLinkTemplate(tenantId: number): Promise<string | null> {
+    if (!this.aiConfigRepo) return null;
+    const row = await this.aiConfigRepo.findOne({
+      where: { tenantId },
+      select: { id: true, guestGuidance: true },
+    });
+    const template = row?.guestGuidance?.hostLinkTemplate;
+    return typeof template === 'string' && template.includes('{hotelSn}') ? template : null;
   }
 
   /**
@@ -528,8 +585,13 @@ export class AgentService {
     autoReplyEffective: boolean;
     aiAgentId: number | null;
     aiAgentName: string | null;
+    /** Signed partner context (REQ-261006) for the console header; null = none. */
+    identityClaims: IdentityClaims | null;
+    /** "Open in host system" link for that partner (W6); null without template/claims. */
+    partnerLink: string | null;
   }> {
     const state = (await this.sessionStates([sessionId])).get(String(sessionId));
+    const hostTemplate = tenantId != null ? await this.hostLinkTemplate(tenantId) : null;
     const mode = state?.autoReplyMode ?? AUTO_REPLY_MODE.INHERIT;
     const defaults = await this.channelDefaults([conversationId]);
     // Same effective-agent resolution as the queue rows (REQ-260825 R8).
@@ -549,17 +611,27 @@ export class AgentService {
         effectiveAgentId != null
           ? display.byId.get(effectiveAgentId) ?? display.defaultLabel
           : display.defaultLabel,
+      identityClaims: state?.identityClaims ?? null,
+      partnerLink: partnerLinkOf(hostTemplate, state?.identityClaims ?? null),
     };
   }
 
-  /** session id → alias + auto-reply mode (+ AI agent pin), one query per page. */
-  private async sessionStates(
-    sessionIds: number[],
-  ): Promise<Map<string, { alias: string | null; autoReplyMode: string; aiAgentId: number | null }>> {
+  /** session id → alias + auto-reply mode (+ AI agent pin, partner claims), one query per page. */
+  private async sessionStates(sessionIds: number[]): Promise<
+    Map<
+      string,
+      {
+        alias: string | null;
+        autoReplyMode: string;
+        aiAgentId: number | null;
+        identityClaims: IdentityClaims | null;
+      }
+    >
+  > {
     if (sessionIds.length === 0) return new Map();
     const rows = await this.sessionRepo.find({
       where: { id: In(sessionIds) },
-      select: { id: true, alias: true, autoReplyMode: true, aiAgentId: true },
+      select: { id: true, alias: true, autoReplyMode: true, aiAgentId: true, identityClaims: true },
     });
     return new Map(
       rows.map((s) => [
@@ -568,6 +640,7 @@ export class AgentService {
           alias: s.alias ?? null,
           autoReplyMode: s.autoReplyMode || AUTO_REPLY_MODE.INHERIT,
           aiAgentId: s.aiAgentId != null ? Number(s.aiAgentId) : null,
+          identityClaims: s.identityClaims ?? null,
         },
       ]),
     );

@@ -158,7 +158,45 @@ describe('KbCategoryService', () => {
     });
   });
 
+  describe('setGuestVisible (PLN-261001 v1.1 T2)', () => {
+    it('opens and closes a category to unidentified visitors', async () => {
+      const { svc, saved } = build([row({ id: 1, name: 'faq' })]);
+
+      await svc.setGuestVisible(1, 1, true);
+      expect(saved[0]).toMatchObject({ guestVisible: 1 });
+
+      await svc.setGuestVisible(1, 1, false);
+      expect(saved[1]).toMatchObject({ guestVisible: 0 });
+    });
+
+    it('refuses a catalogue category — product knowledge has no sign-in story', async () => {
+      const { svc } = build([row({ id: 1, name: 'cat', origin: CATEGORY_ORIGIN.CATALOG })]);
+
+      await expect(svc.setGuestVisible(1, 1, true)).rejects.toThrow();
+    });
+
+    it('reports the flag in the list and defaults it to closed', async () => {
+      const { svc } = build([
+        row({ id: 1, name: 'open', guestVisible: 1 } as never),
+        row({ id: 2, name: 'closed' }),
+      ]);
+
+      const list = await svc.list(1, 'counsel');
+
+      expect(list.find((c) => c.name === 'open')?.guestVisible).toBe(true);
+      expect(list.find((c) => c.name === 'closed')?.guestVisible).toBe(false);
+    });
+  });
+
   describe('ensure', () => {
+    it('never touches the guest flag of an existing category', async () => {
+      const { svc, saved } = build([row({ id: 1, name: 'faq', guestVisible: 1 } as never)]);
+
+      await svc.ensure(1, 'faq', CATEGORY_ORIGIN.MANUAL, 'counsel');
+
+      expect(saved).toHaveLength(0);
+    });
+
     it('never touches the scope of an existing category', async () => {
       // Sync ensures every category on every run: writing a default here would
       // quietly release the operator's scope at the next sync.

@@ -457,5 +457,11 @@
     "counts": "Chờ duyệt {{pending}} · đã chấp nhận {{promoted}}"
   },
   "videoRef": "Video",
-  "videoRefHint": "Hiển thị là “Xem video” dưới các câu trả lời trích dẫn tài liệu này. Liên kết https:// hoặc notion:<block id> cho video tải lên Notion."
+  "videoRefHint": "Hiển thị là “Xem video” dưới các câu trả lời trích dẫn tài liệu này. Liên kết https:// hoặc notion:<block id> cho video tải lên Notion.",
+  "categoryGuestVisibleOnLabel": "Công khai cho khách",
+  "categoryGuestVisibleOffLabel": "Chỉ đã đăng nhập",
+  "categoryGuestVisibleHint": "Trợ lý \"chỉ hướng dẫn đăng nhập\" có được trả lời khách chưa đăng nhập từ phân loại này không.",
+  "categoryGuestVisibleConfirm": "Cho phép đọc {{count}} tài liệu mà không cần đăng nhập?",
+  "categoryGuestVisibleOn": "Phân loại đã công khai cho khách.",
+  "categoryGuestVisibleOff": "Phân loại chỉ dành cho người đã đăng nhập."
 }

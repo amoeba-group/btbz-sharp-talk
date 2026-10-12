@@ -41,10 +41,24 @@ describe('SessionMapper.toResponse', () => {
       noticeOutdated: false,
       consentAt: null,
       widgetLoginMode: 'redirect',
+      // Notice predates the guest gate → open, no sign-in links (PLN-261001 v1.1).
+      guestPolicy: 'open',
+      guestGuidance: null,
       widgetCopy: { displayName: 'Shop', firstVisit: {}, loginGreeting: {} },
       aiProcessingRegion: 'US',
       issueFeed: false,
     });
+  });
+
+  it('passes the agent guest policy and sign-in links through (PLN-261001 v1.1)', () => {
+    const gated: PrivacyNoticeInfo = {
+      ...notice,
+      guestPolicy: 'login_guidance',
+      guestGuidance: { loginUrl: 'https://ha.go2joy.vn/sign-in', signupUrl: null },
+    };
+    const res = SessionMapper.toResponse(session(), gated);
+    expect(res.guestPolicy).toBe('login_guidance');
+    expect(res.guestGuidance).toEqual({ loginUrl: 'https://ha.go2joy.vn/sign-in', signupUrl: null });
   });
 
   it('defaults customerName to null (guest, or profile not resolved yet)', () => {

@@ -106,6 +106,8 @@ describe('ChatService — deny-list mode', () => {
           citations: [{ id: 2098, title: '환불계좌 변경' }],
         })),
         effectiveAgentId: jest.fn(async () => null),
+        // Guest gate (PLN-261001 v1.1): every agent is open unless a test says otherwise.
+        agentGuestPolicy: jest.fn(async () => 'open'),
       } as unknown as RagService,
       {
         moderate: jest.fn(async () => ({

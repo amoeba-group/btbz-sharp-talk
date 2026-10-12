@@ -17,6 +17,8 @@ export interface KbCategorySummary {
   documentCount: number;
   /** Empty = every agent may cite it (REQ-260826 R2). */
   agentIds: number[];
+  /** Guests of a `login_guidance` agent may be answered from here (PLN-261001 v1.1). */
+  guestVisible: boolean;
 }
 
 /**
@@ -64,6 +66,7 @@ export class KbCategoryService {
       // report them as unscoped whatever the column happens to hold — a row
       // that changed origin after being scoped must not keep a stale narrowing.
       agentIds: r.origin === CATEGORY_ORIGIN.CATALOG ? [] : (r.agentIds ?? []),
+      guestVisible: r.guestVisible === 1,
     }));
 
     // A string that documents carry but no row describes — drift, or a category
@@ -81,6 +84,7 @@ export class KbCategoryService {
         documentCount: count,
         // Nothing owns this string yet, so there is nothing to scope it with.
         agentIds: [],
+        guestVisible: false,
       });
     }
     return summaries;
@@ -269,6 +273,22 @@ export class KbCategoryService {
   async setHidden(tenantId: number, id: number, hidden: boolean): Promise<KbCategory> {
     const row = await this.find(tenantId, id);
     row.hidden = hidden ? 1 : 0;
+    return this.repo.save(row);
+  }
+
+  /**
+   * Open (or close) a category to unidentified visitors of a gated agent
+   * (PLN-261001 v1.1 T2). Catalogue categories are refused like `setAgents`:
+   * product knowledge has no sign-in story, and an operator flipping it would
+   * be configuring something retrieval never reads.
+   */
+  async setGuestVisible(tenantId: number, id: number, visible: boolean): Promise<KbCategory> {
+    const row = await this.find(tenantId, id);
+    if (row.origin === CATEGORY_ORIGIN.CATALOG) {
+      throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.CONFLICT);
+    }
+    row.guestVisible = visible ? 1 : 0;
+    this.logger.log(`kb category guest_visible: tenant=${tenantId} id=${id} → ${row.guestVisible}`);
     return this.repo.save(row);
   }
 

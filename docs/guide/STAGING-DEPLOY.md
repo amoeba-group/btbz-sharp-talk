@@ -65,5 +65,5 @@ Data volumes (`sharptalk_mysql_staging_data` (physical `staging_ivy_mysql_stagin
 `docker compose -f docker/staging/docker-compose.staging.yml down -v`.
 
 ## 7. Notes / differences from production
-- Staging: `DB_SYNCHRONIZE=true` (auto schema), demo data on, MySQL host port exposed.
+- Staging: `DB_SYNCHRONIZE=false` since 2026-07-31 — schema changes are pre-applied from `sql/` before the code deploy (see the `pre-deploy-check` skill); demo data on, MySQL host port exposed.
 - Production (`docker/production/`): `DB_SYNCHRONIZE=false`, schema via `init-sql` (`sql/01-schema.sql` DDL), no DB host port, `restart: always`. Bootstrap via `SEED_ON_BOOT` or a controlled seed; rotate all secrets.

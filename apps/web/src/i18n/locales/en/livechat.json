@@ -394,5 +394,22 @@
     "addTo": "Add to “{{title}}”",
     "group": "Group as timeline",
     "dismiss": "Hide for this conversation"
+  },
+  "partner": {
+    "filterLabel": "Filter by hotel",
+    "filterPlaceholder": "Hotel name or key",
+    "filterScope": "Signed partner sessions only — exact key, or part of the name",
+    "signed": "signed",
+    "unsigned": "self-declared",
+    "signedHint": "The host system signed this hotel and role.",
+    "unsignedHint": "Declared by the page, not signed — verify before acting on it.",
+    "verifiedAt": "Verified at",
+    "openInHost": "Open in host system",
+    "briefingLine": "Partner of {{hotel}} · {{role}}",
+    "role": {
+      "manager": "Manager",
+      "receptionist": "Receptionist",
+      "internal": "Internal staff"
+    }
   }
 }

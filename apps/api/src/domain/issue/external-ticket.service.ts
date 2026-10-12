@@ -257,6 +257,9 @@ export class ExternalTicketService implements OnModuleInit {
     }));
     const orderNote = await this.orderNote(tenantId, email);
     if (orderNote) messages.push({ fromAgent: true, bodyText: orderNote });
+    // Signed partner context (REQ-261006 H4) — which hotel the ticket is about.
+    const partnerNote = await this.partnerNote(conversationId);
+    if (partnerNote) messages.push({ fromAgent: true, bodyText: partnerNote });
 
     const lastUser = [...transcript].reverse().find((m) => m.senderType === SENDER_TYPE.USER);
     const subject = `[SharpTalk] ${reason} — ${(lastUser?.body ?? 'chat escalation').slice(0, 80)}`;
@@ -335,6 +338,26 @@ export class ExternalTicketService implements OnModuleInit {
       where: { id: session.customerId, tenantId },
     });
     return customer?.email?.trim() || null;
+  }
+
+  /**
+   * The session's signed partner claims as an internal-style note
+   * (REQ-261006 H4), or null for guests / v1 identities. Only the signed key
+   * and the display fields travel; nothing that could be a person's contact.
+   */
+  private async partnerNote(conversationId: number): Promise<string | null> {
+    try {
+      const conv = await this.convRepo.findOne({ where: { id: conversationId } });
+      if (!conv) return null;
+      const session = await this.sessionRepo.findOne({ where: { id: conv.sessionId } });
+      const claims = session?.identityClaims;
+      if (!claims?.signed || !claims.hotelSn) return null;
+      const name = claims.hotelName?.trim() || 'hotel';
+      const code = claims.hotelCode?.trim() ? ` · ${claims.hotelCode.trim()}` : '';
+      return `[SharpTalk] Partner: ${name} (hotelSn ${claims.hotelSn}${code}) · role ${claims.role}`;
+    } catch {
+      return null;
+    }
   }
 
   /** Recent-order context as an internal-style note (§11.2 packaging). */

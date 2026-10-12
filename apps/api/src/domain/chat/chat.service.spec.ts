@@ -108,6 +108,8 @@ describe('ChatService consent gate', () => {
         // No agents configured — the shape these fixtures describe. Scoping is
         // exercised in rag-retrieval-scope.spec.ts, not smuggled in here.
         effectiveAgentId: jest.fn(async () => null),
+        // Guest gate (PLN-261001 v1.1): every agent is open unless a test says otherwise.
+        agentGuestPolicy: jest.fn(async () => 'open'),
       } as unknown as RagService,
       { moderate } as unknown as ModerationService,
       // orderService precedes sessionService: it supplies the signed-in shopper's own

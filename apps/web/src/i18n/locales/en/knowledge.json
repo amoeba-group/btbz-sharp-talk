@@ -457,5 +457,11 @@
     "counts": "Waiting for review {{pending}} · adopted {{promoted}}"
   },
   "videoRef": "Video",
-  "videoRefHint": "Shown as “Watch video” under answers that cite this document. An https:// link, or notion:<block id> for a video uploaded to Notion."
+  "videoRefHint": "Shown as “Watch video” under answers that cite this document. An https:// link, or notion:<block id> for a video uploaded to Notion.",
+  "categoryGuestVisibleOnLabel": "Visible to guests",
+  "categoryGuestVisibleOffLabel": "Signed-in only",
+  "categoryGuestVisibleHint": "Whether an agent that only guides sign-in may answer a visitor who has not signed in from this category.",
+  "categoryGuestVisibleConfirm": "Make {{count}} document(s) readable without signing in?",
+  "categoryGuestVisibleOn": "Category is now visible to guests.",
+  "categoryGuestVisibleOff": "Category is now signed-in only."
 }

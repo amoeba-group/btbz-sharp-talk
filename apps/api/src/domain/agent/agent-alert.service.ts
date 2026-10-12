@@ -23,6 +23,8 @@ interface EscalationPayload {
   offHoursEmail?: string;
   /** Label routing (P2, 결정 4): narrow the alarm to this label's available agents. */
   issueLabel?: string;
+  /** Signed partner context, one line (REQ-261006 H4): "Hotel (hotelSn) · role". */
+  partnerLabel?: string;
 }
 
 const REASON_LABEL: Record<string, string> = {
@@ -102,10 +104,13 @@ export class AgentAlertService implements OnModuleInit {
     // summary goes to the configured mailbox instead of paging the on-call
     // channels (PLN-AiSetting W3).
     if (payload.offHoursEmail) {
-      await this.notifyEmail(alert, payload.offHoursEmail);
+      await this.notifyEmail(alert, payload.offHoursEmail, payload.partnerLabel);
       return;
     }
-    await Promise.allSettled([this.notifySlack(alert), this.notifyEmail(alert)]);
+    await Promise.allSettled([
+      this.notifySlack(alert, payload.partnerLabel),
+      this.notifyEmail(alert, undefined, payload.partnerLabel),
+    ]);
   }
 
   /**
@@ -177,21 +182,27 @@ export class AgentAlertService implements OnModuleInit {
 
   // ---- channels ----
 
-  private summary(alert: AgentAlert): string {
+  /**
+   * One text for every channel. The partner line (REQ-261006 H4) is appended
+   * only when the escalating session carried signed claims — tenants without
+   * identify v2 get the exact text they always got.
+   */
+  summary(alert: AgentAlert, partnerLabel?: string): string {
     const reason = REASON_LABEL[alert.reason] ?? alert.reason;
     const preview = alert.preview ? `\n> ${alert.preview}` : '';
-    return `Chat escalation — conversation #${alert.conversationId}\nReason: ${reason}${preview}`;
+    const partner = partnerLabel?.trim() ? `\nPartner: ${partnerLabel.trim()}` : '';
+    return `Chat escalation — conversation #${alert.conversationId}\nReason: ${reason}${partner}${preview}`;
   }
 
   /** Slack incoming webhook (SLACK_WEBHOOK_URL; empty = disabled). */
-  private async notifySlack(alert: AgentAlert): Promise<void> {
+  private async notifySlack(alert: AgentAlert, partnerLabel?: string): Promise<void> {
     const url = this.config.get<string>('SLACK_WEBHOOK_URL');
     if (!url) return;
     try {
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: `:rotating_light: ${this.summary(alert)}` }),
+        body: JSON.stringify({ text: `:rotating_light: ${this.summary(alert, partnerLabel)}` }),
       });
       if (!res.ok) this.logger.warn(`Slack alert failed: HTTP ${res.status}`);
     } catch (e) {
@@ -200,13 +211,17 @@ export class AgentAlertService implements OnModuleInit {
   }
 
   /** Escalation summary to the ops mailbox (or the off-hours override). */
-  private async notifyEmail(alert: AgentAlert, overrideTo?: string): Promise<void> {
+  private async notifyEmail(
+    alert: AgentAlert,
+    overrideTo?: string,
+    partnerLabel?: string,
+  ): Promise<void> {
     const to = overrideTo ?? this.config.get<string>('ALERT_EMAIL_TO');
     if (!to) return;
     await this.mailer.send({
       to,
       subject: `[IVY Chat] Escalation — conversation #${alert.conversationId}`,
-      text: this.summary(alert),
+      text: this.summary(alert, partnerLabel),
     });
   }
 }

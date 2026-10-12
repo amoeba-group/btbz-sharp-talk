@@ -1,4 +1,5 @@
-import { IsArray, IsBoolean, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsArray, IsBoolean, IsIn, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { GUEST_POLICY, type GuestPolicy } from '@sharptalk/types';
 
 /** Request DTOs — snake_case (amoeba_code_convention). */
 export class CreateAiAgentRequest {
@@ -10,6 +11,9 @@ export class CreateAiAgentRequest {
   @IsOptional() @IsString() @MaxLength(4000) persona?: string;
 
   @IsOptional() @IsArray() @IsString({ each: true }) rules?: string[];
+
+  /** Guest policy (PLN-261001 v1.1); omitted = `open`. */
+  @IsOptional() @IsIn(Object.values(GUEST_POLICY)) guest_policy?: GuestPolicy;
 }
 
 export class UpdateAiAgentRequest {
@@ -26,4 +30,7 @@ export class UpdateAiAgentRequest {
   @IsOptional() @IsObject() greeting?: Record<string, string>;
 
   @IsOptional() @IsBoolean() active?: boolean;
+
+  /** `open` | `login_guidance` (PLN-261001 v1.1). */
+  @IsOptional() @IsIn(Object.values(GUEST_POLICY)) guest_policy?: GuestPolicy;
 }

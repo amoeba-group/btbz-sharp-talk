@@ -195,6 +195,45 @@ test('a queued message reaches every subscriber, not just the first', async () =
   assert.equal(second.length, 2);
 });
 
+test('openHostUrl asks a frame host to navigate, in the given login mode', async () => {
+  // PLN-261001 V2: the sandboxed widget never navigates the storefront itself.
+  const sent = [];
+  const parent = { postMessage: (msg) => sent.push(msg) };
+  const { mod, w } = await load({ parent, open: () => assert.fail('must not open from the iframe') });
+  w.open = () => assert.fail('must not open from the iframe');
+
+  assert.equal(mod.openHostUrl('https://ha.example.com/sign-in', 'popup'), true);
+  assert.deepEqual(sent, [{ type: 'ivy:open-url', url: 'https://ha.example.com/sign-in', mode: 'popup' }]);
+  // Mode defaults to redirect — the loader's safer path (no popup blockers).
+  mod.openHostUrl('https://ha.example.com/sign-up');
+  assert.equal(sent[1].mode, 'redirect');
+});
+
+test('openHostUrl hands a native host the same message', async () => {
+  const sent = [];
+  const { mod } = await load({ ReactNativeWebView: { postMessage: (data) => sent.push(data) } });
+  mod.openHostUrl('https://ha.example.com/sign-in');
+  assert.deepEqual(JSON.parse(sent[sent.length - 1]), {
+    type: 'ivy:open-url',
+    url: 'https://ha.example.com/sign-in',
+    mode: 'redirect',
+  });
+});
+
+test('openHostUrl standalone opens a new tab, and refuses non-http URLs everywhere', async () => {
+  const opened = [];
+  const { mod } = await load({ open: (url, target, features) => opened.push([url, target, features]) });
+  assert.equal(mod.openHostUrl('https://ha.example.com/sign-in'), true);
+  assert.equal(opened.length, 1);
+  assert.equal(opened[0][0], 'https://ha.example.com/sign-in');
+  assert.match(String(opened[0][2]), /noopener/);
+
+  // A `javascript:` value saved into tenant config must not run anywhere.
+  assert.equal(mod.openHostUrl('javascript:alert(1)'), false);
+  assert.equal(mod.openHostUrl('/relative'), false);
+  assert.equal(opened.length, 1);
+});
+
 test('app mode is read from the URL', async () => {
   const a = await load({ location: { search: '?mode=app&shop=x' } });
   assert.equal(a.mod.isAppMode(), true);

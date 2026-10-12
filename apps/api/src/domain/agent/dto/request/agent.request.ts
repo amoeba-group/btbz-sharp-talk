@@ -24,6 +24,8 @@ export class ListSessionsQuery {
   @IsOptional() @IsString() channel?: string;
   /** AI-agent filter (REQ-260825 R7): agent id; omitted/'all' = every agent. */
   @IsOptional() @IsString() ai_agent_id?: string;
+  /** Partner-hotel filter (REQ-261006 H3): exact hotelSn or a hotel-name fragment. */
+  @IsOptional() @IsString() @MaxLength(120) hotel?: string;
 }
 
 /** Re-pin the session to another AI agent — applies from the next turn. */
