@@ -271,7 +271,7 @@ describe('listSessions — team filter', () => {
 
   it('filters by the chosen team', async () => {
     const { svc, wheres } = buildTeam();
-    await svc.listSessions(1, 1, 50, undefined, 'queue', 'all', undefined, 'business');
+    await svc.listSessions(1, 1, 50, undefined, 'queue', 'all', undefined, undefined, 'business');
     const clause = wheres.find((w) => w.clause.includes('c.support_type'));
     expect(clause?.params).toEqual({ supportType: 'business' });
   });
@@ -279,7 +279,7 @@ describe('listSessions — team filter', () => {
   it('adds no team clause for "all" or when omitted', async () => {
     for (const team of ['all', undefined, '  ']) {
       const { svc, wheres } = buildTeam();
-      await svc.listSessions(1, 1, 50, undefined, 'queue', 'all', undefined, team);
+      await svc.listSessions(1, 1, 50, undefined, 'queue', 'all', undefined, undefined, team);
       expect(wheres.some((w) => w.clause.includes('c.support_type'))).toBe(false);
     }
   });
