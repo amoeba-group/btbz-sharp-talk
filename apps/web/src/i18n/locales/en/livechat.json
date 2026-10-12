@@ -429,5 +429,13 @@
       "receptionist": "Receptionist",
       "internal": "Internal staff"
     }
+  },
+  "duty": {
+    "on": "On duty",
+    "off": "Off duty",
+    "hint": "While on duty you are asked first for new escalations. Keep this console open: you drop off about 90 seconds after it is closed.",
+    "switchedOn": "You are on duty. New escalations for your team come to you first.",
+    "switchedOff": "You are off duty. New escalations go to other agents.",
+    "saveError": "Could not change your duty status. Try again."
   }
 }

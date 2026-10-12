@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPatch, apiPost, apiUpload } from '@/lib/api-client';
+import { apiDelete, apiGet, apiPatch, apiPost, apiPut, apiUpload } from '@/lib/api-client';
 // Type-only: the package's CJS entry is unsafe for VALUE imports in the browser build.
 import type { IdentityClaims } from '@sharptalk/types';
 
@@ -220,6 +220,16 @@ export interface AgentAlert {
   createdAt?: string;
 }
 
+/** The signed-in agent's own profile; `status === 'online'` is the "On duty" switch (SG-60). */
+export interface AgentProfile {
+  id: number;
+  userId: number;
+  status: string;
+  maxConcurrent: number;
+  /** Last console heartbeat; null = never. */
+  lastSeen?: string | null;
+}
+
 /** Slim AI-agent row for the filter/picker (staff-readable, REQ-260825 R7). */
 export interface AiAgentOption {
   id: number;
@@ -368,6 +378,11 @@ export const liveChatService = {
     apiPost<{ id: string; status: string }>(`/agent/conversations/${id}/handback`, {}),
   alerts: (status = 'new') => apiGet<AgentAlert[]>(`/agent/alerts?status=${status}`),
   ackAlert: (id: string) => apiPost<AgentAlert>(`/agent/alerts/${id}/ack`),
+  /** null when the user has never had a profile row (= off duty). */
+  getProfile: () => apiGet<AgentProfile | null>('/agent/profile'),
+  /** The "On duty" toggle (PLN-261012 SG-60): creates the profile row when missing. */
+  setDuty: (onDuty: boolean) =>
+    apiPut<AgentProfile>('/agent/profile', { status: onDuty ? 'online' : 'offline' }),
   // POST, so a shopper's address typed into the search box never becomes part
   // of a URL — query strings live on in proxy access logs and browser history
   // long after the conversation is disposed of (PLN-260920 P3).

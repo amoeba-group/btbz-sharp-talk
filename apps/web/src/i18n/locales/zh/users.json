@@ -42,5 +42,14 @@
   "filterRole": "按角色筛选",
   "filterRoleAll": "所有角色",
   "filterRegion": "按区域筛选",
-  "filterRegionAll": "所有区域"
+  "filterRegionAll": "所有区域",
+  "presence": {
+    "header": "值班",
+    "seen": "值班中 · {{ago}}前在线",
+    "agoSec": "{{n}}秒",
+    "agoMin": "{{n}}分钟",
+    "stale": "值班中 · 未连接",
+    "staleHint": "已开启值班，但近期未检测到控制台在线，新的转人工提醒会跳过此人。",
+    "off": "未值班"
+  }
 }

@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Repository } from 'typeorm';
+import { In, IsNull, LessThan, Or, Repository } from 'typeorm';
 import { AgentAlert } from './entity/agent-alert.entity';
 import { AgentProfile } from './entity/agent-profile.entity';
 import { Assignment } from './entity/assignment.entity';
@@ -12,6 +12,12 @@ import { JOB_LABEL } from '@sharptalk/types';
 import { EventBusService, EVENTS, MailerService } from '../../infrastructure/infrastructure.module';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import {
+  isPresent,
+  PRESENCE_TOUCH_THROTTLE_SEC,
+  PROFILE_STATUS_ONLINE,
+  presenceTtlSec,
+} from '../../global/util/presence.util';
 
 interface EscalationPayload {
   tenantId?: number;
@@ -148,8 +154,8 @@ export class AgentAlertService implements OnModuleInit {
   }
 
   /**
-   * Least-loaded available agent holding the label (P2, 결정 4): online profile,
-   * active assignments under maxConcurrent. Null → broadcast fallback.
+   * Least-loaded available agent holding the label (P2, 결정 4): a present profile
+   * (on duty and seen lately, PLN-261012 SG-60), active assignments under maxConcurrent. Null → broadcast fallback.
    *
    * With a `region` (PLN-261007 Hotel Region Routing) the search runs in two
    * rounds, so the hotel's own regional team is always asked first: staff of that
@@ -190,12 +196,20 @@ export class AgentAlertService implements OnModuleInit {
     }
   }
 
-  /** Online agent under their concurrency cap with the fewest active conversations. */
+  /**
+   * Present agent under their concurrency cap with the fewest active conversations.
+   * Present = on duty AND polled the console within AGENT_PRESENCE_TTL_SEC
+   * (PLN-261012 SG-60): a profile left on 'online' by someone who closed the
+   * console, or one that has no heartbeat at all, is not asked.
+   */
   private async leastLoadedOnline(tenantId: number, userIds: number[]): Promise<number | null> {
     if (!userIds.length) return null;
-    const profiles = await this.profileRepo.find({
-      where: { tenantId, userId: In(userIds), status: 'online' },
+    const rows = await this.profileRepo.find({
+      where: { tenantId, userId: In(userIds), status: PROFILE_STATUS_ONLINE },
     });
+    const now = Date.now();
+    const ttl = presenceTtlSec(this.config.get('AGENT_PRESENCE_TTL_SEC'));
+    const profiles = rows.filter((p) => isPresent(p, now, ttl));
     let best: { userId: number; load: number } | null = null;
     for (const p of profiles) {
       const active = await this.assignmentRepo.count({
@@ -205,6 +219,30 @@ export class AgentAlertService implements OnModuleInit {
       if (!best || active < best.load) best = { userId: Number(p.userId), load: active };
     }
     return best?.userId ?? null;
+  }
+
+  /**
+   * Heartbeat (PLN-261012 SG-60): the console polls the alert feed about every 10 s,
+   * and each poll by an on-duty agent stamps `agent_profiles.last_seen`. One UPDATE
+   * that matches only an on-duty profile whose stamp is missing or older than the
+   * throttle, so an idle poll costs no write and a user without a profile (or off
+   * duty) is never touched. Never throws: presence must not break the alarm feed.
+   */
+  async touchPresence(userId: number, tenantId: number, nowMs = Date.now()): Promise<void> {
+    if (!userId || !tenantId) return;
+    try {
+      await this.profileRepo.update(
+        {
+          tenantId,
+          userId,
+          status: PROFILE_STATUS_ONLINE,
+          lastSeen: Or(IsNull(), LessThan(new Date(nowMs - PRESENCE_TOUCH_THROTTLE_SEC * 1000))),
+        },
+        { lastSeen: new Date(nowMs) },
+      );
+    } catch (e) {
+      this.logger.warn(`presence touch failed (user ${userId}): ${(e as Error).message}`);
+    }
   }
 
   /**

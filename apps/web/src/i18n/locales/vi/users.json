@@ -42,5 +42,14 @@
   "filterRole": "Lọc theo vai trò",
   "filterRoleAll": "Mọi vai trò",
   "filterRegion": "Lọc theo khu vực",
-  "filterRegionAll": "Mọi khu vực"
+  "filterRegionAll": "Mọi khu vực",
+  "presence": {
+    "header": "Trực",
+    "seen": "Đang trực · thấy {{ago}} trước",
+    "agoSec": "{{n}} giây",
+    "agoMin": "{{n}} phút",
+    "stale": "Đang trực · không kết nối",
+    "staleHint": "Đã bật trực nhưng gần đây không thấy console, nên các yêu cầu chuyển người mới sẽ bỏ qua người này.",
+    "off": "Không trực"
+  }
 }

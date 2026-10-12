@@ -130,7 +130,7 @@ describe('AgentAlertService — label routing precedence', () => {
       { find: jest.fn(async () => opts.labelUsers.map((userId) => ({ userId, jobLabelId: 3 }))) } as never,
       {
         find: jest.fn(async () =>
-          opts.online.map((userId) => ({ tenantId: 1, userId, status: 'online', maxConcurrent: 5 })),
+          opts.online.map((userId) => ({ tenantId: 1, userId, status: 'online', maxConcurrent: 5, lastSeen: new Date() })),
         ),
       } as never,
       { count: jest.fn(async () => 0) } as never,
@@ -231,7 +231,7 @@ describe('AgentAlertService — regional ladder', () => {
           const asked = (q.where.userId as unknown as { _value: number[] })._value;
           return online
             .filter((id) => asked.includes(id))
-            .map((userId) => ({ tenantId: 1, userId, status: 'online', maxConcurrent: 5 }));
+            .map((userId) => ({ tenantId: 1, userId, status: 'online', maxConcurrent: 5, lastSeen: new Date() }));
         }),
       } as never,
       { count: jest.fn(async () => 0) } as never,

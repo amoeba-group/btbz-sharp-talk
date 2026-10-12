@@ -429,5 +429,13 @@
       "receptionist": "Lễ tân",
       "internal": "Nhân viên nội bộ"
     }
+  },
+  "duty": {
+    "on": "Đang trực",
+    "off": "Không trực",
+    "hint": "Khi đang trực, bạn được báo trước với các yêu cầu chuyển người mới. Hãy giữ console này mở: sau khi đóng khoảng 90 giây bạn sẽ tự rời trạng thái trực.",
+    "switchedOn": "Bạn đã bật trực. Các yêu cầu chuyển người mới của đội bạn sẽ báo cho bạn trước.",
+    "switchedOff": "Bạn đã tắt trực. Các yêu cầu chuyển người mới sẽ báo cho nhân viên khác.",
+    "saveError": "Không đổi được trạng thái trực. Vui lòng thử lại."
   }
 }

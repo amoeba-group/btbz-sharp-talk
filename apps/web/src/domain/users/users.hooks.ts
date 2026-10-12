@@ -4,13 +4,17 @@ import type { InviteUserBody, UpdateUserBody, UserListFilter } from './users.ser
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
 
-/** Tenant users; optional role/region filter (PLN-261007). Unfiltered callers keep the old key. */
-export const useUsers = (filter?: UserListFilter) => {
+/**
+ * Tenant users; optional role/region filter (PLN-261007). Unfiltered callers keep the old key.
+ * `refetchMs` keeps a screen that shows live presence (PLN-261012 SG-60) fresh.
+ */
+export const useUsers = (filter?: UserListFilter, opts?: { refetchMs?: number }) => {
   const tenantKey = useTenantKey();
   const active = filter && (filter.label || filter.region) ? filter : undefined;
   return useQuery({
     queryKey: active ? ['users', tenantKey, active] : ['users', tenantKey],
     queryFn: () => usersService.list(active),
+    refetchInterval: opts?.refetchMs,
   });
 };
 

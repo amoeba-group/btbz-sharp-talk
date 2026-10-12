@@ -425,16 +425,50 @@ export function useGroupActions(id: string | null) {
   return { create, update, addMembers, removeMember, dissolve, send };
 }
 
-/** New escalation alerts for the alarm modal (FR-S3) — 10s poll. */
+/**
+ * New escalation alerts for the alarm modal (FR-S3) — 10s poll.
+ *
+ * The poll is also the presence heartbeat of an on-duty agent (PLN-261012 SG-60:
+ * the server stamps last_seen on each call), so it keeps running while the tab is
+ * in the background — an agent working in another window must not drop off duty.
+ */
 export const useAgentAlerts = (enabled = true) => {
   const tenantKey = useTenantKey();
   return useQuery({
     queryKey: ['agent', tenantKey, 'alerts'],
     queryFn: () => liveChatService.alerts('new'),
     refetchInterval: 10000,
+    refetchIntervalInBackground: true,
     enabled,
   });
 };
+
+/** The agent's own profile: whether they are on duty (PLN-261012 SG-60). */
+export const useAgentProfile = (enabled = true) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['agent', tenantKey, 'profile'],
+    queryFn: () => liveChatService.getProfile(),
+    enabled,
+  });
+};
+
+/** Flip the "On duty" switch; toast on success and on failure (PLN-261012 SG-60). */
+export function useSetDuty() {
+  const { t } = useTranslation('livechat');
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: (onDuty: boolean) => liveChatService.setDuty(onDuty),
+    onSuccess: (profile, onDuty) => {
+      qc.setQueryData(['agent', tenantKey, 'profile'], profile);
+      // The Users screen shows the same state.
+      qc.invalidateQueries({ queryKey: ['users', tenantKey] });
+      toast.success(onDuty ? t('duty.switchedOn') : t('duty.switchedOff'));
+    },
+    onError: (e: Error) => toast.error(e.message || t('duty.saveError'), { sticky: true }),
+  });
+}
 
 export const useAckAlert = () => {
   const qc = useQueryClient();

@@ -204,6 +204,8 @@ export function toProfileResponse(p: AgentProfile) {
     skills: p.skills,
     maxConcurrent: p.maxConcurrent,
     status: p.status,
+    /** Last console heartbeat of an on-duty agent (PLN-261012 SG-60); null = never. */
+    lastSeen: p.lastSeen ?? null,
   };
 }
 

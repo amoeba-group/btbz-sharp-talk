@@ -42,5 +42,14 @@
   "filterRole": "Filter by role",
   "filterRoleAll": "All roles",
   "filterRegion": "Filter by region",
-  "filterRegionAll": "All regions"
+  "filterRegionAll": "All regions",
+  "presence": {
+    "header": "Duty",
+    "seen": "On duty · seen {{ago}} ago",
+    "agoSec": "{{n}} s",
+    "agoMin": "{{n}} min",
+    "stale": "On duty · not connected",
+    "staleHint": "Switched on, but the console has not been seen lately, so new escalations skip this person.",
+    "off": "Off duty"
+  }
 }
