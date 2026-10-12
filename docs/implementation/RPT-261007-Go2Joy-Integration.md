@@ -1,6 +1,6 @@
 # RPT-261007 — Nhánh tích hợp Go2Joy (7 nhánh tính năng trên main 9fd31630)
 
-- Ngày: 2026-10-07 · **Cập nhật 2026-10-12: rebase toàn bộ lên `main` 9fd31630 (xem §2b)** · Nhánh: `test/go2joy-integration` (local, không dùng để merge) · Base ban đầu: `origin/main` 4949e107, nay 9fd31630
+- Ngày: 2026-10-07 · **Cập nhật 2026-10-12: rebase toàn bộ lên `main` 9fd31630 (xem §2b)** · Nhánh: `test/go2joy-integration` (đã push lên origin để chia sẻ và phân tích; không dùng để merge — gồm cả `feature/hotel-region-routing` R1 ở trên cùng, tài liệu riêng ở `RPT-261007-Hotel-Region-Routing`) · Base ban đầu: `origin/main` 4949e107, nay 9fd31630
 - Mục đích: chứng minh các nhánh Go2Joy chạy cùng nhau trên main mới nhất, ghi lại mọi xung đột và cách giải để rebase từng PR đúng một lần, và chốt thứ tự SQL cho staging.
 - Không phải bản phát hành: các PR thật vẫn mở riêng từng nhánh theo §2.
 
