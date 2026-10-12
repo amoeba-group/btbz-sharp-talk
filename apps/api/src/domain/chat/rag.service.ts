@@ -658,7 +658,10 @@ export class RagService {
     // was the top hit for the question alone — and the model said it had no
     // information, at 0.77. Both searches now contribute.
     if (retrievalQuery?.trim() && retrievalQuery.trim() !== query.trim()) {
-      const own = await this.retrieveHybrid(tenantId, query, RagService.TOP_K, preferGroup, scopeAgentId);
+      // `opts` must reach this search too: it carries the guest scope, and a leg
+      // that drops it hands a signed-out visitor documents outside the public
+      // categories (REQ-261012 D-01 — the context-query leg alone was scoped).
+      const own = await this.retrieveHybrid(tenantId, query, RagService.TOP_K, preferGroup, scopeAgentId, opts);
       chunks = RagService.mergeOwnFirst(own.chunks, chunks, RagService.TOP_K);
       vectorProvider = vectorProvider ?? own.vectorProvider;
     }
