@@ -3,7 +3,7 @@
 - Ngày: 2026-10-12 · Yêu cầu: "lên plan nhận định kỹ để implement luôn phần chưa có, và phần đã có muốn cải thiện"
 - REQ: `docs/analysis/REQ-261012-Go2Joy-Stage1-Gap-Closure.md` (D-01…D-20 là lỗi/rủi ro hiện có; SG-01…SG-85 là yêu cầu)
 - Phạm vi: bảo mật danh tính và phiên · phân quyền KB theo vai trò · phiên bản KB · dữ liệu đối tác (mock trước) · cờ pilot theo khách sạn · audit, mô phỏng cổng, số liệu pilot · định tuyến (hiện diện thật) · PDPL · hạ tầng và vận hành trên phía Go2Joy. **Có UI** (wireframe ở §5) và **có migration** (§4).
-- Trạng thái: **chờ duyệt.** Theo quy trình dự án, chưa triển khai bất cứ thứ gì cho đến khi bạn duyệt PLN và chốt các quyết định ở §9.
+- Trạng thái: **đã duyệt Phương án 2 (2026-10-13)**; các quyết định còn lại ở §9 giữ mặc định đề xuất cho đến khi bạn đổi. Tiến độ ở §11.
 - Nhánh hiện trạng làm nền: `test/go2joy-integration` `73ff8acf` (đã push). Nhánh tài liệu này: `feature/go2joy-stage1-gap-plan` (local).
 
 ## 1. Tóm tắt quyết định
@@ -307,3 +307,9 @@ Mọi nhóm test cần cập nhật: `knowledge-ask-agent-scope.spec.ts`, `chat.
 ## 10. Sau khi duyệt
 
 Theo CLAUDE.md: triển khai → `TCR-261012-*.md` (ca kiểm thử, kịch bản tích hợp, ca biên) → `RPT-261012-*.md` (thay đổi, danh sách tệp, kết quả kiểm, **trạng thái deploy: PR, SHA, từng môi trường và migration**). Lỗi đã phát hiện (D-01…) ghi lại bằng `FIX-261012-*.md` kèm mẫu phòng ngừa.
+
+## 11. Tiến độ
+
+| Ngày | Mục | Kết quả | Nhánh / commit |
+|---|---|---|---|
+| 2026-10-13 | **SG-01 / D-01** rò rỉ phạm vi khách ở câu hỏi tiếp nối | Xong: lượt tìm "câu hiện tại" nhận `opts`; `retrieveHybrid` bắt buộc đủ tham số (thiếu là lỗi biên dịch TS2554, đã thử); 3 test hồi quy (bỏ sửa thì đỏ); tsc 0, jest chat+knowledge+ai-engine 719 đạt; FIX-261012 | `feature/guest-login-gate` `7d577326`, `89df7e7b`, `a8154a89`; gate-ui rebase theo; `test/go2joy-integration` cherry-pick `57db9a9a`, `cd04f1fd`, `370e8c9b` (local, chưa push) |
