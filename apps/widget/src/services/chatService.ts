@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/api-client';
-import type { ChatAttachment, ChatReply, Conversation, ScenarioReply } from '../lib/types';
+import type { ChatAttachment, ChatReply, Conversation, EscalateReply, ScenarioReply } from '../lib/types';
 
 export function getConversation(
   sessionToken: string,
@@ -62,10 +62,20 @@ export function rateChat(
   });
 }
 
-export function escalate(sessionToken: string, conversationId: string): Promise<unknown> {
-  return apiClient.post('/chat/escalate', {
+/**
+ * Ask for a human (FR-015). Without `supportType` the tenant's team question
+ * may come back instead of a handoff (PLN-261007 Team Routing); the chip the
+ * shopper taps calls this again with its option id.
+ */
+export function escalate(
+  sessionToken: string,
+  conversationId: string,
+  supportType?: string,
+): Promise<EscalateReply> {
+  return apiClient.post<EscalateReply>('/chat/escalate', {
     session_token: sessionToken,
     conversation_id: conversationId,
+    support_type: supportType || undefined,
   });
 }
 

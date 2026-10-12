@@ -310,6 +310,8 @@ export class AgentService {
     aiAgentId?: number,
     /** Partner-hotel filter (REQ-261006 H3): exact hotelSn, or a name fragment. */
     hotel?: string,
+    /** Team filter (PLN-261007 Team Routing): teamRouting option id; 'all'/omitted = every team. */
+    supportType?: string,
   ): Promise<{
     items: Array<{
       conversation: Conversation;
@@ -357,6 +359,13 @@ export class AgentService {
       } else {
         qb.andWhere('c.channel = :channel', { channel: channelFilter });
       }
+    }
+
+    // Team filter (PLN-261007 Team Routing): the option the customer picked
+    // when asking for a human. Rows without a choice only show under 'all'.
+    const teamFilter = supportType?.trim();
+    if (teamFilter && teamFilter !== 'all') {
+      qb.andWhere('c.support_type = :supportType', { supportType: teamFilter });
     }
 
     // AI-agent filter (REQ-260825 R7). Filtering by the DEFAULT agent must also

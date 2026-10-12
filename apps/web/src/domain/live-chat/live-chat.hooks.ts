@@ -91,11 +91,12 @@ export const useSessions = (
   channel = 'all',
   aiAgentId = 'all',
   hotel = '',
+  supportType = 'all',
 ) => {
   const tenantKey = useTenantKey();
   return useQuery({
-    queryKey: ['agent', tenantKey, 'sessions', q, status, channel, aiAgentId, hotel],
-    queryFn: () => liveChatService.sessions(q, status, channel, aiAgentId, hotel),
+    queryKey: ['agent', tenantKey, 'sessions', q, status, channel, aiAgentId, hotel, supportType],
+    queryFn: () => liveChatService.sessions(q, status, channel, aiAgentId, hotel, supportType),
     // 5s (was 15s): a new escalation should surface within a beat, not a
     // quarter-minute — the endpoint is a few ms (PLN-260804).
     refetchInterval: 5000,

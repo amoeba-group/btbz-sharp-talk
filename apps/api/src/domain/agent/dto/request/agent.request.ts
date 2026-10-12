@@ -26,6 +26,8 @@ export class ListSessionsQuery {
   @IsOptional() @IsString() ai_agent_id?: string;
   /** Partner-hotel filter (REQ-261006 H3): exact hotelSn or a hotel-name fragment. */
   @IsOptional() @IsString() @MaxLength(120) hotel?: string;
+  /** Team filter (PLN-261007 Team Routing): teamRouting option id; omitted/'all' = every team. */
+  @IsOptional() @IsString() support_type?: string;
 }
 
 /** Re-pin the session to another AI agent — applies from the next turn. */

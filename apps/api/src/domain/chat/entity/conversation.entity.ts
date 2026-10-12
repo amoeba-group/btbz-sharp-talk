@@ -46,6 +46,15 @@ export class Conversation {
   replyChannel: string | null;
 
   /**
+   * The team the customer picked when they asked for a human (PLN-261007
+   * Team Routing): a `handoffConfig.teamRouting` option id such as `cs` or
+   * `business`. Null when the tenant does not ask, or nobody has chosen yet.
+   * The console badges and filters the queue on it.
+   */
+  @Column({ name: 'support_type', type: 'varchar', length: 32, nullable: true })
+  supportType: string | null;
+
+  /**
    * When the "anything else?" check was sent (PLN-260810 P1). Doubles as the
    * idempotency guard — a non-null value means the question already went out,
    * so a sweep that runs every 30 seconds cannot ask twice.

@@ -49,6 +49,8 @@ export interface AgentSession {
   partnerLink?: string | null;
   /** Origin surface: widget | telegram | viber | zalo | line | kakao | sms | email … */
   channel?: string | null;
+  /** Team the customer picked when asking for a human (PLN-261007 Team Routing). */
+  supportType?: string | null;
   /** Team pin (PLN-260826) — pinned rows arrive first from the server. */
   pinned?: boolean;
   pinnedAt?: string | null;
@@ -130,6 +132,8 @@ export interface ConversationDetail {
   channel?: string | null;
   /** Current human owner's name (REQ-260825 R8-②); null = unassigned. */
   assignedTo?: string | null;
+  /** Team the customer picked when asking for a human (PLN-261007 Team Routing). */
+  supportType?: string | null;
   aiAgentId?: string | null;
   aiAgentName?: string | null;
   /** Signed partner context for the header (REQ-261006 W6). */
@@ -221,7 +225,14 @@ export interface AiAgentOption {
 }
 
 export const liveChatService = {
-  sessions: (q?: string, status?: string, channel?: string, aiAgentId?: string, hotel?: string) =>
+  sessions: (
+    q?: string,
+    status?: string,
+    channel?: string,
+    aiAgentId?: string,
+    hotel?: string,
+    supportType?: string,
+  ) =>
     apiGet<AgentSession[]>('/agent/sessions', {
       ...(q?.trim() ? { q: q.trim() } : {}),
       ...(status && status !== 'all' ? { status } : {}),
@@ -229,6 +240,7 @@ export const liveChatService = {
       ...(aiAgentId && aiAgentId !== 'all' ? { ai_agent_id: aiAgentId } : {}),
       // Hotel key (exact) or name (contains) of the signed partner (REQ-261006 W6).
       ...(hotel?.trim() ? { hotel: hotel.trim() } : {}),
+      ...(supportType && supportType !== 'all' ? { support_type: supportType } : {}),
     }),
   aiAgents: () => apiGet<AiAgentOption[]>('/agent/ai-agents'),
   setAiAgent: (id: string, aiAgentId: number) =>

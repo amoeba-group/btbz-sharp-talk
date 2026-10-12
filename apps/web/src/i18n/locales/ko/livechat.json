@@ -137,6 +137,13 @@
     "cancel": "취소",
     "move": "이동…"
   },
+  "team": {
+    "filterLabel": "팀 필터",
+    "filterAll": "전체 팀",
+    "cs": "고객 서비스",
+    "business": "비즈니스",
+    "badgeTitle": "팀"
+  },
   "channel": {
     "filterLabel": "채널 필터",
     "filterAll": "전체 채널",
