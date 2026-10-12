@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useWidgetStore, type ConsentInfo } from '../store/widgetStore';
 import { ensureSession, setConsent } from '../services/sessionService';
-import { getStoredSessionToken } from '../lib/api-client';
+import { getShopDomain, getStoredSessionToken } from '../lib/api-client';
 import { applyTheme, cacheTheme } from '../lib/theme';
 import { apiOrigin } from '../lib/api-client';
 import { clearStoredConsent, getStoredConsentRecord, setStoredConsent } from '../lib/consent';
@@ -27,10 +27,6 @@ function hasManualLanguageOverride(): boolean {
   }
 }
 
-/**
- * The Shopify shop domain the embed loader passes in the iframe URL (`?shop=`).
- * Binds the session to the right tenant; absent in local/standalone dev.
- */
 /**
  * Origin of the page hosting this widget (PLN-260819 S1).
  *
@@ -61,13 +57,9 @@ export function getAccessKey(): string | undefined {
   }
 }
 
-export function getShopDomain(): string | undefined {
-  try {
-    return new URLSearchParams(window.location.search).get('shop') ?? undefined;
-  } catch {
-    return undefined;
-  }
-}
+// Re-exported for existing importers (branding.ts); the definition moved to
+// lib/api-client so the session storage key can be namespaced by shop.
+export { getShopDomain };
 
 /**
  * AI agent code the embed loader forwards from the page's snippet (`?agent=`,
