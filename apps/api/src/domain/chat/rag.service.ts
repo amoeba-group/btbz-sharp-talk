@@ -373,13 +373,18 @@ export class RagService {
     return this.confidence(chunks, vectorProvider);
   }
 
+  // Every scope argument is REQUIRED (pass `undefined` on purpose). It used to
+  // end in `opts?`, and a second search added to answer() simply left it off —
+  // the guest scope silently vanished from that leg (REQ-261012 D-01). With no
+  // optional tail, a new call site cannot forget the scope without the compiler
+  // saying so.
   private async retrieveHybrid(
     tenantId: number,
     query: string,
-    limit = 4,
-    preferGroup?: string,
-    aiAgentId?: number | null,
-    opts?: RetrievalOpts,
+    limit: number,
+    preferGroup: string | undefined,
+    aiAgentId: number | null | undefined,
+    opts: RetrievalOpts | undefined,
   ): Promise<{ chunks: RetrievedChunk[]; vectorProvider: string | null }> {
     const [ftDocs, vec] = await Promise.all([
       this.retrieveFulltext(tenantId, query, RagService.LEG_LIMIT, aiAgentId, opts),
