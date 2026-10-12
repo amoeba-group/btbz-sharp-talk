@@ -216,6 +216,18 @@ export function ChatTab() {
     else if (res.needsContactEmail) setInline('contactEmail');
   }
 
+  /**
+   * Ask for a person (PLN-261012 SG-62). Outside business hours, with no address
+   * on file, the server's notice asks for one and the form appears here — the same
+   * as after a chat turn that hands off — so the agent's reply has somewhere to go.
+   */
+  function connectAgent(team?: string, label?: string) {
+    return escalate(team, label).then((r) => {
+      if (r.needsContactEmail) setInline('contactEmail');
+      return r;
+    });
+  }
+
   // Auto-send a message queued from another tab (e.g. "Ask about this order").
   useEffect(() => {
     if (!pendingChatMessage || !sessionToken) return;
@@ -273,7 +285,7 @@ export function ChatTab() {
         setInline('affiliate');
         return;
       case 'connect_agent':
-        void escalate();
+        void connectAgent();
         return;
       case 'open_url':
         // noopener/noreferrer: the destination is tenant-supplied.
@@ -313,14 +325,14 @@ export function ChatTab() {
     const team = teamChoiceOf(id);
     if (team) {
       setShowEscalate(false);
-      void escalate(team, label);
+      void connectAgent(team, label);
       return;
     }
     switch (id) {
       case 'agent_connect':
         setShowEscalate(false);
         analytics.escalate();
-        void escalate();
+        void connectAgent();
         return;
       case 'my_orders':
         openOrAuth('orders');
@@ -554,7 +566,7 @@ export function ChatTab() {
               setShowEscalate(true);
               // With the team question pending (PLN-261007) the bar would only
               // ask again — the chips are the way forward.
-              void escalate().then((r) => {
+              void connectAgent().then((r) => {
                 if (r.choose) setShowEscalate(false);
               });
             }}
@@ -569,7 +581,7 @@ export function ChatTab() {
           <button
             onClick={() => {
               setShowEscalate(false);
-              void escalate();
+              void connectAgent();
             }}
             className="flex w-full items-center justify-center gap-2 rounded-st-md border border-primary-400 bg-primary-500/5 px-3 py-2 text-sm font-medium text-primary-600 hover:bg-primary-500/10"
           >

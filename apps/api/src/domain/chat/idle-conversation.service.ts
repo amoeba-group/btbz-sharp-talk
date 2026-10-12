@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, LessThan, MoreThan, Repository } from 'typeorm';
+import { FindOptionsWhere, IsNull, LessThan, MoreThan, Not, Repository } from 'typeorm';
 import { CONVERSATION_STATUS, SENDER_TYPE, localized } from '@sharptalk/types';
 import type { LocalizedText } from '@sharptalk/types';
 import { Conversation } from './entity/conversation.entity';
@@ -129,7 +129,6 @@ export class IdleConversationService implements OnModuleInit, OnModuleDestroy {
   private async closeDue(): Promise<number> {
     const due = await this.convRepo.find({
       where: this.sweepable({
-        status: this.openStatuses(),
         idlePromptAt: LessThan(new Date(Date.now() - CLOSE_AFTER_SEC * 1000)),
         // Also excluded here, not just in the ask pass: a thread can be asked
         // and only then slip off hours, and closing it would cancel the email
@@ -165,7 +164,6 @@ export class IdleConversationService implements OnModuleInit, OnModuleDestroy {
     const quietSince = new Date(Date.now() - PROMPT_AFTER_MIN * 60_000);
     const candidates = await this.convRepo.find({
       where: this.sweepable({
-        status: this.openStatuses(),
         idlePromptAt: IsNull(),
         // An off-hours thread is waiting on a promised email reply; closing it
         // would cancel an answer the customer was told to expect.
@@ -259,25 +257,36 @@ export class IdleConversationService implements OnModuleInit, OnModuleDestroy {
       .catch((e: Error) => this.logger.warn(`${action} audit failed: ${e.message}`));
   }
 
-  private openStatuses() {
-    return In([CONVERSATION_STATUS.AGENT, CONVERSATION_STATUS.WAITING]);
-  }
-
   /**
-   * Only widget threads are swept (PLN-260812 S5).
+   * Which threads the sweep may touch: widget threads (below) that are in an
+   * agent's hands, or that an agent has already had.
    *
-   * "Idle" is a widget idea: the visitor closed the tab. A KakaoTalk room or a
-   * mail thread does not go idle — the person is simply not typing — and
-   * closing it sent "Anything else? / Rate this chat" into someone's personal
-   * chat room 52 times on staging. Messenger threads are ended by an agent.
+   * A WAITING thread nobody has claimed (no agent_id) is NOT swept (PLN-261012
+   * SG-62, REQ D-10). It is in the queue, and the queue — the alarm, the console
+   * list — is what answers it. Counted as "idle", a customer who asked for a person
+   * at 18:05 was asked "anything else?" at 18:35 and had the chat closed with a
+   * satisfaction survey a minute later, with nobody ever having picked it up.
+   * AI-owned threads are not in these states at all, and AGENT threads keep the
+   * exact behaviour they had.
    *
-   * Expressed as two alternatives so legacy NULL rows keep being swept.
+   * Only widget threads are swept (PLN-260812 S5): "idle" is a widget idea, the
+   * visitor closed the tab. A KakaoTalk room or a mail thread does not go idle —
+   * the person is simply not typing — and closing it sent "Anything else? / Rate
+   * this chat" into someone's personal chat room 52 times on staging. Messenger
+   * threads are ended by an agent. Channel is two alternatives so legacy NULL rows
+   * keep being swept; each is crossed with each state, which is why the result is
+   * an OR of four conditions.
    */
-  private sweepable<T extends Record<string, unknown>>(where: T): T[] {
-    return [
-      { ...where, channel: IsNull() },
-      { ...where, channel: CONVERSATION_CHANNEL_WIDGET },
+  private sweepable(where: FindOptionsWhere<Conversation>): FindOptionsWhere<Conversation>[] {
+    const channels: FindOptionsWhere<Conversation>[] = [
+      { channel: IsNull() as never },
+      { channel: CONVERSATION_CHANNEL_WIDGET },
     ];
+    const states: FindOptionsWhere<Conversation>[] = [
+      { status: CONVERSATION_STATUS.AGENT },
+      { status: CONVERSATION_STATUS.WAITING, agentId: Not(IsNull()) },
+    ];
+    return channels.flatMap((channel) => states.map((state) => ({ ...where, ...state, ...channel })));
   }
 
   private after(date: Date) {

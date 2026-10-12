@@ -302,6 +302,13 @@ export interface EscalateOutcome {
   /** Notice persisted for the customer this call (team question or off-hours), if any. */
   body: string | null;
   followUps?: Array<{ id: string; label: string }>;
+  /**
+   * Off-hours hand-off with no address on file: the widget asks for one so the
+   * agent's reply has somewhere to go — the same flag `handoff()` returns
+   * (PLN-261012 SG-62). Present (true) only then; absent in hours and on the
+   * team-question and preview paths.
+   */
+  needsContactEmail?: boolean;
 }
 
 /**
@@ -1487,16 +1494,30 @@ export class ChatService {
     // widget's local "connecting you" line would be a lie, so persist the
     // off-hours notice — the conversation poll shows it to the customer.
     const route = await this.handoffRouter.route(tenantId, session.language);
+    // Off hours the answer travels by email, exactly as in handoff() (PLN-261012
+    // SG-62): with no address on file the notice asks for one and the widget shows
+    // the form, instead of promising a reply we cannot deliver.
+    const needsContactEmail =
+      route.mode === 'email' && !(await this.hasContactEmail(tenantId, session));
     // In hours the "connecting you" line is stored too (PLN-261007): as a
     // widget-local bubble it vanished on the poll after a team choice, and the
     // transcript never said the customer had asked for a person.
-    const body =
-      route.mode === 'email' && route.notice ? route.notice : sysMsg('connectingAgent', session.language);
+    const body = needsContactEmail
+      ? sysMsg('offHoursNeedEmail', session.language)
+      : route.mode === 'email' && route.notice
+        ? route.notice
+        : sysMsg('connectingAgent', session.language);
     await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, body, session.language, {
       reason: 'user_request',
     });
     await this.markWaiting(conversationId);
     const region = await this.stampRegion(conversationId, tenantId, session);
+    // Remember how this thread must be answered: an agent replying tomorrow has no
+    // one in the widget to read it (see AgentService.sendMessage). Without this the
+    // reply stayed in a chat nobody was looking at, and the idle sweep closed it.
+    if (route.mode === 'email') {
+      await this.convRepo.update({ id: conversationId }, { replyChannel: 'email' });
+    }
     const event: EscalationEvent = {
       tenantId,
       conversationId,
@@ -1512,7 +1533,8 @@ export class ChatService {
       ...regionEventFields(region),
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
-    return { escalated: true, choose: false, body };
+    // The flag rides only when true, so an in-hours response is exactly what it was.
+    return { escalated: true, choose: false, body, ...(needsContactEmail ? { needsContactEmail } : {}) };
   }
 
   /**
