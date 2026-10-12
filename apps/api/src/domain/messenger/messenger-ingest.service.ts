@@ -216,7 +216,9 @@ export class MessengerIngestService {
       }
       // A draft nobody sees is a draft nobody sends — put the thread in the queue.
       if (conversation.escalated !== 1) {
-        await this.chatService.escalate(session, conversation.id).catch((e) => {
+        // askTeam: false — a chat room cannot show the team chips, and the question
+        // would page nobody (PLN-261012 SG-65).
+        await this.chatService.escalate(session, conversation.id, undefined, { askTeam: false }).catch((e) => {
           this.logger.warn(`escalation failed for conversation ${conversation.id}: ${(e as Error).message}`);
         });
       }
@@ -246,7 +248,7 @@ export class MessengerIngestService {
       // every inbound paged the agents again for a thread already sitting in
       // their queue — 400 messages across 37 conversations on staging.
       if (!humanOwnsThread && conversation.escalated !== 1) {
-        await this.chatService.escalate(session, conversation.id).catch((e) => {
+        await this.chatService.escalate(session, conversation.id, undefined, { askTeam: false }).catch((e) => {
           this.logger.warn(`escalation failed for conversation ${conversation.id}: ${(e as Error).message}`);
         });
       }

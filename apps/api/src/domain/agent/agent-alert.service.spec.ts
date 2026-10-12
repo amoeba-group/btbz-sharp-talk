@@ -117,6 +117,7 @@ describe('AgentAlertService — label routing precedence', () => {
     const saved: Array<Partial<AgentAlert>> = [];
     const alertRepo = {
       findOne: jest.fn(async () => null),
+      count: jest.fn(async () => 0),
       save: jest.fn(async (a: Partial<AgentAlert>) => {
         saved.push(a);
         return { id: 1, ...a } as AgentAlert;
@@ -210,6 +211,7 @@ describe('AgentAlertService — regional ladder', () => {
     const saved: Array<Partial<AgentAlert>> = [];
     const alertRepo = {
       findOne: jest.fn(async () => null),
+      count: jest.fn(async () => 0),
       save: jest.fn(async (a: Partial<AgentAlert>) => {
         saved.push(a);
         return { id: 1, ...a } as AgentAlert;
@@ -244,12 +246,13 @@ describe('AgentAlertService — regional ladder', () => {
   }
 
   const base = { tenantId: 1, conversationId: 50, reason: 'user_request', targetUserIds: [9] };
+  // Real user statuses are active / suspended / invited (users.status, user.request.ts).
   const STAFF: StaffRow[] = [
-    { id: 11, region: 'north' },
-    { id: 12, region: 'north' },
-    { id: 21, region: 'south' },
-    { id: 31, region: null }, // nationwide
-    { id: 41, region: 'south', status: 'inactive' },
+    { id: 11, region: 'north', status: 'active' },
+    { id: 12, region: 'north', status: 'active' },
+    { id: 21, region: 'south', status: 'active' },
+    { id: 31, region: null, status: 'active' }, // nationwide
+    { id: 41, region: 'south', status: 'suspended' },
   ];
 
   it('picks an online agent of the hotel region, not of the other one', async () => {
@@ -279,7 +282,7 @@ describe('AgentAlertService — regional ladder', () => {
     expect(none.saved[0].targetUserId).toBeNull();
   });
 
-  it('skips deactivated staff', async () => {
+  it('skips suspended staff', async () => {
     const h = build(STAFF, [41]);
     await h.svc.onEscalation({ ...base, issueLabel: 'consult', supportRegion: 'south' });
     expect(h.saved[0].targetUserId).toBe(9);

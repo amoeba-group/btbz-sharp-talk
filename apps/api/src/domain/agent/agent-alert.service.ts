@@ -57,6 +57,9 @@ export interface AlertContext {
   regionUnmapped?: string;
 }
 
+/** `users.status` of someone who can take a conversation (the others are suspended / invited). */
+const USER_STATUS_ACTIVE = 'active';
+
 /**
  * "? (unmapped: Tp Quy Nhơn)" for a province the table does not list, or '' when
  * there is none. The province is signed partner data, but it is still free text
@@ -169,8 +172,10 @@ export class AgentAlertService implements OnModuleInit {
   }
 
   /**
-   * Least-loaded available agent holding the label (P2, 결정 4): a present profile
-   * (on duty and seen lately, PLN-261012 SG-60), active assignments under maxConcurrent. Null → broadcast fallback.
+   * Least-loaded available agent holding the label (P2, 결정 4): an ACTIVE user (not
+   * suspended or invited) with a present profile — on duty and seen lately,
+   * PLN-261012 SG-60 — whose active assignments are under maxConcurrent. Null →
+   * broadcast fallback.
    *
    * With a `region` (PLN-261007 Hotel Region Routing) the search runs in two
    * rounds, so the hotel's own regional team is always asked first: staff of that
@@ -192,13 +197,18 @@ export class AgentAlertService implements OnModuleInit {
       });
       const userIds = [...new Set(links.map((l) => Number(l.userId)))];
       if (!userIds.length) return null;
-      if (!region || !this.userRepo) return await this.leastLoadedOnline(tenantId, userIds);
-
+      // Real user statuses are active / suspended / invited (PLN-261012 SG-65, D-11):
+      // only 'active' can take a conversation, in BOTH branches below. (The filter
+      // used to read `!== 'inactive'`, a status no user has, so a suspended agent
+      // was still paged — and the no-region branch had no check at all.) A test
+      // double built without the user repository cannot say, so it is not filtered.
+      if (!this.userRepo) return await this.leastLoadedOnline(tenantId, userIds);
       const users = await this.userRepo.find({
         where: { tenantId, id: In(userIds) },
         select: { id: true, region: true, status: true },
       });
-      const active = users.filter((u) => u.status !== 'inactive');
+      const active = users.filter((u) => u.status === USER_STATUS_ACTIVE);
+      if (!region) return await this.leastLoadedOnline(tenantId, active.map((u) => Number(u.id)));
       const ofRegion = active.filter((u) => u.region === region).map((u) => Number(u.id));
       const nationwide = active.filter((u) => u.region == null).map((u) => Number(u.id));
       return (
@@ -212,10 +222,17 @@ export class AgentAlertService implements OnModuleInit {
   }
 
   /**
-   * Present agent under their concurrency cap with the fewest active conversations.
+   * The present agent under their concurrency cap with the lowest load; ties go to
+   * the lowest user id, so the same inputs always page the same person.
+   *
    * Present = on duty AND polled the console within AGENT_PRESENCE_TTL_SEC
    * (PLN-261012 SG-60): a profile left on 'online' by someone who closed the
    * console, or one that has no heartbeat at all, is not asked.
+   *
+   * Load = conversations they hold + alerts already addressed to them that nobody
+   * has acknowledged (PLN-261012 SG-65, D-11). Without the second term, three
+   * escalations in a row all went to the same agent because none had been accepted
+   * yet. The cap still counts conversations only: a pending alert is not one.
    */
   private async leastLoadedOnline(tenantId: number, userIds: number[]): Promise<number | null> {
     if (!userIds.length) return null;
@@ -227,11 +244,12 @@ export class AgentAlertService implements OnModuleInit {
     const profiles = rows.filter((p) => isPresent(p, now, ttl));
     let best: { userId: number; load: number } | null = null;
     for (const p of profiles) {
-      const active = await this.assignmentRepo.count({
-        where: { tenantId, agentId: Number(p.userId), status: 'active' },
-      });
-      if (active >= p.maxConcurrent) continue;
-      if (!best || active < best.load) best = { userId: Number(p.userId), load: active };
+      const userId = Number(p.userId);
+      const open = await this.assignmentRepo.count({ where: { tenantId, agentId: userId, status: 'active' } });
+      if (open >= p.maxConcurrent) continue;
+      const pending = await this.alertRepo.count({ where: { tenantId, targetUserId: userId, status: 'new' } });
+      const load = open + pending;
+      if (!best || load < best.load || (load === best.load && userId < best.userId)) best = { userId, load };
     }
     return best?.userId ?? null;
   }

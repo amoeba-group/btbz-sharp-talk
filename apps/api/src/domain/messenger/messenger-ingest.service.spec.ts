@@ -241,6 +241,25 @@ describe('MessengerIngestService', () => {
     expect(h.chatService.escalate).toHaveBeenCalled();
   });
 
+  // A chat room cannot show the team chips (PLN-261012 SG-65, D-12): with the team
+  // question on, escalate() would store a question nobody can answer, return
+  // choose:true and page no one. Both messenger escalation paths skip it.
+  it('escalates without the team question when auto-reply is off', async () => {
+    const h = build({ channel: { replyMode: 'off' } });
+    await h.service.ingestOne(h.channel, inbound);
+
+    expect(h.chatService.escalate).toHaveBeenCalledTimes(1);
+    expect(h.chatService.escalate).toHaveBeenCalledWith(expect.anything(), 300, undefined, { askTeam: false });
+  });
+
+  it('escalates without the team question when a draft needs approval', async () => {
+    const h = build({ channel: { replyMode: 'approve' } });
+    await h.service.ingestOne(h.channel, inbound);
+
+    expect(h.chatService.escalate).toHaveBeenCalledTimes(1);
+    expect(h.chatService.escalate).toHaveBeenCalledWith(expect.anything(), 300, undefined, { askTeam: false });
+  });
+
   it('records the stored message as an Inquiry step, which the chat pipeline would have (REQ-261008 F3)', async () => {
     const h = build({ channel: { replyMode: 'off' } });
     await h.service.ingestOne(h.channel, inbound);

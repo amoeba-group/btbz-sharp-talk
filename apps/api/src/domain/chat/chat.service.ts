@@ -293,6 +293,16 @@ export interface EscalationEvent {
   regionUnmapped?: string;
 }
 
+/** How a caller of `escalate` differs from the widget. */
+export interface EscalateOptions {
+  /**
+   * False for channels that cannot render the team chips (Messenger, Zalo, Telegram …):
+   * the hand-off happens at once, routed by the default label, instead of asking
+   * a question nobody can answer (PLN-261012 SG-65). Default true.
+   */
+  askTeam?: boolean;
+}
+
 /** What `escalate` tells the widget (PLN-261007 Team Routing). */
 export interface EscalateOutcome {
   /** True once the agents are paged. False while the team question is pending. */
@@ -1451,6 +1461,7 @@ export class ChatService {
     conversationId: number,
     /** Team option id echoed back from a chip (PLN-261007 Team Routing). */
     supportType?: string,
+    options: EscalateOptions = {},
   ): Promise<EscalateOutcome> {
     const conversation = await this.convRepo.findOne({ where: { id: conversationId } });
     // Number() both sides: session.id is a bare bigint PK (hydrates as a string)
@@ -1463,7 +1474,15 @@ export class ChatService {
     // Team routing (PLN-261007): first call asks, second call (with the chip's
     // option id) routes. A tenant that switched the question off in between
     // simply hands off — the stale id is ignored, never an error.
-    const teams = await this.handoffRouter.teamQuestion(tenantId, session.language);
+    //
+    // A caller that cannot show the chips (a messenger room) passes
+    // `askTeam: false` and goes straight to the hand-off (PLN-261012 SG-65, D-12):
+    // the question would be stored where nobody can answer it, `choose: true`
+    // would come back, and no agent would ever be paged.
+    const teams =
+      options.askTeam === false
+        ? null
+        : await this.handoffRouter.teamQuestion(tenantId, session.language);
     let chosen: TeamQuestion['options'][number] | null = null;
     if (teams) {
       if (!supportType) {
