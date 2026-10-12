@@ -12,13 +12,16 @@ import type { Session } from '../session/entity/session.entity';
 describe('ChatService — hotel region on hand-off', () => {
   const REGION = { category: 'south_central', team: 'south', label: 'South (South Central)' };
 
-  function build(opts: { region?: typeof REGION | null; regionThrows?: boolean }) {
+  function build(opts: { region?: typeof REGION | null; regionThrows?: boolean; unmapped?: string }) {
     const conversation = { id: 77, sessionId: 5, tenantId: 1 } as Conversation;
     const convUpdate = jest.fn();
     const publish = jest.fn();
     const regionOf = jest.fn(async () => {
       if (opts.regionThrows) throw new Error('config unavailable');
-      return opts.region ?? null;
+      return {
+        region: opts.region ?? null,
+        ...(opts.unmapped ? { unmapped: opts.unmapped } : {}),
+      };
     });
     const svc = new ChatService(
       { findOne: jest.fn(async () => conversation), update: convUpdate } as never,
@@ -38,7 +41,7 @@ describe('ChatService — hotel region on hand-off', () => {
       {
         teamQuestion: jest.fn(async () => null),
         route: jest.fn(async () => ({ mode: 'agents', targetUserIds: [] })),
-        regionOf,
+        regionLookup: regionOf,
       } as never, // HandoffRouterService
       { publish } as never, // EventBusService
       {} as never, // CustomerService
@@ -83,6 +86,34 @@ describe('ChatService — hotel region on hand-off', () => {
     expect(event.supportRegion).toBeUndefined();
     expect(event.regionLabel).toBeUndefined();
     expect(h.publish).toHaveBeenCalledTimes(1);
+  });
+
+  it('escalate: an unmapped province rides on the event, and stamps nothing', async () => {
+    const h = build({ region: null, unmapped: 'Tp Quy Nhơn' });
+
+    await h.svc.escalate(h.session, 77);
+
+    expect(stamped(h.convUpdate)).toBe(false);
+    const event = h.publish.mock.calls[0][1] as Record<string, unknown>;
+    expect(event.regionUnmapped).toBe('Tp Quy Nhơn');
+    expect(event.supportRegion).toBeUndefined();
+    expect(event.regionLabel).toBeUndefined();
+  });
+
+  it('automatic hand-off carries the unmapped province too', async () => {
+    const h = build({ region: null, unmapped: 'Pleiku' });
+
+    await h.svc.handoff(77, h.session, 1, 'low_confidence', 'Hoa hồng tính thế nào?');
+
+    expect((h.publish.mock.calls[0][1] as Record<string, unknown>).regionUnmapped).toBe('Pleiku');
+  });
+
+  it('a resolved region never carries an unmapped marker', async () => {
+    const h = build({ region: REGION });
+
+    await h.svc.escalate(h.session, 77);
+
+    expect((h.publish.mock.calls[0][1] as Record<string, unknown>).regionUnmapped).toBeUndefined();
   });
 
   it('a failing region lookup never stops the hand-off', async () => {

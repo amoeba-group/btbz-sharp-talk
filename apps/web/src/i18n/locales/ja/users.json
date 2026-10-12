@@ -42,5 +42,14 @@
   "filterRole": "役割で絞り込み",
   "filterRoleAll": "すべての役割",
   "filterRegion": "地域で絞り込み",
-  "filterRegionAll": "すべての地域"
+  "filterRegionAll": "すべての地域",
+  "presence": {
+    "header": "対応状況",
+    "seen": "対応中 · {{ago}}前に確認",
+    "agoSec": "{{n}}秒",
+    "agoMin": "{{n}}分",
+    "stale": "対応中 · 未接続",
+    "staleHint": "対応中に設定されていますが、最近コンソールが確認されていないため、新しいエスカレーションは対象外になります。",
+    "off": "対応外"
+  }
 }

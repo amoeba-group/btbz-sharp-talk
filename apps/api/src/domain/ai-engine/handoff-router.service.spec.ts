@@ -322,3 +322,100 @@ describe('HandoffRouterService — regionOf', () => {
     expect(await routerFor(off).regionOf(1, signed('Hà Nội'))).toBeNull();
   });
 });
+
+/**
+ * Unmapped provinces (PLN-261012 SG-61): region routing is on but the table does not
+ * list the hotel's province. The lookup says so (the alert prints it) and the log
+ * line is written once per tenant and province per hour instead of per hand-off.
+ */
+describe('HandoffRouterService — regionLookup / unmapped province', () => {
+  const routing: HandoffConfig = {
+    regionRouting: {
+      enabled: true,
+      categories: [{ id: 'south_central', team: 'south', provinces: ['Đà Nẵng'] }],
+    },
+  };
+  const signed = (province?: string | null) => ({ province, signed: true as const });
+  const NOW = Date.parse('2026-10-15T09:00:00.000Z');
+
+  function warnSpy(router: HandoffRouterService) {
+    return jest.spyOn((router as unknown as { logger: { warn: (m: string) => void } }).logger, 'warn').mockImplementation();
+  }
+
+  beforeEach(() => {
+    jest.useFakeTimers().setSystemTime(NOW);
+  });
+  afterEach(() => {
+    jest.useRealTimers();
+    jest.restoreAllMocks();
+  });
+
+  it('reports the province when the table does not list it', async () => {
+    const router = routerFor(routing);
+    warnSpy(router);
+    expect(await router.regionLookup(1, signed('Tp Quy Nhơn'))).toEqual({ region: null, unmapped: 'Tp Quy Nhơn' });
+  });
+
+  it('reports a region and no unmapped marker when it resolves', async () => {
+    const r = await routerFor(routing).regionLookup(1, signed('Da Nang'));
+    expect(r.unmapped).toBeUndefined();
+    expect(r.region).toMatchObject({ category: 'south_central', team: 'south' });
+  });
+
+  it('says nothing is unmapped when there is nothing to map (off, blank, unsigned, guest)', async () => {
+    const off: HandoffConfig = { regionRouting: { ...routing.regionRouting!, enabled: false } };
+    expect(await routerFor(off).regionLookup(1, signed('Tp Quy Nhơn'))).toEqual({ region: null });
+    expect(await routerFor(null).regionLookup(1, signed('Tp Quy Nhơn'))).toEqual({ region: null });
+    expect(await routerFor(routing).regionLookup(1, signed('  '))).toEqual({ region: null });
+    expect(await routerFor(routing).regionLookup(1, { province: 'Tp Quy Nhơn', signed: false })).toEqual({ region: null });
+    expect(await routerFor(routing).regionLookup(1, null)).toEqual({ region: null });
+  });
+
+  it('keeps regionOf null for an unmapped province', async () => {
+    const router = routerFor(routing);
+    warnSpy(router);
+    expect(await router.regionOf(1, signed('Tp Quy Nhơn'))).toBeNull();
+  });
+
+  it('warns once per tenant and province, however it is spelled, for an hour', async () => {
+    const router = routerFor(routing);
+    const warn = warnSpy(router);
+
+    await router.regionLookup(1, signed('Tp Quy Nhơn'));
+    await router.regionLookup(1, signed('TP. QUY NHƠN'));
+    await router.regionLookup(1, signed('quy nhon'));
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain('Tp Quy Nhơn');
+
+    // A different tenant, and a different province, are separate keys.
+    await router.regionLookup(2, signed('Tp Quy Nhơn'));
+    await router.regionLookup(1, signed('Pleiku'));
+    expect(warn).toHaveBeenCalledTimes(3);
+
+    // Still inside the hour: silent. After it: one more line.
+    jest.setSystemTime(NOW + 59 * 60 * 1000);
+    await router.regionLookup(1, signed('Tp Quy Nhơn'));
+    expect(warn).toHaveBeenCalledTimes(3);
+    jest.setSystemTime(NOW + 61 * 60 * 1000);
+    await router.regionLookup(1, signed('Tp Quy Nhơn'));
+    expect(warn).toHaveBeenCalledTimes(4);
+  });
+
+  it('still tells the caller about the province on every call, warned or not', async () => {
+    const router = routerFor(routing);
+    warnSpy(router);
+    for (let i = 0; i < 3; i += 1) {
+      expect((await router.regionLookup(1, signed('Pleiku'))).unmapped).toBe('Pleiku');
+    }
+  });
+
+  it('logs one line however the partner wrote the value, and bounds what it remembers', async () => {
+    const router = routerFor(routing);
+    const warn = warnSpy(router);
+    await router.regionLookup(1, signed('Pleiku\nFAKE LOG LINE'));
+    expect(warn.mock.calls[0][0]).not.toMatch(/[\r\n]/);
+
+    for (let i = 0; i < 700; i += 1) await router.regionLookup(1, signed('P' + i));
+    expect((router as unknown as { unmappedWarned: Map<string, number> }).unmappedWarned.size).toBeLessThanOrEqual(500);
+  });
+});

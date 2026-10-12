@@ -194,7 +194,11 @@
       "answer_then_handoff": "Trả lời rồi chuyển"
     },
     "denyModeHint": "\"Không trả lời\" chuyển cho nhân viên mà không phản hồi. \"Trả lời rồi chuyển\" trả lời từ cơ sở tri thức trước rồi vẫn chuyển — nhân viên đều được gọi trong cả hai trường hợp.",
-    "denyModeLabel": "Khách hàng nhận được gì"
+    "denyModeLabel": "Khách hàng nhận được gì",
+    "regionPresetLoad": "Nạp bộ tỉnh Việt Nam có sẵn",
+    "regionPresetHint": "63 tỉnh thành trước tháng 7/2025 và 34 đơn vị sau sáp nhập, kèm cách viết thường gặp. Kiểm tra rồi bấm Lưu.",
+    "regionPresetConfirm": "Thao tác này thay tỉnh và đội phụ trách của cả bốn vùng bằng bộ Việt Nam có sẵn. Chưa lưu gì cho đến khi bạn bấm Lưu. Tiếp tục?",
+    "regionPresetLoaded": "Đã nạp bộ Việt Nam ({{count}} tên). Kiểm tra rồi bấm Lưu."
   },
   "coach": {
     "title": "Huấn luyện trợ lý",

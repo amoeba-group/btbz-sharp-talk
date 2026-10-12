@@ -264,6 +264,8 @@ export const ERROR_CODE = {
   // E5093-E5094 — Customer journey management (PLN-261006).
   JOURNEY_STAGE_UNKNOWN: { code: 'E5093', message: 'No such journey stage for this tenant' },
   JOURNEY_STAGE_IN_USE: { code: 'E5094', message: 'Move the journeys out of a stage before removing it' },
+  // E5095 — Hotel region routing table (PLN-261012 SG-65).
+  REGION_ROUTING_INVALID: { code: 'E5095', message: 'The region routing table is invalid' },
 
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },

@@ -176,6 +176,7 @@ CREATE TABLE `agent_profiles` (
   `skills` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `max_concurrent` int NOT NULL DEFAULT '3',
   `status` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'offline',
+  `last_seen` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_agent_user` (`user_id`),
   KEY `idx_agent_tenant` (`tenant_id`)

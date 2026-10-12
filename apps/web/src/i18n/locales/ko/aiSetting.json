@@ -194,7 +194,11 @@
       "answer_then_handoff": "답변 후 인계"
     },
     "denyModeHint": "「답변 안 함」은 답하지 않고 사람에게 넘깁니다. 「답변 후 인계」는 지식베이스로 먼저 답하고 그대로 넘깁니다 — 어느 쪽이든 상담원은 호출됩니다.",
-    "denyModeLabel": "고객에게 보이는 방식"
+    "denyModeLabel": "고객에게 보이는 방식",
+    "regionPresetLoad": "베트남 기본 표 불러오기",
+    "regionPresetHint": "2025년 7월 이전 63개 성·시와 통합 후 34개 단위, 흔한 표기를 포함합니다. 확인 후 저장하세요.",
+    "regionPresetConfirm": "네 지역의 성·시와 담당 팀이 베트남 기본 표로 바뀝니다. 저장을 누르기 전에는 반영되지 않습니다. 계속할까요?",
+    "regionPresetLoaded": "베트남 기본 표를 불러왔습니다({{count}}개 이름). 확인 후 저장을 누르세요."
   },
   "coach": {
     "title": "에이전트 코칭",

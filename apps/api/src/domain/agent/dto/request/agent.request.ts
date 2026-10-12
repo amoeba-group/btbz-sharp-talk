@@ -167,5 +167,6 @@ export class UpsertProfileRequest {
   @IsOptional() @IsString() languages?: string;
   @IsOptional() @IsString() skills?: string;
   @IsOptional() @IsInt() @Min(1) max_concurrent?: number;
-  @IsOptional() @IsString() status?: string;
+  /** 'online' = on duty (the console's toggle); anything else is off duty to routing. */
+  @IsOptional() @IsIn(['online', 'away', 'offline']) status?: string;
 }

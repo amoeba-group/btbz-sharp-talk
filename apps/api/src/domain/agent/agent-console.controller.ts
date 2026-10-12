@@ -281,6 +281,11 @@ export class AgentConsoleController {
     // An alert addressed to a specific agent is only shown to that agent;
     // broadcast alerts (target NULL) stay visible to everyone in the SAME
     // tenant (PLN-AiSetting W3, tenant fence REQ-260824 R2).
+    //
+    // The console polls this about every 10 s, which doubles as the presence
+    // heartbeat of an on-duty agent (PLN-261012 SG-60). Throttled and failure-proof
+    // inside the service, so it never delays or breaks the feed.
+    await this.alertService.touchPresence(actorIdOf(user), tenantOf(user));
     const items = await this.alertService.list(query.status ?? 'new', actorIdOf(user), tenantOf(user));
     return items.map(toAlertResponse);
   }

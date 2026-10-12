@@ -7,6 +7,8 @@ import { User } from './entity/user.entity';
 import { JobLabel } from './entity/job-label.entity';
 import { UserJobLabel } from './entity/user-job-label.entity';
 import { Invitation } from './entity/invitation.entity';
+import { AgentProfile } from '../agent/entity/agent-profile.entity';
+import { isPresent, presenceTtlSec, PROFILE_STATUS_ONLINE } from '../../global/util/presence.util';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import {
@@ -14,6 +16,7 @@ import {
   JobLabelMapper,
   JobLabelResponse,
   UserMapper,
+  UserPresence,
   UserResponse,
 } from './dto/response/user.response';
 
@@ -46,6 +49,9 @@ export class UserService {
     private readonly mailer: MailerService,
     private readonly tenantService: TenantService,
     private readonly config: ConfigService,
+    // Entity-only read for the Users list's presence column (PLN-261012 SG-60);
+    // appended last so positional test doubles stay valid, and `?.`-guarded.
+    @InjectRepository(AgentProfile) private readonly profileRepo?: Repository<AgentProfile>,
   ) {}
 
   // ---- Users ----
@@ -76,7 +82,13 @@ export class UserService {
     const [users, total] = await qb.getManyAndCount();
 
     const labelsByUser = await this.loadLabelCodes(users.map((u) => u.id));
-    const items = users.map((u) => UserMapper.toResponse(u, labelsByUser.get(String(u.id)) ?? []));
+    const presenceByUser = await this.loadPresence(
+      tenantId,
+      users.map((u) => u.id),
+    );
+    const items = users.map((u) =>
+      UserMapper.toResponse(u, labelsByUser.get(String(u.id)) ?? [], presenceByUser?.get(String(u.id))),
+    );
     return { items, total };
   }
 
@@ -333,6 +345,35 @@ export class UserService {
   private async toResponseWithLabels(user: User): Promise<UserResponse> {
     const labelsByUser = await this.loadLabelCodes([user.id]);
     return UserMapper.toResponse(user, labelsByUser.get(String(user.id)) ?? []);
+  }
+
+  /**
+   * Presence of each listed user (PLN-261012 SG-60): on duty = profile status
+   * 'online'; present = on duty AND a heartbeat within AGENT_PRESENCE_TTL_SEC, the
+   * very rule routing applies. One query for the whole page. Undefined when the
+   * profile table is not wired (the field is then omitted, never guessed).
+   */
+  private async loadPresence(
+    tenantId: number,
+    userIds: number[],
+  ): Promise<Map<string, UserPresence> | undefined> {
+    if (!this.profileRepo) return undefined;
+    const result = new Map<string, UserPresence>();
+    const ttl = presenceTtlSec(this.config?.get('AGENT_PRESENCE_TTL_SEC'));
+    const now = Date.now();
+    const profiles = userIds.length
+      ? await this.profileRepo.find({ where: { tenantId, userId: In(userIds.map(Number)) } })
+      : [];
+    const byUser = new Map(profiles.map((p) => [String(p.userId), p]));
+    for (const id of userIds) {
+      const p = byUser.get(String(id));
+      result.set(String(id), {
+        onDuty: p?.status === PROFILE_STATUS_ONLINE,
+        present: isPresent(p, now, ttl),
+        lastSeenAt: p?.lastSeen ? new Date(p.lastSeen) : null,
+      });
+    }
+    return result;
   }
 
   /**

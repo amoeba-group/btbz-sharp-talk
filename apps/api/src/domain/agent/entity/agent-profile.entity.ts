@@ -26,4 +26,13 @@ export class AgentProfile {
 
   @Column({ type: 'varchar', length: 16, default: 'offline' })
   status: string; // online/away/offline
+
+  /**
+   * Last time the console polled for alerts while this agent was on duty
+   * (PLN-261012 SG-60). `status = 'online'` alone never expires; routing treats an
+   * agent as present only while this is within AGENT_PRESENCE_TTL_SEC. NULL = never
+   * seen, i.e. not present.
+   */
+  @Column({ name: 'last_seen', type: 'datetime', nullable: true })
+  lastSeen: Date | null;
 }

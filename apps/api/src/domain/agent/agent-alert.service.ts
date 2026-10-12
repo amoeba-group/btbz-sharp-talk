@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Repository } from 'typeorm';
+import { In, IsNull, LessThan, Or, Repository } from 'typeorm';
 import { AgentAlert } from './entity/agent-alert.entity';
 import { AgentProfile } from './entity/agent-profile.entity';
 import { Assignment } from './entity/assignment.entity';
@@ -12,6 +12,12 @@ import { JOB_LABEL } from '@sharptalk/types';
 import { EventBusService, EVENTS, MailerService } from '../../infrastructure/infrastructure.module';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import {
+  isPresent,
+  PRESENCE_TOUCH_THROTTLE_SEC,
+  PROFILE_STATUS_ONLINE,
+  presenceTtlSec,
+} from '../../global/util/presence.util';
 
 interface EscalationPayload {
   tenantId?: number;
@@ -35,6 +41,8 @@ interface EscalationPayload {
    */
   supportRegion?: string;
   regionLabel?: string;
+  /** Region routing is on but the hotel's province is not in the table (PLN-261012 SG-61). */
+  regionUnmapped?: string;
 }
 
 /** The extra lines an alert text carries beyond the reason and the preview. */
@@ -45,6 +53,21 @@ export interface AlertContext {
   teamLabel?: string;
   /** Regional team of the hotel (PLN-261007 Hotel Region Routing). */
   regionLabel?: string;
+  /** The province the table did not list; shown as "Region: ? (unmapped: …)" (PLN-261012 SG-61). */
+  regionUnmapped?: string;
+}
+
+/** `users.status` of someone who can take a conversation (the others are suspended / invited). */
+const USER_STATUS_ACTIVE = 'active';
+
+/**
+ * "? (unmapped: Tp Quy Nhơn)" for a province the table does not list, or '' when
+ * there is none. The province is signed partner data, but it is still free text
+ * on its way into a Slack line and a mail body: one line, bounded.
+ */
+function unmappedRegion(province?: string): string {
+  const clean = (province ?? '').replace(/\s+/g, ' ').trim().slice(0, 80);
+  return clean ? `? (unmapped: ${clean})` : '';
 }
 
 const REASON_LABEL: Record<string, string> = {
@@ -135,6 +158,7 @@ export class AgentAlertService implements OnModuleInit {
       partnerLabel: payload.partnerLabel,
       teamLabel: payload.supportLabel,
       regionLabel: payload.regionLabel,
+      regionUnmapped: payload.regionUnmapped,
     };
 
     // Off hours: the shopper has already been told to expect an email, so the
@@ -148,8 +172,10 @@ export class AgentAlertService implements OnModuleInit {
   }
 
   /**
-   * Least-loaded available agent holding the label (P2, 결정 4): online profile,
-   * active assignments under maxConcurrent. Null → broadcast fallback.
+   * Least-loaded available agent holding the label (P2, 결정 4): an ACTIVE user (not
+   * suspended or invited) with a present profile — on duty and seen lately,
+   * PLN-261012 SG-60 — whose active assignments are under maxConcurrent. Null →
+   * broadcast fallback.
    *
    * With a `region` (PLN-261007 Hotel Region Routing) the search runs in two
    * rounds, so the hotel's own regional team is always asked first: staff of that
@@ -171,13 +197,18 @@ export class AgentAlertService implements OnModuleInit {
       });
       const userIds = [...new Set(links.map((l) => Number(l.userId)))];
       if (!userIds.length) return null;
-      if (!region || !this.userRepo) return await this.leastLoadedOnline(tenantId, userIds);
-
+      // Real user statuses are active / suspended / invited (PLN-261012 SG-65, D-11):
+      // only 'active' can take a conversation, in BOTH branches below. (The filter
+      // used to read `!== 'inactive'`, a status no user has, so a suspended agent
+      // was still paged — and the no-region branch had no check at all.) A test
+      // double built without the user repository cannot say, so it is not filtered.
+      if (!this.userRepo) return await this.leastLoadedOnline(tenantId, userIds);
       const users = await this.userRepo.find({
         where: { tenantId, id: In(userIds) },
         select: { id: true, region: true, status: true },
       });
-      const active = users.filter((u) => u.status !== 'inactive');
+      const active = users.filter((u) => u.status === USER_STATUS_ACTIVE);
+      if (!region) return await this.leastLoadedOnline(tenantId, active.map((u) => Number(u.id)));
       const ofRegion = active.filter((u) => u.region === region).map((u) => Number(u.id));
       const nationwide = active.filter((u) => u.region == null).map((u) => Number(u.id));
       return (
@@ -190,21 +221,61 @@ export class AgentAlertService implements OnModuleInit {
     }
   }
 
-  /** Online agent under their concurrency cap with the fewest active conversations. */
+  /**
+   * The present agent under their concurrency cap with the lowest load; ties go to
+   * the lowest user id, so the same inputs always page the same person.
+   *
+   * Present = on duty AND polled the console within AGENT_PRESENCE_TTL_SEC
+   * (PLN-261012 SG-60): a profile left on 'online' by someone who closed the
+   * console, or one that has no heartbeat at all, is not asked.
+   *
+   * Load = conversations they hold + alerts already addressed to them that nobody
+   * has acknowledged (PLN-261012 SG-65, D-11). Without the second term, three
+   * escalations in a row all went to the same agent because none had been accepted
+   * yet. The cap still counts conversations only: a pending alert is not one.
+   */
   private async leastLoadedOnline(tenantId: number, userIds: number[]): Promise<number | null> {
     if (!userIds.length) return null;
-    const profiles = await this.profileRepo.find({
-      where: { tenantId, userId: In(userIds), status: 'online' },
+    const rows = await this.profileRepo.find({
+      where: { tenantId, userId: In(userIds), status: PROFILE_STATUS_ONLINE },
     });
+    const now = Date.now();
+    const ttl = presenceTtlSec(this.config.get('AGENT_PRESENCE_TTL_SEC'));
+    const profiles = rows.filter((p) => isPresent(p, now, ttl));
     let best: { userId: number; load: number } | null = null;
     for (const p of profiles) {
-      const active = await this.assignmentRepo.count({
-        where: { tenantId, agentId: Number(p.userId), status: 'active' },
-      });
-      if (active >= p.maxConcurrent) continue;
-      if (!best || active < best.load) best = { userId: Number(p.userId), load: active };
+      const userId = Number(p.userId);
+      const open = await this.assignmentRepo.count({ where: { tenantId, agentId: userId, status: 'active' } });
+      if (open >= p.maxConcurrent) continue;
+      const pending = await this.alertRepo.count({ where: { tenantId, targetUserId: userId, status: 'new' } });
+      const load = open + pending;
+      if (!best || load < best.load || (load === best.load && userId < best.userId)) best = { userId, load };
     }
     return best?.userId ?? null;
+  }
+
+  /**
+   * Heartbeat (PLN-261012 SG-60): the console polls the alert feed about every 10 s,
+   * and each poll by an on-duty agent stamps `agent_profiles.last_seen`. One UPDATE
+   * that matches only an on-duty profile whose stamp is missing or older than the
+   * throttle, so an idle poll costs no write and a user without a profile (or off
+   * duty) is never touched. Never throws: presence must not break the alarm feed.
+   */
+  async touchPresence(userId: number, tenantId: number, nowMs = Date.now()): Promise<void> {
+    if (!userId || !tenantId) return;
+    try {
+      await this.profileRepo.update(
+        {
+          tenantId,
+          userId,
+          status: PROFILE_STATUS_ONLINE,
+          lastSeen: Or(IsNull(), LessThan(new Date(nowMs - PRESENCE_TOUCH_THROTTLE_SEC * 1000))),
+        },
+        { lastSeen: new Date(nowMs) },
+      );
+    } catch (e) {
+      this.logger.warn(`presence touch failed (user ${userId}): ${(e as Error).message}`);
+    }
   }
 
   /**
@@ -250,8 +321,10 @@ export class AgentAlertService implements OnModuleInit {
    * exists: the partner line (REQ-261006 H4) when the escalating session carried
    * signed claims, the team line (PLN-261007) when the customer picked a team,
    * the region line (PLN-261007 Hotel Region Routing) when the hotel's province
-   * resolved. Tenants with none of them get the exact text they always got.
-   * Order is fixed: Reason, Team, Region, Partner, preview.
+   * resolved — or, when region routing is on and the province is not in the table,
+   * "Region: ? (unmapped: <province>)" so the person paged sees why no regional
+   * team was asked (PLN-261012 SG-61). Tenants with none of them get the exact text
+   * they always got. Order is fixed: Reason, Team, Region, Partner, preview.
    */
   summary(alert: AgentAlert, ctx: AlertContext = {}): string {
     const reason = REASON_LABEL[alert.reason] ?? alert.reason;
@@ -260,7 +333,7 @@ export class AgentAlertService implements OnModuleInit {
     return (
       `Chat escalation — conversation #${alert.conversationId}\nReason: ${reason}` +
       line('Team', ctx.teamLabel) +
-      line('Region', ctx.regionLabel) +
+      line('Region', ctx.regionLabel?.trim() ? ctx.regionLabel : unmappedRegion(ctx.regionUnmapped)) +
       line('Partner', ctx.partnerLabel) +
       preview
     );

@@ -117,6 +117,7 @@ describe('AgentAlertService — label routing precedence', () => {
     const saved: Array<Partial<AgentAlert>> = [];
     const alertRepo = {
       findOne: jest.fn(async () => null),
+      count: jest.fn(async () => 0),
       save: jest.fn(async (a: Partial<AgentAlert>) => {
         saved.push(a);
         return { id: 1, ...a } as AgentAlert;
@@ -130,7 +131,7 @@ describe('AgentAlertService — label routing precedence', () => {
       { find: jest.fn(async () => opts.labelUsers.map((userId) => ({ userId, jobLabelId: 3 }))) } as never,
       {
         find: jest.fn(async () =>
-          opts.online.map((userId) => ({ tenantId: 1, userId, status: 'online', maxConcurrent: 5 })),
+          opts.online.map((userId) => ({ tenantId: 1, userId, status: 'online', maxConcurrent: 5, lastSeen: new Date() })),
         ),
       } as never,
       { count: jest.fn(async () => 0) } as never,
@@ -210,6 +211,7 @@ describe('AgentAlertService — regional ladder', () => {
     const saved: Array<Partial<AgentAlert>> = [];
     const alertRepo = {
       findOne: jest.fn(async () => null),
+      count: jest.fn(async () => 0),
       save: jest.fn(async (a: Partial<AgentAlert>) => {
         saved.push(a);
         return { id: 1, ...a } as AgentAlert;
@@ -231,7 +233,7 @@ describe('AgentAlertService — regional ladder', () => {
           const asked = (q.where.userId as unknown as { _value: number[] })._value;
           return online
             .filter((id) => asked.includes(id))
-            .map((userId) => ({ tenantId: 1, userId, status: 'online', maxConcurrent: 5 }));
+            .map((userId) => ({ tenantId: 1, userId, status: 'online', maxConcurrent: 5, lastSeen: new Date() }));
         }),
       } as never,
       { count: jest.fn(async () => 0) } as never,
@@ -244,12 +246,13 @@ describe('AgentAlertService — regional ladder', () => {
   }
 
   const base = { tenantId: 1, conversationId: 50, reason: 'user_request', targetUserIds: [9] };
+  // Real user statuses are active / suspended / invited (users.status, user.request.ts).
   const STAFF: StaffRow[] = [
-    { id: 11, region: 'north' },
-    { id: 12, region: 'north' },
-    { id: 21, region: 'south' },
-    { id: 31, region: null }, // nationwide
-    { id: 41, region: 'south', status: 'inactive' },
+    { id: 11, region: 'north', status: 'active' },
+    { id: 12, region: 'north', status: 'active' },
+    { id: 21, region: 'south', status: 'active' },
+    { id: 31, region: null, status: 'active' }, // nationwide
+    { id: 41, region: 'south', status: 'suspended' },
   ];
 
   it('picks an online agent of the hotel region, not of the other one', async () => {
@@ -279,7 +282,7 @@ describe('AgentAlertService — regional ladder', () => {
     expect(none.saved[0].targetUserId).toBeNull();
   });
 
-  it('skips deactivated staff', async () => {
+  it('skips suspended staff', async () => {
     const h = build(STAFF, [41]);
     await h.svc.onEscalation({ ...base, issueLabel: 'consult', supportRegion: 'south' });
     expect(h.saved[0].targetUserId).toBe(9);
@@ -296,5 +299,54 @@ describe('AgentAlertService — regional ladder', () => {
     const h = build(STAFF, [21]);
     await h.svc.onEscalation({ ...base, issueLabel: 'consult' });
     expect(h.saved[0].targetUserId).toBe(21);
+  });
+});
+
+/**
+ * An unmapped province (PLN-261012 SG-61): region routing is on, the hotel's
+ * province is not in the table. The alert says so instead of showing no region.
+ */
+describe('AgentAlertService.summary — unmapped province', () => {
+  const svc = Object.create(AgentAlertService.prototype) as AgentAlertService;
+  const alert = { conversationId: 9, reason: 'user_request', preview: 'Hoa hồng?' } as AgentAlert;
+
+  it('prints "Region: ? (unmapped: <province>)" in the region slot', () => {
+    expect(svc.summary(alert, { teamLabel: 'Business Support', regionUnmapped: 'Tp Quy Nhơn', partnerLabel: 'Hotel X (1)' })).toBe(
+      'Chat escalation — conversation #9\nReason: Customer asked for a human agent' +
+        '\nTeam: Business Support\nRegion: ? (unmapped: Tp Quy Nhơn)' +
+        '\nPartner: Hotel X (1)\n> Hoa hồng?',
+    );
+  });
+
+  it('a resolved region wins over the marker, and no marker keeps the old text byte for byte', () => {
+    expect(svc.summary(alert, { regionLabel: 'North', regionUnmapped: 'X' })).toContain('\nRegion: North');
+    expect(svc.summary(alert, { regionLabel: 'North', regionUnmapped: 'X' })).not.toContain('unmapped');
+    expect(svc.summary(alert, {})).toBe(
+      'Chat escalation — conversation #9\nReason: Customer asked for a human agent\n> Hoa hồng?',
+    );
+    expect(svc.summary(alert, { regionUnmapped: '   ' })).not.toContain('Region');
+  });
+
+  it('keeps the province on one bounded line', () => {
+    const text = svc.summary(alert, { regionUnmapped: 'Pleiku\n:rotating_light: injected\n' + 'x'.repeat(200) });
+    expect(text.split('\n').filter((l) => l.startsWith('Region:'))).toHaveLength(1);
+    expect(text).not.toContain('\n:rotating_light:');
+    expect(text.split('\n').find((l) => l.startsWith('Region:'))!.length).toBeLessThanOrEqual('Region: ? (unmapped: )'.length + 80);
+  });
+
+  it('flows from the escalation payload to the channels', async () => {
+    const mailer = { send: jest.fn() };
+    const svc2 = new AgentAlertService(
+      { findOne: jest.fn(async () => null), save: jest.fn(async (a: unknown) => ({ id: 1, ...(a as object) })), create: jest.fn((a: unknown) => a) } as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      { subscribe: jest.fn() } as never,
+      { get: jest.fn((k: string) => (k === 'ALERT_EMAIL_TO' ? 'ops@example.com' : undefined)) } as never,
+      mailer as never,
+    );
+    await svc2.onEscalation({ tenantId: 1, conversationId: 9, reason: 'user_request', regionUnmapped: 'Tp Quy Nhơn' });
+    expect(mailer.send.mock.calls[0][0].text).toContain('Region: ? (unmapped: Tp Quy Nhơn)');
   });
 });

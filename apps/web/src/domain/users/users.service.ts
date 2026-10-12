@@ -16,6 +16,16 @@ export interface TenantUser {
   region?: string | null;
   status?: string;
   createdAt?: string;
+  /** List endpoint only (PLN-261012 SG-60): the agent's duty switch and what routing sees. */
+  presence?: UserPresence;
+}
+
+export interface UserPresence {
+  /** The agent's own "On duty" switch. */
+  onDuty: boolean;
+  /** On duty AND the console polled within the presence window — what routing counts. */
+  present: boolean;
+  lastSeenAt: string | null;
 }
 
 export const USER_REGIONS = ['north', 'south'] as const;

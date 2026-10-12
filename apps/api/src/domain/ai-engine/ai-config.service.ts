@@ -21,6 +21,7 @@ import {
   TenantAiConfig,
 } from './entity/tenant-ai-config.entity';
 import { AiAgent } from './entity/ai-agent.entity';
+import { sanitizeRegionRouting } from './region-routing.util';
 import {
   SCENARIOS,
   SCRIPT_BY_BUTTON_ACTION,
@@ -257,6 +258,18 @@ export class AiConfigService {
     return row?.answerFooter ?? null;
   }
 
+  /**
+   * The handoff config as it will be stored. Only the province table is checked
+   * here (PLN-261012 SG-65): it is rejected with E5095 when malformed and stored
+   * cleaned; everything else in the JSON passes through exactly as before.
+   */
+  private checkedHandoff(handoff: HandoffConfig | null): HandoffConfig | null {
+    if (!handoff || handoff.regionRouting === undefined) return handoff;
+    const { regionRouting, ...rest } = handoff;
+    const clean = sanitizeRegionRouting(regionRouting);
+    return clean ? { ...rest, regionRouting: clean } : rest;
+  }
+
   /** Handoff routing for a tenant, or null when it has never been configured. */
   async getHandoffConfig(tenantId: number | null): Promise<HandoffConfig | null> {
     if (tenantId == null) return null;
@@ -358,7 +371,7 @@ export class AiConfigService {
     if (input.scenarioOverrides !== undefined) {
       row.scenarioOverrides = this.sanitizeOverrides(input.scenarioOverrides);
     }
-    if (input.handoffConfig !== undefined) row.handoffConfig = input.handoffConfig;
+    if (input.handoffConfig !== undefined) row.handoffConfig = this.checkedHandoff(input.handoffConfig);
     if (input.answerFooter !== undefined) row.answerFooter = sanitizeAnswerFooter(input.answerFooter);
     if (input.guestGuidance !== undefined) {
       row.guestGuidance = this.sanitizeGuestGuidance(input.guestGuidance);

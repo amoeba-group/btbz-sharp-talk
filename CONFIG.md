@@ -136,6 +136,10 @@ Copy the `.example` to the real filename on the server and fill in secrets — t
 `ALERT_EMAIL_FROM`, `ALERT_EMAIL_TO`. The DB-backed console alarm modal always works
 regardless of these.
 
+**Agent presence (PLN-261012 SG-60):** `AGENT_PRESENCE_TTL_SEC` (default 90) — an agent counts as
+available for alert routing only while "On duty" in the console AND the console polled within this
+many seconds (the 10 s alert poll is the heartbeat). Blank or non-positive = default.
+
 ### 4.3 Shopify (optional — features default-safe/disabled when unset)
 | Variable | Purpose |
 |---|---|

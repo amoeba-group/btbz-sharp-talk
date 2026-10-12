@@ -39,6 +39,7 @@ import { PROMPT_LANGUAGE_NAMES } from './prompt-language';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { UpsertProfileRequest } from './dto/request/agent.request';
+import { PROFILE_STATUS_ONLINE } from '../../global/util/presence.util';
 import { ChannelThread } from '../messenger/entity/channel-thread.entity';
 import { MessengerChannel } from '../messenger/entity/messenger-channel.entity';
 import { ReplyDraft } from '../chat/entity/reply-draft.entity';
@@ -1533,11 +1534,15 @@ export class AgentService {
     input: UpsertProfileRequest,
   ): Promise<AgentProfile> {
     const existing = await this.profileRepo.findOne({ where: { userId } });
+    // Switching to 'online' is the agent's own first heartbeat (PLN-261012 SG-60):
+    // routing counts them present from this moment, not from the next 10 s poll.
+    const seen = input.status === PROFILE_STATUS_ONLINE ? new Date() : undefined;
     if (existing) {
       if (input.languages !== undefined) existing.languages = input.languages;
       if (input.skills !== undefined) existing.skills = input.skills;
       if (input.max_concurrent !== undefined) existing.maxConcurrent = input.max_concurrent;
       if (input.status !== undefined) existing.status = input.status;
+      if (seen) existing.lastSeen = seen;
       return this.profileRepo.save(existing);
     }
     return this.profileRepo.save(
@@ -1548,6 +1553,7 @@ export class AgentService {
         skills: input.skills ?? null,
         maxConcurrent: input.max_concurrent ?? 3,
         status: input.status ?? 'offline',
+        lastSeen: seen ?? null,
       }),
     );
   }

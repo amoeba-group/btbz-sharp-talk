@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { localized, regionLabelOf, resolveHotelRegion } from '@sharptalk/types';
+import { localized, normalizeProvince, regionLabelOf, resolveHotelRegion } from '@sharptalk/types';
 import type { HotelRegion, IdentityClaims, LocalizedText } from '@sharptalk/types';
 import { AiConfigService } from './ai-config.service';
 import { DENY_MODE } from './entity/tenant-ai-config.entity';
@@ -26,6 +26,21 @@ const DEFAULT_OFF_HOURS_NOTICE: LocalizedText = {
   JA: 'ただいまサポート時間外です。いただいたメッセージは担当チームに引き継ぎました。営業時間になり次第、メールでご返信いたします。',
   ZH: '现在是客服工作时间之外。我已将您的留言转交给我们的团队，他们上班后会尽快通过电子邮件回复您。',
 };
+
+/** A province the table does not list is warned about once per this long, per tenant. */
+const UNMAPPED_WARN_TTL_MS = 60 * 60 * 1000;
+/** Bound on remembered (tenant, province) pairs, so hostile input cannot grow the map. */
+const UNMAPPED_WARN_MAX = 500;
+
+/** Result of resolving a hotel's province (PLN-261012 SG-61). */
+export interface RegionLookup {
+  region: (HotelRegion & { label: string }) | null;
+  /**
+   * Set only when region routing is ON, the province is signed and non-blank, and
+   * the table does not list it — the case an operator must be able to see.
+   */
+  unmapped?: string;
+}
 
 /** One team the customer can pick, resolved to the session language. */
 export interface TeamOption {
@@ -94,6 +109,8 @@ const DEFAULT_TEAM_OPTIONS: Array<{ id: string; jobLabel: string; label: Localiz
 @Injectable()
 export class HandoffRouterService {
   private readonly logger = new Logger(HandoffRouterService.name);
+  /** "tenant|normalised province" → when it was last warned about. */
+  private readonly unmappedWarned = new Map<string, number>();
 
   constructor(private readonly aiConfig: AiConfigService) {}
 
@@ -104,26 +121,60 @@ export class HandoffRouterService {
    *
    * Only SIGNED claims count: an unsigned province is display text a visitor
    * could type, and the whole point of putting it under the signature is that
-   * routing may rely on it. A province the table misses is logged once per call
-   * so an operator can see which spellings to add — silence here would just look
-   * like "region routing does nothing".
+   * routing may rely on it. A province the table misses is logged so an operator
+   * can see which spellings to add — silence here would just look like "region
+   * routing does nothing" — but once per tenant and province per hour, so one
+   * unlisted hotel does not write a line per hand-off (PLN-261012 SG-61).
    */
   async regionOf(
     tenantId: number | null,
     claims: Pick<IdentityClaims, 'province' | 'signed'> | null | undefined,
   ): Promise<(HotelRegion & { label: string }) | null> {
+    return (await this.regionLookup(tenantId, claims)).region;
+  }
+
+  /**
+   * `regionOf` plus the one fact it cannot carry in a null: that the province was
+   * NOT in the table. The hand-off puts that on the alert ("Region: ? (unmapped:
+   * …)") so the person paged can see why no regional team was asked.
+   */
+  async regionLookup(
+    tenantId: number | null,
+    claims: Pick<IdentityClaims, 'province' | 'signed'> | null | undefined,
+  ): Promise<RegionLookup> {
     const province = claims?.signed ? claims.province?.trim() : '';
-    if (!province) return null;
+    if (!province) return { region: null };
     const config = await this.aiConfig.getHandoffConfig(tenantId);
     const routing = config?.regionRouting;
-    if (!routing?.enabled) return null;
+    if (!routing?.enabled) return { region: null };
     const region = resolveHotelRegion(routing, province);
     if (!region) {
-      this.logger.warn(`region routing: province "${province}" is not in the table (tenant ${tenantId})`);
-      return null;
+      this.warnUnmapped(tenantId, province);
+      return { region: null, unmapped: province };
     }
     const rule = routing.categories?.find((c) => c.id === region.category);
-    return { ...region, label: regionLabelOf(region, localized(rule?.label, 'EN')) };
+    return { region: { ...region, label: regionLabelOf(region, localized(rule?.label, 'EN')) } };
+  }
+
+  /** Log an unmapped province, at most once per (tenant, province) per hour per process. */
+  private warnUnmapped(tenantId: number | null, province: string, nowMs = Date.now()): void {
+    const key = `${tenantId}|${normalizeProvince(province) || province}`;
+    const last = this.unmappedWarned.get(key);
+    if (last !== undefined && nowMs - last < UNMAPPED_WARN_TTL_MS) return;
+    if (this.unmappedWarned.size >= UNMAPPED_WARN_MAX) {
+      for (const [k, at] of this.unmappedWarned) {
+        if (nowMs - at >= UNMAPPED_WARN_TTL_MS) this.unmappedWarned.delete(k);
+      }
+      // Still full of fresh entries: forget the oldest rather than grow.
+      if (this.unmappedWarned.size >= UNMAPPED_WARN_MAX) {
+        const oldest = this.unmappedWarned.keys().next().value;
+        if (oldest !== undefined) this.unmappedWarned.delete(oldest);
+      }
+    }
+    this.unmappedWarned.set(key, nowMs);
+    // One log line however the partner's value is written.
+    const shown = province.replace(/[\u0000-\u001f\u007f]+/g, ' ').slice(0, 80);
+    this.logger.warn(`region routing: province "${shown}" is not in the table (tenant ${tenantId})`);
   }
 
   /**

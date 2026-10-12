@@ -42,5 +42,14 @@
   "filterRole": "Filtrar por rol",
   "filterRoleAll": "Todos los roles",
   "filterRegion": "Filtrar por región",
-  "filterRegionAll": "Todas las regiones"
+  "filterRegionAll": "Todas las regiones",
+  "presence": {
+    "header": "Servicio",
+    "seen": "En servicio · visto hace {{ago}}",
+    "agoSec": "{{n}} s",
+    "agoMin": "{{n}} min",
+    "stale": "En servicio · sin conexión",
+    "staleHint": "Activado, pero la consola no se ha visto recientemente, así que las nuevas escalaciones omiten a esta persona.",
+    "off": "Fuera de servicio"
+  }
 }

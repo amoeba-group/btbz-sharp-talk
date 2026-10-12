@@ -215,7 +215,10 @@ export function useChat(sessionToken: string | null) {
    * its option id and `label`, which is echoed as the shopper's own words.
    */
   const escalate = useCallback(
-    async (supportType?: string, label?: string): Promise<{ choose: boolean }> => {
+    async (
+      supportType?: string,
+      label?: string,
+    ): Promise<{ choose: boolean; needsContactEmail?: boolean }> => {
       if (!conversationId) return { choose: false };
       if (label) {
         append({
@@ -246,7 +249,9 @@ export function useChat(sessionToken: string | null) {
           body: res?.body || t('chat.connectingAgent'),
           createdAt: new Date().toISOString(),
         });
-        return { choose: false };
+        // Off hours with no address on file: the caller shows the contact-email
+        // form (PLN-261012 SG-62), as it does after a chat turn that hands off.
+        return { choose: false, needsContactEmail: res?.needsContactEmail === true };
       } finally {
         // Rows were persisted past the cursor — full reconcile on the next poll.
         lastServerId.current = null;

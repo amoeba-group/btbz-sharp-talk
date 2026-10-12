@@ -37,6 +37,7 @@ const REGION_FILTERS = ['north', 'south', 'none'] as const;
 import { SessionAlias } from './SessionAlias';
 import { AutoReplyControl } from './AutoReplyControl';
 import { DraftPanel } from './DraftPanel';
+import { DutyToggle } from './DutyToggle';
 import { Badge } from '@/components/Badge';
 import { Modal } from '@/components/Modal';
 import { Input, FormRow } from '@/components/Field';
@@ -501,7 +502,7 @@ export function LiveChatPage() {
     // what used to push every pane header off screen.
     <div className="flex h-[calc(100dvh-112px)] flex-col">
       <div className="shrink-0">
-        <PageHeader title={t('title')} subtitle={t('subtitle')} />
+        <PageHeader title={t('title')} subtitle={t('subtitle')} action={<DutyToggle />} />
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-12 gap-4">

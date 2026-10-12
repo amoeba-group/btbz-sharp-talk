@@ -20,10 +20,53 @@ import {
   useResetUserMfa,
 } from './users.hooks';
 import { USER_REGIONS } from './users.service';
-import type { JobLabel, TenantUser, UpdateUserBody } from './users.service';
+import type { JobLabel, TenantUser, UpdateUserBody, UserPresence } from './users.service';
 
 const RANKS = ['master', 'director', 'manager', 'staff'] as const;
 const STATUSES = ['active', 'suspended'] as const;
+
+/**
+ * Duty state of one user (PLN-261012 SG-60). Green = on duty and connected (what
+ * routing counts); amber = switched on but the console has not been seen lately,
+ * so alerts skip them; grey = off duty.
+ */
+function PresenceCell({ presence }: { presence?: UserPresence }) {
+  const { t } = useTranslation('users');
+  if (!presence) return <span className="text-gray-400">—</span>;
+  const dot = (cls: string) => (
+    <span className={`h-2 w-2 shrink-0 rounded-full ${cls}`} aria-hidden="true" />
+  );
+  if (presence.present) {
+    const sec = presence.lastSeenAt
+      ? Math.max(0, Math.round((Date.now() - new Date(presence.lastSeenAt).getTime()) / 1000))
+      : 0;
+    const ago =
+      sec < 60 ? t('presence.agoSec', { n: sec }) : t('presence.agoMin', { n: Math.round(sec / 60) });
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm text-gray-700">
+        {dot('bg-emerald-500')}
+        {t('presence.seen', { ago })}
+      </span>
+    );
+  }
+  if (presence.onDuty) {
+    return (
+      <span
+        className="inline-flex items-center gap-1.5 text-sm text-amber-700"
+        title={t('presence.staleHint')}
+      >
+        {dot('bg-amber-400')}
+        {t('presence.stale')}
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-sm text-gray-500">
+      {dot('bg-gray-300')}
+      {t('presence.off')}
+    </span>
+  );
+}
 
 /** Region select (PLN-261007): '' = nationwide, which the API stores as NULL. */
 function RegionSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -84,7 +127,11 @@ export function UsersPage() {
   // Role/region filters (PLN-261007) — server-side, so they work past page one.
   const [filterLabel, setFilterLabel] = useState('');
   const [filterRegion, setFilterRegion] = useState('');
-  const { data: users, isLoading, error } = useUsers({ label: filterLabel, region: filterRegion });
+  // The presence column (PLN-261012 SG-60) is live, so the list re-reads every 15 s.
+  const { data: users, isLoading, error } = useUsers(
+    { label: filterLabel, region: filterRegion },
+    { refetchMs: 15000 },
+  );
   const { data: jobLabels } = useJobLabels();
   const inviteUser = useInviteUser();
   const updateUser = useUpdateUser();
@@ -235,6 +282,11 @@ export function UsersPage() {
       key: 'region',
       header: t('region'),
       render: (u) => (u.region ? t(`region_${u.region}`, { defaultValue: u.region }) : t('region_all')),
+    },
+    {
+      key: 'presence',
+      header: t('presence.header'),
+      render: (u) => <PresenceCell presence={u.presence} />,
     },
     { key: 'status', header: t('status'), render: (u) => <StatusBadge status={u.status} /> },
     { key: 'createdAt', header: t('created'), render: (u) => fmtDate(u.createdAt) },

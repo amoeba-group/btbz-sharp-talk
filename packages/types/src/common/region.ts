@@ -69,29 +69,83 @@ export const REGION_CATEGORY_NAME: Record<RegionCategory, string> = {
 const COMBINING_MARKS = /[̀-ͯ]/g;
 // Longest first, each followed by a space so a province that merely STARTS with
 // the letters ("Thanh Hoa") is never clipped.
-const ADMIN_PREFIXES = ['thanh pho', 'tinh', 'thu do', 'province', 'city', 'tp'];
+const ADMIN_PREFIXES = ['thanh pho', 'tinh', 'thu do', 'province', 'city of', 'city', 't p', 'tp'];
+// Trailing words that name the kind of unit or the country, not the place:
+// "Ho Chi Minh City", "Thanh Hoa Province", "Da Nang, Viet Nam".
+const COUNTRY_SUFFIXES = [' viet nam', ' vietnam'];
+const ADMIN_SUFFIXES = [' city', ' province'];
 
 /**
- * Province name → matching key: lower-case, no Vietnamese diacritics (đ → d),
- * no punctuation, no "tỉnh / thành phố / tp" prefix, single spaces.
- * "TP. Hồ Chí Minh", "Thành phố Hồ Chí Minh" and "ho chi minh" share one key.
- * Codes ("HN", "79") pass through unchanged apart from case.
+ * Spelling variants of ONE place → the key they share. Keyed on the normalised
+ * form (so "TP.HCM" is looked up as "hcm"), applied to BOTH the host's value and
+ * every table entry — which keeps the match an exact comparison of two keys, never
+ * a fuzzy guess. Only spellings of the same unit belong here; a merger ("Quảng
+ * Nam" now being part of Đà Nẵng) is data in the province table, not an alias.
+ */
+const PROVINCE_ALIASES: ReadonlyMap<string, string> = new Map([
+  // Capital and the big cities: joined spellings, English forms, old names.
+  ['hanoi', 'ha noi'],
+  ['hochiminh', 'ho chi minh'],
+  ['hcm', 'ho chi minh'], // "TP.HCM" / "TP HCM" once the prefix is gone
+  ['tphcm', 'ho chi minh'],
+  ['hcmc', 'ho chi minh'],
+  ['saigon', 'ho chi minh'],
+  ['sai gon', 'ho chi minh'],
+  ['danang', 'da nang'],
+  ['haiphong', 'hai phong'],
+  ['cantho', 'can tho'],
+  // Huế: the province was "Thừa Thiên Huế", the city is "Huế", hosts say "TT Huế".
+  ['hue', 'thua thien hue'],
+  ['tt hue', 'thua thien hue'],
+  // Đắk Lắk / Đắk Nông: the older "Đắc" and the joined spellings are all in use.
+  ['dac lac', 'dak lak'],
+  ['dak lac', 'dak lak'],
+  ['dac lak', 'dak lak'],
+  ['daklak', 'dak lak'],
+  ['dac nong', 'dak nong'],
+  ['daknong', 'dak nong'],
+  ['kontum', 'kon tum'],
+  // Bà Rịa - Vũng Tàu: abbreviation and run-together spellings.
+  ['brvt', 'ba ria vung tau'],
+  ['br vt', 'ba ria vung tau'],
+  ['baria vungtau', 'ba ria vung tau'],
+  ['baria vung tau', 'ba ria vung tau'],
+]);
+
+function dropSuffix(s: string, suffixes: readonly string[]): string {
+  for (const suffix of suffixes) {
+    // Never reduce a value to nothing: "Vietnam" alone stays "vietnam" (and misses).
+    if (s.length > suffix.length && s.endsWith(suffix)) return s.slice(0, -suffix.length).trim();
+  }
+  return s;
+}
+
+/**
+ * Province name → matching key: lower-case, no Vietnamese diacritics (đ → d, and
+ * the legacy-encoded Ð U+00D0 too), no punctuation, no "tỉnh / thành phố / tp /
+ * city" prefix, no " city" / " province" / ", Việt Nam" suffix, single spaces, and
+ * known spelling variants folded together (see PROVINCE_ALIASES).
+ * "TP. Hồ Chí Minh", "Thành phố Hồ Chí Minh", "HCMC", "Saigon" and
+ * "Ho Chi Minh City, Vietnam" share one key. Codes ("HN", "79") pass through
+ * unchanged apart from case.
  */
 export function normalizeProvince(input: string | null | undefined): string {
   let s = String(input ?? '')
     .normalize('NFD')
     .replace(COMBINING_MARKS, '')
     .toLowerCase()
-    .replace(/đ/g, 'd')
+    .replace(/[đðɖ]/g, 'd')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
+  s = dropSuffix(s, COUNTRY_SUFFIXES);
   for (const prefix of ADMIN_PREFIXES) {
     if (s.startsWith(`${prefix} `)) {
       s = s.slice(prefix.length + 1).trim();
       break;
     }
   }
-  return s;
+  s = dropSuffix(s, ADMIN_SUFFIXES);
+  return PROVINCE_ALIASES.get(s) ?? s;
 }
 
 function categoryTeam(rule: RegionCategoryRule): UserRegion {

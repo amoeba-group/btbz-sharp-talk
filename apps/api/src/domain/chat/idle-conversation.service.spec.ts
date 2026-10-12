@@ -30,6 +30,7 @@ describe('IdleConversationService.sweep', () => {
     Object.entries(where ?? {}).every(([key, cond]: [string, any]) => {
       const value = row[key];
       if (cond && typeof cond === 'object' && '_type' in cond) {
+        if (cond._type === 'not') return !matches({ [key]: value }, { [key]: cond._value });
         if (cond._type === 'isNull') return value == null;
         if (cond._type === 'in') return cond._value.includes(value);
         if (cond._type === 'lessThan') return value != null && value < cond._value;
@@ -202,6 +203,70 @@ describe('IdleConversationService.sweep', () => {
 
       expect(res.closed).toBe(0);
       expect(updates).toHaveLength(0);
+    });
+  });
+
+  /**
+   * A customer who asked for a person is in the queue (PLN-261012 SG-62, D-10). The
+   * sweep used to count WAITING as "open" and, 30 minutes later, ask them whether
+   * anything else was needed and close the chat a minute after — with nobody ever
+   * having picked it up.
+   */
+  describe('the unclaimed queue is not the sweep\'s business', () => {
+    const quiet = () => new Date(Date.now() - 45 * MIN);
+
+    it('does not ask a WAITING thread nobody has claimed', async () => {
+      const h = build([conv({ status: CONVERSATION_STATUS.WAITING, agentId: null })], quiet());
+      expect(await h.svc.sweep()).toEqual({ prompted: 0, closed: 0, silentlyClosed: 0 });
+      expect(h.saved).toHaveLength(0);
+      expect(h.updates).toHaveLength(0);
+    });
+
+    it('does not close a WAITING thread nobody has claimed, even one that was already asked', async () => {
+      const h = build(
+        [conv({ status: CONVERSATION_STATUS.WAITING, agentId: null, idlePromptAt: new Date(Date.now() - 90_000) })],
+        quiet(),
+      );
+      expect((await h.svc.sweep()).closed).toBe(0);
+      expect(h.updates).toHaveLength(0);
+    });
+
+    it('does not silently close a long-dead unclaimed WAITING thread either', async () => {
+      const h = build(
+        [conv({ status: CONVERSATION_STATUS.WAITING, agentId: null })],
+        new Date(Date.now() - 40 * DAY),
+      );
+      expect((await h.svc.sweep()).silentlyClosed).toBe(0);
+      expect(h.updates).toHaveLength(0);
+    });
+
+    it('leaves the queue alone however many unclaimed threads there are', async () => {
+      const rows = [1, 2, 3].map((id) => conv({ id, status: CONVERSATION_STATUS.WAITING, agentId: null }));
+      const h = build(rows, quiet());
+      expect((await h.svc.sweep()).prompted).toBe(0);
+    });
+
+    it('still asks an AGENT thread that has gone quiet — unchanged', async () => {
+      const h = build([conv({ status: CONVERSATION_STATUS.AGENT, agentId: 5 })], quiet());
+      expect((await h.svc.sweep()).prompted).toBe(1);
+    });
+
+    it('still sweeps a WAITING thread an agent has already had (it has a claim)', async () => {
+      const h = build([conv({ status: CONVERSATION_STATUS.WAITING, agentId: 5 })], quiet());
+      expect((await h.svc.sweep()).prompted).toBe(1);
+    });
+
+    it('still closes an AGENT thread after the grace period — unchanged', async () => {
+      const h = build(
+        [conv({ status: CONVERSATION_STATUS.AGENT, agentId: 5, idlePromptAt: new Date(Date.now() - 90_000) })],
+        quiet(),
+      );
+      expect((await h.svc.sweep()).closed).toBe(1);
+    });
+
+    it('never sweeps an AI-owned thread (it is in neither state)', async () => {
+      const h = build([conv({ status: CONVERSATION_STATUS.AI_ACTIVE })], quiet());
+      expect((await h.svc.sweep()).prompted).toBe(0);
     });
   });
 

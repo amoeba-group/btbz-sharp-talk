@@ -210,6 +210,20 @@ export function partnerLabelOf(session: Pick<Session, 'identityClaims'>): string
   return `${name} (${claims.hotelSn}) · ${claims.role}`;
 }
 
+/**
+ * The region fields of an escalation event from what `stampRegion` found: the
+ * hotel's team and wording, or — region routing on, province not in the table —
+ * the unmapped province for the alert line; nothing otherwise.
+ */
+export function regionEventFields(
+  region: { team: string; label: string } | { unmapped: string } | null,
+): Pick<EscalationEvent, 'supportRegion' | 'regionLabel' | 'regionUnmapped'> {
+  if (!region) return {};
+  return 'unmapped' in region
+    ? { regionUnmapped: region.unmapped }
+    : { supportRegion: region.team, regionLabel: region.label };
+}
+
 export function sysMsg(key: keyof typeof SYSTEM_MESSAGES, lang: string): string {
   return localized(SYSTEM_MESSAGES[key], lang);
 }
@@ -272,6 +286,21 @@ export interface EscalationEvent {
    */
   supportRegion?: string;
   regionLabel?: string;
+  /**
+   * Set when region routing is on and the signed province is not in the table
+   * (PLN-261012 SG-61): the alert says so instead of silently showing no region.
+   */
+  regionUnmapped?: string;
+}
+
+/** How a caller of `escalate` differs from the widget. */
+export interface EscalateOptions {
+  /**
+   * False for channels that cannot render the team chips (Messenger, Zalo, Telegram …):
+   * the hand-off happens at once, routed by the default label, instead of asking
+   * a question nobody can answer (PLN-261012 SG-65). Default true.
+   */
+  askTeam?: boolean;
 }
 
 /** What `escalate` tells the widget (PLN-261007 Team Routing). */
@@ -283,6 +312,13 @@ export interface EscalateOutcome {
   /** Notice persisted for the customer this call (team question or off-hours), if any. */
   body: string | null;
   followUps?: Array<{ id: string; label: string }>;
+  /**
+   * Off-hours hand-off with no address on file: the widget asks for one so the
+   * agent's reply has somewhere to go — the same flag `handoff()` returns
+   * (PLN-261012 SG-62). Present (true) only then; absent in hours and on the
+   * team-question and preview paths.
+   */
+  needsContactEmail?: boolean;
 }
 
 /**
@@ -1375,7 +1411,7 @@ export class ChatService {
       issueType: stamp?.issueType,
       issueLabel: stamp?.issueLabel,
       partnerLabel: partnerLabelOf(session),
-      ...(region ? { supportRegion: region.team, regionLabel: region.label } : {}),
+      ...regionEventFields(region),
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
     return { body, needsContactEmail };
@@ -1425,6 +1461,7 @@ export class ChatService {
     conversationId: number,
     /** Team option id echoed back from a chip (PLN-261007 Team Routing). */
     supportType?: string,
+    options: EscalateOptions = {},
   ): Promise<EscalateOutcome> {
     const conversation = await this.convRepo.findOne({ where: { id: conversationId } });
     // Number() both sides: session.id is a bare bigint PK (hydrates as a string)
@@ -1437,7 +1474,15 @@ export class ChatService {
     // Team routing (PLN-261007): first call asks, second call (with the chip's
     // option id) routes. A tenant that switched the question off in between
     // simply hands off — the stale id is ignored, never an error.
-    const teams = await this.handoffRouter.teamQuestion(tenantId, session.language);
+    //
+    // A caller that cannot show the chips (a messenger room) passes
+    // `askTeam: false` and goes straight to the hand-off (PLN-261012 SG-65, D-12):
+    // the question would be stored where nobody can answer it, `choose: true`
+    // would come back, and no agent would ever be paged.
+    const teams =
+      options.askTeam === false
+        ? null
+        : await this.handoffRouter.teamQuestion(tenantId, session.language);
     let chosen: TeamQuestion['options'][number] | null = null;
     if (teams) {
       if (!supportType) {
@@ -1468,16 +1513,30 @@ export class ChatService {
     // widget's local "connecting you" line would be a lie, so persist the
     // off-hours notice — the conversation poll shows it to the customer.
     const route = await this.handoffRouter.route(tenantId, session.language);
+    // Off hours the answer travels by email, exactly as in handoff() (PLN-261012
+    // SG-62): with no address on file the notice asks for one and the widget shows
+    // the form, instead of promising a reply we cannot deliver.
+    const needsContactEmail =
+      route.mode === 'email' && !(await this.hasContactEmail(tenantId, session));
     // In hours the "connecting you" line is stored too (PLN-261007): as a
     // widget-local bubble it vanished on the poll after a team choice, and the
     // transcript never said the customer had asked for a person.
-    const body =
-      route.mode === 'email' && route.notice ? route.notice : sysMsg('connectingAgent', session.language);
+    const body = needsContactEmail
+      ? sysMsg('offHoursNeedEmail', session.language)
+      : route.mode === 'email' && route.notice
+        ? route.notice
+        : sysMsg('connectingAgent', session.language);
     await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, body, session.language, {
       reason: 'user_request',
     });
     await this.markWaiting(conversationId);
     const region = await this.stampRegion(conversationId, tenantId, session);
+    // Remember how this thread must be answered: an agent replying tomorrow has no
+    // one in the widget to read it (see AgentService.sendMessage). Without this the
+    // reply stayed in a chat nobody was looking at, and the idle sweep closed it.
+    if (route.mode === 'email') {
+      await this.convRepo.update({ id: conversationId }, { replyChannel: 'email' });
+    }
     const event: EscalationEvent = {
       tenantId,
       conversationId,
@@ -1490,10 +1549,11 @@ export class ChatService {
       ...(chosen
         ? { issueLabel: chosen.jobLabel, supportType: chosen.id, supportLabel: chosen.label }
         : {}),
-      ...(region ? { supportRegion: region.team, regionLabel: region.label } : {}),
+      ...regionEventFields(region),
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
-    return { escalated: true, choose: false, body };
+    // The flag rides only when true, so an in-hours response is exactly what it was.
+    return { escalated: true, choose: false, body, ...(needsContactEmail ? { needsContactEmail } : {}) };
   }
 
   /**
@@ -1506,10 +1566,10 @@ export class ChatService {
     conversationId: number,
     tenantId: number,
     session: Session,
-  ): Promise<{ team: string; label: string } | null> {
+  ): Promise<{ team: string; label: string } | { unmapped: string } | null> {
     try {
-      const region = await this.handoffRouter.regionOf(tenantId, session.identityClaims);
-      if (!region) return null;
+      const { region, unmapped } = await this.handoffRouter.regionLookup(tenantId, session.identityClaims);
+      if (!region) return unmapped ? { unmapped } : null;
       await this.convRepo.update({ id: conversationId }, { supportRegion: region.team });
       return { team: region.team, label: region.label };
     } catch (e) {

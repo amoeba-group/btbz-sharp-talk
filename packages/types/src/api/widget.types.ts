@@ -235,6 +235,11 @@ export interface EscalateResponse {
   /** Notice persisted for the customer by this call (team question or off-hours), if any. */
   body?: string | null;
   followUps?: ScenarioFollowUpResponse[];
+  /**
+   * Off-hours hand-off with no address on file: ask for one so the agent's reply
+   * has somewhere to go (PLN-261012 SG-62) — the same flag a chat turn carries.
+   */
+  needsContactEmail?: boolean;
 }
 
 /** Post-reply navigation the widget performs after a scripted answer (FR-003). */

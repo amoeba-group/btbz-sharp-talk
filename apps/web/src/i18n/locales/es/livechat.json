@@ -429,5 +429,13 @@
       "receptionist": "Recepcionista",
       "internal": "Personal interno"
     }
+  },
+  "duty": {
+    "on": "En servicio",
+    "off": "Fuera de servicio",
+    "hint": "Mientras estás en servicio, recibes primero las nuevas escalaciones. Mantén esta consola abierta: dejas de estar disponible unos 90 segundos después de cerrarla.",
+    "switchedOn": "Estás en servicio. Las nuevas escalaciones de tu equipo te llegan primero.",
+    "switchedOff": "Estás fuera de servicio. Las nuevas escalaciones irán a otros agentes.",
+    "saveError": "No se pudo cambiar tu estado de servicio. Inténtalo de nuevo."
   }
 }

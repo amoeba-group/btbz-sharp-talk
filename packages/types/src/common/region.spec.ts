@@ -62,9 +62,12 @@ describe('resolveHotelRegion', () => {
     for (const spelling of ['ho chi minh', 'TP. Hồ Chí Minh', 'THÀNH PHỐ HỒ CHÍ MINH', 'Tp Ho Chi Minh']) {
       expect(resolveHotelRegion(CONFIG, spelling)).toEqual({ category: 'south', team: 'south' });
     }
-    expect(resolveHotelRegion(CONFIG, 'hue')).toBeNull();
-    expect(resolveHotelRegion(CONFIG, 'Huế')).toBeNull();
+    // Huế (the city) and Thừa Thiên Huế (the old province) are one place (PLN-261012
+    // SG-61): a table that lists either matches a host that sends either.
+    expect(resolveHotelRegion(CONFIG, 'hue')).toEqual({ category: 'north_central', team: 'north' });
+    expect(resolveHotelRegion(CONFIG, 'Huế')).toEqual({ category: 'north_central', team: 'north' });
     expect(resolveHotelRegion(CONFIG, 'thua thien hue')).toEqual({ category: 'north_central', team: 'north' });
+    expect(resolveHotelRegion(CONFIG, 'Hoi An')).toBeNull();
   });
 
   it('accepts a code the tenant listed', () => {
@@ -89,7 +92,7 @@ describe('resolveHotelRegion', () => {
       ],
     };
     expect(resolveHotelRegion(cfg, 'hue')).toEqual({ category: 'north_central', team: 'north' });
-    expect(duplicateProvinces(cfg)).toEqual(['hue']);
+    expect(duplicateProvinces(cfg)).toEqual(['thua thien hue']);
     expect(duplicateProvinces(CONFIG)).toEqual([]);
   });
 
