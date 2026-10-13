@@ -51,7 +51,7 @@
 - Widget ([useEmbedCommands.ts](apps/widget/src/hooks/useEmbedCommands.ts)): `logout` gọi API; `<ChatTab key={sessionToken}>`; `queryClient.clear()`; chạy `adoptSessionConsent` cho phiên mới; `identify` lỗi trên phiên đã xác thực thì đặt lại thành khách mới (sửa chú thích sai); làm mới `customerName`.
 - Tương thích: tenant Shopify/Odoo gọi `identify` cùng một người liên tục nên không bị tách. Widget cũ bỏ qua token mới trả về nên **phát hành widget và API cùng lúc** và giữ phản hồi cũ hợp lệ.
 
-**SG-03 hết hạn claims.** `effectiveIdentity(session)` trung tâm: claims cũ hơn `IDENTITY_MAX_AGE` (mặc định 8 giờ, cấu hình theo tenant) coi như khách; dùng tại `handleUserMessage` (cổng), `partnerContextOf`, `partnerLabelOf`, `stampRegion`, mapper console. Quá hạn trả E5049 (`IDENTITY_EXPIRED`). `embed.js` chuyển tiếp `ivy:event` thành `ShopTalk.on('identity-expired')` (hiện bị bỏ qua) để Hotel Admin ký lại không cần tải lại.
+**SG-03 hết hạn claims.** `effectiveIdentity(session)` trung tâm: claims cũ hơn `IDENTITY_MAX_AGE` (mặc định 8 giờ, cấu hình theo tenant) coi như khách; dùng tại `handleUserMessage` (cổng), `partnerContextOf`, `partnerLabelOf`, `stampRegion`, mapper console. Quá hạn trả E5096 (`IDENTITY_EXPIRED`; **E5049 đã bị `WIDGET_LOGO_REJECTED` dùng**). `embed.js` chuyển tiếp `ivy:event` thành `ShopTalk.on('identity-expired')` (hiện bị bỏ qua) để Hotel Admin ký lại không cần tải lại.
 
 **SG-04 chống phát lại.** Redis `SET NX` theo hash, TTL = 2 × cửa sổ (1200 s), giá trị = token phiên đầu; token khác dùng cùng hash bị từ chối. Cờ tenant `refuse_identify_v1` (mặc định tắt).
 
@@ -62,7 +62,7 @@
 **SG-50 stamps và lý do từ chối.**
 - `conversations.hotel_sn`, `actor_role`, `ai_agent_id`, đóng dấu lúc tạo hội thoại từ phiên (nhờ SG-02 một hội thoại ↔ một danh tính). Chỉ mục `(tenant_id, hotel_sn, created_at)`.
 - Enum đóng `REFUSAL_REASON` (`guest_gate`, `auth_gate`, `consent`, `pilot_denied`, `role_manager_only`, `moderation`, `low_confidence`, `embedder_degraded`, `policy_deny`) vào `retrieval_trace` của mọi tin hệ thống/từ chối cùng `agentId`; `audit_logs` (actor `system`) cho `embed.identify_ok`, `identify_rejected`, `identity_forked`, `logout`, `kb.category_access_changed`, `tenant.pilot_*`; thử lại và ghi lỗi khi `moderation_logs` thất bại.
-- Mã lỗi mới (khối trống kế tiếp, kiểm khi viết mã): E5049 `IDENTITY_EXPIRED`.
+- Mã lỗi mới: E5096 `IDENTITY_EXPIRED` (E5049 đã bị `WIDGET_LOGO_REJECTED` dùng; E5095 đã dùng cho bảng vùng). Cấp phát theo luồng ở §12.
 
 ### 3.2 S2 — Phân quyền KB, phiên bản KB, cổng khách (SG-10, 11, 20, 51)
 
@@ -109,7 +109,7 @@
   - `money.util`: `Money` số nguyên VND, phân rã server tính (cơ bản + phụ thu − giảm trực tiếp − Flash Sale − coupon = cuối cùng) có kiểm bất biến; chuỗi đã định dạng sẵn; kiểm sau sinh: mọi số tiền trong câu trả lời phải có trong khối dữ liệu, sai → hạ về "xác nhận sau" + chuyển người.
   - Nối vào chat: bước tiền xử lý giữa [chat.service.ts:957](apps/api/src/domain/chat/chat.service.ts:957) và :983, trả khối `PARTNER_DATA` + bằng chứng, đưa vào `AnswerOpts.partnerData` bên cạnh `orderBlock` ([rag.service.ts:698](apps/api/src/domain/chat/rag.service.ts:698)); chủ đề và tham số lấy từ JSON `classifyIntent` mở rộng (không thêm lời gọi LLM). Không tái dùng khi dùng dữ liệu đối tác; trace `partnerEvidence` **riêng** (không vào `citations`, vì widget nhận nguyên khối `citations` và cơ chế tự giải quyết vé đếm độ tin cậy). Thêm danh sách bảo vệ theo từng lời gọi để bộ che PII mặc định (`\b\d{13,16}\b`) không che mã đặt phòng/đối soát dài.
   - Cấu hình & console: thêm nhà cung cấp `go2joy_partner_api` (`base_url`, `api_key`) vào `INTEGRATION_FIELDS` ([enum.types.ts:461](packages/types/src/common/enum.types.ts:461)) và danh sách nhà cung cấp chép tay ở `apps/web/src/domain/settings/integration-providers.ts` (sửa hai nơi); dùng lại lưu mã hoá AES-256-GCM, luồng lưu/thử và bộ chống SSRF.
-  - Bảng `partner_lookup_logs` (tenant, hội thoại, tin nhắn, phiên, `hotel_sn`, role, chủ đề, tham số đã che, trạng thái, độ trễ, hash bản chụp). Mã lỗi E5095… (`PARTNER_API_UNAVAILABLE`, `PARTNER_ROLE_DENIED`, `PARTNER_CLAIMS_STALE`, `PARTNER_TOPIC_UNKNOWN`) chỉ ghi và ánh xạ sang thông báo + chuyển người (luồng chat không ném lỗi).
+  - Bảng `partner_lookup_logs` (tenant, hội thoại, tin nhắn, phiên, `hotel_sn`, role, chủ đề, tham số đã che, trạng thái, độ trễ, hash bản chụp). Mã lỗi từ E5100 (E5095 đã dùng cho bảng vùng) (`PARTNER_API_UNAVAILABLE`, `PARTNER_ROLE_DENIED`, `PARTNER_CLAIMS_STALE`, `PARTNER_TOPIC_UNKNOWN`) chỉ ghi và ánh xạ sang thông báo + chuyển người (luồng chat không ném lỗi).
 - **Kiểm thử:** tham số chứa mã khách sạn bị từ chối; fixture chéo khách sạn không trả gì; vai trò lễ tân bị chặn chủ đề đối soát; golden có trường hotel/role/mock.
 - **SG-33 (pha 2):** mở rộng hợp đồng adapter (`tools`, `toolUses`, `stopReason`, khối nội dung), bộ chạy vòng lặp, xử lý stub/degraded giữa vòng, tương đương OpenAI; kiểm duyệt vẫn chạy một lần trên văn bản cuối.
 
@@ -318,3 +318,26 @@ Theo CLAUDE.md: triển khai → `TCR-261012-*.md` (ca kiểm thử, kịch bả
 | 2026-10-13 | Gộp thử S1+S3 trên `test/go2joy-integration` | Không xung đột; kiểm trên bản gộp: tsc 0 ×3, jest API 2478 đạt (3 lỗi nền), widget 61/61, i18n đủ | `test/go2joy-integration` `f7266697` (local, chưa push) |
 
 **Còn mở sau P0 (ghi nhận từ hai luồng):** huy hiệu vùng "?" trên hàng chờ (cần dấu lưu bền); đóng dấu lại `support_region` khi nhân viên đổi vùng; toast bảng vùng bị từ chối chỉ hiện mã chung E5095; `identity_level` còn `verified` sau DSAR; mỗi lần tách phiên thêm một dòng `sessions` (số liệu phiên có thể phình); đóng hội thoại do AI khi logout không gọi `IssueService.onConversationEnded`; phiên tách mới không ghi sự kiện CJM `session_start`; widget để lại không có phiên nếu tạo phiên khách thất bại lúc ngoại tuyến; tab cũ giữ token cũ đến khi gọi `identify`. **Quyết định cần bạn:** đồng ý (consent) hiện được sao chép sang phiên mới khi đổi người trên cùng trình duyệt — giữ nguyên hành vi cũ (người sau không phải đồng ý lại) hay buộc hiện lại banner cho người mới (an toàn hơn theo PDPL, nhưng thêm một bước)?
+
+## 12. Triển khai đầy đủ ở local (2026-10-13)
+
+Theo yêu cầu "phân tích sâu và implement đủ các yêu cầu ở local trước", phạm vi mở rộng từ Phương án 2 sang **toàn bộ SG-xx** (kể cả phần trước đó hoãn: SG-31, 32, 33, 52 UI, 53, 66, 67, 80–85). Không push nhánh nào; mọi thứ kiểm ở local rồi gộp vào `test/go2joy-integration`.
+
+**Mặc định áp dụng cho các quyết định bạn chưa chốt:** trục phiên bản KB so sánh **không phụ thuộc trục** (bằng nhau sau khi chuẩn hoá, bỏ `v` đầu); bậc quyền theo nhóm; ngoài pilot = ẩn widget; hiện diện = công tắc "Trực" + heartbeat; **đồng ý (consent) chỉ sao chép khi cùng người đổi khách sạn/vai trò, người khác thì bắt đồng ý lại**; nội dung PDPL là bản nháp chờ pháp lý; dữ liệu thật dựng theo hợp đồng OpenAPI của chính ta (chưa có API Go2Joy) và kiểm bằng mock + máy chủ giả.
+
+| Đợt | Luồng (nhánh) | Phạm vi | Mã lỗi | Cổng boot |
+|---|---|---|---|---|
+| 1 | `s1b` `feature/go2joy-s1b-identity-audit` | SG-03, 04, 50, việc còn mở của S1, bộ kiểm thử bảo mật | E5096–99 | 3021 |
+| 1 | `s4` `feature/go2joy-s4-partner-data` | SG-30, 31, 32 (hợp đồng OpenAPI, module, client HTTP) | E5100–09 | 3022 |
+| 1 | `s2b` `feature/go2joy-s2b-kb-version` | SG-20 | E5110–14 | 3023 |
+| 1 | `s5a` `feature/go2joy-s5a-compliance-embed` | SG-70, 82, 53 | E5115–19 | 3024 |
+| 1 | `s5b` `feature/go2joy-s5b-resilience-observability` | SG-83, 84 | E5120–24 | 3025 |
+| 1 | `s5c` `feature/go2joy-s5c-hosting` | SG-80, 81, D-18 | — | 3026 |
+| 1 | `s3b` `feature/go2joy-s3b-routing-more` | SG-63, 64, 66, 67, phần còn lại SG-65 | E5125–29 | 3027 |
+| 1 | `s5d` `feature/go2joy-s5d-pilot-flag` | SG-40 | E5130–34 | 3028 |
+| 2 | `s2a` access tiers + gate | SG-10, 11, 06, 51 (cần `REFUSAL_REASON` của s1b) | E5135+ | — |
+| 2 | analytics pilot | SG-52 (cần dấu hội thoại của s1b) | | |
+| 2 | tool-calling | SG-33 (cần module của s4) | | |
+| 2 | tài liệu vận hành | SG-85 (cần giao diện cuối) | | |
+
+Mỗi luồng ở một worktree riêng, dựa trên `test/go2joy-integration` `f7266697`; bản gộp cuối chạy lại toàn bộ kiểm và boot API thật trên DB dev sau khi gộp (agent chỉ boot trên DB tạm `scratch_<luồng>` để không làm `synchronize` xoá cột của nhánh khác).
