@@ -89,20 +89,24 @@ CORS_ORIGINS=https://admin.example.vn,https://admin-staging.example.vn
 
 ### 5. Fonts: make the iframe free of third-party requests
 
-Pretendard is **not** in this repository or its `node_modules`, and nothing was downloaded. The base stylesheet is now
-`/widget/base-font.css` (same origin), whose content is chosen by an env var on the **widget container**:
+Pretendard v1.3.9 (the version the widget always linked) is **bundled** under `apps/widget/public/fonts/pretendard/`:
+the four weights the widget uses (400/500/600/700, woff2) plus its SIL OFL licence. It was copied unmodified from a
+`pretendard@1.3.9` package already present in a local `node_modules` — **nothing was downloaded**. The base stylesheet is
+now `/widget/base-font.css` (same origin), whose content is chosen by an env var on the **widget container**:
 
 | Env (widget container) | Meaning |
 |---|---|
 | `WIDGET_FONT_CSS_URL` | Unset = the default jsDelivr URL (unchanged behaviour). A path/URL = that stylesheet. **Empty** = no external font, system fonts only. Plain URL or path — no quotes, spaces or semicolons. |
 | `WIDGET_FRAME_ANCESTORS` | Section 6. |
 
-Self-hosting Pretendard (license: SIL OFL 1.1) — on a machine with internet access, before building the image:
+Switching to the bundled copy (no rebuild beyond the normal image build, since the files ship in every widget image):
 
-1. Download the Pretendard release zip from `github.com/orioncactus/pretendard` (the stylesheet in use is `v1.3.9`).
-2. Copy its `web/static/pretendard.css` and the `web/static/woff2/` folder into `apps/widget/public/fonts/pretendard/` (the layout of the release zip should be re-checked on download; the stylesheet refers to the font files by relative path, so keep them together).
-3. Build the widget image as usual; set `WIDGET_FONT_CSS_URL=/widget/fonts/pretendard/pretendard.css`.
-4. Check in DevTools › Network that no request leaves for `cdn.jsdelivr.net`.
+1. Set `WIDGET_FONT_CSS_URL=/widget/fonts/pretendard/pretendard.css` on the widget container (already set in the Go2Joy profile example).
+2. Restart the widget container.
+3. Check in DevTools › Network that no request leaves for `cdn.jsdelivr.net` and that `/widget/fonts/pretendard/woff2/Pretendard-*.woff2` return 200.
+
+The bundle adds about 3 MB to the widget image and is used only when selected. Keep `LICENSE.txt` next to the font files (OFL requires it).
+To use a different font, put the stylesheet and its files anywhere under the widget's `public/` and point `WIDGET_FONT_CSS_URL` at it.
 
 ### 6. Who may frame the widget (`frame-ancestors`)
 
@@ -208,20 +212,24 @@ CORS_ORIGINS=https://admin.example.vn,https://admin-staging.example.vn
 
 ### 5. Phông chữ: để iframe không có yêu cầu bên thứ ba
 
-Pretendard **không** có trong kho mã hay `node_modules`, và không có gì được tải về. Stylesheet nền nay là
-`/widget/base-font.css` (cùng nguồn gốc), nội dung do biến môi trường trên **container widget** quyết định:
+Pretendard v1.3.9 (đúng phiên bản widget vẫn liên kết) đã được **đóng gói sẵn** trong `apps/widget/public/fonts/pretendard/`:
+bốn độ đậm widget dùng (400/500/600/700, woff2) cùng giấy phép SIL OFL. Tệp được chép nguyên vẹn từ gói `pretendard@1.3.9`
+có sẵn trong một `node_modules` cục bộ — **không tải gì từ Internet**. Stylesheet nền nay là `/widget/base-font.css`
+(cùng nguồn gốc), nội dung do biến môi trường trên **container widget** quyết định:
 
 | Biến (container widget) | Ý nghĩa |
 |---|---|
 | `WIDGET_FONT_CSS_URL` | Không đặt = URL jsDelivr mặc định (hành vi cũ). Đường dẫn/URL = stylesheet đó. **Rỗng** = không dùng phông ngoài, chỉ phông hệ thống. URL hoặc đường dẫn thuần — không dấu nháy, khoảng trắng hay dấu chấm phẩy. |
 | `WIDGET_FRAME_ANCESTORS` | Mục 6. |
 
-Tự lưu Pretendard (giấy phép SIL OFL 1.1) — trên máy có Internet, trước khi build image:
+Chuyển sang bản đóng gói sẵn (không cần build thêm ngoài lần build image thông thường vì tệp đã nằm trong mọi image widget):
 
-1. Tải bản phát hành Pretendard (zip) từ `github.com/orioncactus/pretendard` (stylesheet đang dùng là `v1.3.9`).
-2. Chép `web/static/pretendard.css` và thư mục `web/static/woff2/` vào `apps/widget/public/fonts/pretendard/` (cần kiểm tra lại cấu trúc zip khi tải; stylesheet tham chiếu tệp phông bằng đường dẫn tương đối nên phải để cùng nhau).
-3. Build image widget như bình thường; đặt `WIDGET_FONT_CSS_URL=/widget/fonts/pretendard/pretendard.css`.
-4. Kiểm tra trong DevTools › Network rằng không còn yêu cầu nào tới `cdn.jsdelivr.net`.
+1. Đặt `WIDGET_FONT_CSS_URL=/widget/fonts/pretendard/pretendard.css` trên container widget (đã đặt sẵn trong ví dụ hồ sơ Go2Joy).
+2. Khởi động lại container widget.
+3. Kiểm tra trong DevTools › Network rằng không còn yêu cầu nào tới `cdn.jsdelivr.net` và `/widget/fonts/pretendard/woff2/Pretendard-*.woff2` trả 200.
+
+Bản đóng gói tăng khoảng 3 MB cho image widget và chỉ được dùng khi chọn. Giữ `LICENSE.txt` cạnh các tệp phông (OFL yêu cầu).
+Muốn dùng phông khác, đặt stylesheet và tệp của nó ở bất kỳ đâu dưới `public/` của widget rồi trỏ `WIDGET_FONT_CSS_URL` tới đó.
 
 ### 6. Ai được nhúng widget (`frame-ancestors`)
 
