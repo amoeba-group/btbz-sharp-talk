@@ -36,8 +36,9 @@ const matches = (row: Row, cond: Record<string, unknown>) =>
 function build(rows: Row[], policies: Record<number, Partial<RoutingPolicy>> = {}) {
   const table = rows;
   const convRepo = {
+    // Copies, like a real read: two instances must not see each other's later writes by reference.
     find: jest.fn(async (q: { where: Array<Record<string, unknown>> }) =>
-      table.filter((r) => q.where.some((cond) => matches(r, cond))),
+      table.filter((r) => q.where.some((cond) => matches(r, cond))).map((r) => ({ ...r })),
     ),
     update: jest.fn(async (criteria: Record<string, unknown>, patch: Partial<Conversation>) => {
       const hit = table.filter((r) => matches(r, criteria));

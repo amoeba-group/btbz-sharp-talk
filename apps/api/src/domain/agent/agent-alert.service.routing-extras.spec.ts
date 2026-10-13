@@ -267,6 +267,15 @@ describe('AgentAlertService — the de-dupe, its bypass, and settling (SG-64, RE
     expect(h.alerts.table).toHaveLength(1);
   });
 
+  it('the bypass holds even when settling the old alerts fails: the fresh alert is still raised', async () => {
+    const h = build({ staff: [{ id: 11 }, { id: 22 }], online: [22] });
+    h.alerts.table.push({ id: 5, tenantId: 1, conversationId: 42, reason: 'rerouted', status: 'new', targetUserId: 11, targetRegion: null });
+    h.alerts.update.mockRejectedValueOnce(new Error('db hiccup')); // settle swallows it and returns 0
+    const raised = await h.svc.raise({ ...base, reason: 'rerouted', issueLabel: 'sales_admin' }, { supersede: true });
+    expect(raised?.targetUserId).toBe(22);
+    expect(h.alerts.table).toHaveLength(2);
+  });
+
   it('settle closes only the conversation open alerts of that tenant, as acked by the claimant', async () => {
     const h = build({
       alerts: [
