@@ -210,8 +210,13 @@ export type SessionIdentity = (typeof SESSION_IDENTITY)[keyof typeof SESSION_IDE
 export const GUEST_POLICY = { OPEN: 'open', LOGIN_GUIDANCE: 'login_guidance' } as const;
 export type GuestPolicy = (typeof GUEST_POLICY)[keyof typeof GUEST_POLICY];
 
-/** Who a scenario button is shown to. Absent = `all` (the pre-v1.1 shape). */
-export const SCENARIO_AUDIENCE = { ALL: 'all', GUEST: 'guest', VERIFIED: 'verified' } as const;
+/**
+ * Who a scenario button is shown to. Absent = `all` (the pre-v1.1 shape).
+ * `manager` (PLN-261012 SG-10): only a signed manager/internal session — shown AND
+ * enforced when the button is pressed, because a script behind it may carry
+ * content a receptionist must not read.
+ */
+export const SCENARIO_AUDIENCE = { ALL: 'all', GUEST: 'guest', VERIFIED: 'verified', MANAGER: 'manager' } as const;
 export type ScenarioAudience = (typeof SCENARIO_AUDIENCE)[keyof typeof SCENARIO_AUDIENCE];
 
 /** Role of a partner-side user as signed into the identify v2 payload. */
@@ -250,6 +255,11 @@ export interface GuestGuidance {
   signupUrl?: string | null;
   /** Per-language override of the built-in "please sign in" line. */
   notice?: Partial<Record<string, string>>;
+  /**
+   * Per-language override of the built-in "ask your hotel's manager account" line a
+   * receptionist gets for a manager-only topic (PLN-261012 SG-10).
+   */
+  managerNotice?: Partial<Record<string, string>>;
   /** Console deep-link template; `{hotelSn}` is substituted from the signed claims. */
   hostLinkTemplate?: string | null;
 }

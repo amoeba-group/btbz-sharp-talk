@@ -17,3 +17,5 @@ export * from './common/markdown-lite';
 export * from './common/identity-policy';
 export * from './common/refusal-reason';
 export * from './common/kb-version';
+export * from './common/audience';
+export * from './common/kb-access';
