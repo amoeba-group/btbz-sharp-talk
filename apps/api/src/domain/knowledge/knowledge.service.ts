@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, Not, Raw, Repository } from 'typeorm';
 import { normalizePage } from '@sharptalk/common';
 import { MODERATION_DECISION, KB_VERSION_MISMATCH, kbVersionState, normalizeKbVersion } from '@sharptalk/types';
+import type { Audience } from '@sharptalk/types';
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
 import { RagService } from '../chat/rag.service';
 import { ModerationService } from '../moderation/moderation.service';
@@ -366,6 +367,13 @@ export class KnowledgeService {
      * a fixed notice that stands as the answer. Never set from a request.
      */
     partner?: PartnerPrepared | null,
+    /**
+     * Answer as this audience would be answered (PLN-261012 SG-10): manager-only categories
+     * are left out for anything below `manager`, exactly as on a widget turn. Omitted = the
+     * operator's own view, which sees everything — you cannot fix what is hidden from you.
+     * Never taken from a request in this stream; the simulator control is SG-51's.
+     */
+    audience?: Audience,
   ): Promise<{
     answer: string;
     confidence: number;
@@ -403,7 +411,9 @@ export class KnowledgeService {
       aiAgentId ?? null,
       undefined,
       undefined,
-      partner ? { partnerData: partner.block } : undefined,
+      partner || audience
+        ? { ...(partner ? { partnerData: partner.block } : {}), ...(audience ? { audience } : {}) }
+        : undefined,
     );
     const moderated = await this.moderation.moderate({
       tenantId,

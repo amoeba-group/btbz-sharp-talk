@@ -13,6 +13,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { VIDEO_REF_PATTERN } from '../../video-ref.util';
+import { AUDIENCE, type Audience } from '@sharptalk/types';
 
 /**
  * Knowledge source ingestion modes (FR-064). board/repository were removed
@@ -268,6 +269,15 @@ export class SetCategoryAgentsRequest {
 /** PUT /knowledge/categories/:id/guest-visible (PLN-261001 v1.1 T2). */
 export class SetCategoryGuestVisibleRequest {
   @IsBoolean() guest_visible: boolean;
+}
+
+/**
+ * PUT /knowledge/categories/:id/access (PLN-261012 SG-10) — who may read the category:
+ * public (anyone) | partner (signed-in partners) | manager (managers only). Writes both
+ * `guest_visible` and `min_audience`; the older /guest-visible endpoint keeps working.
+ */
+export class SetCategoryAccessRequest {
+  @IsIn(Object.values(AUDIENCE)) access: Audience;
 }
 
 /** POST /knowledge/gap-tasks/:id/accept — 승인 전 인라인 편집(P5). */

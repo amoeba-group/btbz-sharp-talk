@@ -4,6 +4,8 @@ import { In, IsNull, LessThan, Repository } from 'typeorm';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import {
+  AUDIENCE,
+  AUDIENCE_RANK,
   CJM_STAGE,
   CONSENT_STATE,
   CONVERSATION_STATUS,
@@ -12,12 +14,13 @@ import {
   REFUSAL_REASON,
   SENDER_TYPE,
   SESSION_IDENTITY,
+  audienceOf,
   buildHandoffTrace,
   buildRefusalTrace,
   kbVersionCaveatVariants,
   localized,
 } from '@sharptalk/types';
-import type { LocalizedText } from '@sharptalk/types';
+import type { Audience, LocalizedText } from '@sharptalk/types';
 import { Conversation } from './entity/conversation.entity';
 import { CSAT_WINDOW_MS } from './chat.mapper';
 import { Message } from './entity/message.entity';
@@ -62,6 +65,8 @@ import type { PartnerNotice } from '../partner-data/partner-data.step';
 import { PilotService } from '../pilot/pilot.service';
 import { ObserveChatTurn, markTurnOutcome } from '../../infrastructure/observability/app-metrics';
 import { partnerLabelOfClaims } from '../../global/util/partner-label.util';
+import { FOLLOW_UP_AGENT } from './scenario-scripts';
+import { historyExceedsViewer } from './conversation-audience.util';
 
 const ESCALATION_CONFIDENCE = 0.45;
 /**
@@ -137,6 +142,17 @@ const SYSTEM_MESSAGES = {
     VI: 'Nội dung này dành cho đối tác đã đăng nhập. Vui lòng đăng nhập tài khoản đối tác để tôi hướng dẫn chi tiết.',
     JA: 'この内容はログイン済みのパートナー様向けです。パートナーアカウントでログインしていただければ、詳しくご案内します。',
     ZH: '此内容仅面向已登录的合作伙伴。请登录您的合作伙伴账户，我会为您详细说明。',
+  },
+  // A receptionist asked a topic only manager-only KB categories cover (PLN-261012 SG-10): the
+  // content is NOT shown — they are pointed to the hotel's manager account and offered a person.
+  // A tenant may override the line per language (guest_guidance.managerNotice).
+  managerOnly: {
+    EN: "That information is only shared with your hotel's manager account. Please ask your hotel's manager to look it up, or tell me if you'd like me to connect you with a support agent.",
+    ES: 'Esa información solo se comparte con la cuenta de gerente de tu hotel. Pídele al gerente de tu hotel que la consulte, o dime si prefieres que te conecte con un agente de soporte.',
+    KO: '이 내용은 호텔 매니저 계정에게만 안내해 드릴 수 있습니다. 호텔 매니저께 확인을 요청해 주시거나, 상담원 연결이 필요하시면 말씀해 주세요.',
+    VI: 'Nội dung này chỉ được cung cấp cho tài khoản Quản lý của khách sạn. Bạn vui lòng nhờ Quản lý khách sạn tra cứu giúp, hoặc cho tôi biết nếu bạn muốn được kết nối với nhân viên hỗ trợ.',
+    JA: 'この内容はホテルのマネージャーアカウントにのみご案内できます。ホテルのマネージャーにご確認いただくか、サポート担当者へのおつなぎをご希望でしたらお知らせください。',
+    ZH: '此内容仅向贵酒店的经理账户提供。请让酒店经理查询，或告诉我，我可以为您转接客服人员。',
   },
   connectingAgent: {
     EN: "I'm connecting you with a support agent who can help with this.",
@@ -265,6 +281,11 @@ const REGION_HINT_MAX = 64;
 
 export function sysMsg(key: keyof typeof SYSTEM_MESSAGES, lang: string): string {
   return localized(SYSTEM_MESSAGES[key], lang);
+}
+
+/** The "Talk to an agent" chip scripts end with, in the session language (PLN-261012 SG-10). */
+export function agentConnectChip(language: string): { id: string; label: string } {
+  return { id: FOLLOW_UP_AGENT.id, label: localized(FOLLOW_UP_AGENT.label, language) };
 }
 
 /** An answer produced but NOT delivered — approval mode (PLN-260812). */
@@ -759,6 +780,9 @@ export class ChatService {
     // SG-03): the gate, the order-auth check, the prompt's partner line and the
     // conversation stamps all use this view, never the stored columns.
     const identity = await this.identityOf(session);
+    // Who this answer is FOR (PLN-261012 SG-10): the effective identity, so lapsed claims
+    // read as a guest. Passed to every retrieval below and to the reuse store.
+    const audience = audienceOf(identity);
     const conversation = await this.getOrCreateConversation(session.id, session);
 
     const userTurn = await this.persist(tenantId, conversation.id, SENDER_TYPE.USER, text, session.language);
@@ -871,7 +895,11 @@ export class ChatService {
     // earlier answers for the same reason — the model copies what it reads.
     const versionPolicy = (await this.rag.kbVersionPolicy?.(tenantId)) ?? null;
     const caveatTexts = kbVersionCaveatVariants(versionPolicy);
-    const history = await this.conversationHistory(conversation.id, userTurn.id, [...variants, ...caveatTexts]);
+    // A thread held at a higher tier than the viewer's tier now must not feed the model its
+    // earlier turns (PLN-261012 SG-11): see `historyReadableBy`.
+    const history = (await this.historyReadableBy(conversation, audience, tenantId))
+      ? await this.conversationHistory(conversation.id, userTurn.id, [...variants, ...caveatTexts])
+      : [];
 
     // Intent + scope check (FN-015): order data requires authentication first.
     const classifyT0 = Date.now();
@@ -1000,6 +1028,7 @@ export class ChatService {
       conversation.id,
       retrievalQuery(history, egressText),
       session.aiAgentId ?? null,
+      audience,
     );
     if (nonQuestion) {
       // A deny topic that reads as chit-chat is still a deny topic.
@@ -1113,7 +1142,9 @@ export class ChatService {
         tenantId,
         retrievalQuery(history, egressText),
         effectiveAgentId,
-        { guestOnly: true },
+        // `audience` too (SG-10): the gate asks "is it public?", this asks "may this audience read
+        // it?" — a category left guest-visible by a hand edit must still not leak a manager topic.
+        { guestOnly: true, audience },
       );
       if (grounded < GUEST_GATE_CONFIDENCE) {
         if (denyAnswersFirst) return denyHandoffNow();
@@ -1241,6 +1272,8 @@ export class ChatService {
             session.language,
             egressText,
             effectiveAgentId,
+            // Replay only to a viewer at least as privileged as the one it was generated for (SG-06).
+            AUDIENCE_RANK[audience],
           );
     const answer = reused
       ? {
@@ -1269,6 +1302,7 @@ export class ChatService {
           // context for identified ones (REQ-261006 H6).
           {
             guestOnly: guestGated,
+            audience,
             partnerContext: partnerContextOf(session, identity),
             ...(partner ? { partnerData: partner.block } : {}),
           },
@@ -1333,6 +1367,22 @@ export class ChatService {
       if (queued) {
         return { conversationId: String(conversation.id), reply: null, escalate: false, needsAuth: false };
       }
+      // Nothing grounded for THIS audience — but is it a topic only a manager may read? Then the
+      // receptionist is told so (and offered a person) instead of a vague "no answer" handoff
+      // (PLN-261012 SG-10). Not for an outage, and not when a deny rule already requires the page.
+      const managerOnly =
+        engineDown || denyAnswersFirst
+          ? null
+          : await this.managerOnlyTurn({
+              conversationId: conversation.id,
+              session,
+              tenantId,
+              identity,
+              audience,
+              effectiveAgentId,
+              searchText: retrievalQuery(history, egressText),
+            });
+      if (managerOnly) return managerOnly;
       const handoff = await this.handoff(
         conversation.id,
         session,
@@ -1449,6 +1499,8 @@ export class ChatService {
         sourceMessageId: aiTurn.id,
         needsOrderData,
         aiAgentId: effectiveAgentId,
+        // What the answer was generated FOR (SG-06): replayed only to this rank or above.
+        audienceRank: AUDIENCE_RANK[audience],
       });
     }
 
@@ -1519,10 +1571,18 @@ export class ChatService {
     conversationId: number,
     searchText: string,
     aiAgentId: number | null,
+    audience?: Audience,
   ): Promise<'smalltalk' | 'out_of_scope' | 'unintelligible' | null> {
     if (kind !== 'out_of_scope') return kind;
     const scope = await this.rag.effectiveAgentId(tenantId, aiAgentId);
-    const grounded = await this.rag.groundingConfidence(tenantId, searchText, scope);
+    // The same audience as the answer: a manager-only document must not talk an out_of_scope
+    // label out of a receptionist's turn either (SG-10).
+    const grounded = await this.rag.groundingConfidence(
+      tenantId,
+      searchText,
+      scope,
+      audience ? { audience } : undefined,
+    );
     if (grounded < ESCALATION_CONFIDENCE) return kind;
     this.logger.log(
       `out_of_scope overridden by knowledge (conf ${grounded}) conversation=${conversationId}`,
@@ -1998,6 +2058,84 @@ export class ChatService {
    * so order number, dates, status, totals and item titles are what's needed.
    * Never throws — losing the enrichment must not break the reply.
    */
+  /**
+   * The "ask your hotel's manager" line (PLN-261012 SG-10): the tenant's own wording for the
+   * session language when it set one (guest_guidance.managerNotice), else the built-in line.
+   */
+  async managerOnlyMessage(tenantId: number | null, language: string): Promise<string> {
+    const guidance = await this.rag.guestGuidance(tenantId);
+    const override = guidance?.managerNotice?.[String(language ?? '').toUpperCase()]?.trim();
+    return override || sysMsg('managerOnly', language);
+  }
+
+  /**
+   * May the conversation's earlier turns go to the model for this viewer? (PLN-261012 SG-11.)
+   * No when the thread was held at a higher tier than the viewer's tier now — the claims lapsed
+   * mid-conversation, or the role that opened it is no longer the one asking — AND the tenant
+   * has a manager-only category (a tenant with none is byte-identical to before).
+   */
+  private async historyReadableBy(conversation: Conversation, audience: Audience, tenantId: number): Promise<boolean> {
+    if (!historyExceedsViewer(conversation.actorRole, audience)) return true;
+    if (!(await this.rag.hasAudienceTiers?.(tenantId))) return true;
+    this.logger.warn(
+      `conversation ${conversation.id} was held at a higher tier than the viewer's (${audience}) — earlier turns withheld from the model`,
+    );
+    return false;
+  }
+
+  /**
+   * A receptionist asked a topic only manager-only categories cover (PLN-261012 SG-10). Called
+   * from the low-confidence branch, i.e. when the audience-scoped answer found nothing to stand
+   * on: a SECOND grounding check with the manager audience (one extra embed, only on this branch
+   * and only when the tenant has a manager-only category). If that grounds, the content is NOT
+   * shown — the reply points to the hotel's manager account and offers a person, the trace carries
+   * `role_manager_only`, and nobody is paged (no CS page). Null = does not apply, the caller
+   * hands off as usual.
+   */
+  private async managerOnlyTurn(ctx: {
+    conversationId: number;
+    session: Session;
+    tenantId: number;
+    identity: EffectiveIdentity;
+    audience: Audience;
+    effectiveAgentId: number | null;
+    searchText: string;
+  }): Promise<ChatTurnResult | null> {
+    // A signed-in partner below manager. A guest is told to sign in (the gate) or handed off.
+    if (ctx.audience !== AUDIENCE.PARTNER) return null;
+    if (!(await this.rag.hasAudienceTiers?.(ctx.tenantId))) return null;
+    const grounded = await this.rag.groundingConfidence(
+      ctx.tenantId,
+      ctx.searchText,
+      ctx.effectiveAgentId,
+      { audience: AUDIENCE.MANAGER },
+    );
+    if (grounded < ESCALATION_CONFIDENCE) return null;
+    const body = await this.managerOnlyMessage(ctx.tenantId, ctx.session.language);
+    const followUps = [agentConnectChip(ctx.session.language)];
+    // Chips ride on the trace like the team question's, so they survive the poll and a reload.
+    await this.persist(ctx.tenantId, ctx.conversationId, SENDER_TYPE.SYSTEM, body, ctx.session.language, {
+      ...buildRefusalTrace(REFUSAL_REASON.ROLE_MANAGER_ONLY, ctx.effectiveAgentId, {
+        actorRole: ctx.identity.claims?.role ?? null,
+        requiredRole: 'manager',
+        grounded,
+        threshold: ESCALATION_CONFIDENCE,
+      }),
+      followUps,
+    });
+    this.logger.log(
+      `manager-only topic: receptionist pointed to the manager account conversation=${ctx.conversationId} agent=${ctx.effectiveAgentId ?? 'default'}`,
+    );
+    markTurnOutcome('refused');
+    return {
+      conversationId: String(ctx.conversationId),
+      reply: { senderType: 'system', body },
+      escalate: false,
+      needsAuth: false,
+      followUps,
+    };
+  }
+
   /**
    * The sign-in prompt for a gated guest (PLN-261001 v1.1 T4): the tenant's
    * own wording for the session language when it set one, else the built-in

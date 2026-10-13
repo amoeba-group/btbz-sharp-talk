@@ -472,10 +472,20 @@
   "uiVersionMismatchTip": "Khác phiên bản tham chiếu {{reference}}. Câu trả lời trích dẫn tài liệu này sẽ kèm lưu ý hoặc bỏ qua tài liệu, tùy cài đặt AI.",
   "uiVersionMatchTip": "Khớp phiên bản tham chiếu {{reference}}.",
   "uiVersionOther": "Giao diện {{version}}",
-  "categoryGuestVisibleOnLabel": "Công khai cho khách",
-  "categoryGuestVisibleOffLabel": "Chỉ đã đăng nhập",
-  "categoryGuestVisibleHint": "Trợ lý \"chỉ hướng dẫn đăng nhập\" có được trả lời khách chưa đăng nhập từ phân loại này không.",
-  "categoryGuestVisibleConfirm": "Cho phép đọc {{count}} tài liệu mà không cần đăng nhập?",
-  "categoryGuestVisibleOn": "Phân loại đã công khai cho khách.",
-  "categoryGuestVisibleOff": "Phân loại chỉ dành cho người đã đăng nhập."
+  "categoryAccessLabel": "Ai được xem",
+  "categoryAccessOption": {
+    "public": "Công khai",
+    "partner": "Đối tác đã đăng nhập",
+    "manager": "Chỉ Quản lý"
+  },
+  "categoryAccessHint": "Công khai: khách chưa đăng nhập cũng có thể được trả lời từ phân loại này (trợ lý chỉ hướng dẫn đăng nhập). Đối tác đã đăng nhập: mọi tài khoản đối tác đã đăng nhập, kể cả Lễ tân. Chỉ Quản lý: chỉ tài khoản Quản lý (hoặc nội bộ) của khách sạn.",
+  "categoryAccessManagerWarning": "Lễ tân hỏi về nội dung này sẽ được hướng dẫn nhờ tài khoản Quản lý của khách sạn.",
+  "categoryAccessConfirmPublic": "Cho phép đọc {{count}} tài liệu mà không cần đăng nhập?",
+  "categoryAccessConfirmPartner": "Cho phép mọi đối tác đã đăng nhập, kể cả Lễ tân, đọc {{count}} tài liệu hiện chỉ dành cho Quản lý?",
+  "categoryAccessSaved": {
+    "public": "Phân loại đã chuyển sang công khai.",
+    "partner": "Phân loại đã chuyển sang dành cho đối tác đã đăng nhập.",
+    "manager": "Phân loại chỉ còn dành cho Quản lý. Các câu trả lời đã lưu đã được xóa."
+  },
+  "categoryMergeTierRefused": "Không thể gộp phân loại chỉ dành cho Quản lý vào phân loại ít hạn chế hơn. Hãy đặt phân loại đích thành \"Chỉ Quản lý\" trước."
 }

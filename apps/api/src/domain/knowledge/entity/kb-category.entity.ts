@@ -112,6 +112,25 @@ export class KbCategory {
   @Column({ name: 'guest_visible', type: 'tinyint', width: 1, default: 0 })
   guestVisible: number;
 
+  /**
+   * The lowest audience that may READ documents filed here (PLN-261012 SG-10):
+   * `public | partner | manager`. NULL = a row from before tiers — `guest_visible=1`
+   * reads as public, otherwise partner; there is deliberately NO backfill. `guest_visible`
+   * stays THE single public flag; only `manager` restricts retrieval (excluded for every
+   * caller that is not a manager/internal session, guests of `open` agents included).
+   *
+   * Written by `KbCategoryService.setAccess()` together with `guest_visible`.
+   *
+   * ⚠️ `ensure()` must never write this field (see `agentIds`): a category created by an
+   * import or a sync stays unrestricted-by-tier AND not public — fail-closed for guests,
+   * and the operator opens or restricts it on purpose in the console.
+   *
+   * ⚠️ `type` is explicit: a `string | null` union alone makes TypeORM infer `Object` and
+   * the DataSource fails at boot (dev-kit lesson A-1).
+   */
+  @Column({ name: 'min_audience', type: 'varchar', length: 16, nullable: true })
+  minAudience: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

@@ -64,12 +64,14 @@ export interface ScenarioButton {
   message?: string | Partial<Record<ScenarioLang, string>>;
   /**
    * Who sees the chip (PLN-261001 W4): everyone, unidentified visitors only, or
-   * identified (signed-in) visitors only. Absent = all, as before the field.
+   * identified (signed-in) visitors only — or, PLN-261012 SG-10, hotel managers
+   * only, which the API also ENFORCES when the button is pressed. Absent = all,
+   * as before the field.
    */
   audience?: ScenarioAudience;
 }
 
-export const SCENARIO_AUDIENCES = ['all', 'guest', 'verified'] as const;
+export const SCENARIO_AUDIENCES = ['all', 'guest', 'verified', 'manager'] as const;
 export type ScenarioAudience = (typeof SCENARIO_AUDIENCES)[number];
 
 /**
@@ -82,6 +84,8 @@ export interface GuestGuidance {
   loginUrl?: string | null;
   signupUrl?: string | null;
   notice?: Partial<Record<ScenarioLang, string>>;
+  /** The line a receptionist gets for a manager-only topic (PLN-261012 SG-10). */
+  managerNotice?: Partial<Record<ScenarioLang, string>>;
   hostLinkTemplate?: string | null;
 }
 

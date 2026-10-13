@@ -472,10 +472,20 @@
   "uiVersionMismatchTip": "基準バージョン {{reference}} と異なります。この文書を引用した回答には、AI設定に応じて注意書きが付くか、この文書が除外されます。",
   "uiVersionMatchTip": "基準バージョン {{reference}} と一致しています。",
   "uiVersionOther": "UI {{version}}",
-  "categoryGuestVisibleOnLabel": "ゲストに公開",
-  "categoryGuestVisibleOffLabel": "ログイン済みのみ",
-  "categoryGuestVisibleHint": "ログイン案内のみのエージェントが、未ログインの訪問者にこのカテゴリから回答してよいかどうか。",
-  "categoryGuestVisibleConfirm": "{{count}} 件の文書をログインなしで読めるようにしますか？",
-  "categoryGuestVisibleOn": "カテゴリをゲストに公開しました。",
-  "categoryGuestVisibleOff": "カテゴリをログイン済みのみに変更しました。"
+  "categoryAccessLabel": "閲覧できる人",
+  "categoryAccessOption": {
+    "public": "公開",
+    "partner": "ログイン済みパートナー",
+    "manager": "マネージャーのみ"
+  },
+  "categoryAccessHint": "公開：ログインしていない訪問者にもこのカテゴリから回答できます（ログイン案内のみのエージェント）。ログイン済みパートナー：フロント担当を含む、ログイン済みのすべてのパートナーアカウント。マネージャーのみ：ホテルのマネージャー（または社内）アカウントだけです。",
+  "categoryAccessManagerWarning": "これについて質問したフロント担当には、ホテルのマネージャーアカウントに確認するよう案内します。",
+  "categoryAccessConfirmPublic": "{{count}} 件の文書をログインなしで読めるようにしますか？",
+  "categoryAccessConfirmPartner": "現在マネージャーのみの文書 {{count}} 件を、フロント担当を含むログイン済みのすべてのパートナーが読めるようにしますか？",
+  "categoryAccessSaved": {
+    "public": "カテゴリを公開に変更しました。",
+    "partner": "カテゴリをログイン済みパートナー向けに変更しました。",
+    "manager": "カテゴリをマネージャーのみに変更しました。保存済みの回答を消去しました。"
+  },
+  "categoryMergeTierRefused": "マネージャーのみのカテゴリを、制限の緩いカテゴリに統合することはできません。先に統合先を「マネージャーのみ」に設定してください。"
 }

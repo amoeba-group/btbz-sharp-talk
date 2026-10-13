@@ -26,7 +26,8 @@ export interface ScenarioScript {
   followUps: Array<{ id: string; label: Record<Lang, string> }>;
 }
 
-const FOLLOW_UP_AGENT = {
+/** The "Talk to an agent" chip — exported so a system reply (PLN-261012 SG-10) can offer the same one. */
+export const FOLLOW_UP_AGENT = {
   id: 'agent_connect',
   label: {
     EN: 'Talk to an agent',

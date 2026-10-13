@@ -1,5 +1,8 @@
 import { apiGet, apiGetBlob, apiGetList, apiPost, apiPostForm, apiPatch, apiPut, apiDelete, saveBlob } from '@/lib/api-client';
 import type { Paginated } from '@/lib/types';
+// Source deep-import, not '@sharptalk/types': the package's CJS runtime exports are invisible to the
+// browser build (see KbVersionSection).
+import type { Audience } from '../../../../../packages/types/src/common/audience';
 
 /** Shapes mirror KnowledgeMapper (apps/api knowledge.mapper.ts). */
 export interface GdriveCredentialStatus {
@@ -216,6 +219,13 @@ export interface KbCategoryRow {
    * runs the login-guidance policy (PLN-261001 W3). Default off.
    */
   guestVisible?: boolean;
+  /**
+   * Who may read the category (PLN-261012 SG-10): public | partner | manager, derived by the API from
+   * `min_audience` + `guest_visible`. Absent from an older API — read through `kbAccessOf`.
+   */
+  access?: Audience;
+  /** The raw column; null for a row from before tiers. */
+  minAudience?: string | null;
 }
 
 /** Live state of the async conversion (PLN-260807 P1 / RPT-260808 D3). */
@@ -530,10 +540,9 @@ export const knowledgeService = {
     apiPut<KbCategoryRow>(`/knowledge/categories/${id}/agents`, { agent_ids: agentIds }),
   setCategoryHidden: (id: string, hidden: boolean) =>
     apiPut<KbCategoryRow>(`/knowledge/categories/${id}/hidden`, { hidden }),
-  setCategoryGuestVisible: (id: string, guestVisible: boolean) =>
-    apiPut<KbCategoryRow>(`/knowledge/categories/${id}/guest-visible`, {
-      guest_visible: guestVisible,
-    }),
+  // Three-state successor of the guest-visible toggle (PLN-261012 SG-10): writes both columns.
+  setCategoryAccess: (id: string, access: Audience) =>
+    apiPut<KbCategoryRow>(`/knowledge/categories/${id}/access`, { access }),
   removeCategory: (id: string) =>
     apiDelete<{ removed: boolean }>(`/knowledge/categories/${id}`),
   saveUsageGuide: (key: string, body: { title: string; content: string }) =>

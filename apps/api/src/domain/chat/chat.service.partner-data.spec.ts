@@ -338,7 +338,7 @@ describe('ChatService — partner data', () => {
       const b = build({ stepOn: false });
       await b.svc.handleUserMessage(b.session, 'Giá qua đêm phòng Deluxe hôm nay?');
 
-      expect(Object.keys(optsOf(b)).sort()).toEqual(['guestOnly', 'partnerContext']); // no partnerData key at all
+      expect(Object.keys(optsOf(b)).sort()).toEqual(['audience', 'guestOnly', 'partnerContext']); // no partnerData key at all
       expect(b.moderate.mock.calls[0][0]).not.toHaveProperty('protect');
       expect(b.answerReuse.lookup).toHaveBeenCalledTimes(1);
       expect(b.answerReuse.recordAiAnswer).toHaveBeenCalledTimes(1);
@@ -351,14 +351,14 @@ describe('ChatService — partner data', () => {
       const b = build({ noStep: true });
       const res = await b.svc.handleUserMessage(b.session, 'Giá qua đêm phòng Deluxe hôm nay?');
       expect(res.reply?.senderType).toBe('ai');
-      expect(Object.keys(optsOf(b)).sort()).toEqual(['guestOnly', 'partnerContext']);
+      expect(Object.keys(optsOf(b)).sort()).toEqual(['audience', 'guestOnly', 'partnerContext']);
       expect(b.answerReuse.lookup).toHaveBeenCalledTimes(1);
     });
 
     it('a guest asking the same question is answered the ordinary (knowledge) way', async () => {
       const b = build({ claims: null });
       await b.svc.handleUserMessage(b.session, 'Giá qua đêm phòng Deluxe hôm nay?');
-      expect(Object.keys(optsOf(b)).sort()).toEqual(['guestOnly', 'partnerContext']);
+      expect(Object.keys(optsOf(b)).sort()).toEqual(['audience', 'guestOnly', 'partnerContext']);
       expect(b.resolve).not.toHaveBeenCalled();
     });
   });

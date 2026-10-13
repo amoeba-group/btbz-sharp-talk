@@ -126,7 +126,7 @@ describe('ChatService guest gate — decision', () => {
     expect(result.reply?.body).toContain('đăng nhập');
     expect(ragAnswer).not.toHaveBeenCalled();
     // Measured on the public scope only — the whole point of the gate.
-    expect(grounding).toHaveBeenCalledWith(1, expect.any(String), 10, { guestOnly: true });
+    expect(grounding).toHaveBeenCalledWith(1, expect.any(String), 10, { guestOnly: true, audience: 'public' });
     // The prompt is a persisted system turn, so the transcript shows what the
     // visitor was told.
     expect(msgSave).toHaveBeenCalled();

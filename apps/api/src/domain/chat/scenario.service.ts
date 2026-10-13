@@ -1,7 +1,14 @@
 import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CJM_STAGE, CONSENT_STATE, MODERATION_DECISION, SENDER_TYPE, languageBySession } from '@sharptalk/types';
+import {
+  CJM_STAGE,
+  CONSENT_STATE,
+  MODERATION_DECISION,
+  SENDER_TYPE,
+  audienceOf,
+  languageBySession,
+} from '@sharptalk/types';
 import type {
   ScenarioFollowUpResponse,
   ScenarioTurnResponse,
@@ -9,9 +16,11 @@ import type {
 } from '@sharptalk/types';
 import { Message } from './entity/message.entity';
 import { Session } from '../session/entity/session.entity';
-import { ChatService, sysMsg } from './chat.service';
+import { ChatService, agentConnectChip, sysMsg } from './chat.service';
 import { ModerationService } from '../moderation/moderation.service';
 import { SessionService } from '../session/session.service';
+import { effectiveIdentity } from '../session/identity.util';
+import { scenarioPressAllowed } from '../ai-engine/scenario-audience.util';
 import { PilotService } from '../pilot/pilot.service';
 import { AiConfigService } from '../ai-engine/ai-config.service';
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
@@ -109,7 +118,38 @@ export class ScenarioService {
     };
   }
 
+  /**
+   * A manager-only button is ENFORCED when it is pressed (PLN-261012 SG-10). The widget stops
+   * listing it for anyone else, but the endpoint used to run whatever action it was handed, so a
+   * receptionist who called it directly read the manager's script. Refused softly, like the
+   * pilot gate: nothing stored, no conversation opened — the notice points to the manager
+   * account and offers the "Talk to an agent" chip. The admin preview sandbox is not a hotel
+   * user and sees everything. Null = allowed.
+   */
+  private async managerOnlyPress(session: Session, action: string): Promise<ScenarioTurnResult | null> {
+    if (session.channel === 'preview' || !this.aiConfig.getScenarioButtons) return null;
+    const buttons = await this.aiConfig.getScenarioButtons(session.tenantId ?? null);
+    const identity = this.sessionService.identityOf
+      ? await this.sessionService.identityOf(session)
+      : effectiveIdentity(session);
+    const viewer = audienceOf(identity);
+    if (scenarioPressAllowed(buttons, action, viewer, resolveScriptAction)) return null;
+    this.logger.warn(`scenario button "${action}" refused: manager-only, session ${session.id} is ${viewer}`);
+    return {
+      conversationId: null,
+      reply: {
+        senderType: SENDER_TYPE.SYSTEM,
+        body:
+          (await this.chatService.managerOnlyMessage?.(session.tenantId ?? null, session.language)) ??
+          sysMsg('managerOnly', session.language),
+      },
+      followUps: [agentConnectChip(session.language)],
+    };
+  }
+
   async handle(session: Session, action: string, text?: string): Promise<ScenarioTurnResult> {
+    const refused = await this.managerOnlyPress(session, action);
+    if (refused) return refused;
     // A console BUTTON action is not always a script key: "delivery_status"
     // runs `shipping_policy`. Resolve first, or the fallback below would treat
     // a perfectly good scripted button as scriptless and answer it with RAG —

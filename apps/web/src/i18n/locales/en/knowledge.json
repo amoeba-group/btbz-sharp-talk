@@ -472,10 +472,20 @@
   "uiVersionMismatchTip": "Differs from the reference version {{reference}}. An answer citing it gets the caveat, or skips it, depending on the AI setting.",
   "uiVersionMatchTip": "Matches the reference version {{reference}}.",
   "uiVersionOther": "UI version {{version}}",
-  "categoryGuestVisibleOnLabel": "Visible to guests",
-  "categoryGuestVisibleOffLabel": "Signed-in only",
-  "categoryGuestVisibleHint": "Whether an agent that only guides sign-in may answer a visitor who has not signed in from this category.",
-  "categoryGuestVisibleConfirm": "Make {{count}} document(s) readable without signing in?",
-  "categoryGuestVisibleOn": "Category is now visible to guests.",
-  "categoryGuestVisibleOff": "Category is now signed-in only."
+  "categoryAccessLabel": "Who can read",
+  "categoryAccessOption": {
+    "public": "Public",
+    "partner": "Signed-in partners",
+    "manager": "Managers only"
+  },
+  "categoryAccessHint": "Public: visitors who have not signed in may be answered from here (agents that only guide sign-in). Signed-in partners: any signed-in partner account, receptionists included. Managers only: just the hotel manager (or internal) account.",
+  "categoryAccessManagerWarning": "Receptionists who ask about this will be told to ask their hotel's manager account.",
+  "categoryAccessConfirmPublic": "Make {{count}} document(s) readable without signing in?",
+  "categoryAccessConfirmPartner": "Let every signed-in partner, receptionists included, read {{count}} document(s) that are manager-only today?",
+  "categoryAccessSaved": {
+    "public": "Category is now public.",
+    "partner": "Category is now for signed-in partners.",
+    "manager": "Category is now managers only. Stored answers were cleared."
+  },
+  "categoryMergeTierRefused": "A manager-only category cannot be merged into a less restricted one. Set the destination to \"Managers only\" first."
 }

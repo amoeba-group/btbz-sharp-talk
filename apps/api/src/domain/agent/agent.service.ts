@@ -3,10 +3,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { FindOptionsWhere, In, IsNull, LessThan, Not, Repository } from 'typeorm';
 import {
   AI_FUNCTION,
+  AUDIENCE_RANK,
   CONSENT_STATE,
   CONVERSATION_STATUS,
   MODERATION_DECISION,
   SENDER_TYPE,
+  audienceOf,
   isSupportedLanguage,
   localized,
 } from '@sharptalk/types';
@@ -1256,6 +1258,16 @@ export class AgentService {
       const session = conv
         ? await this.sessionRepo.findOne({ where: { id: conv.sessionId, tenantId } })
         : null;
+      // A reply to a signed hotel user is about THAT hotel (PLN-261012 SG-06, REQ D-06): it can
+      // quote its rates, its settlement, a one-off exception — and the store has no hotel (or
+      // role) dimension, so it would replay to every other hotel asking the same words. Not
+      // stored. Judged on the stored claims, not the effective identity: a lapse mid-thread does
+      // not make the earlier turns any less about that hotel. (The store also closes to human
+      // replies while the tenant has a manager-only category — see `recordAgentAnswer`.)
+      if (session?.identityClaims?.signed || conv?.hotelSn) {
+        this.logger.debug(`reuse agent-ingest skipped: conversation ${conversationId} is with a signed hotel user`);
+        return;
+      }
       const pinned = session?.aiAgentId != null ? Number(session.aiAgentId) : null;
       const fallback = pinned == null && this.aiAgentRepo
         ? await this.aiAgentRepo.findOne({ where: { tenantId, isDefault: 1 } })
@@ -1267,6 +1279,10 @@ export class AgentService {
         answerText: reply.body,
         sourceMessageId: reply.id,
         aiAgentId: pinned ?? (fallback ? Number(fallback.id) : null),
+        // The audience the conversation was held with (SG-06) — a guest or a v1-verified user here,
+        // since a signed hotel user returned above. A session we cannot read is of unknown audience:
+        // fail closed to the highest rank, so only a manager could ever be replayed it.
+        audienceRank: session ? AUDIENCE_RANK[audienceOf(effectiveIdentity(session))] : AUDIENCE_RANK.manager,
       });
     } catch (e) {
       this.logger.debug(`reuse agent-ingest skipped: ${(e as Error).message}`);

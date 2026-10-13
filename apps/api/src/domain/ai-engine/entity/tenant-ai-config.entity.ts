@@ -32,9 +32,10 @@ export interface ScenarioButton {
   /**
    * Who sees the button (PLN-261001 v1.1): `guest` only before the session is
    * identified, `verified` only after. Absent = `all`, the shape every button
-   * had before — so a stored set needs no migration.
+   * had before — so a stored set needs no migration. `manager` (PLN-261012 SG-10):
+   * only a signed manager/internal session, shown AND enforced when pressed.
    */
-  audience?: 'all' | 'guest' | 'verified';
+  audience?: 'all' | 'guest' | 'verified' | 'manager';
 }
 
 /** Where the widget should take the shopper after a scripted reply (FR-003). */

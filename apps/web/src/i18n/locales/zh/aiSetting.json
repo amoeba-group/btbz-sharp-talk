@@ -493,6 +493,7 @@
   "audience_all": "所有人",
   "audience_guest": "未登录",
   "audience_verified": "已登录",
+  "audience_manager": "仅限经理",
   "kbVersion": {
     "title": "基准界面版本",
     "hint": "填写用户当前使用的产品版本。知识文档可以标注其所描述的版本（知识 › 文档 › 界面版本）。引用其他版本文档的回答会附带一句固定的话，或该文档被排除在检索之外。版本是只比较是否相同的标签：“v0.12.0”“V0.12.0”“0.12.0”视为同一版本，“0.12.0”与“0.12.1”则不同，因此任何编号方式都可以使用，也不比较先后。未设置版本的文档不会在回答中被提示。",
@@ -525,6 +526,9 @@
     "notice": "登录提示语",
     "noticePlaceholder": "此内容面向已登录的合作伙伴。请登录后我再为您详细说明。",
     "noticeHint": "留空 = 使用该语言的内置提示语。",
+    "managerNotice": "经理专属提示",
+    "managerNoticePlaceholder": "此内容仅向贵酒店的经理账户提供。请让酒店经理为您查询。",
+    "managerNoticeHint": "当前台人员询问仅限经理的话题时显示，并附带\"联系人工客服\"按钮。留空 = 使用该语言的内置提示语。",
     "hostLinkTemplate": "\"在您的系统中打开\"链接模板",
     "hostLinkTemplateHint": "{hotelSn} 会替换为已签名的酒店键；控制台将在合作伙伴会话中显示\"在主系统中打开\"按钮。留空 = 不显示按钮。",
     "hostLinkTemplateInvalid": "必须是包含 {hotelSn} 的 https:// URL。"

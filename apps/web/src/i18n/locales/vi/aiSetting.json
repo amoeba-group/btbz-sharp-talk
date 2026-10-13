@@ -493,6 +493,7 @@
   "audience_all": "Tất cả",
   "audience_guest": "Chưa đăng nhập",
   "audience_verified": "Đã đăng nhập",
+  "audience_manager": "Chỉ Quản lý",
   "kbVersion": {
     "title": "Phiên bản giao diện tham chiếu",
     "hint": "Nhập phiên bản sản phẩm mà người dùng của bạn đang dùng hiện nay. Tài liệu kiến thức có thể được gán phiên bản mà nó mô tả (Kiến thức › tài liệu › Phiên bản giao diện). Câu trả lời trích dẫn tài liệu thuộc phiên bản khác sẽ kèm một câu cố định, hoặc tài liệu đó bị loại khỏi tìm kiếm. Phiên bản là nhãn chỉ so sánh bằng nhau: “v0.12.0”, “V0.12.0” và “0.12.0” là một, còn “0.12.0” và “0.12.1” thì khác — nên dùng cách đánh số nào cũng được, không có thứ tự lớn nhỏ. Tài liệu chưa gán phiên bản không bao giờ bị lưu ý trong câu trả lời.",
@@ -525,6 +526,9 @@
     "notice": "Lời nhắc đăng nhập",
     "noticePlaceholder": "Nội dung này dành cho đối tác đã đăng nhập. Vui lòng đăng nhập để tôi hướng dẫn chi tiết.",
     "noticeHint": "Để trống = dùng lời mặc định theo ngôn ngữ.",
+    "managerNotice": "Lời nhắc chỉ dành cho Quản lý",
+    "managerNoticePlaceholder": "Nội dung này chỉ được cung cấp cho tài khoản Quản lý của khách sạn. Bạn vui lòng nhờ Quản lý tra cứu giúp.",
+    "managerNoticeHint": "Hiển thị cho Lễ tân khi hỏi về nội dung chỉ dành cho Quản lý, kèm nút \"Gặp nhân viên hỗ trợ\". Để trống = dùng lời mặc định theo ngôn ngữ.",
     "hostLinkTemplate": "Mẫu link \"Mở trong hệ thống của bạn\"",
     "hostLinkTemplateHint": "{hotelSn} được thay bằng mã khách sạn đã ký; console sẽ hiện nút \"Mở trong hệ thống\" ở hội thoại đối tác. Để trống = ẩn nút.",
     "hostLinkTemplateInvalid": "Phải là URL https:// có chứa {hotelSn}."

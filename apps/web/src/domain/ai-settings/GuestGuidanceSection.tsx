@@ -33,6 +33,7 @@ export function GuestGuidanceSection() {
   const [loginUrl, setLoginUrl] = useState('');
   const [signupUrl, setSignupUrl] = useState('');
   const [notice, setNotice] = useState<Partial<Record<ScenarioLang, string>>>({});
+  const [managerNotice, setManagerNotice] = useState<Partial<Record<ScenarioLang, string>>>({});
   const [lang, setLang] = useState<ScenarioLang>('VI');
   const [hostLinkTemplate, setHostLinkTemplate] = useState('');
 
@@ -41,6 +42,7 @@ export function GuestGuidanceSection() {
     setLoginUrl(g?.loginUrl ?? '');
     setSignupUrl(g?.signupUrl ?? '');
     setNotice(g?.notice ?? {});
+    setManagerNotice(g?.managerNotice ?? {});
     setHostLinkTemplate(g?.hostLinkTemplate ?? '');
   }, [config]);
 
@@ -53,13 +55,15 @@ export function GuestGuidanceSection() {
   const valid = loginOk && signupOk && templateOk;
 
   const save = () => {
-    const trimmedNotice = Object.fromEntries(
-      Object.entries(notice).filter(([, v]) => (v ?? '').trim()),
-    ) as Partial<Record<ScenarioLang, string>>;
+    const trimmed = (m: Partial<Record<ScenarioLang, string>>) =>
+      Object.fromEntries(Object.entries(m).filter(([, v]) => (v ?? '').trim())) as Partial<
+        Record<ScenarioLang, string>
+      >;
     const guidance: GuestGuidance = {
       loginUrl: loginUrl.trim() || null,
       signupUrl: signupUrl.trim() || null,
-      notice: trimmedNotice,
+      notice: trimmed(notice),
+      managerNotice: trimmed(managerNotice),
       hostLinkTemplate: hostLinkTemplate.trim() || null,
     };
     updateConfig.mutate({ guest_guidance: guidance });
@@ -114,6 +118,21 @@ export function GuestGuidanceSection() {
               className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500"
             />
             <p className="text-[11px] text-gray-400">{t('guest.noticeHint')}</p>
+          </div>
+
+          {/* What a receptionist is told for a manager-only topic (PLN-261012 SG-10). Same language
+              tabs as the sign-in prompt above: one wording per language, blank = the built-in line. */}
+          <div className="space-y-2 border-t border-gray-100 pt-3">
+            <Label>{t('guest.managerNotice')}</Label>
+            <textarea
+              rows={2}
+              value={managerNotice[lang] ?? ''}
+              onChange={(e) => setManagerNotice((prev) => ({ ...prev, [lang]: e.target.value }))}
+              placeholder={t('guest.managerNoticePlaceholder')}
+              aria-label={t('guest.managerNotice')}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500"
+            />
+            <p className="text-[11px] text-gray-400">{t('guest.managerNoticeHint')}</p>
           </div>
 
           {/* W8: console deep link into the tenant's system for a signed partner. */}

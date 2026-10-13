@@ -7,6 +7,9 @@ import { AiAgent } from '../ai-engine/entity/ai-agent.entity';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { AuditService } from '../audit/audit.service';
+import { AnswerReuseService } from '../answer-reuse/answer-reuse.service';
+import { AUDIENCE, kbAccessColumns, kbAccessOf, normalizeAudience } from '@sharptalk/types';
+import type { Audience } from '@sharptalk/types';
 
 export interface KbCategorySummary {
   id: string;
@@ -20,6 +23,11 @@ export interface KbCategorySummary {
   agentIds: number[];
   /** Guests of a `login_guidance` agent may be answered from here (PLN-261001 v1.1). */
   guestVisible: boolean;
+  /**
+   * The tier the category reads as (PLN-261012 SG-10): public | partner | manager, from
+   * `min_audience` + `guest_visible` (NULL min_audience = legacy: guest_visible decides).
+   */
+  access: Audience;
 }
 
 /**
@@ -43,6 +51,8 @@ export class KbCategoryService {
     private readonly dataSource: DataSource,
     // Appended last so positional test doubles stay valid; every use is `?.`-guarded.
     private readonly audit?: AuditService,
+    // Narrowing a category to managers retires the stored replays (PLN-261012 SG-06).
+    private readonly answerReuse?: AnswerReuseService,
   ) {}
 
   /**
@@ -70,6 +80,7 @@ export class KbCategoryService {
       // that changed origin after being scoped must not keep a stale narrowing.
       agentIds: r.origin === CATEGORY_ORIGIN.CATALOG ? [] : (r.agentIds ?? []),
       guestVisible: r.guestVisible === 1,
+      access: kbAccessOf(r),
     }));
 
     // A string that documents carry but no row describes — drift, or a category
@@ -88,6 +99,7 @@ export class KbCategoryService {
         // Nothing owns this string yet, so there is nothing to scope it with.
         agentIds: [],
         guestVisible: false,
+        access: AUDIENCE.PARTNER,
       });
     }
     return summaries;
@@ -218,6 +230,14 @@ export class KbCategoryService {
       sources.push(row);
     }
     if (!sources.length) return { moved: 0 };
+    // Moving manager-only documents into a category more people can read would widen who reads
+    // them without anyone having decided that (PLN-261012 SG-10): refuse, the operator sets the
+    // destination to manager-only first. (guest_visible has never had this guard; only the new
+    // tier does, so a tenant without a manager-only category merges exactly as before.)
+    if (kbAccessOf(into) !== AUDIENCE.MANAGER && sources.some((src) => kbAccessOf(src) === AUDIENCE.MANAGER)) {
+      this.logger.warn(`category merge refused: manager-only source into ${into.name} (tenant ${tenantId})`);
+      throw new BusinessException(ERROR_CODE.KB_CATEGORY_MERGE_WIDENS, HttpStatus.CONFLICT);
+    }
 
     let moved = 0;
     await this.dataSource.transaction(async (m) => {
@@ -297,7 +317,20 @@ export class KbCategoryService {
       throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.CONFLICT);
     }
     const was = row.guestVisible === 1;
+    const tierWas = kbAccessOf(row);
     row.guestVisible = visible ? 1 : 0;
+    // Keep the tier column coherent with the flag (PLN-261012 SG-10) — only for a row that has
+    // one (NULL = legacy, the flag alone decides): opening a category to guests clears a
+    // manager-only restriction (the two cannot both hold), closing it demotes an explicit
+    // 'public' to 'partner' and leaves 'partner' / 'manager' as they are.
+    if (row.minAudience != null) {
+      if (visible) row.minAudience = AUDIENCE.PUBLIC;
+      else if (row.minAudience === AUDIENCE.PUBLIC) row.minAudience = AUDIENCE.PARTNER;
+    }
+    // public <-> partner is the flag itself and is already what the audit row says; what this
+    // endpoint can ADD is lifting a manager-only restriction, which the row must name.
+    const tierIs = kbAccessOf(row);
+    const managerLifted = (tierWas === AUDIENCE.MANAGER) !== (tierIs === AUDIENCE.MANAGER);
     this.logger.log(`kb category guest_visible: tenant=${tenantId} id=${id} → ${row.guestVisible}`);
     const saved = await this.repo.save(row);
     // Who opened (or closed) a category to signed-out visitors is exactly the
@@ -305,7 +338,7 @@ export class KbCategoryService {
     // beyond a log line. Only a real change is audited; a repeated PUT is not news.
     // Best effort: the flip is already saved and a failing audit write must not
     // turn it into an error the operator reads as "nothing happened".
-    if (was !== visible) {
+    if (was !== visible || managerLifted) {
       await this.audit
         ?.write({
           tenantId,
@@ -313,11 +346,80 @@ export class KbCategoryService {
           actorId: actor?.userId ?? 0,
           action: 'kb.category_guest_visible_changed',
           target: `kb_category:${id}`,
-          metadata: { category: row.name, from: was, to: visible },
+          // One row per flip, extended (not duplicated) when the flip also moved the tier —
+          // e.g. a manager-only category opened to guests via this older endpoint.
+          metadata: {
+            category: row.name,
+            from: was,
+            to: visible,
+            ...(managerLifted ? { accessFrom: tierWas, accessTo: tierIs } : {}),
+          },
         })
         .catch((e: Error) => this.logger.warn(`guest_visible audit write failed: ${e.message}`));
     }
     return saved;
+  }
+
+  /**
+   * Set who may read a category (PLN-261012 SG-10, wireframe W1): public | partner | manager.
+   * Writes BOTH columns — `guest_visible` (the single public flag the guest gate reads) and
+   * `min_audience` (the tier retrieval and answer reuse read) — so they cannot disagree.
+   *
+   * Refused for catalogue categories like `setGuestVisible`: product knowledge has no tier
+   * story, and an operator who thought they had restricted it would be wrong.
+   *
+   * Audited as `kb.category_access_changed` (one row, only on a real change). Narrowing TO
+   * manager-only also retires every stored replay of the tenant: answers cached while the
+   * category was readable by receptionists may quote it, and nothing in them says which.
+   */
+  async setAccess(
+    tenantId: number,
+    id: number,
+    access: unknown,
+    /** The console user making the change, for the audit trail. */
+    actor?: { userId: number },
+  ): Promise<KbCategory> {
+    const to = normalizeAudience(access);
+    if (!to) throw new BusinessException(ERROR_CODE.KB_ACCESS_INVALID, HttpStatus.BAD_REQUEST);
+    const row = await this.find(tenantId, id);
+    if (row.origin === CATEGORY_ORIGIN.CATALOG) {
+      throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.CONFLICT);
+    }
+    const from = kbAccessOf(row);
+    const columns = kbAccessColumns(to);
+    row.guestVisible = columns.guestVisible;
+    row.minAudience = columns.minAudience;
+    this.logger.log(`kb category access: tenant=${tenantId} id=${id} ${from} → ${to}`);
+    const saved = await this.repo.save(row);
+    if (from !== to) {
+      await this.audit
+        ?.write({
+          tenantId,
+          actorType: actor ? 'user' : 'system',
+          actorId: actor?.userId ?? 0,
+          action: 'kb.category_access_changed',
+          target: `kb_category:${id}`,
+          metadata: { category: row.name, from, to },
+        })
+        .catch((e: Error) => this.logger.warn(`access audit write failed: ${e.message}`));
+      if (to === AUDIENCE.MANAGER) await this.retireStoredAnswers(tenantId);
+    }
+    return saved;
+  }
+
+  /**
+   * Deactivate every stored replay of the tenant after a category became manager-only. Best
+   * effort, like the KB version policy's: the change is already saved and a reuse-store outage
+   * must not turn it into an error — the replays then age out by TTL, and the failure is logged.
+   */
+  private async retireStoredAnswers(tenantId: number): Promise<void> {
+    if (!this.answerReuse) return;
+    try {
+      const n = await this.answerReuse.deactivateAll(tenantId);
+      this.logger.log(`category made manager-only: ${n} stored answer(s) retired (tenant ${tenantId})`);
+    } catch (e) {
+      this.logger.warn(`category made manager-only but retiring stored answers failed: ${(e as Error).message}`);
+    }
   }
 
   async reorder(tenantId: number, ids: number[]): Promise<void> {

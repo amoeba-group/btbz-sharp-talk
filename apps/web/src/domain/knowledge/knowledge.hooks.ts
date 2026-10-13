@@ -5,6 +5,7 @@ import { knowledgeService } from './knowledge.service';
 import type { CatalogSyncJob, DocumentListParams } from './knowledge.service';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
+import type { Audience } from '../../../../../packages/types/src/common/audience';
 
 export function useSources() {
   const tenantKey = useTenantKey();
@@ -817,7 +818,9 @@ export function useMergeCategories() {
       invalidate();
       toast.success(t('categoryMerged', { count: res.moved }));
     },
-    onError: (err: Error) => toast.error(err.message),
+    // E5136: a manager-only category into a less restricted one (PLN-261012 SG-10) — say what to do.
+    onError: (err: Error & { code?: string }) =>
+      toast.error(err.code === 'E5136' ? t('categoryMergeTierRefused') : err.message, { sticky: true }),
   });
 }
 
@@ -849,18 +852,23 @@ export function useSetCategoryHidden() {
   });
 }
 
-/** Guest visibility of a category (PLN-261001 W3) — the public axis of the KB. */
-export function useSetCategoryGuestVisible() {
+/**
+ * Who may read a category (PLN-261012 SG-10, wireframe W1): public | partner | manager. Replaces the
+ * guest-visible toggle (PLN-261001 W3) — the server writes both columns, and the old endpoint it used
+ * keeps working for API clients. Success and failure both say so: narrowing a category to managers
+ * clears the tenant's stored answers, which the operator should be told.
+ */
+export function useSetCategoryAccess() {
   const invalidate = useTaxonomyInvalidator('categories');
   const { t } = useTranslation('knowledge');
   return useMutation({
-    mutationFn: (v: { id: string; guestVisible: boolean }) =>
-      knowledgeService.setCategoryGuestVisible(v.id, v.guestVisible),
+    mutationFn: (v: { id: string; access: Audience }) =>
+      knowledgeService.setCategoryAccess(v.id, v.access),
     onSuccess: (_res, v) => {
       invalidate();
-      toast.success(v.guestVisible ? t('categoryGuestVisibleOn') : t('categoryGuestVisibleOff'));
+      toast.success(t(`categoryAccessSaved.${v.access}`));
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => toast.error(err.message, { sticky: true }),
   });
 }
 

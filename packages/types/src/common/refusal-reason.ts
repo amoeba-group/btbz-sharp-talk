@@ -11,7 +11,8 @@
  *  auth_gate         an order question that needs a signed-in customer
  *  consent           privacy notice not accepted — the turn is not processed (nothing is stored)
  *  pilot_denied      the hotel is outside the pilot list (reserved for the pilot flag)
- *  role_manager_only the content is for the Manager role (reserved for the access tiers)
+ *  role_manager_only the content is for the Manager role: a receptionist asked a topic only
+ *                    manager-only KB categories cover (SG-10); the notice points to the manager account
  *  moderation        the answer was blocked by the outbound moderation gate
  *  low_confidence    the knowledge base could not ground an answer
  *  embedder_degraded the vector leg was down, so grounding could not be measured (reserved)

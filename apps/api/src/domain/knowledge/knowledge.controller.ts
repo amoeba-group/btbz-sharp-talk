@@ -61,6 +61,7 @@ import {
   SaveUsageTypeRequest,
   SetCategoryAgentsRequest,
   SetCategoryGuestVisibleRequest,
+  SetCategoryAccessRequest,
   SetCategoryHiddenRequest,
   TestGdriveRequest,
   TestNotionRequest,
@@ -754,6 +755,23 @@ export class KnowledgeController {
       body.guest_visible,
       { userId: actor.userId },
     );
+    return KnowledgeMapper.toCategory(row);
+  }
+
+  @Put('categories/:id/access')
+  @RequireCapability(CAPABILITY.KNOWLEDGE_SOURCE_MANAGE)
+  @ApiOperation({
+    summary: 'Set who may read a category: public, signed-in partners, or managers only',
+  })
+  async setCategoryAccess(
+    @CurrentUser() user: Principal,
+    @Param('id') id: string,
+    @Body() body: SetCategoryAccessRequest,
+  ) {
+    const actor = this.tenantUser(user);
+    const row = await this.kbCategories.setAccess(actor.tenantId, Number(id), body.access, {
+      userId: actor.userId,
+    });
     return KnowledgeMapper.toCategory(row);
   }
 

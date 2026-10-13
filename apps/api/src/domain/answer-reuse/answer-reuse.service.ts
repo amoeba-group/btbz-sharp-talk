@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Like, Repository } from 'typeorm';
+import { AUDIENCE, AUDIENCE_RANK } from '@sharptalk/types';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { AnswerReuse, REUSE_SOURCE } from './entity/answer-reuse.entity';
@@ -53,6 +54,10 @@ export class AnswerReuseService {
   ) {}
 
   /**
+   * What the tenant's categories say about replay: does it restrict any category to
+   * specific agents, and does it have a manager-only category (PLN-261012 SG-10)? One
+   * read answers both — see the two rules in `replayableFor`.
+   *
    * Does this tenant restrict any category to specific agents?
    *
    * The answer decides what happens to rows written before agents were
@@ -67,19 +72,42 @@ export class AnswerReuseService {
    * and the query is one indexed read against a table that peaks in the dozens
    * — next to the embedding call this lookup already makes, it is free.
    */
-  private async tenantScopesKnowledge(tenantId: number): Promise<boolean> {
+  private async categoryState(tenantId: number): Promise<{ scopes: boolean; tiers: boolean }> {
     const rows = await this.categoryRepo.find({ where: { tenantId } });
-    return rows.some((r) => (r.agentIds ?? []).length > 0);
+    return {
+      scopes: rows.some((r) => (r.agentIds ?? []).length > 0),
+      tiers: rows.some((r) => r.minAudience === AUDIENCE.MANAGER),
+    };
   }
 
+  /**
+   * May this stored answer be replayed to THIS viewer (REQ-260826 D4, PLN-261012 SG-06)?
+   *
+   * Two independent rules, both about the audience the answer was generated for:
+   *  - agent: an agent-bound row replays only to that agent; a row with no agent recorded
+   *    (written before agents were) replays only while the tenant scopes nothing;
+   *  - audience: while the tenant has a manager-only category, a row replays only to a
+   *    viewer whose rank is >= the rank it was generated for. A row with no rank (written
+   *    before the column) never replays then — its audience is unknowable, and a manager's
+   *    answer could be sitting in it. A tenant with no tier skips this rule entirely, so
+   *    its replays are byte-identical to before.
+   */
   private async replayableFor(
     row: AnswerReuse,
     tenantId: number,
     aiAgentId: number | null,
+    viewerRank: number,
   ): Promise<boolean> {
     const rowAgent = row.aiAgentId != null ? Number(row.aiAgentId) : null;
-    if (rowAgent != null) return aiAgentId != null && rowAgent === aiAgentId;
-    return !(await this.tenantScopesKnowledge(tenantId));
+    const state = await this.categoryState(tenantId);
+    if (rowAgent != null) {
+      if (aiAgentId == null || rowAgent !== aiAgentId) return false;
+    } else if (state.scopes) {
+      return false;
+    }
+    if (!state.tiers) return true;
+    if (row.audienceRank == null) return false;
+    return viewerRank >= Number(row.audienceRank);
   }
 
   private enabled(): boolean {
@@ -92,6 +120,11 @@ export class AnswerReuseService {
     lang: string,
     question: string,
     aiAgentId: number | null = null,
+    /**
+     * The viewer's audience rank (`AUDIENCE_RANK`, PLN-261012 SG-06). Omitted reads as the
+     * lowest rank — fail-closed: a caller that forgets it can only replay what anyone may see.
+     */
+    viewerRank: number = AUDIENCE_RANK[AUDIENCE.PUBLIC],
   ): Promise<ReuseHit | null> {
     if (!this.enabled()) return null;
     try {
@@ -107,7 +140,9 @@ export class AnswerReuseService {
       // Per-agent knowledge scope reaches here too (REQ-260826 D4): this lookup
       // runs BEFORE retrieval, so a scope applied only to RAG would be bypassed
       // by every question that had been asked once already.
-      if (!(await this.replayableFor(row, tenantId, aiAgentId))) return null;
+      // Audience (SG-06) is judged here too, for the same reason: a manager's answer replayed
+      // to a receptionist would bypass every retrieval scope.
+      if (!(await this.replayableFor(row, tenantId, aiAgentId, viewerRank))) return null;
       // Stale entries retire at read time (knowledge moves on — REQ Track C).
       const ageMs = Date.now() - new Date(row.updatedAt).getTime();
       if (ageMs > TTL_DAYS() * 24 * 60 * 60_000) {
@@ -159,6 +194,8 @@ export class AnswerReuseService {
     sourceMessageId: number | null;
     needsOrderData: boolean;
     aiAgentId?: number | null;
+    /** Rank of the audience the answer was generated for (SG-06); null/omitted = unknown, never replayed once tiers exist. */
+    audienceRank?: number | null;
   }): Promise<void> {
     try {
       if (!this.enabled()) return;
@@ -187,9 +224,20 @@ export class AnswerReuseService {
     answerText: string;
     sourceMessageId: number | null;
     aiAgentId?: number | null;
+    /** Rank of the audience the conversation was held with (SG-06). */
+    audienceRank?: number | null;
   }): Promise<void> {
     try {
       if (!this.enabled()) return;
+      // A person may answer anything to the person in front of them — a settlement figure to
+      // a manager, a one-off exception to a receptionist — and a stored reply carries no
+      // record of which. While the tenant has a manager-only category the human-verified
+      // store is therefore closed to new replies (PLN-261012 SG-06); AI answers, which are
+      // generated from a scoped retrieval and stamped with the rank, keep being stored.
+      if ((await this.categoryState(input.tenantId)).tiers) {
+        this.logger.debug(`reuse agent-ingest skipped: tenant ${input.tenantId} has manager-only categories`);
+        return;
+      }
       await this.store({
         ...input,
         source: REUSE_SOURCE.AGENT,
@@ -297,6 +345,7 @@ export class AnswerReuseService {
     citations: unknown[];
     sourceMessageId: number | null;
     aiAgentId?: number | null;
+    audienceRank?: number | null;
   }): Promise<void> {
     // Both sides stored scrubbed only — the question may arrive scrubbed already
     // (chat egress) but the agent path passes the original; scrub is idempotent.
@@ -318,6 +367,8 @@ export class AnswerReuseService {
     // the agent: a second agent asking the same question simply keeps using the
     // LLM rather than getting a row of its own. Costlier, never wrong — the
     // alternative is a near-duplicate row per persona.
+    // Equally blind to the audience (SG-06): a manager's stored answer keeps a receptionist's
+    // identical question on the LLM path rather than earning a row of its own.
     const dupes = await this.vector.search(input.tenantId, input.lang, vector, 1);
     if (dupes[0] && dupes[0].score >= DEDUPE_THRESHOLD) return;
 
@@ -332,6 +383,7 @@ export class AnswerReuseService {
         tenantId: input.tenantId,
         lang: input.lang,
         aiAgentId: input.aiAgentId ?? null,
+        audienceRank: input.audienceRank ?? null,
         questionText: question,
         answerText: answer,
         source: input.source,
