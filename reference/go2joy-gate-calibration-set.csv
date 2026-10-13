@@ -1,0 +1,52 @@
+# DRAFT — labels proposed by the SharpTalk team, NOT yet reviewed by Go2Joy ops. Do not treat them as ground truth.
+# Used by `npm run gate:calibrate -- --file=reference/go2joy-gate-calibration-set.csv` (PLN-261012 SG-51).
+#
+# Columns
+#   question  a realistic Hotel Admin question (Vietnamese and English, as partners ask them)
+#   audience  who is asking:  guest (signed-out visitor) | partner | receptionist | manager
+#   expect    what the gate should do:  allow | refuse   (refuse = sign-in prompt, "ask your manager" line or hand-off)
+#   language  question language (informational)
+#   topic     the Go2Joy knowledge category the question belongs to (informational)
+#   status    DRAFT until a Go2Joy ops reviewer has confirmed the row
+#
+# For Go2Joy ops to review, row by row:
+#   1. Is the topic really PUBLIC (answerable to a visitor who never signed in) / PARTNER-only / MANAGER-only?
+#      The three groups below follow the proposal in PLN-261012: sign-in and registration help is public;
+#      day-to-day Hotel Admin operations (rates, promotions, cancellations, bookings) are partner-only;
+#      payout / bank account / settlement and staff permissions are manager-only.
+#   2. Do the wording and the Vietnamese read the way a hotel partner really types it?
+#   3. Add the questions your support team gets most that are missing (aim for 10+ per group).
+# Calibration needs real Voyage embeddings and a populated Qdrant (staging); with the stub embedder the
+# CLI prints "NOT MEANINGFUL" and exits 3. Keep the manager-only rows' categories set to "Managers only"
+# in the console (Knowledge > Categories) before running, or those rows will report a leak.
+question,audience,expect,language,topic,status
+Làm sao để đăng ký trở thành đối tác Go2Joy?,guest,allow,vi,Đăng nhập & đăng ký đối tác,DRAFT
+How do I create a Go2Joy partner account?,guest,allow,en,Login & partner registration,DRAFT
+Tôi quên mật khẩu Hotel Admin thì làm thế nào?,guest,allow,vi,Đăng nhập & đăng ký đối tác,DRAFT
+How do I reset my Hotel Admin password?,guest,allow,en,Login & partner registration,DRAFT
+Đăng nhập Hotel Admin báo sai tài khoản hoặc mật khẩu thì phải làm sao?,guest,allow,vi,Đăng nhập & đăng ký đối tác,DRAFT
+I cannot sign in to Hotel Admin. What should I check?,guest,allow,en,Login & partner registration,DRAFT
+"Cảnh báo ""Mật khẩu có nguy cơ bị lộ"" nghĩa là gì?",guest,allow,vi,Đăng nhập & đăng ký đối tác,DRAFT
+What are the 5 steps to set up a new hotel on Go2Joy?,guest,allow,en,Login & partner registration,DRAFT
+Tôi chưa có tài khoản Hotel Admin thì liên hệ Go2Joy bằng cách nào?,guest,allow,vi,Đăng nhập & đăng ký đối tác,DRAFT
+How do I verify my email address after registering?,guest,allow,en,Login & partner registration,DRAFT
+Quy tắc đặt mật khẩu Hotel Admin như thế nào?,guest,allow,vi,Đăng nhập & đăng ký đối tác,DRAFT
+My new hotel is waiting for verification. Who do I contact?,guest,allow,en,Login & partner registration,DRAFT
+Chính sách hủy phòng khách sạn tự thiết lập được cấu hình ở đâu?,guest,refuse,vi,Đặt phòng: hủy & no-show,DRAFT
+How do I set up my hotel's own cancellation policy?,guest,refuse,en,Bookings: cancellation & no-show,DRAFT
+Giá phòng qua đêm hôm nay của khách sạn tôi là bao nhiêu?,guest,refuse,vi,Loại phòng & giá,DRAFT
+How do I create an overnight Flash Sale for a room type?,guest,refuse,en,Room types & rates,DRAFT
+Làm sao tạo chương trình Giảm giá trực tiếp cho loại phòng?,guest,refuse,vi,Loại phòng & giá,DRAFT
+How do I set up a coupon with Hotel CRM targeted promotions?,guest,refuse,en,Promotions & campaigns,DRAFT
+Cách khóa phòng nhanh trên Hotel Admin?,guest,refuse,vi,Loại phòng & giá,DRAFT
+How do I report a guest no-show and what does the guest have to confirm?,guest,refuse,en,Bookings: cancellation & no-show,DRAFT
+Tôi muốn hủy một đặt phòng thì phải nhập lý do gì và sửa được đến khi nào?,guest,refuse,vi,Đặt phòng: hủy & no-show,DRAFT
+How do I run an advertising push-notification campaign to Go2Joy users?,guest,refuse,en,Promotions & campaigns,DRAFT
+Tem tích lũy cho khách đặt phòng được thiết lập như thế nào?,guest,refuse,vi,Khuyến mãi & chiến dịch,DRAFT
+Where do I download the booking list report?,guest,refuse,en,Reports,DRAFT
+Làm sao đổi tài khoản ngân hàng nhận thanh toán công nợ?,receptionist,refuse,vi,Đối soát & thanh toán,DRAFT
+How do I request a change of the bank account that receives payouts?,receptionist,refuse,en,Reconciliation & payments,DRAFT
+Hạn hoàn tất đối soát là khi nào?,receptionist,refuse,vi,Đối soát & thanh toán,DRAFT
+"How is the settlement debt calculated, including commission and VAT?",receptionist,refuse,en,Reconciliation & payments,DRAFT
+Làm sao phân quyền cho nhân viên lễ tân trên Hotel Admin?,receptionist,refuse,vi,Tài khoản & nhân viên,DRAFT
+How do I add a staff account and change its permissions?,receptionist,refuse,en,Accounts & staff,DRAFT
