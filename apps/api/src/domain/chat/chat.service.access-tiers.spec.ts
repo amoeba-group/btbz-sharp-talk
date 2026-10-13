@@ -6,6 +6,7 @@ import {
   REFUSAL_REASON,
 } from '@sharptalk/types';
 import { ChatService } from './chat.service';
+import { ChatMapper } from './chat.mapper';
 import { Conversation } from './entity/conversation.entity';
 import { Message } from './entity/message.entity';
 import { Session } from '../session/entity/session.entity';
@@ -305,6 +306,17 @@ describe('SG-10 — a receptionist asking a manager-only topic', () => {
     expect(JSON.stringify(trace)).not.toContain('đối soát');
     // The chip survives the poll and a reload: it rides on the trace like the team question's.
     expect(trace.followUps).toEqual([{ id: 'agent_connect', label: 'Gặp nhân viên hỗ trợ' }]);
+  });
+
+  it('the chip survives the widget poll: the stored turn maps back to the same follow-up', async () => {
+    const h = asked({ groundingManager: 0.8 });
+
+    await h.svc.handleUserMessage(h.session, QUESTION);
+
+    const stored = h.saved.find((m) => m.senderType === 'system')!;
+    const wire = ChatMapper.toMessageResponse({ ...stored, createdAt: new Date() } as Message);
+    expect(wire.quickReplies).toEqual([{ id: 'agent_connect', label: 'Gặp nhân viên hỗ trợ' }]);
+    expect(wire.body).toContain('Quản lý');
   });
 
   it('asks the SECOND grounding question with the manager audience, on the same agent', async () => {
