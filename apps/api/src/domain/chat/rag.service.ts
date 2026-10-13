@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Brackets, In, Repository } from 'typeorm';
-import { AI_FUNCTION } from '@sharptalk/types';
-import type { GuestGuidance } from '@sharptalk/types';
+import { Brackets, In, IsNull, Repository } from 'typeorm';
+import { AI_FUNCTION, KB_VERSION_MISMATCH, KB_VERSION_STATE, kbVersionCaveatText, kbVersionState } from '@sharptalk/types';
+import type { GuestGuidance, KbVersionPolicy } from '@sharptalk/types';
 import { KbDocument } from '../knowledge/entity/kb-document.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { normalizeStorefrontUrl, productLinkFor } from '../../global/util/storefront-url.util';
@@ -15,6 +15,7 @@ import { AnswerFooter, footerFor } from '../ai-engine/answer-footer.util';
 import { envNumber } from '../../global/util/env-number.util';
 import { signKbVideo } from '../../global/util/crypto.util';
 import { kbVideoPath, parseVideoRef } from '../knowledge/video-ref.util';
+import { activeKbReference, kbVersionKeepSql } from '../knowledge/kb-version.util';
 import { CONVERSATION_RULES, transcript, withCurrentTurn } from './conversation-history.util';
 
 export interface RetrievedChunk {
@@ -37,6 +38,12 @@ export interface RetrievedChunk {
    * client against its API origin. Added by code, never by the model.
    */
   videoUrl?: string | null;
+  /**
+   * The UI version the document describes (PLN-261012 SG-20), as stamped when it
+   * was retrieved. Informational: the answer caveat reads the live value again
+   * at delivery, because a replayed answer carries citations from days ago.
+   */
+  uiVersion?: string | null;
   snippet: string;
   /** Dense similarity (dot, normalized vectors) when the vector leg saw this doc. */
   similarity: number | null;
@@ -60,6 +67,13 @@ export interface RagCandidateInput {
  */
 export interface RetrievalOpts {
   guestOnly?: boolean;
+  /**
+   * KB UI-version `hide` policy (PLN-261012 SG-20): the tenant's reference
+   * version, NORMALISED. Documents of any other version are excluded; unversioned
+   * ones stay. Resolved inside `retrieveHybrid` from the tenant's policy, so no
+   * caller has to remember it — set explicitly only to pin it (tests).
+   */
+  uiVersionReference?: string;
 }
 
 export interface AnswerOpts extends RetrievalOpts {
@@ -353,6 +367,65 @@ export class RagService {
     return (await this.aiConfig.getAnswerFooter?.(tenantId)) ?? null;
   }
 
+  /** The tenant's KB reference-version policy, or null = no stamping (PLN-261012 SG-20). */
+  async kbVersionPolicy(tenantId: number): Promise<KbVersionPolicy | null> {
+    return (await this.aiConfig.getKbVersionPolicy?.(tenantId)) ?? null;
+  }
+
+  /**
+   * Adds the `hide` reference version to the retrieval scope when the tenant's
+   * policy asks for it (PLN-261012 SG-20). Read here, once per search, because
+   * every entry point — chat, console QA, grounding checks — ends up in
+   * `retrieveHybrid`; a scope applied by callers would be forgotten by the next
+   * one (REQ-261012 D-01 was exactly that). No policy → `opts` comes back as is.
+   */
+  private async withVersionScope(
+    tenantId: number,
+    opts: RetrievalOpts | undefined,
+  ): Promise<RetrievalOpts | undefined> {
+    if (opts?.uiVersionReference !== undefined) return opts;
+    const reference = activeKbReference(await this.kbVersionPolicy(tenantId), KB_VERSION_MISMATCH.HIDE);
+    return reference ? { ...opts, uiVersionReference: reference } : opts;
+  }
+
+  /**
+   * The ONE fixed sentence to append to an answer that cites a document of a
+   * different UI version, or null (PLN-261012 SG-20). Appended by the chat path
+   * after moderation, like the contact footer — operator-written fixed text, not
+   * model output, and never stored in the answer-reuse store.
+   *
+   * The cited documents' versions are read LIVE here (one primary-key batch),
+   * not taken from `citations[].uiVersion`: a replayed answer carries citations
+   * stored days ago, and a document re-stamped since must change what the
+   * replay says. A document with no version never triggers it. Synthetic
+   * (negative-id) board candidates are skipped. Returns null for `off` / `hide`
+   * (hide already kept other versions out of the context) / no policy, without
+   * touching the database.
+   */
+  async versionCaveat(
+    tenantId: number,
+    policy: KbVersionPolicy | null | undefined,
+    citations: ReadonlyArray<{ id?: unknown }> | null | undefined,
+    language: string,
+  ): Promise<string | null> {
+    const reference = activeKbReference(policy, KB_VERSION_MISMATCH.CAVEAT);
+    if (!reference || !citations?.length) return null;
+    const ids = [...new Set(citations.map((c) => Number(c?.id)).filter((n) => Number.isInteger(n) && n > 0))];
+    if (!ids.length) return null;
+    const docs = await this.kbRepo.find({
+      // Same tenant scope retrieval uses: the tenant's own rows and shared (NULL-tenant) ones.
+      where: [
+        { id: In(ids), tenantId },
+        { id: In(ids), tenantId: IsNull() },
+      ],
+      select: ['id', 'uiVersion'],
+    });
+    const mismatched = docs.some(
+      (d) => kbVersionState(d.uiVersion, reference) === KB_VERSION_STATE.MISMATCH,
+    );
+    return mismatched ? kbVersionCaveatText(policy, language) : null;
+  }
+
   /** Who is answering, after inactive/unknown pins degrade to the default. */
   effectiveAgentId(tenantId: number, aiAgentId?: number | null): Promise<number | null> {
     return this.aiConfig.effectiveAgentId(tenantId, aiAgentId);
@@ -400,6 +473,7 @@ export class RagService {
     aiAgentId: number | null | undefined,
     opts: RetrievalOpts | undefined,
   ): Promise<{ chunks: RetrievedChunk[]; vectorProvider: string | null }> {
+    opts = await this.withVersionScope(tenantId, opts); // KB UI-version `hide` (SG-20)
     const [ftDocs, vec] = await Promise.all([
       this.retrieveFulltext(tenantId, query, RagService.LEG_LIMIT, aiAgentId, opts),
       this.retrieveVector(tenantId, query, RagService.LEG_LIMIT),
@@ -464,6 +538,7 @@ export class RagService {
       videoUrl: parseVideoRef(doc.videoRef)
         ? kbVideoPath(Number(doc.id), tenantId, signKbVideo(tenantId, Number(doc.id)))
         : null,
+      uiVersion: doc.uiVersion ?? null,
       // Whole document up to the budget, else the paragraphs matching the query (R3).
       snippet: selectPassages(doc.content ?? '', query),
       similarity,
@@ -594,6 +669,13 @@ export class RagService {
                AND g.guest_visible = 1))`,
         { guestTenantId: tenantId },
       );
+    }
+    // KB UI-version `hide` (PLN-261012 SG-20): only the tenant's reference
+    // version and unversioned documents. Absent opts → no predicate, so a tenant
+    // without the policy is byte-identical. Both legs and the vector re-hydration
+    // pass through here, like the scopes above.
+    if (opts?.uiVersionReference) {
+      qb.andWhere(kbVersionKeepSql('kb.ui_version', 'uiVersionRef'), { uiVersionRef: opts.uiVersionReference });
     }
     return qb;
   }

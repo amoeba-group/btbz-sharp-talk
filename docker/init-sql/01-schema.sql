@@ -1121,6 +1121,7 @@ CREATE TABLE `kb_document_revisions` (
   `actor_user_id` bigint DEFAULT NULL,
   `restored_from` int DEFAULT NULL COMMENT 'revision_no this one was restored from',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ui_version` varchar(16) DEFAULT NULL COMMENT 'NULL = not recorded (legacy revision); empty = recorded, unversioned',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_kbrev` (`tenant_id`,`document_id`,`revision_no`),
   KEY `idx_kbrev_doc` (`tenant_id`,`document_id`,`revision_no`)
@@ -1154,6 +1155,7 @@ CREATE TABLE `kb_documents` (
   `superseded_by` bigint DEFAULT NULL,
   `doc_group` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'counsel' COMMENT 'counsel|product — closed set',
   `external_key` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'stable key from the origin system (product: Shopify Handle)',
+  `ui_version` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'product UI version the document describes; NULL = unversioned',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_kb_extkey` (`tenant_id`,`doc_group`,`external_key`),
   KEY `idx_kb_tenant` (`tenant_id`),
@@ -1678,6 +1680,7 @@ CREATE TABLE `tenant_ai_config` (
   `guest_guidance` json DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `kb_version_policy` json DEFAULT NULL COMMENT 'reference UI version + caveat|hide|off; NULL = no stamping',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_aiconfig_tenant` (`tenant_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

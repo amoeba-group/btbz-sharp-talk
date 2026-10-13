@@ -298,6 +298,12 @@ export const ERROR_CODE = {
   /** The partner API throttled us (429). */
   PARTNER_RATE_LIMITED: { code: 'E5108', message: 'The partner data service is rate limiting requests' },
   // E5109 is reserved for this block.
+  // E5110-E5111 — KB UI version stamping (PLN-261012 SG-20). E5112-E5114 stay reserved for this stream.
+  KB_UI_VERSION_INVALID: {
+    code: 'E5110',
+    message: 'The UI version must be 1-16 characters: letters, digits and . _ + - (for example v0.12.0)',
+  },
+  KB_VERSION_POLICY_INVALID: { code: 'E5111', message: 'The reference UI version setting is invalid' },
 } as const;
 
 export type ErrorCodeEntry = { code: string; message: string };

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Build the Go2Joy Hotel Admin *policy* knowledge base as a bulk-import CSV
-(console: Knowledge → 일괄등록; columns category,title,content,external_key,source_url).
+(console: Knowledge → 일괄등록; columns category,title,content,external_key,source_url,ui_version).
 
 Source of every fact: Hotel Admin UAT v23.3.0 (go2joy-ha-uat.go2joy.io) — screen
 text, i18n strings and the "Tin nhắn từ G2J" announcements read on 2026-09-16
@@ -14,6 +14,16 @@ Out:  reference/go2joy-ha-policies-kb-260916.csv  (50 rows: 25 topics × VI/EN;
       GTJ-HA-POL-22..25 = the guest-visible "sign in / register" group, PLN-261001 K1)
 
 Re-running is idempotent for the importer: it upserts by external_key.
+
+ui_version (PLN-261012 SG-20): the product UI version a document describes. The column is written
+BLANK by default because the version AXIS is not decided (Go2Joy's own sources say Hotel Admin
+v23.3.0 / v23.4.0 — see above — while the requirements document FR-010 / R10 says v0.4.1-v0.12.0).
+Fill UI_VERSION / UI_VERSION_BY_KEY below once it is. The importer treats the label as opaque and
+compares it for equality only, so either axis works.
+⚠️ A blank cell in a file that HAS the ui_version column CLEARS a version stamped in the console
+for that row (that is what makes download → edit → upload round-trip). To keep console-stamped
+versions, import a file WITHOUT the column (e.g. the CSV committed before this change) or fill
+the versions here and treat this script as their source of truth.
 """
 from __future__ import annotations
 
@@ -22,6 +32,11 @@ import os
 
 HA = 'https://ha.go2joy.vn'
 OUT = os.path.join(os.path.dirname(__file__), '..', '..', 'reference', 'go2joy-ha-policies-kb-260916.csv')
+# UI version written to every row's ui_version cell; '' = unversioned (see the module docstring).
+UI_VERSION = ''
+# Per topic key (the GTJ-HA-POL-NN prefix) override, e.g. {'GTJ-HA-POL-22': 'v23.4.0'} — POL-22..25
+# were read from the v23.4.0 bundle, the rest from v23.3.0. Left empty: the axis is undecided.
+UI_VERSION_BY_KEY: dict[str, str] = {}
 # Guest-visible category (PLN-261001 K1/K2): the only one a login-guidance agent may
 # answer an unidentified visitor from. Everything else stays signed-in only.
 CAT_PUBLIC = 'HA · Đăng nhập & đăng ký đối tác'
@@ -608,7 +623,7 @@ Source: Hotel Admin UAT v23.4.0 and Go2Joy notices 2024–2026 (read 2026-10-01)
     ),
 ]
 
-LIMITS = {'category': 64, 'title': 255, 'external_key': 255, 'source_url': 512}
+LIMITS = {'category': 64, 'title': 255, 'external_key': 255, 'source_url': 512, 'ui_version': 16}
 
 
 def rows():
@@ -619,6 +634,7 @@ def rows():
             'content': content_vi.strip(),
             'external_key': f'{key}-VI',
             'source_url': HA + path,
+            'ui_version': UI_VERSION_BY_KEY.get(key, UI_VERSION),
         }
         yield {
             'category': category,
@@ -626,6 +642,7 @@ def rows():
             'content': content_en.strip(),
             'external_key': f'{key}-EN',
             'source_url': HA + path,
+            'ui_version': UI_VERSION_BY_KEY.get(key, UI_VERSION),
         }
 
 
@@ -639,7 +656,7 @@ def main() -> None:
     keys = [r['external_key'] for r in all_rows]
     assert len(keys) == len(set(keys)), 'duplicate external_key'
     with open(out, 'w', encoding='utf-8-sig', newline='') as fh:
-        w = csv.DictWriter(fh, fieldnames=['category', 'title', 'content', 'external_key', 'source_url'],
+        w = csv.DictWriter(fh, fieldnames=['category', 'title', 'content', 'external_key', 'source_url', 'ui_version'],
                            quoting=csv.QUOTE_ALL, lineterminator='\n')
         w.writeheader()
         w.writerows(all_rows)

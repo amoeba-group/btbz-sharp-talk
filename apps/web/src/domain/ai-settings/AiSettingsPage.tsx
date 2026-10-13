@@ -33,6 +33,7 @@ import { AgentEffectiveSection } from './AgentEffectiveSection';
 import { ScriptLibrarySection } from './ScriptLibrarySection';
 import { AnswerFooterSection } from './AnswerFooterSection';
 import { GuestGuidanceSection } from './GuestGuidanceSection';
+import { KbVersionSection } from './KbVersionSection';
 import { useAiAgents } from './ai-agents.hooks';
 import type { AiAgentRow } from './ai-agents.service';
 import type {
@@ -92,6 +93,8 @@ export function AiSettingsPage() {
           <GuestGuidanceSection />
           <ScriptLibrarySection />
           <AnswerFooterSection />
+          {/* Reference UI version for knowledge documents (PLN-261012 SG-20). */}
+          <KbVersionSection />
           <AiFunctionsSection />
           <ModerationSection />
           <RegressionSection />

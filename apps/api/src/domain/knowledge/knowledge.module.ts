@@ -49,6 +49,7 @@ import { KnowledgeController } from './knowledge.controller';
 import { AgentKnowledgeController } from './agent-knowledge.controller';
 import { ChatModule } from '../chat/chat.module';
 import { ModerationModule } from '../moderation/moderation.module';
+import { AnswerReuseModule } from '../answer-reuse/answer-reuse.module';
 
 @Module({
   imports: [
@@ -87,6 +88,9 @@ import { ModerationModule } from '../moderation/moderation.module';
     BoardModule,
     // Knowledge edits were the one privileged action leaving no audit trail.
     AuditModule,
+    // Re-stamping a document's UI version retires stored replays under the
+    // `hide` policy (PLN-261012 SG-20). AnswerReuse imports no Knowledge code.
+    AnswerReuseModule,
   ],
   controllers: [KnowledgeController, AgentKnowledgeController, BoardReviewController, KbVideoController],
   providers: [

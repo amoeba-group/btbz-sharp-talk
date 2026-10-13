@@ -1,4 +1,5 @@
 import type { RegionRoutingConfig } from '../../../../../packages/types/src/common/region';
+import type { KbVersionPolicy } from '../../../../../packages/types/src/common/kb-version';
 import type { SessionLanguage } from '@sharptalk/types';
 import { apiGet, apiPut, apiPost, apiDelete } from '@/lib/api-client';
 
@@ -203,6 +204,8 @@ export interface AiConfig {
   handoffConfig?: HandoffConfig | null;
   answerFooter?: AnswerFooter | null;
   guestGuidance?: GuestGuidance | null;
+  /** Reference UI version for KB documents (PLN-261012 SG-20); null = no stamping. */
+  kbVersionPolicy?: KbVersionPolicy | null;
 }
 
 /** Contact footer appended to knowledge answers + masking-exempt values (PLN-261007 R4). */
@@ -260,6 +263,8 @@ export const aiSettingsService = {
     answer_footer?: AnswerFooter;
     /** Guest sign-in guidance + host link template (PLN-261001 W2/W8). */
     guest_guidance?: GuestGuidance;
+    /** Reference UI version + what to do on a mismatch (PLN-261012 SG-20). */
+    kb_version_policy?: KbVersionPolicy;
     /** Why this change was made — recorded on the config revision. */
     note?: string;
     /** Which AI agent a persona/rules write targets (PLN-260820); omitted = default. */

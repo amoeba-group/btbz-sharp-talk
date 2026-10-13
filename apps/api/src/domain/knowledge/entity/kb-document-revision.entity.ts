@@ -56,6 +56,17 @@ export class KbDocumentRevision {
   @Column({ name: 'review_interval_days', type: 'int', nullable: true })
   reviewIntervalDays: number | null;
 
+  /**
+   * The document's UI version when this revision was taken (PLN-261012 SG-20).
+   * THREE states, because a restore must not guess: a version label; '' =
+   * "recorded, and the document was unversioned"; NULL = "not recorded" — every
+   * revision written before the column existed. A restore applies the first two
+   * and leaves the document's current version alone for NULL, so rolling back
+   * to an old revision cannot silently wipe a version stamped since.
+   */
+  @Column({ name: 'ui_version', type: 'varchar', length: 16, nullable: true })
+  uiVersion: string | null;
+
   @Column({ type: 'tinyint', width: 1, default: 1 })
   active: number;
 

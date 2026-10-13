@@ -14,6 +14,7 @@ import {
   SESSION_IDENTITY,
   buildHandoffTrace,
   buildRefusalTrace,
+  kbVersionCaveatVariants,
   localized,
 } from '@sharptalk/types';
 import type { LocalizedText } from '@sharptalk/types';
@@ -803,7 +804,11 @@ export class ChatService {
     // back to the model (it copied the block and then the system added it again).
     const footerCfg = (await this.rag.footerConfig?.(tenantId)) ?? null;
     const variants = footerVariants(footerCfg);
-    const history = await this.conversationHistory(conversation.id, userTurn.id, variants);
+    // KB UI-version caveat (PLN-261012 SG-20): its sentences are stripped from
+    // earlier answers for the same reason — the model copies what it reads.
+    const versionPolicy = (await this.rag.kbVersionPolicy?.(tenantId)) ?? null;
+    const caveatTexts = kbVersionCaveatVariants(versionPolicy);
+    const history = await this.conversationHistory(conversation.id, userTurn.id, [...variants, ...caveatTexts]);
 
     // Intent + scope check (FN-015): order data requires authentication first.
     const intent = await this.rag.classifyIntent(
@@ -1292,7 +1297,15 @@ export class ChatService {
     const footer = footerFor(footerCfg, session.language);
     // A copy the model wrote itself is removed so the block appears once.
     const answerText = footer ? stripFooters(replyText, variants) : replyText;
-    const deliveredText = footer ? `${answerText}\n\n${footer}` : replyText;
+    // One fixed UI-version caveat when a cited document is stamped with another
+    // version (PLN-261012 SG-20): added here, after moderation, read live from the
+    // cited documents so a replay is covered too, and kept out of `baseText` —
+    // which is what the reuse store gets. It sits before the contact footer.
+    const baseText = stripFooters(answerText, caveatTexts);
+    const caveat =
+      (await this.rag.versionCaveat?.(tenantId, versionPolicy, answer.citations, session.language)) ?? null;
+    const bodyText = caveat ? `${baseText}\n\n${caveat}` : baseText;
+    const deliveredText = footer ? `${bodyText}\n\n${footer}` : bodyText;
 
     if (opts.draft) {
       // Approval mode: the answer is a proposal, not a message. Persisting it
@@ -1322,6 +1335,7 @@ export class ChatService {
       // statistics read them as knowledge-document ids, and issue auto-resolve
       // counts the confidence next to them.
       ...(partner ? { partnerEvidence: partner.evidence, answeredFrom: 'partner_data' } : {}),
+      ...(caveat ? { uiVersionCaveat: true } : {}),
     });
     if (reused) {
       void this.answerReuse?.recordHit(reused.reuseId);
@@ -1336,7 +1350,7 @@ export class ChatService {
         tenantId,
         lang: session.language,
         question: egressText,
-        answerText,
+        answerText: baseText,
         confidence: answer.confidence,
         citations: answer.citations,
         sourceMessageId: aiTurn.id,

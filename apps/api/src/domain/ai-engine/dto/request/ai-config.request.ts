@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsIn, IsInt, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsIn, IsInt, IsObject, IsOptional, IsString, ValidateIf } from 'class-validator';
 import { SCENARIO_AUDIENCE, type ScenarioAudience } from '@sharptalk/types';
 
 class ScenarioButtonDto {
@@ -46,6 +46,15 @@ export class UpdateAiConfigRequest {
    * AiConfigService.sanitizeGuestGuidance (https URLs only, known languages).
    */
   @IsOptional() @IsObject() guest_guidance?: Record<string, unknown>;
+
+  /**
+   * Reference UI version for KB documents (PLN-261012 SG-20): `{ referenceVersion,
+   * onMismatch: 'caveat'|'hide'|'off', notice: {EN: …} }`. Validated in
+   * AiConfigService via sanitizeKbVersionPolicy (E5111); `null` clears it.
+   */
+  @ValidateIf((_o, v) => v !== undefined && v !== null)
+  @IsObject()
+  kb_version_policy?: Record<string, unknown> | null;
 
   /** Why this change was made — stored on the revision, never sent to the model. */
   @IsOptional() @IsString() note?: string;

@@ -15,3 +15,4 @@ export * from './domain/status-map';
 export * from './common/markdown-lite';
 export * from './common/identity-policy';
 export * from './common/refusal-reason';
+export * from './common/kb-version';

@@ -129,6 +129,15 @@ export function KnowledgeQaPanel({ onEditSource }: { onEditSource: (documentId: 
                           disagreeing sources to trust. */}
                       {s.conflicted && <Badge tone="error">{t('qa.conflicted')}</Badge>}
                       {s.stale && <Badge tone="warning">{t('staleBadge')}</Badge>}
+                      {/* UI version vs the reference (SG-20): a customer reading an
+                          answer that cites a mismatched document gets a caveat, so
+                          the operator sees which source causes it. */}
+                      {s.versionState === 'mismatch' && (
+                        <Badge tone="warning">{t('uiVersionOther', { version: s.uiVersion })}</Badge>
+                      )}
+                      {s.versionState === 'unversioned' && (
+                        <Badge tone="warning">{t('uiVersionUnversioned')}</Badge>
+                      )}
                       {s.similarity !== null && (
                         <span className="text-[11px] tabular-nums text-gray-400">
                           {t('qa.similarity')} {s.similarity.toFixed(2)}

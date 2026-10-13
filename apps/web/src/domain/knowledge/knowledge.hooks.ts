@@ -222,6 +222,20 @@ export function useDocumentFacets() {
   });
 }
 
+/**
+ * The tenant's reference UI version (PLN-261012 SG-20) — what the version badge
+ * and the mismatch filter compare against. Short-lived: the AI settings card
+ * changes it and invalidates this key.
+ */
+export function useKbVersionPolicy() {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['knowledge', tenantKey, 'version-policy'],
+    queryFn: () => knowledgeService.versionPolicy(),
+    staleTime: 60_000,
+  });
+}
+
 export function useDocument(id: string | null) {
   const tenantKey = useTenantKey();
   return useQuery({
@@ -261,6 +275,7 @@ export function useCreateDocument() {
       source_id?: number;
       doc_group?: string;
       source_url?: string;
+      ui_version?: string;
     }) => knowledgeService.createDocument(body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'documents'] });
@@ -284,6 +299,7 @@ export function useUpdateDocument() {
         active?: number;
         source_url?: string | null;
         video_ref?: string | null;
+        ui_version?: string | null;
         effective_from?: string | null;
         review_interval_days?: number | null;
       };

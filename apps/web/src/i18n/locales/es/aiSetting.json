@@ -435,6 +435,29 @@
   "audience_all": "Todos",
   "audience_guest": "Sin sesión",
   "audience_verified": "Con sesión",
+  "kbVersion": {
+    "title": "Versión de interfaz de referencia",
+    "hint": "Indica la versión del producto que usan hoy tus usuarios. Los documentos de conocimiento pueden llevar la versión que describen (Conocimiento › documento › Versión de la interfaz). Una respuesta que cita un documento de otra versión recibe una frase fija, o ese documento se deja fuera. Las versiones son etiquetas que se comparan por igualdad: «v0.12.0», «V0.12.0» y «0.12.0» son la misma, «0.12.0» y «0.12.1» no, así que sirve cualquier numeración; no se ordena nada. Un documento sin versión nunca se marca en las respuestas.",
+    "reference": "Versión actual",
+    "referenceInvalid": "Usa de 1 a 16 caracteres: letras, dígitos y . _ + - (sin espacios).",
+    "referenceRequired": "Escribe la versión actual o elige «Desactivado».",
+    "onMismatch": "Cuando un documento tiene otra versión",
+    "mode": {
+      "caveat": "Añadir un aviso a la respuesta",
+      "hide": "Ocultar el documento",
+      "off": "Desactivado"
+    },
+    "modeHint": {
+      "caveat": "La respuesta se entrega como siempre, seguida de una frase fija (se añade tras la moderación, antes del bloque de contacto).",
+      "hide": "El documento se excluye de la búsqueda, así que el asistente no puede citarlo. Los documentos sin versión siguen disponibles.",
+      "off": "Las versiones se ven en la lista de conocimiento pero no cambian nada en las respuestas."
+    },
+    "notice": "Texto del aviso",
+    "noticeHint": "En blanco se usa la frase predeterminada en gris. Una sola frase; solo se añade cuando un documento citado tiene otra versión.",
+    "retireNote": "Cambiar la versión o el modo también retira las respuestas guardadas, para que ninguna se repita con la regla anterior.",
+    "saved": "Versión de referencia guardada",
+    "saveError": "No se pudo guardar la versión de referencia"
+  },
   "guest": {
     "title": "Guía para invitados (sin sesión)",
     "hint": "Lo que ofrece el asistente cuando un agente configurado como \"solo guiar para iniciar sesión\" atiende a un visitante sin sesión. Qué agentes lo hacen se define arriba, por agente.",

@@ -72,6 +72,11 @@ export class ListDocumentsQuery {
   @IsOptional() @IsString() source?: string;
   /** embedded | pending. */
   @IsOptional() @IsString() status?: string;
+  /**
+   * UI-version filter (PLN-261012 SG-20): `mismatch` = stamped with a version
+   * other than the tenant's reference, `unversioned` = no version at all.
+   */
+  @IsOptional() @IsIn(['mismatch', 'unversioned']) ui_version_state?: string;
   /** Sort axis — anything else falls back to the default id DESC. */
   @IsOptional() @IsIn(['title', 'updated']) sort?: string;
   @IsOptional() @IsIn(['asc', 'desc']) order?: string;
@@ -95,6 +100,12 @@ export class CreateDocumentRequest {
   @IsOptional() @IsString() @MaxLength(512) source_url?: string;
   /** `https://…` or `notion:<block id>` — the video this document explains. */
   @IsOptional() @IsString() @MaxLength(255) @Matches(VIDEO_REF_PATTERN) video_ref?: string;
+  /**
+   * The product UI version this document describes (PLN-261012 SG-20): "v23.3.0",
+   * "0.12.0" — an opaque label. Shape checked in the service (E5110); the length
+   * cap here only stops absurd input before it gets that far.
+   */
+  @IsOptional() @IsString() @MaxLength(64) ui_version?: string;
 }
 
 /** Multipart form fields riding along the bulk-import file (PLN-260828 D3). */
@@ -158,6 +169,11 @@ export class UpdateDocumentRequest {
   @IsOptional() @IsString() effective_from?: string | null;
   @IsOptional() @IsInt() review_interval_days?: number | null;
   @IsOptional() @IsInt() owner_user_id?: number | null;
+  /** UI version (PLN-261012 SG-20). Empty string or null clears it; shape checked in the service (E5110). */
+  @ValidateIf((_o, v) => v !== undefined && v !== null)
+  @IsString()
+  @MaxLength(64)
+  ui_version?: string | null;
 }
 
 /** Conflict review queue filter. */

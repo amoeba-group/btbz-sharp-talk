@@ -1,8 +1,8 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Not, Repository } from 'typeorm';
+import { In, IsNull, Not, Raw, Repository } from 'typeorm';
 import { normalizePage } from '@sharptalk/common';
-import { MODERATION_DECISION } from '@sharptalk/types';
+import { MODERATION_DECISION, KB_VERSION_MISMATCH, kbVersionState, normalizeKbVersion } from '@sharptalk/types';
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
 import { RagService } from '../chat/rag.service';
 import { ModerationService } from '../moderation/moderation.service';
@@ -28,6 +28,8 @@ import { IntegrationCredential } from '../tenant/entity/integration-credential.e
 import { AuditLog } from '../audit/entity/audit-log.entity';
 import { decryptSecret } from '../../global/util/crypto.util';
 import { REVISION_KIND } from './entity/kb-document-revision.entity';
+import { AnswerReuseService } from '../answer-reuse/answer-reuse.service';
+import { kbUnversionedSql, kbVersionMismatchSql, parseUiVersionInput } from './kb-version.util';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { verifyNumbers } from '../partner-data/partner-numbers.util';
@@ -69,6 +71,9 @@ export class KnowledgeService {
     // Optional: run-history reads (PLN-260828-Source-Conversion-History).
     @InjectRepository(AuditLog)
     private readonly auditRepo?: Repository<AuditLog>,
+    // Optional: a re-stamped UI version retires stored replays under the `hide`
+    // policy (PLN-261012 SG-20).
+    private readonly answerReuse?: AnswerReuseService,
   ) {}
 
   // ---- Sources ----
@@ -208,6 +213,16 @@ export class KnowledgeService {
     if (query.active !== undefined) where.active = Number(query.active);
     if (query.source !== undefined) where.source = query.source;
     if (query.status !== undefined) where.status = query.status;
+    // UI-version filter (PLN-261012 SG-20), in SQL with the same normaliser the
+    // `hide` policy uses so the list and retrieval can never disagree.
+    if (query.ui_version_state === 'unversioned') {
+      where.uiVersion = Raw((col) => kbUnversionedSql(col));
+    } else if (query.ui_version_state === 'mismatch') {
+      const reference = normalizeKbVersion((await this.rag.kbVersionPolicy?.(tenantId))?.referenceVersion);
+      // No reference version set: there is nothing a document could mismatch.
+      if (!reference) return { items: [], total: 0, page, size };
+      where.uiVersion = Raw((col) => kbVersionMismatchSql(col, 'uiVerRef'), { uiVerRef: reference });
+    }
     // Sort axis is a whitelist mapped here — user input never reaches ORDER BY
     // directly. Unset (or anything else, which the DTO already rejects) keeps
     // the original id DESC, so existing callers see identical ordering.
@@ -239,6 +254,7 @@ export class KnowledgeService {
         'reviewIntervalDays',
         'effectiveFrom',
         'supersededBy',
+        'uiVersion',
       ],
       where,
       order,
@@ -273,6 +289,18 @@ export class KnowledgeService {
       sources: sources.map((r) => r.v).filter(Boolean),
       statuses: statuses.map((r) => r.v).filter(Boolean),
     };
+  }
+
+  /**
+   * The tenant's reference UI version and mode, for the document list's badge and
+   * mismatch filter (PLN-261012 SG-20). A read of `tenant_ai_config` exposed
+   * under the knowledge capability: the people who curate documents need to see
+   * which version they are measured against without holding AI-settings rights.
+   * The caveat wording stays with the AI settings; null = the tenant sets none.
+   */
+  async getVersionPolicy(tenantId: number): Promise<{ referenceVersion: string; onMismatch: string } | null> {
+    const policy = (await this.rag.kbVersionPolicy?.(tenantId)) ?? null;
+    return policy ? { referenceVersion: policy.referenceVersion, onMismatch: policy.onMismatch } : null;
   }
 
   /** Full document including LONGTEXT content (list omits it — PERF-9). */
@@ -354,6 +382,10 @@ export class KnowledgeService {
       stale: boolean;
       /** Contradicts another cited document (an open conflict names this one). */
       conflicted: boolean;
+      /** The UI version the document describes (PLN-261012 SG-20); null = unversioned. */
+      uiVersion: string | null;
+      /** Against the tenant's reference version; null while the tenant has none set. */
+      versionState: string | null;
     }>;
   }> {
     // A refusal/degradation of the partner step is itself the answer: fixed,
@@ -406,13 +438,26 @@ export class KnowledgeService {
     ]);
     const docsById = new Map(citedDocs.map((d) => [Number(d.id), d]));
 
+    // The UI-version caveat a shopper would get (PLN-261012 SG-20), so what the
+    // operator tests here is what customers read — appended after moderation.
+    const versionPolicy = (await this.rag.kbVersionPolicy?.(tenantId)) ?? null;
+    const reference = normalizeKbVersion(versionPolicy?.referenceVersion);
+    const caveat = blocked
+      ? null
+      : ((await this.rag.versionCaveat?.(tenantId, versionPolicy, result.citations, language.toUpperCase())) ?? null);
+
     return {
-      answer: answerText,
+      // `answerText` already went through moderation and the partner-data number
+      // check (SG-31); the UI-version caveat is appended last, as in chat (SG-20) —
+      // but never onto the withheld "unverified" notice.
+      answer: caveat && answerText === moderated.text ? `${answerText}\n\n${caveat}` : answerText,
       confidence,
       blocked,
       sources: result.citations.map((c) => {
         const doc = docsById.get(Number(c.id));
         return {
+          uiVersion: doc?.uiVersion ?? null,
+          versionState: reference ? kbVersionState(doc?.uiVersion, reference) : null,
           id: Number(c.id),
           title: c.title,
           category: c.category,
@@ -459,6 +504,8 @@ export class KnowledgeService {
       content: body.content,
       sourceUrl: body.source_url ?? null,
       videoRef: body.video_ref || null,
+      // Validated first (E5110): a bad label must not leave a half-created row.
+      uiVersion: parseUiVersionInput(body.ui_version),
       active: 1,
       status: 'pending',
       embeddingRef: null,
@@ -484,6 +531,9 @@ export class KnowledgeService {
     if (body.source_url !== undefined) doc.sourceUrl = body.source_url;
     // A video link changes nothing the search reads, so it never re-embeds.
     if (body.video_ref !== undefined) doc.videoRef = body.video_ref || null;
+    // UI version (PLN-261012 SG-20): metadata only — never re-embeds. Blank or
+    // null clears it (back to "unversioned"); a malformed label is refused (E5110).
+    if (body.ui_version !== undefined) doc.uiVersion = parseUiVersionInput(body.ui_version);
     if (body.effective_from !== undefined) doc.effectiveFrom = body.effective_from;
     if (body.review_interval_days !== undefined) doc.reviewIntervalDays = body.review_interval_days;
     if (body.owner_user_id !== undefined) doc.ownerUserId = body.owner_user_id;
@@ -496,6 +546,9 @@ export class KnowledgeService {
     }
     const saved = await this.docRepo.save(doc);
     await this.revisions.record(tenantId, saved, before, REVISION_KIND.UPDATE, actorUserId);
+    if ((before.uiVersion ?? null) !== (saved.uiVersion ?? null)) {
+      await this.retireReplaysIfHiding(tenantId);
+    }
     if (reembed) return this.embed(saved);
     if (activeChanged && this.qdrant.enabled) {
       // Visibility toggle only — flip the Qdrant payload flag, no re-embedding.
@@ -622,6 +675,7 @@ export class KnowledgeService {
     );
     const docs = await this.bulkImport.pendingByIds(tenantId, touchedIds);
     const { embedded, failed } = await this.embedDocuments(docs);
+    if (result.versionChanged > 0) await this.retireReplaysIfHiding(tenantId);
 
     await this.revisions.recordAudit(tenantId, 0, 'knowledge.bulk_imported', actorUserId, {
       filename: file.originalname,
@@ -648,13 +702,31 @@ export class KnowledgeService {
     revisionId: number,
     actorUserId: number,
   ): Promise<KbDocument> {
-    const { doc, contentChanged } = await this.revisions.restore(
+    const { doc, contentChanged, versionChanged } = await this.revisions.restore(
       tenantId,
       documentId,
       revisionId,
       actorUserId,
     );
+    if (versionChanged) await this.retireReplaysIfHiding(tenantId);
     return contentChanged ? this.embed(doc) : doc;
+  }
+
+  /**
+   * Under the `hide` policy a document's version decides whether it may be cited
+   * at all, so re-stamping one makes stored replays that cited it stale: they
+   * are retired (PLN-261012 SG-20). `caveat` needs nothing — the caveat is
+   * read live at delivery, replays included. Best effort: the edit is already
+   * saved, a reuse-store failure is logged, never raised.
+   */
+  async retireReplaysIfHiding(tenantId: number): Promise<void> {
+    if (!this.answerReuse) return;
+    try {
+      const policy = await this.rag.kbVersionPolicy?.(tenantId);
+      if (policy?.onMismatch === KB_VERSION_MISMATCH.HIDE) await this.answerReuse.deactivateAll(tenantId);
+    } catch (e) {
+      this.logger.warn(`retiring stored answers after a UI-version change failed: ${(e as Error).message}`);
+    }
   }
 
   async deleteDocument(tenantId: number, id: number, actorUserId: number | null = null): Promise<void> {
