@@ -1,4 +1,8 @@
+import 'reflect-metadata';
 import { randomBytes } from 'crypto';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
+import { DsarEraseRequest, DsarExportRequest } from './dto/request/operator-dsar.request';
 import { OperatorDsarService, phoneKey } from './operator-dsar.service';
 import { PrivacyService } from './privacy.service';
 import { blindIndex } from '../../global/util/crypto.util';
@@ -152,6 +156,29 @@ describe('OperatorDsarService (SG-70)', () => {
       const h = build([customer({ tenantId: 8 })]);
       await expect(h.svc.eraseFor(7, 99, 42, 42)).rejects.toMatchObject({ errorCode: 'E5116' });
       expect(h.privacy.eraseCustomer).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('bigint ids (found in the browser smoke: export answered 400)', () => {
+    it('returns the id as a number even though the driver hands bigint back as a string', async () => {
+      const h = build([customer({ id: '42' })]);
+      const [row] = (await h.svc.lookup(7, 1, 'external_id', 'ext-1')).items;
+      expect(row.id).toBe(42);
+      expect(typeof row.id).toBe('number');
+    });
+
+    it('the request DTOs accept a numeric string for the id, so a stale client cannot 400 the action', async () => {
+      const exp = plainToInstance(DsarExportRequest, { customer_id: '42' });
+      expect(await validate(exp)).toEqual([]);
+      expect(exp.customer_id).toBe(42);
+      const del = plainToInstance(DsarEraseRequest, { customer_id: '42', confirm_customer_id: '42', confirm: true });
+      expect(await validate(del)).toEqual([]);
+      expect(del.confirm_customer_id).toBe(42);
+    });
+
+    it('still rejects a non-numeric or non-positive id', async () => {
+      expect((await validate(plainToInstance(DsarExportRequest, { customer_id: 'abc' }))).length).toBeGreaterThan(0);
+      expect((await validate(plainToInstance(DsarExportRequest, { customer_id: 0 }))).length).toBeGreaterThan(0);
     });
   });
 

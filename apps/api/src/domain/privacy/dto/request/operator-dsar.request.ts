@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Length, MaxLength, Min } from 'class-validator';
 
 /** Request DTOs for the operator DSAR tool — snake_case (amoeba_code_convention). */
@@ -17,15 +18,16 @@ export class DsarLookupRequest {
 }
 
 export class DsarExportRequest {
-  @IsInt() @Min(1) customer_id: number;
+  // @Type: a bigint id that travelled as a string must still validate as an integer.
+  @Type(() => Number) @IsInt() @Min(1) customer_id: number;
   /** Where the request came from (ticket / email id) — recorded in the audit row only. */
   @IsOptional() @IsString() @MaxLength(120) reference?: string;
 }
 
 export class DsarEraseRequest {
-  @IsInt() @Min(1) customer_id: number;
+  @Type(() => Number) @IsInt() @Min(1) customer_id: number;
   /** Must repeat `customer_id`: a second, deliberate step before an irreversible action. */
-  @IsInt() @Min(1) confirm_customer_id: number;
+  @Type(() => Number) @IsInt() @Min(1) confirm_customer_id: number;
   @IsBoolean() confirm: boolean;
   @IsOptional() @IsString() @MaxLength(120) reference?: string;
 }

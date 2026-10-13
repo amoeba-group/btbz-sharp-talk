@@ -177,7 +177,9 @@ export class OperatorDsarService {
   private toRow(c: Customer): DsarCustomerRow {
     const claims = c.lastClaims as { hotelSn?: string; hotelName?: string } | null;
     return {
-      id: c.id,
+      // bigint ids arrive from the driver as strings; the console and the DSAR
+      // request DTOs both want a number.
+      id: Number(c.id),
       name: maskName(c.name),
       email: maskEmail(c.email),
       phone: maskPhone(c.phone),
