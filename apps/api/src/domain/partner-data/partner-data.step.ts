@@ -267,14 +267,23 @@ export class PartnerDataStep {
     // it answer AROUND that refusal, so such a question is left to prefetch.
     if (intent.topics.some((t) => !tools.roleMayRead(ctx.role, t.topic))) return { done: false };
 
-    const out = await tools.run({
-      ctx,
-      language: input.language,
-      // The model sees the scrubbed copy, like every other egress (PRV Stage 5).
-      modelText: input.modelText ?? scrubPii(input.text).text,
-      history: input.history,
-      call: { conversationId: input.conversationId, messageId: input.messageId, sessionId: input.session.id },
-    });
+    let out: Awaited<ReturnType<PartnerToolsService['run']>>;
+    try {
+      out = await tools.run({
+        ctx,
+        language: input.language,
+        // The model sees the scrubbed copy, like every other egress (PRV Stage 5).
+        modelText: input.modelText ?? scrubPii(input.text).text,
+        history: input.history,
+        call: { conversationId: input.conversationId, messageId: input.messageId, sessionId: input.session.id },
+      });
+    } catch (e) {
+      // `run` never throws by design. If it did, the safe answers are the old ones: prefetch for a
+      // detected topic, an ordinary turn otherwise — never the "partner unavailable" notice for a
+      // question the model merely might have wanted to look up.
+      this.logger.error(`partner tools failed unexpectedly, using the standard lookup: ${(e as Error).message}`, (e as Error).stack);
+      return intent.topics.length ? { done: false } : { done: true, prepared: null };
+    }
 
     switch (out.kind) {
       case 'data':

@@ -138,7 +138,8 @@ export class FakeAnthropicServer {
     this.script = script;
   }
 
-  async start(): Promise<this> {
+  /** Listen on an ephemeral port (default) or a fixed one (a standalone smoke needs a stable URL). */
+  async start(port = 0): Promise<this> {
     this.server = http.createServer((req, res) => {
       const chunks: Buffer[] = [];
       req.on('data', (c: Buffer) => chunks.push(c));
@@ -150,7 +151,7 @@ export class FakeAnthropicServer {
       this.sockets.add(s);
       s.on('close', () => this.sockets.delete(s));
     });
-    await new Promise<void>((r) => this.server.listen(0, '127.0.0.1', r));
+    await new Promise<void>((r) => this.server.listen(port, '127.0.0.1', r));
     this.url = `http://127.0.0.1:${(this.server.address() as AddressInfo).port}/v1/messages`;
     return this;
   }
