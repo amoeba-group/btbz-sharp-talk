@@ -69,6 +69,9 @@ export class AiCoachMapper {
       forbidden: q.forbidden ?? [],
       // The partner context the question runs under (PLN-261012 SG-31), or null.
       partnerCtx: q.partnerCtx ?? null,
+      // Who the question is asked as and what the gate should do for them (PLN-261012 SG-51), or null.
+      audience: q.audience ?? null,
+      expectGate: q.expectGate ?? null,
       createdAt: q.createdAt,
     };
   }

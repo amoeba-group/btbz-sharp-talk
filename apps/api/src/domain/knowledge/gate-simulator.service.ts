@@ -9,6 +9,7 @@ import { decideGate } from '../chat/gate-decision';
 import type { GateDecision, GateOptions } from '../chat/gate-decision';
 import { KbCategory } from './entity/kb-category.entity';
 import { KnowledgeService } from './knowledge.service';
+import type { PartnerPrepared } from '../partner-data/partner-data.step';
 
 /** One category the retrieval matched, with the tier that decides who may read it. */
 export interface SimulatedCategory {
@@ -56,6 +57,11 @@ export interface SimulateInput {
   /** The agent to talk to; null/absent = the tenant's default agent (what an unpinned visitor gets). */
   aiAgentId?: number | null;
   as: GateAs;
+  /**
+   * A partner-data turn prepared for a golden question (SG-31), handed to the answer when the gate lets
+   * the question through. Never taken from a request.
+   */
+  partner?: PartnerPrepared | null;
 }
 
 /**
@@ -143,7 +149,7 @@ export class GateSimulatorService {
       language,
       input.group,
       agentId,
-      null,
+      input.partner ?? null,
       decision.audience,
       decision.guestGated,
     );

@@ -1,4 +1,6 @@
 import { sanitizePartnerCtx } from '../partner-data/partner-golden.util';
+import { sanitizeAudience, sanitizeExpectGate } from './golden-gate-grade.util';
+import type { ExpectGate, GateAs } from '@sharptalk/types';
 import type { GoldenPartnerCtx } from '../partner-data/partner-golden.util';
 
 /**
@@ -99,15 +101,32 @@ export function parsePartnerColumn(cell: string | undefined): GoldenPartnerCtx |
  */
 export function parseBulkLines(
   text: string,
-): Array<{ question: string; expected: string[] | null; forbidden: string[] | null; partnerCtx?: GoldenPartnerCtx }> {
+): Array<{
+  question: string;
+  expected: string[] | null;
+  forbidden: string[] | null;
+  partnerCtx?: GoldenPartnerCtx;
+  /** 5th / 6th columns (PLN-261012 SG-51); absent when the column is absent or blank (a re-paste keeps the stored value). */
+  audience?: GateAs;
+  expectGate?: ExpectGate;
+}> {
   return (text ?? '')
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith('#'))
     .map((l) => {
-      const [q, e = '', f = '', partner] = l.split('\t');
+      const [q, e = '', f = '', partner, audience, expectGate] = l.split('\t');
       const split = (s: string) => sanitizeChecks(s.split('|'));
-      return { question: q.trim(), expected: split(e), forbidden: split(f), partnerCtx: parsePartnerColumn(partner) };
+      const viewer = sanitizeAudience(audience);
+      const expectation = sanitizeExpectGate(expectGate);
+      return {
+        question: q.trim(),
+        expected: split(e),
+        forbidden: split(f),
+        partnerCtx: parsePartnerColumn(partner),
+        ...(viewer ? { audience: viewer } : {}),
+        ...(expectation ? { expectGate: expectation } : {}),
+      };
     })
     .filter((r) => r.question.length >= 2);
 }

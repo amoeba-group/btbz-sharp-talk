@@ -199,7 +199,11 @@ export class AiCoachController {
   @ApiOperation({ summary: 'Add a regression question' })
   async addGolden(@CurrentUser() user: Principal, @Body() body: CreateGoldenQuestionRequest) {
     const { tenantId, userId } = this.tenantUser(user);
-    const row = await this.golden.addQuestion(tenantId, userId, { ...body, partnerCtx: partnerCtxFromBody(body) });
+    const row = await this.golden.addQuestion(tenantId, userId, {
+      ...body,
+      partnerCtx: partnerCtxFromBody(body),
+      expectGate: body.expect_gate,
+    });
     return AiCoachMapper.toGoldenQuestion(row);
   }
 
@@ -223,6 +227,7 @@ export class AiCoachController {
     const row = await this.golden.updateQuestion(this.tenantUser(user).tenantId, id, {
       ...body,
       partnerCtx: partnerCtxFromBody(body),
+      expectGate: body.expect_gate,
     });
     return AiCoachMapper.toGoldenQuestion(row);
   }

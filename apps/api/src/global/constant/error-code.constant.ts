@@ -357,6 +357,12 @@ export const ERROR_CODE = {
   PARTNER_TOOLS_UNAVAILABLE: { code: 'E5143', message: 'The AI engine could not run the lookup tools; the standard lookup was used' },
   /** The model asked for a lookup tool the server does not offer. */
   PARTNER_TOOL_CALL_INVALID: { code: 'E5144', message: 'The model asked for a lookup the server does not offer' },
+  // E5145-E5149 — Measurable guest/role gate (PLN-261012 SG-51).
+  /** A golden question names what the gate should do (`expect_gate`) but not who it is asked as (`audience`). */
+  GOLDEN_GATE_NEEDS_AUDIENCE: {
+    code: 'E5145',
+    message: 'A gate expectation needs an audience to ask as (guest, partner, receptionist or manager)',
+  },
 } as const;
 
 export type ErrorCodeEntry = { code: string; message: string };

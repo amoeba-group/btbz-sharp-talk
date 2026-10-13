@@ -9,6 +9,16 @@ import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { GoldenQuestion } from './entity/golden-question.entity';
 import { GOLDEN_RUN_KIND, GoldenRun, GoldenRunItem, GoldenRunKind } from './entity/golden-run.entity';
 import { gradeAnswer, parseBulkLines, sanitizeChecks } from './golden-grade.util';
+import {
+  combineGrades,
+  gradeGate,
+  sanitizeAudience,
+  sanitizeExpectGate,
+  textGradeAppliesFacts,
+} from './golden-gate-grade.util';
+import { GateSimulatorService } from '../knowledge/gate-simulator.service';
+import type { GateReport } from '../knowledge/gate-simulator.service';
+import type { ExpectGate, GateDecisionValue } from '@sharptalk/types';
 import { PartnerGoldenService } from '../partner-data/partner-golden.service';
 import { sanitizePartnerCtx } from '../partner-data/partner-golden.util';
 import type { PartnerPrepared } from '../partner-data/partner-data.step';
@@ -62,6 +72,9 @@ export class GoldenService implements OnModuleInit {
     // Appended and optional (specs build this service positionally): runs a
     // question's partner context through the partner-data step (PLN-261012 SG-31).
     private readonly partnerGolden?: PartnerGoldenService,
+    // Appended and optional likewise: asks a question AS a viewer and records the gate's decision
+    // (PLN-261012 SG-51).
+    private readonly gateSimulator?: GateSimulatorService,
   ) {}
 
   /**
@@ -99,8 +112,17 @@ export class GoldenService implements OnModuleInit {
       forbidden?: unknown;
       /** `{ hotelSn, role, mockSet }` — run under a partner context (PLN-261012 SG-31). */
       partnerCtx?: unknown;
+      /** Ask AS this viewer (guest | partner | receptionist | manager) and record the gate (SG-51). */
+      audience?: unknown;
+      /** What the gate should do for that viewer: allow | refuse. Needs an audience. */
+      expectGate?: unknown;
     },
   ): Promise<GoldenQuestion> {
+    const audience = sanitizeAudience(input.audience);
+    const expectGate = sanitizeExpectGate(input.expectGate);
+    if (expectGate && !audience) {
+      throw new BusinessException(ERROR_CODE.GOLDEN_GATE_NEEDS_AUDIENCE, HttpStatus.BAD_REQUEST);
+    }
     return this.questionRepo.save(
       this.questionRepo.create({
         tenantId,
@@ -110,6 +132,8 @@ export class GoldenService implements OnModuleInit {
         expected: sanitizeChecks(input.expected),
         forbidden: sanitizeChecks(input.forbidden),
         partnerCtx: sanitizePartnerCtx(input.partnerCtx),
+        audience,
+        expectGate,
         active: 1,
         createdBy: userId,
       }),
@@ -142,6 +166,10 @@ export class GoldenService implements OnModuleInit {
         hit.forbidden = r.forbidden;
         // A re-paste without the 4th column leaves the context as it was.
         if (r.partnerCtx) hit.partnerCtx = r.partnerCtx;
+        // Likewise the 5th / 6th (viewer, gate expectation): absent leaves what is stored (SG-51).
+        if (r.audience) hit.audience = r.audience;
+        if (r.expectGate) hit.expectGate = r.expectGate;
+        if (hit.expectGate && !hit.audience) hit.expectGate = null;
         hit.language = language;
         await this.questionRepo.save(hit);
         updated++;
@@ -157,6 +185,9 @@ export class GoldenService implements OnModuleInit {
         expected: r.expected,
         forbidden: r.forbidden,
         partnerCtx: r.partnerCtx,
+        audience: r.audience,
+        // An expectation without a viewer is dropped, not an error: one bad cell must not cost the paste.
+        expectGate: r.audience ? r.expectGate : undefined,
       });
       byText.set(saved.question.trim(), saved);
       created++;
@@ -176,6 +207,10 @@ export class GoldenService implements OnModuleInit {
       expected?: unknown;
       forbidden?: unknown;
       partnerCtx?: unknown;
+      /** Blank clears the viewer (and with it the expectation); absent leaves it (SG-51). */
+      audience?: unknown;
+      /** Blank clears the expectation; absent leaves it. A set expectation needs a viewer. */
+      expectGate?: unknown;
     },
   ): Promise<GoldenQuestion> {
     const row = await this.questionRepo.findOne({ where: { id, tenantId } });
@@ -187,6 +222,15 @@ export class GoldenService implements OnModuleInit {
     if (input.expected !== undefined) row.expected = sanitizeChecks(input.expected);
     if (input.forbidden !== undefined) row.forbidden = sanitizeChecks(input.forbidden);
     if (input.partnerCtx !== undefined) row.partnerCtx = sanitizePartnerCtx(input.partnerCtx);
+    if (input.audience !== undefined) {
+      row.audience = sanitizeAudience(input.audience);
+      // Without a viewer there is nothing to grade: the expectation goes with it unless one is sent.
+      if (!row.audience && input.expectGate === undefined) row.expectGate = null;
+    }
+    if (input.expectGate !== undefined) row.expectGate = sanitizeExpectGate(input.expectGate);
+    if (row.expectGate && !row.audience) {
+      throw new BusinessException(ERROR_CODE.GOLDEN_GATE_NEEDS_AUDIENCE, HttpStatus.BAD_REQUEST);
+    }
     return this.questionRepo.save(row);
   }
 
@@ -281,10 +325,32 @@ export class GoldenService implements OnModuleInit {
           if (!this.partnerGolden) throw new Error('partner-data golden support is not available');
           partner = await this.partnerGolden.prepare(tenantId, q.partnerCtx, q.question, q.language);
         }
-        const res = await this.knowledge.ask(tenantId, q.question, q.language, undefined, run.aiAgentId ?? null, partner);
-        const grade = res.blocked
+        // A question asked AS a viewer goes through the gate simulator: what that viewer would be
+        // told — a refusal's own notice, or the answer — plus the gate's decision, recorded per item
+        // and graded against `expect_gate` (PLN-261012 SG-51). No audience = asked exactly as before.
+        const viewer = sanitizeAudience(q.audience);
+        let gate: GateReport | null = null;
+        let res: Awaited<ReturnType<KnowledgeService['ask']>>;
+        if (viewer) {
+          if (!this.gateSimulator) throw new Error('gate simulation is not available');
+          const sim = await this.gateSimulator.simulate(tenantId, {
+            question: q.question,
+            language: q.language,
+            aiAgentId: run.aiAgentId ?? null,
+            as: viewer,
+            partner,
+          });
+          gate = sim.gate;
+          res = sim;
+        } else {
+          res = await this.knowledge.ask(tenantId, q.question, q.language, undefined, run.aiAgentId ?? null, partner);
+        }
+        const expectGate = viewer ? sanitizeExpectGate(q.expectGate) : null;
+        const decision: GateDecisionValue | null = gate?.decision ?? null;
+        const textGrade = res.blocked
           ? { verdict: q.expected?.length ? ('fail' as const) : null, failedChecks: q.expected?.length ? ['blocked'] : [] }
-          : gradeAnswer(res.answer, q.expected, q.forbidden);
+          : gradeAnswer(res.answer, textGradeAppliesFacts(expectGate, decision) ? q.expected : null, q.forbidden);
+        const grade = combineGrades(textGrade, gradeGate(expectGate as ExpectGate | null, decision));
         if (grade.verdict === 'pass') pass++;
         if (grade.verdict === 'fail') fail++;
         await this.itemRepo.save(
@@ -303,10 +369,20 @@ export class GoldenService implements OnModuleInit {
             })),
             verdict: grade.verdict,
             failedChecks: grade.failedChecks.length ? grade.failedChecks : null,
+            // The gate, as asked and as decided (SG-51); all NULL for an ordinary question.
+            audience: gate ? viewer : null,
+            expectGate: gate ? expectGate : null,
+            gateDecision: gate?.decision ?? null,
+            gateConfidence: gate?.confidence ?? null,
+            gateThreshold: gate ? gate.threshold : null,
+            gateTopSimilarity: gate?.topSimilarity ?? null,
+            gateVectorProvider: gate ? (gate.degraded ? 'degraded' : (gate.vectorProvider ?? 'none')) : null,
           }),
         );
       } catch (e) {
-        if (q.expected?.length) fail++;
+        // A question that names facts OR a gate expectation is graded, so a failure to run it fails it.
+        const graded = !!(q.expected?.length || (q.audience && q.expectGate));
+        if (graded) fail++;
         // One bad question must not cost the whole run — record and continue.
         this.logger.warn(`golden run ${run.id}: question ${q.id} failed: ${(e as Error).message}`);
         await this.itemRepo.save(
@@ -320,8 +396,10 @@ export class GoldenService implements OnModuleInit {
             blocked: 0,
             citations: null,
             error: (e as Error).message.slice(0, 300),
-            verdict: q.expected?.length ? 'fail' : null,
-            failedChecks: q.expected?.length ? ['error'] : null,
+            verdict: graded ? 'fail' : null,
+            failedChecks: graded ? ['error'] : null,
+            audience: q.audience ?? null,
+            expectGate: q.expectGate ?? null,
           }),
         );
       }
