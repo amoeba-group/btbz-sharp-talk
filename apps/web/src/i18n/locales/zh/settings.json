@@ -49,7 +49,14 @@
     "copyResponsibility": "此处填写的文案将替换向顾客展示的标准告知，内容由租户负责。",
     "bumpVersion": "这是重大变更——提升告知版本，并请已同意的顾客重新确认。",
     "unsetUrl": "未设置——留空时同意告知中不会显示政策链接。",
-    "unsetVersion": "未设置——当前适用平台默认版本。"
+    "unsetVersion": "未设置——当前适用平台默认版本。",
+    "profile_vn_pdpl": "越南(个人数据保护法)",
+    "line_controller": "数据控制方及联系方式",
+    "line_crossBorder": "跨境传输",
+    "line_rights": "数据主体的权利",
+    "vnPdplDraft": "越南版本的文案是草稿。面向用户启用前,请法务人员确认适用法律以及处理和跨境传输的法律依据,并请越南语母语者审校文字。",
+    "unfilledWarning": "用户将看到的通知中仍有 [[…]] 占位符({{languages}})。使用前,请在“数据控制方及联系方式”一行填写法人名称、地址和个人数据保护联系人。",
+    "tokensHint": "任何一行都可以使用 {{retention}} 和 {{region}}:服务器会填入当前部署的保存期限和 AI 处理地区,因此文案始终与实际执行一致。"
   },
   "widgetBehavior": {
     "title": "小组件行为",

@@ -9,7 +9,32 @@ import type { NoticeLineKey, NoticeLines } from './privacy-notice.service';
 import { LANGUAGES } from '../../../../../packages/types/src/common/language';
 
 /** Rendered in the banner's order; `title`/`body` lead, the disclosures follow. */
-const NOTICE_LINES: NoticeLineKey[] = ['title', 'body', 'items', 'purpose', 'retention', 'aiProcessor'];
+const NOTICE_LINES: NoticeLineKey[] = [
+  'title',
+  'body',
+  'controller',
+  'items',
+  'purpose',
+  'retention',
+  'aiProcessor',
+  'crossBorder',
+  'rights',
+];
+
+/** Lines that are a full paragraph in the Vietnam profile — they get a multi-line box. */
+const LONG_LINES: ReadonlySet<NoticeLineKey> = new Set<NoticeLineKey>([
+  'body',
+  'controller',
+  'aiProcessor',
+  'crossBorder',
+  'rights',
+]);
+
+/** Server-side cap (PRIVACY_NOTICE_LINE_MAX is 1000); the box stops a little earlier. */
+const LINE_MAX = 800;
+
+const TEXTAREA_CLASS =
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500';
 
 /** Empty is allowed (clears the link); otherwise http(s) URL, max 512 (server rule). */
 function isValidPolicyUrl(value: string): boolean {
@@ -165,8 +190,16 @@ export function PrivacyNoticePage() {
                   <option value="commerce">{t('privacyNotice.profile_commerce')}</option>
                   <option value="lodging">{t('privacyNotice.profile_lodging')}</option>
                   <option value="generic">{t('privacyNotice.profile_generic')}</option>
+                  <option value="vn_pdpl">{t('privacyNotice.profile_vn_pdpl')}</option>
                 </Select>
                 <p className="mt-1 text-xs text-gray-400">{t('privacyNotice.profileHint')}</p>
+                {/* Operator-facing only: the draft caveat never reaches shoppers. */}
+                {(profile || data?.effectiveProfile) === 'vn_pdpl' && (
+                  <div className="mt-2 flex items-start gap-2 rounded-lg border border-warning/40 bg-warning/10 px-3 py-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                    <p className="text-xs leading-relaxed text-gray-700">{t('privacyNotice.vnPdplDraft')}</p>
+                  </div>
+                )}
               </FormRow>
 
               <FormRow label={t('privacyNotice.copyLang')}>
@@ -181,17 +214,49 @@ export function PrivacyNoticePage() {
 
               {NOTICE_LINES.map((key) => (
                 <FormRow key={key} label={t(`privacyNotice.line_${key}`)}>
-                  <Input
-                    value={copy[copyLang]?.[key] ?? ''}
-                    // The placeholder is the profile's own wording, so an
-                    // operator can see what they are replacing before they do.
-                    placeholder={data?.profileCopy?.[copyLang]?.[key] ?? ''}
-                    onChange={(e) => setLine(key, e.target.value)}
-                    maxLength={500}
-                  />
+                  {LONG_LINES.has(key) ? (
+                    <textarea
+                      rows={3}
+                      value={copy[copyLang]?.[key] ?? ''}
+                      placeholder={data?.profileCopy?.[copyLang]?.[key] ?? ''}
+                      onChange={(e) => setLine(key, e.target.value)}
+                      maxLength={LINE_MAX}
+                      className={TEXTAREA_CLASS}
+                    />
+                  ) : (
+                    <Input
+                      value={copy[copyLang]?.[key] ?? ''}
+                      // The placeholder is the profile's own wording, so an
+                      // operator can see what they are replacing before they do.
+                      placeholder={data?.profileCopy?.[copyLang]?.[key] ?? ''}
+                      onChange={(e) => setLine(key, e.target.value)}
+                      maxLength={LINE_MAX}
+                    />
+                  )}
                 </FormRow>
               ))}
+              {/* A `[[…]]` fill-in marker in what shoppers would read is an
+                  unfinished notice — say which languages still have one. */}
+              {(data?.unfilledPlaceholders?.length ?? 0) > 0 && (
+                <div
+                  className="mb-3 flex items-start gap-2 rounded-lg border border-error/40 bg-error/10 px-3 py-2"
+                  role="alert"
+                >
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-error" />
+                  <p className="text-xs leading-relaxed text-gray-700">
+                    {t('privacyNotice.unfilledWarning', {
+                      languages: (data?.unfilledPlaceholders ?? []).map((u) => u.language).join(', '),
+                    })}
+                  </p>
+                </div>
+              )}
               <p className="mb-2 text-xs text-gray-400">{t('privacyNotice.copyHint')}</p>
+              <p className="mb-2 text-xs text-gray-400">
+                {t('privacyNotice.tokensHint', {
+                  retention: '{{retentionDays}}',
+                  region: '{{region}}',
+                })}
+              </p>
               <p className="text-xs text-gray-500">{t('privacyNotice.copyResponsibility')}</p>
             </div>
 

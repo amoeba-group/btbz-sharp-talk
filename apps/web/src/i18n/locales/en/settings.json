@@ -49,7 +49,14 @@
     "copyResponsibility": "Text you write here replaces the standard notice for your shoppers — its content is your responsibility.",
     "bumpVersion": "This is a material change — raise the notice version and ask everyone who already consented to consent again.",
     "unsetUrl": "Not set — without it the consent banner shows no policy link.",
-    "unsetVersion": "Not set — the platform default version is in force."
+    "unsetVersion": "Not set — the platform default version is in force.",
+    "profile_vn_pdpl": "Vietnam (personal data law)",
+    "line_controller": "Data controller & contact",
+    "line_crossBorder": "Cross-border transfer",
+    "line_rights": "Your rights",
+    "vnPdplDraft": "The Vietnam wording is a draft. Before you turn it on for shoppers, have your counsel confirm the governing law and the legal basis for processing and for the cross-border transfer, and have a native Vietnamese speaker review the text.",
+    "unfilledWarning": "The notice shoppers would read still contains [[…]] placeholders ({{languages}}). Write your legal entity, address and data protection contact in the \"Data controller & contact\" line before you rely on it.",
+    "tokensHint": "{{retention}} and {{region}} can be used inside any line: the server fills in this deployment's retention window and AI processing region, so the text always matches what is enforced."
   },
   "widgetBehavior": {
     "title": "Widget behavior",

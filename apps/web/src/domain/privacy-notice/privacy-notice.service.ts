@@ -1,7 +1,17 @@
 import { apiGet, apiPatch } from '@/lib/api-client';
 
 /** One notice line, keyed the way the widget renders them. */
-export type NoticeLineKey = 'title' | 'body' | 'items' | 'purpose' | 'retention' | 'aiProcessor';
+export type NoticeLineKey =
+  | 'title'
+  | 'body'
+  | 'items'
+  | 'purpose'
+  | 'retention'
+  | 'aiProcessor'
+  // Vietnam profile only (PLN-261012 SG-70): the widget shows these when sent.
+  | 'controller'
+  | 'crossBorder'
+  | 'rights';
 export type NoticeLines = Partial<Record<NoticeLineKey, string>>;
 
 /** Tenant-facing consent notice configuration (camelCase response). */
@@ -16,6 +26,8 @@ export interface PrivacyNoticeSettings {
   privacyNoticeCopy: Record<string, NoticeLines> | null;
   /** The profile's own wording per language — shown as the placeholder. */
   profileCopy: Record<string, NoticeLines>;
+  /** Languages whose notice still carries a `[[…]]` fill-in marker (PLN-261012 SG-70). */
+  unfilledPlaceholders?: { language: string; keys: string[] }[];
 }
 
 /** PATCH body is snake_case per API convention. */

@@ -49,7 +49,14 @@
     "copyResponsibility": "El texto que escribas aquí reemplaza el aviso estándar para tus clientes; su contenido es tu responsabilidad.",
     "bumpVersion": "Es un cambio sustancial: sube la versión del aviso y vuelve a pedir el consentimiento a quienes ya lo dieron.",
     "unsetUrl": "Sin configurar: sin él, el aviso no muestra enlace a la política.",
-    "unsetVersion": "Sin configurar: rige la versión predeterminada de la plataforma."
+    "unsetVersion": "Sin configurar: rige la versión predeterminada de la plataforma.",
+    "profile_vn_pdpl": "Vietnam (ley de datos personales)",
+    "line_controller": "Responsable del tratamiento y contacto",
+    "line_crossBorder": "Transferencia internacional",
+    "line_rights": "Sus derechos",
+    "vnPdplDraft": "El texto para Vietnam es un borrador. Antes de activarlo para los compradores, pida a su asesor jurídico que confirme la ley aplicable y la base legal del tratamiento y de la transferencia internacional, y que un hablante nativo de vietnamita revise el texto.",
+    "unfilledWarning": "El aviso que leerían los compradores aún contiene marcadores [[…]] ({{languages}}). Escriba su entidad legal, dirección y contacto de protección de datos en la línea «Responsable del tratamiento y contacto» antes de usarlo.",
+    "tokensHint": "{{retention}} y {{region}} pueden usarse en cualquier línea: el servidor completa el plazo de conservación y la región de procesamiento de IA de este despliegue, así el texto coincide siempre con lo que se aplica."
   },
   "widgetBehavior": {
     "title": "Comportamiento del widget",

@@ -41,6 +41,8 @@ import {
 import type { ResolvedPrivacyNotice, SessionLanguage } from '@sharptalk/types';
 import { evaluateWidgetAccess } from '@sharptalk/types';
 import { getRequestContext } from '../../global/middleware/request-context.middleware';
+import { noticeContextFromEnv } from '../../global/util/retention-policy.util';
+import { AuditService } from '../audit/audit.service';
 
 /** A suspended tenant serves nobody — widget included (REQ-260929 G6). */
 const TENANT_SUSPENDED = 'suspended';
@@ -134,6 +136,9 @@ export class SessionService {
     // Guest guidance (PLN-261001 v1.1) rides on the tenant AI config row. Repo
     // only — importing AiEngineModule here would be a cycle (see the module).
     @InjectRepository(TenantAiConfig) private readonly aiConfigRepo?: Repository<TenantAiConfig>,
+    // Consent evidence (PLN-261012 SG-70). Optional + trailing: positional test
+    // doubles stay valid, and a missing writer only skips the evidence row.
+    private readonly audit?: AuditService,
   ) {}
 
   async ensure(
@@ -512,8 +517,9 @@ export class SessionService {
     return session;
   }
 
-  async setConsent(token: string, granted: boolean): Promise<Session> {
+  async setConsent(token: string, granted: boolean, replayed = false): Promise<Session> {
     const session = await this.loadByToken(token);
+    const previousState = session.consentState;
     session.consentState = granted ? CONSENT_STATE.GRANTED : CONSENT_STATE.DECLINED;
     // Auditable proof of the choice: when + which notice version (PRV-M4).
     // The version stamped is the tenant's *effective* one so a tenant override
@@ -526,7 +532,54 @@ export class SessionService {
     this.logger.log(
       `consent recorded: session=${session.id} state=${saved.consentState} version=${saved.consentVersion}`,
     );
+    if (!replayed) await this.writeConsentEvidence(saved, previousState);
     return saved;
+  }
+
+  /**
+   * Consent evidence in `audit_logs` (PLN-261012 SG-70).
+   *
+   * The session row holds the CURRENT choice only, and the widget re-records a
+   * remembered choice onto every new anonymous session — so `consent_at` there
+   * is "when this session inherited it", not "when the person decided". This
+   * row is the durable trail of the decisions themselves: grant, first refusal,
+   * and withdrawal (granted -> declined), each with the notice version shown.
+   *
+   * No PII by design: actor is `system`, the target is the session id, and the
+   * request IP that AuditService would otherwise stamp is dropped explicitly.
+   * Replays are not recorded (one per page load would drown the table); the
+   * click that created the choice already was.
+   *
+   * Best-effort: the choice itself is already saved, and failing the shopper's
+   * request because the evidence write failed would block their chat for a
+   * bookkeeping problem — so a failure is logged loudly instead.
+   */
+  private async writeConsentEvidence(session: Session, previousState: string): Promise<void> {
+    if (!this.audit) return;
+    const granted = session.consentState === CONSENT_STATE.GRANTED;
+    const action = granted
+      ? 'consent.granted'
+      : previousState === CONSENT_STATE.GRANTED
+        ? 'consent.withdrawn'
+        : 'consent.declined';
+    try {
+      await this.audit.write({
+        tenantId: session.tenantId ?? null,
+        actorType: 'system',
+        actorId: 0,
+        action,
+        target: `session:${session.id}`,
+        ip: null,
+        metadata: {
+          state: session.consentState,
+          previousState,
+          noticeVersion: session.consentVersion,
+          language: session.language,
+        },
+      });
+    } catch (err) {
+      this.logger.error(`consent evidence write failed (session ${session.id}): ${String(err)}`);
+    }
   }
 
   /**
@@ -637,6 +690,10 @@ export class SessionService {
         profile,
         normalizePrivacyNoticeCopy(tenant?.privacyNoticeCopy),
         (languageBySession(language)?.session ?? null) as SessionLanguage | null,
+        // {{retentionDays}} / {{region}} are filled from the deployment's env
+        // here, not in the widget, so the notice quotes what the purge job
+        // enforces (PLN-261012 SG-70).
+        noticeContextFromEnv(),
       ),
       aiProcessingRegion: AI_PROCESSING_REGION,
       // Guest gate (PLN-261001 v1.1): the widget learns up front whether this

@@ -73,6 +73,11 @@ export interface PrivacyNoticeResponse {
   privacyNoticeCopy: Record<string, Record<string, string>> | null;
   /** The profile's own wording, per language — the console shows it as the placeholder. */
   profileCopy: Record<string, Record<string, string>>;
+  /**
+   * Languages whose effective notice still contains a `[[…]]` fill-in marker
+   * (PLN-261012 SG-70). Empty = nothing left to complete.
+   */
+  unfilledPlaceholders: { language: string; keys: string[] }[];
 }
 
 /** Widget behavior settings (PLN-Widget-Login-Redirect-Orders). */

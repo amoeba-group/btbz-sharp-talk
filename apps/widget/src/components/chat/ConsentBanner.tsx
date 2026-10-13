@@ -64,11 +64,26 @@ export function ConsentBanner({
   const line = (key: string, fallbackKey: string): string =>
     noticeCopy?.[key]?.trim() || t(fallbackKey);
 
+  /**
+   * Lines that exist ONLY when the server sends them (PLN-261012 SG-70): the
+   * controller, cross-border and rights statements of the Vietnam profile.
+   * There is deliberately no bundled fallback — the bundled notice is a CCPA
+   * text, and inventing a controller or a rights list client-side would put
+   * words in a legal notice that no tenant wrote.
+   */
+  const extra = (key: string): string[] => {
+    const text = noticeCopy?.[key]?.trim();
+    return text ? [text] : [];
+  };
+
   const disclosures: string[] = [
+    ...extra('controller'),
     line('items', 'chat.consent.items'),
     line('purpose', 'chat.consent.purpose'),
     line('retention', 'chat.consent.retention'),
     line('aiProcessor', 'chat.consent.aiProcessor'),
+    ...extra('crossBorder'),
+    ...extra('rights'),
   ];
 
   return (
@@ -103,7 +118,13 @@ export function ConsentBanner({
         {line('body', 'chat.consent.body')}
       </p>
 
-      <ul className="mb-2 space-y-0.5 text-[11px] leading-relaxed text-gray-500">
+      {/* The fuller notice can outgrow the panel; scroll the list, not the page.
+          Focusable so a keyboard user can reach the part below the fold. */}
+      <ul
+        tabIndex={0}
+        aria-labelledby={titleId}
+        className="mb-2 max-h-56 space-y-0.5 overflow-y-auto pr-1 text-[11px] leading-relaxed text-gray-500 focus:outline-none focus-visible:ring-1 focus-visible:ring-primary-500"
+      >
         {disclosures.map((line) => (
           <li key={line} className="flex gap-1">
             <span aria-hidden="true">•</span>

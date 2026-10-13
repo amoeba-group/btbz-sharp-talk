@@ -7,6 +7,7 @@ import { AiAgent } from '../ai-engine/entity/ai-agent.entity';
 import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { SessionService } from './session.service';
 import { SessionController } from './session.controller';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   // Customer is registered for the repository only (display name lookup) — no
@@ -14,7 +15,9 @@ import { SessionController } from './session.controller';
   // AiAgent likewise (agent-code → id pinning) — AiEngineModule imports THIS
   // module, so importing it back would be a cycle. TenantAiConfig the same
   // way, for the guest guidance the session response carries (PLN-261001 v1.1).
-  imports: [TypeOrmModule.forFeature([Session, Tenant, Customer, AiAgent, TenantAiConfig])],
+  // AuditModule only imports TypeORM entities, so unlike AiEngineModule it
+  // cannot cycle back here — consent evidence rows (PLN-261012 SG-70).
+  imports: [TypeOrmModule.forFeature([Session, Tenant, Customer, AiAgent, TenantAiConfig]), AuditModule],
   controllers: [SessionController],
   providers: [SessionService],
   exports: [SessionService],

@@ -1,5 +1,10 @@
 import {
+  aiRegionName,
+  hasUnfilledPlaceholder,
+  interpolateNoticeLine,
+  isPrivacyProfile,
   normalizePrivacyNoticeCopy,
+  PRIVACY_NOTICE_KEYS,
   privacyProfileCopy,
   resolvePrivacyNotice,
   resolvePrivacyProfile,
@@ -92,5 +97,118 @@ describe('resolvePrivacyNotice', () => {
     // `title` is not part of any profile, so it is simply absent — the widget
     // then renders its own bundled title.
     expect(out.title).toBeUndefined();
+  });
+});
+
+/**
+ * vn_pdpl (PLN-261012 SG-70, REQ D-17). The Vietnamese partner notice used to
+ * be the bundled CCPA/Google Analytics text with "365 days" and "United States"
+ * frozen in. The properties that matter: it never falls back to that text, the
+ * numbers come from the server, and an unfinished draft is detectable.
+ */
+describe('vn_pdpl profile', () => {
+  const ctx = { retentionDays: 180, region: 'US' };
+
+  it('is a selectable profile and survives the "unknown value" check', () => {
+    expect(isPrivacyProfile('vn_pdpl')).toBe(true);
+    expect(resolvePrivacyProfile('vn_pdpl', true)).toBe('vn_pdpl');
+    // Fits the varchar(16) column the profile is stored in.
+    expect('vn_pdpl'.length).toBeLessThanOrEqual(16);
+  });
+
+  it('supplies every key in vi and en, so the bundled CCPA text is never reached', () => {
+    for (const lang of ['VI', 'EN'] as const) {
+      const notice = privacyProfileCopy('vn_pdpl', lang, ctx);
+      for (const key of PRIVACY_NOTICE_KEYS) {
+        expect(notice[key]?.trim().length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('carries none of the CCPA / Google Analytics wording', () => {
+    for (const lang of ['VI', 'EN'] as const) {
+      const all = Object.values(privacyProfileCopy('vn_pdpl', lang, ctx)).join(' ');
+      expect(all).not.toMatch(/CCPA|CPRA|Google|Analytics|GA4|365/i);
+    }
+  });
+
+  it('interpolates the retention window and region from the server context', () => {
+    const vi = privacyProfileCopy('vn_pdpl', 'VI', ctx);
+    expect(vi.retention).toContain('180 ngày');
+    expect(vi.aiProcessor).toContain('Hoa Kỳ');
+    expect(vi.crossBorder).toContain('Hoa Kỳ');
+    const en = privacyProfileCopy('vn_pdpl', 'EN', { retentionDays: 30, region: 'SG' });
+    expect(en.retention).toContain('30 days');
+    expect(en.crossBorder).toContain('Singapore');
+    // No token may survive once a context is supplied.
+    for (const text of Object.values(vi)) expect(text).not.toContain('{{');
+  });
+
+  it('a language without profile copy reads the EN lines, with an English region name', () => {
+    const ko = privacyProfileCopy('vn_pdpl', 'KO', ctx);
+    expect(ko.title).toBe(privacyProfileCopy('vn_pdpl', 'EN', ctx).title);
+    expect(ko.crossBorder).toContain('the United States');
+    expect(ko.crossBorder).not.toContain('미국');
+  });
+
+  it('interpolates inside a tenant override too, in the override language', () => {
+    const out = resolvePrivacyNotice(
+      'vn_pdpl',
+      { VI: { retention: 'Chúng tôi giữ {{retentionDays}} ngày tại {{region}}.' } },
+      'VI',
+      ctx,
+    );
+    expect(out.retention).toBe('Chúng tôi giữ 180 ngày tại Hoa Kỳ.');
+  });
+
+  it('names the controller, the recipients and the rights', () => {
+    const vi = privacyProfileCopy('vn_pdpl', 'VI', ctx);
+    expect(vi.controller).toMatch(/Bên kiểm soát/);
+    expect(vi.aiProcessor).toMatch(/Anthropic/);
+    expect(vi.aiProcessor).toMatch(/Voyage/);
+    expect(vi.rights).toMatch(/rút lại/);
+  });
+
+  it('keeps the controller placeholders detectable until the tenant fills them', () => {
+    const draft = privacyProfileCopy('vn_pdpl', 'EN', ctx);
+    expect(hasUnfilledPlaceholder(draft.controller)).toBe(true);
+    expect(hasUnfilledPlaceholder(draft.rights)).toBe(false);
+    const filled = resolvePrivacyNotice(
+      'vn_pdpl',
+      { EN: { controller: 'Data controller: Go2Joy Vietnam JSC, Hanoi. DPO: dpo@example.com.' } },
+      'EN',
+      ctx,
+    );
+    expect(hasUnfilledPlaceholder(filled.controller)).toBe(false);
+  });
+
+  it('normalisation keeps the three new keys instead of dropping them as unknown', () => {
+    expect(
+      normalizePrivacyNoticeCopy({
+        VI: { controller: 'a', crossBorder: 'b', rights: 'c', nope: 'x' },
+      }),
+    ).toEqual({ VI: { controller: 'a', crossBorder: 'b', rights: 'c' } });
+  });
+
+  it('does not change what the other profiles resolve to', () => {
+    // Existing tenants must see byte-identical copy: no new key leaks into them.
+    const lodging = privacyProfileCopy('lodging', 'VI', ctx);
+    expect(Object.keys(lodging).sort()).toEqual(['items', 'purpose']);
+  });
+});
+
+describe('interpolateNoticeLine / aiRegionName', () => {
+  it('leaves the text alone when there is no context or no token', () => {
+    expect(interpolateNoticeLine('kept {{retentionDays}}', 'EN', undefined)).toBe('kept {{retentionDays}}');
+    expect(interpolateNoticeLine('plain', 'EN', { retentionDays: 5 })).toBe('plain');
+  });
+
+  it('tolerates spaces inside the braces and repeated tokens', () => {
+    expect(interpolateNoticeLine('{{ retentionDays }} / {{retentionDays}}', 'EN', { retentionDays: 90 })).toBe('90 / 90');
+  });
+
+  it('passes an unknown region code through as written', () => {
+    expect(aiRegionName('XX', 'VI')).toBe('XX');
+    expect(aiRegionName('us', 'VI')).toBe('Hoa Kỳ');
   });
 });

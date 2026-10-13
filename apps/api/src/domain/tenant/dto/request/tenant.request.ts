@@ -141,7 +141,7 @@ export class UpdatePrivacyNoticeRequest {
   @Matches(/^[A-Za-z0-9][A-Za-z0-9._-]*$/)
   consent_notice_version?: string | null;
 
-  /** Industry wording: commerce | lodging | generic. Null/absent = infer. */
+  /** Industry wording: commerce | lodging | generic | vn_pdpl. Null/absent = infer. */
   @IsOptional() @IsString() @MaxLength(16) privacy_profile?: string | null;
 
   /** Per-language rewrites of single notice lines; null clears them. */

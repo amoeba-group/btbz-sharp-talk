@@ -36,6 +36,12 @@ export class SessionOpenedRequest {
 export class ConsentRequest {
   @IsString() session_token: string;
   @IsBoolean() granted: boolean;
+  /**
+   * True when the widget is re-recording a choice it remembered from an earlier
+   * visit rather than one the shopper just made (PLN-261012 SG-70): the state is
+   * saved as before, but no consent-evidence audit row is written for it.
+   */
+  @IsOptional() @IsBoolean() replayed?: boolean;
 }
 
 export class LanguageRequest {

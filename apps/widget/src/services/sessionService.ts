@@ -107,10 +107,13 @@ export function logoutSession(sessionToken: string): Promise<{ loggedOut: boolea
 export function setConsent(
   sessionToken: string,
   granted: boolean,
+  /** True when re-recording a remembered choice (no consent-evidence row server-side). */
+  replayed = false,
 ): Promise<ConsentResult> {
   return apiClient.post<ConsentResult>('/session/consent', {
     session_token: sessionToken,
     granted,
+    ...(replayed ? { replayed: true } : {}),
   });
 }
 

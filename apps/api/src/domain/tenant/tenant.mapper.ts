@@ -6,7 +6,10 @@ import {
   EXTERNAL_CHANNELS,
   LANGUAGES,
   isWithinWindow,
+  hasUnfilledPlaceholder,
+  PRIVACY_NOTICE_KEYS,
   privacyProfileCopy,
+  resolvePrivacyNotice,
   resolvePrivacyProfile,
   normalizeWidgetTheme,
   NOTIFICATION_CATEGORY,
@@ -16,6 +19,7 @@ import {
   normalizeWidgetTabs,
   DEFAULT_BRAND,
 } from '@sharptalk/types';
+import { noticeContextFromEnv } from '../../global/util/retention-policy.util';
 import {
   CredentialResponse,
   PrivacyNoticeResponse,
@@ -78,9 +82,28 @@ export class TenantMapper {
     // The profile's own text travels with the settings so the console can show
     // it as the placeholder in every language — an operator must be able to see
     // what they are overriding before they decide to override it.
+    // `{{retentionDays}}` / `{{region}}` are shown filled in, exactly as a
+    // shopper will read them (PLN-261012 SG-70) — a placeholder reading
+    // "{{region}}" would not tell the operator what they are replacing.
+    const ctx = noticeContextFromEnv();
     const profileCopy = Object.fromEntries(
-      LANGUAGES.map((l) => [l.session, privacyProfileCopy(effectiveProfile, l.session)]),
+      LANGUAGES.map((l) => [l.session, privacyProfileCopy(effectiveProfile, l.session, ctx)]),
     );
+    // Languages whose notice, as a shopper would see it, still carries a `[[…]]`
+    // fill-in marker (the VN_PDPL controller line ships as one until a tenant
+    // writes the real entity + DPO contact). The console warns on it.
+    const unfilledPlaceholders = LANGUAGES.map((l) => {
+      const notice = resolvePrivacyNotice(
+        effectiveProfile,
+        (t.privacyNoticeCopy ?? null) as never,
+        l.session,
+        ctx,
+      );
+      return {
+        language: l.session as string,
+        keys: PRIVACY_NOTICE_KEYS.filter((k) => hasUnfilledPlaceholder(notice[k])) as string[],
+      };
+    }).filter((u) => u.keys.length > 0);
     return {
       privacyPolicyUrl: t.privacyPolicyUrl,
       consentNoticeVersion: t.consentNoticeVersion,
@@ -88,6 +111,7 @@ export class TenantMapper {
       effectiveProfile,
       privacyNoticeCopy: (t.privacyNoticeCopy ?? null) as Record<string, Record<string, string>> | null,
       profileCopy: profileCopy as Record<string, Record<string, string>>,
+      unfilledPlaceholders,
     };
   }
 
