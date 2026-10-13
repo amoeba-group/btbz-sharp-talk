@@ -11,6 +11,14 @@ import {
   rateChat,
 } from '../services/chatService';
 import type { ChatAttachment, ChatMessage, ChatReply, ScenarioPostAction } from '../lib/types';
+import {
+  FAILURE_ID_PREFIX,
+  SEND_TIMEOUT_MS,
+  classifySendFailure,
+  keepFailureTail,
+  sendFailureChips,
+  withoutFailures,
+} from '../components/chat/send-failure';
 
 export interface SendResult {
   escalate: boolean;
@@ -49,6 +57,8 @@ export function useChat(sessionToken: string | null) {
   // Reset to null (full fetch) after a send, since the send's own persisted
   // rows are newer than the cursor and must replace the optimistic bubbles.
   const lastServerId = useRef<string | null>(null);
+  // The turn that did not go through, kept so the Retry chip can resend exactly it (PLN-261012 SG-84).
+  const failedSend = useRef<{ text: string; attachments?: ChatAttachment[] } | null>(null);
 
   useQuery({
     queryKey: ['conversation', sessionToken],
@@ -85,21 +95,31 @@ export function useChat(sessionToken: string | null) {
   }, []);
 
   const send = useCallback(
-    async (text: string, attachments?: ChatAttachment[]): Promise<SendResult> => {
+    async (
+      text: string,
+      attachments?: ChatAttachment[],
+      /** A resend of the turn that failed: the shopper's bubble is already in the thread. */
+      opts?: { retry?: boolean },
+    ): Promise<SendResult> => {
       // A turn is now valid with files and no words (PLN-260814) — but still
       // never with neither.
       if (!sessionToken || (!text.trim() && !attachments?.length)) {
         return { escalate: false, needsAuth: false };
       }
-      append({
-        id: `local-${Date.now()}`,
-        senderType: 'user',
-        body: text,
-        createdAt: new Date().toISOString(),
-        // Shown from the upload response, so the shopper sees their own photo
-        // in the thread before the next poll returns the stored row.
-        attachments,
-      });
+      if (opts?.retry) {
+        // The retry replaces the failure bubble (and its chips) rather than stacking another.
+        setMessages((prev) => withoutFailures(prev));
+      } else {
+        append({
+          id: `local-${Date.now()}`,
+          senderType: 'user',
+          body: text,
+          createdAt: new Date().toISOString(),
+          // Shown from the upload response, so the shopper sees their own photo
+          // in the thread before the next poll returns the stored row.
+          attachments,
+        });
+      }
       setSending(true);
       inFlight.current = true;
       try {
@@ -107,7 +127,9 @@ export function useChat(sessionToken: string | null) {
           sessionToken,
           text,
           attachments?.map((a) => a.id),
+          SEND_TIMEOUT_MS,
         );
+        failedSend.current = null;
         setConversationId(res.conversationId);
         // A message after an ended thread opened a fresh conversation — clear
         // the ended banner now rather than waiting for the next poll.
@@ -135,11 +157,18 @@ export function useChat(sessionToken: string | null) {
         // Not signed in is a state, not a failure: report it as needsAuth so the
         // caller shows the sign-in card instead of a dead-end error bubble.
         if (isAuthError(e)) return { escalate: false, needsAuth: true };
+        // Retry and Talk-to-an-agent chips under the bubble (PLN-261012 SG-84): the shopper no
+        // longer has to retype the question, and during an AI outage a person is one tap away.
+        failedSend.current = { text, attachments };
         append({
-          id: `err-${Date.now()}`,
+          id: `${FAILURE_ID_PREFIX}${Date.now()}`,
           senderType: 'system',
           body: t('chat.sendFailed'),
           createdAt: new Date().toISOString(),
+          quickReplies: sendFailureChips(
+            { retry: t('common.retry'), agent: t('chat.nextActions.agent') },
+            classifySendFailure(e),
+          ),
         });
         return { escalate: false, needsAuth: false };
       } finally {
@@ -152,6 +181,13 @@ export function useChat(sessionToken: string | null) {
     },
     [sessionToken, append, t],
   );
+
+  /** Resend the turn that failed, exactly as typed (the Retry chip). */
+  const retryLast = useCallback(async (): Promise<SendResult> => {
+    const failed = failedSend.current;
+    if (!failed) return { escalate: false, needsAuth: false };
+    return send(failed.text, failed.attachments, { retry: true });
+  }, [send]);
 
   /**
    * Scenario button / quick-reply chip (FR-S1): deterministic scripted turn.
@@ -219,7 +255,35 @@ export function useChat(sessionToken: string | null) {
       supportType?: string,
       label?: string,
     ): Promise<{ choose: boolean; needsContactEmail?: boolean }> => {
-      if (!conversationId) return { choose: false };
+      // The conversation may exist on the server without the widget knowing yet: a first message
+      // that failed was still stored. Ask for it rather than doing nothing — the failure bubble's
+      // "Talk to an agent" chip is exactly this case (PLN-261012 SG-84).
+      let targetId = conversationId;
+      if (!targetId && sessionToken) {
+        try {
+          const found = (await getConversation(sessionToken, null)).conversationId;
+          if (found != null) {
+            targetId = String(found);
+            setConversationId(targetId);
+          }
+        } catch {
+          /* handled below */
+        }
+      }
+      if (!targetId) {
+        append({
+          id: `${FAILURE_ID_PREFIX}${Date.now()}`,
+          senderType: 'system',
+          body: t('chat.sendFailed'),
+          createdAt: new Date().toISOString(),
+          quickReplies: sendFailureChips(
+            { retry: t('common.retry'), agent: t('chat.nextActions.agent') },
+            'network',
+            Boolean(failedSend.current),
+          ),
+        });
+        return { choose: false };
+      }
       if (label) {
         append({
           id: `local-${Date.now()}`,
@@ -229,7 +293,7 @@ export function useChat(sessionToken: string | null) {
         });
       }
       try {
-        const res = await escalateApi(sessionToken!, conversationId, supportType);
+        const res = await escalateApi(sessionToken!, targetId, supportType);
         if (res?.choose) {
           append({
             id: `ask-${Date.now()}`,
@@ -252,6 +316,22 @@ export function useChat(sessionToken: string | null) {
         // Off hours with no address on file: the caller shows the contact-email
         // form (PLN-261012 SG-62), as it does after a chat turn that hands off.
         return { choose: false, needsContactEmail: res?.needsContactEmail === true };
+      } catch (e) {
+        // A hand-off that fails must say so — silence here left a customer in an outage believing a
+        // person was coming (PLN-261012 SG-84). The chips let them try again.
+        if (isAuthError(e)) throw e;
+        append({
+          id: `${FAILURE_ID_PREFIX}${Date.now()}`,
+          senderType: 'system',
+          body: t('chat.sendFailed'),
+          createdAt: new Date().toISOString(),
+          quickReplies: sendFailureChips(
+            { retry: t('common.retry'), agent: t('chat.nextActions.agent') },
+            classifySendFailure(e),
+            Boolean(failedSend.current),
+          ),
+        });
+        return { choose: false };
       } finally {
         // Rows were persisted past the cursor — full reconcile on the next poll.
         lastServerId.current = null;
@@ -288,6 +368,7 @@ export function useChat(sessionToken: string | null) {
   return {
     messages,
     send,
+    retryLast,
     scenario,
     sending,
     status,
@@ -313,7 +394,8 @@ function reconcile(local: ChatMessage[], server: ChatMessage[]): ChatMessage[] {
   const lastWithCites = [...local].reverse().find((m) => m.citations?.length);
   const sameBubble = (a: ChatMessage, b: ChatMessage) =>
     a.body === b.body && a.senderType === b.senderType;
-  return server.map((m) => {
+  // A failure bubble still being the latest thing is carried over, with its chips (PLN-261012 SG-84).
+  const reconciled = server.map((m) => {
     const merged = { ...m };
     if (!merged.quickReplies?.length && lastWithChips && sameBubble(merged, lastWithChips)) {
       merged.quickReplies = lastWithChips.quickReplies;
@@ -325,6 +407,7 @@ function reconcile(local: ChatMessage[], server: ChatMessage[]): ChatMessage[] {
     }
     return merged;
   });
+  return [...reconciled, ...keepFailureTail(local, server)];
 }
 
 function countServerKnown(local: ChatMessage[]): number {

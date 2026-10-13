@@ -27,6 +27,7 @@ import { ContactCard } from './ContactCard';
 import { AffiliateCard } from './AffiliateCard';
 import { InlineOrdersAnswer } from './InlineOrderCard';
 import { replyChips, teamChoiceOf } from './reply-chips';
+import { RETRY_CHIP_ID } from './send-failure';
 
 type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'orders' | null;
 
@@ -57,7 +58,7 @@ export function ChatTab() {
   const consumeChatMessage = useWidgetStore((s) => s.consumeChatMessage);
   const analytics = useAnalytics();
 
-  const { messages, send, scenario, sending, status, escalate, endChat, canRate, rate, conversationId } =
+  const { messages, send, retryLast, scenario, sending, status, escalate, endChat, canRate, rate, conversationId } =
     useChat(sessionToken);
   // Reply-pending indicator (PLN-260804, corrected by FIX-260806).
   //  · sending  → the AI completion runs synchronously inside the send request.
@@ -205,7 +206,16 @@ export function ChatTab() {
   ) {
     analytics.chatStart();
     analytics.messageSent(via);
-    const res = await send(text, attachments);
+    applySendResult(await send(text, attachments));
+  }
+
+  /** The Retry chip under a failed send (PLN-261012 SG-84): resend exactly what was typed. */
+  async function doRetry() {
+    analytics.messageSent('quick_reply');
+    applySendResult(await retryLast());
+  }
+
+  function applySendResult(res: Awaited<ReturnType<typeof send>>) {
     setShowEscalate(res.escalate);
     if (res.needsAuth && !authenticated) {
       setAuthReason(res.authReason === 'login' ? 'login' : 'order');
@@ -329,6 +339,9 @@ export function ChatTab() {
       return;
     }
     switch (id) {
+      case RETRY_CHIP_ID:
+        void doRetry();
+        return;
       case 'agent_connect':
         setShowEscalate(false);
         analytics.escalate();
