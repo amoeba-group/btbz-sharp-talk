@@ -1,6 +1,7 @@
 import { KnowledgeSource } from './entity/knowledge-source.entity';
 import { UsageType } from './entity/usage-type.entity';
 import { KbCategory } from './entity/kb-category.entity';
+import { kbAccessOf } from '@sharptalk/types';
 import { parseKeywords } from './usage-guide.types';
 import { KbDocument } from './entity/kb-document.entity';
 import { isStale } from './kb-conflict.service';
@@ -163,6 +164,10 @@ export class KnowledgeMapper {
       hidden: c.hidden === 1,
       agentIds: c.agentIds ?? [],
       guestVisible: c.guestVisible === 1,
+      // The tier the row reads as (PLN-261012 SG-10) and the raw column, which is null for a
+      // row from before tiers.
+      access: kbAccessOf(c),
+      minAudience: c.minAudience ?? null,
     };
   }
 }
