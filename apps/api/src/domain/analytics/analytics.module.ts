@@ -19,6 +19,10 @@ import { AnalyticsService } from './analytics.service';
 import { QuestionStatsService } from './question-stats.service';
 import { AnalyticsBreakdownService } from './analytics-breakdown.service';
 import { AnalyticsController } from './analytics.controller';
+import { AnalyticsPilotController } from './analytics-pilot.controller';
+import { AnalyticsPilotService } from './analytics-pilot.service';
+import { AnalyticsPilotQueries } from './analytics-pilot.queries';
+import { TenantPilotHotel } from '../pilot/entity/tenant-pilot-hotel.entity';
 
 @Module({
   imports: [
@@ -37,13 +41,21 @@ import { AnalyticsController } from './analytics.controller';
       AiAgent,
       Tenant,
       QuestionCluster,
+      // Pilot analytics (PLN-261012 SG-52): the allowlist adoption is measured against.
+      TenantPilotHotel,
     ]),
     // Reading a transcript is a PII access and is audited like the agent
     // console's equivalent route (PRV-H4).
     AuditModule,
   ],
-  controllers: [AnalyticsController],
-  providers: [AnalyticsService, QuestionStatsService, AnalyticsBreakdownService],
+  controllers: [AnalyticsController, AnalyticsPilotController],
+  providers: [
+    AnalyticsService,
+    QuestionStatsService,
+    AnalyticsBreakdownService,
+    AnalyticsPilotQueries,
+    AnalyticsPilotService,
+  ],
   exports: [AnalyticsService, QuestionStatsService, AnalyticsBreakdownService],
 })
 export class AnalyticsModule {}

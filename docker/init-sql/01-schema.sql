@@ -646,7 +646,8 @@ CREATE TABLE `conversations` (
   KEY `idx_conv_idle` (`status`,`idle_prompt_at`),
   KEY `idx_conv_tenant_pinned` (`tenant_id`,`pinned_at`),
   KEY `idx_conv_tenant_ended` (`tenant_id`,`ended_at`),
-  KEY `idx_conv_tenant_hotel_created` (`tenant_id`,`hotel_sn`,`created_at`)
+  KEY `idx_conv_tenant_hotel_created` (`tenant_id`,`hotel_sn`,`created_at`),
+  KEY `idx_conv_tenant_created` (`tenant_id`,`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `customers`;

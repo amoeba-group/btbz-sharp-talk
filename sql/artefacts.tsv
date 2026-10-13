@@ -103,6 +103,7 @@
 261017-conversation-escalated-at.sql	column	conversations	unclaimed_paged_at
 261017-conversation-escalated-at.sql	column	conversations	support_region_hint
 261017-hotel-provinces.sql	table	hotel_provinces	-
+261018-analytics-pilot-indexes.sql	index	conversations	idx_conv_tenant_created
 migration_agent_coaching.sql	table	agent_coaching_threads	-
 migration_agent_coaching.sql	table	agent_coaching_messages	-
 migration_agent_coaching.sql	table	agent_coaching_proposals	-

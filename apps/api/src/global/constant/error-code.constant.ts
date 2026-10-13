@@ -334,6 +334,12 @@ export const ERROR_CODE = {
   HOTEL_PROVINCE_CSV_INVALID: { code: 'E5127', message: 'The hotel province file is invalid' },
   HANDOFF_CONFIG_INVALID: { code: 'E5128', message: 'The hand-off settings are invalid' },
   ROUTING_NOT_ENABLED: { code: 'E5129', message: 'Team routing is not enabled for this tenant' },
+  // E5140-E5141 — Pilot analytics (PLN-261012 SG-52).
+  PILOT_ANALYTICS_QUERY_INVALID: {
+    code: 'E5140',
+    message: 'The pilot analytics request is invalid (group must be hotel, role or day, and from must be before to)',
+  },
+  PILOT_ANALYTICS_WINDOW_TOO_LONG: { code: 'E5141', message: 'The pilot analytics window is limited to 92 days' },
 } as const;
 
 export type ErrorCodeEntry = { code: string; message: string };
