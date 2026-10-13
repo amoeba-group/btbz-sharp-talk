@@ -1,0 +1,28 @@
+# SharpTalk backup — database + uploads + vector index (PLN-261012 SG-81).
+#
+#   sudo install -m 644 docker/self-hosted/ops/sharptalk-backup.{service,timer} /etc/systemd/system/
+#   sudo install -m 600 -o sharptalk docker/self-hosted/ops/backup.env.example /etc/sharptalk/backup.env   # then edit
+#   sudo systemctl daemon-reload && sudo systemctl enable --now sharptalk-backup.timer
+#   systemctl list-timers sharptalk-backup.timer        # next run
+#   journalctl -u sharptalk-backup.service -n 100       # last run
+#   sudo systemctl start sharptalk-backup.service       # run it now
+#
+# Adjust User= (must be in the docker group) and WorkingDirectory= (the release in use).
+[Unit]
+Description=SharpTalk backup (database, uploads, vector index)
+Wants=docker.service
+After=docker.service
+# Alerting hook: point this at a unit that mails or pages you (see docs/guide/GUIDE-261013-Observability-Alerting.md).
+#OnFailure=sharptalk-alert@%n.service
+
+[Service]
+Type=oneshot
+User=sharptalk
+Group=docker
+WorkingDirectory=/opt/sharptalk/current
+EnvironmentFile=/etc/sharptalk/backup.env
+ExecStart=/usr/bin/bash scripts/backup-self-hosted.sh
+# A backup should never starve the chat that is running beside it.
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=2h

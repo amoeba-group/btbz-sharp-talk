@@ -1,0 +1,14 @@
+# Daily trigger for sharptalk-backup.service (PLN-261012 SG-81). See the .service file for install steps.
+[Unit]
+Description=Daily SharpTalk backup
+
+[Timer]
+# 02:30 UTC — keep the host on UTC. A missed run (host was off) is made up at boot.
+OnCalendar=*-*-* 02:30:00 UTC
+Persistent=true
+# Spread start times so a fleet of hosts does not hit shared storage together.
+RandomizedDelaySec=10min
+Unit=sharptalk-backup.service
+
+[Install]
+WantedBy=timers.target

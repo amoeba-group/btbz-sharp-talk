@@ -1,0 +1,22 @@
+# SharpTalk scheduled backup + quarterly restore drill, for hosts without systemd timers
+# (PLN-261012 SG-81). Prefer the systemd units next to this file when you have systemd.
+#
+#   sudo install -m 644 docker/self-hosted/ops/sharptalk-backup.cron /etc/cron.d/sharptalk-backup
+#
+# Adjust the user (must be in the docker group) and the path of the deployed release.
+# /opt/sharptalk/current is a symlink to the release directory in use; backup.env is
+# docker/self-hosted/ops/backup.env.example installed to /etc/sharptalk/backup.env.
+#
+# Times are the HOST's time zone: keep the host on UTC (the install guide says so) and the
+# 02:30 below is 09:30 in Ho Chi Minh City, i.e. before the working day, after the quiet night.
+#
+# cron mails any output to the user; the failure marker <BACKUP_ROOT>/LAST_FAILURE and the
+# freshness marker <BACKUP_ROOT>/LAST_SUCCESS are what a monitor should watch instead.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# Daily backup, 02:30.
+30 2 * * *  sharptalk  set -a; . /etc/sharptalk/backup.env; set +a; cd /opt/sharptalk/current && bash scripts/backup-self-hosted.sh >> /var/log/sharptalk-backup.log 2>&1
+
+# Restore drill, 03:30 on the 1st of Jan/Apr/Jul/Oct, against the newest backup. Needs the key too.
+30 3 1 1,4,7,10 *  sharptalk  set -a; . /etc/sharptalk/backup.env; set +a; cd /opt/sharptalk/current && bash scripts/restore-drill-self-hosted.sh --latest "$BACKUP_ROOT" >> /var/log/sharptalk-restore-drill.log 2>&1
