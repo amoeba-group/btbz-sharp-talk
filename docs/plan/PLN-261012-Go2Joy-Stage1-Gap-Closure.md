@@ -341,3 +341,24 @@ Theo yêu cầu "phân tích sâu và implement đủ các yêu cầu ở local 
 | 2 | tài liệu vận hành | SG-85 (cần giao diện cuối) | | |
 
 Mỗi luồng ở một worktree riêng, dựa trên `test/go2joy-integration` `f7266697`; bản gộp cuối chạy lại toàn bộ kiểm và boot API thật trên DB dev sau khi gộp (agent chỉ boot trên DB tạm `scratch_<luồng>` để không làm `synchronize` xoá cột của nhánh khác).
+
+### 12.1 Kết quả đợt 1 (2026-10-13)
+
+Cả 8 luồng đợt 1 đã xong, đã gộp theo thứ tự s1b → s4 → s2b → s5d → s5b → s5c → s5a → s3b vào `test/go2joy-integration` (local, chưa push; tip `5f9ebc3e`). Ba luồng (s5a, s5c, s3b) bị ngắt giữa chừng do hạn mức API của phiên, được đánh thức lại và làm nốt từ trạng thái đã commit.
+
+| Luồng | Phạm vi | Kiểm chứng riêng của luồng |
+|---|---|---|
+| s1b | SG-03, 04, 50 + việc còn mở của S1 | 254 suite, 35/35 HTTP smoke, 32 đột biến đều bắt được; consent chỉ sao chép khi cùng người |
+| s4 | SG-30, 31, 32 | +299 test, 29/29 đột biến; chỉ kiểm với mock và máy chủ giả, **chưa từng gọi Go2Joy thật** |
+| s2b | SG-20 | 170 test mới; smoke HTTP + trình duyệt; chưa chạy LLM/Voyage thật |
+| s5d | SG-40 | 158 test mới; 12/25 test bắt buộc đỏ khi bỏ cổng; loader 13/19 đỏ với embed.js cũ |
+| s5b | SG-83, 84 | 269 test mới; chạy thật với nhà cung cấp giả: ngắt mạch, hạ cấp vector, cảnh báo webhook |
+| s5c | SG-80, 81, D-18 | 97/97 test script; MySQL tạm kiểm backup/restore/drill; **chưa từng chạy `docker build`/deploy** |
+| s5a | SG-70, 82, 53 | 642 câu corpus ngôn ngữ; DSAR chạy trong Chrome thật; nội dung pháp lý là bản nháp |
+| s3b | SG-63, 64, 66, 67 + SG-65 còn lại | 232 test mới; 38/38 HTTP smoke; chưa kiểm Slack/SMTP thật |
+
+**Kiểm chứng trên bản gộp (do điều phối chạy lại):** `tsc` api/web/widget 0 lỗi; jest API 3998 test, 3994 đạt, 4 lỗi: 3 lỗi nền Windows + 1 spec của s3b hỏng do `verifiedAt` cũ sau khi SG-03 hết hạn claims (đã sửa); widget 152/152; types 386; common 64; `i18n:check` đủ 6 ngôn ngữ; `initsql:check` 211 artefact khớp; **boot thật trên DB tạm: "successfully started"; schema do entity sinh ra và `01-schema.sql` giống hệt nhau (1061 cột)**.
+
+**Xung đột khi gộp và cách giải:** `chat.service.ts` (nhiều hunk cộng thêm; `partnerLabelOf` hợp nhất giữa `effectiveIdentity` và util dùng chung; `lookupRegion` dùng danh tính còn hiệu lực), `agent-alert.service.ts` (giữ cả đếm số liệu của s5b và các hàm Slack theo vùng của s3b), `session.mapper/controller` (danh tính + pilot), pilot dùng `effectiveIdentity` thay cho tự tính tuổi claims (thêm test), `REFUSAL_REASON` thêm `engine_unavailable`, các spec dùng constructor theo vị trí được chỉnh.
+
+**Còn lại sau đợt 1 → đợt 2 đã giao:** SG-10/11/06 (bậc quyền KB), SG-52 (số liệu pilot), SG-33 (vòng tool-calling). Chờ làm sau: SG-51 (mô phỏng cổng khách + hiệu chỉnh ngưỡng, cần bậc quyền), SG-85 (chương vận hành CS/SA).
