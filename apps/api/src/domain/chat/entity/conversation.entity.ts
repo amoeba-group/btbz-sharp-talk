@@ -12,6 +12,8 @@ import { bigintTransformer } from '../../../global/util/transformers';
 @Index('idx_conv_tenant_ended', ['tenantId', 'endedAt'])
 // Per-hotel history / pilot analytics (PLN-261012 SG-50) — mirrors sql/261016-conversation-stamps.sql.
 @Index('idx_conv_tenant_hotel_created', ['tenantId', 'hotelSn', 'createdAt'])
+// Window reads without a hotel (pilot analytics, the statistics lenses) — mirrors sql/261018-analytics-pilot-indexes.sql.
+@Index('idx_conv_tenant_created', ['tenantId', 'createdAt'])
 @Entity('conversations')
 export class Conversation {
   @PrimaryGeneratedColumn({ type: 'bigint' })

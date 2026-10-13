@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { HTTP_BUCKETS, LLM_BUCKETS, MetricsRegistry } from './metrics.registry';
+import { HTTP_BUCKETS, LLM_BUCKETS, MetricsRegistry, TURN_STAGE_BUCKETS } from './metrics.registry';
 
 /**
  * The application's metric catalogue (PLN-261012 SG-83) on one process-wide registry.
@@ -42,6 +42,12 @@ export const m = {
     'LLM call duration (including retries) by provider',
     LLM_BUCKETS,
     ['provider'],
+  ),
+  turnStageDuration: metrics.histogram(
+    'sharptalk_chat_turn_stage_duration_seconds',
+    'Chat turn latency by stage (total, classify, retrieve, generate, moderate), from the persisted turn latency',
+    TURN_STAGE_BUCKETS,
+    ['stage'],
   ),
   llmRetries: metrics.counter('sharptalk_llm_retries_total', 'LLM calls retried after a transient failure', ['provider']),
   embedFailures: metrics.counter(
@@ -116,6 +122,36 @@ export const m = {
 };
 
 export const BREAKER_STATE_VALUE = { closed: 0, half_open: 1, open: 2 } as const;
+
+/** The stages a persisted turn latency can hold (`retrieval_trace.latencyMs`, PLN-261012 SG-53). */
+const TURN_STAGES = ['total', 'classify', 'retrieve', 'generate', 'moderate'] as const;
+
+/**
+ * Feed a turn's latency into the per-stage histograms and hand the SAME object back, so the
+ * call site is a one-token wrap around the value it already persists
+ * (`latencyMs: observeTurnLatency(buildTurnLatency(...))`) and the histogram can never disagree
+ * with the rows the pilot analytics read their P50/P95 from (PLN-261012 SG-52).
+ *
+ * A stage the turn did not run is null and is NOT observed: "0 ms" would drag every quantile
+ * toward instant for the replayed answers that skip retrieval and generation. Values are
+ * milliseconds in the trace and seconds in the histogram. Best-effort by contract — a metric
+ * must never be able to break a conversation.
+ */
+export function observeTurnLatency<T extends Partial<Record<(typeof TURN_STAGES)[number], number | null>>>(
+  latency: T,
+): T {
+  try {
+    for (const stage of TURN_STAGES) {
+      const ms = latency[stage];
+      if (typeof ms === 'number' && Number.isFinite(ms) && ms >= 0) {
+        m.turnStageDuration.observe({ stage }, ms / 1000);
+      }
+    }
+  } catch {
+    /* metrics are best-effort */
+  }
+  return latency;
+}
 
 /** Keep a free-form code (a feature name) inside a safe, bounded label alphabet. */
 export function safeLabel(raw: string | undefined | null, fallback = 'other'): string {

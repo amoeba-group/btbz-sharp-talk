@@ -35,7 +35,8 @@
     "resolution": "Kết quả",
     "hours": "Khung giờ",
     "access": "Truy cập",
-    "journey": "Hành trình"
+    "journey": "Hành trình",
+    "pilot": "Thí điểm"
   },
   "csat": {
     "avgTitle": "Điểm trung bình",
@@ -160,5 +161,102 @@
     "details": "Chi tiết",
     "notExclusive": "Hội thoại đã chuyển vẫn được đánh giá và kết thúc — tổng có thể vượt số hội thoại.",
     "collectionNote": "Hiển thị và truy cập được thu thập từ 2026-09-20; khoảng trước đó bắt đầu từ hội thoại."
+  },
+  "pilot": {
+    "title": "Kết quả thí điểm",
+    "subtitle": "Trợ lý hoạt động ra sao theo từng khách sạn và vai trò — các số liệu để đánh giá đợt thí điểm.",
+    "groupBy": "Nhóm theo",
+    "group": {
+      "hotel": "Khách sạn",
+      "role": "Vai trò",
+      "day": "Ngày"
+    },
+    "total": "Tất cả",
+    "unknown": "Chưa xác định (khách vãng lai hoặc dữ liệu cũ)",
+    "export": "Xuất hội thoại (CSV)",
+    "exporting": "Đang xuất…",
+    "exportHint": "Mỗi hội thoại một dòng kèm nội dung trao đổi, đã che thông tin cá nhân — để chấm câu trả lời bằng tay. Dành cho tài khoản master và director.",
+    "exportDone": "Đã tải tệp CSV.",
+    "exportTruncated": "Tệp chỉ gồm tối đa {{max}} hội thoại. Hãy thu hẹp khoảng ngày để lấy phần còn lại.",
+    "exportFailed": "Không tạo được tệp xuất. Vui lòng thử lại.",
+    "windowTooLong": "Chế độ xem thí điểm chỉ đọc tối đa {{max}} ngày mỗi lần. Hãy chọn khoảng ngày ngắn hơn.",
+    "truncatedNote": "Khoảng này có nhiều hội thoại hơn giới hạn đọc ({{max}}); số liệu chỉ tính {{scanned}} hội thoại cũ nhất. Hãy chọn khoảng ngắn hơn.",
+    "empty": "Không có hội thoại nào trong khoảng này.",
+    "retry": "Thử lại",
+    "adoption": {
+      "title": "Khách sạn",
+      "line": "Đã hoạt động {{active}} / danh sách thí điểm {{listed}}",
+      "outside": "Khách sạn ngoài danh sách cũng đã chat: {{count}}",
+      "silent": "Có trong danh sách nhưng chưa chat: {{count}}",
+      "allActive": "Mọi khách sạn trong danh sách đều đã chat trong khoảng này.",
+      "showSilent": "Xem các khách sạn này",
+      "hideSilent": "Ẩn",
+      "silentMore": "và {{count}} khách sạn nữa",
+      "listOff": "Danh sách thí điểm đang tắt nên mọi khách sạn đều được phục vụ; số liệu ở đây là danh sách hiện có.",
+      "noList": "Chưa thiết lập danh sách thí điểm cho tenant này."
+    },
+    "col": {
+      "conversations": "Hội thoại",
+      "aiOnly": "AI tự xử lý",
+      "handoff": "Chuyển cho nhân viên",
+      "other": "Từ chối / chưa trả lời",
+      "confidence": "Độ tin cậy TB",
+      "noSource": "Không có nguồn",
+      "csat": "CSAT",
+      "guestGate": "Lần yêu cầu đăng nhập",
+      "refusals": "Từ chối khác",
+      "moderation": "Kiểm duyệt (chặn / chỉnh sửa)",
+      "partner": "Tra cứu đối tác (ổn / từ chối / lỗi)",
+      "users": "Người dùng",
+      "latency": "Thời gian trả lời P50 / P95"
+    },
+    "cell": {
+      "users": "{{users}} đã đăng nhập · {{guests}} phiên khách",
+      "csat": "{{avg}} ({{count}})"
+    },
+    "reason": {
+      "low_confidence": "Chưa đủ căn cứ",
+      "user_request": "Khách yêu cầu gặp người",
+      "moderation": "Bị kiểm duyệt chặn",
+      "policy_deny": "Chủ đề phải chuyển cho người",
+      "engine_unavailable": "Sự cố hệ thống AI",
+      "partner_unavailable": "Không tra cứu được dữ liệu đối tác",
+      "partner_unverified": "Chưa xác minh được số liệu",
+      "guest_gate": "Yêu cầu đăng nhập",
+      "auth_gate": "Cần đăng nhập để xem đơn",
+      "identity_expired": "Phiên đăng nhập đã hết hạn",
+      "role_manager_only": "Chỉ dành cho Quản lý",
+      "partner_role_denied": "Vai trò không được xem dữ liệu này",
+      "partner_claims_stale": "Cần đăng nhập lại",
+      "partner_param_rejected": "Hỏi về khách sạn khác",
+      "embedder_degraded": "Tìm kiếm vector gián đoạn",
+      "consent": "Chưa đồng ý thông báo quyền riêng tư",
+      "pilot_denied": "Khách sạn ngoài thí điểm",
+      "other": "Lý do khác",
+      "unknown": "Không ghi lại lý do"
+    },
+    "stage": {
+      "total": "Tổng",
+      "classify": "Hiểu câu hỏi",
+      "retrieve": "Tìm kiếm",
+      "generate": "Soạn câu trả lời",
+      "moderate": "Kiểm tra an toàn"
+    },
+    "latencyTitle": "Thời gian trả lời theo từng bước (toàn bộ)",
+    "stageCol": "Bước",
+    "samples": "Số lượt đo",
+    "notRecorded": "Không được ghi lại (không lưu nên không có số đếm): {{reasons}}.",
+    "definitions": {
+      "title": "Cách đọc các số liệu này",
+      "aiOnly": "AI tự xử lý: không có ai trong nhóm tham gia (không chuyển người, không có tin nhắn của nhân viên) và trợ lý đã đưa ra ít nhất một câu trả lời có căn cứ trong kho tri thức. Đây không phải tỷ lệ “đã giải quyết” ở tab Kết quả, vì tab đó còn tính cả cuộc nhân viên đã đóng.",
+      "handoff": "Chuyển cho nhân viên: hội thoại đã được chuyển tiếp, nhân viên đã nhắn trong đó, hoặc thông báo chuyển người đã hiện ra. Mỗi lý do chỉ đếm một lần cho mỗi hội thoại.",
+      "other": "Từ chối: chỉ hiện thông báo yêu cầu đăng nhập hoặc không đủ quyền. Chưa trả lời: chưa có câu nào có căn cứ (xã giao, hoặc đang chờ).",
+      "confidence": "Độ tin cậy TB và Không có nguồn được tính theo từng câu trả lời; Không có nguồn là câu trả lời không dẫn tài liệu nào.",
+      "window": "Ngày được tính theo múi giờ của tenant ({{zone}}) và hội thoại được đếm vào ngày bắt đầu."
+    },
+    "error": {
+      "E5140": "Yêu cầu không hợp lệ. Hãy kiểm tra khoảng ngày và cách nhóm.",
+      "E5141": "Chế độ xem thí điểm chỉ đọc tối đa {{max}} ngày mỗi lần."
+    }
   }
 }

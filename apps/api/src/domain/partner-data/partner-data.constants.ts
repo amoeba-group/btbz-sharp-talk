@@ -1,4 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
+import { REFUSAL_REASON } from '@sharptalk/types';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import type { ErrorCodeEntry } from '../../global/constant/error-code.constant';
 
@@ -42,15 +43,17 @@ export type PartnerLookupStatus = (typeof PARTNER_LOOKUP_STATUS)[keyof typeof PA
 
 /**
  * Reasons recorded on the customer-facing message trace (`reason`) when the
- * partner step refuses or degrades a turn. Kept as a closed set so the refusal
- * analytics of SG-50 can fold them into REFUSAL_REASON without guessing.
+ * partner step refuses or degrades a turn. They are members of the closed
+ * REFUSAL_REASON vocabulary (PLN-261012 SG-50/SG-52) — this object only names the
+ * subset the partner step speaks, so the strings live in ONE place and the pilot
+ * analytics group by them without a second list.
  */
 export const PARTNER_REFUSAL_REASON = {
-  ROLE_DENIED: 'partner_role_denied',
-  CLAIMS_STALE: 'partner_claims_stale',
-  PARAM_REJECTED: 'partner_param_rejected',
-  UNAVAILABLE: 'partner_unavailable',
-  UNVERIFIED: 'partner_unverified',
+  ROLE_DENIED: REFUSAL_REASON.PARTNER_ROLE_DENIED,
+  CLAIMS_STALE: REFUSAL_REASON.PARTNER_CLAIMS_STALE,
+  PARAM_REJECTED: REFUSAL_REASON.PARTNER_PARAM_REJECTED,
+  UNAVAILABLE: REFUSAL_REASON.PARTNER_UNAVAILABLE,
+  UNVERIFIED: REFUSAL_REASON.PARTNER_UNVERIFIED,
 } as const;
 export type PartnerRefusalReason = (typeof PARTNER_REFUSAL_REASON)[keyof typeof PARTNER_REFUSAL_REASON];
 

@@ -35,7 +35,8 @@
     "resolution": "Outcomes",
     "hours": "Hours",
     "access": "Access",
-    "journey": "Journey"
+    "journey": "Journey",
+    "pilot": "Pilot"
   },
   "csat": {
     "avgTitle": "Average rating",
@@ -160,5 +161,102 @@
     "details": "Details",
     "notExclusive": "An escalated conversation is still rated and still ends — these can sum past the conversation count.",
     "collectionNote": "Impressions and access are collected from 2026-09-20; earlier ranges start at conversations."
+  },
+  "pilot": {
+    "title": "Pilot results",
+    "subtitle": "How the assistant performs for each hotel and role — the figures the pilot is judged on.",
+    "groupBy": "Group by",
+    "group": {
+      "hotel": "Hotel",
+      "role": "Role",
+      "day": "Day"
+    },
+    "total": "All",
+    "unknown": "No stamp (guest or older)",
+    "export": "Export conversations (CSV)",
+    "exporting": "Exporting…",
+    "exportHint": "One row per conversation with its transcript, personal details masked — for grading answers by hand. Available to master and director accounts.",
+    "exportDone": "The CSV was downloaded.",
+    "exportTruncated": "The file stops at {{max}} conversations. Narrow the date range to get the rest.",
+    "exportFailed": "The export could not be created. Please try again.",
+    "windowTooLong": "The pilot view reads at most {{max}} days at a time. Choose a shorter date range.",
+    "truncatedNote": "This range holds more conversations than the view reads ({{max}}); the figures cover the oldest {{scanned}}. Choose a shorter range.",
+    "empty": "No conversations in this range.",
+    "retry": "Try again",
+    "adoption": {
+      "title": "Hotels",
+      "line": "Active {{active}} / pilot list {{listed}}",
+      "outside": "Hotels outside the list that also chatted: {{count}}",
+      "silent": "On the list but never chatted: {{count}}",
+      "allActive": "Every hotel on the list has chatted in this range.",
+      "showSilent": "Show these hotels",
+      "hideSilent": "Hide",
+      "silentMore": "and {{count}} more",
+      "listOff": "The pilot list is switched off, so every hotel is served; the figures here are the list as it stands.",
+      "noList": "No pilot list is set up for this tenant."
+    },
+    "col": {
+      "conversations": "Conversations",
+      "aiOnly": "AI-only resolved",
+      "handoff": "Handed to a person",
+      "other": "Refused / no answer",
+      "confidence": "Avg. confidence",
+      "noSource": "No source",
+      "csat": "CSAT",
+      "guestGate": "Sign-in prompts",
+      "refusals": "Other refusals",
+      "moderation": "Moderation (blocked / edited)",
+      "partner": "Partner lookups (ok / refused / down)",
+      "users": "Users",
+      "latency": "Answer time P50 / P95"
+    },
+    "cell": {
+      "users": "{{users}} signed in · {{guests}} guest sessions",
+      "csat": "{{avg}} ({{count}})"
+    },
+    "reason": {
+      "low_confidence": "Not enough grounding",
+      "user_request": "Customer asked for a person",
+      "moderation": "Stopped by moderation",
+      "policy_deny": "Topic that goes to a person",
+      "engine_unavailable": "AI engine outage",
+      "partner_unavailable": "Partner data unavailable",
+      "partner_unverified": "Figures could not be verified",
+      "guest_gate": "Sign-in required",
+      "auth_gate": "Sign-in needed for orders",
+      "identity_expired": "Sign-in expired",
+      "role_manager_only": "Manager only",
+      "partner_role_denied": "Role may not read that data",
+      "partner_claims_stale": "Sign in again",
+      "partner_param_rejected": "Asked about another hotel",
+      "embedder_degraded": "Vector search degraded",
+      "consent": "Privacy notice not accepted",
+      "pilot_denied": "Hotel outside the pilot",
+      "other": "Other reason",
+      "unknown": "Reason not recorded"
+    },
+    "stage": {
+      "total": "Total",
+      "classify": "Understand",
+      "retrieve": "Search",
+      "generate": "Write",
+      "moderate": "Safety check"
+    },
+    "latencyTitle": "Answer time by stage (all rows)",
+    "stageCol": "Stage",
+    "samples": "Measured",
+    "notRecorded": "Not recorded (never stored, so there is no count): {{reasons}}.",
+    "definitions": {
+      "title": "How to read these numbers",
+      "aiOnly": "AI-only resolved: nobody from the team was involved (no hand-off and no agent message) and the assistant gave at least one answer grounded in the knowledge base. It is not the “resolved” rate of the Outcomes tab, which also counts conversations an agent closed.",
+      "handoff": "Handed to a person: the conversation was escalated, an agent wrote in it, or a hand-off notice was shown. Reasons are counted once per conversation.",
+      "other": "Refused: only sign-in or permission notices were shown. No answer: nothing grounded was said (small talk, or still waiting).",
+      "confidence": "Average confidence and No source are per answer; No source is an answer that cited no document.",
+      "window": "Days follow the tenant time zone ({{zone}}) and conversations are counted on the day they started."
+    },
+    "error": {
+      "E5140": "The request is not valid. Check the dates and the grouping.",
+      "E5141": "The pilot view reads at most {{max}} days at a time."
+    }
   }
 }

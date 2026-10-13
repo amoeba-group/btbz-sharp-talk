@@ -38,6 +38,7 @@ import { ErasureSuppressionModule } from './erasure-suppression.module';
 import { PrivacyController, ShopifyComplianceController } from './privacy.controller';
 import { ModerationLog } from '../moderation/entity/moderation-log.entity';
 import { AgentAlert } from '../agent/entity/agent-alert.entity';
+import { PartnerLookupLog } from '../partner-data/entity/partner-lookup-log.entity';
 
 /**
  * Privacy / consumer-rights module: Shopify GDPR webhooks (audit High-2) and
@@ -73,6 +74,8 @@ import { AgentAlert } from '../agent/entity/agent-alert.entity';
       AgentAlert,
       // Opt-in audit_logs disposal (PLN-261012 SG-70).
       AuditLog,
+      // Partner-data lookup log retention (PLN-261012 SG-31/SG-52 follow-up).
+      PartnerLookupLog,
     ]),
     AuditModule,
     ErasureSuppressionModule,

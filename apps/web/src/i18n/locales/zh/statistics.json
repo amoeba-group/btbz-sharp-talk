@@ -35,7 +35,8 @@
     "resolution": "处理结果",
     "hours": "时段",
     "access": "展示与访问",
-    "journey": "旅程"
+    "journey": "旅程",
+    "pilot": "试点"
   },
   "csat": {
     "avgTitle": "平均评分",
@@ -160,5 +161,102 @@
     "details": "详情",
     "notExclusive": "转人工的会话同样会被评价并结束 — 合计可能超过会话数。",
     "collectionNote": "展示与访问自 2026-09-20 起收集；更早的区间从会话开始。"
+  },
+  "pilot": {
+    "title": "试点结果",
+    "subtitle": "按酒店和角色查看助手的表现 — 评估试点所依据的数据。",
+    "groupBy": "分组方式",
+    "group": {
+      "hotel": "酒店",
+      "role": "角色",
+      "day": "日期"
+    },
+    "total": "全部",
+    "unknown": "无标识（访客或旧数据）",
+    "export": "导出会话（CSV）",
+    "exporting": "正在导出…",
+    "exportHint": "每个会话一行，包含对话内容，个人信息已脱敏 — 用于人工评分答案。仅限 master 和 director 账号使用。",
+    "exportDone": "CSV 文件已下载。",
+    "exportTruncated": "文件最多包含 {{max}} 个会话。请缩小日期范围以获取其余部分。",
+    "exportFailed": "无法生成导出文件，请重试。",
+    "windowTooLong": "试点视图一次最多读取 {{max}} 天。请选择更短的日期范围。",
+    "truncatedNote": "该范围内的会话数超过读取上限（{{max}}）；数据仅统计最早的 {{scanned}} 个会话。请选择更短的范围。",
+    "empty": "此范围内没有会话。",
+    "retry": "重试",
+    "adoption": {
+      "title": "酒店",
+      "line": "活跃 {{active}} / 试点名单 {{listed}}",
+      "outside": "名单之外也发起过会话的酒店：{{count}}",
+      "silent": "在名单中但从未发起会话：{{count}}",
+      "allActive": "名单中的所有酒店在此范围内都发起过会话。",
+      "showSilent": "查看这些酒店",
+      "hideSilent": "收起",
+      "silentMore": "另有 {{count}} 家",
+      "listOff": "试点名单已关闭，所有酒店均可使用；此处数据按当前名单统计。",
+      "noList": "此租户尚未设置试点名单。"
+    },
+    "col": {
+      "conversations": "会话",
+      "aiOnly": "AI 独立解决",
+      "handoff": "转人工",
+      "other": "拒绝 / 未回答",
+      "confidence": "平均置信度",
+      "noSource": "无来源",
+      "csat": "CSAT",
+      "guestGate": "登录提示",
+      "refusals": "其他拒绝",
+      "moderation": "审核（拦截 / 修改）",
+      "partner": "合作方查询（成功 / 拒绝 / 故障）",
+      "users": "用户",
+      "latency": "回答耗时 P50 / P95"
+    },
+    "cell": {
+      "users": "已登录 {{users}} 人 · 访客会话 {{guests}} 个",
+      "csat": "{{avg}}（{{count}}）"
+    },
+    "reason": {
+      "low_confidence": "依据不足",
+      "user_request": "客户要求人工",
+      "moderation": "被审核拦截",
+      "policy_deny": "必须转人工的主题",
+      "engine_unavailable": "AI 引擎故障",
+      "partner_unavailable": "无法获取合作方数据",
+      "partner_unverified": "数据无法核实",
+      "guest_gate": "需要登录",
+      "auth_gate": "查询订单需要登录",
+      "identity_expired": "登录已过期",
+      "role_manager_only": "仅限经理",
+      "partner_role_denied": "该角色无权查看",
+      "partner_claims_stale": "需要重新登录",
+      "partner_param_rejected": "询问了其他酒店",
+      "embedder_degraded": "向量检索降级",
+      "consent": "未同意隐私通知",
+      "pilot_denied": "不在试点范围内的酒店",
+      "other": "其他原因",
+      "unknown": "未记录原因"
+    },
+    "stage": {
+      "total": "合计",
+      "classify": "理解问题",
+      "retrieve": "检索",
+      "generate": "撰写回答",
+      "moderate": "安全检查"
+    },
+    "latencyTitle": "各环节回答耗时（全部）",
+    "stageCol": "环节",
+    "samples": "测量次数",
+    "notRecorded": "未记录（未存储，因此没有计数）：{{reasons}}。",
+    "definitions": {
+      "title": "如何解读这些数据",
+      "aiOnly": "AI 独立解决：团队无人介入（没有转人工，也没有人工客服消息），且助手至少给出过一次基于知识库的回答。它不同于“结果”标签页中的解决率（后者也包含由人工客服关闭的会话）。",
+      "handoff": "转人工：会话被升级、人工客服在其中发过言，或显示过转人工提示。每个原因在每个会话中只计一次。",
+      "other": "拒绝：只显示了登录或权限提示。未回答：没有任何有依据的回答（仅寒暄，或仍在等待）。",
+      "confidence": "平均置信度和无来源按回答统计；无来源指未引用任何文档的回答。",
+      "window": "日期按租户时区（{{zone}}）计算，会话计入其开始当天。"
+    },
+    "error": {
+      "E5140": "请求无效，请检查日期和分组方式。",
+      "E5141": "试点视图一次最多读取 {{max}} 天。"
+    }
   }
 }

@@ -280,6 +280,19 @@ describe('ChatService — partner data', () => {
       expect(b.bus.publish).not.toHaveBeenCalledWith(EVENTS.ESCALATION, expect.anything());
     });
 
+    it('a notice-only refusal names the speaking agent on its trace like every other refusal (SG-52)', async () => {
+      // The pilot analytics group refusals by reason AND read the agent; without `agentId` this
+      // one family of refusals would be the only stored refusal that cannot be tied to an agent.
+      const b = build({ claims: claims({ role: 'receptionist' }) });
+      b.rag.effectiveAgentId.mockResolvedValue(7);
+      await b.svc.handleUserMessage(b.session, 'Đối soát tháng 9 còn bao nhiêu chưa thanh toán?');
+      expect(traceOf(b.saved.find((m) => m.senderType === 'system'))).toMatchObject({
+        reason: 'partner_role_denied',
+        partnerError: 'E5101',
+        agentId: 7,
+      });
+    });
+
     it('expired claims: "sign in again", nothing fetched', async () => {
       const b = build({ claims: claims({ verifiedAt: new Date(NOW - 9 * 3600_000).toISOString() }) });
       const res = await b.svc.handleUserMessage(b.session, 'Giá qua đêm phòng Deluxe hôm nay?');

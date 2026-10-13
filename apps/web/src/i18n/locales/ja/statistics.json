@@ -35,7 +35,8 @@
     "resolution": "結果",
     "hours": "時間帯",
     "access": "表示・接続",
-    "journey": "ジャーニー"
+    "journey": "ジャーニー",
+    "pilot": "パイロット"
   },
   "csat": {
     "avgTitle": "平均評価",
@@ -160,5 +161,102 @@
     "details": "詳細",
     "notExclusive": "引き継いだ会話も評価され終了します — 合計が会話数を超えることがあります。",
     "collectionNote": "表示・接続は 2026-09-20 から収集します。それ以前は会話から表示されます。"
+  },
+  "pilot": {
+    "title": "パイロット結果",
+    "subtitle": "ホテル別・ロール別のアシスタントの状況 — パイロットを評価するための数値です。",
+    "groupBy": "グループ",
+    "group": {
+      "hotel": "ホテル",
+      "role": "ロール",
+      "day": "日付"
+    },
+    "total": "全体",
+    "unknown": "識別情報なし（ゲストまたは過去データ）",
+    "export": "会話をエクスポート（CSV）",
+    "exporting": "エクスポート中…",
+    "exportHint": "会話1件につき1行で、やり取りの内容を含み、個人情報はマスクされます — 回答を手作業で採点するためのファイルです。master・director アカウントのみ利用できます。",
+    "exportDone": "CSV をダウンロードしました。",
+    "exportTruncated": "ファイルには最大 {{max}} 件の会話までしか含まれません。残りは期間を絞ってご利用ください。",
+    "exportFailed": "エクスポートを作成できませんでした。もう一度お試しください。",
+    "windowTooLong": "パイロット画面は一度に最大 {{max}} 日分までしか読み込めません。期間を短くしてください。",
+    "truncatedNote": "この期間には読み込み上限（{{max}} 件）を超える会話があるため、最も古い {{scanned}} 件のみを集計しています。期間を短くしてください。",
+    "empty": "この期間の会話はありません。",
+    "retry": "再試行",
+    "adoption": {
+      "title": "ホテル",
+      "line": "稼働 {{active}} / パイロット対象 {{listed}}",
+      "outside": "対象外でも会話したホテル: {{count}}",
+      "silent": "対象だがまだ会話がないホテル: {{count}}",
+      "allActive": "対象のすべてのホテルがこの期間に会話しました。",
+      "showSilent": "該当ホテルを表示",
+      "hideSilent": "閉じる",
+      "silentMore": "ほか {{count}} 件",
+      "listOff": "パイロット対象リストはオフのため、すべてのホテルが対象になっています。ここでの数値は現在登録されているリスト基準です。",
+      "noList": "このテナントにはパイロット対象リストが設定されていません。"
+    },
+    "col": {
+      "conversations": "会話",
+      "aiOnly": "AI のみで解決",
+      "handoff": "担当者へ引き継ぎ",
+      "other": "拒否 / 未回答",
+      "confidence": "平均信頼度",
+      "noSource": "出典なし",
+      "csat": "CSAT",
+      "guestGate": "ログイン案内",
+      "refusals": "その他の拒否",
+      "moderation": "モデレーション（ブロック / 修正）",
+      "partner": "パートナー照会（成功 / 拒否 / 障害）",
+      "users": "ユーザー",
+      "latency": "回答時間 P50 / P95"
+    },
+    "cell": {
+      "users": "ログイン {{users}} 人 · ゲストセッション {{guests}} 件",
+      "csat": "{{avg}}（{{count}}）"
+    },
+    "reason": {
+      "low_confidence": "根拠不足",
+      "user_request": "お客様が担当者を希望",
+      "moderation": "モデレーションで停止",
+      "policy_deny": "担当者対応のトピック",
+      "engine_unavailable": "AI エンジンの障害",
+      "partner_unavailable": "パートナーデータを取得できず",
+      "partner_unverified": "数値を検証できず",
+      "guest_gate": "ログインが必要",
+      "auth_gate": "注文の確認にログインが必要",
+      "identity_expired": "ログインの期限切れ",
+      "role_manager_only": "マネージャー専用",
+      "partner_role_denied": "このロールは閲覧不可",
+      "partner_claims_stale": "再ログインが必要",
+      "partner_param_rejected": "別のホテルについての質問",
+      "embedder_degraded": "ベクトル検索の低下",
+      "consent": "プライバシー通知に未同意",
+      "pilot_denied": "パイロット対象外のホテル",
+      "other": "その他の理由",
+      "unknown": "理由の記録なし"
+    },
+    "stage": {
+      "total": "合計",
+      "classify": "質問の理解",
+      "retrieve": "検索",
+      "generate": "回答の作成",
+      "moderate": "安全チェック"
+    },
+    "latencyTitle": "工程別の回答時間（全体）",
+    "stageCol": "工程",
+    "samples": "計測数",
+    "notRecorded": "記録されません（保存しないため件数がありません）: {{reasons}}。",
+    "definitions": {
+      "title": "数値の読み方",
+      "aiOnly": "AI のみで解決: チームの誰も関与しておらず（引き継ぎなし・担当者のメッセージなし）、アシスタントがナレッジに基づく回答を 1 回以上行った会話です。担当者が終了した会話も含む「結果」タブの解決率とは異なります。",
+      "handoff": "担当者へ引き継ぎ: エスカレーションされた、担当者が書き込んだ、または引き継ぎの案内が表示された会話です。理由は 1 会話につき 1 回だけ数えます。",
+      "other": "拒否: ログインや権限の案内だけが表示された会話。未回答: 根拠のある回答がなかった会話（あいさつのみ、または返信待ち）。",
+      "confidence": "平均信頼度と出典なしは回答単位の集計です。出典なしは文書を引用していない回答です。",
+      "window": "日付はテナントのタイムゾーン（{{zone}}）で、会話は開始した日に数えます。"
+    },
+    "error": {
+      "E5140": "リクエストが正しくありません。期間とグループを確認してください。",
+      "E5141": "パイロット画面は一度に最大 {{max}} 日分までしか読み込めません。"
+    }
   }
 }

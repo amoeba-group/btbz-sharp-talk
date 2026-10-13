@@ -343,6 +343,12 @@ export const ERROR_CODE = {
     message:
       'Merging a manager-only category into a less restricted one would widen who can read its documents; set the destination to manager-only first',
   },
+  // E5140-E5141 — Pilot analytics (PLN-261012 SG-52).
+  PILOT_ANALYTICS_QUERY_INVALID: {
+    code: 'E5140',
+    message: 'The pilot analytics request is invalid (group must be hotel, role or day, and from must be before to)',
+  },
+  PILOT_ANALYTICS_WINDOW_TOO_LONG: { code: 'E5141', message: 'The pilot analytics window is limited to 92 days' },
 } as const;
 
 export type ErrorCodeEntry = { code: string; message: string };

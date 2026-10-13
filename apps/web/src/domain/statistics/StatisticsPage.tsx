@@ -21,6 +21,7 @@ import { CsatSection } from './CsatSection';
 import { JourneySection } from './JourneySection';
 import { DateRangePicker, useDateRange } from '@/components/DateRangePicker';
 import { AccessSection } from './AccessSection';
+import { PilotSection } from './PilotSection';
 
 /** Below this confidence an answer is treated as shaky (matches RAG_MIN_SIMILARITY). */
 const LOW_CONFIDENCE = 0.45;
@@ -28,11 +29,11 @@ const LOW_CONFIDENCE = 0.45;
  * Tab order: what was asked first (questions), then where it came from, who
  * answered, how it ended, and when it happens.
  */
-const SECTIONS = ['journey', 'questions', 'access', 'channels', 'agents', 'resolution', 'csat', 'hours'] as const;
+const SECTIONS = ['journey', 'questions', 'access', 'channels', 'agents', 'resolution', 'csat', 'hours', 'pilot'] as const;
 type Section = (typeof SECTIONS)[number];
 
 /** Tabs computed from conversations/messages, which the retention purge removes. */
-const LOG_BACKED_SECTIONS: readonly Section[] = ['journey', 'access', 'channels', 'agents', 'resolution', 'hours'];
+const LOG_BACKED_SECTIONS: readonly Section[] = ['journey', 'access', 'channels', 'agents', 'resolution', 'hours', 'pilot'];
 
 /** Days behind yesterday before the page says so. 1 = simply "no questions yesterday". */
 const STALE_WARN_DAYS = 2;
@@ -171,6 +172,8 @@ export function StatisticsPage() {
       {section === 'agents' && <AgentSection from={from} to={to} />}
       {section === 'resolution' && <ResolutionSection from={from} to={to} />}
       {section === 'hours' && <HourSection from={from} to={to} />}
+      {/* Pilot numbers by hotel / role / day (PLN-261012 SG-52). */}
+      {section === 'pilot' && <PilotSection from={from} to={to} />}
 
       {section === 'questions' && (
       <>

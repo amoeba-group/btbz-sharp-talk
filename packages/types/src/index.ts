@@ -8,6 +8,7 @@ export * from './common/widget-copy';
 export * from './common/widget-theme';
 export * from './common/widget-access';
 export * from './common/pilot-access';
+export * from './common/pilot-analytics';
 export * from './common/privacy-notice-copy';
 export * from './common/order-status';
 export * from './domain/menu.types';

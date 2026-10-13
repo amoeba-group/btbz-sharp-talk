@@ -1,4 +1,5 @@
-import { apiGet, apiGetList } from '@/lib/api-client';
+import { apiGet, apiGetBlob, apiGetList, saveBlob } from '@/lib/api-client';
+import type { PilotAnalyticsGroup } from '../../../../../packages/types/src/common/pilot-analytics';
 
 /** The four lenses a question can be counted through (PLN D2). */
 export const DIMENSIONS = ['intent', 'category', 'document', 'keyword', 'cluster'] as const;
@@ -158,7 +159,109 @@ export interface TenantJourneyRow extends JourneyStages {
   slug: string | null;
 }
 
+// ---- Pilot analytics (PLN-261012 SG-52) ----
+
+export interface PilotLatencySummary {
+  count: number;
+  p50: number | null;
+  p95: number | null;
+  max: number | null;
+}
+
+export type PilotStage = 'total' | 'classify' | 'retrieve' | 'generate' | 'moderate';
+
+/** One group row (hotel / role / day). Counts only — nothing identifies a customer or a conversation. */
+export interface PilotRow {
+  key: string;
+  /** The group of conversations carrying no stamp (guests, older rows). */
+  unknown: boolean;
+  conversations: number;
+  aiOnlyResolved: number;
+  handedOff: number;
+  refused: number;
+  noAnswer: number;
+  aiOnlyResolvedRate: number | null;
+  handoffRate: number | null;
+  /** Hand-offs by reason, one count per conversation. */
+  handoffReasons: Record<string, number>;
+  /** Refusal notices by reason, one count per turn. */
+  refusals: Record<string, number>;
+  guestGatePrompts: number;
+  roleManagerOnly: number;
+  answers: number;
+  avgConfidence: number | null;
+  noSourceAnswers: number;
+  noSourceRate: number | null;
+  moderation: { blocked: number; edited: number };
+  csat: { rated: number; avg: number | null };
+  distinctUsers: number;
+  anonymousSessions: number;
+  partner: {
+    lookups: number;
+    ok: number;
+    denied: number;
+    rejected: number;
+    unavailable: number;
+    unverified: number;
+    topics: Record<string, number>;
+  };
+  latency: Record<PilotStage, PilotLatencySummary>;
+}
+
+export interface PilotAdoption {
+  pilotEnabled: boolean;
+  listed: number;
+  listedActive: number;
+  listedSilent: number;
+  silentHotels: string[];
+  hotelsActive: number;
+  offListActive: number;
+}
+
+export interface PilotReport {
+  group: PilotAnalyticsGroup;
+  window: { from: string; to: string; days: number; timezone: string };
+  rows: PilotRow[];
+  totals: PilotRow;
+  adoption: PilotAdoption;
+  meta: {
+    scanned: number;
+    truncated: boolean;
+    maxConversations: number;
+    rowsTotal: number;
+    rowsShown: number;
+    defaultWindowDays: number;
+    maxWindowDays: number;
+    exportMaxRows: number;
+    unrecordedReasons: string[];
+  };
+}
+
+export interface PilotParams {
+  group: PilotAnalyticsGroup;
+  from: string;
+  to: string;
+}
+
+/** The last records of a capped CSV carry this marker (the server also sends X-Export-Truncated). */
+const CSV_TRUNCATED_MARKER = '#truncated';
+
 export const statisticsService = {
+  pilot: (params: PilotParams) =>
+    apiGet<PilotReport>('/analytics/pilot', { group: params.group, from: params.from, to: params.to }),
+
+  /**
+   * Download the pilot conversations as CSV (master / director). Resolves to whether the server capped
+   * the file, read from its last record so no CORS-exposed header is needed to tell the user.
+   */
+  exportPilotCsv: async (from: string, to: string): Promise<{ truncated: boolean }> => {
+    const { blob, filename } = await apiGetBlob('/analytics/pilot/conversations.csv', { from, to });
+    saveBlob(blob, filename ?? `pilot-conversations-${from}-${to}.csv`);
+    // The truncation record is the file's last line, so the tail is enough; the file itself is untouched.
+    const tail = await blob.slice(Math.max(0, blob.size - 600)).text();
+    return { truncated: tail.includes(CSV_TRUNCATED_MARKER) };
+  },
+
   journey: (from: string, to: string) => apiGet<JourneyStages>('/analytics/journey', { from, to }),
 
   access: (from: string, to: string) => apiGet<AccessBreakdown>('/analytics/access', { from, to }),

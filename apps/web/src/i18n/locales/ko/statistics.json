@@ -35,7 +35,8 @@
     "resolution": "처리",
     "hours": "시간대",
     "access": "노출·접속",
-    "journey": "여정"
+    "journey": "여정",
+    "pilot": "파일럿"
   },
   "csat": {
     "avgTitle": "평균 평점",
@@ -160,5 +161,102 @@
     "details": "상세",
     "notExclusive": "이관된 대화도 평가와 종료를 거칩니다 — 합이 대화 수를 넘을 수 있습니다.",
     "collectionNote": "노출·접속은 2026-09-20부터 수집합니다. 이전 구간은 대화부터 표시됩니다."
+  },
+  "pilot": {
+    "title": "파일럿 결과",
+    "subtitle": "호텔별·역할별로 어시스턴트가 어떻게 동작하는지 — 파일럿을 평가하는 지표입니다.",
+    "groupBy": "그룹 기준",
+    "group": {
+      "hotel": "호텔",
+      "role": "역할",
+      "day": "일자"
+    },
+    "total": "전체",
+    "unknown": "식별 정보 없음(비로그인 또는 이전 데이터)",
+    "export": "대화 내보내기(CSV)",
+    "exporting": "내보내는 중…",
+    "exportHint": "대화 1건당 1행으로 대화 내용을 포함하며 개인정보는 마스킹됩니다 — 답변을 수기로 채점하기 위한 파일입니다. master·director 계정만 사용할 수 있습니다.",
+    "exportDone": "CSV 파일을 다운로드했습니다.",
+    "exportTruncated": "파일은 최대 {{max}}건의 대화까지만 포함합니다. 나머지는 기간을 좁혀서 받아 주세요.",
+    "exportFailed": "내보내기 파일을 만들지 못했습니다. 다시 시도해 주세요.",
+    "windowTooLong": "파일럿 화면은 한 번에 최대 {{max}}일까지만 조회합니다. 더 짧은 기간을 선택해 주세요.",
+    "truncatedNote": "이 기간에는 조회 한도({{max}}건)보다 많은 대화가 있어, 가장 오래된 {{scanned}}건만 집계했습니다. 더 짧은 기간을 선택해 주세요.",
+    "empty": "이 기간에 대화가 없습니다.",
+    "retry": "다시 시도",
+    "adoption": {
+      "title": "호텔",
+      "line": "활동 {{active}} / 파일럿 목록 {{listed}}",
+      "outside": "목록 밖에서 대화한 호텔: {{count}}",
+      "silent": "목록에는 있지만 대화가 없는 호텔: {{count}}",
+      "allActive": "목록의 모든 호텔이 이 기간에 대화했습니다.",
+      "showSilent": "해당 호텔 보기",
+      "hideSilent": "숨기기",
+      "silentMore": "외 {{count}}곳",
+      "listOff": "파일럿 목록이 꺼져 있어 모든 호텔이 응대 대상입니다. 여기 수치는 현재 등록된 목록 기준입니다.",
+      "noList": "이 테넌트에는 파일럿 목록이 설정되어 있지 않습니다."
+    },
+    "col": {
+      "conversations": "대화",
+      "aiOnly": "AI 단독 해결",
+      "handoff": "상담원 연결",
+      "other": "거절 / 무응답",
+      "confidence": "평균 신뢰도",
+      "noSource": "출처 없음",
+      "csat": "CSAT",
+      "guestGate": "로그인 안내",
+      "refusals": "기타 거절",
+      "moderation": "검수(차단 / 수정)",
+      "partner": "파트너 조회(성공 / 거절 / 장애)",
+      "users": "사용자",
+      "latency": "응답 시간 P50 / P95"
+    },
+    "cell": {
+      "users": "로그인 {{users}}명 · 비로그인 세션 {{guests}}개",
+      "csat": "{{avg}} ({{count}})"
+    },
+    "reason": {
+      "low_confidence": "근거 부족",
+      "user_request": "고객이 상담원 요청",
+      "moderation": "검수에서 차단",
+      "policy_deny": "상담원 연결 대상 주제",
+      "engine_unavailable": "AI 엔진 장애",
+      "partner_unavailable": "파트너 데이터 조회 불가",
+      "partner_unverified": "수치 검증 실패",
+      "guest_gate": "로그인 필요",
+      "auth_gate": "주문 조회에 로그인 필요",
+      "identity_expired": "로그인 만료",
+      "role_manager_only": "매니저 전용",
+      "partner_role_denied": "해당 역할은 조회 불가",
+      "partner_claims_stale": "다시 로그인 필요",
+      "partner_param_rejected": "다른 호텔을 문의",
+      "embedder_degraded": "벡터 검색 저하",
+      "consent": "개인정보 안내 미동의",
+      "pilot_denied": "파일럿 대상 아닌 호텔",
+      "other": "기타 사유",
+      "unknown": "사유 기록 없음"
+    },
+    "stage": {
+      "total": "합계",
+      "classify": "질문 이해",
+      "retrieve": "검색",
+      "generate": "답변 작성",
+      "moderate": "안전 검사"
+    },
+    "latencyTitle": "단계별 응답 시간(전체)",
+    "stageCol": "단계",
+    "samples": "측정 건수",
+    "notRecorded": "기록되지 않음(저장하지 않아 집계 불가): {{reasons}}.",
+    "definitions": {
+      "title": "수치 읽는 법",
+      "aiOnly": "AI 단독 해결: 팀원이 개입하지 않았고(상담원 연결 없음, 상담원 메시지 없음) 어시스턴트가 지식 베이스에 근거한 답변을 한 번 이상 한 대화입니다. 상담원이 종료한 대화까지 포함하는 ‘결과’ 탭의 해결률과는 다릅니다.",
+      "handoff": "상담원 연결: 대화가 에스컬레이션되었거나, 상담원이 메시지를 남겼거나, 연결 안내가 표시된 대화입니다. 사유는 대화당 한 번만 집계합니다.",
+      "other": "거절: 로그인·권한 안내만 표시된 대화. 무응답: 근거 있는 답변이 없는 대화(인사말만 있거나 응답 대기 중).",
+      "confidence": "평균 신뢰도와 출처 없음은 답변 단위로 집계합니다. 출처 없음은 문서를 인용하지 않은 답변입니다.",
+      "window": "일자는 테넌트 시간대({{zone}}) 기준이며, 대화는 시작한 날에 집계됩니다."
+    },
+    "error": {
+      "E5140": "요청이 올바르지 않습니다. 기간과 그룹 기준을 확인해 주세요.",
+      "E5141": "파일럿 화면은 한 번에 최대 {{max}}일까지만 조회합니다."
+    }
   }
 }
