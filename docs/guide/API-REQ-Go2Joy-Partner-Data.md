@@ -75,6 +75,12 @@ Tham số truy vấn được sắp theo tên rồi theo giá trị, mã hóa RF
 | Giới hạn tốc độ | Đề xuất 60 yêu cầu/phút/khóa và 20/phút/khách sạn; 429 + `Retry-After` | proposal |
 | Hiệu năng | SharpTalk chờ tối đa 3 s mỗi lần; mục tiêu P95 ≤ 1 s; cache 30–60 s theo (tenant, khách sạn, chủ đề, truy vấn) | 3 s per attempt; 30–60 s cache |
 
+> **Lưu ý về tần suất gọi (SG-33) / Call-rate note.** Ở chế độ `tools` (tùy chọn, mặc định tắt) mô hình AI tự chọn tra cứu: một câu hỏi của người dùng có thể
+> sinh tối đa **4 lượt GET tuần tự** (cùng bốn chủ đề, cùng tập tham số đóng, cùng header khách sạn do máy chủ đặt) — hợp đồng không đổi, nhưng nên tính vào giới hạn tốc độ
+> (đề xuất 20 yêu cầu/phút/khách sạn). Xem `GUIDE-261013-Partner-Data-Tools-Mode.md`.
+> *In the optional `tools` mode (off by default) the AI model chooses the lookups: one user question can cause up to **4 sequential GETs** — same four topics, same closed
+> parameters, same server-set hotel header. The contract is unchanged, but size rate limits for it (proposal: 20 requests/min/hotel).*
+
 ## 4. Cần Go2Joy cung cấp / What we need from Go2Joy (R8 / R9)
 
 1. **R8 — Danh sách API và đặc tả thật** cho bốn chủ đề (hoặc nhận xét chi tiết trên bản nháp này): đường dẫn, tham số, giá trị liệt kê (trạng thái đặt phòng, loại giá, loại thanh toán), mã loại phòng.
