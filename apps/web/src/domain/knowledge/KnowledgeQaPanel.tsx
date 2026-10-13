@@ -8,8 +8,11 @@ import { Select } from '@/components/Field';
 import { useAiAgents } from '../ai-settings/ai-agents.hooks';
 import { useAskKnowledge } from './knowledge.hooks';
 import type { KnowledgeAnswer } from './knowledge.service';
+import { GateDecisionCard } from './GateDecisionCard';
 // Runtime table from the registry source (see apps/web/src/i18n/i18n.ts for why).
 import { LANGUAGES } from '../../../../../packages/types/src/common/language';
+import { GATE_AS_OPTIONS } from '../../../../../packages/types/src/common/gate-decision';
+import type { GateAs } from '../../../../../packages/types/src/common/gate-decision';
 
 
 /**
@@ -27,6 +30,9 @@ export function KnowledgeQaPanel({ onEditSource }: { onEditSource: (documentId: 
   // category scope without opening the widget as five different personas.
   const [agentId, setAgentId] = useState<number>(0);
   const agents = (useAiAgents().data ?? []).filter((a) => a.active);
+  // "Test as…" (PLN-261012 SG-51): '' = the operator's own view; otherwise what this kind of viewer
+  // would be told, gate decision included — the same decision the chat itself makes.
+  const [viewer, setViewer] = useState<GateAs | ''>('');
   const [question, setQuestion] = useState('');
   const [asked, setAsked] = useState('');
   const [result, setResult] = useState<KnowledgeAnswer | null>(null);
@@ -36,17 +42,21 @@ export function KnowledgeQaPanel({ onEditSource }: { onEditSource: (documentId: 
     const text = q.trim();
     if (!text || ask.isPending) return;
     setAsked(text);
-    ask.mutate({ question: text, language, aiAgentId: agentId || null }, { onSuccess: setResult });
+    ask.mutate(
+      { question: text, language, aiAgentId: agentId || null, asAudience: viewer || null },
+      { onSuccess: setResult },
+    );
   };
 
   return (
     <Card
       title={t('qa.title')}
       action={
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {agents.length > 1 ? (
             <Select value={String(agentId)} onChange={(e) => setAgentId(Number(e.target.value))}>
-              <option value="0">{t('qa.agentAll')}</option>
+              {/* A simulated viewer talks to the default agent when none is picked — never to "everything". */}
+              <option value="0">{viewer ? t('qa.agentDefault') : t('qa.agentAll')}</option>
               {agents.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.name}
@@ -54,6 +64,24 @@ export function KnowledgeQaPanel({ onEditSource }: { onEditSource: (documentId: 
               ))}
             </Select>
           ) : null}
+          <label className="flex items-center gap-1.5 text-xs text-gray-500">
+            {t('qa.testAs')}
+            <Select
+              value={viewer}
+              onChange={(e) => {
+                setViewer(e.target.value as GateAs | '');
+                // A result from another viewer would read as this one's.
+                setResult(null);
+              }}
+            >
+              <option value="">{t('qa.asOperator')}</option>
+              {GATE_AS_OPTIONS.map((v) => (
+                <option key={v} value={v}>
+                  {t(`qa.as_${v}`)}
+                </option>
+              ))}
+            </Select>
+          </label>
           <Select value={language} onChange={(e) => setLanguage(e.target.value)}>
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>
@@ -86,6 +114,7 @@ export function KnowledgeQaPanel({ onEditSource }: { onEditSource: (documentId: 
 
       {!ask.isPending && result && (
         <div className="mt-3 space-y-3">
+          {result.gate && <GateDecisionCard gate={result.gate} />}
           <div className="rounded-lg border border-gray-100 bg-gray-50 p-3">
             <p className="mb-1 text-[11px] font-medium text-gray-500">{asked}</p>
             {result.blocked ? (

@@ -3,6 +3,7 @@ import {
   buildHandoffTrace,
   buildRefusalTrace,
   isRefusalReason,
+  sanitizeTraceExtras,
 } from './refusal-reason';
 
 /**
@@ -111,5 +112,62 @@ describe('buildHandoffTrace', () => {
 
   it('an unknown escalation word falls back to low_confidence, never to a free-text reason', () => {
     expect(buildHandoffTrace('something_new', 3).reason).toBe('low_confidence');
+  });
+});
+
+describe('gate extras on a trace (PLN-261012 SG-51)', () => {
+  it('keeps what the gate measured: tier, decision word, provider, top-3 categories and documents', () => {
+    const t = buildRefusalTrace(REFUSAL_REASON.GUEST_GATE, 5, {
+      grounded: 0.2,
+      threshold: 0.45,
+      topSimilarity: 0.412345678,
+      audience: 'public',
+      gate: 'embedder_degraded',
+      vectorProvider: 'degraded',
+      categories: ['Settlement', 'Cancellation', 'Rates', 'Fourth-is-dropped'],
+      docIds: [11, 12, 13, 14],
+    });
+    expect(t).toEqual({
+      reason: 'guest_gate',
+      agentId: 5,
+      audience: 'public',
+      gate: 'embedder_degraded',
+      vectorProvider: 'degraded',
+      grounded: 0.2,
+      threshold: 0.45,
+      topSimilarity: 0.4123, // four decimals: the column is kept for a year
+      categories: ['Settlement', 'Cancellation', 'Rates'],
+      docIds: [11, 12, 13],
+    });
+  });
+
+  it('drops array members that are not primitives of the right type, and caps a long category name', () => {
+    const t = buildRefusalTrace(REFUSAL_REASON.LOW_CONFIDENCE, 1, {
+      ...({
+        categories: ['ok', 42, { query: 'my phone is 0901234567' }, '', 'x'.repeat(200)],
+        docIds: [1, '2', 3.5, null, { id: 9 }, 4],
+      } as object),
+    });
+    expect(t.categories).toEqual(['ok', 'x'.repeat(48)]);
+    expect(t.docIds).toEqual([1, 4]);
+    expect(JSON.stringify(t)).not.toContain('0901234567');
+  });
+
+  it('an empty or non-array match list leaves no key at all', () => {
+    const t = buildRefusalTrace(REFUSAL_REASON.LOW_CONFIDENCE, 1, {
+      ...({ categories: [], docIds: 'nope' } as object),
+    });
+    expect(Object.keys(t).sort()).toEqual(['agentId', 'reason']);
+  });
+
+  it('sanitizeTraceExtras serves a PASS (no reason): same whitelist, no reason or agent', () => {
+    const extras = sanitizeTraceExtras({
+      gate: 'allow',
+      audience: 'partner',
+      grounded: 0.8,
+      ...({ query: 'secret words', text: 'x' } as object),
+    });
+    expect(extras).toEqual({ gate: 'allow', audience: 'partner', grounded: 0.8 });
+    expect(extras).not.toHaveProperty('reason');
   });
 });

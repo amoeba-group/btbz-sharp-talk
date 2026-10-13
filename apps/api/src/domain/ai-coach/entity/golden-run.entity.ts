@@ -119,6 +119,35 @@ export class GoldenRunItem {
   @Column({ type: 'varchar', length: 300, nullable: true })
   error: string | null;
 
+  /**
+   * The gate, per question that was asked AS a viewer (PLN-261012 SG-51); all NULL for an ordinary
+   * question. `audience` / `expectGate` are the viewer and the expectation AS ASKED, so a later edit
+   * of the question cannot rewrite what this run measured.
+   */
+  @Column({ type: 'varchar', length: 16, nullable: true })
+  audience: string | null;
+
+  @Column({ name: 'expect_gate', type: 'varchar', length: 8, nullable: true })
+  expectGate: string | null;
+
+  /** allow | guest_gate | role_manager_only | low_confidence | embedder_degraded. */
+  @Column({ name: 'gate_decision', type: 'varchar', length: 24, nullable: true })
+  gateDecision: string | null;
+
+  /** The deciding measurement on the confidence scale, and the bar it met (or missed). */
+  @Column({ name: 'gate_confidence', type: 'decimal', precision: 4, scale: 3, nullable: true, transformer: decimalTransformer })
+  gateConfidence: number | null;
+
+  @Column({ name: 'gate_threshold', type: 'decimal', precision: 4, scale: 3, nullable: true, transformer: decimalTransformer })
+  gateThreshold: number | null;
+
+  @Column({ name: 'gate_top_similarity', type: 'decimal', precision: 4, scale: 3, nullable: true, transformer: decimalTransformer })
+  gateTopSimilarity: number | null;
+
+  /** voyage | stub | none — which vector provider the measurement used (a stub run is not calibration data). */
+  @Column({ name: 'gate_vector_provider', type: 'varchar', length: 16, nullable: true })
+  gateVectorProvider: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

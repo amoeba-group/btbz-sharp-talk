@@ -8,6 +8,7 @@ import { KbConflict } from './entity/kb-conflict.entity';
 import { KbDocumentRevision } from './entity/kb-document-revision.entity';
 import { ProductCache } from '../product/entity/product-cache.entity';
 import { KnowledgeService } from './knowledge.service';
+import { GateSimulatorService } from './gate-simulator.service';
 import { KbConflictService } from './kb-conflict.service';
 import { KbRevisionService } from './kb-revision.service';
 import { ProductImportService } from './product-import.service';
@@ -95,6 +96,8 @@ import { AnswerReuseModule } from '../answer-reuse/answer-reuse.module';
   controllers: [KnowledgeController, AgentKnowledgeController, BoardReviewController, KbVideoController],
   providers: [
     KnowledgeService,
+    // "Test as…" gate simulator (PLN-261012 SG-51).
+    GateSimulatorService,
     BoardReviewService,
     KnowledgeGapService,
     KbConflictService,
@@ -119,6 +122,6 @@ import { AnswerReuseModule } from '../answer-reuse/answer-reuse.module';
     NotionCredentialService,
     KbVideoService,
   ],
-  exports: [KnowledgeService, KbConflictService, KbRevisionService],
+  exports: [KnowledgeService, KbConflictService, KbRevisionService, GateSimulatorService],
 })
 export class KnowledgeModule {}

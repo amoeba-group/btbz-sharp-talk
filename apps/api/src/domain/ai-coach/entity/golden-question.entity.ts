@@ -50,6 +50,21 @@ export class GoldenQuestion {
   @Column({ name: 'partner_ctx', type: 'json', nullable: true })
   partnerCtx: GoldenPartnerCtx | null;
 
+  /**
+   * Who the question is asked as (PLN-261012 SG-51): guest | partner | receptionist | manager — the
+   * console's "Test as…" viewers. NULL = asked exactly as before (the operator's own view, no gate).
+   * Set = the run goes through the gate simulator, so the gate's decision is recorded per item.
+   */
+  @Column({ type: 'varchar', length: 16, nullable: true })
+  audience: string | null;
+
+  /**
+   * What the gate should do for that viewer: 'allow' | 'refuse' (refuse = ANY decision but allow).
+   * NULL = the gate is not graded. Calibration (gate:calibrate) reads the labelled set from here.
+   */
+  @Column({ name: 'expect_gate', type: 'varchar', length: 8, nullable: true })
+  expectGate: string | null;
+
   @Column({ name: 'created_by', type: 'bigint', nullable: true, transformer: bigintTransformer })
   createdBy: number | null;
 

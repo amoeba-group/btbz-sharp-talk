@@ -10,6 +10,8 @@ import { Input, Select } from '@/components/Field';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
 import { goldenService, type Comparison, type GoldenRun } from './golden.service';
+// Source deep-import (a value import from '@sharptalk/types' fails the browser build — see language.ts).
+import { EXPECT_GATE, GATE_AS_OPTIONS } from '../../../../../packages/types/src/common/gate-decision';
 import { ComparisonModal } from './ComparisonModal';
 import { useAiAgents } from './ai-agents.hooks';
 
@@ -19,6 +21,59 @@ const splitFacts = (s: string) =>
     .split('|')
     .map((v) => v.trim())
     .filter(Boolean);
+
+/**
+ * The two gate labels of a golden question (PLN-261012 SG-51): who it is asked as, and what the gate
+ * should do for them. The expectation needs a viewer, so clearing the viewer clears it too and the
+ * expectation select stays disabled until one is chosen.
+ */
+function GateLabelSelects({
+  audience,
+  expectGate,
+  disabled,
+  onChange,
+}: {
+  audience: string;
+  expectGate: string;
+  disabled?: boolean;
+  onChange: (audience: string, expectGate: string) => void;
+}) {
+  const { t } = useTranslation('aiSetting');
+  return (
+    <>
+      <Select
+        value={audience}
+        disabled={disabled}
+        aria-label={t('regression.audience')}
+        title={t('regression.audience')}
+        onChange={(e) => onChange(e.target.value, e.target.value ? expectGate : '')}
+        className="h-8 text-xs"
+      >
+        <option value="">{t('regression.audienceNone')}</option>
+        {GATE_AS_OPTIONS.map((a) => (
+          <option key={a} value={a}>
+            {t(`regression.audience_${a}`)}
+          </option>
+        ))}
+      </Select>
+      <Select
+        value={expectGate}
+        disabled={disabled || !audience}
+        aria-label={t('regression.expectGate')}
+        title={t('regression.expectGate')}
+        onChange={(e) => onChange(audience, e.target.value)}
+        className="h-8 text-xs"
+      >
+        <option value="">{t('regression.expectGateNone')}</option>
+        {Object.values(EXPECT_GATE).map((x) => (
+          <option key={x} value={x}>
+            {t(`regression.expect_${x}`)}
+          </option>
+        ))}
+      </Select>
+    </>
+  );
+}
 
 /**
  * Regression set (FR-073). Re-asks a fixed list of questions so a config change
@@ -39,7 +94,11 @@ export function RegressionSection() {
   const [draft, setDraft] = useState('');
   const [draftFacts, setDraftFacts] = useState('');
   const [agentId, setAgentId] = useState('');
-  const [editing, setEditing] = useState<{ id: number; facts: string } | null>(null);
+  // The gate labels of a new question and of the one being edited (SG-51): who it is asked as and what
+  // the gate should do for them. '' = none (an expectation needs a viewer, so it follows the viewer).
+  const [draftAudience, setDraftAudience] = useState('');
+  const [draftExpect, setDraftExpect] = useState('');
+  const [editing, setEditing] = useState<{ id: number; facts: string; audience: string; expectGate: string } | null>(null);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [bulkText, setBulkText] = useState('');
   const [bulkLang, setBulkLang] = useState('VI');
@@ -61,10 +120,18 @@ export function RegressionSection() {
   };
 
   const add = useMutation({
-    mutationFn: () => goldenService.addQuestion({ question: draft.trim(), expected: splitFacts(draftFacts) }),
+    mutationFn: () =>
+      goldenService.addQuestion({
+        question: draft.trim(),
+        expected: splitFacts(draftFacts),
+        ...(draftAudience ? { audience: draftAudience } : {}),
+        ...(draftAudience && draftExpect ? { expect_gate: draftExpect } : {}),
+      }),
     onSuccess: () => {
       setDraft('');
       setDraftFacts('');
+      setDraftAudience('');
+      setDraftExpect('');
       invalidate();
       toast.success(t('regression.toastAdded'));
     },
@@ -72,12 +139,17 @@ export function RegressionSection() {
   });
 
   const saveFacts = useMutation({
-    mutationFn: (v: { id: number; facts: string }) =>
-      goldenService.updateQuestion(v.id, { expected: splitFacts(v.facts) }),
+    mutationFn: (v: { id: number; facts: string; audience: string; expectGate: string }) =>
+      goldenService.updateQuestion(v.id, {
+        expected: splitFacts(v.facts),
+        // Blank clears; without a viewer there is nothing for the gate to be graded on.
+        audience: v.audience,
+        expect_gate: v.audience ? v.expectGate : '',
+      }),
     onSuccess: () => {
       setEditing(null);
       invalidate();
-      toast.success(t('regression.toastFactsSaved'));
+      toast.success(t('regression.toastQuestionSaved'));
     },
     onError: (e: Error) => toast.error(e.message, { sticky: true }),
   });
@@ -179,7 +251,14 @@ export function RegressionSection() {
               <button
                 type="button"
                 disabled={busy}
-                onClick={() => setEditing({ id: q.id, facts: q.expected.join(' | ') })}
+                onClick={() =>
+                  setEditing({
+                    id: q.id,
+                    facts: q.expected.join(' | '),
+                    audience: q.audience ?? '',
+                    expectGate: q.expectGate ?? '',
+                  })
+                }
                 className="rounded p-1 text-gray-400 hover:text-primary-600 disabled:opacity-50"
                 aria-label={t('regression.editFacts')}
               >
@@ -196,28 +275,45 @@ export function RegressionSection() {
               </button>
             </div>
             {editing?.id === q.id ? (
-              <div className="mt-1.5 flex items-center gap-2">
+              <div className="mt-1.5 flex flex-wrap items-center gap-2">
                 <Input
                   value={editing.facts}
                   placeholder={t('regression.factsPlaceholder')}
-                  onChange={(e) => setEditing({ id: q.id, facts: e.target.value })}
-                  className="text-xs"
+                  onChange={(e) => setEditing({ ...editing, facts: e.target.value })}
+                  className="min-w-0 flex-1 text-xs"
+                />
+                <GateLabelSelects
+                  audience={editing.audience}
+                  expectGate={editing.expectGate}
+                  onChange={(audience, expectGate) => setEditing({ ...editing, audience, expectGate })}
                 />
                 <Button size="sm" disabled={saveFacts.isPending} onClick={() => saveFacts.mutate(editing)}>
                   <Check className="h-4 w-4" />
                 </Button>
               </div>
             ) : (
-              <p className="mt-1 text-[11px] text-gray-500">
-                {q.expected.length ? (
-                  <>
-                    <span className="text-gray-400">{t('regression.expected')}: </span>
-                    {q.expected.join(' · ')}
-                  </>
-                ) : (
-                  <span className="text-gray-400">{t('regression.notGraded')}</span>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <p className="text-[11px] text-gray-500">
+                  {q.expected.length ? (
+                    <>
+                      <span className="text-gray-400">{t('regression.expected')}: </span>
+                      {q.expected.join(' · ')}
+                    </>
+                  ) : (
+                    <span className="text-gray-400">{t('regression.notGraded')}</span>
+                  )}
+                </p>
+                {q.audience && (
+                  <Badge tone={q.expectGate ? 'info' : 'gray'}>
+                    {q.expectGate
+                      ? t('regression.gateBadge', {
+                          audience: t(`regression.audience_${q.audience}`),
+                          expect: t(`regression.expect_${q.expectGate}`),
+                        })
+                      : t('regression.gateNotGraded', { audience: t(`regression.audience_${q.audience}`) })}
+                  </Badge>
                 )}
-              </p>
+              </div>
             )}
           </div>
         ))}
@@ -240,6 +336,15 @@ export function RegressionSection() {
           placeholder={t('regression.factsPlaceholder')}
           onChange={(e) => setDraftFacts(e.target.value)}
           className="min-w-0 flex-1"
+        />
+        <GateLabelSelects
+          audience={draftAudience}
+          expectGate={draftExpect}
+          disabled={busy || items.length >= max}
+          onChange={(audience, expectGate) => {
+            setDraftAudience(audience);
+            setDraftExpect(expectGate);
+          }}
         />
         <Button size="sm" disabled={busy || !draft.trim() || items.length >= max} onClick={() => add.mutate()}>
           <Plus className="h-4 w-4" />
@@ -328,6 +433,7 @@ export function RegressionSection() {
             aria-label={t('regression.bulkTitle')}
           />
           <p className="text-xs text-gray-500">{t('regression.bulkHint', { count: bulkLines.length, max })}</p>
+          <p className="text-xs text-gray-500">{t('regression.bulkGateHint')}</p>
         </div>
       </Modal>
 

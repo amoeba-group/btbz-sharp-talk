@@ -786,6 +786,8 @@ CREATE TABLE `golden_questions` (
   `partner_ctx` json DEFAULT NULL,
   `expected` json DEFAULT NULL,
   `forbidden` json DEFAULT NULL,
+  `audience` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `expect_gate` varchar(8) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_golden_q_tenant` (`tenant_id`,`active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -807,6 +809,13 @@ CREATE TABLE `golden_run_items` (
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `verdict` varchar(8) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `failed_checks` json DEFAULT NULL,
+  `audience` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `expect_gate` varchar(8) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gate_decision` varchar(24) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gate_confidence` decimal(4,3) DEFAULT NULL,
+  `gate_threshold` decimal(4,3) DEFAULT NULL,
+  `gate_top_similarity` decimal(4,3) DEFAULT NULL,
+  `gate_vector_provider` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_golden_item_run` (`run_id`,`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

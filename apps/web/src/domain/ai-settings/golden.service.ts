@@ -11,6 +11,10 @@ export interface GoldenQuestion {
   /** Facts the answer must contain (PLN-261007 R7); empty = not graded. */
   expected: string[];
   forbidden: string[];
+  /** Who the question is asked as (SG-51): guest | partner | receptionist | manager; null = operator view. */
+  audience: string | null;
+  /** What the gate should do for that viewer: allow | refuse; null = the gate is not graded. */
+  expectGate: string | null;
   createdAt: string;
 }
 
@@ -62,12 +66,21 @@ export interface Comparison {
 
 export const goldenService = {
   listQuestions: () => apiGet<{ items: GoldenQuestion[]; max: number }>('/ai-coach/golden/questions'),
-  addQuestion: (body: { question: string; language?: string; note?: string; expected?: string[] }) =>
-    apiPost<GoldenQuestion>('/ai-coach/golden/questions', body),
+  addQuestion: (body: {
+    question: string;
+    language?: string;
+    note?: string;
+    expected?: string[];
+    audience?: string;
+    expect_gate?: string;
+  }) => apiPost<GoldenQuestion>('/ai-coach/golden/questions', body),
   bulkImport: (body: { text: string; language?: string }) =>
     apiPost<{ created: number; updated: number; skipped: number }>('/ai-coach/golden/questions/bulk', body),
-  updateQuestion: (id: number, body: { question?: string; active?: number; expected?: string[] }) =>
-    apiPatch<GoldenQuestion>(`/ai-coach/golden/questions/${id}`, body),
+  // A blank audience / expect_gate clears it (the server reads '' as "none"); absent leaves it.
+  updateQuestion: (
+    id: number,
+    body: { question?: string; active?: number; expected?: string[]; audience?: string; expect_gate?: string },
+  ) => apiPatch<GoldenQuestion>(`/ai-coach/golden/questions/${id}`, body),
   removeQuestion: (id: number) => apiDelete<{ removed: boolean }>(`/ai-coach/golden/questions/${id}`),
 
   listRuns: () => apiGet<{ items: GoldenRun[] }>('/ai-coach/golden/runs'),

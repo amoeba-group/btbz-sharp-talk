@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsIn, IsInt, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { EXPECT_GATE, GATE_AS_OPTIONS } from '@sharptalk/types';
 import { GOLDEN_RUN_KIND } from '../../entity/golden-run.entity';
 
 /** Request DTOs — snake_case (code convention §2). */
@@ -19,6 +20,13 @@ export class CreateGoldenQuestionRequest {
   @IsOptional() @IsString() @MaxLength(32) partner_hotel_sn?: string;
   @IsOptional() @IsString() @MaxLength(16) partner_role?: string;
   @IsOptional() @IsString() @MaxLength(32) partner_mock_set?: string;
+  /**
+   * Ask AS this viewer (PLN-261012 SG-51): guest | partner | receptionist | manager — the gate's decision
+   * is then recorded per run item. Absent = the operator's own view, as before.
+   */
+  @IsOptional() @IsIn(GATE_AS_OPTIONS as unknown as string[]) audience?: string;
+  /** What the gate should do for that viewer: allow | refuse. Needs an `audience` (E5145 otherwise). */
+  @IsOptional() @IsIn(Object.values(EXPECT_GATE) as string[]) expect_gate?: string;
 }
 
 export class UpdateGoldenQuestionRequest {
@@ -32,6 +40,10 @@ export class UpdateGoldenQuestionRequest {
   @IsOptional() @IsString() @MaxLength(32) partner_hotel_sn?: string;
   @IsOptional() @IsString() @MaxLength(16) partner_role?: string;
   @IsOptional() @IsString() @MaxLength(32) partner_mock_set?: string;
+  /** A blank value clears the viewer (and its expectation); absent leaves it unchanged (SG-51). */
+  @IsOptional() @IsIn([...(GATE_AS_OPTIONS as unknown as string[]), '']) audience?: string;
+  /** A blank value clears the expectation; absent leaves it unchanged. */
+  @IsOptional() @IsIn([...(Object.values(EXPECT_GATE) as string[]), '']) expect_gate?: string;
 }
 
 /** POST /ai-coach/golden/questions/bulk — TSV paste (PLN-261007 R7 S4). */

@@ -13,7 +13,7 @@ import {
   ValidateIf,
 } from 'class-validator';
 import { VIDEO_REF_PATTERN } from '../../video-ref.util';
-import { AUDIENCE, type Audience } from '@sharptalk/types';
+import { AUDIENCE, GATE_AS_OPTIONS, type Audience, type GateAs } from '@sharptalk/types';
 
 /**
  * Knowledge source ingestion modes (FR-064). board/repository were removed
@@ -198,6 +198,12 @@ export class AskKnowledgeRequest {
   @IsOptional() @IsString() group?: string;
   /** Answer as this AI agent would (its knowledge scope); omit to see everything. */
   @IsOptional() @IsInt() ai_agent_id?: number;
+  /**
+   * "Test as…" (PLN-261012 SG-51): simulate what this kind of viewer would be told — guest (a
+   * signed-out visitor), partner, receptionist or manager. The response then carries the full gate
+   * decision. Absent = the operator's own view, exactly as before.
+   */
+  @IsOptional() @IsIn(GATE_AS_OPTIONS as unknown as string[]) as_audience?: GateAs;
 }
 
 // ---- Board posts ----

@@ -371,9 +371,15 @@ export class KnowledgeService {
      * Answer as this audience would be answered (PLN-261012 SG-10): manager-only categories
      * are left out for anything below `manager`, exactly as on a widget turn. Omitted = the
      * operator's own view, which sees everything — you cannot fix what is hidden from you.
-     * Never taken from a request in this stream; the simulator control is SG-51's.
+     * Never taken from a request here; the console simulator (SG-51) reaches it through
+     * GateSimulatorService, which also decides whether the gate would have let the question through.
      */
     audience?: Audience,
+    /**
+     * Retrieve from the GUEST-visible categories only, as a gated visitor's answer is (PLN-261012
+     * SG-51): the simulator asks as a signed-out guest of a login_guidance agent. Omitted = off.
+     */
+    guestOnly?: boolean,
   ): Promise<{
     answer: string;
     confidence: number;
@@ -411,8 +417,12 @@ export class KnowledgeService {
       aiAgentId ?? null,
       undefined,
       undefined,
-      partner || audience
-        ? { ...(partner ? { partnerData: partner.block } : {}), ...(audience ? { audience } : {}) }
+      partner || audience || guestOnly
+        ? {
+            ...(partner ? { partnerData: partner.block } : {}),
+            ...(audience ? { audience } : {}),
+            ...(guestOnly ? { guestOnly: true } : {}),
+          }
         : undefined,
     );
     const moderated = await this.moderation.moderate({
