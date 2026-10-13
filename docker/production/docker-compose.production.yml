@@ -68,6 +68,12 @@ services:
     container_name: sharptalk_widget_production
     restart: always
     logging: *default-logging
+    environment:
+      # Who may frame the widget, and where its base font comes from (PLN-261012
+      # SG-82). Unset FRAME_ANCESTORS = no header (any site may embed); an EMPTY
+      # FONT_CSS_URL = system fonts only, UNSET = the image default (jsDelivr).
+      WIDGET_FRAME_ANCESTORS: ${WIDGET_FRAME_ANCESTORS:-}
+      WIDGET_FONT_CSS_URL: ${WIDGET_FONT_CSS_URL-https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css}
     expose:
       - '80'
 

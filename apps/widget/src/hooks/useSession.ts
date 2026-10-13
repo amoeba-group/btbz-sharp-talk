@@ -156,7 +156,7 @@ export function adoptSessionConsent(
       state: replay.state === 'granted' ? 'granted' : 'declined',
       consentAt: replay.at,
     });
-    void setConsent(res.sessionToken, replay.state === 'granted').catch(() =>
+    void setConsent(res.sessionToken, replay.state === 'granted', true).catch(() =>
       setConsentInfo(consentInfo),
     );
   } else {

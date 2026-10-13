@@ -44,6 +44,7 @@ import { AttachmentService } from '../attachment/attachment.service';
 import { MessageAttachment } from '../attachment/entity/message-attachment.entity';
 import { scrubPii } from '../../global/util/pii-scrub.util';
 import { detectLanguage } from '../../global/util/detect-language.util';
+import { buildTurnLatency, elapsedMs } from './turn-latency.util';
 import { DENY_MODE } from '../ai-engine/entity/tenant-ai-config.entity';
 import type { AiMessage } from '../../infrastructure/external/ai/ai-adapter.interface';
 import {
@@ -699,6 +700,7 @@ export class ChatService {
     text: string,
     opts: { draft?: boolean; attachmentIds?: string[] } = {},
   ): Promise<ChatTurnResult> {
+    const turnStartedAt = Date.now(); // per-turn latency (PLN-261012 SG-53)
     // Consent gate (PRV-M4, PLN-Privacy-Control-Gap D-1: fail-closed). Only an
     // effective GRANTED — fresh (uncached) read, current notice version — lets
     // the turn proceed; PENDING, DECLINED, and an outdated grant all soft-block:
@@ -853,11 +855,13 @@ export class ChatService {
     const history = await this.conversationHistory(conversation.id, userTurn.id, [...variants, ...caveatTexts]);
 
     // Intent + scope check (FN-015): order data requires authentication first.
+    const classifyT0 = Date.now();
     const intent = await this.rag.classifyIntent(
       tenantId,
       egressText,
       history.slice(-INTENT_HISTORY_MESSAGES),
     );
+    const classifyMs = elapsedMs(classifyT0);
     // Record the label on the turn that produced it. The classifier already
     // runs on every message and its result was discarded after the
     // needsOrderData check below, so the intent statistics lens costs no extra
@@ -982,6 +986,7 @@ export class ChatService {
       // A deny topic that reads as chit-chat is still a deny topic.
       if (denyAnswersFirst) return denyHandoffNow();
       const streak = await this.nonQuestionStreak(conversation.id);
+      const draftT0 = Date.now();
       const drafted = await this.rag.answerWithoutKnowledge(
         tenantId,
         nonQuestion,
@@ -1007,7 +1012,9 @@ export class ChatService {
           needsContactEmail: handoff.needsContactEmail,
         };
       }
+      const draftMs = elapsedMs(draftT0);
       // Same gate as any other AI egress (FR-069, non-bypassable).
+      const checkT0 = Date.now();
       const checked = await this.moderation.moderate({
         tenantId,
         scope: 'ai',
@@ -1015,6 +1022,7 @@ export class ChatService {
         conversationId: conversation.id,
         text: drafted,
       });
+      const checkMs = elapsedMs(checkT0);
       if (checked.decision === MODERATION_DECISION.BLOCKED) {
         const handoff = await this.handoff(
           conversation.id,
@@ -1046,6 +1054,7 @@ export class ChatService {
         answeredFrom: 'no_knowledge',
         nonQuestionKind: nonQuestion,
         intentConfidence: intent.confidence ?? null,
+        latencyMs: buildTurnLatency(turnStartedAt, { classify: classifyMs, generate: draftMs, moderate: checkMs }),
       });
       this.logger.log(
         `handoff skipped: ${nonQuestion} (conf ${intent.confidence ?? 0}) conversation=${conversation.id}`,
@@ -1251,6 +1260,7 @@ export class ChatService {
     const vectorDegraded = 'vectorDegraded' in answer ? answer.vectorDegraded : undefined;
 
     // Mandatory moderation gate (FR-069).
+    const moderateT0 = Date.now();
     const moderated = await this.moderation.moderate({
       tenantId,
       scope: 'ai',
@@ -1261,6 +1271,7 @@ export class ChatService {
       // 13-16 digit rule would eat a long booking code) — this call only.
       ...(partner ? { protect: partner.protect } : {}),
     });
+    const moderateMs = elapsedMs(moderateT0);
     // A privacy token the model copied despite the rule (PLN-260929 S7).
     const replyText = replacePiiTokens(moderated.text, session.language);
 
@@ -1392,6 +1403,13 @@ export class ChatService {
       ...(caveat ? { uiVersionCaveat: true } : {}),
       // The vector leg was down and this answer stands on the keyword leg alone (PLN-261012 SG-84).
       ...(vectorDegraded ? { vectorProvider: 'degraded', vectorDegraded } : {}),
+      // A replayed answer carries no `timings`: its retrieve/generate stay null, not 0.
+      latencyMs: buildTurnLatency(turnStartedAt, {
+        classify: classifyMs,
+        retrieve: (answer as Partial<RagAnswer>).timings?.retrieveMs,
+        generate: (answer as Partial<RagAnswer>).timings?.generateMs,
+        moderate: moderateMs,
+      }),
     });
     if (reused) {
       void this.answerReuse?.recordHit(reused.reuseId);

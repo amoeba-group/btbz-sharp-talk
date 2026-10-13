@@ -475,7 +475,10 @@
 
   var frame = document.createElement('iframe');
   frame.id = 'ivy-talktalk-frame';
-  frame.title = 'IVY USA Support';
+  // Accessible name of the iframe (PLN-261012 SG-82). A host that is not IVY USA
+  // sets `title` in its config; the default is unchanged. boot() re-applies it
+  // because init() can merge `title` after this line ran.
+  frame.title = String(cfg.title || 'IVY USA Support').slice(0, 120);
   frame.setAttribute('allow', 'clipboard-write');
   frame.setAttribute('allowtransparency', 'true');
   // FE-L1: sandbox the widget iframe — grant only what it needs (its own
@@ -663,6 +666,7 @@
         baseOrigin = base;
       }
     }
+    if (cfg.title) frame.title = String(cfg.title).slice(0, 120);
     frame.src = frameSrc();
     if (launcher) applyLauncher(launcher);
     if (document.body) mount();
@@ -710,12 +714,38 @@
     }
   }
 
+  // Where to ask "who is signed in" (PLN-261012 SG-82), or '' when this page has
+  // no such endpoint. The default is the Shopify app proxy, which exists ONLY on a
+  // Shopify storefront: on any other host (a Hotel Admin, a test page) that
+  // request is a guaranteed 404 on every page load, sent with cookies, and it
+  // needs `connect-src 'self'` on strict-CSP hosts for nothing. So the default
+  // probe now runs only where a proxy can exist (window.Shopify / *.myshopify.com)
+  // — or when the page names an endpoint itself. Read at script load, so set
+  // these in SHARPTALK_WIDGET_CONFIG, not in init().
+  //   identityProbe: false  never probe (resolve as anonymous)
+  //   identityProbe: true   probe even on a non-Shopify host
+  //   identityPath:         the host's own endpoint (same JSON contract); relative
+  //                         paths resolve against the host page
+  //   proxyPath:            unchanged — a custom App Proxy subpath
+  function identityUrl() {
+    if (cfg.identityProbe === false) return '';
+    var custom = cfg.identityPath ? String(cfg.identityPath) : '';
+    var named = custom || cfg.proxyPath;
+    var shopify = !!window.Shopify || /\.myshopify\.com$/i.test(pageHost);
+    if (!named && cfg.identityProbe !== true && !shopify) return '';
+    var base = custom || proxyBase + '/identity';
+    return base + (base.indexOf('?') >= 0 ? '&' : '?') + 'locale=' + encodeURIComponent(locale);
+  }
+
   // Ask the store (via the Shopify app proxy) whether a customer is logged in.
   // Resolves to the identity JSON, or null on any failure (proxy not set up,
   // logged-out, network). Never throws — callers treat null as anonymous.
   function fetchIdentity() {
+    var url = identityUrl();
+    // Same answer a 404 would give, without the request.
+    if (!url) return Promise.resolve(null);
     try {
-      return fetch(proxyBase + '/identity?locale=' + encodeURIComponent(locale), {
+      return fetch(url, {
         credentials: 'include',
         headers: { accept: 'application/json' },
       })

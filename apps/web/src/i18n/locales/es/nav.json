@@ -40,5 +40,6 @@
   "settingsMarketing": "Marketing y helpdesk",
   "settingsMessengers": "Mensajeros",
   "settingsEtc": "Otros ajustes",
-  "journey": "Recorrido del cliente"
+  "journey": "Recorrido del cliente",
+  "dataRequests": "Solicitudes de datos"
 }

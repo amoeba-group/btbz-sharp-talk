@@ -86,7 +86,7 @@ export class SessionController {
   @Public()
   @ApiOperation({ summary: 'Record CCPA consent (FN-008)' })
   async consent(@Body() body: ConsentRequest) {
-    const s = await this.sessionService.setConsent(body.session_token, body.granted);
+    const s = await this.sessionService.setConsent(body.session_token, body.granted, !!body.replayed);
     return { consentState: s.consentState, consentVersion: s.consentVersion };
   }
 

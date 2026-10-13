@@ -117,6 +117,8 @@ export interface RagAnswer {
    * failed or was skipped by its breaker). Recorded in the retrieval trace (PLN-261012 SG-84).
    */
   vectorDegraded?: string;
+  /** Where the time went (PLN-261012 SG-53): search, then the answering call. */
+  timings?: { retrieveMs: number; generateMs: number };
 }
 
 /**
@@ -757,6 +759,7 @@ export class RagService {
     // thing, and the operator view silently lost every scoped category
     // (found in the staging smoke, T9).
     const scopeAgentId = aiAgentId ?? null;
+    const retrieveT0 = Date.now();
     // eslint-disable-next-line prefer-const
     let { chunks, vectorProvider } = await this.retrieveHybrid(
       tenantId,
@@ -790,6 +793,7 @@ export class RagService {
     if (extraCandidates?.length) {
       chunks = await this.mergeCandidates(retrievalQuery?.trim() || query, chunks, extraCandidates);
     }
+    const retrieveMs = Date.now() - retrieveT0;
     // Numbered so the model can name the items it actually used (see CITED_LINE).
     // Total prompt budget across documents (R3) — the numbering below must
     // match what the model sees, so the cap is applied to `chunks` itself.
@@ -857,6 +861,7 @@ export class RagService {
     // The tenant's contact footer is appended by the system (R4); the model is
     // told not to write its own, which also frees the output budget.
     const footerOn = !!footerFor(await this.aiConfig.getAnswerFooter?.(tenantId), language);
+    const generateT0 = Date.now();
     const res = await this.ai.complete({
       tenantId,
       function: AI_FUNCTION.RAG,
@@ -882,6 +887,7 @@ export class RagService {
     // Not an answer: zero confidence sends the turn to a person through the
     // ordinary low-confidence path instead of delivering "Here's what I found
     // for you: [category] title" as if it were one.
+    const generateMs = Date.now() - generateT0;
     if (res.degraded) {
       this.logger.warn(`answer withheld: engine degraded to stub (tenant ${tenantId})`);
       return {
@@ -892,6 +898,7 @@ export class RagService {
         tokensOut: res.tokensOut,
         engineDegraded: true,
         ...(vectorDegraded ? { vectorDegraded } : {}),
+        timings: { retrieveMs, generateMs },
       };
     }
 
@@ -913,6 +920,7 @@ export class RagService {
       tokensIn: res.tokensIn,
       tokensOut: res.tokensOut,
       ...(vectorDegraded ? { vectorDegraded } : {}),
+      timings: { retrieveMs, generateMs },
     };
   }
 

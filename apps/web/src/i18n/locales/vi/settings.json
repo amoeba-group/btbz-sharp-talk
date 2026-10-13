@@ -49,7 +49,14 @@
     "copyResponsibility": "Nội dung bạn nhập ở đây thay thế thông báo chuẩn hiển thị cho khách — bạn chịu trách nhiệm về nội dung đó.",
     "bumpVersion": "Đây là thay đổi quan trọng — tăng phiên bản thông báo và hỏi lại những người đã đồng ý.",
     "unsetUrl": "Chưa đặt — nếu trống, thông báo đồng ý sẽ không có liên kết chính sách.",
-    "unsetVersion": "Chưa đặt — phiên bản mặc định của nền tảng đang được áp dụng."
+    "unsetVersion": "Chưa đặt — phiên bản mặc định của nền tảng đang được áp dụng.",
+    "profile_vn_pdpl": "Việt Nam (luật dữ liệu cá nhân)",
+    "line_controller": "Bên kiểm soát dữ liệu & liên hệ",
+    "line_crossBorder": "Chuyển dữ liệu ra nước ngoài",
+    "line_rights": "Quyền của chủ thể dữ liệu",
+    "vnPdplDraft": "Nội dung dành cho Việt Nam là bản nháp. Trước khi bật cho khách, hãy nhờ luật sư xác nhận luật áp dụng và căn cứ pháp lý của việc xử lý cũng như việc chuyển dữ liệu ra nước ngoài, và nhờ người bản ngữ tiếng Việt rà soát lại câu chữ.",
+    "unfilledWarning": "Thông báo khách sẽ đọc vẫn còn chỗ trống dạng [[…]] ({{languages}}). Hãy điền pháp nhân, địa chỉ và đầu mối bảo vệ dữ liệu vào dòng \"Bên kiểm soát dữ liệu & liên hệ\" trước khi dùng.",
+    "tokensHint": "Bạn có thể dùng {{retention}} và {{region}} trong bất kỳ dòng nào: máy chủ sẽ điền thời hạn lưu và khu vực xử lý AI của hệ thống này, nên nội dung luôn khớp với thực tế đang áp dụng."
   },
   "widgetBehavior": {
     "title": "Hành vi của widget",

@@ -14,6 +14,8 @@ import { ModerationLog } from '../moderation/entity/moderation-log.entity';
 import { AgentAlert } from '../agent/entity/agent-alert.entity';
 import { isCliContext } from '../../global/util/cli-context.util';
 import { OpsAlertService } from '../../infrastructure/observability/ops-alert.service';
+import { conversationRetentionDays } from '../../global/util/retention-policy.util';
+import { OptInRetentionService } from './opt-in-retention.service';
 
 export interface RetentionPurgeResult {
   retentionDays: number;
@@ -32,6 +34,14 @@ export interface RetentionPurgeResult {
   moderationLogs: number;
   /** Escalation alerts disposed of — they carry a message preview. */
   agentAlerts: number;
+  /**
+   * Opt-in disposal (PLN-261012 SG-70): customers anonymised and audit rows
+   * deleted. Both stay 0 with a null window unless the operator turned them on.
+   */
+  customersAnonymised: number;
+  customerRetentionDays: number | null;
+  auditLogs: number;
+  auditLogRetentionDays: number | null;
 }
 
 /** First scheduled run fires shortly after boot so frequent restarts can't starve disposal. */
@@ -64,6 +74,9 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     private readonly attachments: AttachmentService,
     // Appended and optional so positional test doubles that predate it stay valid (PLN-261012 SG-83).
     @Optional() private readonly opsAlert?: OpsAlertService,
+    // Opt-in customers / audit_logs disposal (PLN-261012 SG-70). Trailing and
+    // optional so positional specs stay valid; absent = both stay off.
+    private readonly optIn?: OptInRetentionService,
   ) {}
 
   onModuleInit(): void {
@@ -107,10 +120,10 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
   }
 
   private retentionDays(): number {
-    // env values arrive as strings; coerce and fall back on a non-positive/NaN value.
-    const raw = this.config.get<string | number>('CONVERSATION_LOG_RETENTION_DAYS', 365);
-    const days = Number(raw);
-    return Number.isFinite(days) && days > 0 ? days : 365;
+    // env values arrive as strings; coerce and fall back on a non-positive/NaN
+    // value. Shared with the consent notice, which quotes the same number
+    // (PLN-261012 SG-70).
+    return conversationRetentionDays(this.config.get<string | number>('CONVERSATION_LOG_RETENTION_DAYS', 365));
   }
 
   /**
@@ -172,6 +185,21 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       .andWhere('id NOT IN (SELECT session_id FROM conversations)')
       .execute();
 
+    // Customers + audit_logs: no-ops unless CUSTOMER_RETENTION_DAYS /
+    // AUDIT_LOG_RETENTION_DAYS are set. A failure here is logged and must not
+    // swallow the audit row for the conversation purge that already happened.
+    let optIn = {
+      customersAnonymised: 0,
+      customerRetentionDays: null as number | null,
+      auditLogs: 0,
+      auditLogRetentionDays: null as number | null,
+    };
+    try {
+      if (this.optIn) optIn = await this.optIn.purge();
+    } catch (err) {
+      this.logger.error(`opt-in retention (customers/audit_logs) failed: ${String(err)}`);
+    }
+
     const result: RetentionPurgeResult = {
       retentionDays,
       cutoff: cutoff.toISOString(),
@@ -185,6 +213,10 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       aiUsageRetentionDays,
       moderationLogs: moderation.affected ?? 0,
       agentAlerts: alerts.affected ?? 0,
+      customersAnonymised: optIn.customersAnonymised,
+      customerRetentionDays: optIn.customerRetentionDays,
+      auditLogs: optIn.auditLogs,
+      auditLogRetentionDays: optIn.auditLogRetentionDays,
     };
 
     // Scheduler-driven purge — 'system' actor, not a phantom admin (Stage 4).
@@ -206,6 +238,10 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         aiUsageRetentionDays: result.aiUsageRetentionDays,
         moderationLogs: result.moderationLogs,
         agentAlerts: result.agentAlerts,
+        customersAnonymised: result.customersAnonymised,
+        customerRetentionDays: result.customerRetentionDays,
+        auditLogs: result.auditLogs,
+        auditLogRetentionDays: result.auditLogRetentionDays,
       },
     });
 

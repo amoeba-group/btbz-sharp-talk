@@ -37,7 +37,13 @@ RUN npx turbo run build --filter=@sharptalk/widget...
 
 # ---- Runtime stage (nginx static, served under /widget/) -------------------
 FROM ${NGINX_IMAGE} AS runtime
-COPY docker/self-hosted/nginx.widget.conf /etc/nginx/conf.d/default.conf
+# The conf is an envsubst TEMPLATE (PLN-261012 SG-82): the nginx entrypoint renders
+# /etc/nginx/templates/*.template into conf.d at container start. Defaults keep an
+# unconfigured container identical to before: no frame-ancestors header, Pretendard
+# from jsDelivr. See the header of nginx.widget.conf for what each one does.
+COPY docker/self-hosted/nginx.widget.conf /etc/nginx/templates/default.conf.template
+ENV WIDGET_FRAME_ANCESTORS="" \
+    WIDGET_FONT_CSS_URL="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css"
 COPY --from=build /app/apps/widget/dist /usr/share/nginx/html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

@@ -271,6 +271,10 @@ export const ERROR_CODE = {
   IDENTITY_EXPIRED: { code: 'E5096', message: 'The signed identity has expired' },
   /** Console save of `identity_policy` with an out-of-range value. */
   IDENTITY_POLICY_INVALID: { code: 'E5097', message: 'The identity policy is invalid' },
+  // E5115-E5117 — Operator-side data-subject requests (PLN-261012 SG-70).
+  DSAR_LOOKUP_INVALID: { code: 'E5115', message: 'Enter at least 3 characters to look up a customer' },
+  DSAR_CUSTOMER_NOT_FOUND: { code: 'E5116', message: 'No such customer in this tenant' },
+  DSAR_CONFIRM_MISMATCH: { code: 'E5117', message: 'The confirmation does not match the customer id' },
 
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },

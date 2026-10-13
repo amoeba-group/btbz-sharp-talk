@@ -131,4 +131,79 @@ describe('detectLanguage', () => {
       expect(detectLanguage('yeah!!!')).toBe('EN');
     });
   });
+  // PLN-261012 SG-53 — found by the labelled eval corpus (detect-language.eval.spec.ts).
+  describe('Vietnamese typed without tone marks', () => {
+    it.each([
+      'Cho toi hoi gia phong qua dem',
+      'Khach san con phong khong',
+      'Doi soat thang nay cua toi bi sai',
+      'cam on ban',
+      'xin chao',
+    ])('reads %s as Vietnamese (it used to read as English)', (text) => {
+      expect(detectLanguage(text)).toBe('VI');
+      expect(detectLanguage(text, 'EN')).toBe('VI');
+    });
+
+    it('trusts a Vietnamese session more: one strong word is enough there, not elsewhere', () => {
+      expect(detectLanguage('khong biet', 'VI')).toBe('VI');
+      expect(detectLanguage('khong biet', 'EN')).toBe('EN');
+      // A longer message carries its own evidence on any session.
+      expect(detectLanguage('hmm khong biet lam sao day nhi', 'EN')).toBe('VI');
+    });
+
+    it.each([
+      'I would like to list a hotel in Phong Nha Ke Bang',
+      'Our hotel is on Nguyen Hue street in District 1',
+      'Can you contact Dalat Palace at 0912345678?',
+      'How long does shipping take?',
+      'Please update the rate for Phong Nha Ecolodge',
+    ])('does not read English that merely names a Vietnamese place (%s) as Vietnamese', (text) => {
+      expect(detectLanguage(text)).toBe('EN');
+      expect(detectLanguage(text, 'EN')).toBe('EN');
+    });
+
+    it('still reads Portuguese as English, as the contract requires', () => {
+      // "não" collides with Vietnamese "nào" but is one hit, not two.
+      expect(detectLanguage('Nao recebi meu pedido')).toBe('EN');
+    });
+
+    it('a short unaccented acknowledgement is still not evidence', () => {
+      expect(detectLanguage('ko')).toBeNull();
+      expect(detectLanguage('dc r')).toBeNull();
+    });
+  });
+
+  describe('Japanese and Chinese (session languages that used to return nothing)', () => {
+    it.each([
+      'ありがとうございます',
+      '予約をキャンセルしたいです',
+      'ホテルアドミンにログインできません',
+      'Hotel Admin のログインができません',
+    ])('reads %s as Japanese — kana decides', (text) => {
+      expect(detectLanguage(text)).toBe('JA');
+    });
+
+    it.each(['我想订一个房间', '请问结算单在哪里下载?', '我的 Hotel Admin 账号被锁了'])(
+      'reads %s as Chinese — Han with no kana',
+      (text) => {
+        expect(detectLanguage(text)).toBe('ZH');
+      },
+    );
+
+    it('Korean with Hanja stays Korean (Hangul outranks Han)', () => {
+      expect(detectLanguage('예약 確認 부탁드립니다')).toBe('KO');
+    });
+
+    it('kana outranks Han: Japanese mixed with kanji is Japanese, not Chinese', () => {
+      expect(detectLanguage('宿泊料金を変更する')).toBe('JA');
+    });
+
+    it('stays silent on one- and two-character replies, like every other language', () => {
+      for (const text of ['はい', '好', '你好', '谢谢']) expect(detectLanguage(text)).toBeNull();
+    });
+
+    it('kanji-only Japanese reads as Chinese — the documented limit of script detection', () => {
+      expect(detectLanguage('予約確認')).toBe('ZH');
+    });
+  });
 });

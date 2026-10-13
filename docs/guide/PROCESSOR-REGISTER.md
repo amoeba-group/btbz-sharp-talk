@@ -23,9 +23,19 @@
 | 4 | 스테이징 호스팅 사업자 (`211.110.140.172` / `shoptalk.amoeba.site`) | 인프라 호스팅 — MySQL/Redis/RabbitMQ/Qdrant 도커 볼륨이 이 호스트에 존재(공유 호스트) | 표 1 전체(스테이징 데이터셋) | 대한민국(추정 — **사업자·계약 형태 TBD/확인 필요**) | **TBD/확인 필요** | TBD/확인 필요 | TBD | Gray(기본) |
 | 5 | 이메일/SMS 발송 제공자 | **미정** — 현재 고객 대상 외부 발송은 mock(코드상 미전송). 상담원 알림용 SMTP/Slack은 환경변수 설정 시에만 활성 | (도입 시) 고객 email/전화번호, 알림 내용; (알림용) 대화 preview 300자 | TBD | **해당 없음(미계약)** — 도입 전 §2 절차 필수 | — | — | Gray(기본) |
 | 6 | Google LLC (GA4) | 위젯 전환/UTM 분석(consent-gated 설계). 본 브랜치 코드에는 래퍼 부재 — 배포 브랜치 확인 필요 | 이벤트·전환 데이터(쿠키/클라이언트 ID; Consent Mode v2 게이팅 전제) | 미국 | **표준 약관 존재**(Google Ads Data Processing Terms — GA4 관리 콘솔에서 수락) — 수락 여부 **확인 필요** | 약관 편입형 — 확인 필요 | 약관 갱신 추적 | Gray(기본) |
+| 7 | Notion Labs, Inc. | **지식(KB) 소스 — 유입 방향만.** `knowledge/notion.client.ts`는 운영자가 연결한 페이지·DB를 **읽는** 호출(`GET`/`POST …/query`)만 한다. 고객 대화·고객 개인정보는 Notion으로 **전송되지 않는다**(코드로 확인, 2026-10-13) | 운영자 Notion 통합 토큰(`integration_credentials`, AES-256-GCM) · 읽어 온 페이지 본문(KB 텍스트) | 미국(추정 — **TBD/확인 필요**) | **TBD/확인 필요** — 운영자 자체 Notion 계약이 적용될 수 있음 | TBD/확인 필요 | TBD | Gray(기본) |
+| 8 | AmoebaTalk 허브 (`api-talk.amoeba.site`) | 메신저 릴레이 채널(`messenger/adapter/amoeba-talk-hub.adapter.ts`, 기본 `DEFAULT_BASE_URL`) — 채널을 연결한 테넌트에서만. 허브가 외부 메신저(카카오·LINE 등)와 SharpTalk 사이를 중계 | 해당 채널의 고객 이름·메시지 본문·대화 ID(양방향), 허브 로그인 자격증명 | 대한민국(Amoeba 운영 — **TBD/확인 필요**) | **내부 계열 서비스 — 처리 계약 형태 TBD/확인 필요** (Go2Joy 배포에서 이 채널을 켜면 Go2Joy ↔ Amoeba 처리 관계 명문화 필요) | TBD/확인 필요 | TBD | Gray(기본) |
+| 9 | SMTP 제공자 (`SMTP_HOST` — **미정**) | `infrastructure/external/mailer.service.ts`: ① 근무시간 외 상담 답변을 **고객 이메일**로 발송(`reply_channel=email`) ② 상담원 에스컬레이션 알림 메일 ③ 직원 계정 메일(비밀번호 복구·초대). env 미설정 시 비활성 | 고객 이메일 주소·답변 본문, 알림 본문(대화 preview ≤300자), 직원 이메일 | TBD(제공자 선정 시 확정) | **미계약** — 활성화 전 §2 절차 필수(행 5와 동일 규칙) | — | — | Gray(기본) |
+| 10 | jsDelivr (Cloudflare·Fastly 등 CDN) | **위젯 iframe이 브라우저에서 직접 로드**하는 Pretendard 폰트 CSS(`apps/widget/index.html`). 앱 데이터는 보내지 않으나 방문자 **IP·User-Agent·Referer**가 CDN에 노출됨. **번들된 로컬 사본**(`apps/widget/public/fonts/pretendard`)으로 제거 가능 — `WIDGET_FONT_CSS_URL=/widget/fonts/pretendard/pretendard.css`(Go2Joy 프로필 예시에 설정됨, GUIDE-261013-Go2Joy-HotelAdmin-CSP-CORS.md §5) | 방문자 IP/UA(폰트 요청 시) | 전 세계(CDN) | 해당 없음(처리 위탁 아님 — 자체 호스팅 시 행 삭제) | — | — | Gray(기본) |
+| 11 | Go2Joy 자체 호스팅 인프라 (**TBD**) | Go2Joy가 SharpTalk을 자체 인프라에 설치할 때의 호스트(`docker/self-hosted`) — MySQL·Redis·RabbitMQ·Qdrant·업로드 볼륨이 이 호스트에 존재. 이 배포에서 **Go2Joy가 처리자이자(또는) 관리자**이며 Amoeba는 지원 시에만 접근 | 표 1 전체(Go2Joy 데이터셋) | **TBD/확인 필요**(국내 베트남 내 호스팅 여부 — 국외이전 고지·영향평가 입력값) | **TBD/확인 필요** — Go2Joy ↔ Amoeba 지원 접근 조건(운영 매뉴얼 §지원) | TBD/확인 필요 | TBD | Go2Joy(지정 필요) |
 
 부속 메모:
 - Slack(에스컬레이션 웹훅)·SMTP 제공자는 운영 환경변수(`SLACK_WEBHOOK_URL`, `SMTP_HOST`)가 설정되는 순간 실질적 수탁자가 된다. 설정 전에 본 대장에 행을 추가할 것.
+  (SMTP는 2026-10-13 행 9로 추가. Slack은 에스컬레이션 알림에 대화 preview가 실리므로 사용 시 행을 추가한다.)
+- **2026-10-13 갱신(PLN-261012 SG-70):** 행 7–11 추가. 신규 행의 계약/DPA 상태는 전부 **TBD/확인 필요**이며
+  저장소에 증빙이 없다. 행 7(Notion)은 개인정보가 나가지 않는 **유입 전용** 연동이라 `vn_pdpl` 고지의
+  수신자 목록에 넣지 않았다(사실과 다른 고지를 피하기 위함). 행 2·3(Anthropic·Voyage)은 고지에 "미국 —
+  `AI_PROCESSING_REGION`"으로 표기된다.
 - Qdrant는 자체 호스팅(스테이징 compose 내부)이므로 수탁자가 아니며, 행 4(호스팅)의 범위에 포함된다.
 
 ## 2. 신규 연동 승인 절차 (MUST)

@@ -30,6 +30,10 @@ import { AttachmentModule } from '../attachment/attachment.module';
 import { ShopifyAdminClient } from '../order/shopify-admin.client';
 import { PrivacyService } from './privacy.service';
 import { RetentionService } from './retention.service';
+import { OptInRetentionService } from './opt-in-retention.service';
+import { OperatorDsarService } from './operator-dsar.service';
+import { OperatorDsarController } from './operator-dsar.controller';
+import { AuditLog } from '../audit/entity/audit-log.entity';
 import { ErasureSuppressionModule } from './erasure-suppression.module';
 import { PrivacyController, ShopifyComplianceController } from './privacy.controller';
 import { ModerationLog } from '../moderation/entity/moderation-log.entity';
@@ -67,6 +71,8 @@ import { AgentAlert } from '../agent/entity/agent-alert.entity';
       Tenant,
       ModerationLog,
       AgentAlert,
+      // Opt-in audit_logs disposal (PLN-261012 SG-70).
+      AuditLog,
     ]),
     AuditModule,
     ErasureSuppressionModule,
@@ -80,7 +86,7 @@ import { AgentAlert } from '../agent/entity/agent-alert.entity';
     // remove the files on disk, not just the rows that point at them.
     AttachmentModule,
   ],
-  controllers: [ShopifyComplianceController, PrivacyController],
-  providers: [PrivacyService, RetentionService, ShopifyAdminClient],
+  controllers: [ShopifyComplianceController, PrivacyController, OperatorDsarController],
+  providers: [PrivacyService, RetentionService, OptInRetentionService, OperatorDsarService, ShopifyAdminClient],
 })
 export class PrivacyModule {}
