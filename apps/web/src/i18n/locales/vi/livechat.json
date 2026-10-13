@@ -142,7 +142,8 @@
     "filterAll": "Tất cả đội",
     "cs": "Hỗ trợ khách hàng",
     "business": "Kinh doanh",
-    "badgeTitle": "Đội"
+    "badgeTitle": "Đội",
+    "unassigned": "Chưa có đội"
   },
   "region": {
     "filterLabel": "Lọc theo vùng",
@@ -150,7 +151,11 @@
     "north": "Bắc",
     "south": "Nam",
     "none": "Chưa xác định vùng",
-    "badgeTitle": "Vùng"
+    "badgeTitle": "Vùng",
+    "mine": "Vùng của tôi ({{region}})",
+    "unmapped": "Tỉnh chưa ánh xạ",
+    "hintTitle": "Chưa xác định vùng — tỉnh “{{province}}” không có trong bảng vùng",
+    "unmappedLine": "? (chưa ánh xạ: {{province}})"
   },
   "channel": {
     "filterLabel": "Lọc theo kênh",
@@ -437,5 +442,41 @@
     "switchedOn": "Bạn đã bật trực. Các yêu cầu chuyển người mới của đội bạn sẽ báo cho bạn trước.",
     "switchedOff": "Bạn đã tắt trực. Các yêu cầu chuyển người mới sẽ báo cho nhân viên khác.",
     "saveError": "Không đổi được trạng thái trực. Vui lòng thử lại."
+  },
+  "alarmReasonUnclaimed": "Chưa ai nhận cuộc trò chuyện này.",
+  "alarmReasonRerouted": "Một nhân viên đã chuyển cuộc trò chuyện này sang đội của bạn.",
+  "alarmTeam": "Đội",
+  "alarmRegion": "Vùng",
+  "alarmPartner": "Khách sạn",
+  "alarmWaiting": "Đang chờ",
+  "alarmScope": "Thông báo cho",
+  "alarmScopeRegion": "Chỉ đội {{region}}",
+  "queue": {
+    "chipsLabel": "Hàng chờ theo đội",
+    "waiting": "Chờ {{time}}",
+    "waitingTitle": "Đang chờ nhân viên từ {{at}}",
+    "unclaimedTitle": "Chưa ai nhận cuộc trò chuyện này",
+    "unclaimedSummary": "{{count}} chưa ai nhận · lâu nhất {{time}}"
+  },
+  "reroute": {
+    "button": "Chuyển sang…",
+    "hint": "Chuyển cuộc trò chuyện này sang đội khác",
+    "endedHint": "Cuộc trò chuyện đã kết thúc",
+    "title": "Chuyển cuộc trò chuyện",
+    "explain": "Cuộc trò chuyện quay lại hàng chờ của đội bạn chọn và đội đó được báo. Khách hàng không nhận được thông báo nào.",
+    "current": "Hiện tại: {{team}} · {{region}}",
+    "team": "Chuyển sang",
+    "teamPlaceholder": "Chọn một đội…",
+    "region": "Vùng",
+    "regionKeep": "Giữ vùng hiện tại",
+    "regionClear": "Không có vùng",
+    "confirm": "Chuyển",
+    "savedPaged": "Đã chuyển sang {{team}}. {{name}} đã được báo.",
+    "savedRegion": "Đã chuyển sang {{team}}. Đội {{region}} đã được báo.",
+    "savedBroadcast": "Đã chuyển sang {{team}}. Tất cả người có thể nhận đã được báo.",
+    "saveError": "Không thể chuyển cuộc trò chuyện.",
+    "errorEnded": "Cuộc trò chuyện đã kết thúc nên không thể chuyển.",
+    "errorTarget": "Đội hoặc vùng đó không khả dụng.",
+    "errorNotEnabled": "Chưa bật định tuyến theo đội."
   }
 }

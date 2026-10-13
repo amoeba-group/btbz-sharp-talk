@@ -85,6 +85,70 @@ export function useDraftActions(id: string | null) {
   return { approve, discard };
 }
 
+/**
+ * Queue counters per team and region, same scope and channel as the list (PLN-261012 SG-66).
+ * Polled with the list so a chip never disagrees with what clicking it shows for long.
+ */
+export const useQueueCounts = (status = 'all', channel = 'all') => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['agent', tenantKey, 'queue-counts', status, channel],
+    queryFn: () => liveChatService.queueCounts(status, channel),
+    refetchInterval: 5000,
+  });
+};
+
+/** The hand-over control's teams/regions in the console language (PLN-261012 SG-64). */
+export const useRoutingOptions = (language: string, enabled = true) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['agent', tenantKey, 'routing-options', language],
+    queryFn: () => liveChatService.routingOptions(language),
+    staleTime: 60_000,
+    enabled,
+  });
+};
+
+/**
+ * Hand the open conversation over to another team/region (PLN-261012 SG-64). The toast says who was
+ * asked; the errors the API names by code get their own localised line.
+ */
+export function useRerouteConversation(id: string | null) {
+  const { t } = useTranslation('livechat');
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: (v: { supportType: string; region?: string | null; teamLabel: string }) =>
+      liveChatService.reroute(id as string, { supportType: v.supportType, region: v.region }),
+    onSuccess: (data, v) => {
+      qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'conversation', id] });
+      qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'sessions'] });
+      qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'queue-counts'] });
+      qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'alerts'] });
+      const team = v.teamLabel;
+      const who = data.notified;
+      toast.success(
+        who.userId != null && who.name
+          ? t('reroute.savedPaged', { team, name: who.name })
+          : who.region
+            ? t('reroute.savedRegion', { team, region: t(`region.${who.region}`, { defaultValue: who.region }) })
+            : t('reroute.savedBroadcast', { team }),
+      );
+    },
+    onError: (e: Error & { code?: string }) =>
+      toast.error(
+        e.code === 'E5125'
+          ? t('reroute.errorEnded')
+          : e.code === 'E5126'
+            ? t('reroute.errorTarget')
+            : e.code === 'E5129'
+              ? t('reroute.errorNotEnabled')
+              : e.message || t('reroute.saveError'),
+        { sticky: true },
+      ),
+  });
+}
+
 export const useSessions = (
   q = '',
   status = 'all',

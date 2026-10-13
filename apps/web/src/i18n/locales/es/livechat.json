@@ -142,7 +142,8 @@
     "filterAll": "Todos los equipos",
     "cs": "Atención al cliente",
     "business": "Comercial",
-    "badgeTitle": "Equipo"
+    "badgeTitle": "Equipo",
+    "unassigned": "Sin equipo"
   },
   "region": {
     "filterLabel": "Filtrar por región",
@@ -150,7 +151,11 @@
     "north": "Norte",
     "south": "Sur",
     "none": "Región desconocida",
-    "badgeTitle": "Región"
+    "badgeTitle": "Región",
+    "mine": "Mi región ({{region}})",
+    "unmapped": "Provincia no listada",
+    "hintTitle": "Región desconocida: la provincia «{{province}}» no está en la tabla de regiones",
+    "unmappedLine": "? (no listada: {{province}})"
   },
   "channel": {
     "filterLabel": "Filtrar por canal",
@@ -437,5 +442,41 @@
     "switchedOn": "Estás en servicio. Las nuevas escalaciones de tu equipo te llegan primero.",
     "switchedOff": "Estás fuera de servicio. Las nuevas escalaciones irán a otros agentes.",
     "saveError": "No se pudo cambiar tu estado de servicio. Inténtalo de nuevo."
+  },
+  "alarmReasonUnclaimed": "Nadie ha tomado esta conversación todavía.",
+  "alarmReasonRerouted": "Un agente ha traspasado esta conversación a tu equipo.",
+  "alarmTeam": "Equipo",
+  "alarmRegion": "Región",
+  "alarmPartner": "Hotel",
+  "alarmWaiting": "En espera",
+  "alarmScope": "Alerta para",
+  "alarmScopeRegion": "Solo el equipo {{region}}",
+  "queue": {
+    "chipsLabel": "Cola por equipo",
+    "waiting": "Esperando {{time}}",
+    "waitingTitle": "Esperando a una persona desde {{at}}",
+    "unclaimedTitle": "Nadie ha tomado esta conversación todavía",
+    "unclaimedSummary": "{{count}} sin tomar · la más antigua {{time}}"
+  },
+  "reroute": {
+    "button": "Traspasar a…",
+    "hint": "Traspasar esta conversación a otro equipo",
+    "endedHint": "La conversación ha terminado",
+    "title": "Traspasar esta conversación",
+    "explain": "La conversación vuelve a la cola de espera del equipo que elijas y ese equipo recibe una alerta. El cliente no recibe ningún aviso.",
+    "current": "Ahora: {{team}} · {{region}}",
+    "team": "Traspasar a",
+    "teamPlaceholder": "Elige un equipo…",
+    "region": "Región",
+    "regionKeep": "Mantener la región actual",
+    "regionClear": "Sin región",
+    "confirm": "Traspasar",
+    "savedPaged": "Traspasada a {{team}}. Se avisó a {{name}}.",
+    "savedRegion": "Traspasada a {{team}}. Se avisó al equipo {{region}}.",
+    "savedBroadcast": "Traspasada a {{team}}. Se avisó a todos los que pueden tomarla.",
+    "saveError": "No se pudo traspasar la conversación.",
+    "errorEnded": "Esta conversación ha terminado y no se puede traspasar.",
+    "errorTarget": "Ese equipo o región no está disponible.",
+    "errorNotEnabled": "El enrutamiento por equipos no está activado."
   }
 }

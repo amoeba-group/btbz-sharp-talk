@@ -142,7 +142,8 @@
     "filterAll": "全チーム",
     "cs": "カスタマーサポート",
     "business": "ビジネス",
-    "badgeTitle": "チーム"
+    "badgeTitle": "チーム",
+    "unassigned": "チームなし"
   },
   "region": {
     "filterLabel": "地域で絞り込む",
@@ -150,7 +151,11 @@
     "north": "北",
     "south": "南",
     "none": "地域不明",
-    "badgeTitle": "地域"
+    "badgeTitle": "地域",
+    "mine": "自分の地域（{{region}}）",
+    "unmapped": "未登録の省・市",
+    "hintTitle": "地域不明 — 省・市「{{province}}」は地域テーブルにありません",
+    "unmappedLine": "?（未登録：{{province}}）"
   },
   "channel": {
     "filterLabel": "チャネルで絞り込み",
@@ -437,5 +442,41 @@
     "switchedOn": "対応中にしました。チーム宛ての新しいエスカレーションを優先的に受け取ります。",
     "switchedOff": "対応外にしました。新しいエスカレーションは他の担当者に回ります。",
     "saveError": "対応状況を変更できませんでした。もう一度お試しください。"
+  },
+  "alarmReasonUnclaimed": "まだ誰もこの会話に対応していません。",
+  "alarmReasonRerouted": "担当者がこの会話をあなたのチームに引き継ぎました。",
+  "alarmTeam": "チーム",
+  "alarmRegion": "地域",
+  "alarmPartner": "ホテル",
+  "alarmWaiting": "待機",
+  "alarmScope": "通知先",
+  "alarmScopeRegion": "{{region}}チームのみ",
+  "queue": {
+    "chipsLabel": "チーム別キュー",
+    "waiting": "待機 {{time}}",
+    "waitingTitle": "{{at}} から担当者を待っています",
+    "unclaimedTitle": "まだ誰もこの会話に対応していません",
+    "unclaimedSummary": "未対応 {{count}} 件・最長待機 {{time}}"
+  },
+  "reroute": {
+    "button": "他のチームへ引き継ぐ…",
+    "hint": "この会話を別のチームへ引き継ぎます",
+    "endedHint": "会話は終了しています",
+    "title": "会話を引き継ぐ",
+    "explain": "会話は選択したチームの待機キューに戻り、そのチームに通知されます。お客様には通知されません。",
+    "current": "現在：{{team}}・{{region}}",
+    "team": "引き継ぎ先",
+    "teamPlaceholder": "チームを選択…",
+    "region": "地域",
+    "regionKeep": "現在の地域を維持",
+    "regionClear": "地域なし",
+    "confirm": "引き継ぐ",
+    "savedPaged": "{{team}}に引き継ぎました。{{name}}さんに通知しました。",
+    "savedRegion": "{{team}}に引き継ぎました。{{region}}チームに通知しました。",
+    "savedBroadcast": "{{team}}に引き継ぎました。対応可能な全員に通知しました。",
+    "saveError": "会話を引き継げませんでした。",
+    "errorEnded": "終了した会話は引き継げません。",
+    "errorTarget": "そのチームまたは地域は利用できません。",
+    "errorNotEnabled": "チーム振り分けがオンになっていません。"
   }
 }

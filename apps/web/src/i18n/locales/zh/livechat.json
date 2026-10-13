@@ -142,7 +142,8 @@
     "filterAll": "全部团队",
     "cs": "客户服务",
     "business": "商务",
-    "badgeTitle": "团队"
+    "badgeTitle": "团队",
+    "unassigned": "无团队"
   },
   "region": {
     "filterLabel": "按地区筛选",
@@ -150,7 +151,11 @@
     "north": "北部",
     "south": "南部",
     "none": "地区未知",
-    "badgeTitle": "地区"
+    "badgeTitle": "地区",
+    "mine": "我的地区（{{region}}）",
+    "unmapped": "未收录的省份",
+    "hintTitle": "地区未知——省份“{{province}}”不在地区表中",
+    "unmappedLine": "?（未收录：{{province}}）"
   },
   "channel": {
     "filterLabel": "按渠道筛选",
@@ -437,5 +442,41 @@
     "switchedOn": "已切换为值班。您团队的新转人工提醒将优先发给您。",
     "switchedOff": "已切换为未值班。新的转人工提醒将发给其他客服。",
     "saveError": "无法更改值班状态，请重试。"
+  },
+  "alarmReasonUnclaimed": "还没有人接待这个会话。",
+  "alarmReasonRerouted": "有客服把这个会话转给了你们团队。",
+  "alarmTeam": "团队",
+  "alarmRegion": "地区",
+  "alarmPartner": "酒店",
+  "alarmWaiting": "等待",
+  "alarmScope": "提醒对象",
+  "alarmScopeRegion": "仅{{region}}团队",
+  "queue": {
+    "chipsLabel": "按团队的队列",
+    "waiting": "等待 {{time}}",
+    "waitingTitle": "自 {{at}} 起等待人工",
+    "unclaimedTitle": "还没有人接待这个会话",
+    "unclaimedSummary": "{{count}} 个无人接待 · 最久等待 {{time}}"
+  },
+  "reroute": {
+    "button": "转交给…",
+    "hint": "把此会话转交给其他团队",
+    "endedHint": "会话已结束",
+    "title": "转交会话",
+    "explain": "会话会回到所选团队的等待队列，并提醒该团队。不会通知客户。",
+    "current": "当前：{{team}} · {{region}}",
+    "team": "转交给",
+    "teamPlaceholder": "选择团队…",
+    "region": "地区",
+    "regionKeep": "保持当前地区",
+    "regionClear": "无地区",
+    "confirm": "转交",
+    "savedPaged": "已转交给{{team}}，已提醒 {{name}}。",
+    "savedRegion": "已转交给{{team}}，已提醒{{region}}团队。",
+    "savedBroadcast": "已转交给{{team}}，已提醒所有可接待的人。",
+    "saveError": "无法转交会话。",
+    "errorEnded": "会话已结束，无法转交。",
+    "errorTarget": "该团队或地区不可用。",
+    "errorNotEnabled": "尚未开启团队分配。"
   }
 }
