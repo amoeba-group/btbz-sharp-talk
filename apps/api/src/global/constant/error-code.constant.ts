@@ -349,6 +349,14 @@ export const ERROR_CODE = {
     message: 'The pilot analytics request is invalid (group must be hotel, role or day, and from must be before to)',
   },
   PILOT_ANALYTICS_WINDOW_TOO_LONG: { code: 'E5141', message: 'The pilot analytics window is limited to 92 days' },
+  // E5142-E5144 — Partner data tool-calling loop (PLN-261012 SG-33). Recorded in partner_lookup_logs
+  // and on the message trace; E5142 also reaches the customer as the "confirm later" notice.
+  /** The model-driven lookup hit its iteration, tool-call or wall-clock limit before it finished. */
+  PARTNER_TOOL_LOOP_LIMIT: { code: 'E5142', message: 'The lookup assistant stopped at its iteration, call or time limit' },
+  /** The engine could not run the lookup tools (no tool support, failed or malformed mid-loop). */
+  PARTNER_TOOLS_UNAVAILABLE: { code: 'E5143', message: 'The AI engine could not run the lookup tools; the standard lookup was used' },
+  /** The model asked for a lookup tool the server does not offer. */
+  PARTNER_TOOL_CALL_INVALID: { code: 'E5144', message: 'The model asked for a lookup the server does not offer' },
 } as const;
 
 export type ErrorCodeEntry = { code: string; message: string };

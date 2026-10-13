@@ -927,7 +927,15 @@
     "notConfigured": "尚未保存连接信息（基础 URL 和 API 密钥），真实数据模式需要。",
     "connection": "连接",
     "saved": "已保存合作伙伴数据查询设置",
-    "saveError": "无法保存合作伙伴数据查询设置"
+    "saveError": "无法保存合作伙伴数据查询设置",
+    "methodTitle": "查询方式",
+    "methodInherit": "服务器默认（{{mode}}）",
+    "modePrefetch": "标准",
+    "modeTools": "AI 辅助",
+    "methodPrefetch": "标准 — 服务器先获取关键词识别出的数据，再由助手根据这些数据作答。",
+    "methodTools": "AI 辅助 — 对涉及多个主题或表述含糊的问题，由助手自行选择要执行的只读查询。安全检查不变，每个问题会多一次 AI 调用。",
+    "toolsUnsupported": "回答客户的 AI 引擎暂时无法运行查询工具（引擎的 capabilities 需包含“tools”），因此使用标准查询。",
+    "toolsOff": "AI 辅助查询已在整个服务器关闭（PARTNER_TOOLS_ENABLED），因此使用标准查询。"
   },
   "pilot": {
     "title": "按酒店划定试点范围",

@@ -119,6 +119,11 @@ export const m = {
   uptime: metrics.gauge('sharptalk_process_uptime_seconds', 'Seconds since the API process started'),
   rss: metrics.gauge('sharptalk_process_resident_memory_bytes', 'Resident set size of the API process'),
   heapUsed: metrics.gauge('sharptalk_process_heap_used_bytes', 'V8 heap in use'),
+  partnerToolLoops: metrics.counter(
+    'sharptalk_partner_tool_loops_total',
+    'Partner-data tool loops by outcome (data, failed, fallback) and loop reason (PLN-261012 SG-33)',
+    ['outcome', 'reason'],
+  ),
 };
 
 export const BREAKER_STATE_VALUE = { closed: 0, half_open: 1, open: 2 } as const;

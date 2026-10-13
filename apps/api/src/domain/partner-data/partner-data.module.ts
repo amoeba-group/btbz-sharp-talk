@@ -16,7 +16,9 @@ import { PartnerDataStep } from './partner-data.step';
 import { PartnerFlagService, partnerApiMode } from './partner-flag.service';
 import { PartnerLookupLogService } from './partner-lookup-log.service';
 import { PartnerSettingsService } from './partner-settings.service';
+import { PartnerToolsService } from './partner-tools.service';
 import { TopicRegistry } from './partner-topics';
+import { ToolLoopService } from '../ai-engine/tool-loop.service';
 
 /**
  * Partner data lookup (PLN-261012 SG-30/31/32): the assistant answers a signed-in
@@ -48,6 +50,10 @@ import { TopicRegistry } from './partner-topics';
           : new MockGo2JoyClient(),
     },
     PartnerDataService,
+    // Tools mode (PLN-261012 SG-33): the generic loop runner and its partner binding. Inert unless a
+    // tenant (or PARTNER_DATA_MODE) asks for tools; the step owns it, ChatService never sees it.
+    ToolLoopService,
+    PartnerToolsService,
     PartnerDataStep,
     PartnerGoldenService,
   ],

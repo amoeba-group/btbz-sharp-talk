@@ -187,6 +187,24 @@ never opts in behaves exactly as before. Draft API contract: `docs/guide/API-REQ
 | `PARTNER_API_BUDGET_MS` | 7000 | wall-clock cap across attempts |
 | `PARTNER_API_PRIVATE_HOSTS` | — | comma list of hostnames/IPs the OPERATOR allows even though private or plain http (e.g. when the partner API is on Go2Joy's own network); plain http is refused in production. Tenants cannot widen it |
 | `PARTNER_CLAIMS_MAX_AGE_SEC` | 28800 | identity claims older than this (8 h) no longer allow a data lookup — the user is asked to sign in again |
+
+**Tools mode (PLN-261012 SG-33, optional).** By default the server *prefetches* the data a keyword detector names
+before the model runs. In `tools` mode the model chooses the read-only lookups through native tool calling — for
+multi-topic or ambiguous questions — behind exactly the same checks (hotel from the signed claims only, closed
+parameters, role allow-list, projection, moderation, number verification). It needs an AI engine whose
+`capabilities` include `tools` (Anthropic / OpenAI adapters implement it; the built-in stub does not), and falls back
+to prefetch when it cannot run. Verified against a local fake provider only — see
+[docs/guide/GUIDE-261013-Partner-Data-Tools-Mode.md](docs/guide/GUIDE-261013-Partner-Data-Tools-Mode.md).
+Schema: `sql/261018-partner-lookup-mode.sql` (`partner_lookup_logs.mode`, `tenants.partner_data_mode`).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `PARTNER_DATA_MODE` | `prefetch` | `prefetch` \| `tools` — the default for tenants without an override (a tenant sets its own in Settings → Etc; anything but `tools` is `prefetch`) |
+| `PARTNER_TOOLS_ENABLED` | on | server-wide kill switch: `0`/`false`/`no`/`off` forces every tenant to prefetch whatever they chose. It only permits — nothing runs in tools mode until the mode asks for it |
+| `PARTNER_TOOLS_MAX_ITERATIONS` | 3 | model calls per customer turn (the last one may not ask for tools; floor 1) |
+| `PARTNER_TOOLS_MAX_CALLS` | 4 | tool calls per customer turn, across iterations (floor 1) |
+| `PARTNER_TOOLS_BUDGET_MS` | 20000 | wall-clock cap of the whole lookup phase (floor 500); each model call's own deadline is cut to what is left |
+| `PARTNER_TOOLS_MAX_TOKENS` | 512 | output cap of each planning model call (floor 64) |
 ### 4.2b Resilience, observability and ops alerting (PLN-261012 SG-83 / SG-84)
 All optional; every default is safe. Full meaning, thresholds and example Prometheus rules:
 [docs/guide/GUIDE-261013-Observability-Alerting.md](docs/guide/GUIDE-261013-Observability-Alerting.md).

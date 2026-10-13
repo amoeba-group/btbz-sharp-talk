@@ -6,7 +6,23 @@ import {
   AiCompletionResult,
   AiEmbeddingRequest,
   AiEmbeddingResult,
+  AiStopReason,
+  AiToolUse,
+  messageText,
 } from '../ai-adapter.interface';
+
+/**
+ * What a test's tool script returns for one request (PLN-261012 SG-33). Mirrors the parts of an
+ * `AiCompletionResult` a tool turn has.
+ */
+export interface StubToolTurn {
+  text?: string;
+  toolUses?: AiToolUse[];
+  stopReason?: AiStopReason;
+}
+
+/** Decides the stub's reply to a request that carries tools. Return null to fall back to plain text. */
+export type StubToolScript = (req: AiCompletionRequest) => StubToolTurn | null;
 
 /**
  * Deterministic offline adapter so the whole system runs without API keys.
@@ -17,10 +33,41 @@ import {
 export class StubAdapter implements AiAdapter {
   readonly provider = 'stub';
 
+  /**
+   * TEST-ONLY scripted tool calling (PLN-261012 SG-33). A plain instance field that nothing in the
+   * application sets — not an env var, not a marker in a prompt — so a customer's words can never
+   * switch it on. Absent a script the stub cannot call tools: `supportsTools` is false and the
+   * gateway refuses to hand it a tools request, which is also what keeps a degraded-engine fallback
+   * from ever "inventing" a tool call or a tool result.
+   */
+  toolScript: StubToolScript | null = null;
+
+  get supportsTools(): boolean {
+    return this.toolScript !== null;
+  }
+
   async complete(req: AiCompletionRequest): Promise<AiCompletionResult> {
-    const lastUser = [...req.messages].reverse().find((m) => m.role === 'user')?.content ?? '';
+    // Content of a tool turn is flattened to text; a classic message is returned as it was.
+    const lastUser = messageText([...req.messages].reverse().find((m) => m.role === 'user')?.content ?? '');
     const system = req.system ?? '';
     let text: string;
+
+    if (req.tools?.length && this.toolScript) {
+      const turn = this.toolScript(req);
+      if (turn) {
+        const reply = turn.text ?? '';
+        const toolUses = turn.toolUses ?? [];
+        return {
+          text: reply,
+          tokensIn: this.estimate(system + lastUser),
+          tokensOut: this.estimate(reply + JSON.stringify(toolUses)),
+          provider: this.provider,
+          model: req.model || 'stub-1',
+          ...(toolUses.length ? { toolUses } : {}),
+          stopReason: turn.stopReason ?? (toolUses.length ? 'tool_use' : 'end_turn'),
+        };
+      }
+    }
 
     if (system.includes('JSON_MODE:intent')) {
       text = JSON.stringify(this.classifyIntent(lastUser));

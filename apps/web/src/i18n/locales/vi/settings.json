@@ -927,7 +927,15 @@
     "notConfigured": "Chưa lưu kết nối (URL gốc và khóa API). Cần khi chạy chế độ dữ liệu thật.",
     "connection": "Kết nối",
     "saved": "Đã lưu cài đặt tra cứu dữ liệu đối tác",
-    "saveError": "Không thể lưu cài đặt tra cứu dữ liệu đối tác"
+    "saveError": "Không thể lưu cài đặt tra cứu dữ liệu đối tác",
+    "methodTitle": "Cách thực hiện tra cứu",
+    "methodInherit": "Mặc định của máy chủ ({{mode}})",
+    "modePrefetch": "Tiêu chuẩn",
+    "modeTools": "Có AI hỗ trợ",
+    "methodPrefetch": "Tiêu chuẩn — máy chủ lấy trước dữ liệu mà bộ nhận diện từ khóa chỉ ra, rồi trợ lý trả lời dựa trên dữ liệu đó.",
+    "methodTools": "Có AI hỗ trợ — trợ lý tự chọn các lượt tra cứu chỉ-đọc cần thực hiện, dành cho câu hỏi nhiều chủ đề hoặc diễn đạt chưa rõ. Các bước kiểm tra an toàn giữ nguyên, mỗi câu hỏi tốn thêm một lượt gọi AI.",
+    "toolsUnsupported": "Công cụ AI đang trả lời khách hàng chưa chạy được các công cụ tra cứu (cần khai báo khả năng “tools” cho công cụ), nên hệ thống dùng cách tra cứu tiêu chuẩn.",
+    "toolsOff": "Tra cứu có AI hỗ trợ đang bị tắt trên toàn máy chủ (PARTNER_TOOLS_ENABLED), nên hệ thống dùng cách tra cứu tiêu chuẩn."
   },
   "pilot": {
     "title": "Phạm vi pilot theo khách sạn",

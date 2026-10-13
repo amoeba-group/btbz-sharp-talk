@@ -38,6 +38,13 @@ describe('PartnerLookupLogService', () => {
     });
   });
 
+  it('records how the lookup was triggered: prefetch by default (every row written before tools mode), tool when the model asked (PLN-261012 SG-33)', async () => {
+    const repo = okRepo();
+    await build(repo).record({ tenantId: 1, topic: 'rates', status: 'ok' });
+    await build(repo).record({ tenantId: 1, topic: 'rates', status: 'ok', mode: 'tool' });
+    expect(repo.create.mock.calls.map((c) => c[0].mode)).toEqual(['prefetch', 'tool']);
+  });
+
   it('logs a rejected lookup by KEYS only — never by value', async () => {
     const repo = okRepo();
     await build(repo).record({

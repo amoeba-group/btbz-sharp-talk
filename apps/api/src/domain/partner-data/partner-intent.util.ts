@@ -265,3 +265,27 @@ export function detectPartnerIntent(
 
   return { topics: topics.slice(0, 2), foreignHotel };
 }
+
+/**
+ * Does the message TALK ABOUT a partner topic at all (PLN-261012 SG-33)? Looser than
+ * `detectPartnerIntent` on purpose: no handle (booking code / date window / room-type context) is
+ * needed, because in tools mode the model — not this lexicon — decides whether a lookup is wanted and
+ * with which arguments. It only gates the extra planning call: a message with none of these words
+ * (a greeting, a how-to about something else) never costs a model round trip. Words only, never a
+ * parameter: nothing here can name a hotel.
+ */
+export function looksLikePartnerQuestion(text: string): boolean {
+  const raw = (text ?? '').slice(0, 1000);
+  const folded = foldVi(raw);
+  return (
+    SETTLEMENT_RE.test(folded) ||
+    SETTLEMENT_KO.test(raw) ||
+    BOOKING_NOUN_RE.test(folded) ||
+    BOOKING_KO.test(raw) ||
+    RATE_VI_RE.test(folded) ||
+    RATE_EN_RE.test(folded) ||
+    RATE_KO.test(raw) ||
+    POLICY_RE.test(folded) ||
+    POLICY_KO.test(raw)
+  );
+}

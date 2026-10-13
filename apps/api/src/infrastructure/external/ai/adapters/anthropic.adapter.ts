@@ -1,5 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AiAdapter, AiCompletionRequest, AiCompletionResult } from '../ai-adapter.interface';
+import {
+  AiAdapter,
+  AiCompletionRequest,
+  AiCompletionResult,
+  AiContentBlock,
+  AiRequestMessage,
+  AiStopReason,
+  AiToolUse,
+} from '../ai-adapter.interface';
 import { redactSecrets } from '../../../../global/util/secret-redact.util';
 import { providerErrorSummary } from '../engine-health';
 import {
@@ -8,6 +16,50 @@ import {
   runWithTimeout,
 } from '../../../resilience/resilience';
 
+/** A message as the Messages API wants it: a string for a classic turn, blocks for a tool turn. */
+function toWireMessage(m: AiRequestMessage): { role: string; content: string | Array<Record<string, unknown>> } {
+  // The classic path keeps `{ role, content }` in that key order: a plain request must stay
+  // byte-identical on the wire (PLN-261012 SG-33).
+  if (typeof m.content === 'string') return { role: m.role, content: m.content };
+  return { role: m.role, content: m.content.map(toWireBlock) };
+}
+
+function toWireBlock(b: AiContentBlock): Record<string, unknown> {
+  switch (b.type) {
+    case 'text':
+      return { type: 'text', text: b.text };
+    case 'tool_use':
+      return { type: 'tool_use', id: b.id, name: b.name, input: b.input };
+    case 'tool_result':
+      return {
+        type: 'tool_result',
+        tool_use_id: b.toolUseId,
+        content: b.content,
+        ...(b.isError ? { is_error: true } : {}),
+      };
+  }
+}
+
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/** The provider's `stop_reason` in the vocabulary the tool loop reads. */
+function stopReasonOf(raw: unknown): AiStopReason {
+  switch (raw) {
+    case 'end_turn':
+    case 'stop_sequence':
+      return 'end_turn';
+    case 'tool_use':
+      return 'tool_use';
+    case 'max_tokens':
+      return 'max_tokens';
+    case 'refusal':
+      return 'refusal';
+    default:
+      return 'other';
+  }
+}
+
 /**
  * Anthropic Claude adapter (default real provider). Uses the Messages API via
  * fetch (no SDK dependency). Falls back to throwing so the gateway can degrade
@@ -15,10 +67,17 @@ import {
  *
  * One attempt per call, with a whole-call deadline (PLN-261012 SG-84): retry and the
  * circuit breaker live in the gateway, which sees every provider the same way.
+ *
+ * Native tool calling (PLN-261012 SG-33): a request with `tools` sends them as `tools[]`, tool
+ * turns go out as `tool_use` / `tool_result` content blocks, and the response's `tool_use` blocks
+ * and `stop_reason` come back as `toolUses` / `stopReason`. A request WITHOUT tools is unchanged in
+ * both directions. Verified only against a local fake of the Messages API (see the SG-33 RPT) — the
+ * real provider's behaviour has not been exercised.
  */
 @Injectable()
 export class AnthropicAdapter implements AiAdapter {
   readonly provider = 'anthropic';
+  readonly supportsTools = true;
   private readonly logger = new Logger(AnthropicAdapter.name);
 
   async complete(req: AiCompletionRequest): Promise<AiCompletionResult> {
@@ -44,9 +103,11 @@ export class AnthropicAdapter implements AiAdapter {
           model: req.model || process.env.ANTHROPIC_MODEL || 'claude-opus-4-8',
           max_tokens: req.maxTokens ?? 1024,
           system: req.system,
-          messages: req.messages
-            .filter((m) => m.role !== 'system')
-            .map((m) => ({ role: m.role, content: m.content })),
+          messages: req.messages.filter((m) => m.role !== 'system').map(toWireMessage),
+          // Last, and only when asked: a request without tools has no `tools` key at all.
+          ...(req.tools?.length
+            ? { tools: req.tools.map((t) => ({ name: t.name, description: t.description, input_schema: t.inputSchema })) }
+            : {}),
         }),
       });
       if (!res.ok) {
@@ -65,13 +126,30 @@ export class AnthropicAdapter implements AiAdapter {
         );
       }
       const data: any = await res.json();
+      // A `tool_use` block has no `text`, so a tool-calling reply used to read as an empty string.
       const text = (data.content ?? []).map((c: any) => c.text ?? '').join('');
-      return {
+      const result: AiCompletionResult = {
         text,
         tokensIn: data.usage?.input_tokens ?? 0,
         tokensOut: data.usage?.output_tokens ?? 0,
         provider: this.provider,
         model: data.model ?? req.model,
+      };
+      // No tools asked → exactly the previous result shape.
+      if (!req.tools?.length) return result;
+
+      const toolUses: AiToolUse[] = (data.content ?? [])
+        .filter((c: any) => c?.type === 'tool_use')
+        .map((c: any) => ({
+          id: typeof c.id === 'string' ? c.id : '',
+          name: typeof c.name === 'string' ? c.name : '',
+          input: isPlainObject(c.input) ? c.input : {},
+          ...(isPlainObject(c.input) ? {} : { inputError: 'input_not_object' }),
+        }));
+      return {
+        ...result,
+        ...(toolUses.length ? { toolUses } : {}),
+        stopReason: stopReasonOf(data.stop_reason),
       };
     });
   }

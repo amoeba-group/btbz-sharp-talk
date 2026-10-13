@@ -1,10 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { IdentityClaims } from '@sharptalk/types';
+import type { AiMessage } from '../../infrastructure/external/ai/ai-adapter.interface';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { scrubPii } from '../../global/util/pii-scrub.util';
 import { partnerCtxOf } from './partner-ctx';
 import type { PartnerCtx } from './partner-ctx';
-import { PARTNER_LOOKUP_STATUS, PartnerError, partnerError } from './partner-data.constants';
-import type { PartnerRefusalReason, PartnerTopic } from './partner-data.constants';
+import { PARTNER_CALL_MODE, PARTNER_LOOKUP_STATUS, PartnerError, partnerError } from './partner-data.constants';
+import type { PartnerCallMode, PartnerRefusalReason, PartnerTopic } from './partner-data.constants';
 import { PartnerDataService } from './partner-data.service';
 import type { PartnerEvidence } from './partner-data.service';
 import { PartnerFlagService } from './partner-flag.service';
@@ -12,6 +14,7 @@ import { PartnerLookupLogService } from './partner-lookup-log.service';
 import { partnerNoticePolicy, partnerNoticeText } from './partner-messages';
 import { verifyNumbers } from './partner-numbers.util';
 import { detectPartnerIntent } from './partner-intent.util';
+import { PartnerToolsService } from './partner-tools.service';
 
 /** What the chat step needs to know about the session (a subset of the Session entity). */
 export interface PartnerStepSession {
@@ -36,6 +39,13 @@ export interface PartnerPrepareInput {
    * must not get live data on claims its own policy no longer vouches for.
    */
   identity?: { expired: boolean };
+  /**
+   * Tools mode only (PLN-261012 SG-33): the customer's turn with PII scrubbed, and the earlier turns
+   * (already scrubbed by `buildHistory`) — what the planning model may read. Absent, the step scrubs
+   * `text` itself and plans without history. Prefetch never reads either.
+   */
+  modelText?: string;
+  history?: AiMessage[];
 }
 
 /** The identifiers every lookup of a turn shares — also what `verify` logs against. */
@@ -58,6 +68,10 @@ export interface PartnerDataBlock {
   protect: string[];
   topics: PartnerTopic[];
   meta: TurnMeta;
+  /** `tool` when the model's tool calls fetched the facts (PLN-261012 SG-33); absent = prefetch. */
+  mode?: PartnerCallMode;
+  /** Merged into the persisted message trace (`partnerMode`, `partnerToolLoop`, `partnerToolsFallback`). */
+  trace?: Record<string, unknown>;
 }
 
 /** The turn is answered with a fixed localized notice instead of a model reply. */
@@ -97,6 +111,9 @@ export class PartnerDataStep {
     private readonly flags: PartnerFlagService,
     private readonly data: PartnerDataService,
     private readonly logs: PartnerLookupLogService,
+    // Appended and optional (PLN-261012 SG-33): specs and the golden runner build the step with three
+    // arguments, and without this collaborator the step is prefetch-only, exactly as before.
+    private readonly tools?: PartnerToolsService,
   ) {}
 
   /**
@@ -111,7 +128,9 @@ export class PartnerDataStep {
       if (!(await this.flags.isEnabled(input.tenantId))) return false;
       const claims = input.session.identityClaims;
       if (!claims?.signed) return false;
-      return detectPartnerIntent(input.text, { hotelSn: String(claims.hotelSn ?? '') }).topics.length > 0;
+      if (detectPartnerIntent(input.text, { hotelSn: String(claims.hotelSn ?? '') }).topics.length > 0) return true;
+      // Tools mode also takes questions the detector cannot pin to a topic (PLN-261012 SG-33).
+      return !!this.tools && this.tools.couldBePartnerQuestion(input.text) && (await this.tools.active(input.tenantId));
     } catch {
       return false;
     }
@@ -120,6 +139,7 @@ export class PartnerDataStep {
   async prepare(input: PartnerPrepareInput): Promise<PartnerPrepared | null> {
     let claims: IdentityClaims | null;
     let intent: ReturnType<typeof detectPartnerIntent>;
+    let toolsOn = false;
     try {
       if (!this.flags.serverEnabled()) return null;
       if (!(await this.flags.isEnabled(input.tenantId))) return null;
@@ -129,7 +149,11 @@ export class PartnerDataStep {
       claims = input.session.identityClaims;
       if (!claims?.signed) return null;
       intent = detectPartnerIntent(input.text, { hotelSn: String(claims.hotelSn ?? '') });
-      if (!intent.topics.length) return null;
+      // PLN-261012 SG-33: tools mode is asked only AFTER every gate above (flags, signed identity), so
+      // a guest or an unsigned session can never reach a tool call. In tools mode a question the
+      // detector cannot pin to a topic still goes on when it talks about one (the model decides).
+      toolsOn = this.tools ? await this.tools.active(input.tenantId) : false;
+      if (!intent.topics.length && !(toolsOn && this.tools!.couldBePartnerQuestion(input.text))) return null;
     } catch (e) {
       this.logger.error(`partner step skipped: ${(e as Error).message}`);
       return null;
@@ -153,6 +177,10 @@ export class PartnerDataStep {
         ctx = partnerCtxOf({ tenantId: input.session.tenantId ?? input.tenantId, identityClaims: claims });
       } catch (e) {
         const err = e instanceof PartnerError ? e : partnerError.claimsStale('claims_unusable');
+        // A tools-mode turn that only TALKS about a topic (no detected topic) is not refused for stale
+        // claims: it may be a how-to the knowledge base answers, and the chat's own identity gates
+        // already handle an expired identity (PLN-261012 SG-33).
+        if (!intent.topics.length) return null;
         await this.logDenied(input, claims, intent.topics[0].topic, err);
         return this.notice(err.code, input.language, { claims: err.reason });
       }
@@ -164,13 +192,23 @@ export class PartnerDataStep {
         this.logger.warn(`partner lookup refused: message names another hotel (tenant=${ctx.tenantId} hotel=${ctx.hotelSn})`);
         await this.logs.record({
           ...this.logWho(meta(ctx)),
-          topic: intent.topics[0].topic,
+          topic: intent.topics[0]?.topic ?? 'tool_loop',
           rejectedKeys: ['hotel_mention'],
           status: PARTNER_LOOKUP_STATUS.REJECTED,
           errorCode: err.code,
           reason: err.reason,
         });
         return this.notice(err.code, input.language);
+      }
+
+      // Tools mode (PLN-261012 SG-33): the model picks the lookups, behind the same ctx, validator, role
+      // allow-list and projection. It either answers the step (data / notice / "not a partner turn"),
+      // or hands back to the prefetch below when tools cannot be used.
+      let toolsTrace: Record<string, unknown> | undefined;
+      if (toolsOn) {
+        const tooled = await this.prepareWithTools(input, ctx, intent, meta(ctx));
+        if (tooled.done) return tooled.prepared;
+        toolsTrace = tooled.trace;
       }
 
       const sections: string[] = [];
@@ -200,10 +238,81 @@ export class PartnerDataStep {
         protect: [...new Set(protect)].sort((a, b) => b.length - a.length),
         topics: intent.topics.map((t) => t.topic),
         meta: meta(ctx),
+        // Why tools mode handed this turn to prefetch (trace only).
+        ...(toolsTrace ? { trace: toolsTrace } : {}),
       };
     } catch (e) {
       this.logger.error(`partner step failed after a partner topic was detected: ${(e as Error).message}`, (e as Error).stack);
       return this.notice(ERROR_CODE.PARTNER_API_UNAVAILABLE.code, input.language, { topic: 'step_error' });
+    }
+  }
+
+  /**
+   * The tool-calling path of `prepare` (PLN-261012 SG-33). Runs only after the flags, the signed
+   * identity, the claims check and the foreign-hotel check, so by here `ctx` is a verified hotel and
+   * the message names no other.
+   *  - `done` with a block, a notice or null: the turn is settled (null = "not a partner turn after
+   *    all": the ordinary answer path runs, as if the step had not applied);
+   *  - not done: tools could not be used and the caller carries on with prefetch.
+   */
+  private async prepareWithTools(
+    input: PartnerPrepareInput,
+    ctx: PartnerCtx,
+    intent: ReturnType<typeof detectPartnerIntent>,
+    turn: TurnMeta,
+  ): Promise<{ done: true; prepared: PartnerPrepared | null } | { done: false; trace?: Record<string, unknown> }> {
+    const tools = this.tools!;
+    // A topic the detector found but this role may not read is refused by the prefetch path (the
+    // role-denied notice, nothing requested). Offering the model a smaller tool set instead would let
+    // it answer AROUND that refusal, so such a question is left to prefetch.
+    if (intent.topics.some((t) => !tools.roleMayRead(ctx.role, t.topic))) return { done: false };
+
+    let out: Awaited<ReturnType<PartnerToolsService['run']>>;
+    try {
+      out = await tools.run({
+        ctx,
+        language: input.language,
+        // The model sees the scrubbed copy, like every other egress (PRV Stage 5).
+        modelText: input.modelText ?? scrubPii(input.text).text,
+        history: input.history,
+        call: { conversationId: input.conversationId, messageId: input.messageId, sessionId: input.session.id },
+      });
+    } catch (e) {
+      // `run` never throws by design. If it did, the safe answers are the old ones: prefetch for a
+      // detected topic, an ordinary turn otherwise — never the "partner unavailable" notice for a
+      // question the model merely might have wanted to look up.
+      this.logger.error(`partner tools failed unexpectedly, using the standard lookup: ${(e as Error).message}`, (e as Error).stack);
+      return intent.topics.length ? { done: false } : { done: true, prepared: null };
+    }
+
+    switch (out.kind) {
+      case 'data':
+        return {
+          done: true,
+          prepared: {
+            kind: 'data',
+            block:
+              `Live data from the partner system for the signed-in hotel (hotel ${ctx.hotelSn}, role ${ctx.role}).\n` +
+              out.sections.join('\n'),
+            evidence: out.evidence,
+            // Longest first: the moderation shield replaces values in this order. The union of EVERY
+            // tool result's ids and amounts — the final text may restate any of them.
+            protect: [...new Set(out.protect)].sort((a, b) => b.length - a.length),
+            topics: out.topics,
+            meta: turn,
+            mode: PARTNER_CALL_MODE.TOOL,
+            trace: out.trace,
+          },
+        };
+      case 'failed':
+        return {
+          done: true,
+          prepared: this.notice(out.error.code, input.language, { toolError: out.error.reason, ...out.trace }),
+        };
+      case 'fallback':
+        // Nothing for prefetch to fetch either: not a partner turn (e.g. a how-to) — answer as usual.
+        if (!intent.topics.length) return { done: true, prepared: null };
+        return { done: false, trace: out.trace };
     }
   }
 
@@ -231,6 +340,7 @@ export class PartnerDataStep {
         reason: `unverified_numbers:${check.unverified.length}`,
         source: prepared.evidence[0]?.source ?? null,
         snapshotHash: prepared.evidence[0]?.snapshotHash ?? null,
+        ...(prepared.mode ? { mode: prepared.mode } : {}),
       });
       return {
         ok: false,

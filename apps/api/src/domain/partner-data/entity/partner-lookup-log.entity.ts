@@ -64,6 +64,13 @@ export class PartnerLookupLog {
   @Column({ name: 'snapshot_hash', type: 'varchar', length: 64, nullable: true })
   snapshotHash: string | null;
 
+  /**
+   * What triggered the lookup (PLN-261012 SG-33): `prefetch` (the deterministic detector, the
+   * default and every row written before tools existed) or `tool` (the model's tool call).
+   */
+  @Column({ type: 'varchar', length: 8, default: 'prefetch' })
+  mode: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

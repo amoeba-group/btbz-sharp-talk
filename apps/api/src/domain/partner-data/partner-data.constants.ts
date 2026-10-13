@@ -42,6 +42,28 @@ export const PARTNER_LOOKUP_STATUS = {
 export type PartnerLookupStatus = (typeof PARTNER_LOOKUP_STATUS)[keyof typeof PARTNER_LOOKUP_STATUS];
 
 /**
+ * What triggered a lookup (PLN-261012 SG-33), stored in partner_lookup_logs.mode: `prefetch` = the
+ * deterministic detector, before the model runs; `tool` = the model asked for it through a tool call.
+ */
+export const PARTNER_CALL_MODE = {
+  PREFETCH: 'prefetch',
+  TOOL: 'tool',
+} as const;
+export type PartnerCallMode = (typeof PARTNER_CALL_MODE)[keyof typeof PARTNER_CALL_MODE];
+
+/**
+ * How a tenant's partner questions are answered (PLN-261012 SG-33): `prefetch` (default) fetches
+ * what the detector names before generation; `tools` lets the model choose the lookups through native
+ * tool calling, with every safety check of prefetch unchanged. `PARTNER_DATA_MODE` sets the default
+ * and `tenants.partner_data_mode` overrides it per tenant.
+ */
+export const PARTNER_DATA_MODE = {
+  PREFETCH: 'prefetch',
+  TOOLS: 'tools',
+} as const;
+export type PartnerDataMode = (typeof PARTNER_DATA_MODE)[keyof typeof PARTNER_DATA_MODE];
+
+/**
  * Reasons recorded on the customer-facing message trace (`reason`) when the
  * partner step refuses or degrades a turn. They are members of the closed
  * REFUSAL_REASON vocabulary (PLN-261012 SG-50/SG-52) — this object only names the
@@ -98,6 +120,13 @@ export const partnerError = {
     new PartnerError(ERROR_CODE.PARTNER_ANSWER_UNVERIFIED, reason, HttpStatus.UNPROCESSABLE_ENTITY, detail),
   rateLimited: (reason: string, detail?: Record<string, unknown>) =>
     new PartnerError(ERROR_CODE.PARTNER_RATE_LIMITED, reason, HttpStatus.TOO_MANY_REQUESTS, detail),
+  // Tool-calling loop (PLN-261012 SG-33).
+  toolLoopLimit: (reason: string, detail?: Record<string, unknown>) =>
+    new PartnerError(ERROR_CODE.PARTNER_TOOL_LOOP_LIMIT, reason, HttpStatus.BAD_GATEWAY, detail),
+  toolsUnavailable: (reason: string, detail?: Record<string, unknown>) =>
+    new PartnerError(ERROR_CODE.PARTNER_TOOLS_UNAVAILABLE, reason, HttpStatus.SERVICE_UNAVAILABLE, detail),
+  toolCallInvalid: (reason: string, detail?: Record<string, unknown>) =>
+    new PartnerError(ERROR_CODE.PARTNER_TOOL_CALL_INVALID, reason, HttpStatus.BAD_REQUEST, detail),
 };
 
 /** Longest free text from the partner we let into a prompt (it is untrusted). */

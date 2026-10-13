@@ -927,7 +927,15 @@
     "notConfigured": "연결 정보(기본 URL, API 키)가 아직 저장되지 않았습니다. 실데이터 모드에서 필요합니다.",
     "connection": "연결",
     "saved": "파트너 데이터 조회 설정을 저장했습니다",
-    "saveError": "파트너 데이터 조회 설정을 저장하지 못했습니다"
+    "saveError": "파트너 데이터 조회 설정을 저장하지 못했습니다",
+    "methodTitle": "조회 방식",
+    "methodInherit": "서버 기본값({{mode}})",
+    "modePrefetch": "표준",
+    "modeTools": "AI 보조",
+    "methodPrefetch": "표준 — 키워드 감지기가 지목한 데이터를 서버가 먼저 가져온 뒤, 어시스턴트가 그 데이터로 답변합니다.",
+    "methodTools": "AI 보조 — 여러 주제에 걸치거나 표현이 모호한 질문에 대해 어시스턴트가 읽기 전용 조회를 직접 고릅니다. 안전 검사는 동일하며, 질문당 AI 호출이 한 번 더 발생합니다.",
+    "toolsUnsupported": "고객에게 답변하는 AI 엔진이 아직 조회 도구를 실행할 수 없어(엔진의 capabilities에 “tools”가 필요합니다) 표준 조회를 사용합니다.",
+    "toolsOff": "AI 보조 조회가 서버 전체에서 꺼져 있어(PARTNER_TOOLS_ENABLED) 표준 조회를 사용합니다."
   },
   "pilot": {
     "title": "호텔별 파일럿 범위",
