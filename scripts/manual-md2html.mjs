@@ -37,7 +37,16 @@ const DOC_META = {
     en: { eyebrow: 'SharpTalk User Guides · Cafe24 integration', title: 'SharpTalk Cafe24 Integration Guide', next: '<a href="platform-integration.en.html">Commerce Integration Credentials</a> (where values come from), <a href="quick-setup.en.html">Quick Setup Manual</a> (tenant creation · widget install), <a href="knowledge-ai.en.html">Knowledge &amp; AI Settings Manual</a> (after catalog sync).' },
     vi: { eyebrow: 'Tài liệu SharpTalk · Tích hợp Cafe24', title: 'Hướng dẫn tích hợp Cafe24 cho SharpTalk', next: '<a href="platform-integration.vi.html">Hướng dẫn thông tin xác thực</a> (nơi lấy các giá trị), <a href="quick-setup.vi.html">Sổ tay cài đặt nhanh</a> (tạo tenant · cài widget), <a href="knowledge-ai.vi.html">Sổ tay tri thức &amp; AI</a> (sau khi đồng bộ catalog).' },
   },
+  // Go2Joy deployment (PLN-261012 SG-85): Vietnamese is the manual staff read; English is the
+  // summary + go-live checklist for the Amoeba side. No Korean edition.
+  'go2joy-ops': {
+    vi: { eyebrow: 'Tài liệu SharpTalk · Vận hành Go2Joy', title: 'Sổ tay vận hành Go2Joy: CS và Sales Admin', next: '<a href="knowledge-ai.vi.html">Sổ tay tri thức &amp; AI</a> (đăng ký tri thức, cài đặt AI), <a href="user-manual.vi.html">Sổ tay tổng hợp</a> (toàn bộ màn hình console), <a href="go2joy-ops.en.html">English summary and go-live checklist</a>.' },
+    en: { eyebrow: 'SharpTalk User Guides · Go2Joy operations', title: 'Go2Joy Operations Manual (CS and Sales Admin): English summary', next: '<a href="go2joy-ops.vi.html">Sổ tay vận hành Go2Joy (Vietnamese, full manual)</a>, <a href="knowledge-ai.en.html">Knowledge &amp; AI Settings Manual</a>, <a href="user-manual.en.html">Complete User Manual</a>.' },
+  },
 };
+// Manuals written in fewer than the three site languages list only the editions that exist, so the
+// language bar never links to a file that is not there (go2joy-ops: Vietnamese + English only).
+const DOC_LANGS = { 'go2joy-ops': ['vi', 'en'] };
 const nav = NAV[lang];
 const meta = DOC_META[doc]?.[lang];
 if (!nav || !meta) { console.error(`no template strings for ${doc}/${lang}`); process.exit(1); }
@@ -47,7 +56,7 @@ function inline(s) {
   s = esc(s);
   s = s.replace(/`([^`]+)`/g, (_, c) => `<code>${c}</code>`);
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  s = s.replace(/(^|[\s(（])\*([^*\s][^*]*?)\*(?=[\s).,，。:：）]|$)/g, '$1<em>$2</em>');
+  s = s.replace(/(^|[\s(（])\*([^*\s][^*]*?)\*(?=[\s).,，。:：）;；!?·]|$)/g, '$1<em>$2</em>');
   s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, t, h) => `<a href="${h.replace(/\.md$/, '.html')}">${t}</a>`);
   return s;
 }
@@ -187,7 +196,7 @@ while (i < lines.length) {
 }
 flushPara(para); closeFaq();
 
-const langLinks = ['ko', 'en', 'vi'].map((l) => (l === lang ? `<span class="cur">${nav.langs[l]}</span>` : `<a href="${doc}.${l}.html">${nav.langs[l]}</a>`)).join('');
+const langLinks = (DOC_LANGS[doc] ?? ['ko', 'en', 'vi']).map((l) => (l === lang ? `<span class="cur">${nav.langs[l]}</span>` : `<a href="${doc}.${l}.html">${nav.langs[l]}</a>`)).join('');
 let html = head + '\n\n<div class="shell">\n';
 html += `<nav class="pagenav" aria-label="${nav.navLabel}"><a href="./">${nav.list}</a><span>·</span>${langLinks}<span>·</span><a href="${doc}.${lang}.md">${nav.md}</a></nav>\n`;
 html += '<header class="hero">\n';
