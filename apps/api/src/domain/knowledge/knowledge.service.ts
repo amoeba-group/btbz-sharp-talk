@@ -288,6 +288,18 @@ export class KnowledgeService {
     };
   }
 
+  /**
+   * The tenant's reference UI version and mode, for the document list's badge and
+   * mismatch filter (PLN-261012 SG-20). A read of `tenant_ai_config` exposed
+   * under the knowledge capability: the people who curate documents need to see
+   * which version they are measured against without holding AI-settings rights.
+   * The caveat wording stays with the AI settings; null = the tenant sets none.
+   */
+  async getVersionPolicy(tenantId: number): Promise<{ referenceVersion: string; onMismatch: string } | null> {
+    const policy = (await this.rag.kbVersionPolicy?.(tenantId)) ?? null;
+    return policy ? { referenceVersion: policy.referenceVersion, onMismatch: policy.onMismatch } : null;
+  }
+
   /** Full document including LONGTEXT content (list omits it — PERF-9). */
   async getDocument(tenantId: number, id: number): Promise<KbDocument> {
     return this.findDocument(tenantId, id);

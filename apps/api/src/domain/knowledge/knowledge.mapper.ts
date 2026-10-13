@@ -96,6 +96,11 @@ export class KnowledgeMapper {
     return docs.map((d) => this.toDocument(d));
   }
 
+  /** Reference UI version for the console's version badge/filter (PLN-261012 SG-20); null = none set. */
+  static toVersionPolicy(p: { referenceVersion: string; onMismatch: string } | null) {
+    return p ? { referenceVersion: p.referenceVersion, onMismatch: p.onMismatch } : null;
+  }
+
 
   /** History row. `content` is omitted from lists — a page of them would drag
    * every past body along for a table that only shows who/when/what. */

@@ -285,6 +285,26 @@ describe('KnowledgeService — KB UI version', () => {
     });
   });
 
+  describe('reference version for the knowledge screens', () => {
+    it('hands the badge and filter the reference and mode — and nothing of the caveat wording', async () => {
+      const h = build({ policy: { referenceVersion: 'v0.12.0', onMismatch: 'hide', notice: { VI: 'x' } } });
+      expect(await h.svc.getVersionPolicy(1)).toEqual({ referenceVersion: 'v0.12.0', onMismatch: 'hide' });
+    });
+
+    it('is null for a tenant that never configured it', async () => {
+      const h = build({ policy: null });
+      expect(await h.svc.getVersionPolicy(1)).toBeNull();
+      expect(KnowledgeMapper.toVersionPolicy(null)).toBeNull();
+    });
+
+    it('maps the response as plain camelCase', () => {
+      expect(KnowledgeMapper.toVersionPolicy({ referenceVersion: 'v1', onMismatch: 'caveat' })).toEqual({
+        referenceVersion: 'v1',
+        onMismatch: 'caveat',
+      });
+    });
+  });
+
   describe('document response', () => {
     it('carries uiVersion (null = unversioned)', () => {
       expect(KnowledgeMapper.toDocument({ id: 1, uiVersion: 'v1.0' } as never).uiVersion).toBe('v1.0');

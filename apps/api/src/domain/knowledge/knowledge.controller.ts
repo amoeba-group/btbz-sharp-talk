@@ -316,6 +316,16 @@ export class KnowledgeController {
     return this.knowledgeService.listDocumentFacets(this.tenantUser(user).tenantId);
   }
 
+  /** Reference UI version the list's version badge and filter measure against (PLN-261012 SG-20). */
+  @Get('version-policy')
+  @RequireCapability(CAPABILITY.KNOWLEDGE_SOURCE_MANAGE)
+  @ApiOperation({ summary: "The tenant's reference UI version and mismatch mode (read-only)" })
+  async versionPolicy(@CurrentUser() user: Principal) {
+    return KnowledgeMapper.toVersionPolicy(
+      await this.knowledgeService.getVersionPolicy(this.tenantUser(user).tenantId),
+    );
+  }
+
   // Also before `documents/:id` — a literal segment after a :id route is
   // swallowed silently.
   @Get('documents/export')
