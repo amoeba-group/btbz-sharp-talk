@@ -10,10 +10,15 @@ import { ConversationBriefing } from './entity/conversation-briefing.entity';
 import { ChatGroup } from './entity/chat-group.entity';
 import { GroupMemberView, GroupRef, RelatedSessionView } from './chat-group.service';
 import { maskEmail, maskName } from '../../global/util/pii-display.util';
+import type { AlertView } from './agent-alert.service';
 import type { IdentityClaims } from '@sharptalk/types';
 
-/** Escalation alert row for the console alarm modal (FR-S3). */
-export function toAlertResponse(a: AgentAlert) {
+/**
+ * Escalation alert row for the console alarm modal (FR-S3). With a view (PLN-261012 SG-66) it
+ * also says which team, region and partner the conversation belongs to, so the person paged
+ * sees it before opening the chat; without one those fields are null.
+ */
+export function toAlertResponse(a: AgentAlert, view: AlertView | null = null) {
   return {
     id: a.id,
     conversationId: a.conversationId,
@@ -22,6 +27,15 @@ export function toAlertResponse(a: AgentAlert) {
     preview: a.preview,
     status: a.status,
     createdAt: a.createdAt,
+    /** Strict regional routing: the team a broadcast alert is scoped to; null = for everyone. */
+    targetRegion: a.targetRegion ?? null,
+    supportType: view?.supportType ?? null,
+    supportRegion: view?.supportRegion ?? null,
+    /** A signed province the region table does not list — shown as "?" with this in a tooltip. */
+    supportRegionHint: view?.supportRegionHint ?? null,
+    escalatedAt: view?.escalatedAt ?? null,
+    /** Signed partner (hotel name, hotelSn, role); null for guests and v1 identities. */
+    partner: view?.partner ?? null,
   };
 }
 
@@ -68,6 +82,10 @@ export function toSessionResponse(
     supportType: c.supportType ?? null,
     /** Regional team of the hotel, north | south (PLN-261007 Hotel Region Routing). */
     supportRegion: c.supportRegion ?? null,
+    /** The signed province the region table did not list — a "?" badge with this as its tooltip (SG-65). */
+    supportRegionHint: c.supportRegionHint ?? null,
+    /** When the conversation started waiting for a person; the queue shows the age (SG-66). */
+    escalatedAt: c.escalatedAt ?? null,
     /** Team pin (PLN-260826) — pinned rows sort first in the queue. */
     pinned: c.pinnedAt != null,
     pinnedAt: c.pinnedAt ?? null,

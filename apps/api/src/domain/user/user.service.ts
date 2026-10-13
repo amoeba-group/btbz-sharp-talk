@@ -26,7 +26,7 @@ import { buildTempPasswordMail } from '../../global/util/temp-password-mail.util
 import { AuditService } from '../audit/audit.service';
 import { maskPii } from '../../global/util/pii.util';
 import { LoginRateLimitService } from '../auth/login-rate-limit.service';
-import { MailerService } from '../../infrastructure/infrastructure.module';
+import { EVENTS, EventBusService, MailerService } from '../../infrastructure/infrastructure.module';
 import { TenantService } from '../tenant/tenant.service';
 import { ConfigService } from '@nestjs/config';
 const INVITE_TTL_MS = 72 * 60 * 60 * 1000;
@@ -52,6 +52,9 @@ export class UserService {
     // Entity-only read for the Users list's presence column (PLN-261012 SG-60);
     // appended last so positional test doubles stay valid, and `?.`-guarded.
     @InjectRepository(AgentProfile) private readonly profileRepo?: Repository<AgentProfile>,
+    // Tells the alert side when someone's region or status changed, so alerts pinned to them
+    // are re-pointed (PLN-261012 SG-65); appended last, `?.`-guarded, for the same reason.
+    private readonly bus?: EventBusService,
   ) {}
 
   // ---- Users ----
@@ -269,6 +272,8 @@ export class UserService {
     const user = await this.getTenantUser(tenantId, userId);
     user.region = region || null;
     await this.userRepo.save(user);
+    // An alert still pinned to them for the other region must not stay with them (SG-65, D-20).
+    await this.bus?.publish(EVENTS.USER_ROUTING_CHANGED, { tenantId, userId: user.id, region: user.region });
     return this.toResponseWithLabels(user);
   }
 
@@ -276,6 +281,13 @@ export class UserService {
     const user = await this.getTenantUser(tenantId, userId);
     user.status = status;
     await this.userRepo.save(user);
+    // Someone no longer active cannot take the alerts pinned to them (SG-65).
+    await this.bus?.publish(EVENTS.USER_ROUTING_CHANGED, {
+      tenantId,
+      userId: user.id,
+      region: user.region ?? null,
+      status,
+    });
     return this.toResponseWithLabels(user);
   }
 

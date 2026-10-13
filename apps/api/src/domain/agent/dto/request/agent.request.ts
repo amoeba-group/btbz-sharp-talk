@@ -28,8 +28,34 @@ export class ListSessionsQuery {
   @IsOptional() @IsString() @MaxLength(120) hotel?: string;
   /** Team filter (PLN-261007 Team Routing): teamRouting option id; omitted/'all' = every team. */
   @IsOptional() @IsString() support_type?: string;
-  /** Regional-team filter (PLN-261007): north | south | none; omitted/'all' = every region. */
+  /**
+   * Regional-team filter (PLN-261007): north | south | none | unmapped (a signed province the
+   * table does not list); `mine` = the caller's own `users.region` (PLN-261012 SG-66);
+   * omitted/'all' = every region.
+   */
   @IsOptional() @IsString() support_region?: string;
+}
+
+/** Counters for the queue chips (PLN-261012 SG-66): same scope and channel as the list. */
+export class QueueCountsQuery {
+  /** 'all' (default) | 'queue' | 'ended'. */
+  @IsOptional() @IsString() status?: string;
+  @IsOptional() @IsString() channel?: string;
+}
+
+/** Language of the team names in the hand-over control (PLN-261012 SG-64). */
+export class RoutingOptionsQuery {
+  @IsOptional() @IsString() @MaxLength(8) lang?: string;
+}
+
+/**
+ * Hand the conversation over to another team and/or region (PLN-261012 SG-64). `region`
+ * omitted keeps the current one, a team (north | south) sets it, null clears it — the
+ * values are checked in the service (E5126), so a bad one gets a message that names it.
+ */
+export class RerouteConversationRequest {
+  @IsString() @MinLength(1) @MaxLength(32) support_type: string;
+  @IsOptional() @IsString() @MaxLength(16) region?: string | null;
 }
 
 /** Re-pin the session to another AI agent — applies from the next turn. */

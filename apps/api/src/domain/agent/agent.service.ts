@@ -19,6 +19,7 @@ import { IssueService } from '../issue/issue.service';
 import { User } from '../user/entity/user.entity';
 import { Session } from '../session/entity/session.entity';
 import { AgentProfile } from './entity/agent-profile.entity';
+import { AgentAlertService, ALERT_STATUS } from './agent-alert.service';
 import { Assignment } from './entity/assignment.entity';
 import { AgentDailyStat } from './entity/agent-daily-stat.entity';
 import { ModerationService } from '../moderation/moderation.service';
@@ -197,6 +198,8 @@ export class AgentService {
     /** AI-agent names for the queue rows/filter (REQ-260825 R6/R7). */
     @InjectRepository(AiAgent)
     private readonly aiAgentRepo?: Repository<AiAgent>,
+    /** Closes the conversation open alerts when it is claimed, ended or handed back (PLN-261012 SG-63). */
+    private readonly alertService?: AgentAlertService,
   ) {}
 
   /**
@@ -315,7 +318,8 @@ export class AgentService {
     supportType?: string,
     /**
      * Regional-team filter (PLN-261007 Hotel Region Routing): north | south, or
-     * 'none' for threads whose region could not be determined. 'all'/omitted = every region.
+     * 'none' for threads whose region could not be determined, or 'unmapped' for the
+     * ones whose signed province the table does not list. 'all'/omitted = every region.
      */
     supportRegion?: string,
   ): Promise<{
@@ -379,6 +383,9 @@ export class AgentService {
     const regionFilter = supportRegion?.trim();
     if (regionFilter === 'none') {
       qb.andWhere('c.support_region IS NULL');
+    } else if (regionFilter === 'unmapped') {
+      // A signed province the region table does not list (PLN-261012 SG-65): no team, but a hint.
+      qb.andWhere('c.support_region IS NULL AND c.support_region_hint IS NOT NULL');
     } else if (regionFilter && regionFilter !== 'all') {
       qb.andWhere('c.support_region = :supportRegion', { supportRegion: regionFilter });
     }
@@ -926,6 +933,8 @@ export class AgentService {
     conversation.agentId = targetUserId;
     conversation.status = CONVERSATION_STATUS.AGENT;
     await this.convRepo.save(conversation);
+    // Somebody has it now: its open alerts are answered (PLN-261012 SG-63).
+    await this.alertService?.settle(tenantId, conversationId, ALERT_STATUS.ACKED, assignedBy);
     // Open issue (if any) follows the conversation's new owner — best-effort.
     await this.issueService?.onAgentAccept(conversationId, tenantId, targetUserId);
     await this.auditAgentAction(
@@ -1105,6 +1114,9 @@ export class AgentService {
       { id: conversationId },
       { status: CONVERSATION_STATUS.AGENT, agentId },
     );
+    // Taking it answers its open alerts, so a colleague is not alarmed about a conversation
+    // that has an owner - and the next escalation is not swallowed by the de-dupe (SG-63, D-20).
+    await this.alertService?.settle(tenantId, conversationId, ALERT_STATUS.ACKED, agentId);
     // Issue P1: a native-mode tenant's ticket follows the acceptance (assign +
     // in_progress + tier stamp). Best-effort — never blocks the accept.
     void this.issueService?.onAgentAccept(conversationId, tenantId, agentId);
@@ -1464,8 +1476,22 @@ export class AgentService {
     );
     await this.convRepo.update(
       { id: conversationId },
-      { status: CONVERSATION_STATUS.AI_ACTIVE, agentId: null },
+      {
+        status: CONVERSATION_STATUS.AI_ACTIVE,
+        agentId: null,
+        // The team, region and waiting clock describe an escalation, and this one is over:
+        // left behind they badge an AI thread with a stale team and make the next escalation
+        // look like a continuation of this one (PLN-261012 SG-64, REQ D-20). A new escalation
+        // stamps them afresh.
+        supportType: null,
+        supportRegion: null,
+        supportRegionHint: null,
+        escalatedAt: null,
+        unclaimedPages: 0,
+        unclaimedPagedAt: null,
+      },
     );
+    await this.alertService?.settle(tenantId, conversationId, ALERT_STATUS.SUPERSEDED);
 
     const session = await this.sessionRepo.findOne({ where: { id: conversation.sessionId } });
     const language = session?.language ?? 'EN';
@@ -1519,6 +1545,7 @@ export class AgentService {
       { conversationId, status: 'active' },
       { status: 'released', releasedAt: new Date() },
     );
+    await this.alertService?.settle(tenantId, conversationId, ALERT_STATUS.SUPERSEDED);
     // Issue P1: a settled (resolved/rejected) issue closes with the conversation.
     void this.issueService?.onConversationEnded(conversationId);
     return this.convRepo.findOneOrFail({ where: { id: conversationId } });

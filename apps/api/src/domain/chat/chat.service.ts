@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, LessThan, Repository } from 'typeorm';
+import { In, IsNull, LessThan, Repository } from 'typeorm';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import {
@@ -32,7 +32,7 @@ import { OrderService } from '../order/order.service';
 import { SessionService, sessionCacheKey } from '../session/session.service';
 import { CustomerService } from '../customer/customer.service';
 import { HandoffRouterService, TEAM_CHIP_PREFIX } from '../ai-engine/handoff-router.service';
-import type { TeamQuestion } from '../ai-engine/handoff-router.service';
+import type { RegionLookup, TeamQuestion } from '../ai-engine/handoff-router.service';
 import { EventBusService, EVENTS, RedisService } from '../../infrastructure/infrastructure.module';
 import { AttachmentService } from '../attachment/attachment.service';
 import { MessageAttachment } from '../attachment/entity/message-attachment.entity';
@@ -50,6 +50,7 @@ import {
 } from './conversation-history.util';
 import { footerFor, footerVariants, stripFooters } from '../ai-engine/answer-footer.util';
 import { envNumber } from '../../global/util/env-number.util';
+import { partnerLabelOfClaims } from '../../global/util/partner-label.util';
 
 const ESCALATION_CONFIDENCE = 0.45;
 /**
@@ -204,10 +205,7 @@ export function partnerContextOf(session: Pick<Session, 'identityClaims'>): stri
 
 /** Short partner label for alert channels and ticket notes (REQ-261006 H4), or undefined. */
 export function partnerLabelOf(session: Pick<Session, 'identityClaims'>): string | undefined {
-  const claims = session.identityClaims;
-  if (!claims?.signed || !claims.hotelSn) return undefined;
-  const name = claims.hotelName?.trim() || 'hotel';
-  return `${name} (${claims.hotelSn}) · ${claims.role}`;
+  return partnerLabelOfClaims(session.identityClaims);
 }
 
 /**
@@ -216,13 +214,22 @@ export function partnerLabelOf(session: Pick<Session, 'identityClaims'>): string
  * the unmapped province for the alert line; nothing otherwise.
  */
 export function regionEventFields(
-  region: { team: string; label: string } | { unmapped: string } | null,
-): Pick<EscalationEvent, 'supportRegion' | 'regionLabel' | 'regionUnmapped'> {
+  region: StampedRegion | null,
+): Pick<EscalationEvent, 'supportRegion' | 'regionLabel' | 'regionUnmapped' | 'regionMode'> {
   if (!region) return {};
+  const mode = region.mode ? { regionMode: region.mode } : {};
   return 'unmapped' in region
-    ? { regionUnmapped: region.unmapped }
-    : { supportRegion: region.team, regionLabel: region.label };
+    ? { regionUnmapped: region.unmapped, ...mode }
+    : { supportRegion: region.team, regionLabel: region.label, ...mode };
 }
+
+/** What `stampRegion` found: the hotel team, or the province the table does not list. */
+export type StampedRegion =
+  | { team: string; label: string; mode?: 'prefer' | 'strict' }
+  | { unmapped: string; mode?: 'prefer' | 'strict' };
+
+/** Longest province text kept on a conversation as the unmapped hint (varchar(64)). */
+const REGION_HINT_MAX = 64;
 
 export function sysMsg(key: keyof typeof SYSTEM_MESSAGES, lang: string): string {
   return localized(SYSTEM_MESSAGES[key], lang);
@@ -291,6 +298,11 @@ export interface EscalationEvent {
    * (PLN-261012 SG-61): the alert says so instead of silently showing no region.
    */
   regionUnmapped?: string;
+  /**
+   * The region table's mode when region routing is on (PLN-261012 SG-67): `strict` keeps
+   * the alert inside the hotel's region. Absent = `prefer`, today's behaviour.
+   */
+  regionMode?: 'prefer' | 'strict';
 }
 
 /** How a caller of `escalate` differs from the widget. */
@@ -706,7 +718,12 @@ export class ChatService {
     // quietly cancelled the email delivery their answer depends on (found in
     // staging verification, PLN-260806 S2).
     if (conversation.replyChannel === 'email') {
-      const route = await this.handoffRouter.route(tenantId, session.language);
+      // The same team/region scope as the hand-off decided with, so a per-team or
+      // per-region schedule does not flip the reply channel back mid-thread (SG-67).
+      const route = await this.handoffRouter.route(tenantId, session.language, {
+        region: conversation.supportRegion,
+        supportType: conversation.supportType,
+      });
       if (route.mode !== 'email') {
         conversation.replyChannel = null;
         await this.convRepo.update({ id: conversation.id }, { replyChannel: null });
@@ -1374,7 +1391,12 @@ export class ChatService {
     // Routing decides both who gets paged and what the customer is told:
     // outside business hours the message goes to a mailbox and the shopper is
     // told to expect an email reply instead of a live agent (PLN-AiSetting W3).
-    const route = await this.handoffRouter.route(tenantId, session.language);
+    // The hotel region is resolved first: an off-hours summary goes to the regional
+    // mailbox when the tenant set one (PLN-261012 SG-67). The preview sandbox resolves nothing.
+    const lookup = session.channel === 'preview' ? null : await this.lookupRegion(tenantId, session);
+    const route = await this.handoffRouter.route(tenantId, session.language, {
+      region: lookup?.region?.team ?? null,
+    });
     // Off hours the answer travels by email, so we need somewhere to send it.
     // Without an address on file the widget asks for one (PLN-260806) and the
     // notice says so, instead of promising a reply we cannot deliver.
@@ -1394,7 +1416,7 @@ export class ChatService {
     // fan-out, no console-queue entry.
     if (session.channel === 'preview') return { body, needsContactEmail: false };
     await this.markWaiting(conversationId);
-    const region = await this.stampRegion(conversationId, tenantId, session);
+    const region = await this.stampRegion(conversationId, lookup);
     // Remember how this thread must be answered: an agent replying tomorrow has
     // no one in the widget to read it (see AgentService.sendMessage).
     if (route.mode === 'email') {
@@ -1512,7 +1534,13 @@ export class ChatService {
     // Same routing as the automatic handoff (PLN-AiSetting W3). Off hours the
     // widget's local "connecting you" line would be a lie, so persist the
     // off-hours notice — the conversation poll shows it to the customer.
-    const route = await this.handoffRouter.route(tenantId, session.language);
+    // Region first, then the decision: per-team hours and the regional off-hours mailbox
+    // need both the team the customer picked and the hotel region (PLN-261012 SG-67).
+    const lookup = await this.lookupRegion(tenantId, session);
+    const route = await this.handoffRouter.route(tenantId, session.language, {
+      region: lookup?.region?.team ?? null,
+      supportType: chosen?.id ?? conversation.supportType,
+    });
     // Off hours the answer travels by email, exactly as in handoff() (PLN-261012
     // SG-62): with no address on file the notice asks for one and the widget shows
     // the form, instead of promising a reply we cannot deliver.
@@ -1530,7 +1558,7 @@ export class ChatService {
       reason: 'user_request',
     });
     await this.markWaiting(conversationId);
-    const region = await this.stampRegion(conversationId, tenantId, session);
+    const region = await this.stampRegion(conversationId, lookup);
     // Remember how this thread must be answered: an agent replying tomorrow has no
     // one in the widget to read it (see AgentService.sendMessage). Without this the
     // reply stayed in a chat nobody was looking at, and the idle sweep closed it.
@@ -1557,23 +1585,39 @@ export class ChatService {
   }
 
   /**
-   * Resolve the hotel's regional team and stamp it on the conversation for the
-   * queue badge and filter (PLN-261007 Hotel Region Routing). Never throws: a
-   * region lookup that fails must not stop a customer reaching a person, it only
-   * means this hand-off is routed by label alone.
+   * The hotel regional team from the signed claims (PLN-261007 Hotel Region Routing),
+   * or null. Never throws: a region lookup that fails must not stop a customer reaching a
+   * person, it only means this hand-off is routed by label alone.
    */
-  private async stampRegion(
-    conversationId: number,
-    tenantId: number,
-    session: Session,
-  ): Promise<{ team: string; label: string } | { unmapped: string } | null> {
+  private async lookupRegion(tenantId: number, session: Session): Promise<RegionLookup | null> {
     try {
-      const { region, unmapped } = await this.handoffRouter.regionLookup(tenantId, session.identityClaims);
-      if (!region) return unmapped ? { unmapped } : null;
-      await this.convRepo.update({ id: conversationId }, { supportRegion: region.team });
-      return { team: region.team, label: region.label };
+      return await this.handoffRouter.regionLookup(tenantId, session.identityClaims);
     } catch (e) {
-      this.logger.warn(`region lookup failed (conversation ${conversationId}): ${(e as Error).message}`);
+      this.logger.warn(`region lookup failed (session ${session.id}): ${(e as Error).message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Stamp what the lookup found on the conversation for the queue badge and filter: the
+   * team when the province resolved, or - region routing on, province not in the table -
+   * the province itself as `support_region_hint`, so the queue can show a "?" badge with
+   * it and filter on it (PLN-261012 SG-65). Never throws, for the same reason.
+   */
+  private async stampRegion(conversationId: number, lookup: RegionLookup | null): Promise<StampedRegion | null> {
+    try {
+      if (!lookup) return null;
+      const { region, unmapped, mode } = lookup;
+      const withMode = mode ? { mode } : {};
+      if (!region) {
+        if (!unmapped) return null;
+        await this.convRepo.update({ id: conversationId }, { supportRegionHint: unmapped.slice(0, REGION_HINT_MAX) });
+        return { unmapped, ...withMode };
+      }
+      await this.convRepo.update({ id: conversationId }, { supportRegion: region.team });
+      return { team: region.team, label: region.label, ...withMode };
+    } catch (e) {
+      this.logger.warn(`region stamp failed (conversation ${conversationId}): ${(e as Error).message}`);
       return null;
     }
   }
@@ -1672,6 +1716,14 @@ export class ChatService {
 
   private async markWaiting(conversationId: number): Promise<void> {
     await this.convRepo.update({ id: conversationId }, { status: CONVERSATION_STATUS.WAITING, escalated: 1 });
+    // When this waiting spell started (PLN-261012 SG-63/SG-66): the queue shows the age and the
+    // unclaimed sweeper counts from it. Only the FIRST hand-off stamps it - a repeat request on a
+    // thread that is already waiting keeps the original time, because the customer has been
+    // waiting since then. A hand-back to the AI clears it, so the next spell starts fresh.
+    await this.convRepo.update(
+      { id: conversationId, escalatedAt: IsNull() },
+      { escalatedAt: new Date(), unclaimedPages: 0, unclaimedPagedAt: null },
+    );
   }
 
   /** Store features flag (PLN-261001); an unknown tenant reads as a store. */

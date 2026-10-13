@@ -23,6 +23,8 @@ import { User } from '../user/entity/user.entity';
 import { Session } from '../session/entity/session.entity';
 import { AgentService } from './agent.service';
 import { AgentAlertService } from './agent-alert.service';
+import { UnclaimedSweepService } from './unclaimed-sweep.service';
+import { AgentRoutingService } from './agent-routing.service';
 import { BriefingService } from './briefing.service';
 import { ChatCommentService } from './chat-comment.service';
 import { ChatGroupService } from './chat-group.service';
@@ -36,6 +38,7 @@ import { JobLabel } from '../user/entity/job-label.entity';
 import { UserJobLabel } from '../user/entity/user-job-label.entity';
 import { IssueModule } from '../issue/issue.module';
 import { AttachmentModule } from '../attachment/attachment.module';
+import { AiEngineModule } from '../ai-engine/ai-engine.module';
 
 @Module({
   imports: [
@@ -83,9 +86,20 @@ import { AttachmentModule } from '../attachment/attachment.module';
     AnswerReuseModule,
     // Issue P1: accept/end hooks drive the conversation's ticket.
     IssueModule,
+    // Routing policy for the alert fan-out, the unclaimed sweep and the re-route
+    // (PLN-261012 SG-63/SG-64/SG-67). AiEngineModule imports nothing from here: no cycle.
+    AiEngineModule,
   ],
   controllers: [AgentConsoleController],
-  providers: [AgentService, AgentAlertService, BriefingService, ChatCommentService, ChatGroupService],
+  providers: [
+    AgentService,
+    AgentAlertService,
+    UnclaimedSweepService,
+    AgentRoutingService,
+    BriefingService,
+    ChatCommentService,
+    ChatGroupService,
+  ],
   exports: [AgentService, AgentAlertService],
 })
 export class AgentModule {}
