@@ -62,7 +62,7 @@
 
 ### 3.3 조사
 
-- 1차 소스: `audit_logs`(actor_type/actor_id/action/target — DSAR·GDPR·retention·privileged action이 모두 기록됨), API 컨테이너 로그, nginx 접근 로그, `moderation_logs`, MySQL 계정/접속 이력.
+- 1차 소스: `audit_logs`(actor_type/actor_id/action/target — DSAR·GDPR·retention·privileged action이 모두 기록됨. 2026-10-13부터 동의 증적 `consent.granted|declined|withdrawn`, 운영자 DSAR `dsar.lookup|export|delete`(`metadata.via='operator'`)도 포함. `AUDIT_LOG_RETENTION_DAYS`를 켠 배포는 그 기간보다 오래된 행이 없다), API 컨테이너 로그, nginx 접근 로그, `moderation_logs`, MySQL 계정/접속 이력.
 - 확인 사항: 침입 시각·경로, 접근된 테이블/행 범위, **영향 정보주체 수 및 항목**(통지 판단의 핵심), 크로스-테넌트 여부, 유출 데이터의 암호화 여부(customers PII는 AES-256-GCM 암호문 — 키 미탈취 시 통지 의무 경감 가능성, 법무 판단).
 
 ### 3.4 복구
@@ -109,3 +109,23 @@
 |---|---|---|---|---|---|
 | | | | | | |
 | | | | | | |
+
+## 6. Go2Joy 자체 호스팅 배포 — 연락 체계 (PLN-261012 SG-70, **전부 미지정**)
+
+Go2Joy 환경에서 SharpTalk을 운영할 때 위 §2 RACI를 채울 **Go2Joy 측 담당과 외부 연락처**다. 아래 칸은 모두
+**〔지정 필요〕 placeholder**이며 저장소에는 실제 값이 없다 — Go2Joy와 법무가 지정하기 전에는 이 런북이
+72시간 통지 기한을 지킬 수 없다는 점을 명시한다.
+
+| 역할 | 성명 | 연락처 | 상태 |
+|---|---|---|---|
+| Go2Joy 사고 지휘(IC) | 〔지정 필요〕 | 〔지정 필요〕 | 미지정 |
+| Go2Joy 개인정보 보호책임자(DPO) | 〔지정 필요〕 | 〔지정 필요〕 | 미지정 — 동의 고지 `controller` 줄과 동일 인물 |
+| Go2Joy 법무·감독기관 통지 | 〔지정 필요〕 | 〔지정 필요〕 | 미지정 — 통지 기한·양식은 **현지 법무가 확정**(2025년 개인정보보호법 적용 여부 포함) |
+| Go2Joy 인프라 운영 | 〔지정 필요〕 | 〔지정 필요〕 | 미지정 |
+| Amoeba 지원 창구 | 〔지정 필요〕 | 〔지정 필요〕 | 미지정 — 운영 매뉴얼의 지원 절차와 연동 |
+| 감독기관(베트남 공안부 A05 등) 접수 창구 | 〔현지 법무 확인〕 | 〔현지 법무 확인〕 | 미확인 |
+| Anthropic / Voyage 보안 연락처 | 〔확인 필요〕 | 〔확인 필요〕 | PROCESSOR-REGISTER 행 2·3과 연동 |
+
+기한 시계: **인지 시각부터 72시간**(§3.5). 인지 시각·판정 근거는 사고 티켓에 기록한다. 위 표가 채워지기 전까지
+Go2Joy 배포는 "침해 통지 담당 미지정" 상태이며, 파일럿 전 점검 항목이다
+(GUIDE-261013-Go2Joy-PDPL-Checklist.md §B-10).

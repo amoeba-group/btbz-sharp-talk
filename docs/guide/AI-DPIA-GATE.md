@@ -20,6 +20,32 @@
 | 4 | 모더레이션 분류·재작성 | `apps/api/src/domain/moderation/moderation.service.ts` — 규칙(word/phrase/regex) + LLM context 분류(`AI_FUNCTION.MODERATION`), rephrase | AI/상담원 발신 예정 텍스트 | 차단/마스킹/재작성. **fail-safe: 오류 시 차단** — 미검열 전달은 불가(FR-069/POL-020) | 차단 시 상담원 이관 경로로 전환(`moderation_blocked` handoff) |
 | 5 | 임베딩(검색) | `voyage.adapter.ts` + `qdrant.service.ts` | KB 문서·사용자 질의 원문 | 유사도 검색(개인에 대한 결정 없음) | — |
 
+### 1.1 `feature:` 값 전수 점검 — 2026-10-13 (PLN-261012 SG-70)
+
+위 표는 5개 용도만 적었으나, AI 게이트웨이 호출에 붙는 `feature:` 라벨은 코드에 **9종**이 있다
+(`grep "feature: '"` 기준; 사용량 집계 `ai_usage_daily`와 감사의 키이기도 하다). 아래가 전수이며,
+신규 `feature:` 추가 시 이 표에 행을 더한다(§4-3).
+
+| # | `feature:` | 게이트웨이 function | 코드 근거 | 모델 입력(개인정보 관점) | 외부 전송 전 PII 마스킹 | 결과·효과 | 전적 자동화 결정? |
+|---|---|---|---|---|---|---|---|
+| 1 | `chat_answer` | `rag` | `chat/rag.service.ts` `answer()` | 마스킹된 사용자 메시지 + 마스킹된 직전 대화 + KB 스니펫 + (로그인 시) 서명된 파트너 맥락 `PARTNER_CONTEXT`(호텔명·hotelSn/코드·역할) + 주문 컨텍스트(연락처 제외, 자체 구성) | 예 — `chat.service.ts` `scrubPii`, `conversation-history.util.ts` | 답변(모더레이션 통과 후) | 아니오 |
+| 2 | `chat_rewrite` | `rag` / `chat` | `rag.service.ts` `answerWithoutKnowledge()`(인사·범위 밖 응답) **과** `classifyIntent()`(의도 JSON) — 두 용도가 같은 라벨을 공유함에 유의 | 마스킹된 메시지 + 대화 이력 | 예 | 짧은 응답 / 분류 라벨(사람 연결·주문 게이트·파트너 데이터 판단) | 아니오(분류 결과가 사람 연결을 **늘릴** 뿐) |
+| 3 | `moderation` | `moderation` | `moderation/moderation.service.ts` `contextFlagged()` + `rephrase()` | **발신 예정 텍스트**(AI 답변은 마스킹된 입력에서 파생, 상담원 작성분은 원문) | LLM 호출 입력은 마스킹하지 않음(로그 excerpt만 마스킹) | 차단/재작성. 오류 시 차단(fail-safe) | 차단은 상담원 연결로 전환됨 |
+| 4 | `agent_translate` | `assist` | `agent/agent.service.ts` (상담원이 고객 메시지 번역 요청) | **고객 메시지 원문**(상담원이 버튼을 눌렀을 때만) | **아니오 — 갭** | 번역문(Redis 24h 캐시) | 아니오 |
+| 5 | `agent_briefing` | `assist` | `agent/briefing.service.ts` (상담원이 대화 요약 요청) | **대화 원문 전체(최근 구간)** | **아니오 — 갭** | 요약·의도·감정·권고 | 아니오 |
+| 6 | `coaching` | `coach` | `ai-coach/ai-coach.service.ts` (콘솔 관리자의 AI 코칭 대화) | 관리자가 붙여넣은 텍스트(마스킹) + 질문·인용 | 예(`scrubPii`) | 코칭 답변·KB 개선 제안(승인 전엔 반영되지 않음) | 아니오 |
+| 7 | `journey_report` | `summary` | `journey/journey-report.service.ts` | 지표 + **마스킹된** 발화 표본 | 예(`scrubPii`, 길이 절단) | 여정 분석 보고서(모더레이션 통과) | 아니오 |
+| 8 | `knowledge_conflict` | `chat` | `knowledge/kb-conflict.service.ts` | KB 문서 2건 발췌(고객 데이터 아님) | 해당 없음 | 충돌/중복 판정 → 운영자 검토 큐 | 아니오 |
+| 9 | `knowledge_ingest` | `summary` | `knowledge/knowledge-ingest.service.ts` | 운영자가 올린 원본 문서(고객 데이터 아님) | 해당 없음 | KB 문서 초안 → 운영자 승인 | 아니오 |
+
+**판정 갱신(2026-10-13):** 9종 모두 §1 판정(전적으로 자동화된 중대영향 결정 없음)을 그대로 유지한다.
+다만 다음을 **갭으로 기록**한다 — 4·5번(`agent_translate`, `agent_briefing`)은 상담원이 명시적으로
+누를 때만 호출되지만 고객 메시지 **원문이 마스킹 없이** 외부 AI 처리자로 전송된다. 3번의 상담원 작성분도
+같다. 베트남 PDPL 배포에서는 국외이전 고지(`vn_pdpl` 프로필 `aiProcessor`/`crossBorder`)가 "메시지가
+AI 제공자로 전송된다"고 말하므로, 이 경로를 마스킹하거나(후속 작업) Go2Joy 법무가 현행 범위를 승인해야 한다
+(체크리스트 GUIDE-261013-Go2Joy-PDPL-Checklist.md §B-6). 향후 파트너 데이터 조회·도구 호출 루프(SG-31/33)가
+들어오면 새 `feature:` 라벨과 함께 본 게이트(§2 Q1–Q8)를 다시 통과해야 한다.
+
 ### 판정 기록 (2026-07-31)
 
 > **현행 AI 기능 중 정보주체에게 법적 효력을 갖거나 그에 준하는 중대한 영향을 미치는
