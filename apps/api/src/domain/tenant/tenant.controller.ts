@@ -39,6 +39,7 @@ import {
   UpdateWidgetAccessRequest,
   UpdateWidgetThemeRequest,
   UpdateEmbedOriginsRequest,
+  UpdateIdentityPolicyRequest,
   UpdateWidgetSettingsRequest,
   UpdateTenantStatusRequest,
   UpsertCredentialRequest,
@@ -316,6 +317,32 @@ export class TenantController {
       .auditEmbedSecretRotated(user.tenantId, user.userId)
       .catch(() => undefined);
     return { secret };
+  }
+
+  /**
+   * How signed identity from `identify` is treated for this tenant (PLN-261012
+   * SG-03 / SG-04): claims max age and the v1 refusal. Declared before ':uuid'.
+   */
+  @Get('identity-policy')
+  @RequireRank(USER_RANK.MASTER, USER_RANK.DIRECTOR)
+  @ApiOperation({ summary: "This tenant's signed-identity policy (claims max age, v1 refusal)" })
+  async getIdentityPolicy(@CurrentUser() user: Principal) {
+    const tenant = await this.tenantService.findById(this.tenantId(user));
+    return TenantMapper.toIdentityPolicy(tenant);
+  }
+
+  @Patch('identity-policy')
+  @RequireRank(USER_RANK.MASTER)
+  @ApiOperation({ summary: 'Replace the signed-identity policy (sent whole)' })
+  async updateIdentityPolicy(
+    @CurrentUser() user: Principal,
+    @Body() body: UpdateIdentityPolicyRequest,
+  ) {
+    if (user.actorType !== 'user') {
+      throw new BusinessException(ERROR_CODE.FORBIDDEN, HttpStatus.FORBIDDEN);
+    }
+    const tenant = await this.tenantService.updateIdentityPolicy(user.tenantId, user.userId, body);
+    return TenantMapper.toIdentityPolicy(tenant);
   }
 
   @Post('widget-theme/logo')

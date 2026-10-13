@@ -854,6 +854,24 @@
       "delete": "스냅샷을 삭제했습니다"
     }
   },
+  "identityPolicy": {
+    "title": "서명 로그인(SSO) 정책",
+    "description": "자사 서버가 위젯에 서명해 전달한 로그인 정보를 얼마 동안 신뢰할지, 호텔·역할이 없는 로그인을 받을지 설정합니다.",
+    "maxAge": "서명된 로그인 유효 시간",
+    "maxAgeDefault": "플랫폼 기본값 ({{hours}}시간)",
+    "maxAgeDefaultNever": "플랫폼 기본값 (만료 없음)",
+    "maxAgeCustom": "직접 지정",
+    "hours": "시간",
+    "maxAgeHint": "이 시간이 지나면 앱이 다시 서명할 때까지 방문자는 비로그인(게스트)으로 처리됩니다. 위젯이 identity-expired 이벤트를 보내므로 ShopTalk.identify()를 조용히 다시 호출할 수 있습니다. 1~720시간.",
+    "refuseV1": "호텔·역할 없는 로그인(v1) 거부",
+    "refuseV1Hint": "v1 서명은 만료되지 않고 어느 호텔·어떤 역할로 접속했는지도 알 수 없습니다. 앱이 claims(v2)로 서명하도록 바꾼 뒤에 켜 주세요.",
+    "inForce": "현재 적용: {{hours}}시간",
+    "inForceNever": "현재 적용: 만료 없음",
+    "masterOnly": "계정 마스터만 변경할 수 있습니다.",
+    "invalidHours": "1~720 사이의 정수(시간)를 입력해 주세요.",
+    "saved": "로그인 정책을 저장했습니다",
+    "saveError": "로그인 정책을 저장하지 못했습니다"
+  },
   "widgetAccess": {
     "title": "노출 제한 (테스트 모드)",
     "on": "사용 중",

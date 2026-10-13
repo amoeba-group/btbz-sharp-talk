@@ -31,12 +31,18 @@ const session = (token, over = {}) => ({ sessionToken: token, authenticated: fal
 /** Ports that log every call, with a controllable network. */
 function ports({ endBinding, startGuest } = {}) {
   const log = [];
+  /** What each adopt() was told about consent replay. */
+  const adopts = [];
   return {
     log,
+    adopts,
     ports: {
       clearCache: () => log.push('clearCache'),
       detach: () => log.push('detach'),
-      adopt: (res) => log.push(`adopt:${res.sessionToken}`),
+      adopt: (res, opts) => {
+        log.push(`adopt:${res.sessionToken}`);
+        adopts.push({ token: res.sessionToken, opts });
+      },
       startGuest: () => {
         log.push('startGuest');
         return (startGuest ?? (async () => session('guest-2')))();
@@ -123,4 +129,21 @@ test('logout before any session existed: nothing to end on the server, a guest i
 
   assert.ok(!log.some((l) => l.startsWith('endBinding')));
   assert.deepEqual(log, ['detach', 'clearCache', 'startGuest', 'adopt:guest-2']);
+});
+
+// ---- consent is per data subject (PLN-261012 S1 follow-up; Go2Joy / PDPL) --------------
+
+test('a forked session is adopted WITHOUT replaying the consent this browser stored', () => {
+  // The previous person said yes in this browser. The API decided what the NEW person
+  // starts with (carried for the same person, pending for another); replaying the stored
+  // yes on top of it would process their messages on consent they never gave.
+  const { adopts, ports: p } = ports();
+  adoptForkedSession(session('tok-2'), p);
+  assert.deepEqual(adopts, [{ token: 'tok-2', opts: { replayConsent: false } }]);
+});
+
+test("the guest session opened after a logout does not replay the previous person's consent either", async () => {
+  const { adopts, ports: p } = ports();
+  await resetToGuest('old', p);
+  assert.deepEqual(adopts, [{ token: 'guest-2', opts: { replayConsent: false } }]);
 });

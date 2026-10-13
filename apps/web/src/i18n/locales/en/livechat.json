@@ -422,6 +422,8 @@
     "signedHint": "The host system signed this hotel and role.",
     "unsignedHint": "Declared by the page, not signed — verify before acting on it.",
     "verifiedAt": "Verified at",
+    "expired": "expired",
+    "expiredHint": "This sign-in is older than the allowed age. The visitor is treated as a guest until the host system signs again.",
     "openInHost": "Open in host system",
     "briefingLine": "Partner of {{hotel}} · {{role}}",
     "role": {

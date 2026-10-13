@@ -12,6 +12,7 @@ import { settingsService } from './settings.service';
 import type {
   SaveShopifyBody,
   UpdateCredentialBody,
+  IdentityPolicyDraft,
   WidgetAccessDraft,
   WidgetCopyDraft,
   WidgetDesignDraft,
@@ -508,6 +509,31 @@ export function useSaveWidgetAccess() {
       // Server-side validation (bad CIDR, empty rule set, inverted window)
       // speaks through the error code — show it rather than a generic failure.
       toast.error(e.message || t('widgetAccess.saveError'), { sticky: true });
+    },
+  });
+}
+
+/** Signed-identity policy: claims max age + v1 refusal (PLN-261012 SG-03 / SG-04). */
+export function useIdentityPolicy() {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['identity-policy', tenantKey],
+    queryFn: settingsService.identityPolicy,
+  });
+}
+
+export function useSaveIdentityPolicy() {
+  const { t } = useTranslation('settings');
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: (body: IdentityPolicyDraft) => settingsService.saveIdentityPolicy(body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['identity-policy', tenantKey] });
+      toast.success(t('identityPolicy.saved'));
+    },
+    onError: (e: Error) => {
+      toast.error(e.message || t('identityPolicy.saveError'), { sticky: true });
     },
   });
 }

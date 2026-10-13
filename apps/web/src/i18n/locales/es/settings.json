@@ -854,6 +854,24 @@
       "delete": "Instantánea eliminada"
     }
   },
+  "identityPolicy": {
+    "title": "Política de inicio de sesión firmado (SSO)",
+    "description": "Cuánto tiempo sigue siendo válido el inicio de sesión que firma tu propio servidor para el widget, y si se aceptan inicios de sesión sin hotel ni rol.",
+    "maxAge": "Confiar en un inicio de sesión firmado durante",
+    "maxAgeDefault": "Valor de la plataforma ({{hours}} horas)",
+    "maxAgeDefaultNever": "Valor de la plataforma (no caduca)",
+    "maxAgeCustom": "Personalizado",
+    "hours": "horas",
+    "maxAgeHint": "Pasado ese tiempo, el visitante se trata como invitado hasta que tu aplicación vuelva a firmar. El widget emite el evento identity-expired para que ShopTalk.identify() se ejecute en silencio. De 1 a 720 horas.",
+    "refuseV1": "Rechazar inicios de sesión sin hotel ni rol (v1)",
+    "refuseV1Hint": "Una firma v1 nunca caduca y no indica en qué hotel ni con qué rol actúa la persona. Actívalo cuando tu aplicación firme con claims (v2).",
+    "inForce": "En vigor ahora: {{hours}} horas",
+    "inForceNever": "En vigor ahora: sin caducidad",
+    "masterOnly": "Solo el usuario principal de la cuenta puede cambiar esto.",
+    "invalidHours": "Introduce un número entero de horas entre 1 y 720.",
+    "saved": "Política de inicio de sesión guardada",
+    "saveError": "No se pudo guardar la política de inicio de sesión"
+  },
   "widgetAccess": {
     "title": "Restricción de visibilidad (modo prueba)",
     "on": "Activada",

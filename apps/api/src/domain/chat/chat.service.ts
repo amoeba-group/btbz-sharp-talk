@@ -9,8 +9,11 @@ import {
   CONVERSATION_STATUS,
   GUEST_POLICY,
   MODERATION_DECISION,
+  REFUSAL_REASON,
   SENDER_TYPE,
   SESSION_IDENTITY,
+  buildHandoffTrace,
+  buildRefusalTrace,
   localized,
 } from '@sharptalk/types';
 import type { LocalizedText } from '@sharptalk/types';
@@ -30,6 +33,8 @@ import { IssueService } from '../issue/issue.service';
 import type { ChatTurnResponse } from '@sharptalk/types';
 import { OrderService } from '../order/order.service';
 import { SessionService, sessionCacheKey } from '../session/session.service';
+import { effectiveIdentity } from '../session/identity.util';
+import type { EffectiveIdentity } from '../session/identity.util';
 import { CustomerService } from '../customer/customer.service';
 import { HandoffRouterService, TEAM_CHIP_PREFIX } from '../ai-engine/handoff-router.service';
 import type { TeamQuestion } from '../ai-engine/handoff-router.service';
@@ -194,8 +199,14 @@ const SYSTEM_MESSAGES = {
  * H6), or undefined for guests and v1 identities. Only the signed fields and
  * the display name travel — never email or phone.
  */
-export function partnerContextOf(session: Pick<Session, 'identityClaims'>): string | undefined {
-  const claims = session.identityClaims;
+export function partnerContextOf(
+  session: Pick<Session, 'identityClaims'>,
+  /** Pass the identity the caller already resolved; omitted = resolved here with the platform default. */
+  identity: EffectiveIdentity = effectiveIdentity(session),
+): string | undefined {
+  // The claims in force, not the stored ones: lapsed claims must not keep naming
+  // a hotel in the prompt (PLN-261012 SG-03).
+  const claims = identity.claims;
   if (!claims?.signed || !claims.hotelSn) return undefined;
   const name = claims.hotelName?.trim() || 'the partner hotel';
   const code = claims.hotelCode?.trim() ? `, code ${claims.hotelCode.trim()}` : '';
@@ -203,8 +214,11 @@ export function partnerContextOf(session: Pick<Session, 'identityClaims'>): stri
 }
 
 /** Short partner label for alert channels and ticket notes (REQ-261006 H4), or undefined. */
-export function partnerLabelOf(session: Pick<Session, 'identityClaims'>): string | undefined {
-  const claims = session.identityClaims;
+export function partnerLabelOf(
+  session: Pick<Session, 'identityClaims'>,
+  identity: EffectiveIdentity = effectiveIdentity(session),
+): string | undefined {
+  const claims = identity.claims;
   if (!claims?.signed || !claims.hotelSn) return undefined;
   const name = claims.hotelName?.trim() || 'hotel';
   return `${name} (${claims.hotelSn}) · ${claims.role}`;
@@ -375,7 +389,49 @@ export class ChatService {
     }
   }
 
-  async getOrCreateConversation(sessionId: number): Promise<Conversation> {
+  /**
+   * What the session may be treated as right now (PLN-261012 SG-03): signed claims
+   * past the max age read as a guest. Falls back to the platform default when a
+   * positional SessionService double predates `identityOf`.
+   */
+  private identityOf(session: Session): Promise<EffectiveIdentity> {
+    return this.sessionService.identityOf
+      ? this.sessionService.identityOf(session)
+      : Promise.resolve(effectiveIdentity(session));
+  }
+
+  /**
+   * The AI agent that speaks for this session (the pin, or the tenant default),
+   * or null. Never throws: a stamp or a trace must not cost the customer a reply.
+   */
+  private async speakingAgentId(tenantId: number | null, session: Session): Promise<number | null> {
+    if (tenantId == null) return null;
+    try {
+      return (await this.rag.effectiveAgentId?.(tenantId, session.aiAgentId ?? null)) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * What a new conversation is stamped with (PLN-261012 SG-50): the signed hotel
+   * and role — only when the claims are in force — and the effective AI agent.
+   * Public so channels that create their own conversation rows (Messenger) stamp
+   * them the same way.
+   */
+  async conversationStamps(
+    session: Session,
+    identity?: EffectiveIdentity,
+  ): Promise<{ hotelSn: string | null; actorRole: string | null; aiAgentId: number | null }> {
+    const claims = (identity ?? (await this.identityOf(session))).claims;
+    return {
+      hotelSn: claims?.signed && claims.hotelSn ? String(claims.hotelSn).slice(0, 32) : null,
+      actorRole: claims?.signed && claims.role ? String(claims.role).slice(0, 16) : null,
+      aiAgentId: await this.speakingAgentId(session.tenantId ?? null, session),
+    };
+  }
+
+  async getOrCreateConversation(sessionId: number, session?: Session): Promise<Conversation> {
     // Reuse waiting/agent conversations too — a customer replying during or
     // after a handoff must stay in the same thread (FR-S4), not fork a new one.
     const open = await this.convRepo.findOne({
@@ -397,6 +453,9 @@ export class ChatService {
         status: CONVERSATION_STATUS.AI_ACTIVE,
         escalated: 0,
         agentId: null,
+        // Who and what this thread is with, as of now (PLN-261012 SG-50). Callers
+        // that only know the id (older specs) stamp nothing.
+        ...(session ? await this.conversationStamps(session) : {}),
       }),
     );
   }
@@ -628,7 +687,11 @@ export class ChatService {
     }
 
     const tenantId = session.tenantId ?? (await this.resolveTenantId());
-    const conversation = await this.getOrCreateConversation(session.id);
+    // Signed claims past their max age read as a guest from here on (PLN-261012
+    // SG-03): the gate, the order-auth check, the prompt's partner line and the
+    // conversation stamps all use this view, never the stored columns.
+    const identity = await this.identityOf(session);
+    const conversation = await this.getOrCreateConversation(session.id, session);
 
     const userTurn = await this.persist(tenantId, conversation.id, SENDER_TYPE.USER, text, session.language);
     // Files were uploaded before this call and are claimed here, inside the
@@ -942,7 +1005,7 @@ export class ChatService {
     // greeted. Deny rules keep their priority — a matched topic is handed to
     // a human exactly as it would be for an identified visitor.
     const guestGated =
-      session.identityLevel !== SESSION_IDENTITY.VERIFIED &&
+      identity.level !== SESSION_IDENTITY.VERIFIED &&
       (await this.rag.agentGuestPolicy(tenantId, effectiveAgentId)) === GUEST_POLICY.LOGIN_GUIDANCE;
     if (guestGated) {
       // Same bar as the handoff decision below (ESCALATION_CONFIDENCE), measured
@@ -960,9 +1023,24 @@ export class ChatService {
       if (grounded < GUEST_GATE_CONFIDENCE) {
         if (denyAnswersFirst) return denyHandoffNow();
         const body = await this.loginRequiredMessage(tenantId, session.language);
-        await this.persist(tenantId, conversation.id, SENDER_TYPE.SYSTEM, body, session.language);
+        // Why this visitor was turned away, in the closed vocabulary (PLN-261012
+        // SG-50): a visitor whose signed claims LAPSED is told apart from one who
+        // never signed in — the first is fixed by the host re-signing.
+        await this.persist(
+          tenantId,
+          conversation.id,
+          SENDER_TYPE.SYSTEM,
+          body,
+          session.language,
+          buildRefusalTrace(
+            identity.expired ? REFUSAL_REASON.IDENTITY_EXPIRED : REFUSAL_REASON.GUEST_GATE,
+            effectiveAgentId,
+            { grounded, threshold: GUEST_GATE_CONFIDENCE },
+          ),
+        );
         this.logger.log(
-          `guest gate: sign-in prompt conversation=${conversation.id} agent=${effectiveAgentId ?? 'default'}`,
+          `guest gate: sign-in prompt conversation=${conversation.id} agent=${effectiveAgentId ?? 'default'}` +
+            (identity.expired ? ' (identity expired)' : ''),
         );
         return {
           conversationId: String(conversation.id),
@@ -974,9 +1052,19 @@ export class ChatService {
       }
     }
 
-    if (needsOrderData && session.customerId == null && !denyAnswersFirst) {
+    if (needsOrderData && identity.customerId == null && !denyAnswersFirst) {
       const body = sysMsg('authRequired', session.language);
-      await this.persist(tenantId, conversation.id, SENDER_TYPE.SYSTEM, body, session.language);
+      await this.persist(
+        tenantId,
+        conversation.id,
+        SENDER_TYPE.SYSTEM,
+        body,
+        session.language,
+        buildRefusalTrace(
+          identity.expired ? REFUSAL_REASON.IDENTITY_EXPIRED : REFUSAL_REASON.AUTH_GATE,
+          effectiveAgentId,
+        ),
+      );
       return { conversationId: String(conversation.id), reply: { senderType: 'system', body }, escalate: false, needsAuth: true, authReason: 'order' };
     }
 
@@ -991,8 +1079,8 @@ export class ChatService {
     // orders, not guessed from the knowledge base. Only reached once the gate
     // above proved the session is bound to a customer.
     const orderContext =
-      needsOrderData && session.customerId != null
-        ? await this.buildOrderContext(tenantId, session.customerId)
+      needsOrderData && identity.customerId != null
+        ? await this.buildOrderContext(tenantId, identity.customerId)
         : undefined;
 
     // RAG answer (FN-016/017). The shopper's own words go out scrubbed (Stage 5);
@@ -1050,7 +1138,7 @@ export class ChatService {
           history,
           // Guest scope for gated visitors (PLN-261001 v1.1); signed partner
           // context for identified ones (REQ-261006 H6).
-          { guestOnly: guestGated, partnerContext: partnerContextOf(session) },
+          { guestOnly: guestGated, partnerContext: partnerContextOf(session, identity) },
         );
 
     // Mandatory moderation gate (FR-069).
@@ -1388,13 +1476,25 @@ export class ChatService {
       : route.mode === 'email' && route.notice
         ? route.notice
         : sysMsg(reason === 'user_request' ? 'connectingAgent' : 'handoff', session.language);
-    await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, body, session.language, { reason });
+    // The stored reason speaks the closed refusal vocabulary and names the agent
+    // that was speaking (PLN-261012 SG-50); the escalation event below keeps its
+    // own words, which the alert channels and the console already key on.
+    await this.persist(
+      tenantId,
+      conversationId,
+      SENDER_TYPE.SYSTEM,
+      body,
+      session.language,
+      buildHandoffTrace(reason, await this.speakingAgentId(tenantId, session)),
+    );
     // Preview sandbox: show the real handoff notice but never page the agents —
     // no WAITING flip (the bot keeps answering for iterative testing), no alert
     // fan-out, no console-queue entry.
     if (session.channel === 'preview') return { body, needsContactEmail: false };
     await this.markWaiting(conversationId);
-    const region = await this.stampRegion(conversationId, tenantId, session);
+    // Lapsed claims name no hotel on the alert and route no region (SG-03).
+    const identity = await this.identityOf(session);
+    const region = await this.stampRegion(conversationId, tenantId, session, identity);
     // Remember how this thread must be answered: an agent replying tomorrow has
     // no one in the widget to read it (see AgentService.sendMessage).
     if (route.mode === 'email') {
@@ -1410,7 +1510,7 @@ export class ChatService {
       offHoursEmail: route.mode === 'email' ? route.email : undefined,
       issueType: stamp?.issueType,
       issueLabel: stamp?.issueLabel,
-      partnerLabel: partnerLabelOf(session),
+      partnerLabel: partnerLabelOf(session, identity),
       ...regionEventFields(region),
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
@@ -1526,11 +1626,17 @@ export class ChatService {
       : route.mode === 'email' && route.notice
         ? route.notice
         : sysMsg('connectingAgent', session.language);
-    await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, body, session.language, {
-      reason: 'user_request',
-    });
+    await this.persist(
+      tenantId,
+      conversationId,
+      SENDER_TYPE.SYSTEM,
+      body,
+      session.language,
+      buildHandoffTrace('user_request', await this.speakingAgentId(tenantId, session)),
+    );
     await this.markWaiting(conversationId);
-    const region = await this.stampRegion(conversationId, tenantId, session);
+    const identity = await this.identityOf(session);
+    const region = await this.stampRegion(conversationId, tenantId, session, identity);
     // Remember how this thread must be answered: an agent replying tomorrow has no
     // one in the widget to read it (see AgentService.sendMessage). Without this the
     // reply stayed in a chat nobody was looking at, and the idle sweep closed it.
@@ -1545,7 +1651,7 @@ export class ChatService {
       preview: (lastUser?.body ?? '').slice(0, 300),
       targetUserIds: route.targetUserIds,
       offHoursEmail: route.mode === 'email' ? route.email : undefined,
-      partnerLabel: partnerLabelOf(session),
+      partnerLabel: partnerLabelOf(session, identity),
       ...(chosen
         ? { issueLabel: chosen.jobLabel, supportType: chosen.id, supportLabel: chosen.label }
         : {}),
@@ -1566,9 +1672,14 @@ export class ChatService {
     conversationId: number,
     tenantId: number,
     session: Session,
+    /** The identity in force (PLN-261012 SG-03); lapsed claims route no region. */
+    identity?: EffectiveIdentity,
   ): Promise<{ team: string; label: string } | { unmapped: string } | null> {
     try {
-      const { region, unmapped } = await this.handoffRouter.regionLookup(tenantId, session.identityClaims);
+      const { region, unmapped } = await this.handoffRouter.regionLookup(
+        tenantId,
+        (identity ?? (await this.identityOf(session))).claims,
+      );
       if (!region) return unmapped ? { unmapped } : null;
       await this.convRepo.update({ id: conversationId }, { supportRegion: region.team });
       return { team: region.team, label: region.label };

@@ -38,8 +38,10 @@ import {
   resolvePrivacyNotice,
   resolvePrivacyProfile,
 } from '@sharptalk/types';
-import type { ResolvedPrivacyNotice, SessionLanguage } from '@sharptalk/types';
+import type { IdentityPolicy, ResolvedPrivacyNotice, SessionLanguage } from '@sharptalk/types';
 import { evaluateWidgetAccess } from '@sharptalk/types';
+import { IdentityPolicyCache, effectiveIdentity } from './identity.util';
+import type { EffectiveIdentity } from './identity.util';
 import { getRequestContext } from '../../global/middleware/request-context.middleware';
 
 /** A suspended tenant serves nobody — widget included (REQ-260929 G6). */
@@ -123,6 +125,16 @@ const OPEN_COUNT_CEILING = 50;
 @Injectable()
 export class SessionService {
   private readonly logger = new Logger(SessionService.name);
+
+  /** Tenant `identity_policy`, read through a short cache (PLN-261012 SG-03). */
+  private readonly identityPolicies = new IdentityPolicyCache(async (tenantId) =>
+    (
+      await this.tenantRepo.findOne({
+        where: { id: tenantId },
+        select: { id: true, identityPolicy: true },
+      })
+    )?.identityPolicy ?? null,
+  );
 
   constructor(
     @InjectRepository(Session) private readonly sessionRepo: Repository<Session>,
@@ -490,6 +502,13 @@ export class SessionService {
    */
   async requireCustomer(token: string, opts?: { verified?: boolean }): Promise<Session> {
     const session = await this.findByToken(token);
+    // Signed claims past their max age are no longer a login (PLN-261012 SG-03):
+    // the explicit code tells the widget to ask the host to sign again, instead of
+    // the generic 401/403 it would read as "this person is not signed in".
+    if ((await this.identityOf(session)).expired) {
+      this.logger.warn(`identity expired: session=${session.id} tenant=${session.tenantId}`);
+      throw new BusinessException(ERROR_CODE.IDENTITY_EXPIRED, HttpStatus.UNAUTHORIZED);
+    }
     if (session.customerId == null) {
       throw new BusinessException(ERROR_CODE.UNAUTHORIZED, HttpStatus.UNAUTHORIZED);
     }
@@ -497,6 +516,25 @@ export class SessionService {
       throw new BusinessException(ERROR_CODE.FORBIDDEN, HttpStatus.FORBIDDEN);
     }
     return session;
+  }
+
+  /**
+   * The tenant's identity policy (`tenants.identity_policy`), or null when it never
+   * set one. Cached for a few seconds per process — see IdentityPolicyCache.
+   */
+  async identityPolicyFor(tenantId: number | null | undefined): Promise<IdentityPolicy | null> {
+    return this.identityPolicies.get(tenantId);
+  }
+
+  /**
+   * What this session may be treated as right now (PLN-261012 SG-03): signed
+   * claims older than the max age read as a guest. The one place the policy and
+   * the clock meet the session — callers that DECIDE from identity ask here.
+   * A session without signed claims has nothing to age, so it costs no tenant read.
+   */
+  async identityOf(session: Session): Promise<EffectiveIdentity> {
+    if (!session.identityClaims?.signed) return effectiveIdentity(session);
+    return effectiveIdentity(session, await this.identityPolicyFor(session.tenantId));
   }
 
   /** Shorthand for the common case: the bound customer's id. */

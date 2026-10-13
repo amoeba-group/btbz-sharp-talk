@@ -18,6 +18,7 @@ import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { Public } from '../../global/decorator/public.decorator';
 import { SessionToken } from '../../global/decorator/session-token.decorator';
+import type { Session } from '../session/entity/session.entity';
 
 /** Widget-facing chat endpoints (public; session-token identified). */
 @ApiTags('Chat')
@@ -35,7 +36,8 @@ export class ChatController {
   @ApiOperation({ summary: 'Scenario button/quick-reply → deterministic scripted reply (FR-S1)' })
   async scenario(@Body() body: ScenarioRequest) {
     const session = await this.sessionService.findByToken(body.session_token);
-    return this.scenarioService.handle(session, body.action, body.text);
+    const turn = await this.scenarioService.handle(session, body.action, body.text);
+    return { ...turn, ...(await this.expiryFlag(session)) };
   }
 
   @Post('message')
@@ -47,9 +49,10 @@ export class ChatController {
       throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.BAD_REQUEST);
     }
     const session = await this.sessionService.findByToken(body.session_token);
-    return this.chatService.handleUserMessage(session, body.message, {
+    const turn = await this.chatService.handleUserMessage(session, body.message, {
       attachmentIds: body.attachment_ids,
     });
+    return { ...turn, ...(await this.expiryFlag(session)) };
   }
 
   @Post('contact-email')
@@ -87,8 +90,9 @@ export class ChatController {
     // Latest (not open-only) so an ended thread reports status 'ended' — the
     // widget renders its end-of-conversation notice off that status.
     const conversation = await this.chatService.findLatestConversation(session.id);
+    const expired = await this.expiryFlag(session);
     if (!conversation) {
-      return { conversationId: null, status: 'none', messages: [] };
+      return { conversationId: null, status: 'none', messages: [], ...expired };
     }
     const after = afterId != null && afterId !== '' ? Number(afterId) : undefined;
     const messages = await this.chatService.listMessages(conversation.id, {
@@ -100,7 +104,10 @@ export class ChatController {
     const attachments = await this.attachmentService.findByMessageIds(
       messages.map((m) => Number(m.id)),
     );
-    return ChatMapper.toConversationResponse(conversation, messages, senderNames, attachments);
+    return {
+      ...ChatMapper.toConversationResponse(conversation, messages, senderNames, attachments),
+      ...expired,
+    };
   }
 
   @Post('escalate')
@@ -111,5 +118,15 @@ export class ChatController {
     // Team routing (PLN-261007): without `support_type` the tenant's team
     // question may come back instead of a handoff — the widget renders it.
     return this.chatService.escalate(session, body.conversation_id, body.support_type?.trim() || undefined);
+  }
+
+  /**
+   * `{ identityExpired: true }` when the session's signed claims have lapsed
+   * (PLN-261012 SG-03), otherwise nothing — a non-error flag, so an older widget
+   * ignores it and every other tenant gets the response it always had. The widget
+   * turns it into the `identity-expired` event the host re-signs on.
+   */
+  private async expiryFlag(session: Session): Promise<{ identityExpired?: true }> {
+    return (await this.sessionService.identityOf(session)).expired ? { identityExpired: true } : {};
   }
 }

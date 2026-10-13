@@ -38,6 +38,7 @@ import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { AiConfigRevisionService, RecordRevisionMeta } from './ai-config-revision.service';
+import { IdentityPolicyCache, effectiveIdentity } from '../session/identity.util';
 
 /** TTL for the per-tenant persona/rules cache (PERF-11) — read on every RAG turn. */
 const PERSONA_CACHE_TTL_SEC = 60;
@@ -222,6 +223,13 @@ const GUIDANCE_NOTICE_MAX = 500;
 /** Tenant AI behavior config (FR-047 / FN-040): persona, response rules, scenario buttons. */
 @Injectable()
 export class AiConfigService {
+  /** Tenant `identity_policy` for the scenario audience check (PLN-261012 SG-03). */
+  private readonly identityPolicies = new IdentityPolicyCache(async (tenantId) =>
+    (
+      await this.tenantRepo.findOne({ where: { id: tenantId }, select: { id: true, identityPolicy: true } })
+    )?.identityPolicy ?? null,
+  );
+
   constructor(
     @InjectRepository(TenantAiConfig) private readonly configRepo: Repository<TenantAiConfig>,
     @InjectRepository(AiAgent) private readonly agentRepo: Repository<AiAgent>,
@@ -546,7 +554,14 @@ export class AiConfigService {
     // Audience (PLN-261001 v1.1): a button marked for guests disappears once
     // the session is identified, and vice versa. Absent = everyone, so a set
     // saved before the field existed is served exactly as before.
-    const verified = session.identityLevel === SESSION_IDENTITY.VERIFIED;
+    // Lapsed signed claims read as a guest, so a guest-audience button comes back
+    // instead of the partner menu of someone no longer signed in (PLN-261012 SG-03).
+    // Sessions without signed claims have nothing to age and cost no tenant read.
+    const verified =
+      effectiveIdentity(
+        session,
+        session.identityClaims?.signed ? await this.identityPolicies.get(tenantId) : null,
+      ).level === SESSION_IDENTITY.VERIFIED;
     const scoped = buttons
       .filter((b) => b.enabled)
       .filter((b) => {

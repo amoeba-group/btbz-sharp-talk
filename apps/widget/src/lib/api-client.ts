@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { identityExpiry } from './identity-expiry';
 
 /**
  * API base, resolved at RUNTIME (PLN-260819 S3).
@@ -123,6 +124,9 @@ function unwrapError(err: unknown): Error {
     const wrapped = new Error(msg) as Error & { status?: number; code?: string };
     wrapped.status = err.response?.status;
     if (e && typeof e !== 'string') wrapped.code = e.code;
+    // E5096 IDENTITY_EXPIRED: the call was refused because the host's signed identity
+    // lapsed (PLN-261012 SG-03). Besides failing like any 401, tell the host to sign again.
+    if (wrapped.code === 'E5096') identityExpiry.reportExpired();
     return wrapped;
   }
   return err instanceof Error ? err : new Error('Unknown error');

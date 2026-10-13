@@ -39,6 +39,8 @@ describe('MessengerIngestService', () => {
     attachmentStore?: jest.Mock;
     /** Effective consent the journey event checks (REQ-261008 F3). */
     consent?: string;
+    /** What ChatService.conversationStamps answers (PLN-261012 SG-50); absent = a double that predates it. */
+    stamps?: { hotelSn: string | null; actorRole: string | null; aiAgentId: number | null };
   }) {
     const channel = {
       id: 10,
@@ -132,6 +134,7 @@ describe('MessengerIngestService', () => {
       ),
       findOpenConversation: jest.fn(async () => (opts.openConversation ?? null) as Conversation | null),
       escalate: jest.fn(async () => undefined),
+      ...(opts.stamps ? { conversationStamps: jest.fn(async () => opts.stamps) } : {}),
     } as unknown as ChatService;
 
     const sessionService = {
@@ -186,6 +189,21 @@ describe('MessengerIngestService', () => {
       threadUpdates,
     };
   }
+
+  it('stamps the channel conversation with the effective agent, like a widget one (PLN-261012 SG-50)', async () => {
+    const h = build({ stamps: { hotelSn: null, actorRole: null, aiAgentId: 7 } });
+    await h.service.ingestOne(h.channel, inbound);
+
+    expect(h.savedConversations[0]).toMatchObject({ channel: 'telegram', hotelSn: null, actorRole: null, aiAgentId: 7 });
+  });
+
+  it('a ChatService double that predates the stamps still gets its conversation created unstamped', async () => {
+    const h = build({});
+    await h.service.ingestOne(h.channel, inbound);
+
+    expect(h.savedConversations[0]).toBeDefined();
+    expect(h.savedConversations[0]).not.toHaveProperty('aiAgentId');
+  });
 
   it('runs the chat pipeline and maps the inbound message', async () => {
     const h = build({});

@@ -205,4 +205,32 @@ describe('AnalyticsService — conversation history', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (messages[1] as any).retrievalTrace = { citations: [], confidence: 0.56 };
   });
+
+  it('keeps the refusal reason and the speaking agent from a refusal turn (PLN-261012 SG-50) and nothing else', async () => {
+    const svc = build();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (messages[1] as any).retrievalTrace = {
+      reason: 'guest_gate',
+      agentId: 12,
+      grounded: 0.2,
+      threshold: 0.45,
+      query: 'must never be rendered',
+    };
+    const detail = await svc.conversationDetail(1, 77);
+    const msgs = detail!.messages as Array<Record<string, unknown>>;
+    expect(msgs[1].trace).toEqual({ reason: 'guest_gate', agentId: 12 });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (messages[1] as any).retrievalTrace = { citations: [], confidence: 0.56 };
+  });
+
+  it('drops an agentId that is not a number', async () => {
+    const svc = build();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (messages[1] as any).retrievalTrace = { reason: 'moderation', agentId: '12; drop table' };
+    const detail = await svc.conversationDetail(1, 77);
+    const msgs = detail!.messages as Array<Record<string, unknown>>;
+    expect(msgs[1].trace).toEqual({ reason: 'moderation' });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (messages[1] as any).retrievalTrace = { citations: [], confidence: 0.56 };
+  });
 });

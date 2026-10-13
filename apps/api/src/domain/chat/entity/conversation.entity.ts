@@ -10,6 +10,8 @@ import { bigintTransformer } from '../../../global/util/transformers';
 // Queue pinning (PLN-260826) — mirrors sql/260826-conversation-pin.sql.
 @Index('idx_conv_tenant_pinned', ['tenantId', 'pinnedAt'])
 @Index('idx_conv_tenant_ended', ['tenantId', 'endedAt'])
+// Per-hotel history / pilot analytics (PLN-261012 SG-50) — mirrors sql/261016-conversation-stamps.sql.
+@Index('idx_conv_tenant_hotel_created', ['tenantId', 'hotelSn', 'createdAt'])
 @Entity('conversations')
 export class Conversation {
   @PrimaryGeneratedColumn({ type: 'bigint' })
@@ -88,6 +90,23 @@ export class Conversation {
 
   @Column({ name: 'pinned_by', type: 'bigint', nullable: true, transformer: bigintTransformer })
   pinnedBy: number | null;
+
+  /**
+   * Who and what this conversation was with, stamped when it was created from the
+   * session (PLN-261012 SG-50, REQ D-13). `hotelSn` / `actorRole` are the SIGNED
+   * claims and only when they were in force (not lapsed) — a guest, a v1 identity
+   * or an expired claim leaves them null. `aiAgentId` is the effective agent (the
+   * pin, or the tenant default). A guest who signs in later has the nulls filled
+   * once by `identify`; a stamp is never overwritten.
+   */
+  @Column({ name: 'hotel_sn', type: 'varchar', length: 32, nullable: true })
+  hotelSn: string | null;
+
+  @Column({ name: 'actor_role', type: 'varchar', length: 16, nullable: true })
+  actorRole: string | null;
+
+  @Column({ name: 'ai_agent_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
+  aiAgentId: number | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -144,7 +144,9 @@ export class ScenarioService {
       };
     }
 
-    const conversation = await this.chatService.getOrCreateConversation(session.id);
+    // The session rides along so a conversation started from a chip is stamped
+    // (hotel, role, agent) like one started by typing (PLN-261012 SG-50).
+    const conversation = await this.chatService.getOrCreateConversation(session.id, session);
 
     await this.msgRepo.save(
       this.msgRepo.create({

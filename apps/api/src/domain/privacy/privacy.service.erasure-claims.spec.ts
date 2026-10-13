@@ -89,7 +89,20 @@ describe('PrivacyService erasure clears identify v2 claims (SG-05)', () => {
 
     expect(h.sessionRepo.update).toHaveBeenCalledWith(
       { customerId: 42 },
-      { customerId: null, identityClaims: null },
+      expect.objectContaining({ customerId: null, identityClaims: null }),
+    );
+  });
+
+  it('puts the identity LEVEL back to guest too — an unbound session must not stay "verified" (S1 follow-up)', async () => {
+    const h = build();
+
+    await h.svc.handleCustomerRedact('lan@example.vn', 'gid://shopify/Customer/1');
+
+    // Without this the session had no customer but still read as verified: it
+    // passed the guest gate and was served the partner scenario menu.
+    expect(h.sessionRepo.update).toHaveBeenCalledWith(
+      { customerId: 42 },
+      { customerId: null, identityClaims: null, identityLevel: 'guest' },
     );
   });
 

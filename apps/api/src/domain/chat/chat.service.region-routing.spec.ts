@@ -47,7 +47,7 @@ describe('ChatService — hotel region on hand-off', () => {
       {} as never, // CustomerService
       {} as never, // RedisService
     );
-    const claims = { hotelSn: '1721', role: 'manager', signed: true, province: 'Đà Nẵng', verifiedAt: 'x' };
+    const claims = { hotelSn: '1721', role: 'manager', signed: true, province: 'Đà Nẵng', verifiedAt: new Date().toISOString() };
     const session = {
       id: 5,
       tenantId: 1,

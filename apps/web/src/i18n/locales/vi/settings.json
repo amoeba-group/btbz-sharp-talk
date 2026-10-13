@@ -854,6 +854,24 @@
       "delete": "Đã xóa ảnh chụp"
     }
   },
+  "identityPolicy": {
+    "title": "Chính sách đăng nhập có chữ ký (SSO)",
+    "description": "Thời gian tin cậy thông tin đăng nhập do máy chủ của bạn ký cho widget, và có chấp nhận đăng nhập không kèm khách sạn và vai trò hay không.",
+    "maxAge": "Tin cậy đăng nhập đã ký trong",
+    "maxAgeDefault": "Mặc định của nền tảng ({{hours}} giờ)",
+    "maxAgeDefaultNever": "Mặc định của nền tảng (không hết hạn)",
+    "maxAgeCustom": "Tùy chỉnh",
+    "hours": "giờ",
+    "maxAgeHint": "Sau thời gian này, khách truy cập được xem là khách vãng lai cho đến khi ứng dụng của bạn ký lại. Widget sẽ phát sự kiện identity-expired để ShopTalk.identify() chạy ngầm. Từ 1 đến 720 giờ.",
+    "refuseV1": "Từ chối đăng nhập không có khách sạn và vai trò (v1)",
+    "refuseV1Hint": "Chữ ký v1 không bao giờ hết hạn và không cho biết người dùng thao tác cho khách sạn nào, với vai trò gì. Hãy bật khi ứng dụng của bạn đã ký kèm claims (v2).",
+    "inForce": "Đang áp dụng: {{hours}} giờ",
+    "inForceNever": "Đang áp dụng: không hết hạn",
+    "masterOnly": "Chỉ tài khoản chủ (master) mới đổi được mục này.",
+    "invalidHours": "Nhập số giờ nguyên từ 1 đến 720.",
+    "saved": "Đã lưu chính sách đăng nhập",
+    "saveError": "Không lưu được chính sách đăng nhập"
+  },
   "widgetAccess": {
     "title": "Giới hạn hiển thị (chế độ thử nghiệm)",
     "on": "Đang bật",

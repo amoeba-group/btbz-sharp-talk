@@ -243,6 +243,23 @@ export interface EmbedSettings {
   shopDomain: string | null;
 }
 
+/**
+ * How signed identity from `identify` is treated (PLN-261012 SG-03 / SG-04). `maxAgeHours`
+ * and `refuseV1` are what is STORED (null / false = never configured); `effectiveHours` is
+ * what the gate actually uses (null = no expiry at all), `platformDefaultHours` the fallback.
+ */
+export interface IdentityPolicySettings {
+  maxAgeHours: number | null;
+  refuseV1: boolean;
+  effectiveHours: number | null;
+  platformDefaultHours: number | null;
+}
+
+export interface IdentityPolicyDraft {
+  maxAgeHours: number | null;
+  refuseV1: boolean;
+}
+
 export const settingsService = {
   credentials: () => apiGet<CredentialStatus[]>('/tenants/me/credentials'),
   embedSettings: () => apiGet<EmbedSettings>('/tenants/embed-settings'),
@@ -261,6 +278,13 @@ export const settingsService = {
       urls: body.urls,
     }),
   rotateWidgetAccessKey: () => apiPost<{ key: string }>('/tenants/widget-access/key', {}),
+  // Signed-identity policy (PLN-261012 SG-03/SG-04). Sent whole, like the access rules.
+  identityPolicy: () => apiGet<IdentityPolicySettings>('/tenants/identity-policy'),
+  saveIdentityPolicy: (body: IdentityPolicyDraft) =>
+    apiPatch<IdentityPolicySettings>('/tenants/identity-policy', {
+      max_age_hours: body.maxAgeHours,
+      refuse_v1: body.refuseV1,
+    }),
   widgetSettings: () => apiGet<WidgetSettings>('/tenants/widget-settings'),
   storefront: () => apiGet<Storefront>('/tenants/storefront'),
   notificationChannels: () => apiGet<NotificationChannels>('/tenants/notification-channels'),

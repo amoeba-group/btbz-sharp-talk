@@ -624,6 +624,9 @@ CREATE TABLE `conversations` (
   `csat_rated_at` datetime DEFAULT NULL,
   `pinned_at` datetime(6) DEFAULT NULL,
   `pinned_by` bigint DEFAULT NULL,
+  `hotel_sn` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `actor_role` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ai_agent_id` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_conv_tenant` (`tenant_id`),
   KEY `idx_conv_session` (`session_id`),
@@ -632,7 +635,8 @@ CREATE TABLE `conversations` (
   KEY `idx_conv_tenant_status_id` (`tenant_id`,`status`,`id`),
   KEY `idx_conv_idle` (`status`,`idle_prompt_at`),
   KEY `idx_conv_tenant_pinned` (`tenant_id`,`pinned_at`),
-  KEY `idx_conv_tenant_ended` (`tenant_id`,`ended_at`)
+  KEY `idx_conv_tenant_ended` (`tenant_id`,`ended_at`),
+  KEY `idx_conv_tenant_hotel_created` (`tenant_id`,`hotel_sn`,`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `customers`;
@@ -1783,6 +1787,7 @@ CREATE TABLE `tenants` (
   `widget_access` json DEFAULT NULL,
   `widget_access_key` varbinary(512) DEFAULT NULL,
   `embed_secret` varbinary(512) DEFAULT NULL,
+  `identity_policy` json DEFAULT NULL,
   `workflow_mode` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'base',
   `usage_guides_enabled` tinyint(1) NOT NULL DEFAULT '0',
   `commerce_enabled` tinyint(1) NOT NULL DEFAULT '1',

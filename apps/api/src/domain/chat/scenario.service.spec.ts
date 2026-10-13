@@ -86,6 +86,12 @@ describe('ScenarioService consent gate', () => {
     expect(result.followUps.length).toBeGreaterThan(0);
   });
 
+  it('hands the session to getOrCreateConversation so a chip-started thread is stamped like a typed one (SG-50)', async () => {
+    effectiveConsentFor.mockResolvedValue(CONSENT_STATE.GRANTED);
+    await svc.handle(session, 'cancel_refund');
+    expect(getOrCreateConversation).toHaveBeenCalledWith(9, session);
+  });
+
   it('records the tapped chip as an Inquiry step, like a typed message (REQ-261008 F3)', async () => {
     effectiveConsentFor.mockResolvedValue(CONSENT_STATE.GRANTED);
     await svc.handle(session, 'shipping_policy');

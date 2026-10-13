@@ -10,6 +10,9 @@ describe('AiConfigService — guest gate configuration', () => {
     buttons?: ScenarioButton[];
     identityLevel?: string;
     agentRow?: Record<string, unknown> | null;
+    /** Signed claims on the session (identify v2), and the tenant's identity policy. */
+    claims?: Record<string, unknown> | null;
+    policy?: unknown;
   } = {}) {
     const session = {
       id: 9,
@@ -17,6 +20,7 @@ describe('AiConfigService — guest gate configuration', () => {
       aiAgentId: null,
       language: 'VI',
       identityLevel: opts.identityLevel ?? 'guest',
+      identityClaims: opts.claims ?? null,
     };
     const sessionRepo = { findOne: jest.fn(async () => session) };
     const configRepo = {
@@ -27,7 +31,7 @@ describe('AiConfigService — guest gate configuration', () => {
       configRepo as never,
       agentRepo as never,
       sessionRepo as never,
-      { findOne: jest.fn(async () => ({ id: 1 })) } as never,
+      { findOne: jest.fn(async () => ({ id: 1, identityPolicy: opts.policy ?? null })) } as never,
       { available: () => false, get: jest.fn(), set: jest.fn(), del: jest.fn() } as never,
       { record: jest.fn() } as never,
       {} as never,
@@ -66,6 +70,42 @@ describe('AiConfigService — guest gate configuration', () => {
       });
       const res = await h.svc.getScenarioForSession('tok');
       expect(res.scenarioButtons.map((b) => b.id)).toEqual(['settlement', 'contact']);
+    });
+
+    describe('lapsed signed claims read as a guest (PLN-261012 SG-03)', () => {
+      const HOUR = 3_600_000;
+      const signed = (ageMs: number) => ({
+        hotelSn: '1721',
+        role: 'receptionist',
+        signed: true,
+        verifiedAt: new Date(Date.now() - ageMs).toISOString(),
+      });
+      const buttons = [btn('login', 'guest'), btn('settlement', 'verified'), btn('contact', 'all')];
+
+      it('claims in force keep the partner menu', async () => {
+        const h = build({ buttons, identityLevel: 'verified', claims: signed(HOUR) });
+        const res = await h.svc.getScenarioForSession('tok');
+        expect(res.scenarioButtons.map((b) => b.id)).toEqual(['settlement', 'contact']);
+      });
+
+      it('claims past the default 8 h bring the guest menu back (sign in again), not the partner one', async () => {
+        const h = build({ buttons, identityLevel: 'verified', claims: signed(9 * HOUR) });
+        const res = await h.svc.getScenarioForSession('tok');
+        expect(res.scenarioButtons.map((b) => b.id)).toEqual(['login', 'contact']);
+      });
+
+      it('the tenant policy sets the limit', async () => {
+        const longer = build({ buttons, identityLevel: 'verified', claims: signed(9 * HOUR), policy: { maxAgeHours: 12 } });
+        const shorter = build({ buttons, identityLevel: 'verified', claims: signed(3 * HOUR), policy: { maxAgeHours: 2 } });
+        expect((await longer.svc.getScenarioForSession('tok')).scenarioButtons.map((b) => b.id)).toEqual(['settlement', 'contact']);
+        expect((await shorter.svc.getScenarioForSession('tok')).scenarioButtons.map((b) => b.id)).toEqual(['login', 'contact']);
+      });
+
+      it('a platform login (verified, no claims) is never aged', async () => {
+        const h = build({ buttons, identityLevel: 'verified', claims: null });
+        const res = await h.svc.getScenarioForSession('tok');
+        expect(res.scenarioButtons.map((b) => b.id)).toEqual(['settlement', 'contact']);
+      });
     });
 
     it('the save-path sanitizer keeps a narrowed audience and drops unknown values', () => {

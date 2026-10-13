@@ -241,3 +241,43 @@ test('app mode is read from the URL', async () => {
   const b = await load({ location: { search: '?embed=1' } });
   assert.equal(b.mod.isAppMode(), false);
 });
+
+test('several subscribers share ONE window listener: each handler sees a host message once (PLN-261012)', async () => {
+  const parent = { postMessage() {} };
+  const { mod, listeners } = await load({ parent });
+  const a = [];
+  const b = [];
+  const c = [];
+  mod.onHostMessage((m) => a.push(m));
+  mod.onHostMessage((m) => b.push(m));
+  const stopC = mod.onHostMessage((m) => c.push(m));
+
+  // The test window delivers an event to every listener it holds, as a browser does.
+  assert.equal(listeners.length, 1, 'one window listener, not one per subscriber');
+  listeners.forEach((fn) => fn({ source: parent, origin: 'https://shop.example', data: { type: 'ivy:identify' } }));
+
+  // Before the fix: three subscribers = three listeners = every handler called three times.
+  assert.deepEqual([a.length, b.length, c.length], [1, 1, 1]);
+
+  // The listener goes away with the LAST subscriber, not the first to leave.
+  stopC();
+  assert.equal(listeners.length, 1);
+});
+
+test('the window listener is removed when the last subscriber leaves, and comes back for the next', async () => {
+  const parent = { postMessage() {} };
+  const { mod, listeners } = await load({ parent });
+  const seen = [];
+
+  const stop1 = mod.onHostMessage((m) => seen.push(m));
+  const stop2 = mod.onHostMessage((m) => seen.push(m));
+  stop1();
+  assert.equal(listeners.length, 1);
+  stop2();
+  assert.equal(listeners.length, 0);
+
+  mod.onHostMessage((m) => seen.push(m));
+  assert.equal(listeners.length, 1);
+  listeners.forEach((fn) => fn({ source: parent, origin: 'https://shop.example', data: { type: 'ivy:ready' } }));
+  assert.equal(seen.length, 1);
+});

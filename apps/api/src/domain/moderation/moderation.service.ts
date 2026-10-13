@@ -220,24 +220,41 @@ export class ModerationService {
     text: string,
     ruleId?: number,
   ): Promise<ModerateResult> {
-    await this.logRepo
-      .save(
-        this.logRepo.create({
-          tenantId: input.tenantId,
-          conversationId: input.conversationId ?? null,
-          authorType: input.authorType,
-          authorId: input.authorId ?? null,
-          // The DECISION is made on the original text above; only this stored
-          // copy is minimized (PLN-260920 P4). A moderation record has to say
-          // what kind of message tripped a rule, not carry the shopper's
-          // address and phone number for a year.
-          excerpt: scrubPii(truncate(input.text, 512)).text,
-          ruleId: ruleId ?? null,
-          action,
-          decision,
-        }),
-      )
-      .catch(() => undefined);
+    const record = () =>
+      this.logRepo.create({
+        tenantId: input.tenantId,
+        conversationId: input.conversationId ?? null,
+        authorType: input.authorType,
+        authorId: input.authorId ?? null,
+        // The DECISION is made on the original text above; only this stored
+        // copy is minimized (PLN-260920 P4). A moderation record has to say
+        // what kind of message tripped a rule, not carry the shopper's
+        // address and phone number for a year.
+        excerpt: scrubPii(truncate(input.text, 512)).text,
+        ruleId: ruleId ?? null,
+        action,
+        decision,
+      });
+    // The audit row must not vanish silently (PLN-261012 SG-50, REQ D-13): this
+    // write used to be swallowed, so a database hiccup left a delivered or blocked
+    // message with no moderation record and nothing anywhere said so. One retry
+    // covers a transient failure (deadlock, dropped connection); after that it is
+    // logged at ERROR with the ids — never the excerpt, which is the customer's
+    // text. The decision itself is already made and is returned either way: a
+    // failing log must neither block a clean message nor unblock a blocked one.
+    try {
+      await this.logRepo.save(record());
+    } catch (first) {
+      try {
+        await this.logRepo.save(record());
+      } catch (second) {
+        this.logger.error(
+          `moderation_logs write failed after retry (tenant ${input.tenantId}, ` +
+            `conversation ${input.conversationId ?? 'n/a'}, decision ${decision}, action ${action}): ` +
+            `${(second as Error).message} (first attempt: ${(first as Error).message})`,
+        );
+      }
+    }
     return { decision, action, text, ruleId };
   }
 }

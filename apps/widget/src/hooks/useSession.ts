@@ -5,6 +5,7 @@ import { getShopDomain, getStoredSessionToken } from '../lib/api-client';
 import { applyTheme, cacheTheme } from '../lib/theme';
 import { apiOrigin } from '../lib/api-client';
 import { clearStoredConsent, getStoredConsentRecord, setStoredConsent } from '../lib/consent';
+import { identityExpiry } from '../lib/identity-expiry';
 import type { SessionResponse } from '../lib/types';
 import i18n, {
   LANG_STORAGE_KEY,
@@ -117,9 +118,25 @@ export function consentInfoFromSession(res: SessionResponse): ConsentInfo {
  * one, and skipping it left signed-in shoppers with a hidden banner AND a
  * consent-blocked chat ("cannot process chat messages until you accept…").
  */
-export function adoptSessionConsent(res: SessionResponse): void {
+export function adoptSessionConsent(
+  res: SessionResponse,
+  /**
+   * `replay: false` for a session that belongs to a DIFFERENT data subject than the one
+   * who consented in this browser (a fork to another person, a sign-out): the stored
+   * choice is dropped and the notice is shown again (PLN-261012 S1 follow-up).
+   */
+  opts: { replay?: boolean } = {},
+): void {
   const { setConsentInfo } = useWidgetStore.getState();
   const consentInfo = consentInfoFromSession(res);
+  if (opts.replay === false && consentInfo.state === 'pending') {
+    // Consent is per data subject: the previous person's yes is not this one's. Drop the
+    // record so neither this adoption nor the next page load replays it, and let the
+    // banner ask.
+    clearStoredConsent();
+    setConsentInfo(consentInfo);
+    return;
+  }
   const stored = getStoredConsentRecord();
   const replay =
     consentInfo.state === 'pending' &&
@@ -304,6 +321,9 @@ export function useEnsureSession() {
         }
         setAuthenticated(!!res.authenticated);
         if (res.customerName) setCustomerName(res.customerName);
+        // A resumed session may already be past its signed identity's max age, or about
+        // to be: tell the host to sign again (PLN-261012 SG-03).
+        identityExpiry.observe(res);
 
         // Server-side consent is the source of truth for the notice banner
         // (an outdated notice re-prompts regardless of the local cache); a

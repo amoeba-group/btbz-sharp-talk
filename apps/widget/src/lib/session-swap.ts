@@ -14,6 +14,21 @@ import type { SessionResponse } from './types';
  * cache, the Zustand store, the API) come in as `ports`, so the ORDER of the
  * steps — the part that matters — is testable on its own.
  */
+/** How a session is taken up. */
+export interface AdoptOptions {
+  /**
+   * Replay the consent choice this BROWSER stored onto the session (the default for the
+   * first load: an anonymous page load gets a fresh, pending session every time).
+   *
+   * False whenever the session is not the one that choice was made for — a different
+   * person signed in, or the previous one signed out. Consent is per data subject
+   * (PLN-261012 S1 follow-up; Go2Joy / PDPL): replaying the previous person's yes onto
+   * the next one's session would process their messages on consent they never gave.
+   * The notice is shown again; the stored record is dropped so it cannot come back.
+   */
+  replayConsent?: boolean;
+}
+
 export interface SessionSwapPorts {
   /** Forget everything fetched for the previous session (the React Query cache). */
   clearCache(): void;
@@ -29,7 +44,7 @@ export interface SessionSwapPorts {
    * the token. The token is what re-keys the panels, so everything they read
    * must already be in place when it changes.
    */
-  adopt(res: SessionResponse): void;
+  adopt(res: SessionResponse, opts?: AdoptOptions): void;
   /** Open a guest session for this page (same inputs as the first ensure). */
   startGuest(): Promise<SessionResponse>;
   /** Ask the API to end the identity binding of `token` (`POST /public/embed/logout`). */
@@ -49,7 +64,10 @@ export function isForkedSession(sentToken: string, res: Pick<SessionResponse, 's
 /** Switch to the session the API created for a new person or hotel. */
 export function adoptForkedSession(res: SessionResponse, ports: SessionSwapPorts): void {
   ports.clearCache();
-  ports.adopt(res);
+  // The API already decided consent: carried when the SAME person switched hotel or
+  // role, pending when a different one signed in. Either way the browser's stored
+  // choice must not be replayed on top of that decision.
+  ports.adopt(res, { replayConsent: false });
 }
 
 /**
@@ -73,6 +91,7 @@ export async function resetToGuest(oldToken: string | null, ports: SessionSwapPo
     ports.startGuest(),
   ]);
   if (fresh.status !== 'fulfilled' || !fresh.value?.sessionToken) return false;
-  ports.adopt(fresh.value);
+  // Whoever is signed in next is not necessarily who consented in this browser.
+  ports.adopt(fresh.value, { replayConsent: false });
   return true;
 }

@@ -777,7 +777,7 @@ export function LiveChatPage() {
                     )}
                   </div>
                   {/* Which hotel this partner acts for (REQ-261006 W6). */}
-                  {s.identityClaims && <PartnerLine claims={s.identityClaims} />}
+                  {s.identityClaims && <PartnerLine claims={s.identityClaims} expired={s.identityExpired} />}
                   {/* Badges wrap onto a second line: a thread can carry team, region,
                       channel and status at once, and one row ran past the list edge. */}
                   <div className="mt-0.5 flex items-start justify-between gap-2">
@@ -939,7 +939,11 @@ export function LiveChatPage() {
                 {/* Partner context (REQ-261006 W6): role @ hotel (key), signed
                     or not, when verified, and the jump into the host system. */}
                 {convo?.identityClaims && (
-                  <PartnerHeader claims={convo.identityClaims} partnerLink={convo.partnerLink} />
+                  <PartnerHeader
+                    claims={convo.identityClaims}
+                    partnerLink={convo.partnerLink}
+                    expired={convo.identityExpired}
+                  />
                 )}
                 <div className="flex flex-wrap gap-2">
                   <Button

@@ -4,6 +4,7 @@ import {
   ArrayNotEmpty,
   IsArray,
   IsIn,
+  IsNumber,
   IsObject,
   IsOptional,
   IsString,
@@ -313,4 +314,18 @@ export class UpdateEmbedOriginsRequest {
   @MaxLength(255, { each: true })
   @ArrayMaxSize(50)
   origins: string[];
+}
+
+/**
+ * PLN-261012 SG-03/SG-04 — how this tenant's signed identity is treated. Sent whole:
+ * both absent (or `max_age_hours: null` with `refuse_v1: false`) clears the policy back
+ * to the platform default. The range check lives in the service so a bad value answers
+ * with its own error code (E5097) instead of a generic validation failure.
+ */
+export class UpdateIdentityPolicyRequest {
+  /** Whole hours (1..720) signed claims stay trusted; null/absent = platform default. */
+  @IsOptional() @IsNumber() max_age_hours?: number | null;
+
+  /** Reject `identify` calls that carry no claims (v1). */
+  @IsOptional() @IsBoolean() refuse_v1?: boolean;
 }

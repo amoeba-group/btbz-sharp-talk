@@ -1,6 +1,7 @@
 import { CLAIMS_IAT_WINDOW_SEC, EmbedService, principalChanged } from './embed.service';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { sessionCacheKey } from '../session/session.service';
+import { fakeConvRepo, fakeRedis } from './embed-test-doubles-spec';
 
 /**
  * One session = one (person, hotel, role) — PLN-261012 SG-02 / REQ D-02, D-03.
@@ -91,14 +92,9 @@ function build(opts: { secret?: string | null; withConvRepo?: boolean } = {}) {
       return { affected: 1 };
     }),
   };
-  const convRepo = {
-    update: jest.fn(async (where: { sessionId: number; status: string }, set: Row) => {
-      const hit = conversations.filter((c) => c.sessionId === where.sessionId && c.status === where.status);
-      hit.forEach((c) => Object.assign(c, set));
-      return { affected: hit.length };
-    }),
-  };
-  const redis = { del: jest.fn(async () => undefined) };
+  const convRepo = fakeConvRepo(conversations);
+  // A real SET NX store: the replay guard runs for every v2 identify.
+  const redis = fakeRedis();
 
   const service = new EmbedService(
     tenantRepo as never,
@@ -251,7 +247,7 @@ describe('EmbedService.identify — fork on rebind (SG-02)', () => {
     expect(h.sessions).toHaveLength(2);
   });
 
-  it('the new session inherits the visitor context — agent pin, language, consent, page — not the old identity', async () => {
+  it('the new session inherits the visitor context — agent pin, language, page — not the old identity, and (different person) not the consent', async () => {
     const h = build();
     h.sessions[0].alias = 'Ms. Lan (front desk)';
     h.sessions[0].autoReplyMode = 'off';
@@ -268,10 +264,11 @@ describe('EmbedService.identify — fork on rebind (SG-02)', () => {
       language: 'VI',
       languageLocked: 1,
       landingPath: 'https://hotel-admin.example/login',
-      consentState: 'granted',
-      consentVersion: '2026-07',
     });
-    expect(out.consentAt).toEqual(CONSENT_AT);
+    // Consent is per data subject: staff-A said yes, staff-B has not (see the
+    // dedicated block below). The notice must be shown to B again.
+    expect(out).toMatchObject({ consentState: 'pending', consentVersion: null });
+    expect(out.consentAt ?? null).toBeNull();
     // Operator notes and impression counters belong to the old row.
     expect(out.alias ?? null).toBeNull();
     expect(out.autoReplyMode ?? 'inherit').toBe('inherit');
@@ -279,17 +276,41 @@ describe('EmbedService.identify — fork on rebind (SG-02)', () => {
     expect(out.firstOpenedAt ?? null).toBeNull();
   });
 
-  it('a pending consent is carried as pending, not upgraded', async () => {
+  it('a pending consent is carried as pending (same person), not upgraded', async () => {
     const h = build();
     h.sessions[0].consentState = 'pending';
     h.sessions[0].consentAt = null;
     h.sessions[0].consentVersion = null;
+    await h.service.identify(v2('tok', 'mgr-M', { hotelSn: '1721' }));
+
+    const out = await h.service.identify(v2('tok', 'mgr-M', { hotelSn: '2204' }));
+
+    expect(out.consentState).toBe('pending');
+    expect(out.consentVersion).toBeNull();
+  });
+
+  it('the SAME person on another hotel keeps the consent they gave (one data subject)', async () => {
+    const h = build();
+    await h.service.identify(v2('tok', 'mgr-M', { role: 'manager', hotelSn: '1721' }));
+
+    const out = await h.service.identify(v2('tok', 'mgr-M', { role: 'manager', hotelSn: '2204' }));
+
+    expect(out.sessionToken).not.toBe('tok');
+    expect(out).toMatchObject({ consentState: 'granted', consentVersion: '2026-07' });
+    expect(out.consentAt).toEqual(CONSENT_AT);
+  });
+
+  it('a DIFFERENT person never inherits a recorded consent, whatever its state (declined too)', async () => {
+    const h = build();
+    h.sessions[0].consentState = 'declined';
     await h.service.identify(v2('tok', 'staff-A'));
 
     const out = await h.service.identify(v2('tok', 'staff-B'));
 
+    // Declined is not carried either: B has not declined anything. Starting over
+    // as pending asks B, which is the only fail-closed answer for a new person.
     expect(out.consentState).toBe('pending');
-    expect(out.consentVersion).toBeNull();
+    expect(out.consentAt ?? null).toBeNull();
   });
 
   it('records the last claims on the customer of the NEW session', async () => {
@@ -491,6 +512,7 @@ describe('EmbedService.logout (SG-02)', () => {
 
   it('an unknown token errors exactly like identify does, and writes nothing', async () => {
     const h = await signedIn();
+    h.convRepo.update.mockClear();
     const before = snap(h.sessions);
 
     await expect(h.service.logout('does-not-exist')).rejects.toMatchObject({
