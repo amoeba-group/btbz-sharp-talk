@@ -18,10 +18,35 @@ import { AiCreditAlertService } from './ai-credit-alert.service';
 import { AnthropicAdapter } from './adapters/anthropic.adapter';
 import { OpenAiAdapter } from './adapters/openai.adapter';
 import { VoyageAdapter } from './adapters/voyage.adapter';
+import {
+  BreakerSnapshot,
+  CircuitBreaker,
+  breakerEnabled,
+  breakerOptionsFromEnv,
+  isEngineFailure,
+} from '../../resilience/circuit-breaker';
+import {
+  AiTimeoutError,
+  failureReason,
+  isTransientError,
+  retryWithJitter,
+} from '../../resilience/resilience';
+import { envNumber } from '../../../global/util/env-number.util';
+import { m, safeLabel } from '../../observability/app-metrics';
+
+/** What the gateway exposes per breaker — metrics, readiness and the ops watchdog read it. */
+export interface GatewayBreakerInfo extends BreakerSnapshot {
+  /** Metric/alert grouping: the provider of an LLM engine, or `embedding`. */
+  component: string;
+  /** Stable key: `engine:<id>` or `embed:voyage`. */
+  key: string;
+}
 
 export interface GatewayRequest {
   tenantId: number;
   function: AiFunction;
+  /** Per-call deadline override in ms (default `AI_REQUEST_TIMEOUT_MS`) — small JSON calls use a short one. */
+  timeoutMs?: number;
   /**
    * What is spending, finer than the function (PLN-260824 D2).
    *
@@ -118,38 +143,156 @@ export class AiGatewayService {
     const adapter = this.adapters.get(engine?.provider ?? 'stub') ?? this.adapters.get('stub')!;
 
     const apiKey = engine?.apiKeyEncrypted ? this.safeDecrypt(engine.apiKeyEncrypted) : undefined;
+    // A breaker guards REAL engines only; the stub cannot fail and has nothing to protect.
+    const real = !!engine && adapter.provider !== 'stub';
+    const feature = safeLabel(req.feature ?? req.function);
+    const breaker = real ? this.breakerFor(`engine:${engine!.id}`, adapter.provider) : null;
+    const startedAt = this.hooks.now?.() ?? Date.now();
+
+    // Open breaker (PLN-261012 SG-84): the engine just failed `failureThreshold` times in a row,
+    // so spending the full request timeout on it again would only make every customer turn wait
+    // for the stub. Same contract as any adapter failure — stub text, `degraded: true` — but
+    // without the network call and without rewriting the engine's health row on every turn.
+    if (breaker && !breaker.allow()) {
+      m.llmCalls.inc({ feature, provider: adapter.provider, status: 'breaker_open' });
+      this.logSkipped(`engine:${engine!.id}`, `Engine ${engine!.id} (${adapter.provider}) circuit open — skipping calls, using stub`);
+      return this.degradedFallback(req, engine, adapter.provider);
+    }
+
     try {
-      const res = await adapter.complete({
-        system: req.system,
-        messages: req.messages,
-        temperature: req.temperature ?? (params.temperature as number) ?? 0.3,
-        maxTokens: req.maxTokens ?? (params.max_tokens as number) ?? 1024,
-        model: engine?.model ?? 'stub-1',
-        apiKey,
-        endpoint: engine?.endpoint ?? undefined,
-      });
+      const call = () =>
+        adapter.complete({
+          system: req.system,
+          messages: req.messages,
+          temperature: req.temperature ?? (params.temperature as number) ?? 0.3,
+          maxTokens: req.maxTokens ?? (params.max_tokens as number) ?? 1024,
+          model: engine?.model ?? 'stub-1',
+          apiKey,
+          endpoint: engine?.endpoint ?? undefined,
+          timeoutMs: req.timeoutMs,
+        });
+      // A completion is retried once, and only on what a second try can fix: a dropped
+      // connection, a 5xx, a 429. Never on a timeout (that doubles the customer's wait for an
+      // engine already too slow) and never on a 4xx.
+      const res = real
+        ? await retryWithJitter(call, {
+            retries: Math.max(0, Math.round(envNumber('AI_MAX_RETRIES', 1))),
+            retryOn: isTransientError,
+            sleep: this.hooks.sleep,
+            random: this.hooks.random,
+            onRetry: (err) => {
+              m.llmRetries.inc({ provider: adapter.provider });
+              this.logger.warn(`Adapter ${adapter.provider} transient failure, retrying: ${(err as Error).message}`);
+            },
+          })
+        : await call();
+      breaker?.recordSuccess();
+      if (real) {
+        m.llmCalls.inc({ feature, provider: adapter.provider, status: 'ok' });
+        m.llmDuration.observe({ provider: adapter.provider }, ((this.hooks.now?.() ?? Date.now()) - startedAt) / 1000);
+      }
       this.meter(req, engine, res, { stub: adapter.provider === 'stub' });
       if (engine && adapter.provider !== 'stub') this.recordHealth(engine.id, null);
       return res;
     } catch (e) {
       const message = (e as Error).message ?? '';
       this.logger.warn(`Adapter ${adapter.provider} failed, falling back to stub: ${message}`);
+      if (breaker) {
+        // A request-level rejection (a 400) proves the engine is reachable; only engine-level
+        // failures move the breaker.
+        if (isEngineFailure(e)) breaker.recordFailure();
+        else breaker.recordSuccess();
+      }
+      if (real) {
+        m.llmCalls.inc({
+          feature,
+          provider: adapter.provider,
+          status: e instanceof AiTimeoutError ? 'timeout' : 'error',
+        });
+        m.llmDuration.observe({ provider: adapter.provider }, ((this.hooks.now?.() ?? Date.now()) - startedAt) / 1000);
+      }
       if (engine && adapter.provider !== 'stub') this.recordHealth(engine.id, message);
-      const res = await this.adapters.get('stub')!.complete({
-        system: req.system,
-        messages: req.messages,
-        model: 'stub-1',
-      });
-      // Recorded against the engine that was SUPPOSED to answer, not against
-      // the stub that caught it — otherwise a failing engine shows no usage and
-      // no failures, and looks simply unused.
-      this.meter(req, engine, res, { stub: true, failed: true });
-      // Marked so nothing customer-facing mistakes the stub's canned text for
-      // an answer (PLN-261007 D4) — on 2026-10-06 it reached 39 go2joy
-      // conversations 121 times, and the stub's moderation verdict ("not
-      // flagged") stood in for the real one.
-      return { ...res, degraded: adapter.provider !== 'stub' };
+      return this.degradedFallback(req, engine, adapter.provider);
     }
+  }
+
+  /**
+   * The stub's answer for a call the real engine could not serve (failed, or skipped by an open
+   * breaker). Recorded against the engine that was SUPPOSED to answer, not against the stub that
+   * caught it — otherwise a failing engine shows no usage and no failures, and looks simply
+   * unused.
+   */
+  private async degradedFallback(
+    req: GatewayRequest,
+    engine: AiEngine | null,
+    provider: string,
+  ): Promise<AiCompletionResult> {
+    const res = await this.adapters.get('stub')!.complete({
+      system: req.system,
+      messages: req.messages,
+      model: 'stub-1',
+    });
+    this.meter(req, engine, res, { stub: true, failed: true });
+    // Marked so nothing customer-facing mistakes the stub's canned text for
+    // an answer (PLN-261007 D4) — on 2026-10-06 it reached 39 go2joy
+    // conversations 121 times, and the stub's moderation verdict ("not
+    // flagged") stood in for the real one.
+    return { ...res, degraded: provider !== 'stub' };
+  }
+
+  /**
+   * Test seam for time, sleeping and jitter (PLN-261012 SG-84). Production leaves it empty, so
+   * the real clock, `setTimeout` and `Math.random` apply; specs set it before the first call
+   * (breakers read the clock when they are created).
+   */
+  readonly hooks: {
+    now?: () => number;
+    sleep?: (ms: number) => Promise<void>;
+    random?: () => number;
+  } = {};
+
+  private readonly breakers = new Map<string, { breaker: CircuitBreaker; component: string }>();
+
+  /**
+   * The breaker for one engine (or `embed:voyage`), created on first use. Null when the operator
+   * switched the feature off with `AI_BREAKER_ENABLED=0`.
+   */
+  private breakerFor(key: string, component: string): CircuitBreaker | null {
+    if (!breakerEnabled()) return null;
+    let entry = this.breakers.get(key);
+    if (!entry) {
+      const breaker = new CircuitBreaker({
+        ...breakerOptionsFromEnv(),
+        now: this.hooks.now,
+        onTransition: (from, to) => {
+          m.breakerTransitions.inc({ component, to });
+          const log = to === 'open' ? this.logger.warn : this.logger.log;
+          log.call(this.logger, `Circuit breaker ${key} (${component}): ${from} -> ${to}`);
+        },
+      });
+      entry = { breaker, component };
+      this.breakers.set(key, entry);
+    }
+    return entry.breaker;
+  }
+
+  private readonly lastSkipLog = new Map<string, number>();
+
+  /** One line per breaker per 30 s: a skipped call happens on every customer turn while it is open. */
+  private logSkipped(key: string, message: string): void {
+    const now = this.hooks.now?.() ?? Date.now();
+    if (now - (this.lastSkipLog.get(key) ?? 0) < 30_000) return;
+    this.lastSkipLog.set(key, now);
+    this.logger.warn(message);
+  }
+
+  /** Every breaker's current state — read by `/metrics`, readiness and the ops watchdog. */
+  breakerSnapshots(): GatewayBreakerInfo[] {
+    return [...this.breakers.entries()].map(([key, e]) => ({
+      key,
+      component: e.component,
+      ...e.breaker.snapshot(),
+    }));
   }
 
   /** Successes are written at most this often per engine; failures always. */
@@ -231,10 +374,38 @@ export class AiGatewayService {
     const voyage = this.adapters.get('voyage')!;
     const stub = this.adapters.get('stub')!;
     if (process.env.VOYAGE_API_KEY) {
-      try {
-        return await voyage.embed!({ texts, inputType });
-      } catch (e) {
-        this.logger.warn(`Voyage embed failed, falling back to stub: ${(e as Error).message}`);
+      const breaker = this.breakerFor('embed:voyage', 'embedding');
+      const live = inputType === 'query';
+      // Only a LIVE query is short-circuited by an open breaker (PLN-261012 SG-84): it is the one
+      // that blocks a customer's turn. Document embeddings (KB writes, reindex) keep trying — they
+      // are operator-driven and low-rate, and skipping them would write stub vectors into the
+      // shared collection for as long as the breaker stays open.
+      if (live && breaker && !breaker.allow()) {
+        m.embedFailures.inc({ provider: 'voyage', reason: 'breaker_open' });
+        this.logSkipped('embed:voyage', 'Voyage embedding circuit open — using the stub embedder for live queries');
+      } else {
+        try {
+          // Embeddings are idempotent, so they get a bounded retry with jitter. A live query
+          // retries once on a transient failure only; document batches also retry a timeout.
+          const res = await retryWithJitter(() => voyage.embed!({ texts, inputType }), {
+            retries: live
+              ? Math.max(0, Math.round(envNumber('EMBED_QUERY_RETRIES', 1)))
+              : Math.max(0, Math.round(envNumber('EMBED_DOCUMENT_RETRIES', 2))),
+            retryOn: live ? isTransientError : (err) => isTransientError(err) || err instanceof AiTimeoutError,
+            sleep: this.hooks.sleep,
+            random: this.hooks.random,
+            onRetry: () => m.llmRetries.inc({ provider: 'voyage' }),
+          });
+          breaker?.recordSuccess();
+          return res;
+        } catch (e) {
+          if (breaker) {
+            if (isEngineFailure(e)) breaker.recordFailure();
+            else breaker.recordSuccess();
+          }
+          m.embedFailures.inc({ provider: 'voyage', reason: failureReason(e) });
+          this.logger.warn(`Voyage embed failed, falling back to stub: ${(e as Error).message}`);
+        }
       }
     }
     return stub.embed!({ texts, inputType });

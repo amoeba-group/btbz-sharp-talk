@@ -12,6 +12,8 @@ export interface AiCompletionRequest {
   model: string;
   apiKey?: string;
   endpoint?: string;
+  /** Whole-call deadline in ms; adapters default to `AI_REQUEST_TIMEOUT_MS` (PLN-261012 SG-84). */
+  timeoutMs?: number;
 }
 
 export interface AiCompletionResult {
@@ -35,6 +37,8 @@ export interface AiEmbeddingRequest {
   inputType: 'query' | 'document';
   model?: string;
   apiKey?: string;
+  /** Per-request deadline in ms; defaults to `EMBED_REQUEST_TIMEOUT_MS` (PLN-261012 SG-84). */
+  timeoutMs?: number;
 }
 
 export interface AiEmbeddingResult {

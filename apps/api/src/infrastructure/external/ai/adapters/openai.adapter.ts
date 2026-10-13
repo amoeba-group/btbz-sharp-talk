@@ -2,6 +2,12 @@ import { Injectable, Logger } from '@nestjs/common';
 import { AiAdapter, AiCompletionRequest, AiCompletionResult } from '../ai-adapter.interface';
 import { redactSecrets } from '../../../../global/util/secret-redact.util';
 import { providerErrorSummary } from '../engine-health';
+import {
+  AiTimeoutError,
+  ProviderHttpError,
+  aiRequestTimeoutMs,
+  runWithTimeout,
+} from '../../../resilience/resilience';
 
 /** Body fields the API may reject per model; each has a documented fallback. */
 type Negotiable = 'temperature' | 'max_completion_tokens';
@@ -57,15 +63,28 @@ export class OpenAiAdapter implements AiAdapter {
     if (req.temperature != null) body.temperature = req.temperature;
 
     const settled = new Set<Negotiable>();
+    // One deadline for the whole call, negotiation retries included (PLN-261012 SG-84): three
+    // sequential attempts each granted a full window would triple the worst case.
+    const budgetMs = req.timeoutMs ?? aiRequestTimeoutMs();
+    const startedAt = Date.now();
     for (let attempt = 1; attempt <= OpenAiAdapter.MAX_ATTEMPTS; attempt++) {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify(body),
+      const remaining = budgetMs - (Date.now() - startedAt);
+      if (remaining <= 0) throw new AiTimeoutError('OpenAI', budgetMs);
+      // The body is read inside the deadline too, so a stalled stream cannot outlive it.
+      const res = await runWithTimeout(remaining, 'OpenAI', async (signal) => {
+        const r = await fetch(url, {
+          method: 'POST',
+          signal,
+          headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+          body: JSON.stringify(body),
+        });
+        return r.ok
+          ? { ok: true as const, status: r.status, data: (await r.json()) as any, detail: '' }
+          : { ok: false as const, status: r.status, data: null, detail: await r.text().catch(() => '') };
       });
 
       if (res.ok) {
-        const data: any = await res.json();
+        const data: any = res.data;
         const text = (data.choices ?? [])
           .map((c: any) => c.message?.content ?? '')
           .join('')
@@ -79,15 +98,16 @@ export class OpenAiAdapter implements AiAdapter {
         };
       }
 
-      const detail = await res.text().catch(() => '');
+      const detail = res.detail;
       const field = res.status === 400 ? this.rejectedField(detail, body, settled) : null;
       if (!field) {
         // A 401 body quotes the rejected key verbatim — never log it raw.
         this.logger.error(
           `OpenAI error ${res.status}: ${redactSecrets(detail, apiKey).slice(0, 300)}`,
         );
-        throw new Error(
+        throw new ProviderHttpError(
           `OpenAI API error ${res.status}: ${redactSecrets(providerErrorSummary(detail), apiKey)}`,
+          res.status,
         );
       }
       settled.add(field);
@@ -95,7 +115,7 @@ export class OpenAiAdapter implements AiAdapter {
       this.logger.warn(`OpenAI rejected '${field}' for model ${body.model}; retrying without it`);
     }
 
-    throw new Error('OpenAI API error 400 (parameter negotiation exhausted)');
+    throw new ProviderHttpError('OpenAI API error 400 (parameter negotiation exhausted)', 400);
   }
 
   /**

@@ -1,5 +1,13 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { runWithTimeout, qdrantRequestTimeoutMs } from '../../resilience/resilience';
+import {
+  BreakerSnapshot,
+  CircuitBreaker,
+  breakerEnabled,
+  breakerOptionsFromEnv,
+} from '../../resilience/circuit-breaker';
+import { m } from '../../observability/app-metrics';
 
 /** Payload stored with every KB point. tenantId 0 = global/platform document. */
 export interface KbVectorPayload {
@@ -29,6 +37,15 @@ export class QdrantService implements OnModuleInit {
   private readonly dimension = 1024; // voyage-4 / stub-embed-1
   private baseUrl: string | null = null;
   private ready = false;
+  private readonly breaker: CircuitBreaker | null = breakerEnabled()
+    ? new CircuitBreaker({
+        ...breakerOptionsFromEnv(),
+        onTransition: (from, to) => {
+          m.breakerTransitions.inc({ component: 'qdrant', to });
+          this.logger.warn(`Circuit breaker qdrant: ${from} -> ${to}`);
+        },
+      })
+    : null;
 
   constructor(private readonly config: ConfigService) {}
 
@@ -103,23 +120,50 @@ export class QdrantService implements OnModuleInit {
    * a required positional parameter by design — no unscoped variant exists.
    */
   async search(tenantId: number, vector: number[], limit: number): Promise<KbVectorHit[]> {
-    await this.lazyEnsure();
-    const res: any = await this.request('POST', `/collections/${this.collection}/points/search`, {
-      vector,
-      limit,
-      with_payload: true,
-      filter: {
-        must: [
-          { key: 'active', match: { value: true } },
-          { key: 'tenant_id', match: { any: [Number(tenantId), 0] } },
-        ],
-      },
-    });
-    return ((res?.result ?? []) as any[]).map((p) => ({
-      id: Number(p.id),
-      score: Number(p.score),
-      payload: p.payload as KbVectorPayload,
-    }));
+    // Live-query path only (PLN-261012 SG-84): after N consecutive failures stop spending the
+    // request timeout on every customer turn and let retrieval run on FULLTEXT alone. KB writes
+    // (upsert/delete) are not gated — they are operator-driven and must report their own errors.
+    if (this.breaker && !this.breaker.allow()) {
+      m.qdrantFailures.inc({ operation: 'search_skipped' });
+      throw new Error('Qdrant circuit open — search skipped');
+    }
+    try {
+      await this.lazyEnsure();
+      const res: any = await this.request('POST', `/collections/${this.collection}/points/search`, {
+        vector,
+        limit,
+        with_payload: true,
+        filter: {
+          must: [
+            { key: 'active', match: { value: true } },
+            { key: 'tenant_id', match: { any: [Number(tenantId), 0] } },
+          ],
+        },
+      });
+      this.breaker?.recordSuccess();
+      return ((res?.result ?? []) as any[]).map((p) => ({
+        id: Number(p.id),
+        score: Number(p.score),
+        payload: p.payload as KbVectorPayload,
+      }));
+    } catch (e) {
+      this.breaker?.recordFailure();
+      throw e;
+    }
+  }
+
+  /** Breaker state for `/metrics`, readiness and the ops watchdog; null when disabled. */
+  breakerSnapshot(): (BreakerSnapshot & { component: string }) | null {
+    return this.breaker ? { component: 'qdrant', ...this.breaker.snapshot() } : null;
+  }
+
+  /**
+   * Cheap reachability probe for readiness — one bounded GET, no side effects, and independent of
+   * the breaker (readiness must see the backend's real state, not our own opinion of it).
+   */
+  async probe(): Promise<void> {
+    if (!this.baseUrl) throw new Error('Qdrant disabled (QDRANT_URL not set)');
+    await this.request('GET', '/collections');
   }
 
   private async lazyEnsure(): Promise<void> {
@@ -131,15 +175,35 @@ export class QdrantService implements OnModuleInit {
   }
 
   private async request(method: string, path: string, body?: unknown): Promise<unknown> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      method,
-      headers: { 'content-type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-    if (!res.ok) {
-      const detail = await res.text().catch(() => '');
-      throw new Error(`Qdrant ${method} ${path} → ${res.status} ${detail.slice(0, 200)}`);
+    try {
+      // Whole-call deadline, body read included (PLN-261012 SG-84): Qdrant had none, so a hung
+      // instance stalled every live retrieval until the HTTP layer gave up on its own.
+      return await runWithTimeout(qdrantRequestTimeoutMs(), 'Qdrant', async (signal) => {
+        const res = await fetch(`${this.baseUrl}${path}`, {
+          method,
+          signal,
+          headers: { 'content-type': 'application/json' },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        });
+        if (!res.ok) {
+          const detail = await res.text().catch(() => '');
+          throw new Error(`Qdrant ${method} ${path} → ${res.status} ${detail.slice(0, 200)}`);
+        }
+        return res.json().catch(() => ({}));
+      });
+    } catch (e) {
+      m.qdrantFailures.inc({ operation: QdrantService.operationOf(method, path) });
+      throw e;
     }
-    return res.json().catch(() => ({}));
+  }
+
+  /** A bounded label for the failure counter — never the raw path (it carries ids). */
+  static operationOf(method: string, path: string): string {
+    if (path.includes('/points/search')) return 'search';
+    if (path.includes('/points/delete')) return 'delete';
+    if (path.includes('/points/payload')) return 'set_active';
+    if (path.includes('/points')) return 'upsert';
+    if (path === '/collections') return 'probe';
+    return method === 'GET' || path.includes('/index') ? 'ensure' : 'other';
   }
 }

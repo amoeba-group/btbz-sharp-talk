@@ -6,6 +6,11 @@ import {
   AiEmbeddingRequest,
   AiEmbeddingResult,
 } from '../ai-adapter.interface';
+import {
+  ProviderHttpError,
+  embedRequestTimeoutMs,
+  runWithTimeout,
+} from '../../../resilience/resilience';
 
 /**
  * Voyage AI embedding adapter (PLAN-KB-VectorHybrid-Qdrant W2). voyage-4 is
@@ -29,24 +34,32 @@ export class VoyageAdapter implements AiAdapter {
     const apiKey = req.apiKey ?? process.env.VOYAGE_API_KEY;
     if (!apiKey) throw new Error('Voyage API key not configured');
     const model = req.model || process.env.VOYAGE_MODEL || 'voyage-4';
+    // Per REQUEST, not per call: a batch that waits out a 429 backoff must not have its next
+    // request pre-expired by the time it slept. The gateway bounds the retries (PLN-261012 SG-84).
+    const timeoutMs = req.timeoutMs ?? embedRequestTimeoutMs();
 
     // Blocking 429 backoff is for BATCH calls only (reindex CLI). A single-text
     // request is the live chat query path — fail fast there so retrieval
     // degrades to FULLTEXT instead of stalling the reply for up to 105s.
     const maxRetries = req.texts.length > 1 ? VoyageAdapter.RETRY_429_MS.length : 0;
-    let res: Response | null = null;
+    let res: { ok: boolean; status: number; data: any } | null = null;
     for (let attempt = 0; ; attempt++) {
-      res = await fetch('https://api.voyageai.com/v1/embeddings', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          input: req.texts,
-          model,
-          input_type: req.inputType,
-        }),
+      res = await runWithTimeout(timeoutMs, 'Voyage', async (signal) => {
+        const r = await fetch('https://api.voyageai.com/v1/embeddings', {
+          method: 'POST',
+          signal,
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            input: req.texts,
+            model,
+            input_type: req.inputType,
+          }),
+        });
+        // Body inside the deadline: a stalled stream must not outlive it.
+        return { ok: r.ok, status: r.status, data: r.ok ? await r.json() : null };
       });
       if (res.status === 429 && attempt < maxRetries) {
         const wait = VoyageAdapter.RETRY_429_MS[attempt];
@@ -58,9 +71,15 @@ export class VoyageAdapter implements AiAdapter {
     }
     if (!res.ok) {
       this.logger.error(`Voyage error ${res.status}`);
-      throw new Error(`Voyage API error ${res.status}`);
+      // `alreadyRetried` on a batch 429: the backoff above WAS the retry budget, so the gateway
+      // must not stack its own retries on top of up to 105 s of waiting.
+      throw new ProviderHttpError(
+        `Voyage API error ${res.status}`,
+        res.status,
+        res.status === 429 && maxRetries > 0,
+      );
     }
-    const data: any = await res.json();
+    const data: any = res.data;
     const byIndex = [...(data.data ?? [])].sort((a: any, b: any) => a.index - b.index);
     const vectors = byIndex.map((d: any) => d.embedding as number[]);
     return {
