@@ -166,16 +166,16 @@ export const es: Translation = {
 
   contact: {
     title: 'Contactar con soporte',
-    phone: '1588-0000',
-    hours: 'Lun–Vie 10:00–18:00',
-    email: 'help@ivy.com',
+    // No `phone`, `email`, `hours` or `emailHours` here on purpose (w3c, ops-manual finding 8): they used
+    // to hold IVY's own placeholder phone, address and opening hours, which every other tenant's
+    // customers then saw. ContactCard reads them with an empty default and draws a method only when
+    // it has a value (lib/contact-card.ts), so a bundle without them offers just "chat with an agent".
     chatAgent: 'Chatear con un agente',
     methods: {
       phone: 'Teléfono',
       email: 'Correo electrónico',
       chat: 'Chat en vivo',
     },
-    emailHours: 'Abierto 24/7 · respuesta en 1 día hábil',
   },
 
   affiliate: {
