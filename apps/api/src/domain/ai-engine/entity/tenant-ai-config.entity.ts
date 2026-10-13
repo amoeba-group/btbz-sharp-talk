@@ -1,6 +1,6 @@
 import type { AnswerFooter } from '../answer-footer.util';
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
-import type { GuestGuidance, LocalizedText, RegionRoutingConfig } from '@sharptalk/types';
+import type { GuestGuidance, LocalizedText, RegionRoutingConfig, UserRegion } from '@sharptalk/types';
 import { bigintTransformer } from '../../../global/util/transformers';
 
 /** Scenario button shown in the widget menu (FR-003 / FN-009). */
@@ -53,22 +53,24 @@ export interface ScenarioPostAction {
  * Handoff routing (PLN-AiSetting W3). All fields optional — an empty config
  * keeps the historical behaviour: alert every agent, any time of day.
  */
+export interface HandoffBusinessHours {
+  timezone: string; // IANA, e.g. America/New_York
+  days: number[]; // 0=Sun … 6=Sat
+  start: string; // 'HH:mm'
+  end: string; // 'HH:mm'
+  /**
+   * Windows inside the shift when nobody is at the console (lunch, standup).
+   * Treated exactly like off hours, so the shopper is told about the email
+   * reply instead of waiting for someone who is away.
+   */
+  breaks?: Array<{ start: string; end: string }>;
+}
+
 export interface HandoffConfig {
   /** Agents to page. Empty/omitted = broadcast to all (first to accept wins). */
   assigneeUserIds?: number[];
   /** When agents are on duty. Omitted = always route to agents. */
-  businessHours?: {
-    timezone: string; // IANA, e.g. America/New_York
-    days: number[]; // 0=Sun … 6=Sat
-    start: string; // 'HH:mm'
-    end: string; // 'HH:mm'
-    /**
-     * Windows inside the shift when nobody is at the console (lunch, standup).
-     * Treated exactly like off hours, so the shopper is told about the email
-     * reply instead of waiting for someone who is away.
-     */
-    breaks?: Array<{ start: string; end: string }>;
-  };
+  businessHours?: HandoffBusinessHours;
   /**
    * Wording shown when an agent hands the thread back to the AI (PLN-260810 S1).
    * Blank falls back to the built-in text. The customer should learn that the
@@ -78,9 +80,21 @@ export interface HandoffConfig {
   /** Where to send the conversation outside business hours. */
   offHours?: {
     email?: string;
+    /**
+     * Per regional team mailbox (PLN-261012 SG-67): a hotel of that team's region gets
+     * its summary at this address instead of `email`. A team without an entry uses `email`.
+     */
+    emailByRegion?: Partial<Record<UserRegion, string>>;
     /** Customer-facing notice; blank falls back to the built-in wording. */
     notice?: LocalizedText;
   };
+  /**
+   * "Nobody has taken this conversation" re-alert (PLN-261012 SG-63). `true`/`false` force
+   * it on/off for the tenant; absent = automatic: on where an alert can be pinned to one
+   * person (assignees, team routing or region routing configured), off otherwise — a
+   * tenant that only ever broadcasts, and a tenant with no hand-off config, behave as before.
+   */
+  unclaimedAlerts?: boolean;
   /**
    * Policy deny-list (PLN-260808-Issue-Workflow-P2, REQ §5.3): a customer
    * message matching any keyword is force-handed to an agent regardless of AI
@@ -118,7 +132,17 @@ export interface HandoffConfig {
     /** The question; blank = built-in wording. */
     prompt?: LocalizedText;
     /** 1..4 options in display order. Absent = the built-in CS / Business pair. */
-    options?: Array<{ id: string; jobLabel: string; label?: LocalizedText }>;
+    options?: Array<{
+      id: string;
+      jobLabel: string;
+      label?: LocalizedText;
+      /**
+       * This team's own hours (PLN-261012 SG-67). Absent = the tenant-wide `businessHours`.
+       * Decides, for a conversation asked for this team, whether the customer is told to
+       * expect an email reply instead of a live agent.
+       */
+      businessHours?: HandoffBusinessHours;
+    }>;
   };
   /**
    * Hand the conversation to the team that looks after the hotel's region

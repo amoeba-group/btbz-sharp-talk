@@ -270,6 +270,13 @@ export const ERROR_CODE = {
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },
+
+  // E5125-E5129 — Routing extras: re-route, hotel→province CSV, handoff config (PLN-261012 SG-64/SG-67).
+  CONVERSATION_NOT_REROUTABLE: { code: 'E5125', message: 'The conversation has ended and cannot be handed over' },
+  ROUTING_TARGET_INVALID: { code: 'E5126', message: 'Unknown team or region for this tenant' },
+  HOTEL_PROVINCE_CSV_INVALID: { code: 'E5127', message: 'The hotel province file is invalid' },
+  HANDOFF_CONFIG_INVALID: { code: 'E5128', message: 'The hand-off settings are invalid' },
+  ROUTING_NOT_ENABLED: { code: 'E5129', message: 'Team routing is not enabled for this tenant' },
 } as const;
 
 export type ErrorCodeEntry = { code: string; message: string };

@@ -85,6 +85,7 @@ CREATE TABLE `agent_alerts` (
   `reason` varchar(32) COLLATE utf8mb4_unicode_ci NOT NULL,
   `preview` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `target_user_id` bigint DEFAULT NULL,
+  `target_region` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `status` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'new',
   `acked_by` bigint DEFAULT NULL,
   `acked_at` datetime DEFAULT NULL,
@@ -619,6 +620,10 @@ CREATE TABLE `conversations` (
   `support_region` varchar(8) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `ended_at` datetime DEFAULT NULL,
+  `escalated_at` datetime DEFAULT NULL,
+  `unclaimed_pages` tinyint unsigned NOT NULL DEFAULT '0',
+  `unclaimed_paged_at` datetime DEFAULT NULL,
+  `support_region_hint` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `idle_prompt_at` datetime DEFAULT NULL COMMENT 'when the idle check was sent; also the ask-once latch',
   `csat_rating` tinyint DEFAULT NULL COMMENT 'customer satisfaction 1..5',
   `csat_rated_at` datetime DEFAULT NULL,
@@ -807,6 +812,19 @@ CREATE TABLE `golden_runs` (
   `completed_at` datetime(6) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_golden_run_tenant` (`tenant_id`,`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `hotel_provinces`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `hotel_provinces` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `hotel_sn` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `province` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_hotel_province` (`tenant_id`,`hotel_sn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `inquiries`;
