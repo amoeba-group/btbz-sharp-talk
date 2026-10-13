@@ -18,6 +18,7 @@
 
 import type { WidgetLoginMode, WidgetTab, WidgetTabPosition } from '../common/enum.types';
 import type { PrivacyNoticeKey } from '../common/privacy-notice-copy';
+import type { PilotStatus } from '../common/pilot-access';
 import type { WidgetTheme } from '../common/widget-theme';
 
 // ---- session -------------------------------------------------------------
@@ -110,6 +111,18 @@ export interface SessionResponse {
    * reads as "no feed".
    */
   issueFeed?: boolean;
+  /**
+   * Pilot allowlist verdict for THIS session (PLN-261012 SG-40): may this
+   * visitor be served, and if not, hide or show a note. Absent on an older API =
+   * no pilot list = show the widget as always. The server enforces it on every
+   * turn regardless; this only lets the widget get out of the way.
+   */
+  pilot?: PilotStatus;
+}
+
+/** `POST /session/pilot` — the verdict alone, for a re-check without a new session. */
+export interface SessionPilotResponse {
+  pilot: PilotStatus;
 }
 
 // ---- chat ---------------------------------------------------------------
@@ -224,6 +237,12 @@ export interface ChatTurnResponse {
    * in place of a handoff. Absent on ordinary turns — the RAG path has none.
    */
   followUps?: ScenarioFollowUpResponse[];
+  /**
+   * The turn was refused because this visitor's hotel is not on the tenant's
+   * pilot list (PLN-261012 SG-40). `reply` carries the notice; nothing was
+   * stored and no model was called. The widget re-checks its pilot verdict.
+   */
+  pilotDenied?: boolean;
 }
 
 /** `POST /chat/escalate` (PLN-261007 Team Routing). */
@@ -240,6 +259,8 @@ export interface EscalateResponse {
    * has somewhere to go (PLN-261012 SG-62) — the same flag a chat turn carries.
    */
   needsContactEmail?: boolean;
+  /** Refused by the pilot allowlist (SG-40) — `body` is the notice, nobody was paged. */
+  pilotDenied?: boolean;
 }
 
 /** Post-reply navigation the widget performs after a scripted answer (FR-003). */
@@ -259,6 +280,8 @@ export interface ScenarioTurnResponse {
   followUps: ScenarioFollowUpResponse[];
   /** Absent/`none` = stay in the thread. */
   postAction?: ScenarioPostActionResponse;
+  /** Refused by the pilot allowlist (SG-40) — `reply` is the notice, nothing was stored. */
+  pilotDenied?: boolean;
 }
 
 // ---- orders -------------------------------------------------------------

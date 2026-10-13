@@ -270,6 +270,18 @@ export const ERROR_CODE = {
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },
+  // E5130-E5134 — Pilot allowlist by hotel (PLN-261012 SG-40).
+  PILOT_HOTEL_SN_INVALID: {
+    code: 'E5130',
+    message: "A hotel serial is 1-64 letters, digits, '-' or '_'",
+  },
+  PILOT_HOTEL_LIMIT: { code: 'E5131', message: 'The pilot list is limited to 5000 hotels' },
+  PILOT_HOTEL_NOT_FOUND: { code: 'E5132', message: 'That hotel is not in the pilot list' },
+  PILOT_ACCESS_INVALID: { code: 'E5133', message: 'The pilot settings are invalid' },
+  PILOT_IMPORT_INVALID: {
+    code: 'E5134',
+    message: 'The pasted list or CSV could not be read (empty, too large, or no hotel serial column)',
+  },
 } as const;
 
 export type ErrorCodeEntry = { code: string; message: string };
