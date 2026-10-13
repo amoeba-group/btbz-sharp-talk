@@ -76,7 +76,8 @@ Commits (all end with the `Co-Authored-By` line):
 - `e127fdb2` feat(ai-engine): generic bounded model<->tools loop runner
 - `d9967d91` feat(partner-data): optional model-driven lookups via native tool calling
 - `ebd1e3d0` feat(web): choose the partner lookup method in the partner-data card
-- (docs + final fixes follow in the last commit of the branch)
+- `f0b5f849` test(partner-data): metrics, planner prompt, lookup-log mode; guard the tools collaborator
+- `46414af6` docs: guide, TCR, RPT, call-rate note in the API-REQ (plus this SHA list, in a follow-up docs commit)
 
 Backend: `ai-adapter.interface.ts`, `adapters/{anthropic,openai,stub}.adapter.ts`, `ai-gateway.service.ts`, `domain/ai-engine/tool-loop.service.ts`, `domain/partner-data/{partner-tools.ts, partner-tools.service.ts, partner-data.step.ts, partner-flag.service.ts, partner-settings.service.ts, partner-data.controller.ts, partner-data.constants.ts, partner-data.service.ts (mode in meta), partner-lookup-log.service.ts, partner-intent.util.ts (looksLikePartnerQuestion), partner-data.module.ts, dto/*, partner-data.mapper.ts}`, entities `partner-lookup-log.entity.ts` / `tenant.entity.ts`, `error-code.constant.ts` (E5142–E5144), `app-metrics.ts` (+1 counter), `chat.service.ts` (+2 hunks).
 Web: `PartnerDataCard.tsx`, `partner-data.service.ts`, `partner-data.hooks.ts`, new `partner-data-patch.ts`, six `settings.json`.
