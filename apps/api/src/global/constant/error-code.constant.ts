@@ -266,6 +266,11 @@ export const ERROR_CODE = {
   JOURNEY_STAGE_IN_USE: { code: 'E5094', message: 'Move the journeys out of a stage before removing it' },
   // E5095 — Hotel region routing table (PLN-261012 SG-65).
   REGION_ROUTING_INVALID: { code: 'E5095', message: 'The region routing table is invalid' },
+  // E5096-E5097 — signed identity lifecycle (PLN-261012 SG-03).
+  /** The session's signed claims are older than the max age: the host must sign again. */
+  IDENTITY_EXPIRED: { code: 'E5096', message: 'The signed identity has expired' },
+  /** Console save of `identity_policy` with an out-of-range value. */
+  IDENTITY_POLICY_INVALID: { code: 'E5097', message: 'The identity policy is invalid' },
 
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },

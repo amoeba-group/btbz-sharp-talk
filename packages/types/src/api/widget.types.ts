@@ -110,6 +110,19 @@ export interface SessionResponse {
    * reads as "no feed".
    */
   issueFeed?: boolean;
+  /**
+   * The signed identity of this session has lapsed (PLN-261012 SG-03): the host
+   * must sign again. Present (true) only then, so an older widget and every
+   * tenant that never sends claims see exactly the response they always had.
+   * The session is treated as a guest meanwhile — `authenticated` is false.
+   */
+  identityExpired?: boolean;
+  /**
+   * When the signed claims of this session lapse, or lapsed (ISO 8601). Lets the
+   * widget tell the host to re-sign BEFORE the next message hits the gate.
+   * Absent for guests, v1 identities and platform logins (nothing to age).
+   */
+  identityExpiresAt?: string | null;
 }
 
 // ---- chat ---------------------------------------------------------------
@@ -184,6 +197,8 @@ export interface ConversationResponse {
    */
   csatRating?: number | null;
   canRate?: boolean;
+  /** Signed identity lapsed (PLN-261012 SG-03); present (true) only then. See SessionResponse. */
+  identityExpired?: boolean;
 }
 
 export interface ChatTurnResponse {
@@ -224,6 +239,8 @@ export interface ChatTurnResponse {
    * in place of a handoff. Absent on ordinary turns — the RAG path has none.
    */
   followUps?: ScenarioFollowUpResponse[];
+  /** Signed identity lapsed (PLN-261012 SG-03); present (true) only then. See SessionResponse. */
+  identityExpired?: boolean;
 }
 
 /** `POST /chat/escalate` (PLN-261007 Team Routing). */
@@ -259,6 +276,8 @@ export interface ScenarioTurnResponse {
   followUps: ScenarioFollowUpResponse[];
   /** Absent/`none` = stay in the thread. */
   postAction?: ScenarioPostActionResponse;
+  /** Signed identity lapsed (PLN-261012 SG-03); present (true) only then. See SessionResponse. */
+  identityExpired?: boolean;
 }
 
 // ---- orders -------------------------------------------------------------

@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { bigintTransformer } from '../../../global/util/transformers';
 import { decryptSecret, encryptSecret } from '../../../global/util/crypto.util';
-import type { PrivacyNoticeCopy, WidgetAccess, WidgetTheme } from '@sharptalk/types';
+import type { IdentityPolicy, PrivacyNoticeCopy, WidgetAccess, WidgetTheme } from '@sharptalk/types';
 
 /**
  * The embed secret is a credential, so it never sits in the database as text.
@@ -189,6 +189,15 @@ export class Tenant {
     transformer: secretTransformer,
   })
   embedSecret: string | null;
+
+  /**
+   * How the signed identity from `identify` is treated (PLN-261012 SG-03 / SG-04):
+   * `{ maxAgeHours?, refuseV1? }`. NULL = never configured = the platform default
+   * (`IDENTITY_MAX_AGE_HOURS`, v1 identify allowed), so no existing tenant changes.
+   * Explicit `type`: a union without it makes TypeORM infer `Object` and the boot fails.
+   */
+  @Column({ name: 'identity_policy', type: 'json', nullable: true })
+  identityPolicy: IdentityPolicy | null;
 
   /**
    * Issue-workflow entitlement (REQ-260807 §11.1, server-judged):
