@@ -6,6 +6,7 @@ import { Session } from '../session/entity/session.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { User } from '../user/entity/user.entity';
 import { KbDocument } from '../knowledge/entity/kb-document.entity';
+import { KbCategory } from '../knowledge/entity/kb-category.entity';
 import { Assignment } from '../agent/entity/assignment.entity';
 import { AgentDailyStat } from '../agent/entity/agent-daily-stat.entity';
 import { ChatService } from './chat.service';
@@ -36,6 +37,9 @@ import { PilotModule } from '../pilot/pilot.module';
       Tenant,
       User,
       KbDocument,
+      // Repository only — RagService asks whether the tenant has a manager-only category
+      // (PLN-261012 SG-10) without importing Knowledge code (Knowledge imports Chat).
+      KbCategory,
       Assignment,
       // Satisfaction ratings roll up into the agent's daily row.
       AgentDailyStat,

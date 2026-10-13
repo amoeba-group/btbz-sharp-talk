@@ -2,8 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, In, IsNull, Repository } from 'typeorm';
 import { AI_FUNCTION, KB_VERSION_MISMATCH, KB_VERSION_STATE, kbVersionCaveatText, kbVersionState } from '@sharptalk/types';
-import type { GuestGuidance, KbVersionPolicy } from '@sharptalk/types';
+import type { Audience, GuestGuidance, KbVersionPolicy } from '@sharptalk/types';
 import { KbDocument } from '../knowledge/entity/kb-document.entity';
+import { KbCategory } from '../knowledge/entity/kb-category.entity';
+import {
+  MANAGER_ONLY_EXCLUSION_SQL,
+  audienceNeedsManagerExclusion,
+  tenantHasManagerTier,
+} from '../knowledge/kb-access.util';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { normalizeStorefrontUrl, productLinkFor } from '../../global/util/storefront-url.util';
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
@@ -72,6 +78,15 @@ export interface RagCandidateInput {
  */
 export interface RetrievalOpts {
   guestOnly?: boolean;
+  /**
+   * Who the answer is for (PLN-261012 SG-10): `audienceOf(effectiveIdentity(session))`.
+   * Every caller below `manager` — guests of `open` agents and the guest-gated path
+   * included — is kept out of manager-only categories, in `baseQuery`, so both legs and
+   * the vector re-hydration obey it. Absent = no audience (the operator's tester, agent
+   * coaching): sees everything, as before. Resolved against the tenant's categories inside
+   * `retrieveHybrid`: a tenant with no manager-only category is searched byte-identically.
+   */
+  audience?: Audience;
   /**
    * KB UI-version `hide` policy (PLN-261012 SG-20): the tenant's reference
    * version, NORMALISED. Documents of any other version are excluded; unversioned
@@ -225,6 +240,16 @@ export class RagService {
   private readonly logger = new Logger(RagService.name);
   /** Per-leg candidate depth before fusion; the merged top-`limit` is returned. */
   private static readonly LEG_LIMIT = 8;
+  /**
+   * Vector-leg depth when a scope applies (PLN-261012 SG-10, REQ D-15). Qdrant knows
+   * nothing about categories, agents or tiers: it returns its nearest neighbours and
+   * the scope is applied afterwards, when the ids are re-hydrated through `baseQuery`.
+   * With only 8 taken first, in-scope documents could be starved by out-of-scope
+   * neighbours (a receptionist's question whose top 8 are all manager-only) and the
+   * gate over-refused. Three times as many leaves room; only applied when a scope is
+   * active so an unscoped tenant's search is unchanged.
+   */
+  static readonly SCOPED_LEG_LIMIT = 24;
   /** RRF constant (standard k=60). */
   private static readonly RRF_K = 60;
   /** POL-013 nudge: knowledge_store outranks google_drive on near-ties. */
@@ -273,7 +298,28 @@ export class RagService {
     private readonly ai: AiGatewayService,
     private readonly qdrant: QdrantService,
     private readonly aiConfig: AiConfigService,
+    // Appended last and optional so positional specs that predate it stay valid. Absent, the
+    // tier test cannot be answered and fails CLOSED: the manager-only exclusion is applied.
+    @InjectRepository(KbCategory) private readonly categoryRepo?: Repository<KbCategory>,
   ) {}
+
+  /**
+   * Does the tenant have at least one manager-only KB category (PLN-261012 SG-10)? Gates
+   * the exclusion predicate and the extra "is this a manager topic" grounding check, so a
+   * tenant that never configured a tier is searched byte-identically. Fail-closed: when
+   * the answer is unknown (no repository, a failed read) the tenant is treated as having
+   * tiers — a wrongly applied exclusion costs an extra predicate, a wrongly skipped one
+   * leaks.
+   */
+  async hasAudienceTiers(tenantId: number): Promise<boolean> {
+    if (!this.categoryRepo) return true;
+    try {
+      return await tenantHasManagerTier(this.categoryRepo, tenantId);
+    } catch (e) {
+      this.logger.warn(`audience tier lookup failed, treating tenant ${tenantId} as tiered: ${(e as Error).message}`);
+      return true;
+    }
+  }
 
   /** The tenant's storefront origin, or null when nobody has configured one. */
   private async storefrontFor(tenantId: number): Promise<string | null> {
@@ -408,6 +454,28 @@ export class RagService {
   }
 
   /**
+   * Resolves `opts.audience` against the tenant (PLN-261012 SG-10). A caller below
+   * `manager` keeps it only when the tenant has a manager-only category: with none, the
+   * exclusion would match nothing, so it is dropped here and `baseQuery` builds exactly
+   * the SQL it always built. Read once per search, like `withVersionScope`, because every
+   * entry point — chat, grounding checks, the console tester — ends up in `retrieveHybrid`.
+   */
+  private async withAudienceScope(
+    tenantId: number,
+    opts: RetrievalOpts | undefined,
+  ): Promise<RetrievalOpts | undefined> {
+    if (!opts || !audienceNeedsManagerExclusion(opts.audience)) return opts;
+    if (await this.hasAudienceTiers(tenantId)) return opts;
+    const { audience: _dropped, ...rest } = opts;
+    return rest;
+  }
+
+  /** Is any scope active on this search? Then the vector leg is over-fetched (SCOPED_LEG_LIMIT). */
+  private static scopeApplies(opts: RetrievalOpts | undefined): boolean {
+    return !!opts && (!!opts.guestOnly || audienceNeedsManagerExclusion(opts.audience) || !!opts.uiVersionReference);
+  }
+
+  /**
    * The ONE fixed sentence to append to an answer that cites a document of a
    * different UI version, or null (PLN-261012 SG-20). Appended by the chat path
    * after moderation, like the contact footer — operator-written fixed text, not
@@ -493,9 +561,16 @@ export class RagService {
     opts: RetrievalOpts | undefined,
   ): Promise<{ chunks: RetrievedChunk[]; vectorProvider: string | null }> {
     opts = await this.withVersionScope(tenantId, opts); // KB UI-version `hide` (SG-20)
+    opts = await this.withAudienceScope(tenantId, opts); // manager-only categories (SG-10)
     const [ftDocs, vec] = await Promise.all([
       this.retrieveFulltext(tenantId, query, RagService.LEG_LIMIT, aiAgentId, opts),
-      this.retrieveVector(tenantId, query, RagService.LEG_LIMIT),
+      // The keyword leg is scoped in SQL BEFORE its limit; Qdrant is not, so when a scope is
+      // active the vector leg looks deeper (SG-10, D-15).
+      this.retrieveVector(
+        tenantId,
+        query,
+        RagService.scopeApplies(opts) ? RagService.SCOPED_LEG_LIMIT : RagService.LEG_LIMIT,
+      ),
     ]);
     // Uncalibrated (stub) vector scores may RANK docs but never ADMIT them:
     // hash-collision noise would otherwise pad off-topic queries with random
@@ -688,6 +763,15 @@ export class RagService {
                AND g.guest_visible = 1))`,
         { guestTenantId: tenantId },
       );
+    }
+    // Manager-only categories (PLN-261012 SG-10): kept out of EVERY caller below
+    // `manager` — a guest of an `open` agent and the guest-gated path included, the
+    // gate's own scope being a different question (is it public?) from this one (may
+    // this audience read it?). Same "not in the restricted set" polarity as the agent
+    // scope, so a tenant with no tier matches an empty set; `withAudienceScope` drops the
+    // audience for such a tenant, leaving this query byte-identical to before.
+    if (audienceNeedsManagerExclusion(opts?.audience)) {
+      qb.andWhere(MANAGER_ONLY_EXCLUSION_SQL, { audienceTenantId: tenantId });
     }
     // KB UI-version `hide` (PLN-261012 SG-20): only the tenant's reference
     // version and unversioned documents. Absent opts → no predicate, so a tenant

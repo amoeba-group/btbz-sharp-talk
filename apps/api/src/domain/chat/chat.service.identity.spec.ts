@@ -226,7 +226,7 @@ describe('SG-03 — lapsed signed claims read as a guest in the chat path', () =
     expect(res.authReason).toBe('login');
     expect(h.ragAnswer).not.toHaveBeenCalled();
     // The gate was measured on the PUBLIC scope only — the session was demoted to a guest.
-    expect(h.grounding).toHaveBeenCalledWith(1, expect.any(String), AGENT_ID, { guestOnly: true });
+    expect(h.grounding).toHaveBeenCalledWith(1, expect.any(String), AGENT_ID, { guestOnly: true, audience: 'public' });
   });
 
   it('…and the refusal is recorded as identity_expired, not as an ordinary guest gate', async () => {
