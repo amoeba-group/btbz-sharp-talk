@@ -30,20 +30,21 @@ import { Button } from '@/components/Button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ChannelBadge, CHANNEL_FILTERS, RECEIVE_ONLY_CHANNELS } from './ChannelBadge';
 
-/** Built-in team ids (PLN-261007 Team Routing); the API seeds the same pair. */
-const TEAM_FILTERS = ['cs', 'business'] as const;
-/** Regional-team filter values (PLN-261007 Hotel Region Routing); 'none' = region unknown. */
-const REGION_FILTERS = ['north', 'south', 'none'] as const;
 import { SessionAlias } from './SessionAlias';
 import { AutoReplyControl } from './AutoReplyControl';
 import { DraftPanel } from './DraftPanel';
 import { DutyToggle } from './DutyToggle';
+import { QueueChips, RegionHintBadge, WaitBadge } from './QueueBadges';
+import { RerouteControl } from './RerouteControl';
+// Source deep-import: the package entry point is CJS and fails the browser build for values.
+import { defaultRegionFilter, regionOptions } from '../../../../../packages/types/src/common/routing-queue';
 import { Badge } from '@/components/Badge';
 import { Modal } from '@/components/Modal';
 import { Input, FormRow } from '@/components/Field';
 import { toast } from '@/store/toast-store';
 import {
   useSessions,
+  useQueueCounts,
   useConversation,
   useConversationActions,
   useAskKnowledge,
@@ -204,10 +205,12 @@ export function LiveChatPage() {
   }, [hotelQuery]);
 
   // Team filter (PLN-261007 Team Routing): the option the customer picked when
-  // asking for a human. Built-in ids; a tenant's custom id still badges by id.
+  // asking for a human. Set from the chips above the list (PLN-261012 SG-66).
   const [teamFilter, setTeamFilter] = useState('all');
-  // Regional-team filter (PLN-261007 Hotel Region Routing): north | south | none.
+  // Regional-team filter (PLN-261007 Hotel Region Routing): mine | north | south | none | unmapped.
   const [regionFilter, setRegionFilter] = useState('all');
+  // Starts on "my region" for staff who have one (SG-66) - until they pick something themselves.
+  const [regionTouched, setRegionTouched] = useState(false);
 
   // Detail-header controls (REQ-260825 R8).
   const [assignOpen, setAssignOpen] = useState(false);
@@ -272,6 +275,13 @@ export function LiveChatPage() {
     teamFilter,
     regionFilter,
   );
+  // Counters for the chips and the region select, same scope and channel as the list (SG-66).
+  const { data: queueCounts } = useQueueCounts(scope === 'groups' ? 'all' : scope, channel);
+  useEffect(() => {
+    if (regionTouched || !queueCounts) return;
+    const initial = defaultRegionFilter(queueCounts);
+    setRegionFilter((current) => (current === 'all' ? initial : current));
+  }, [queueCounts, regionTouched]);
   const { data: groups, isLoading: groupsLoading } = useGroups(scope === 'groups');
   const { data: convo, isLoading: convoLoading, isFetching: convoFetching, refetch: refetchConvo } =
     useConversation(selected);
@@ -555,6 +565,14 @@ export function LiveChatPage() {
               </button>
             ))}
           </div>
+          {/* Per-team counters (PLN-261012 SG-66); a chip is a team filter, a second click clears it. */}
+          {scope !== 'groups' && (
+            <QueueChips
+              counts={queueCounts}
+              active={teamFilter}
+              onSelect={(team) => setTeamFilter(team === teamFilter ? 'all' : team)}
+            />
+          )}
           <div className="flex flex-wrap items-center gap-1 border-b border-gray-100 px-2 py-2">
             <button
               type="button"
@@ -597,31 +615,24 @@ export function LiveChatPage() {
                 </option>
               ))}
             </select>
-            {/* Team filter (PLN-261007 Team Routing). */}
-            <select
-              value={teamFilter}
-              onChange={(e) => setTeamFilter(e.target.value)}
-              aria-label={t('team.filterLabel')}
-              className="rounded-full border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 outline-none focus:border-primary-400"
-            >
-              <option value="all">{t('team.filterAll')}</option>
-              {TEAM_FILTERS.map((key) => (
-                <option key={key} value={key}>
-                  {t(`team.${key}`, { defaultValue: key })}
-                </option>
-              ))}
-            </select>
             {/* Regional-team filter (PLN-261007 Hotel Region Routing). */}
             <select
               value={regionFilter}
-              onChange={(e) => setRegionFilter(e.target.value)}
+              onChange={(e) => {
+                setRegionFilter(e.target.value);
+                setRegionTouched(true);
+              }}
               aria-label={t('region.filterLabel')}
               className="rounded-full border border-gray-200 bg-white px-2 py-1 text-xs text-gray-600 outline-none focus:border-primary-400"
             >
-              <option value="all">{t('region.filterAll')}</option>
-              {REGION_FILTERS.map((key) => (
-                <option key={key} value={key}>
-                  {t(`region.${key}`)}
+              {regionOptions(queueCounts, regionFilter).map((o) => (
+                <option key={o.key} value={o.key}>
+                  {o.key === 'all'
+                    ? t('region.filterAll')
+                    : o.key === 'mine'
+                      ? t('region.mine', { region: t(`region.${queueCounts?.myRegion ?? 'none'}`) })
+                      : t(`region.${o.key}`)}
+                  {o.count != null ? ` (${o.count})` : ''}
                 </option>
               ))}
             </select>
@@ -834,6 +845,9 @@ export function LiveChatPage() {
                           {t(`region.${s.supportRegion}`, { defaultValue: s.supportRegion })}
                         </span>
                       )}
+                      {/* "?" for a province the region table does not list, and how long it has waited (SG-65/SG-66). */}
+                      <RegionHintBadge supportRegion={s.supportRegion} hint={s.supportRegionHint} />
+                      <WaitBadge status={s.status} escalatedAt={s.escalatedAt} />
                       <ChannelBadge channel={s.channel} />
                       <StatusBadge
                         status={s.status}
@@ -930,6 +944,8 @@ export function LiveChatPage() {
                       {t('region.badgeTitle')}: {t(`region.${convo.supportRegion}`, { defaultValue: convo.supportRegion })}
                     </Badge>
                   )}
+                  <RegionHintBadge supportRegion={convo?.supportRegion} hint={convo?.supportRegionHint} />
+                  <WaitBadge status={convo?.status} escalatedAt={convo?.escalatedAt} />
                   {convo?.assignedTo && (
                     <Badge tone="primary">
                       {t('agentControls.assignedTo')}: {convo.assignedTo}
@@ -969,6 +985,13 @@ export function LiveChatPage() {
                   >
                     <User className="h-4 w-4" /> {t('agentControls.assignButton')}
                   </Button>
+                  {/* Hand the thread to another team/region and page that team (PLN-261012 SG-64). */}
+                  <RerouteControl
+                    conversationId={selected}
+                    status={convo?.status}
+                    supportType={convo?.supportType}
+                    supportRegion={convo?.supportRegion}
+                  />
                   <Button
                     size="sm"
                     variant="secondary"

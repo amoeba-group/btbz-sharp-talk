@@ -67,6 +67,35 @@ export class Conversation {
   supportRegion: string | null;
 
   /**
+   * The signed province the region table did NOT list (PLN-261012 SG-65): persisted
+   * so the queue can show a "?" badge with the province in its tooltip and filter on
+   * it. `supportRegion` stays null for such a row. Cleared with the rest of the
+   * escalation state when the thread is handed back to the AI.
+   */
+  @Column({ name: 'support_region_hint', type: 'varchar', length: 64, nullable: true })
+  supportRegionHint: string | null;
+
+  /**
+   * When the conversation became WAITING for a person (PLN-261012 SG-63/66). The
+   * queue shows the age from it and the unclaimed-alert sweeper counts from it.
+   * Re-stamped by a re-route, cleared by a hand-back to the AI. NULL = never
+   * escalated, or waiting since before the column existed (the sweeper skips those).
+   */
+  @Column({ name: 'escalated_at', type: 'datetime', nullable: true })
+  escalatedAt: Date | null;
+
+  /**
+   * "UNCLAIMED" re-pages sent for the current waiting spell and when the last one went
+   * out (PLN-261012 SG-63): the de-dupe latch and the cap, kept on the row so a
+   * restart or a second API instance cannot page twice.
+   */
+  @Column({ name: 'unclaimed_pages', type: 'tinyint', unsigned: true, default: 0 })
+  unclaimedPages: number;
+
+  @Column({ name: 'unclaimed_paged_at', type: 'datetime', nullable: true })
+  unclaimedPagedAt: Date | null;
+
+  /**
    * When the "anything else?" check was sent (PLN-260810 P1). Doubles as the
    * idempotency guard — a non-null value means the question already went out,
    * so a sweep that runs every 30 seconds cannot ask twice.

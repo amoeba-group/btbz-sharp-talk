@@ -133,9 +133,16 @@ http.interceptors.response.use(
       (envelope && typeof envelope === 'object' && envelope.error?.message) ||
       error.message ||
       'Request failed';
-    const wrapped = new Error(message) as Error & { status?: number; code?: string };
+    const wrapped = new Error(message) as Error & {
+      status?: number;
+      code?: string;
+      details?: Record<string, string[]>;
+    };
     wrapped.status = error.response?.status;
     wrapped.code = envelope?.error?.code;
+    // Which row the server refused (PLN-261012 SG-65): a generic "invalid" toast left the
+    // operator guessing, the details say "categories[1].provinces entries are at most 80 ...".
+    wrapped.details = envelope?.error?.details;
     return Promise.reject(wrapped);
   },
 );

@@ -20,6 +20,7 @@ import { CAPABILITY, Principal, USER_RANK } from '@sharptalk/types';
 import { normalizePage, buildPagination } from '@sharptalk/common';
 import { AgentService } from './agent.service';
 import { AgentAlertService } from './agent-alert.service';
+import { AgentRoutingService } from './agent-routing.service';
 import { BriefingService } from './briefing.service';
 import { ChatCommentService } from './chat-comment.service';
 import { ChatGroupService } from './chat-group.service';
@@ -55,6 +56,9 @@ import {
   TranslateMessageRequest,
   UpdateCommentRequest,
   UpsertProfileRequest,
+  QueueCountsQuery,
+  RerouteConversationRequest,
+  RoutingOptionsQuery,
 } from './dto/request/agent.request';
 import {
   toAlertResponse,
@@ -89,6 +93,7 @@ export class AgentConsoleController {
     private readonly briefingService: BriefingService,
     private readonly commentService: ChatCommentService,
     private readonly groupService: ChatGroupService,
+    private readonly routing: AgentRoutingService,
   ) {}
 
   // ---- session groups: timeline / project (PLN-260824-Session-Grouping) ----
@@ -286,8 +291,10 @@ export class AgentConsoleController {
     // heartbeat of an on-duty agent (PLN-261012 SG-60). Throttled and failure-proof
     // inside the service, so it never delays or breaks the feed.
     await this.alertService.touchPresence(actorIdOf(user), tenantOf(user));
-    const items = await this.alertService.list(query.status ?? 'new', actorIdOf(user), tenantOf(user));
-    return items.map(toAlertResponse);
+    // With the conversation's team, region and partner on each row (PLN-261012 SG-66); a strict-mode
+    // region-scoped alert is only listed for staff of that region and nationwide staff (SG-67).
+    const items = await this.alertService.listWithContext(query.status ?? 'new', actorIdOf(user), tenantOf(user));
+    return items.map(({ alert, view }) => toAlertResponse(alert, view));
   }
 
   @Post('alerts/:id/ack')
@@ -308,6 +315,12 @@ export class AgentConsoleController {
     const scope = query.status === 'queue' || query.status === 'ended' ? query.status : 'all';
     const agentFilter =
       query.ai_agent_id && query.ai_agent_id !== 'all' ? Number(query.ai_agent_id) : undefined;
+    // "My region" (PLN-261012 SG-66): the caller's own users.region. Nationwide staff have none,
+    // and for them the filter means everything.
+    const regionFilter =
+      query.support_region === 'mine'
+        ? ((await this.routing.userRegion(tenantOf(user), actorIdOf(user))) ?? 'all')
+        : query.support_region;
     const { items, total } = await this.agentService.listSessions(
       tenantOf(user),
       page,
@@ -318,7 +331,7 @@ export class AgentConsoleController {
       Number.isFinite(agentFilter) ? agentFilter : undefined,
       query.hotel,
       query.support_type,
-      query.support_region,
+      regionFilter,
     );
     return new Paginated(
       items.map(
@@ -349,6 +362,37 @@ export class AgentConsoleController {
       ),
       buildPagination(page, size, total),
     );
+  }
+
+  @Get('sessions/counts')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Queue counters per team and region, plus the caller region (PLN-261012 SG-66)' })
+  async sessionCounts(@CurrentUser() user: Principal, @Query() query: QueueCountsQuery) {
+    const scope = query.status === 'queue' || query.status === 'ended' ? query.status : 'all';
+    return this.routing.queueCounts(tenantOf(user), actorIdOf(user), scope, query.channel);
+  }
+
+  @Get('routing-options')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Teams and regions the hand-over control offers (PLN-261012 SG-64)' })
+  async routingOptions(@CurrentUser() user: Principal, @Query() query: RoutingOptionsQuery) {
+    return this.routing.options(tenantOf(user), (query.lang ?? 'EN').toUpperCase());
+  }
+
+  @Patch('conversations/:id/routing')
+  // CONVERSATION_HANDLE, not _ASSIGN: a staff member with the CS label may hand a conversation
+  // over (the customer picked the wrong team) - the matrix already requires that label.
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Hand the conversation over to another team/region and page its team (PLN-261012 SG-64)' })
+  async rerouteConversation(
+    @CurrentUser() user: Principal,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: RerouteConversationRequest,
+  ) {
+    return this.routing.reroute(id, tenantOf(user), actorIdOf(user), {
+      supportType: body.support_type,
+      region: body.region,
+    });
   }
 
   @Get('ai-agents')
@@ -550,6 +594,9 @@ export class AgentConsoleController {
       supportType: conversation.supportType ?? null,
       // Regional team of the hotel (PLN-261007 Hotel Region Routing).
       supportRegion: conversation.supportRegion ?? null,
+      // Unmapped province hint and the start of the waiting spell (PLN-261012 SG-65/SG-66).
+      supportRegionHint: conversation.supportRegionHint ?? null,
+      escalatedAt: conversation.escalatedAt ?? null,
       // Current human owner, for the detail header (REQ-260825 R8-②).
       assignedTo:
         conversation.agentId != null

@@ -47,9 +47,31 @@ export interface RegionCategoryRule {
   provinces: string[];
 }
 
+/**
+ * How hard the regional team boundary is (PLN-261012 SG-67). `prefer` (the default,
+ * and what an absent value means) asks the hotel's own team first and then falls
+ * back across regions exactly as before; `strict` never crosses a region on its own.
+ */
+export const REGION_ROUTING_MODE = { PREFER: 'prefer', STRICT: 'strict' } as const;
+export type RegionRoutingMode = (typeof REGION_ROUTING_MODE)[keyof typeof REGION_ROUTING_MODE];
+
 export interface RegionRoutingConfig {
   enabled: boolean;
   categories?: RegionCategoryRule[];
+  /** Absent = `prefer` — today's behaviour (PLN-261012 SG-67). */
+  mode?: RegionRoutingMode;
+  /**
+   * Strict mode only: minutes an unclaimed conversation waits before the alert is
+   * widened to the OTHER region's team. This is the only cross-region path in strict
+   * mode; absent or 0 = never widen.
+   */
+  widenAfterMinutes?: number;
+  /**
+   * Strict/prefer: the Slack incoming webhook of each regional team's channel (used
+   * instead of the global SLACK_WEBHOOK_URL for that team's alerts). Stored sealed
+   * (AES-256-GCM) and returned masked, never in clear.
+   */
+  slackByRegion?: Partial<Record<UserRegion, string>>;
 }
 
 /** What a province resolved to. */

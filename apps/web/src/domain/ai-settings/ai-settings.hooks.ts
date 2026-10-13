@@ -1,7 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { aiSettingsService, type AiFunction } from './ai-settings.service';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
+// Source deep-import: the package entry point is CJS and fails the browser build for values.
+import { errorDetailText } from '../../../../../packages/types/src/common/error-detail';
 
 export const useAiSettings = () => {
   const tenantKey = useTenantKey();
@@ -48,6 +51,7 @@ export const useAiConfigDefaults = () => {
 };
 
 export function useUpdateAiConfig() {
+  const { t } = useTranslation('aiSetting');
   const qc = useQueryClient();
   const tenantKey = useTenantKey();
   return useMutation({
@@ -58,7 +62,20 @@ export function useUpdateAiConfig() {
       qc.invalidateQueries({ queryKey: ['ai-agents', tenantKey] });
       toast.success('AI configuration saved.');
     },
-    onError: (e: Error) => toast.error(e.message),
+    // The server says WHICH row it refused (PLN-261012 SG-65): a region table or hand-off setting
+    // that fails validation used to show only the generic code message. Error toasts stay until
+    // dismissed (feedback rule), so the detail can actually be read.
+    onError: (e: Error & { code?: string; details?: Record<string, string[]> }) => {
+      const detail = errorDetailText(e.details);
+      const message = !detail
+        ? e.message
+        : e.code === 'E5095'
+          ? t('handoff.regionInvalid', { detail })
+          : e.code === 'E5128'
+            ? t('handoff.configInvalid', { detail })
+            : `${e.message}: ${detail}`;
+      toast.error(message, { sticky: true });
+    },
   });
 }
 

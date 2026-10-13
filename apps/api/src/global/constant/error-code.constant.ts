@@ -328,6 +328,12 @@ export const ERROR_CODE = {
   READINESS_FAILED: { code: 'E5122', message: 'A required dependency is not ready' },
   /** The hook was called but no alert channel took it (none configured, or every channel failed). */
   OPS_ALERT_NOT_DELIVERED: { code: 'E5123', message: 'The operational alert could not be delivered' },
+  // E5125-E5129 — Routing extras: re-route, hotel→province CSV, handoff config (PLN-261012 SG-64/SG-67).
+  CONVERSATION_NOT_REROUTABLE: { code: 'E5125', message: 'The conversation has ended and cannot be handed over' },
+  ROUTING_TARGET_INVALID: { code: 'E5126', message: 'Unknown team or region for this tenant' },
+  HOTEL_PROVINCE_CSV_INVALID: { code: 'E5127', message: 'The hotel province file is invalid' },
+  HANDOFF_CONFIG_INVALID: { code: 'E5128', message: 'The hand-off settings are invalid' },
+  ROUTING_NOT_ENABLED: { code: 'E5129', message: 'Team routing is not enabled for this tenant' },
 } as const;
 
 export type ErrorCodeEntry = { code: string; message: string };

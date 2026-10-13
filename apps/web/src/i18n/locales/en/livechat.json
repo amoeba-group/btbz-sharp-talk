@@ -143,7 +143,8 @@
     "filterAll": "All teams",
     "cs": "Customer Service",
     "business": "Business",
-    "badgeTitle": "Team"
+    "badgeTitle": "Team",
+    "unassigned": "No team"
   },
   "region": {
     "filterLabel": "Filter by region",
@@ -151,7 +152,11 @@
     "north": "North",
     "south": "South",
     "none": "Unknown region",
-    "badgeTitle": "Region"
+    "badgeTitle": "Region",
+    "mine": "My region ({{region}})",
+    "unmapped": "Unlisted province",
+    "hintTitle": "Region unknown — the province “{{province}}” is not in the region table",
+    "unmappedLine": "? (unlisted: {{province}})"
   },
   "channel": {
     "filterLabel": "Filter by channel",
@@ -440,5 +445,41 @@
     "switchedOn": "You are on duty. New escalations for your team come to you first.",
     "switchedOff": "You are off duty. New escalations go to other agents.",
     "saveError": "Could not change your duty status. Try again."
+  },
+  "alarmReasonUnclaimed": "Nobody has taken this conversation yet.",
+  "alarmReasonRerouted": "An agent handed this conversation over to your team.",
+  "alarmTeam": "Team",
+  "alarmRegion": "Region",
+  "alarmPartner": "Hotel",
+  "alarmWaiting": "Waiting",
+  "alarmScope": "Alert for",
+  "alarmScopeRegion": "{{region}} team only",
+  "queue": {
+    "chipsLabel": "Queue by team",
+    "waiting": "Waiting {{time}}",
+    "waitingTitle": "Waiting for a person since {{at}}",
+    "unclaimedTitle": "Nobody has taken this conversation yet",
+    "unclaimedSummary": "{{count}} unclaimed · oldest {{time}}"
+  },
+  "reroute": {
+    "button": "Hand over to…",
+    "hint": "Hand this conversation over to another team",
+    "endedHint": "The conversation has ended",
+    "title": "Hand over this conversation",
+    "explain": "The conversation goes back to the waiting queue of the team you choose, and that team is alerted. The customer is not told.",
+    "current": "Now: {{team}} · {{region}}",
+    "team": "Hand over to",
+    "teamPlaceholder": "Choose a team…",
+    "region": "Region",
+    "regionKeep": "Keep the current region",
+    "regionClear": "No region",
+    "confirm": "Hand over",
+    "savedPaged": "Handed over to {{team}}. {{name}} was alerted.",
+    "savedRegion": "Handed over to {{team}}. The {{region}} team was alerted.",
+    "savedBroadcast": "Handed over to {{team}}. Everyone who can take it was alerted.",
+    "saveError": "Could not hand the conversation over.",
+    "errorEnded": "This conversation has ended and cannot be handed over.",
+    "errorTarget": "That team or region is not available.",
+    "errorNotEnabled": "Team routing is not switched on."
   }
 }

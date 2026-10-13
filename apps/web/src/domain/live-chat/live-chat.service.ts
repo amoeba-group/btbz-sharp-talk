@@ -1,8 +1,9 @@
 import { apiDelete, apiGet, apiPatch, apiPost, apiPut, apiUpload } from '@/lib/api-client';
 // Type-only: the package's CJS entry is unsafe for VALUE imports in the browser build.
 import type { IdentityClaims } from '@sharptalk/types';
+import type { QueueCountsView } from '../../../../../packages/types/src/common/routing-queue';
 
-export type { IdentityClaims };
+export type { IdentityClaims, QueueCountsView };
 
 /** Mirrors the API's toSessionResponse — no invented fields (they render as '—'). */
 export interface GroupRef {
@@ -55,6 +56,10 @@ export interface AgentSession {
   supportType?: string | null;
   /** Regional team of the hotel, north | south (PLN-261007 Hotel Region Routing). */
   supportRegion?: string | null;
+  /** Signed province the region table does not list: a "?" badge with this as its tooltip (SG-65). */
+  supportRegionHint?: string | null;
+  /** When the thread started waiting for a person — the queue shows the age (SG-66). */
+  escalatedAt?: string | null;
   /** Team pin (PLN-260826) — pinned rows arrive first from the server. */
   pinned?: boolean;
   pinnedAt?: string | null;
@@ -140,6 +145,8 @@ export interface ConversationDetail {
   supportType?: string | null;
   /** Regional team of the hotel, north | south (PLN-261007 Hotel Region Routing). */
   supportRegion?: string | null;
+  supportRegionHint?: string | null;
+  escalatedAt?: string | null;
   aiAgentId?: string | null;
   aiAgentName?: string | null;
   /** Signed partner context for the header (REQ-261006 W6). */
@@ -217,10 +224,36 @@ export interface AgentAlert {
   id: string;
   conversationId: string;
   sessionId?: string | null;
-  reason: 'low_confidence' | 'moderation_blocked' | 'user_request' | string;
+  reason: 'low_confidence' | 'moderation_blocked' | 'user_request' | 'unclaimed' | 'rerouted' | string;
   preview?: string | null;
   status: 'new' | 'acked' | string;
   createdAt?: string;
+  /** Strict regional routing: the team a broadcast alert is scoped to; null = for everyone. */
+  targetRegion?: string | null;
+  /** What the conversation says now (PLN-261012 SG-66): team, region, the "?" province, partner. */
+  supportType?: string | null;
+  supportRegion?: string | null;
+  supportRegionHint?: string | null;
+  escalatedAt?: string | null;
+  partner?: { hotelName: string | null; hotelSn: string; role: string } | null;
+}
+
+/** The choices of the "Hand over to…" control (PLN-261012 SG-64). */
+export interface RoutingOptions {
+  /** Team routing is on for the tenant; without it there is nothing to hand over to. */
+  enabled: boolean;
+  teams: Array<{ id: string; label: string }>;
+  regionEnabled: boolean;
+  regions: string[];
+}
+
+/** What a hand-over did: who was asked. */
+export interface RerouteResult {
+  id: number;
+  status: string;
+  supportType: string;
+  supportRegion: string | null;
+  notified: { userId: number | null; name: string | null; region: string | null };
 }
 
 /** The signed-in agent's own profile; `status === 'online'` is the "On duty" switch (SG-60). */
@@ -260,6 +293,21 @@ export const liveChatService = {
       ...(hotel?.trim() ? { hotel: hotel.trim() } : {}),
       ...(supportType && supportType !== 'all' ? { support_type: supportType } : {}),
       ...(supportRegion && supportRegion !== 'all' ? { support_region: supportRegion } : {}),
+    }),
+  /** Counters for the queue chips; `status` = the list scope (SG-66). */
+  queueCounts: (status?: string, channel?: string) =>
+    apiGet<QueueCountsView>('/agent/sessions/counts', {
+      ...(status && status !== 'all' ? { status } : {}),
+      ...(channel && channel !== 'all' ? { channel } : {}),
+    }),
+  /** Teams/regions the hand-over control offers, in the console language (SG-64). */
+  routingOptions: (lang: string) =>
+    apiGet<RoutingOptions>('/agent/routing-options', { lang: lang.toUpperCase().slice(0, 8) }),
+  /** Hand the conversation to another team/region; `region` undefined keeps it, null clears it. */
+  reroute: (id: string, body: { supportType: string; region?: string | null }) =>
+    apiPatch<RerouteResult>(`/agent/conversations/${id}/routing`, {
+      support_type: body.supportType,
+      ...(body.region !== undefined ? { region: body.region } : {}),
     }),
   aiAgents: () => apiGet<AiAgentOption[]>('/agent/ai-agents'),
   setAiAgent: (id: string, aiAgentId: number) =>

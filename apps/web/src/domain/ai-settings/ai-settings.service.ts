@@ -139,7 +139,17 @@ export interface HandoffConfig {
     /** Windows inside the shift when nobody is on duty (lunch) — off-hours routing. */
     breaks?: Array<{ start: string; end: string }>;
   };
-  offHours?: { email?: string; notice?: Partial<Record<ScenarioLang, string>> };
+  offHours?: {
+    email?: string;
+    /** Per regional team mailbox for off-hours summaries (PLN-261012 SG-67). */
+    emailByRegion?: Partial<Record<'north' | 'south', string>>;
+    notice?: Partial<Record<ScenarioLang, string>>;
+  };
+  /**
+   * Re-alert when nobody takes a waiting conversation (PLN-261012 SG-63). true/false force it on/off;
+   * absent = automatic (on where an alert can be pinned to one person).
+   */
+  unclaimedAlerts?: boolean;
   /** Policy deny-list (P2): matched messages are force-handed to a human. */
   denyRules?: Array<{
     keywords: string[];
@@ -158,7 +168,19 @@ export interface HandoffConfig {
   teamRouting?: {
     enabled: boolean;
     prompt?: Partial<Record<ScenarioLang, string>>;
-    options?: Array<{ id: string; jobLabel: string; label?: Partial<Record<ScenarioLang, string>> }>;
+    options?: Array<{
+      id: string;
+      jobLabel: string;
+      label?: Partial<Record<ScenarioLang, string>>;
+      /** This team's own hours; absent = the shared hours (PLN-261012 SG-67). */
+      businessHours?: {
+        timezone: string;
+        days: number[];
+        start: string;
+        end: string;
+        breaks?: Array<{ start: string; end: string }>;
+      };
+    }>;
   };
   /**
    * Hand the conversation to the team that looks after the hotel's region

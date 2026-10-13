@@ -143,7 +143,8 @@
     "filterAll": "전체 팀",
     "cs": "고객 서비스",
     "business": "비즈니스",
-    "badgeTitle": "팀"
+    "badgeTitle": "팀",
+    "unassigned": "팀 없음"
   },
   "region": {
     "filterLabel": "지역 필터",
@@ -151,7 +152,11 @@
     "north": "북부",
     "south": "남부",
     "none": "지역 미확인",
-    "badgeTitle": "지역"
+    "badgeTitle": "지역",
+    "mine": "내 지역 ({{region}})",
+    "unmapped": "미등록 시·도",
+    "hintTitle": "지역 미확인 — 시·도 “{{province}}”가 지역 표에 없습니다",
+    "unmappedLine": "? (미등록: {{province}})"
   },
   "channel": {
     "filterLabel": "채널 필터",
@@ -440,5 +445,41 @@
     "switchedOn": "근무 중으로 전환했습니다. 우리 팀의 새 상담 전환 알림을 먼저 받습니다.",
     "switchedOff": "근무 외로 전환했습니다. 새 상담 전환 알림은 다른 상담원에게 갑니다.",
     "saveError": "근무 상태를 변경하지 못했습니다. 다시 시도해 주세요."
+  },
+  "alarmReasonUnclaimed": "아직 아무도 이 대화를 맡지 않았습니다.",
+  "alarmReasonRerouted": "상담원이 이 대화를 우리 팀으로 넘겼습니다.",
+  "alarmTeam": "팀",
+  "alarmRegion": "지역",
+  "alarmPartner": "호텔",
+  "alarmWaiting": "대기",
+  "alarmScope": "알림 대상",
+  "alarmScopeRegion": "{{region}} 팀만",
+  "queue": {
+    "chipsLabel": "팀별 대기열",
+    "waiting": "대기 {{time}}",
+    "waitingTitle": "{{at}}부터 상담원을 기다리는 중",
+    "unclaimedTitle": "아직 아무도 이 대화를 맡지 않았습니다",
+    "unclaimedSummary": "미수락 {{count}}건 · 가장 오래된 대기 {{time}}"
+  },
+  "reroute": {
+    "button": "다른 팀으로 넘기기…",
+    "hint": "이 대화를 다른 팀으로 넘깁니다",
+    "endedHint": "종료된 대화입니다",
+    "title": "대화 넘기기",
+    "explain": "선택한 팀의 대기열로 대화가 돌아가고 해당 팀에 알림이 갑니다. 고객에게는 알리지 않습니다.",
+    "current": "현재: {{team}} · {{region}}",
+    "team": "넘길 팀",
+    "teamPlaceholder": "팀을 선택하세요…",
+    "region": "지역",
+    "regionKeep": "현재 지역 유지",
+    "regionClear": "지역 없음",
+    "confirm": "넘기기",
+    "savedPaged": "{{team}}(으)로 넘겼습니다. {{name}}님에게 알림이 갔습니다.",
+    "savedRegion": "{{team}}(으)로 넘겼습니다. {{region}} 팀에 알림이 갔습니다.",
+    "savedBroadcast": "{{team}}(으)로 넘겼습니다. 맡을 수 있는 모든 상담원에게 알림이 갔습니다.",
+    "saveError": "대화를 넘기지 못했습니다.",
+    "errorEnded": "종료된 대화는 넘길 수 없습니다.",
+    "errorTarget": "해당 팀이나 지역은 사용할 수 없습니다.",
+    "errorNotEnabled": "팀 라우팅이 켜져 있지 않습니다."
   }
 }

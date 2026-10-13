@@ -1,9 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { localized, normalizeProvince, regionLabelOf, resolveHotelRegion } from '@sharptalk/types';
-import type { HotelRegion, IdentityClaims, LocalizedText } from '@sharptalk/types';
+import type { HotelRegion, IdentityClaims, LocalizedText, RegionRoutingMode } from '@sharptalk/types';
 import { AiConfigService } from './ai-config.service';
 import { DENY_MODE } from './entity/tenant-ai-config.entity';
-import type { DenyMode, HandoffConfig } from './entity/tenant-ai-config.entity';
+import type { DenyMode, HandoffBusinessHours, HandoffConfig } from './entity/tenant-ai-config.entity';
+import { HotelProvince } from './entity/hotel-province.entity';
+import { openWebhook } from './slack-webhook.util';
 
 /** What the chat pipeline should do with one escalation (PLN-AiSetting W3). */
 export interface HandoffRoute {
@@ -32,6 +36,13 @@ const UNMAPPED_WARN_TTL_MS = 60 * 60 * 1000;
 /** Bound on remembered (tenant, province) pairs, so hostile input cannot grow the map. */
 const UNMAPPED_WARN_MAX = 500;
 
+/**
+ * The claims region routing reads: the signed province, and — for the hotel→province
+ * fallback — the signed hotelSn (PLN-261012 SG-67). `hotelSn` is optional here so a caller
+ * that only has a province keeps working.
+ */
+export type RegionClaims = Pick<IdentityClaims, 'province' | 'signed'> & Partial<Pick<IdentityClaims, 'hotelSn'>>;
+
 /** Result of resolving a hotel's province (PLN-261012 SG-61). */
 export interface RegionLookup {
   region: (HotelRegion & { label: string }) | null;
@@ -40,6 +51,50 @@ export interface RegionLookup {
    * the table does not list it — the case an operator must be able to see.
    */
   unmapped?: string;
+  /** The table's routing mode, set whenever region routing is ON (PLN-261012 SG-67). */
+  mode?: RegionRoutingMode;
+  /**
+   * 'hotel_table' when the signed claims carried no province and the tenant's
+   * hotel→province table (keyed by the signed hotelSn) supplied it (PLN-261012 SG-67);
+   * absent when the province came from the claims themselves.
+   */
+  source?: 'hotel_table';
+}
+
+/** Hotel→province answers are cached this long per (tenant, hotelSn); an upload clears them. */
+const HOTEL_PROVINCE_TTL_MS = 60 * 1000;
+/** Bound on cached (tenant, hotelSn) pairs, so a hostile hotelSn stream cannot grow the map. */
+const HOTEL_PROVINCE_CACHE_MAX = 5000;
+
+/**
+ * What the alert side needs to know about a tenant's routing, digested from the stored
+ * config in one place (PLN-261012 SG-63/SG-64/SG-67): the sweeper, the re-route and the
+ * alert fan-out all read it instead of each re-parsing `handoff_config`.
+ */
+export interface RoutingPolicy {
+  /** The tenant has a hand-off config at all. */
+  configured: boolean;
+  assigneeUserIds: number[];
+  /** Region routing is switched on. */
+  regionEnabled: boolean;
+  /** `prefer` unless the table says `strict`. */
+  regionMode: RegionRoutingMode;
+  /** Strict mode: minutes before an unclaimed alert widens across regions; null = never. */
+  widenAfterMinutes: number | null;
+  /** Regional Slack webhooks, opened (clear) — never logged, never put on an event. */
+  slackByRegion: Partial<Record<'north' | 'south', string>>;
+  /** The team options (English wording) when team routing is on; empty otherwise. */
+  teams: Array<{ id: string; jobLabel: string; label: string }>;
+  /** Is the "nobody took it" re-alert on for this tenant (explicit flag, else automatic)? */
+  unclaimedAlerts: boolean;
+}
+
+/** Which team / region a route decision is for (PLN-261012 SG-67). */
+export interface RouteScope {
+  /** Regional team (north | south) of the hotel, when known: picks the regional mailbox. */
+  region?: string | null;
+  /** The team the customer picked (teamRouting option id): picks that team's own hours. */
+  supportType?: string | null;
 }
 
 /** One team the customer can pick, resolved to the session language. */
@@ -111,8 +166,15 @@ export class HandoffRouterService {
   private readonly logger = new Logger(HandoffRouterService.name);
   /** "tenant|normalised province" → when it was last warned about. */
   private readonly unmappedWarned = new Map<string, number>();
+  /** "tenant|hotelSn" → the province the hotel table holds for it (null = no row), with its age. */
+  private readonly hotelProvinces = new Map<string, { province: string | null; at: number }>();
 
-  constructor(private readonly aiConfig: AiConfigService) {}
+  constructor(
+    private readonly aiConfig: AiConfigService,
+    // Appended last so positional test doubles that predate it stay valid; without it the
+    // hotel→province fallback is simply off (PLN-261012 SG-67).
+    @InjectRepository(HotelProvince) private readonly hotelRepo?: Repository<HotelProvince>,
+  ) {}
 
   /**
    * The regional team that looks after this visitor's hotel, or null when the
@@ -128,7 +190,7 @@ export class HandoffRouterService {
    */
   async regionOf(
     tenantId: number | null,
-    claims: Pick<IdentityClaims, 'province' | 'signed'> | null | undefined,
+    claims: RegionClaims | null | undefined,
   ): Promise<(HotelRegion & { label: string }) | null> {
     return (await this.regionLookup(tenantId, claims)).region;
   }
@@ -140,20 +202,99 @@ export class HandoffRouterService {
    */
   async regionLookup(
     tenantId: number | null,
-    claims: Pick<IdentityClaims, 'province' | 'signed'> | null | undefined,
+    claims: RegionClaims | null | undefined,
   ): Promise<RegionLookup> {
-    const province = claims?.signed ? claims.province?.trim() : '';
-    if (!province) return { region: null };
-    const config = await this.aiConfig.getHandoffConfig(tenantId);
+    if (!claims?.signed) return { region: null };
+    let province = claims.province?.trim() ?? '';
+    let viaHotelTable = false;
+    let config: HandoffConfig | null;
+    if (province) {
+      config = await this.aiConfig.getHandoffConfig(tenantId);
+    } else {
+      // The signed claims carry no province: fall back to the tenant's hotel→province
+      // table, keyed by the SIGNED hotelSn only (PLN-261012 SG-67). `signed` is already
+      // required above, so an unsigned name or code can never reach this lookup, and a
+      // province the claims DO carry never gets here — the signature wins over the table.
+      const hotelSn = claims.hotelSn ? String(claims.hotelSn).trim() : '';
+      if (!hotelSn || !this.hotelRepo) return { region: null };
+      config = await this.aiConfig.getHandoffConfig(tenantId);
+      if (!config?.regionRouting?.enabled) return { region: null };
+      province = (await this.provinceOfHotel(tenantId, hotelSn)) ?? '';
+      if (!province) return { region: null };
+      viaHotelTable = true;
+    }
     const routing = config?.regionRouting;
     if (!routing?.enabled) return { region: null };
+    const mode = routing.mode;
     const region = resolveHotelRegion(routing, province);
     if (!region) {
       this.warnUnmapped(tenantId, province);
-      return { region: null, unmapped: province };
+      return { region: null, unmapped: province, ...(mode ? { mode } : {}), ...(viaHotelTable ? { source: 'hotel_table' as const } : {}) };
     }
     const rule = routing.categories?.find((c) => c.id === region.category);
-    return { region: { ...region, label: regionLabelOf(region, localized(rule?.label, 'EN')) } };
+    return {
+      region: { ...region, label: regionLabelOf(region, localized(rule?.label, 'EN')) },
+      ...(mode ? { mode } : {}),
+      ...(viaHotelTable ? { source: 'hotel_table' as const } : {}),
+    };
+  }
+
+  /**
+   * The province the hotel table holds for a signed hotelSn, or null. Cached per
+   * (tenant, hotelSn) for a minute — negative answers too, since most hotels of a tenant
+   * that sends the province itself will never have a row.
+   */
+  private async provinceOfHotel(tenantId: number | null, hotelSn: string, nowMs = Date.now()): Promise<string | null> {
+    if (tenantId == null || !this.hotelRepo) return null;
+    const key = `${tenantId}|${hotelSn}`;
+    const hit = this.hotelProvinces.get(key);
+    if (hit && nowMs - hit.at < HOTEL_PROVINCE_TTL_MS) return hit.province;
+    const row = await this.hotelRepo.findOne({ where: { tenantId, hotelSn } });
+    if (this.hotelProvinces.size >= HOTEL_PROVINCE_CACHE_MAX) {
+      const oldest = this.hotelProvinces.keys().next().value;
+      if (oldest !== undefined) this.hotelProvinces.delete(oldest);
+    }
+    const province = row?.province?.trim() || null;
+    this.hotelProvinces.set(key, { province, at: nowMs });
+    return province;
+  }
+
+  /**
+   * The tenant's routing, digested for the alert side (see RoutingPolicy). The "re-alert
+   * when nobody took it" switch defaults to ON only where an alert can be pinned to one
+   * person — assignees, team routing or region routing configured — because that is where
+   * an alert can sit unseen by everyone else; a tenant with no hand-off config, or one that
+   * only ever broadcasts, is left exactly as it was unless it opts in with `unclaimedAlerts`.
+   */
+  async routingPolicy(tenantId: number | null): Promise<RoutingPolicy> {
+    const config = await this.aiConfig.getHandoffConfig(tenantId);
+    const assigneeUserIds = (config?.assigneeUserIds ?? []).filter((id) => Number.isFinite(id));
+    const regionEnabled = config?.regionRouting?.enabled === true;
+    const teams = config?.teamRouting?.enabled ? ((await this.teamQuestion(tenantId, 'EN'))?.options ?? []) : [];
+    const slackByRegion: RoutingPolicy['slackByRegion'] = {};
+    for (const team of ['north', 'south'] as const) {
+      const url = openWebhook(config?.regionRouting?.slackByRegion?.[team]);
+      if (url) slackByRegion[team] = url;
+    }
+    return {
+      configured: !!config,
+      assigneeUserIds,
+      regionEnabled,
+      regionMode: regionEnabled && config?.regionRouting?.mode === 'strict' ? 'strict' : 'prefer',
+      widenAfterMinutes: config?.regionRouting?.widenAfterMinutes ?? null,
+      slackByRegion,
+      teams: teams.map((o) => ({ id: o.id, jobLabel: o.jobLabel, label: o.label })),
+      unclaimedAlerts:
+        config?.unclaimedAlerts ?? (assigneeUserIds.length > 0 || teams.length > 0 || regionEnabled),
+    };
+  }
+
+  /** Drop the cached hotel→province answers of one tenant (after an upload replaced the table). */
+  invalidateHotelProvinces(tenantId: number): void {
+    const prefix = `${tenantId}|`;
+    for (const key of this.hotelProvinces.keys()) {
+      if (key.startsWith(prefix)) this.hotelProvinces.delete(key);
+    }
   }
 
   /** Log an unmapped province, at most once per (tenant, province) per hour per process. */
@@ -233,12 +374,20 @@ export class HandoffRouterService {
     return null;
   }
 
-  async route(tenantId: number | null, language: string): Promise<HandoffRoute> {
+  /**
+   * Who to notify and what to tell the customer. With a `scope` (PLN-261012 SG-67) the
+   * decision is per team and per region: the team's own hours replace the tenant-wide
+   * ones when it set any, and an off-hours summary goes to the hotel's regional mailbox
+   * when the tenant set one. Without a scope — or with a tenant that configured neither —
+   * the decision is exactly what it always was.
+   */
+  async route(tenantId: number | null, language: string, scope: RouteScope = {}): Promise<HandoffRoute> {
     const config = await this.aiConfig.getHandoffConfig(tenantId);
     const targetUserIds = config?.assigneeUserIds?.filter((id) => Number.isFinite(id)) ?? [];
 
-    if (config?.businessHours && !this.withinBusinessHours(config.businessHours)) {
-      const email = config.offHours?.email?.trim();
+    const hours = this.hoursFor(config, scope.supportType);
+    if (config && hours && !this.withinBusinessHours(hours)) {
+      const email = this.mailboxFor(config, scope.region);
       // Off hours without a mailbox configured: nothing to hand the message to,
       // so fall back to paging agents rather than silently dropping the request.
       if (email) {
@@ -253,6 +402,21 @@ export class HandoffRouterService {
     return { mode: 'agents', targetUserIds };
   }
 
+  /** The hours that apply to this hand-off: the picked team's own, else the tenant-wide. */
+  private hoursFor(config: HandoffConfig | null, supportType?: string | null): HandoffBusinessHours | undefined {
+    const team =
+      supportType && config?.teamRouting?.enabled
+        ? config.teamRouting.options?.find((o) => o?.id === supportType)
+        : undefined;
+    return team?.businessHours ?? config?.businessHours;
+  }
+
+  /** Off-hours mailbox: the hotel's regional one when set, else the tenant's. */
+  private mailboxFor(config: HandoffConfig | null, region?: string | null): string | undefined {
+    const regional = region ? config?.offHours?.emailByRegion?.[region as 'north' | 'south']?.trim() : undefined;
+    return regional || config?.offHours?.email?.trim() || undefined;
+  }
+
   private notice(config: HandoffConfig, language: string): string {
     return (
       localized(config.offHours?.notice, language).trim() ||
@@ -265,7 +429,7 @@ export class HandoffRouterService {
    * of scope (PLN §5-2) — weekday and clock only. An overnight window
    * (start > end, e.g. 22:00–06:00) is treated as spanning midnight.
    */
-  private withinBusinessHours(hours: NonNullable<HandoffConfig['businessHours']>): boolean {
+  private withinBusinessHours(hours: HandoffBusinessHours): boolean {
     const start = this.minutes(hours.start);
     const end = this.minutes(hours.end);
     if (start == null || end == null) return true; // malformed config → never block

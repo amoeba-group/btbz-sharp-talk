@@ -35,9 +35,17 @@ export class AgentAlert {
   @Column({ name: 'target_user_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
   targetUserId: number | null;
 
+  /**
+   * Strict regional routing (PLN-261012 SG-67): on a broadcast row (no addressed
+   * agent) the team (north | south) that may see it. NULL = a plain broadcast for
+   * everyone in the tenant — the behaviour every row had before.
+   */
+  @Column({ name: 'target_region', type: 'varchar', length: 16, nullable: true })
+  targetRegion: string | null;
+
   @Column({ type: 'varchar', length: 16, default: 'new' })
   @Index('idx_alert_status')
-  status: string; // new/acked
+  status: string; // new/acked/superseded (replaced by a newer alert, or its conversation was settled)
 
   @Column({ name: 'acked_by', type: 'bigint', nullable: true, transformer: bigintTransformer })
   ackedBy: number | null;

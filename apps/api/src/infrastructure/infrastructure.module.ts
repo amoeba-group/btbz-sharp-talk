@@ -26,4 +26,6 @@ export const EVENTS = {
   PUSH_DISPATCH: 'push.dispatch',
   /** Agent-tier issue resolution → knowledge-gap capture proposal (P5). */
   ISSUE_RESOLVED: 'issue.resolved',
+  /** A staff member's region or status changed → pinned alerts are re-pointed (PLN-261012 SG-65). */
+  USER_ROUTING_CHANGED: 'user.routing_changed',
 } as const;

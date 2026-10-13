@@ -9,8 +9,13 @@ import { useAiConfig, useUpdateAiConfig } from './ai-settings.hooks';
 import { LanguageTabs } from './LanguageTabs';
 import { DENY_MODE } from './ai-settings.service';
 import type { DenyMode, HandoffConfig, ScenarioLang } from './ai-settings.service';
-// Source-path import: a value import of the package entry point breaks the browser build (CJS).
-import { LANGUAGE_TIMEZONES } from '../../../../../packages/types/src/common/language';
+import { BusinessHoursEditor, TIMEZONES } from './BusinessHoursEditor';
+import { HotelProvinceCard } from './HotelProvinceCard';
+import { REGION_TEAMS, RegionStrictFields } from './RegionStrictFields';
+import type { PerTeam, RegionMode } from './RegionStrictFields';
+// Source-path imports: a value import of the package entry point breaks the browser build (CJS).
+import { defaultHoursDraft, hoursConfigFrom, hoursDraftFrom } from '../../../../../packages/types/src/common/handoff-hours';
+import type { HoursDraft } from '../../../../../packages/types/src/common/handoff-hours';
 import {
   REGION_CATEGORIES,
   REGION_CATEGORY_DEFAULT_TEAM,
@@ -21,23 +26,13 @@ import type { RegionCategory, RegionRoutingConfig } from '../../../../../package
 import { vnRegionPresetRules } from '../../../../../packages/types/src/common/region-vn';
 import { toast } from '@/store/toast-store';
 
-const DAYS = [0, 1, 2, 3, 4, 5, 6];
-/**
- * Picker zones = every language's registry zone (Seoul, New York, Ho Chi Minh,
- * Tokyo, Shanghai, Madrid …) + the remaining US zones + UTC. The server accepts
- * any IANA zone; a stored value outside this list is kept as the first option
- * so saving never silently rewrites it (REQ-260913-VN-Prerequisite-Gaps G3).
- */
-const TIMEZONES = Array.from(
-  new Set([...LANGUAGE_TIMEZONES.map((z) => z.zone), 'America/Chicago', 'America/Denver', 'America/Los_Angeles', 'UTC']),
-).sort();
-const TZ_LABEL = new Map(LANGUAGE_TIMEZONES.map((z) => [z.zone, z.label]));
-
 /** One team the customer can pick (PLN-261007 Team Routing). */
 interface TeamRow {
   id: string;
   jobLabel: string;
   label: Partial<Record<ScenarioLang, string>>;
+  /** The team's own business hours; `on` false = it follows the shared hours (PLN-261012 SG-67). */
+  hours: HoursDraft;
 }
 const TEAM_OPTIONS_MAX = 4;
 
@@ -77,9 +72,12 @@ function regionConfigFrom(rows: RegionRow[], enabled: boolean): RegionRoutingCon
 }
 /** Seed on first enable — the pair Go2Joy asked for; the API holds the wording. */
 const DEFAULT_TEAM_ROWS: TeamRow[] = [
-  { id: 'cs', jobLabel: 'consult', label: {} },
-  { id: 'business', jobLabel: 'sales_admin', label: {} },
+  { id: 'cs', jobLabel: 'consult', label: {}, hours: defaultHoursDraft(TIMEZONES[0]) },
+  { id: 'business', jobLabel: 'sales_admin', label: {}, hours: defaultHoursDraft(TIMEZONES[0]) },
 ];
+
+/** Region-team inputs start blank. */
+const BLANK_PER_TEAM: PerTeam = { north: '', south: '' };
 
 /**
  * Escalation routing (PLN-AiSetting W3): who gets paged, when agents are on
@@ -93,16 +91,12 @@ export function HandoffSection() {
   const users = useUsers();
 
   const [assignees, setAssignees] = useState<string[]>([]);
-  const [hoursOn, setHoursOn] = useState(false);
-  const [timezone, setTimezone] = useState(TIMEZONES[0]);
-  const [days, setDays] = useState<number[]>([1, 2, 3, 4, 5]);
-  const [start, setStart] = useState('09:00');
-  const [end, setEnd] = useState('18:00');
-  // One break window (lunch) is what tenants actually configure; the stored
-  // shape is a list so a second one needs no schema change (PLN-260806 D2).
-  const [breakOn, setBreakOn] = useState(false);
-  const [breakStart, setBreakStart] = useState('12:00');
-  const [breakEnd, setBreakEnd] = useState('13:00');
+  // Tenant-wide business hours. One break window (lunch) is what tenants actually
+  // configure; the stored shape is a list so a second one needs no schema change
+  // (PLN-260806 D2). The editor is shared with each team's own hours (PLN-261012 SG-67).
+  const [hours, setHours] = useState<HoursDraft>(() => defaultHoursDraft(TIMEZONES[0]));
+  // "Alert again when nobody takes a conversation" (PLN-261012 SG-63): auto | on | off.
+  const [unclaimed, setUnclaimed] = useState<'auto' | 'on' | 'off'>('auto');
   const [email, setEmail] = useState('');
   const [notice, setNotice] = useState<Partial<Record<ScenarioLang, string>>>({});
   const [lang, setLang] = useState<ScenarioLang>('KO');
@@ -125,25 +119,21 @@ export function HandoffSection() {
   const [regionOn, setRegionOn] = useState(false);
   const [regionRows, setRegionRows] = useState<RegionRow[]>(() => regionRowsFrom(undefined));
   const [regionProbe, setRegionProbe] = useState('');
+  // Strict regional routing and the per-team channels (PLN-261012 SG-67).
+  const [regionMode, setRegionMode] = useState<RegionMode>('prefer');
+  const [regionWiden, setRegionWiden] = useState('');
+  const [regionEmails, setRegionEmails] = useState<PerTeam>(BLANK_PER_TEAM);
+  // Holds WEBHOOK_MASK for a webhook that is already saved: the server never sends the real URL.
+  const [regionHooks, setRegionHooks] = useState<PerTeam>(BLANK_PER_TEAM);
 
   useEffect(() => {
     const h = config?.handoffConfig;
     if (!h) return;
     setAssignees((h.assigneeUserIds ?? []).map(String));
-    if (h.businessHours) {
-      setHoursOn(true);
-      setTimezone(h.businessHours.timezone || TIMEZONES[0]);
-      setDays(h.businessHours.days ?? [1, 2, 3, 4, 5]);
-      setStart(h.businessHours.start || '09:00');
-      setEnd(h.businessHours.end || '18:00');
-      const firstBreak = h.businessHours.breaks?.[0];
-      if (firstBreak) {
-        setBreakOn(true);
-        setBreakStart(firstBreak.start || '12:00');
-        setBreakEnd(firstBreak.end || '13:00');
-      }
-    }
+    setHours(hoursDraftFrom(h.businessHours, TIMEZONES[0]));
+    setUnclaimed(h.unclaimedAlerts === true ? 'on' : h.unclaimedAlerts === false ? 'off' : 'auto');
     setEmail(h.offHours?.email ?? '');
+    setRegionEmails({ ...BLANK_PER_TEAM, ...(h.offHours?.emailByRegion ?? {}) });
     setNotice(h.offHours?.notice ?? {});
     setDenyRows(
       (h.denyRules ?? []).map((r) => ({
@@ -159,6 +149,9 @@ export function HandoffSection() {
     if (h.sla?.urgentHours != null) setSlaUrgent(String(h.sla.urgentHours));
     setRegionOn(h.regionRouting?.enabled === true);
     setRegionRows(regionRowsFrom(h.regionRouting?.categories));
+    setRegionMode(h.regionRouting?.mode === 'strict' ? 'strict' : 'prefer');
+    setRegionWiden(h.regionRouting?.widenAfterMinutes ? String(h.regionRouting.widenAfterMinutes) : '');
+    setRegionHooks({ ...BLANK_PER_TEAM, ...(h.regionRouting?.slackByRegion ?? {}) });
     setTeamOn(h.teamRouting?.enabled === true);
     setTeamPrompt(h.teamRouting?.prompt ?? {});
     // Enabled with no options of its own means the built-in CS / Business pair is
@@ -168,6 +161,7 @@ export function HandoffSection() {
       id: o.id ?? '',
       jobLabel: o.jobLabel ?? 'consult',
       label: o.label ?? {},
+      hours: hoursDraftFrom(o.businessHours, TIMEZONES[0]),
     }));
     setTeamRows(
       storedOptions.length === 0 && h.teamRouting?.enabled === true
@@ -185,24 +179,26 @@ export function HandoffSection() {
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 
   const save = () => {
+    // Per regional team: the off-hours mailbox (blank = the shared one) - PLN-261012 SG-67.
+    const emailByRegion: Partial<Record<'north' | 'south', string>> = {};
+    for (const team of REGION_TEAMS) if (regionEmails[team].trim()) emailByRegion[team] = regionEmails[team].trim();
+    // `breaks` is written even when empty (see hoursConfigFrom): the console owns the whole config
+    // object, so omitting the key would silently drop a stored break.
+    const businessHours = hoursConfigFrom(hours);
     const handoff: HandoffConfig = {
       assigneeUserIds: assignees.map(Number).filter(Number.isFinite),
-      ...(hoursOn
+      ...(businessHours ? { businessHours } : {}),
+      ...(email.trim() || Object.keys(notice).length || Object.keys(emailByRegion).length
         ? {
-            businessHours: {
-              timezone,
-              days,
-              start,
-              end,
-              // Written even when empty: the console owns the whole config
-              // object, so omitting the key would silently drop a stored break.
-              breaks: breakOn ? [{ start: breakStart, end: breakEnd }] : [],
+            offHours: {
+              email: email.trim() || undefined,
+              ...(Object.keys(emailByRegion).length ? { emailByRegion } : {}),
+              notice,
             },
           }
         : {}),
-      ...(email.trim() || Object.keys(notice).length
-        ? { offHours: { email: email.trim() || undefined, notice } }
-        : {}),
+      // Absent = automatic; only an explicit choice is stored.
+      ...(unclaimed === 'on' ? { unclaimedAlerts: true } : unclaimed === 'off' ? { unclaimedAlerts: false } : {}),
     };
     const denyRules = denyRows
       .map((r) => ({
@@ -224,7 +220,7 @@ export function HandoffSection() {
     // Rows are kept even while disabled, so switching the question off and on
     // again does not lose the labels a tenant translated.
     const teamOptions = teamRows
-      .map((r) => ({ id: r.id.trim(), jobLabel: r.jobLabel, label: r.label }))
+      .map((r) => ({ id: r.id.trim(), jobLabel: r.jobLabel, label: r.label, businessHours: hoursConfigFrom(r.hours) }))
       .filter((r) => r.id.length > 0)
       .slice(0, TEAM_OPTIONS_MAX);
     if (teamOn || teamOptions.length || Object.keys(teamPrompt).length) {
@@ -233,8 +229,18 @@ export function HandoffSection() {
     // Same rule for the province table: kept while disabled so a typed list of
     // provinces survives a switch off and on.
     const regionConfig = regionConfigFrom(regionRows, regionOn);
-    if (regionOn || regionConfig.categories?.some((c) => c.provinces.length)) {
-      handoff.regionRouting = regionConfig;
+    // Strict mode and the per-team webhooks (PLN-261012 SG-67). Prefer mode is the absence of `mode`;
+    // a webhook field still holding the mask means "keep the stored one", a blank one removes it.
+    const slackByRegion: Partial<Record<'north' | 'south', string>> = {};
+    for (const team of REGION_TEAMS) if (regionHooks[team].trim()) slackByRegion[team] = regionHooks[team].trim();
+    const widen = Math.floor(Number(regionWiden));
+    const strictExtras = {
+      ...(regionMode === 'strict' ? { mode: 'strict' as const } : {}),
+      ...(regionMode === 'strict' && Number.isFinite(widen) && widen > 0 ? { widenAfterMinutes: widen } : {}),
+      ...(Object.keys(slackByRegion).length ? { slackByRegion } : {}),
+    };
+    if (regionOn || regionConfig.categories?.some((c) => c.provinces.length) || Object.keys(strictExtras).length) {
+      handoff.regionRouting = { ...regionConfig, ...strictExtras };
     }
     updateConfig.mutate({ handoff_config: handoff });
   };
@@ -259,7 +265,7 @@ export function HandoffSection() {
     toast.success(t('handoff.regionPresetLoaded', { count: rules.reduce((n, r) => n + r.provinces.length, 0) }));
   };
 
-  const smtpWarning = hoursOn && !email.trim();
+  const smtpWarning = hours.on && !email.trim();
 
   return (
     <Card title={t('handoff.title')}>
@@ -294,93 +300,25 @@ export function HandoffSection() {
             <p className="mt-1 text-[11px] text-gray-400">{t('handoff.assigneesHint')}</p>
           </div>
 
-          <div className="space-y-2 border-t border-gray-100 pt-3">
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={hoursOn}
-                onChange={(e) => setHoursOn(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
-              />
-              {t('handoff.useBusinessHours')}
-            </label>
+          {/* Re-alert when nobody takes a waiting conversation (PLN-261012 SG-63). */}
+          <div className="space-y-1 border-t border-gray-100 pt-3">
+            <Label>{t('handoff.unclaimedTitle')}</Label>
+            <div className="max-w-md">
+              <Select
+                value={unclaimed}
+                onChange={(e) => setUnclaimed(e.target.value as 'auto' | 'on' | 'off')}
+                aria-label={t('handoff.unclaimedTitle')}
+              >
+                <option value="auto">{t('handoff.unclaimedAuto')}</option>
+                <option value="on">{t('handoff.unclaimedOn')}</option>
+                <option value="off">{t('handoff.unclaimedOff')}</option>
+              </Select>
+            </div>
+            <p className="text-[11px] text-gray-400">{t('handoff.unclaimedHint')}</p>
+          </div>
 
-            {hoursOn && (
-              <div className="space-y-2 pl-6">
-                <div className="flex flex-wrap items-end gap-3">
-                  <div className="min-w-[200px]">
-                    <Label>{t('handoff.timezone')}</Label>
-                    <Select value={timezone} onChange={(e) => setTimezone(e.target.value)}>
-                      {(TIMEZONES.includes(timezone) ? TIMEZONES : [timezone, ...TIMEZONES]).map((tz) => (
-                        <option key={tz} value={tz}>
-                          {TZ_LABEL.has(tz) ? `${tz} — ${TZ_LABEL.get(tz)}` : tz}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                  <div className="w-28">
-                    <Label>{t('handoff.start')}</Label>
-                    <Input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
-                  </div>
-                  <div className="w-28">
-                    <Label>{t('handoff.end')}</Label>
-                    <Input type="time" value={end} onChange={(e) => setEnd(e.target.value)} />
-                  </div>
-                </div>
-                <div className="flex flex-wrap items-end gap-3">
-                  <label className="flex items-center gap-2 pb-2 text-sm text-gray-700">
-                    <input
-                      type="checkbox"
-                      checked={breakOn}
-                      onChange={(e) => setBreakOn(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
-                    />
-                    {t('handoff.useBreak')}
-                  </label>
-                  {breakOn && (
-                    <>
-                      <div className="w-28">
-                        <Label>{t('handoff.breakStart')}</Label>
-                        <Input
-                          type="time"
-                          value={breakStart}
-                          onChange={(e) => setBreakStart(e.target.value)}
-                        />
-                      </div>
-                      <div className="w-28">
-                        <Label>{t('handoff.breakEnd')}</Label>
-                        <Input
-                          type="time"
-                          value={breakEnd}
-                          onChange={(e) => setBreakEnd(e.target.value)}
-                        />
-                      </div>
-                      <p className="pb-2 text-xs text-gray-400">{t('handoff.breakHint')}</p>
-                    </>
-                  )}
-                </div>
-                <div>
-                  <Label>{t('handoff.days')}</Label>
-                  <div className="mt-1 flex gap-1">
-                    {DAYS.map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => setDays((prev) => toggle(prev, d))}
-                        className={cn(
-                          'h-8 w-9 rounded border text-xs',
-                          days.includes(d)
-                            ? 'border-primary-500 bg-primary-500 text-white'
-                            : 'border-gray-200 bg-white text-gray-600',
-                        )}
-                      >
-                        {t(`handoff.day_${d}`)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="space-y-2 border-t border-gray-100 pt-3">
+            <BusinessHoursEditor value={hours} onChange={setHours} toggleLabel={t('handoff.useBusinessHours')} />
           </div>
 
           <div className="space-y-2 border-t border-gray-100 pt-3">
@@ -553,7 +491,8 @@ export function HandoffSection() {
                   <span />
                 </div>
                 {teamRows.map((row, i) => (
-                  <div key={i} className="grid grid-cols-[6rem_1fr_10rem_auto] items-center gap-2">
+                  <div key={i} className="space-y-1">
+                  <div className="grid grid-cols-[6rem_1fr_10rem_auto] items-center gap-2">
                     <Input
                       value={row.id}
                       aria-label={t('handoff.teamOptionId')}
@@ -596,6 +535,24 @@ export function HandoffSection() {
                       {tc('delete')}
                     </button>
                   </div>
+                  {/* The team's own hours (PLN-261012 SG-67): off = it follows the shared hours above. */}
+                  <details className="pl-1" open={row.hours.on}>
+                    <summary className="cursor-pointer text-[11px] text-gray-500">
+                      {row.hours.on ? t('handoff.teamHoursOn') : t('handoff.teamHoursOff')}
+                    </summary>
+                    <div className="mt-1">
+                      <BusinessHoursEditor
+                        compact
+                        value={row.hours}
+                        toggleLabel={t('handoff.teamHoursToggle')}
+                        onChange={(next) =>
+                          setTeamRows((rows) => rows.map((r, j) => (j === i ? { ...r, hours: next } : r)))
+                        }
+                      />
+                      <p className="mt-1 text-[11px] text-gray-400">{t('handoff.teamHoursHint')}</p>
+                    </div>
+                  </details>
+                  </div>
                 ))}
                 <div className="flex items-center gap-2">
                   <Button
@@ -603,7 +560,10 @@ export function HandoffSection() {
                     variant="secondary"
                     disabled={teamRows.length >= TEAM_OPTIONS_MAX}
                     onClick={() =>
-                      setTeamRows((rows) => [...rows, { id: '', jobLabel: 'consult', label: {} }])
+                      setTeamRows((rows) => [
+                        ...rows,
+                        { id: '', jobLabel: 'consult', label: {}, hours: defaultHoursDraft(TIMEZONES[0]) },
+                      ])
                     }
                   >
                     {t('handoff.teamAdd')}
@@ -703,6 +663,17 @@ export function HandoffSection() {
                     })()}
                 </div>
                 <p className="text-[11px] text-gray-400">{t('handoff.regionFallbackHint')}</p>
+                <RegionStrictFields
+                  mode={regionMode}
+                  onMode={setRegionMode}
+                  widen={regionWiden}
+                  onWiden={setRegionWiden}
+                  emails={regionEmails}
+                  onEmails={setRegionEmails}
+                  hooks={regionHooks}
+                  onHooks={setRegionHooks}
+                />
+                <HotelProvinceCard />
               </div>
             )}
           </div>

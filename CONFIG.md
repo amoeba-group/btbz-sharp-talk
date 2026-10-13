@@ -219,6 +219,23 @@ All optional; every default is safe. Full meaning, thresholds and example Promet
 | `ERROR_WEBHOOK_URL` | — | JSON POST of scrubbed 5xx/unhandled errors (rate-limited) |
 | `ERROR_REPORT_MAX_PER_MIN` / `ERROR_REPORT_DEDUPE_SEC` | 20 / 60 | error-reporter rate limits |
 | `SENTRY_DSN` | — | activates the optional Sentry adapter **only if `@sentry/node` is installed** (not a dependency of this repo; untested against a real Sentry) |
+**Unclaimed-conversation re-alert (PLN-261012 SG-63):** a targeted alert is visible only to the agent it
+is addressed to, so a WAITING conversation nobody takes is re-announced. `ALERT_UNCLAIMED_MINUTES` (default
+5; `0` switches the sweep off) is the wait before the first re-page and the gap between re-pages;
+`ALERT_UNCLAIMED_MAX_PAGES` (default 3, max 20) caps the re-pages per waiting spell;
+`ALERT_UNCLAIMED_SWEEP_SEC` (default 30) is how often the sweep looks. Each re-page raises a fresh broadcast
+alert and posts an "UNCLAIMED" text to Slack/email (team, region and partner lines included). Per tenant it is
+ON by default only where an alert can be pinned to one person (assignees, team routing or region routing in
+`handoff_config`), OFF for a tenant with no hand-off config; `handoff_config.unclaimedAlerts` true/false
+overrides. Off-hours threads waiting on an email reply (`reply_channel='email'`) are never swept. The de-dupe
+and cap live on `conversations.unclaimed_pages/unclaimed_paged_at`, so a restart or a second API instance
+cannot double-page.
+
+**Strict regional routing (PLN-261012 SG-67):** `handoff_config.regionRouting.mode='strict'` (console:
+AI settings > Handoff > region table). Needs `CRED_ENC_KEY` to store the per-team Slack webhooks
+(`regionRouting.slackByRegion`, sealed AES-256-GCM, https://hooks.slack.com only, returned masked).
+`regionRouting.widenAfterMinutes` is the only cross-region path; the sweep above applies it, so it is
+effective only while `ALERT_UNCLAIMED_MINUTES` > 0.
 
 ### 4.3 Shopify (optional — features default-safe/disabled when unset)
 | Variable | Purpose |
