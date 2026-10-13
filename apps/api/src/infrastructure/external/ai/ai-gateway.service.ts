@@ -10,7 +10,8 @@ import {
   AiAdapter,
   AiCompletionResult,
   AiEmbeddingResult,
-  AiMessage,
+  AiRequestMessage,
+  AiToolDef,
 } from './ai-adapter.interface';
 import { StubAdapter } from './adapters/stub.adapter';
 import { ENGINE_FAILURE, classifyEngineFailure } from './engine-health';
@@ -57,9 +58,36 @@ export interface GatewayRequest {
    */
   feature?: string;
   system?: string;
-  messages: AiMessage[];
+  /** Classic string messages, or the block messages of a tool turn (PLN-261012 SG-33). */
+  messages: AiRequestMessage[];
   temperature?: number;
   maxTokens?: number;
+  /**
+   * Tools the model may call (PLN-261012 SG-33). Only an engine that can use tools gets them —
+   * anything else is REFUSED (`toolsRefused`), never silently answered without them, and a failing
+   * engine is never covered by the stub's text (the result is `degraded`, with no tool calls).
+   */
+  tools?: AiToolDef[];
+}
+
+/** Whether (and why not) the engine behind a (tenant, function) pair can run a tool loop. */
+export interface ToolSupport {
+  supported: boolean;
+  /** `ok`, or why not — a bounded vocabulary for logs and the console. */
+  reason: 'ok' | 'no_engine' | 'adapter_unsupported' | 'capability_missing';
+  provider: string | null;
+  engineId: number | null;
+}
+
+/** The capability token an engine row must carry to be handed tools (PLN-261012 SG-33). */
+export const ENGINE_CAPABILITY_TOOLS = 'tools';
+
+/** `ai_engines.capabilities` is a comma list; whether it declares `cap`. */
+export function engineHasCapability(capabilities: string | null | undefined, cap: string): boolean {
+  return (capabilities ?? '')
+    .split(',')
+    .map((c) => c.trim().toLowerCase())
+    .includes(cap);
 }
 
 /** Where a function's engine came from — shown in the console so an unset function is visible. */
@@ -137,10 +165,53 @@ export class AiGatewayService {
     return this.adapters.get(provider) ?? null;
   }
 
+  /**
+   * Can the engine behind (tenant, function) run a tool loop (PLN-261012 SG-33)? Two things must
+   * hold: the provider's adapter implements tool calling, AND the engine row declares the `tools`
+   * capability — the column existed but was never enforced; for tools it is, because an
+   * OpenAI-compatible custom endpoint may not implement tools at all and only the operator knows.
+   * Pure routing + capability reads: no provider call, no breaker state touched.
+   */
+  async toolSupport(tenantId: number, fn: AiFunction): Promise<ToolSupport> {
+    const { engine } = await this.resolveRouting(tenantId, fn);
+    const adapter = this.adapters.get(engine?.provider ?? 'stub') ?? this.adapters.get('stub')!;
+    return this.toolSupportOf(engine, adapter);
+  }
+
+  private toolSupportOf(engine: AiEngine | null, adapter: AiAdapter): ToolSupport {
+    const base = { provider: engine?.provider ?? null, engineId: engine ? Number(engine.id) : null };
+    if (!engine) return { ...base, supported: false, reason: 'no_engine' };
+    if (adapter.supportsTools !== true) return { ...base, supported: false, reason: 'adapter_unsupported' };
+    if (!engineHasCapability(engine.capabilities, ENGINE_CAPABILITY_TOOLS)) {
+      return { ...base, supported: false, reason: 'capability_missing' };
+    }
+    return { ...base, supported: true, reason: 'ok' };
+  }
+
   async complete(req: GatewayRequest): Promise<AiCompletionResult> {
     const { engine } = await this.resolveRouting(req.tenantId, req.function);
     const params = (await this.resolveParams(req.tenantId, req.function)) ?? {};
     const adapter = this.adapters.get(engine?.provider ?? 'stub') ?? this.adapters.get('stub')!;
+
+    // A tools request to an engine that cannot use tools is refused outright (SG-33): not sent,
+    // not metered, and not answered by the stub. The runner pre-checks `toolSupport`, so this is the
+    // backstop for a caller that forgot — or for an engine switched mid-loop.
+    if (req.tools?.length) {
+      const support = this.toolSupportOf(engine, adapter);
+      if (!support.supported) {
+        this.logger.warn(`tools request refused: engine ${support.engineId ?? 'none'} (${support.reason})`);
+        return {
+          text: '',
+          tokensIn: 0,
+          tokensOut: 0,
+          provider: adapter.provider,
+          model: engine?.model ?? 'stub-1',
+          degraded: true,
+          toolsRefused: true,
+          stopReason: 'other',
+        };
+      }
+    }
 
     const apiKey = engine?.apiKeyEncrypted ? this.safeDecrypt(engine.apiKeyEncrypted) : undefined;
     // A breaker guards REAL engines only; the stub cannot fail and has nothing to protect.
@@ -170,6 +241,7 @@ export class AiGatewayService {
           apiKey,
           endpoint: engine?.endpoint ?? undefined,
           timeoutMs: req.timeoutMs,
+          ...(req.tools?.length ? { tools: req.tools } : {}),
         });
       // A completion is retried once, and only on what a second try can fix: a dropped
       // connection, a 5xx, a 429. Never on a timeout (that doubles the customer's wait for an
@@ -227,6 +299,10 @@ export class AiGatewayService {
     engine: AiEngine | null,
     provider: string,
   ): Promise<AiCompletionResult> {
+    // Deliberately WITHOUT `tools` (PLN-261012 SG-33): the stub never sees a tool list, so it cannot
+    // answer with tool calls — what comes back is canned text marked `degraded`, which a tool loop
+    // treats as "abort", never as a model decision. The tool-turn blocks in `messages` are flattened
+    // by the stub; nothing in this path produces or executes a tool use.
     const res = await this.adapters.get('stub')!.complete({
       system: req.system,
       messages: req.messages,

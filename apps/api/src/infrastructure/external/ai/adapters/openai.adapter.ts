@@ -1,5 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { AiAdapter, AiCompletionRequest, AiCompletionResult } from '../ai-adapter.interface';
+import {
+  AiAdapter,
+  AiCompletionRequest,
+  AiCompletionResult,
+  AiRequestMessage,
+  AiStopReason,
+  AiToolUse,
+} from '../ai-adapter.interface';
 import { redactSecrets } from '../../../../global/util/secret-redact.util';
 import { providerErrorSummary } from '../engine-health';
 import {
@@ -11,6 +18,83 @@ import {
 
 /** Body fields the API may reject per model; each has a documented fallback. */
 type Negotiable = 'temperature' | 'max_completion_tokens';
+
+const isPlainObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+
+/**
+ * The conversation in Chat Completions form (PLN-261012 SG-33). A classic string message goes out as
+ * `{ role, content }`, exactly as before. A tool turn is split the way this API wants it: the
+ * assistant's `tool_use` blocks become `tool_calls` on one assistant message, and each
+ * `tool_result` becomes its own `role: 'tool'` message (there is no error flag, so a failed call is
+ * marked in the text).
+ */
+function toWireMessages(messages: AiRequestMessage[]): Array<Record<string, unknown>> {
+  const out: Array<Record<string, unknown>> = [];
+  for (const m of messages) {
+    if (m.role === 'system') continue;
+    if (typeof m.content === 'string') {
+      out.push({ role: m.role, content: m.content });
+      continue;
+    }
+    if (m.role === 'assistant') {
+      const text = m.content.map((b) => (b.type === 'text' ? b.text : '')).join('');
+      const calls = m.content.flatMap((b) =>
+        b.type === 'tool_use'
+          ? [{ id: b.id, type: 'function', function: { name: b.name, arguments: JSON.stringify(b.input) } }]
+          : [],
+      );
+      out.push({ role: 'assistant', content: text || null, ...(calls.length ? { tool_calls: calls } : {}) });
+      continue;
+    }
+    for (const b of m.content) {
+      if (b.type === 'tool_result') {
+        out.push({ role: 'tool', tool_call_id: b.toolUseId, content: b.isError ? `ERROR: ${b.content}` : b.content });
+      } else if (b.type === 'text') {
+        out.push({ role: 'user', content: b.text });
+      }
+    }
+  }
+  return out;
+}
+
+function stopReasonOf(finish: unknown): AiStopReason {
+  switch (finish) {
+    case 'stop':
+      return 'end_turn';
+    case 'tool_calls':
+    case 'function_call':
+      return 'tool_use';
+    case 'length':
+      return 'max_tokens';
+    case 'content_filter':
+      return 'refusal';
+    default:
+      return 'other';
+  }
+}
+
+/** The model's `tool_calls`, arguments parsed (OpenAI sends them as a JSON string). */
+function toolUsesOf(message: any): AiToolUse[] {
+  const calls: any[] = Array.isArray(message?.tool_calls) ? message.tool_calls : [];
+  return calls.map((c) => {
+    let input: Record<string, unknown> = {};
+    let inputError: string | undefined;
+    try {
+      const parsed: unknown = JSON.parse(c?.function?.arguments || '{}');
+      if (isPlainObject(parsed)) input = parsed;
+      else inputError = 'input_not_object';
+    } catch {
+      inputError = 'input_not_json';
+    }
+    return {
+      id: typeof c?.id === 'string' ? c.id : '',
+      name: typeof c?.function?.name === 'string' ? c.function.name : '',
+      input,
+      ...(inputError ? { inputError } : {}),
+    };
+  });
+}
 
 /**
  * OpenAI Chat Completions adapter. Uses fetch (no SDK dependency), mirroring
@@ -38,6 +122,12 @@ type Negotiable = 'temperature' | 'max_completion_tokens';
 @Injectable()
 export class OpenAiAdapter implements AiAdapter {
   readonly provider = 'openai';
+  /**
+   * Tool calling is mapped to Chat Completions `tools` / `tool_calls` (PLN-261012 SG-33) and
+   * covered against a local fake only. The gateway additionally requires the ENGINE row to declare
+   * the `tools` capability, because an OpenAI-compatible custom endpoint may not implement it.
+   */
+  readonly supportsTools = true;
   private readonly logger = new Logger(OpenAiAdapter.name);
 
   /** One attempt per negotiable field, plus the initial try. */
@@ -52,15 +142,20 @@ export class OpenAiAdapter implements AiAdapter {
       model: req.model || process.env.OPENAI_MODEL || 'gpt-4o-mini',
       messages: [
         ...(req.system ? [{ role: 'system', content: req.system }] : []),
-        ...req.messages
-          .filter((m) => m.role !== 'system')
-          .map((m) => ({ role: m.role, content: m.content })),
+        ...toWireMessages(req.messages),
       ],
       max_completion_tokens: req.maxTokens ?? 1024,
     };
     // Only sent when the tenant actually configured it: an absent temperature
     // can never be the thing a model rejects.
     if (req.temperature != null) body.temperature = req.temperature;
+    // After every other field, and only when asked: a plain request has no `tools` key.
+    if (req.tools?.length) {
+      body.tools = req.tools.map((t) => ({
+        type: 'function',
+        function: { name: t.name, description: t.description, parameters: t.inputSchema },
+      }));
+    }
 
     const settled = new Set<Negotiable>();
     // One deadline for the whole call, negotiation retries included (PLN-261012 SG-84): three
@@ -89,12 +184,20 @@ export class OpenAiAdapter implements AiAdapter {
           .map((c: any) => c.message?.content ?? '')
           .join('')
           .trim();
-        return {
+        const result: AiCompletionResult = {
           text,
           tokensIn: data.usage?.prompt_tokens ?? 0,
           tokensOut: data.usage?.completion_tokens ?? 0,
           provider: this.provider,
           model: data.model ?? (body.model as string),
+        };
+        // No tools asked → exactly the previous result shape.
+        if (!req.tools?.length) return result;
+        const toolUses = toolUsesOf(data.choices?.[0]?.message);
+        return {
+          ...result,
+          ...(toolUses.length ? { toolUses } : {}),
+          stopReason: stopReasonOf(data.choices?.[0]?.finish_reason),
         };
       }
 
