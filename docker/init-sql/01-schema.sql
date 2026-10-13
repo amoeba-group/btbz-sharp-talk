@@ -232,6 +232,11 @@ CREATE TABLE `ai_engines` (
   `status` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'enabled',
   `is_default` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `last_ok_at` datetime DEFAULT NULL,
+  `last_error_at` datetime DEFAULT NULL,
+  `last_error_reason` varchar(24) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_error_detail` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `tenant_selectable` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `idx_aiengine_tenant` (`tenant_id`),
   KEY `idx_aiengine_provider` (`provider`)
@@ -747,6 +752,7 @@ CREATE TABLE `fulfillments` (
   `status` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL,
   `tracking_number` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `carrier` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `tracking_url` varchar(1024) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   PRIMARY KEY (`id`),
   KEY `idx_ful_tenant` (`tenant_id`),
@@ -766,6 +772,8 @@ CREATE TABLE `golden_questions` (
   `created_by` bigint DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `expected` json DEFAULT NULL,
+  `forbidden` json DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_golden_q_tenant` (`tenant_id`,`active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -785,6 +793,8 @@ CREATE TABLE `golden_run_items` (
   `citations` json DEFAULT NULL,
   `error` varchar(300) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `verdict` varchar(8) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `failed_checks` json DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_golden_item_run` (`run_id`,`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -805,6 +815,9 @@ CREATE TABLE `golden_runs` (
   `created_by` bigint DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `completed_at` datetime(6) DEFAULT NULL,
+  `ai_agent_id` bigint DEFAULT NULL,
+  `pass_count` int NOT NULL DEFAULT '0',
+  `fail_count` int NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `idx_golden_run_tenant` (`tenant_id`,`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1416,6 +1429,7 @@ CREATE TABLE `order_items` (
   `option_text` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `qty` int NOT NULL DEFAULT '1',
   `price` decimal(12,2) DEFAULT NULL,
+  `product_url` varchar(1024) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_ordi_tenant` (`tenant_id`),
   KEY `idx_items_order` (`order_id`)
@@ -1596,6 +1610,9 @@ CREATE TABLE `sessions` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `session_token` varchar(128) COLLATE utf8mb4_unicode_ci NOT NULL,
   `channel` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `landing_path` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `open_count` int NOT NULL DEFAULT '0',
+  `first_opened_at` datetime DEFAULT NULL,
   `tenant_id` bigint DEFAULT NULL,
   `ai_agent_id` bigint DEFAULT NULL COMMENT 'AI agent (ai_agents.id) answering this session; NULL = tenant default',
   `customer_id` bigint DEFAULT NULL,
@@ -1614,7 +1631,8 @@ CREATE TABLE `sessions` (
   UNIQUE KEY `uk_sessions_token` (`session_token`),
   KEY `idx_sessions_tenant` (`tenant_id`),
   KEY `idx_sessions_customer` (`customer_id`),
-  KEY `idx_sessions_tenant_agent` (`tenant_id`,`ai_agent_id`)
+  KEY `idx_sessions_tenant_agent` (`tenant_id`,`ai_agent_id`),
+  KEY `idx_sessions_tenant_path` (`tenant_id`,`landing_path`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `subscriptions`;
@@ -1647,6 +1665,7 @@ CREATE TABLE `tenant_ai_config` (
   `guest_guidance` json DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `answer_footer` json DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_aiconfig_tenant` (`tenant_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
