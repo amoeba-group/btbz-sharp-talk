@@ -493,6 +493,7 @@
   "audience_all": "Todos",
   "audience_guest": "Sin sesión",
   "audience_verified": "Con sesión",
+  "audience_manager": "Solo gerentes",
   "kbVersion": {
     "title": "Versión de interfaz de referencia",
     "hint": "Indica la versión del producto que usan hoy tus usuarios. Los documentos de conocimiento pueden llevar la versión que describen (Conocimiento › documento › Versión de la interfaz). Una respuesta que cita un documento de otra versión recibe una frase fija, o ese documento se deja fuera. Las versiones son etiquetas que se comparan por igualdad: «v0.12.0», «V0.12.0» y «0.12.0» son la misma, «0.12.0» y «0.12.1» no, así que sirve cualquier numeración; no se ordena nada. Un documento sin versión nunca se marca en las respuestas.",
@@ -525,6 +526,9 @@
     "notice": "Aviso de inicio de sesión",
     "noticePlaceholder": "Esta respuesta es para socios con sesión iniciada. Inicia sesión y te guiaré paso a paso.",
     "noticeHint": "En blanco = el aviso integrado en ese idioma.",
+    "managerNotice": "Aviso solo para gerentes",
+    "managerNoticePlaceholder": "Esa información solo se comparte con la cuenta de gerente de tu hotel. Pídele a tu gerente que la consulte.",
+    "managerNoticeHint": "Se muestra a un recepcionista que pregunta por un tema solo para gerentes, junto con un botón \"Hablar con un agente\". En blanco = el aviso integrado en ese idioma.",
     "hostLinkTemplate": "Plantilla de enlace \"Abrir en tu sistema\"",
     "hostLinkTemplateHint": "{hotelSn} se sustituye por la clave de hotel firmada; la consola mostrará un botón \"Abrir en el sistema anfitrión\" en las conversaciones de socios. En blanco = sin botón.",
     "hostLinkTemplateInvalid": "Debe ser una URL https:// que contenga {hotelSn}."

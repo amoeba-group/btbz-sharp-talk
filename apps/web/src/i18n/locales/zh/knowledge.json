@@ -472,10 +472,20 @@
   "uiVersionMismatchTip": "与基准版本 {{reference}} 不同。引用此文档的回答会附带提示或跳过该文档，取决于 AI 设置。",
   "uiVersionMatchTip": "与基准版本 {{reference}} 一致。",
   "uiVersionOther": "界面 {{version}}",
-  "categoryGuestVisibleOnLabel": "对访客可见",
-  "categoryGuestVisibleOffLabel": "仅限登录",
-  "categoryGuestVisibleHint": "仅引导登录的智能体是否可以用此分类回答未登录的访客。",
-  "categoryGuestVisibleConfirm": "允许 {{count}} 篇文档无需登录即可查看？",
-  "categoryGuestVisibleOn": "分类已对访客可见。",
-  "categoryGuestVisibleOff": "分类已改为仅限登录。"
+  "categoryAccessLabel": "可查看对象",
+  "categoryAccessOption": {
+    "public": "公开",
+    "partner": "已登录合作伙伴",
+    "manager": "仅限经理"
+  },
+  "categoryAccessHint": "公开：未登录的访客也可以从该分类获得回答（仅引导登录的智能体）。已登录合作伙伴：包括前台在内的所有已登录合作伙伴账户。仅限经理：只有酒店经理（或内部）账户。",
+  "categoryAccessManagerWarning": "前台人员询问此类内容时，将被告知请联系酒店的经理账户。",
+  "categoryAccessConfirmPublic": "要让 {{count}} 份文档无需登录即可查看吗？",
+  "categoryAccessConfirmPartner": "要让包括前台在内的所有已登录合作伙伴查看目前仅限经理的 {{count}} 份文档吗？",
+  "categoryAccessSaved": {
+    "public": "分类已设为公开。",
+    "partner": "分类已设为仅限已登录合作伙伴。",
+    "manager": "分类已设为仅限经理，已清除已保存的回答。"
+  },
+  "categoryMergeTierRefused": "仅限经理的分类不能合并到限制更宽的分类中。请先将目标分类设为\"仅限经理\"。"
 }

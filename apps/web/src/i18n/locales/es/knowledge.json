@@ -472,10 +472,20 @@
   "uiVersionMismatchTip": "Difiere de la versión de referencia {{reference}}. Una respuesta que lo cita lleva el aviso o lo omite, según el ajuste de IA.",
   "uiVersionMatchTip": "Coincide con la versión de referencia {{reference}}.",
   "uiVersionOther": "Interfaz {{version}}",
-  "categoryGuestVisibleOnLabel": "Visible para invitados",
-  "categoryGuestVisibleOffLabel": "Solo con sesión",
-  "categoryGuestVisibleHint": "Si un agente que solo guía al inicio de sesión puede responder desde esta categoría a un visitante sin sesión.",
-  "categoryGuestVisibleConfirm": "¿Hacer legibles {{count}} documento(s) sin iniciar sesión?",
-  "categoryGuestVisibleOn": "La categoría ya es visible para invitados.",
-  "categoryGuestVisibleOff": "La categoría ahora es solo con sesión."
+  "categoryAccessLabel": "Quién puede leer",
+  "categoryAccessOption": {
+    "public": "Público",
+    "partner": "Socios con sesión",
+    "manager": "Solo gerentes"
+  },
+  "categoryAccessHint": "Público: se puede responder desde aquí a visitantes sin sesión (agentes que solo guían el inicio de sesión). Socios con sesión: cualquier cuenta de socio con sesión, recepcionistas incluidos. Solo gerentes: únicamente la cuenta de gerente (o interna) del hotel.",
+  "categoryAccessManagerWarning": "A los recepcionistas que pregunten por esto se les dirá que consulten a la cuenta de gerente de su hotel.",
+  "categoryAccessConfirmPublic": "¿Hacer legibles {{count}} documento(s) sin iniciar sesión?",
+  "categoryAccessConfirmPartner": "¿Permitir que todo socio con sesión, recepcionistas incluidos, lea {{count}} documento(s) que hoy son solo para gerentes?",
+  "categoryAccessSaved": {
+    "public": "La categoría ahora es pública.",
+    "partner": "La categoría ahora es para socios con sesión.",
+    "manager": "La categoría ahora es solo para gerentes. Se borraron las respuestas guardadas."
+  },
+  "categoryMergeTierRefused": "Una categoría solo para gerentes no se puede fusionar con otra menos restringida. Primero establece el destino en \"Solo gerentes\"."
 }

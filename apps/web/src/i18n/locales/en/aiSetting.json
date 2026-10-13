@@ -493,6 +493,7 @@
   "audience_all": "Everyone",
   "audience_guest": "Not signed in",
   "audience_verified": "Signed in",
+  "audience_manager": "Managers only",
   "kbVersion": {
     "title": "Reference UI version",
     "hint": "Name the product version your users run today. Knowledge documents can be stamped with the version they describe (Knowledge › document › UI version). An answer that cites a document of another version gets one fixed sentence, or that document is left out. Versions are labels compared for equality — “v0.12.0”, “V0.12.0” and “0.12.0” are the same, “0.12.0” and “0.12.1” are not — so any numbering works; nothing is ordered. A document with no version is never flagged in answers.",
@@ -525,6 +526,9 @@
     "notice": "Sign-in prompt",
     "noticePlaceholder": "This answer is for signed-in partners. Please sign in and I will walk you through it.",
     "noticeHint": "Blank = the built-in prompt in that language.",
+    "managerNotice": "Manager-only prompt",
+    "managerNoticePlaceholder": "That information is only shared with your hotel's manager account. Please ask your manager to look it up.",
+    "managerNoticeHint": "Shown to a receptionist who asks about a manager-only topic, together with a \"Talk to an agent\" button. Blank = the built-in line in that language.",
     "hostLinkTemplate": "\"Open in your system\" link template",
     "hostLinkTemplateHint": "{hotelSn} is replaced with the signed hotel key; the console then shows an \"Open in host system\" button on partner conversations. Blank = no button.",
     "hostLinkTemplateInvalid": "Must be an https:// URL containing {hotelSn}."
