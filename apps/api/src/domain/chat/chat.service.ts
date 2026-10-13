@@ -854,8 +854,15 @@ export class ChatService {
     // and the old code read that as "no answer found" and paged an agent — 19
     // of 34 low-confidence handoffs on staging were greetings, compliments,
     // off-topic questions or noise (REQ-260813).
+    // A message the partner-data step will answer is never "out of scope": the
+    // classifier assumes a shop and knows nothing of a hotel's own rates or
+    // settlement, so it can label "giá qua đêm phòng Deluxe?" as off-topic and the
+    // bot would decline a question the partner API can answer (PLN-261012 SG-31).
+    const askedKind = this.nonQuestionKind(intent);
     const nonQuestion = await this.overrideOutOfScope(
-      this.nonQuestionKind(intent),
+      askedKind === 'out_of_scope' && (await this.partnerData?.handles({ tenantId, session, text }))
+        ? null
+        : askedKind,
       tenantId,
       conversation.id,
       retrievalQuery(history, egressText),

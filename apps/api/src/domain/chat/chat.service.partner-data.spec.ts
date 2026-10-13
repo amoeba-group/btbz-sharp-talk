@@ -53,6 +53,10 @@ describe('ChatService — partner data', () => {
     answerText?: string;
     reuseHit?: boolean;
     status?: string;
+    /** What the (shop-centric) classifier says; default a neutral `other`. */
+    intent?: string;
+    /** How well the knowledge base grounds the message (retrieval only). */
+    grounding?: number;
   }
 
   const build = (opts: BuildOpts = {}) => {
@@ -99,10 +103,10 @@ describe('ChatService — partner data', () => {
     const bus = { publish: jest.fn() } as unknown as EventBusService;
 
     const rag = {
-      classifyIntent: jest.fn(async () => ({ intent: 'other', needsOrderData: false, confidence: 0.8 })),
+      classifyIntent: jest.fn(async () => ({ intent: opts.intent ?? 'other', needsOrderData: false, confidence: opts.intent ? 0.9 : 0.8 })),
       answer: jest.fn(async () => ({ text: opts.answerText ?? 'Giá qua đêm phòng Deluxe là 425.000 ₫.', confidence: 0.9, citations: KB_CITATIONS })),
       answerWithoutKnowledge: jest.fn(async () => 'Xin chào!'),
-      groundingConfidence: jest.fn(async () => 0.9),
+      groundingConfidence: jest.fn(async () => opts.grounding ?? 0.9),
       footerConfig: jest.fn(async () => null),
       effectiveAgentId: jest.fn(async () => null),
       agentGuestPolicy: jest.fn(async () => 'open'),
@@ -290,6 +294,40 @@ describe('ChatService — partner data', () => {
       expect(res.reply?.body).toContain('chỉ tra cứu được dữ liệu của khách sạn bạn đang đăng nhập');
       expect(b.rag.answer).not.toHaveBeenCalled();
       expect(b.resolve).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('a classifier that calls the question "out of scope"', () => {
+    // The classifier assumes a shop; "giá qua đêm phòng Deluxe?" can come back out_of_scope with nothing in the
+    // knowledge base to rescue it. A partner-data question must still reach the partner step.
+    it('does not stop a partner-data question: it is answered from the hotel data', async () => {
+      const b = build({ intent: 'out_of_scope', grounding: 0.2 });
+      const res = await b.svc.handleUserMessage(b.session, 'Giá qua đêm phòng Deluxe hôm nay?');
+
+      expect(b.rag.answerWithoutKnowledge).not.toHaveBeenCalled();
+      expect(b.rag.answer).toHaveBeenCalledTimes(1);
+      expect(res.reply?.body).toContain('425.000 ₫');
+      expect(traceOf(aiTurn(b.saved)).answeredFrom).toBe('partner_data');
+    });
+
+    it('control: without the step the same message is declined as before', async () => {
+      const b = build({ intent: 'out_of_scope', grounding: 0.2, noStep: true });
+      await b.svc.handleUserMessage(b.session, 'Giá qua đêm phòng Deluxe hôm nay?');
+      expect(b.rag.answerWithoutKnowledge).toHaveBeenCalledTimes(1);
+      expect(b.rag.answer).not.toHaveBeenCalled();
+    });
+
+    it('control: a genuinely off-topic message from the same user is still declined', async () => {
+      const b = build({ intent: 'out_of_scope', grounding: 0.2 });
+      await b.svc.handleUserMessage(b.session, 'Thời tiết hôm nay thế nào?');
+      expect(b.rag.answerWithoutKnowledge).toHaveBeenCalledTimes(1);
+      expect(b.rag.answer).not.toHaveBeenCalled();
+    });
+
+    it('control: with the feature off it is declined as before', async () => {
+      const b = build({ intent: 'out_of_scope', grounding: 0.2, stepOn: false });
+      await b.svc.handleUserMessage(b.session, 'Giá qua đêm phòng Deluxe hôm nay?');
+      expect(b.rag.answerWithoutKnowledge).toHaveBeenCalledTimes(1);
     });
   });
 

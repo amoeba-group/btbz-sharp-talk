@@ -92,6 +92,24 @@ export class PartnerDataStep {
     private readonly logs: PartnerLookupLogService,
   ) {}
 
+  /**
+   * Would `prepare` act on this message — feature on, signed partner, a partner
+   * topic named? A cheap yes/no for ChatService, which must not let the shop-
+   * centric classifier call a partner-data question "out of scope" before the
+   * step gets to see it. Never throws; anything doubtful is "no".
+   */
+  async handles(input: Pick<PartnerPrepareInput, 'tenantId' | 'session' | 'text'>): Promise<boolean> {
+    try {
+      if (!this.flags.serverEnabled()) return false;
+      if (!(await this.flags.isEnabled(input.tenantId))) return false;
+      const claims = input.session.identityClaims;
+      if (!claims?.signed) return false;
+      return detectPartnerIntent(input.text, { hotelSn: String(claims.hotelSn ?? '') }).topics.length > 0;
+    } catch {
+      return false;
+    }
+  }
+
   async prepare(input: PartnerPrepareInput): Promise<PartnerPrepared | null> {
     let claims: IdentityClaims | null;
     let intent: ReturnType<typeof detectPartnerIntent>;

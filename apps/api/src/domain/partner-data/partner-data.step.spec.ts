@@ -89,6 +89,31 @@ describe('PartnerDataStep', () => {
     });
   });
 
+  describe('handles() — would the step act on this message?', () => {
+    it('is true only for a signed partner naming a partner topic with the feature on', async () => {
+      const b = build();
+      expect(await b.step.handles(input('Giá qua đêm phòng Deluxe?'))).toBe(true);
+      expect(await b.step.handles(input('Xin chào'))).toBe(false);
+      expect(await b.step.handles(input('Giá qua đêm phòng Deluxe?', {}, null))).toBe(false);
+      expect(await b.step.handles(input('Giá qua đêm phòng Deluxe?', {}, claims({ signed: false })))).toBe(false);
+    });
+
+    it('is false with either switch off, and never throws', async () => {
+      expect(await build({ serverOn: false }).step.handles(input('Giá qua đêm phòng Deluxe?'))).toBe(false);
+      expect(await build({ tenantOn: false }).step.handles(input('Giá qua đêm phòng Deluxe?'))).toBe(false);
+      const b = build();
+      (b.flags.isEnabled as jest.Mock).mockRejectedValueOnce(new Error('redis down'));
+      expect(await b.step.handles(input('Giá qua đêm phòng Deluxe?'))).toBe(false);
+    });
+
+    it('does no lookup — it only classifies', async () => {
+      const b = build();
+      await b.step.handles(input('Giá qua đêm phòng Deluxe?'));
+      expect(b.resolve).not.toHaveBeenCalled();
+      expect(b.get).not.toHaveBeenCalled();
+    });
+  });
+
   describe('a data block', () => {
     it('is built server-side for the signed-in hotel, in the session language', async () => {
       const b = build();
