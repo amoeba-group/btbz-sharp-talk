@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { isAuthError } from '../lib/errors';
+import { useWidgetStore } from '../store/widgetStore';
 import {
   endChat as endChatApi,
   escalate as escalateApi,
@@ -109,6 +110,9 @@ export function useChat(sessionToken: string | null) {
           attachments?.map((a) => a.id),
         );
         setConversationId(res.conversationId);
+        // Refused for pilot scope (PLN-261012 SG-40): the reply is the notice; re-read the
+        // verdict so the widget gets out of the way if it was stale.
+        if (res.pilotDenied) useWidgetStore.getState().requestPilotRecheck();
         // A message after an ended thread opened a fresh conversation — clear
         // the ended banner now rather than waiting for the next poll.
         setStatus((s) => (s === 'ended' ? 'ai_active' : s));
@@ -177,6 +181,7 @@ export function useChat(sessionToken: string | null) {
       try {
         const res = await sendScenario(sessionToken, action, text);
         setConversationId(res.conversationId);
+        if (res.pilotDenied) useWidgetStore.getState().requestPilotRecheck(); // SG-40, as above
         // An empty body means the turn produced no visible reply — agent mode,
         // where the human answers through polling (PLN-261001 §1-2). Appending
         // it would draw an empty bubble under the shopper's own message.
@@ -230,6 +235,7 @@ export function useChat(sessionToken: string | null) {
       }
       try {
         const res = await escalateApi(sessionToken!, conversationId, supportType);
+        if (res?.pilotDenied) useWidgetStore.getState().requestPilotRecheck(); // SG-40, as above
         if (res?.choose) {
           append({
             id: `ask-${Date.now()}`,

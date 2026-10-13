@@ -1,5 +1,6 @@
 import { apiClient } from '../lib/api-client';
 import type { ConsentResult, SessionResponse } from '../lib/types';
+import type { PilotWire } from '../lib/pilot';
 
 export function ensureSession(
   sessionToken: string | null,
@@ -37,6 +38,15 @@ export function ensureSession(
  */
 export function reportPanelOpened(sessionToken: string): void {
   void apiClient.post('/session/opened', { session_token: sessionToken }).catch(() => {});
+}
+
+/**
+ * Ask the server whether this session is still on the pilot list (PLN-261012 SG-40).
+ * A restricted widget re-asks now and then, so a hotel added in the console brings it
+ * back without the host identifying again. Read-only: nothing is created or stored.
+ */
+export function fetchPilot(sessionToken: string): Promise<{ pilot: PilotWire }> {
+  return apiClient.post<{ pilot: PilotWire }>('/session/pilot', { session_token: sessionToken });
 }
 
 /**

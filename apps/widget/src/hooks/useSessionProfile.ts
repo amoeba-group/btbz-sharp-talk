@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useWidgetStore } from '../store/widgetStore';
 import { ensureSession } from '../services/sessionService';
 import { adoptSessionConsent, adoptTenantConfig } from './useSession';
+import { adoptPilot } from './usePilotVisibility';
 
 /**
  * Pulls the signed-in shopper's display name once a session becomes
@@ -48,6 +49,8 @@ export function useSessionProfile() {
         // replayed from the local choice — here, or the shopper sees no banner
         // while the server still blocks chat as consent-pending.
         adoptSessionConsent(res);
+        // The verified session's pilot verdict (PLN-261012 SG-40) — the only ensure it makes.
+        adoptPilot(res);
       })
       .catch(() => {
         /* offline or session gone — greeting simply stays generic */
