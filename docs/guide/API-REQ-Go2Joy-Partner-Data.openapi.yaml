@@ -1,0 +1,564 @@
+openapi: 3.0.3
+info:
+  title: Go2Joy Partner Data API (read-only) - DRAFT contract v0
+  version: 0.1.0-draft
+  description: |
+    DRAFT written by Amoeba/SharpTalk (PLN-261012 SG-30). Go2Joy has NOT reviewed it yet - it is the
+    shape SharpTalk is built and tested against (mock + local fake server), sent to Go2Joy for review
+    (PDF Phase 3: "missing API design -> G2J review"). Everything marked PROPOSAL is open for change.
+    The real Go2Joy API list and credentials (requirements R8/R9) have not been delivered.
+
+    Purpose: let the SharpTalk assistant answer a signed-in hotel user's questions with the hotel's own
+    live data - cancellation / refund / check-in-out policy, hourly / overnight / daily rates, bookings
+    and settlement - instead of generic help text. Four read-only topics, nothing else.
+
+    ## Hotel scoping (the one rule that matters)
+
+    No request parameter, query string or body field may carry a hotel identifier. The hotel is taken
+    from the credential and from headers that SharpTalk's server builds from the identity claims it has
+    already verified (HMAC "identify v2": `userId|hotelSn|role|iat`) - never from what a user typed.
+
+    1. `Authorization: Bearer <service key>` - identifies SharpTalk (one key per installation).
+       PROPOSAL: on Go2Joy's side the key carries an allow-list of the hotelSn values it may act for.
+    2. `X-Hotel-Sn` - the acting hotel, from the verified claims.
+       The API MUST reject (403 `hotel_scope_mismatch`) a hotel outside the key's allow-list.
+    3. `X-Actor-Role` - `manager | receptionist | internal`, from the verified claims. Go2Joy MAY
+       re-check the role per topic (defence in depth; SharpTalk already enforces it).
+    4. `X-Claims-Verified-At` (epoch s) - when SharpTalk verified the claims. PROPOSAL: reject (403
+       `claims_expired`) when older than 8 hours.
+    5. `X-Request-Timestamp` (epoch s), `X-Request-Id` (UUID) and `X-Signature`
+       (`v1=<hex HMAC-SHA256>` keyed by a signing secret provisioned next to the key) bind (1)-(4) to the
+       request so a captured key alone cannot impersonate a hotel. Canonical string:
+       ```
+       v1\n METHOD\n PATH\n SORTED_QUERY\n X-Hotel-Sn\n X-Actor-Role\n X-Claims-Verified-At\n
+       X-Request-Timestamp\n X-Request-Id          (no spaces; "\n" = one line feed)
+       ```
+       SORTED_QUERY = query parameters sorted by name then value, RFC 3986 percent-encoded, no leading
+       `?` (empty string when there is none). Reject timestamps more than 300 s off (401
+       `stale_timestamp`). A worked test vector is in API-REQ-Go2Joy-Partner-Data.md.
+
+    Every response echoes `hotelSn` (body) - SharpTalk drops any reply whose echoed hotel differs from the
+    one it asked for, so a routing bug on either side cannot leak another hotel's data.
+
+    ## Data rules
+
+    - Money: integer VND (no decimals, no floats); field names end in `Vnd`. Where a price is broken
+      down: `finalVnd = baseVnd + extraVnd - directDiscountVnd - flashSaleVnd - couponVnd`.
+      SharpTalk recomputes the identity and drops replies that violate it.
+    - Dates `YYYY-MM-DD` and timestamps ISO 8601 with offset, Asia/Ho_Chi_Minh (+07:00) unless stated.
+    - PII minimisation: NO guest name, phone, e-mail or ID document anywhere in v0. A booking is
+      identified by its opaque `bookingCode`. SharpTalk additionally whitelists the fields it reads.
+    - A `bookingCode` belonging to another hotel MUST be answered exactly like a non-existent one
+      (404 `not_found`) - no existence oracle across hotels.
+
+    ## Operational rules
+
+    - Versioning: major version in the path (`/v0`; `v0` may still change until Go2Joy and Amoeba agree
+      `v1`). Additive changes (new optional response fields) are allowed within a major; SharpTalk ignores
+      unknown response fields. Removals use `Deprecation` / `Sunset` headers (PROPOSAL: >= 90 days).
+      Every response carries `X-Api-Version`.
+    - Idempotency: v0 is read-only; every operation is GET and therefore safe to retry. SharpTalk retries
+      GET on network errors and 5xx (at most once more, jittered) with the SAME `X-Request-Id`; the
+      server should log it, not treat it as a new request. There is deliberately no POST/PUT/DELETE.
+    - Rate limits (PROPOSAL): 60 requests/min per key and 20 requests/min per hotel. Responses carry
+      `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`; 429 carries `Retry-After`.
+      SharpTalk caches successful replies 30-60 s per (tenant, hotel, topic, query).
+    - Pagination: `page` (1-based, default 1) and `size` (default 20, max 50) where a list can be long.
+    - Timeouts: SharpTalk gives up after 3 s per attempt (target P95 <= 1 s).
+  contact:
+    name: Amoeba SharpTalk team
+    email: dev@amoeba.group
+servers:
+  - url: https://{host}
+    description: Go2Joy partner-data host (to be provided with R8/R9)
+    variables:
+      host:
+        default: partner-api.example.go2joy.vn
+security:
+  - ServiceKey: []
+tags:
+  - name: health
+  - name: policies
+  - name: rates
+  - name: bookings
+  - name: settlement
+paths:
+  /v0/ping:
+    get:
+      tags: [health]
+      operationId: ping
+      summary: Credential check (no hotel headers needed)
+      description: Used by SharpTalk's "Test connection" button. Only `Authorization` is required.
+      responses:
+        '200':
+          description: The key is valid.
+          headers:
+            X-Api-Version: { $ref: '#/components/headers/XApiVersion' }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [apiVersion, status]
+                properties:
+                  apiVersion: { type: string, example: '0' }
+                  status: { type: string, enum: [ok] }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /v0/policies:
+    get:
+      tags: [policies]
+      operationId: getPolicies
+      summary: The hotel's cancellation / refund / check-in-out policies
+      description: Roles - manager, receptionist, internal.
+      parameters:
+        - $ref: '#/components/parameters/XHotelSn'
+        - $ref: '#/components/parameters/XActorRole'
+        - $ref: '#/components/parameters/XClaimsVerifiedAt'
+        - $ref: '#/components/parameters/XRequestTimestamp'
+        - $ref: '#/components/parameters/XRequestId'
+        - $ref: '#/components/parameters/XSignature'
+        - name: type
+          in: query
+          required: false
+          description: Omit for all three.
+          schema: { type: string, enum: [cancellation, refund, checkin_out] }
+      responses:
+        '200':
+          description: Policies of the acting hotel.
+          headers:
+            X-Api-Version: { $ref: '#/components/headers/XApiVersion' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PoliciesResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /v0/rates:
+    get:
+      tags: [rates]
+      operationId: getRates
+      summary: Hourly / overnight / daily rates per room type
+      description: Roles - manager, receptionist, internal. All room types and rate types when the filters are omitted.
+      parameters:
+        - $ref: '#/components/parameters/XHotelSn'
+        - $ref: '#/components/parameters/XActorRole'
+        - $ref: '#/components/parameters/XClaimsVerifiedAt'
+        - $ref: '#/components/parameters/XRequestTimestamp'
+        - $ref: '#/components/parameters/XRequestId'
+        - $ref: '#/components/parameters/XSignature'
+        - name: roomType
+          in: query
+          required: false
+          description: Room type code as listed by the hotel (opaque).
+          schema: { type: string, pattern: '^[A-Za-z0-9_-]{1,32}$' }
+        - name: rateType
+          in: query
+          required: false
+          schema: { type: string, enum: [hourly, overnight, daily] }
+        - name: date
+          in: query
+          required: false
+          description: Stay date the price applies to (default today, Asia/Ho_Chi_Minh).
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Rates of the acting hotel.
+          headers:
+            X-Api-Version: { $ref: '#/components/headers/XApiVersion' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RatesResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /v0/bookings:
+    get:
+      tags: [bookings]
+      operationId: getBookings
+      summary: Bookings of the acting hotel, minimal fields
+      description: |
+        Roles - manager, receptionist, internal. Exactly one lookup form:
+        `bookingCode`, OR `checkInFrom` + `checkInTo` (range at most 31 days). `status` and paging apply
+        to the range form. Anything else is 400 `invalid_parameter`.
+      parameters:
+        - $ref: '#/components/parameters/XHotelSn'
+        - $ref: '#/components/parameters/XActorRole'
+        - $ref: '#/components/parameters/XClaimsVerifiedAt'
+        - $ref: '#/components/parameters/XRequestTimestamp'
+        - $ref: '#/components/parameters/XRequestId'
+        - $ref: '#/components/parameters/XSignature'
+        - name: bookingCode
+          in: query
+          required: false
+          schema: { type: string, pattern: '^[A-Za-z0-9-]{6,24}$' }
+        - name: checkInFrom
+          in: query
+          required: false
+          schema: { type: string, format: date }
+        - name: checkInTo
+          in: query
+          required: false
+          schema: { type: string, format: date }
+        - name: status
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/BookingStatus' }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Zero or more bookings (an unknown code is 404, an empty range is an empty list).
+          headers:
+            X-Api-Version: { $ref: '#/components/headers/XApiVersion' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BookingsResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+  /v0/settlement:
+    get:
+      tags: [settlement]
+      operationId: getSettlement
+      summary: Settlement (reconciliation) periods, status and outstanding balance
+      description: Roles - manager, internal ONLY (a receptionist gets 403 `role_forbidden`).
+      parameters:
+        - $ref: '#/components/parameters/XHotelSn'
+        - $ref: '#/components/parameters/XActorRole'
+        - $ref: '#/components/parameters/XClaimsVerifiedAt'
+        - $ref: '#/components/parameters/XRequestTimestamp'
+        - $ref: '#/components/parameters/XRequestId'
+        - $ref: '#/components/parameters/XSignature'
+        - name: period
+          in: query
+          required: false
+          description: Calendar month `YYYY-MM`; omitted = the latest periods.
+          schema: { type: string, pattern: '^\d{4}-(0[1-9]|1[0-2])$' }
+        - name: status
+          in: query
+          required: false
+          schema: { $ref: '#/components/schemas/SettlementStatus' }
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Settlement periods of the acting hotel, newest first.
+          headers:
+            X-Api-Version: { $ref: '#/components/headers/XApiVersion' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SettlementResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/Unavailable' }
+components:
+  securitySchemes:
+    ServiceKey:
+      type: http
+      scheme: bearer
+      description: SharpTalk's service key (R9). Scoped on Go2Joy's side to an allow-list of hotelSn values.
+  headers:
+    XApiVersion:
+      description: Major version served, e.g. `0`.
+      schema: { type: string }
+  parameters:
+    XHotelSn:
+      name: X-Hotel-Sn
+      in: header
+      required: true
+      description: Acting hotel, from SharpTalk's verified claims. Must be inside the key's allow-list.
+      schema: { type: string, pattern: '^[A-Za-z0-9_-]{1,32}$' }
+    XActorRole:
+      name: X-Actor-Role
+      in: header
+      required: true
+      schema: { type: string, enum: [manager, receptionist, internal] }
+    XClaimsVerifiedAt:
+      name: X-Claims-Verified-At
+      in: header
+      required: true
+      description: Epoch seconds at which SharpTalk verified the signed identity claims.
+      schema: { type: integer, format: int64 }
+    XRequestTimestamp:
+      name: X-Request-Timestamp
+      in: header
+      required: true
+      description: Epoch seconds when the request was built (must be within 300 s of the server clock).
+      schema: { type: integer, format: int64 }
+    XRequestId:
+      name: X-Request-Id
+      in: header
+      required: true
+      description: UUID, also used to correlate retries.
+      schema: { type: string, format: uuid }
+    XSignature:
+      name: X-Signature
+      in: header
+      required: false
+      description: '`v1=<hex>` - HMAC-SHA256 over the canonical string in the API description. Required once a signing secret is provisioned.'
+      schema: { type: string, pattern: '^v1=[0-9a-f]{64}$' }
+    Page:
+      name: page
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, default: 1 }
+    Size:
+      name: size
+      in: query
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+  responses:
+    BadRequest:
+      description: Unknown, repeated or malformed parameter. A hotel identifier in the query is `unknown_parameter`.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: Missing/invalid key (`unauthorized`), bad signature (`bad_signature`) or clock skew (`stale_timestamp`).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: '`hotel_scope_mismatch`, `role_forbidden` or `claims_expired`.'
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Nothing of that kind for the acting hotel (also for another hotel's booking code).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    RateLimited:
+      description: Too many requests. Not retried by SharpTalk within the same turn.
+      headers:
+        Retry-After: { description: Seconds., schema: { type: integer } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unavailable:
+      description: Temporary failure. Retried by SharpTalk (GET only).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, requestId]
+          properties:
+            code:
+              type: string
+              enum:
+                - unauthorized
+                - bad_signature
+                - stale_timestamp
+                - hotel_scope_mismatch
+                - role_forbidden
+                - claims_expired
+                - invalid_parameter
+                - unknown_parameter
+                - not_found
+                - rate_limited
+                - server_error
+                - unavailable
+            message: { type: string, description: 'English, for logs only - never shown to end users.' }
+            requestId: { type: string }
+            details:
+              type: object
+              additionalProperties: true
+              description: 'For example `{ "parameter": "hotel_id" }`.'
+    Envelope:
+      type: object
+      required: [apiVersion, hotelSn, topic, generatedAt]
+      properties:
+        apiVersion: { type: string, example: '0' }
+        hotelSn:
+          type: string
+          description: Echo of the acting hotel. SharpTalk drops the reply if it differs from `X-Hotel-Sn`.
+        topic: { type: string, enum: [policies, rates, bookings, settlement] }
+        generatedAt: { type: string, format: date-time }
+    Money:
+      type: integer
+      format: int64
+      minimum: 0
+      description: Integer VND.
+    PriceBreakdown:
+      type: object
+      required: [baseVnd, extraVnd, directDiscountVnd, flashSaleVnd, couponVnd, finalVnd]
+      description: '`finalVnd = baseVnd + extraVnd - directDiscountVnd - flashSaleVnd - couponVnd` (checked by SharpTalk).'
+      properties:
+        baseVnd: { $ref: '#/components/schemas/Money' }
+        extraVnd: { $ref: '#/components/schemas/Money' }
+        directDiscountVnd: { $ref: '#/components/schemas/Money' }
+        flashSaleVnd: { $ref: '#/components/schemas/Money' }
+        couponVnd: { $ref: '#/components/schemas/Money' }
+        finalVnd: { $ref: '#/components/schemas/Money' }
+    PageInfo:
+      type: object
+      required: [number, size, total]
+      properties:
+        number: { type: integer, minimum: 1 }
+        size: { type: integer, minimum: 1, maximum: 50 }
+        total: { type: integer, minimum: 0 }
+    PoliciesResponse:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: object
+              required: [policies]
+              properties:
+                policies:
+                  type: array
+                  items:
+                    oneOf:
+                      - $ref: '#/components/schemas/CancellationPolicy'
+                      - $ref: '#/components/schemas/RefundPolicy'
+                      - $ref: '#/components/schemas/CheckinOutPolicy'
+                    discriminator:
+                      propertyName: type
+    CancellationPolicy:
+      type: object
+      required: [type, rules]
+      properties:
+        type: { type: string, enum: [cancellation] }
+        rules:
+          type: array
+          description: Ordered by `hoursBeforeCheckIn` descending; the first rule whose threshold the cancellation meets applies.
+          items:
+            type: object
+            required: [hoursBeforeCheckIn, refundPercent]
+            properties:
+              hoursBeforeCheckIn: { type: integer, minimum: 0 }
+              refundPercent: { type: integer, minimum: 0, maximum: 100 }
+        noShowRefundPercent: { type: integer, minimum: 0, maximum: 100 }
+        note: { type: string, maxLength: 300 }
+    RefundPolicy:
+      type: object
+      required: [type, processingDays, method]
+      properties:
+        type: { type: string, enum: [refund] }
+        processingDays: { type: integer, minimum: 0 }
+        method: { type: string, enum: [original_payment, wallet, bank_transfer] }
+        note: { type: string, maxLength: 300 }
+    CheckinOutPolicy:
+      type: object
+      required: [type, standardCheckIn, standardCheckOut]
+      properties:
+        type: { type: string, enum: [checkin_out] }
+        standardCheckIn: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$', example: '14:00' }
+        standardCheckOut: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$', example: '12:00' }
+        hourlyMaxHours: { type: integer, minimum: 1, description: Longest hourly stay. }
+        overnightStart: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$' }
+        overnightEnd: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$' }
+        earlyCheckInFeeVnd: { $ref: '#/components/schemas/Money' }
+        lateCheckOutFeeVnd: { $ref: '#/components/schemas/Money' }
+        note: { type: string, maxLength: 300 }
+    RatesResponse:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: object
+              required: [currency, rates]
+              properties:
+                currency: { type: string, enum: [VND] }
+                rates:
+                  type: array
+                  items: { $ref: '#/components/schemas/Rate' }
+    Rate:
+      type: object
+      required: [roomType, rateType, date, breakdown]
+      properties:
+        roomType: { type: string, description: Opaque code. }
+        roomTypeName: { type: string, maxLength: 80 }
+        rateType: { type: string, enum: [hourly, overnight, daily] }
+        date: { type: string, format: date }
+        includedHours: { type: integer, minimum: 1, description: Hourly only - hours covered by the base price. }
+        extraHourVnd: { $ref: '#/components/schemas/Money' }
+        breakdown: { $ref: '#/components/schemas/PriceBreakdown' }
+    BookingStatus:
+      type: string
+      enum: [confirmed, checked_in, checked_out, cancelled, no_show]
+    BookingsResponse:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: object
+              required: [bookings]
+              properties:
+                bookings:
+                  type: array
+                  items: { $ref: '#/components/schemas/Booking' }
+                page: { $ref: '#/components/schemas/PageInfo' }
+    Booking:
+      type: object
+      description: Minimal fields only. No guest name / phone / e-mail / ID document (PII minimisation).
+      required: [bookingCode, status, roomType, rateType, checkInAt, checkOutAt, paymentStatus, breakdown]
+      properties:
+        bookingCode: { type: string, pattern: '^[A-Za-z0-9-]{6,24}$' }
+        status: { $ref: '#/components/schemas/BookingStatus' }
+        roomType: { type: string }
+        rateType: { type: string, enum: [hourly, overnight, daily] }
+        checkInAt: { type: string, format: date-time }
+        checkOutAt: { type: string, format: date-time }
+        guestCount: { type: integer, minimum: 1 }
+        paymentStatus: { type: string, enum: [unpaid, paid, partially_refunded, refunded] }
+        breakdown: { $ref: '#/components/schemas/PriceBreakdown' }
+    SettlementStatus:
+      type: string
+      enum: [pending, paid, disputed]
+    SettlementResponse:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+        - type: object
+          required: [data]
+          properties:
+            data:
+              type: object
+              required: [settlements]
+              properties:
+                settlements:
+                  type: array
+                  items: { $ref: '#/components/schemas/Settlement' }
+                page: { $ref: '#/components/schemas/PageInfo' }
+    Settlement:
+      type: object
+      description: '`netVnd = grossVnd - commissionVnd - deductionVnd` and `outstandingVnd = netVnd - paidVnd` (both checked by SharpTalk).'
+      required: [period, status, bookingCount, grossVnd, commissionVnd, deductionVnd, netVnd, paidVnd, outstandingVnd]
+      properties:
+        period: { type: string, pattern: '^\d{4}-(0[1-9]|1[0-2])$' }
+        status: { $ref: '#/components/schemas/SettlementStatus' }
+        bookingCount: { type: integer, minimum: 0 }
+        grossVnd: { $ref: '#/components/schemas/Money' }
+        commissionVnd: { $ref: '#/components/schemas/Money' }
+        deductionVnd: { $ref: '#/components/schemas/Money' }
+        netVnd: { $ref: '#/components/schemas/Money' }
+        paidVnd: { $ref: '#/components/schemas/Money' }
+        outstandingVnd: { $ref: '#/components/schemas/Money' }
+        dueDate: { type: string, format: date }
+        paidAt: { type: string, format: date-time }
+        reference: { type: string, maxLength: 40, description: Opaque payout reference. }
