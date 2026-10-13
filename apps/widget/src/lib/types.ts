@@ -74,6 +74,11 @@ export interface ChatMessage extends Omit<ChatMessageResponse, 'senderName'> {
   citations?: Citation[];
   /** Optimistic bubble still in flight — never sent by the server. */
   pending?: boolean;
+  /**
+   * Local failure bubble only (PLN-261012 SG-84): the highest server message id the widget had seen
+   * when the send failed. A reply with a higher id means the turn landed after all.
+   */
+  failedAfterId?: string;
 }
 
 /** A file on a turn (PLN-260814); `url`/`thumbUrl` are signed and short-lived. */

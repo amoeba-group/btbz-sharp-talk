@@ -68,21 +68,52 @@ export function sendFailureChips(
   return chips;
 }
 
+/** Highest server-assigned (all-digit) message id in a thread, 0 when there is none. */
+export function maxServerId(messages: ChatMessage[]): number {
+  let max = 0;
+  for (const m of messages) {
+    if (/^\d+$/.test(m.id)) max = Math.max(max, Number(m.id));
+  }
+  return max;
+}
+
+/**
+ * The local bubble that says a send did not go through. It remembers the highest server id seen at
+ * that moment (`failedAfterId`), which is what lets `keepFailureTail` tell "nothing has happened
+ * since" from "the turn landed late".
+ */
+export function failureBubble(
+  thread: ChatMessage[],
+  body: string,
+  chips: FailureChip[],
+  now: Date = new Date(),
+): ChatMessage {
+  return {
+    id: `${FAILURE_ID_PREFIX}${now.getTime()}`,
+    senderType: 'system',
+    body,
+    createdAt: now.toISOString(),
+    quickReplies: chips,
+    failedAfterId: String(maxServerId(thread)),
+  } as ChatMessage;
+}
+
 /**
  * The failure bubble that must survive a reconcile with the server thread.
  *
  * `reconcile` replaces the local thread with the server's, which silently wiped the failure bubble
- * on the very next 5-second poll — taking its chips with it. Keep it while the failure is still the
- * latest thing in the thread: the server's last message is the shopper's own turn (the send failed
- * before any reply) or the thread is empty. Once ANY reply exists after it — the turn landed late,
- * an agent answered, a system notice arrived — the bubble is stale and dropped.
+ * (and its chips) on the very next 5-second poll. Keep it while the failure is still the latest
+ * thing in the thread. The test is NOT "is the server's last message the shopper's own" — a send
+ * that never reached the server leaves the PREVIOUS answer as its last message. It is: has any
+ * reply (ai / agent / system) arrived with an id newer than the one seen when the send failed? If
+ * so the turn landed late, or an agent answered, and the bubble is stale.
  */
 export function keepFailureTail(local: ChatMessage[], server: ChatMessage[]): ChatMessage[] {
   const last = local[local.length - 1];
   if (!last || !last.id.startsWith(FAILURE_ID_PREFIX)) return [];
-  const lastServer = server[server.length - 1];
-  if (lastServer && lastServer.senderType !== 'user') return [];
-  return [last];
+  const after = Number(last.failedAfterId ?? 0);
+  const replied = server.some((m) => m.senderType !== 'user' && /^\d+$/.test(m.id) && Number(m.id) > after);
+  return replied ? [] : [last];
 }
 
 /** Drop failure bubbles (the retry replaces them with the new attempt). */

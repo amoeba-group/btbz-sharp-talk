@@ -12,9 +12,9 @@ import {
 } from '../services/chatService';
 import type { ChatAttachment, ChatMessage, ChatReply, ScenarioPostAction } from '../lib/types';
 import {
-  FAILURE_ID_PREFIX,
   SEND_TIMEOUT_MS,
   classifySendFailure,
+  failureBubble,
   keepFailureTail,
   sendFailureChips,
   withoutFailures,
@@ -94,6 +94,14 @@ export function useChat(sessionToken: string | null) {
     setMessages((prev) => [...prev, m]);
   }, []);
 
+  /** The "didn't go through" bubble with its chips (PLN-261012 SG-84). */
+  const appendFailure = useCallback(
+    (chips: ReturnType<typeof sendFailureChips>) => {
+      setMessages((prev) => [...prev, failureBubble(prev, t('chat.sendFailed'), chips)]);
+    },
+    [t],
+  );
+
   const send = useCallback(
     async (
       text: string,
@@ -160,16 +168,12 @@ export function useChat(sessionToken: string | null) {
         // Retry and Talk-to-an-agent chips under the bubble (PLN-261012 SG-84): the shopper no
         // longer has to retype the question, and during an AI outage a person is one tap away.
         failedSend.current = { text, attachments };
-        append({
-          id: `${FAILURE_ID_PREFIX}${Date.now()}`,
-          senderType: 'system',
-          body: t('chat.sendFailed'),
-          createdAt: new Date().toISOString(),
-          quickReplies: sendFailureChips(
+        appendFailure(
+          sendFailureChips(
             { retry: t('common.retry'), agent: t('chat.nextActions.agent') },
             classifySendFailure(e),
           ),
-        });
+        );
         return { escalate: false, needsAuth: false };
       } finally {
         setSending(false);
@@ -179,7 +183,7 @@ export function useChat(sessionToken: string | null) {
         lastServerId.current = null;
       }
     },
-    [sessionToken, append, t],
+    [sessionToken, append, appendFailure, t],
   );
 
   /** Resend the turn that failed, exactly as typed (the Retry chip). */
@@ -271,17 +275,13 @@ export function useChat(sessionToken: string | null) {
         }
       }
       if (!targetId) {
-        append({
-          id: `${FAILURE_ID_PREFIX}${Date.now()}`,
-          senderType: 'system',
-          body: t('chat.sendFailed'),
-          createdAt: new Date().toISOString(),
-          quickReplies: sendFailureChips(
+        appendFailure(
+          sendFailureChips(
             { retry: t('common.retry'), agent: t('chat.nextActions.agent') },
             'network',
             Boolean(failedSend.current),
           ),
-        });
+        );
         return { choose: false };
       }
       if (label) {
@@ -320,24 +320,20 @@ export function useChat(sessionToken: string | null) {
         // A hand-off that fails must say so — silence here left a customer in an outage believing a
         // person was coming (PLN-261012 SG-84). The chips let them try again.
         if (isAuthError(e)) throw e;
-        append({
-          id: `${FAILURE_ID_PREFIX}${Date.now()}`,
-          senderType: 'system',
-          body: t('chat.sendFailed'),
-          createdAt: new Date().toISOString(),
-          quickReplies: sendFailureChips(
+        appendFailure(
+          sendFailureChips(
             { retry: t('common.retry'), agent: t('chat.nextActions.agent') },
             classifySendFailure(e),
             Boolean(failedSend.current),
           ),
-        });
+        );
         return { choose: false };
       } finally {
         // Rows were persisted past the cursor — full reconcile on the next poll.
         lastServerId.current = null;
       }
     },
-    [conversationId, sessionToken, append, t],
+    [conversationId, sessionToken, append, appendFailure, t],
   );
 
   /**

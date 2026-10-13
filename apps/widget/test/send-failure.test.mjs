@@ -23,6 +23,8 @@ const {
   sendFailureChips,
   keepFailureTail,
   withoutFailures,
+  maxServerId,
+  failureBubble,
 } = await import(`data:text/javascript,${encodeURIComponent(outputFiles[0].text)}`);
 
 const LABELS = { retry: 'Retry', agent: 'Talk to an agent' };
@@ -64,27 +66,46 @@ test('the agent chip reuses the id the post-answer chip uses, so one handler ser
   assert.equal(AGENT_CHIP_ID, 'agent_connect');
 });
 
-test('the failure bubble survives a reconcile while it is still the latest thing in the thread', () => {
-  const failure = msg('err-1', 'system');
-  const local = [msg('local-1', 'user'), failure];
+const thread = (...ids) => ids.map(([id, who]) => msg(id, who));
 
-  // The server holds the shopper's turn but no reply: the send failed before one was written.
-  assert.deepEqual(keepFailureTail(local, [msg('10', 'user')]), [failure]);
-  // The server has nothing yet (first message of a new conversation).
-  assert.deepEqual(keepFailureTail(local, []), [failure]);
+test('maxServerId is the highest all-digit id; optimistic and failure ids do not count', () => {
+  assert.equal(maxServerId(thread(['7', 'user'], ['12', 'ai'], ['local-1', 'user'], ['err-9', 'system'])), 12);
+  assert.equal(maxServerId([]), 0);
 });
 
-test('the failure bubble is dropped once ANY reply exists after it (the turn landed late)', () => {
-  const local = [msg('local-1', 'user'), msg('err-1', 'system')];
+test('a failure bubble remembers the highest server id seen when the send failed', () => {
+  const bubble = failureBubble(thread(['7', 'user'], ['8', 'ai']), 'Sorry', [{ id: 'retry_send', label: 'Retry' }], new Date('2026-10-13T01:00:00Z'));
+  assert.equal(bubble.failedAfterId, '8');
+  assert.equal(bubble.senderType, 'system');
+  assert.ok(bubble.id.startsWith('err-'));
+  assert.deepEqual(ids(bubble.quickReplies), ['retry_send']);
+});
 
-  assert.deepEqual(keepFailureTail(local, [msg('10', 'user'), msg('11', 'ai')]), []);
-  assert.deepEqual(keepFailureTail(local, [msg('10', 'user'), msg('11', 'agent')]), []);
-  assert.deepEqual(keepFailureTail(local, [msg('10', 'user'), msg('11', 'system')]), []);
+test('the failure bubble survives a reconcile when nothing new has arrived — a send that never reached the server', () => {
+  // The REAL case found in the local browser run: the server's last message is the PREVIOUS answer.
+  const failure = failureBubble(thread(['7', 'user'], ['8', 'ai']), 'Sorry', []);
+  const local = [msg('7', 'user'), msg('8', 'ai'), msg('local-1', 'user'), failure];
+
+  assert.deepEqual(keepFailureTail(local, thread(['7', 'user'], ['8', 'ai'])), [failure]);
+  // The server stored the shopper's own turn but wrote no reply: still nothing to show instead.
+  assert.deepEqual(keepFailureTail(local, thread(['7', 'user'], ['8', 'ai'], ['9', 'user'])), [failure]);
+  // A brand-new conversation with nothing stored.
+  const first = failureBubble([], 'Sorry', []);
+  assert.deepEqual(keepFailureTail([first], []), [first]);
+});
+
+test('the failure bubble is dropped once a reply NEWER than the failure exists (the turn landed late)', () => {
+  const failure = failureBubble(thread(['7', 'user'], ['8', 'ai']), 'Sorry', []);
+  const local = [msg('7', 'user'), msg('8', 'ai'), failure];
+
+  assert.deepEqual(keepFailureTail(local, thread(['7', 'user'], ['8', 'ai'], ['9', 'user'], ['10', 'ai'])), []);
+  assert.deepEqual(keepFailureTail(local, thread(['7', 'user'], ['8', 'ai'], ['9', 'user'], ['10', 'agent'])), []);
+  assert.deepEqual(keepFailureTail(local, thread(['7', 'user'], ['8', 'ai'], ['9', 'user'], ['10', 'system'])), []);
 });
 
 test('a failure that is not the last local message is stale and is not carried over', () => {
-  const local = [msg('err-1', 'system'), msg('local-2', 'user')];
-  assert.deepEqual(keepFailureTail(local, [msg('10', 'user')]), []);
+  const failure = failureBubble([], 'Sorry', []);
+  assert.deepEqual(keepFailureTail([failure, msg('local-2', 'user')], thread(['7', 'user'])), []);
   assert.deepEqual(keepFailureTail([], []), []);
 });
 
