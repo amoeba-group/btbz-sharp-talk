@@ -129,7 +129,29 @@ Copy the `.example` to the real filename on the server and fill in secrets — t
 | `SEED_ON_BOOT` | — | true→false after 1st boot | true→false after 1st boot | idempotent bootstrap seed at startup |
 | `SEED_DEMO_DATA` | — | true | **false** | demo orders/customers |
 | `SEED_KB_PROFILE` | us-cosmetics | us-cosmetics | us-cosmetics | baseline KB on first boot: `us-cosmetics` / `none` — REQ-260913 G11 |
-| `SEED_PASSWORD` | — | override recommended | **strong required** | bootstrap account password |
+| `SEED_PASSWORD` | — | override recommended | **strong required** | bootstrap account password. Unset in `NODE_ENV=production` = one-time passwords are **generated** and printed once (PLN-261012 SG-80) |
+| `SEED_TENANT_SLUG` / `_NAME` / `_DOMAIN` | ivyusa / ivyusa / ivyusa.myshopify.com | same | **set for a customer install** | the tenant the first boot creates. A non-default slug requires `SEED_TENANT_DOMAIN`; a custom tenant gets no demo orders and no US-cosmetics KB unless asked (SG-80) |
+| `SEED_ADMIN_EMAIL` / `SEED_MASTER_EMAIL` | admin@ / dev@amoeba.group | same | **required with a custom slug in production** | platform admin and tenant master accounts (SG-80) |
+| `SEED_ADMIN_PASSWORD` | — | — | optional | beats `SEED_PASSWORD` for the bootstrap password |
+
+### 4.1a Self-hosted delivery and operations (PLN-261012 SG-80/81)
+| Variable | Default | Purpose |
+|---|---|---|
+| `SHARPTALK_IMAGE_PREFIX` | `sharptalk` | app images are `<prefix>/{api,web,widget}:<version>`; set for a private registry |
+| `SHARPTALK_VERSION` | `local` (the deploy script sets it) | the image tag — what makes a rollback possible; a bundle supplies its own |
+| `SHARPTALK_ENV_FILE` | `./.env.self-hosted` next to the compose file | absolute path of the env file the api container reads; the deploy script exports it |
+| `SHARPTALK_STATE_DIR` | `docker/self-hosted` | where `releases.log` and `releases/<version>/migrations.tsv` live — keep it **outside** a release bundle directory |
+| `SHARPTALK_NODE_IMAGE` / `SHARPTALK_NGINX_IMAGE` | pinned in the compose file | base-image mirror for host builds |
+| `MYSQL_IMAGE` / `REDIS_IMAGE` / `RABBITMQ_IMAGE` / `QDRANT_IMAGE` | pinned in the compose file | third-party image mirror |
+| `LOG_MAX_SIZE` / `LOG_MAX_FILE` | `20m` / `5` | Docker json-file log rotation per container |
+| `CONSOLE_FRAME_ANCESTORS` | none (`frame-ancestors 'self'`) | build-time: extra origins allowed to frame the console |
+| `VITE_WIDGET_URL` | derived from the API base / the console origin | build-time: the widget URL shown in install snippets |
+| `MANUAL_HOST` | host of `APP_PUBLIC_URL` | build-time: the host the bundled manuals cite |
+| `BACKUP_ENCRYPT_KEY_FILE` | unset = no encryption | `openssl enc -aes-256-cbc -pbkdf2` key file for backups (mode 600, >= 32 chars) |
+| `BACKUP_KEEP_DAYS` | unset = no rotation | delete backup directories older than this after a successful backup |
+| `BACKUP_QDRANT` / `BACKUP_ROOT` / `BACKUP_LABEL` | `auto` / `<repo>/backups` / — | vector-index snapshot mode, backup parent directory, directory suffix |
+
+Alert recipients no longer default to Amoeba: `AI_ALERT_EMAIL` (AI credit + golden-gate alerts), else `ALERT_EMAIL_TO`, else nobody; the mail sender is `ALERT_EMAIL_FROM`, else `SMTP_USER`, else `noreply@<host of APP_PUBLIC_URL>`. Operator manual: [docs/guide/RUNBOOK-261013-Go2Joy-SelfHosted.md](docs/guide/RUNBOOK-261013-Go2Joy-SelfHosted.md).
 
 ### 4.2 Escalation alerts (optional — empty disables a channel)
 `SLACK_WEBHOOK_URL`, `SMTP_HOST`, `SMTP_PORT` (587), `SMTP_USER`, `SMTP_PASS`,
@@ -236,13 +258,16 @@ root `.dockerignore` keeps host `node_modules`/`dist` out of images.
 | **dev** | mysql, redis, rabbitmq (app runs on host via `npm run dev`) | `synchronize` + `db:seed` | — |
 | **staging** | api, web, widget, mysql, redis, rabbitmq, nginx | `synchronize` + `SEED_ON_BOOT` (no init-sql mount) | `unless-stopped` |
 | **production** | api, web, mysql, redis, rabbitmq, nginx | init-sql `01-schema.sql` (`synchronize=false`) | `always` |
+| **self-hosted** (customer infrastructure) | api, web, widget, mysql, redis, rabbitmq, qdrant, nginx | init-sql `01-schema.sql` + manual `sql/` before each release (`synchronize=false`); image tags + release bundle (`scripts/build-release-bundle.sh`) | `unless-stopped` |
 
 **Nginx edge routing** (staging/prod): `/widget` → widget:80 · `/api/` → api:3000 ·
 `/` → web:80. Uses the docker DNS resolver + variable `proxy_pass` so recreated
 containers (new IPs) don't cause stale 404/502.
 
-**Health check:** `GET /api/v1/health` → `{"status":"ok","db":"up"}` (liveness + DB
-readiness); wired into the api container healthcheck (staging + production compose).
+**Health check:** `GET /api/v1/health` → `{"status":"ok"}` — public **liveness only** (it does not touch the
+database); wired into the api container healthcheck. DB readiness is `GET /api/v1/health/ready` (admin token).
+To tell "new code is serving" from "old code" or "API down", request a protected route: `/api/v1/auth/me`
+answers **401** when deployed, 404 when not, 502 when the API is down.
 
 ---
 

@@ -1,0 +1,25 @@
+# SharpTalk restore drill — proves the newest backup restores, without touching the live
+# stack (PLN-261012 SG-81). A scratch MySQL container is started and removed; the result is
+# appended to <BACKUP_ROOT>/DRILL_LOG, which is the evidence an auditor asks for.
+#
+#   sudo install -m 644 docker/self-hosted/ops/sharptalk-restore-drill.{service,timer} /etc/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable --now sharptalk-restore-drill.timer
+#   sudo systemctl start sharptalk-restore-drill.service     # run it now
+#
+# Same adjustments as sharptalk-backup.service (User=, WorkingDirectory=).
+[Unit]
+Description=SharpTalk restore drill (newest backup, scratch database)
+Wants=docker.service
+After=docker.service
+#OnFailure=sharptalk-alert@%n.service
+
+[Service]
+Type=oneshot
+User=sharptalk
+Group=docker
+WorkingDirectory=/opt/sharptalk/current
+EnvironmentFile=/etc/sharptalk/backup.env
+ExecStart=/usr/bin/bash scripts/restore-drill-self-hosted.sh --latest ${BACKUP_ROOT}
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=2h

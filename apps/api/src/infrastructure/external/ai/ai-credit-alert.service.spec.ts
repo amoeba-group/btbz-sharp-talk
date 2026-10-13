@@ -6,7 +6,11 @@ import {
 } from './ai-credit-alert.service';
 import { AiGatewayService } from './ai-gateway.service';
 
-/** PLN-261007-AI-Credit-Alert — mail dev@amoeba.group when an engine runs dry, once, and on recovery. */
+/**
+ * PLN-261007-AI-Credit-Alert — mail the operator when an engine runs dry, once, and on
+ * recovery. The recipient is configuration (AI_ALERT_EMAIL, else ALERT_EMAIL_TO): there
+ * is no Amoeba default any more (PLN-261012 SG-80).
+ */
 describe('creditAlertMail', () => {
   const base = {
     env: 'staging',
@@ -82,19 +86,41 @@ describe('AiCreditAlertService', () => {
     return { svc, mailer, store };
   }
   const OLD = process.env.AI_ALERT_EMAIL;
+  const OLD_TO = process.env.ALERT_EMAIL_TO;
+  beforeEach(() => {
+    process.env.AI_ALERT_EMAIL = 'ops@example.com';
+    delete process.env.ALERT_EMAIL_TO;
+  });
   afterEach(() => {
     if (OLD === undefined) delete process.env.AI_ALERT_EMAIL;
     else process.env.AI_ALERT_EMAIL = OLD;
+    if (OLD_TO === undefined) delete process.env.ALERT_EMAIL_TO;
+    else process.env.ALERT_EMAIL_TO = OLD_TO;
   });
 
-  it('mails dev@amoeba.group once per window, however many calls fail', async () => {
-    delete process.env.AI_ALERT_EMAIL;
+  it('mails the configured recipient once per window, however many calls fail', async () => {
     const { svc, mailer } = build(true);
     await svc.onCredit(5, 'credit balance is too low');
     await svc.onCredit(5, 'credit balance is too low');
     await svc.onCredit(5, 'credit balance is too low');
     expect(mailer.send).toHaveBeenCalledTimes(1);
-    expect((mailer.send.mock.calls[0] as unknown as [{ to: string }])[0].to).toBe('dev@amoeba.group');
+    expect((mailer.send.mock.calls[0] as unknown as [{ to: string }])[0].to).toBe('ops@example.com');
+  });
+
+  it('falls back to ALERT_EMAIL_TO when AI_ALERT_EMAIL is blank', async () => {
+    process.env.AI_ALERT_EMAIL = '  ';
+    process.env.ALERT_EMAIL_TO = 'noc@example.com';
+    const { svc, mailer } = build(true);
+    await svc.onCredit(5, 'credit');
+    expect((mailer.send.mock.calls[0] as unknown as [{ to: string }])[0].to).toBe('noc@example.com');
+  });
+
+  it('mails NOBODY (and never throws) when no recipient is configured — there is no Amoeba default', async () => {
+    delete process.env.AI_ALERT_EMAIL;
+    const { svc, mailer } = build(true);
+    await expect(svc.onCredit(5, 'credit')).resolves.toBeUndefined();
+    await expect(svc.onRecovered(5)).resolves.toBeUndefined();
+    expect(mailer.send).not.toHaveBeenCalled();
   });
 
   it('sends a recovery mail on the first success after an alert, then alerts afresh next time', async () => {

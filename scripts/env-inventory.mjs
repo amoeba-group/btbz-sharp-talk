@@ -47,6 +47,9 @@ const PATTERNS = [
   /configService\.get(?:<[^>]*>)?\(\s*'([A-Z][A-Z0-9_]{2,})'/g,
   /process\.env\.([A-Z][A-Z0-9_]{2,})/g,
   /process\.env\[\s*'([A-Z][A-Z0-9_]{2,})'\s*\]/g,
+  // Helpers that take the environment as a parameter (`resolveSeedIdentity(env)`,
+  // `resolveAlertRecipient(env)`) read `env.X`, not `process.env.X` — PLN-261012 SG-80.
+  /(?<![.\w])env\.([A-Z][A-Z0-9_]{2,})/g,
   // Numeric settings go through envNumber('X', d) since FIX-260930.
   /envNumber\(\s*'([A-Z][A-Z0-9_]{2,})'/g,
 ];

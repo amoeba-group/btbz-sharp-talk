@@ -98,7 +98,7 @@ SharpTalk-KR   SharpTalk-VN       SharpTalk-USA        ← 국가 = 배포 1벌(
 | 도메인 | 콘솔·위젯·API가 **한 오리진**(예 `talk-vn.example.com`) | 동일 | |
 | 리전 | **데이터 상주 요건이 있는 국가는 그 나라 리전**(VN PDPD, KR PIPA) | 동일 | |
 
-메모리는 MySQL·Qdrant·RabbitMQ가 한 호스트에 같이 뜨기 때문에 8GB 미만이면 빌드(`--build`) 중 OOM이 납니다. 빌드가 부담이면 CI에서 이미지를 만들어 레지스트리로 옮기는 방식으로 바꿀 수 있으나 현재는 서버 빌드가 표준입니다.
+메모리는 MySQL·Qdrant·RabbitMQ가 한 호스트에 같이 뜨기 때문에 8GB 미만이면 빌드(`--build`) 중 OOM이 납니다. 서버 빌드가 기본입니다. 고객사 인프라(인터넷·레지스트리 없음)에는 **릴리스 번들**(이미지 tar + `SHA256SUMS` + `manifest.json`, 이미지 태그 `<prefix>/{api,web,widget}:<version>`)로 설치합니다 — `scripts/build-release-bundle.sh`, `deploy-self-hosted.sh --bundle`, 운영 매뉴얼 [RUNBOOK-261013-Go2Joy-SelfHosted.md](RUNBOOK-261013-Go2Joy-SelfHosted.md).
 
 ---
 
@@ -123,11 +123,11 @@ bash scripts/deploy-self-hosted.sh --check
 bash scripts/deploy-self-hosted.sh
 ```
 
-`deploy-self-hosted.sh`가 하는 일(순서대로): env 파일 존재·`UPLOAD_DIR=/data/uploads`·필수 시크릿 검사 → `docker/self-hosted/widget-config.js` 생성(`VITE_API_BASE_URL`) → `scripts/check-migrations.sh`로 미적용 SQL 검출(있으면 **중단**) → `docker compose … up -d --build` → `/api/v1/health` 60×5초 폴링, `/widget/`·`/` 200, API 로그 `successfully started` 확인.
+`deploy-self-hosted.sh`가 하는 일(순서대로): env 파일 존재·`UPLOAD_DIR=/data/uploads`·필수 시크릿 검사 → `docker/self-hosted/widget-config.js` 생성(`VITE_API_BASE_URL`) → `scripts/check-migrations.sh`로 미적용 SQL 검출(있으면 **중단**; **첫 설치에서도** DB 컨테이너만 먼저 띄워 init-sql 결과를 같은 검사로 확인한 뒤 나머지를 기동) → `docker compose … up -d --build`(번들이면 `--no-build`) → `/api/v1/health` 60×5초 폴링, `/widget/`·`/` 200, 보호 라우트 `/api/v1/auth/me` **401**, API 로그 `successfully started`, 실행 중 이미지 태그 확인 → `releases.log` 기록(롤백용). `--dry-run`은 아무것도 실행하지 않고 모든 동작을 출력합니다.
 
 **스키마**: 첫 부팅은 MySQL 볼륨이 비어 있을 때 `docker/init-sql/01-schema.sql`이 자동 실행됩니다(마운트 `/docker-entrypoint-initdb.d`). 그 뒤의 변경은 `sql/*.sql`을 **코드 배포 전에 사람이 적용**합니다(§7.1). `DB_SYNCHRONIZE`는 언제나 `false`.
 
-**첫 로그인**: `SEED_ON_BOOT=true`로 첫 부팅하면 플랫폼 관리자 `admin@amoeba.group`와 테넌트 `ivyusa`의 `dev@amoeba.group`이 `SEED_PASSWORD`로 생성됩니다(첫 로그인 시 변경 강제). **성공 후 즉시 `SEED_ON_BOOT=false`로 바꾸고 API를 재생성**하세요 — 켜 둔 채 재시작하면 계정 비밀번호가 시드값으로 되돌아갑니다. 시드 테넌트 이름·KB는 미국 화장품 기준이므로 국가 프로필 가이드의 "초기화" 절에서 정리합니다.
+**첫 로그인**: `SEED_ON_BOOT=true`로 첫 부팅하면 플랫폼 관리자 `admin@amoeba.group`와 테넌트 `ivyusa`의 `dev@amoeba.group`이 `SEED_PASSWORD`로 생성됩니다(첫 로그인 시 변경 강제). **성공 후 즉시 `SEED_ON_BOOT=false`로 바꾸고 API를 재생성**하세요 — 켜 둔 채 재시작하면 계정 비밀번호가 시드값으로 되돌아갑니다. 시드 테넌트 이름·KB는 미국 화장품 기준이므로 국가 프로필 가이드의 "초기화" 절에서 정리합니다. **고객사 인프라**에서는 `SEED_TENANT_SLUG/NAME/DOMAIN`, `SEED_ADMIN_EMAIL`, `SEED_MASTER_EMAIL`을 설정해 Amoeba의 테넌트·계정 대신 고객사 값으로 시드하고(slug를 바꾸면 domain·두 이메일이 필수 — 배포 스크립트가 거부), `SEED_PASSWORD`를 비우면 production에서 계정별 일회용 비밀번호가 생성되어 로그에 한 번만 출력됩니다(`docker logs sharptalk_api 2>&1 | grep -A4 'SEED CREDENTIALS'`).
 
 ---
 
@@ -158,7 +158,7 @@ bash scripts/deploy-self-hosted.sh
 | 커머스 | `SHOPIFY_*`(+`SHOPIFY_WEBHOOK_SECRET`·`FULFILLMENT_WEBHOOK_SECRET` — **production에서 필수**), `CAFE24_*` | 국가별 플랫폼. 앱 URL·콜백은 도메인 확정 후 외부 재등록 |
 | 메신저 | `MESSENGER_WEBHOOK_BASE_URL` | 인터넷에서 닿는 오리진 |
 | SSO | `AMA_SSO_*` | Amoeba 포털 쓸 때만 |
-| 메일·알림 | `SMTP_*`, `ALERT_EMAIL_FROM/TO`, `SLACK_WEBHOOK_URL` | 발신 도메인은 국가별. `ALERT_EMAIL_FROM` 비우면 `noreply@ivyusa.local` 폴백 |
+| 메일·알림 | `SMTP_*`, `ALERT_EMAIL_FROM/TO`, `SLACK_WEBHOOK_URL` | 발신 도메인은 국가별. `ALERT_EMAIL_FROM` 비우면 `SMTP_USER`, 그것도 없으면 `noreply@<APP_PUBLIC_URL 호스트>`(Amoeba 주소 폴백 없음). `AI_ALERT_EMAIL`(AI 크레딧·골든게이트 알림)·`ALERT_EMAIL_TO`를 둘 다 비우면 알림 메일은 아무에게도 가지 않음 |
 | 푸시 | `VAPID_*`, `EXPO_PUSH_ACCESS_TOKEN` | PWA/모바일 쓸 때만 |
 
 ### 5.3 튜닝 (규제와 직결되는 것만)
@@ -215,7 +215,7 @@ bash scripts/deploy-self-hosted.sh                                     # 빌드�
 | `docker ps` STATUS | 컨테이너 나이가 방금이어야 함(옛 컨테이너가 살아 있으면 배포 안 된 것) |
 | `docker logs sharptalk_api \| grep 'successfully started'` | 부팅 완료 |
 | 새 라우트 curl | **401 = 배포됨 · 404 = 안 됨 · 502 = API 다운/재시작 중** |
-| `/api/v1/health` | `{"status":"ok","db":"up"}` |
+| `/api/v1/health` | `{"success":true,"data":{"status":"ok"}}` — **공개 liveness만**(DB를 조회하지 않음). DB 준비 상태는 `/api/v1/health/ready`(관리자 토큰) |
 | `/widget/`, `/`, `/manual/` | 200 |
 
 ### 7.3 백업·복원 (반드시 둘 다)
@@ -223,11 +223,11 @@ bash scripts/deploy-self-hosted.sh                                     # 빌드�
 bash scripts/backup-self-hosted.sh /backup/sharptalk/$(date -u +%Y%m%d)   # db.sql.gz + uploads.tar.gz + manifest
 bash scripts/restore-self-hosted.sh /backup/sharptalk/20260913
 ```
-DB만 백업하면 "대화는 있는데 사진이 없는" 시스템이 됩니다. 스크립트는 둘 중 하나가 비면 실패합니다. 백업은 **호스트 밖, 나라 안**으로 옮기고 복원 리허설을 분기 1회 합니다. Qdrant는 재색인으로 복구 가능하므로 백업 대상이 아닙니다(`npm run kb:reindex`는 개발 환경 명령; 서버에서는 콘솔 재색인 또는 API).
+DB만 백업하면 "대화는 있는데 사진이 없는" 시스템이 됩니다. 스크립트는 DB·uploads 중 하나가 비면 실패하고, 쓴 뒤 **모든 아카이브를 다시 읽어** 검증합니다. Qdrant(벡터 인덱스)는 파생 데이터지만 재색인에 임베딩 비용이 다시 들기 때문에 **Qdrant HTTP API 스냅샷**으로 함께 백업합니다(`BACKUP_QDRANT=auto`). 선택 기능(기본 꺼짐): `BACKUP_ENCRYPT_KEY_FILE`(openssl AES-256-CBC, `*.enc`), `BACKUP_KEEP_DAYS`(성공 후 오래된 백업 삭제), `LAST_SUCCESS`/`LAST_FAILURE` 마커, `SHA256SUMS`. 스케줄 예시는 `docker/self-hosted/ops/`(systemd timer·cron), 복원 리허설은 **운영 스택을 건드리지 않는** `scripts/restore-drill-self-hosted.sh --latest <백업루트>`(분기 1회, 결과는 `DRILL_LOG`). 백업은 **호스트 밖, 나라 안**으로 옮깁니다. 상세: [RUNBOOK-261013-Go2Joy-SelfHosted.md](RUNBOOK-261013-Go2Joy-SelfHosted.md) §8.
 
 ### 7.4 업그레이드·롤백
 - 업그레이드 = 7.1. 릴리스 노트에 `## Migration`이 있는 PR은 SQL 선적용.
-- 롤백 = `git checkout <이전 SHA>` → `deploy-self-hosted.sh`. 이미 적용한 SQL은 남겨 둡니다(옛 코드는 새 컬럼을 무시). 롤백 불가 마이그레이션(컬럼 삭제)은 PR 본문 롤백 계획을 따릅니다.
+- 롤백 = **이전 이미지 태그로 재기동**: `bash scripts/rollback-self-hosted.sh --dry-run` → 실행. 두 릴리스 사이에 적용된 마이그레이션을 분류(`additive`/`data`는 안전, `breaking`·`destructive`·`unknown`은 **거부**, 종료 코드 3)하고, 거부되면 배포 전 백업 복원 또는 전진 수정을 선택합니다. 이미 적용한 SQL은 남겨 둡니다(옛 코드는 새 컬럼을 무시). `git checkout <이전 SHA>` → `deploy-self-hosted.sh`는 서버 빌드 방식에서만 쓰며, 이전 이미지가 태그로 남지 않습니다. 상세: 런북 §7.
 
 ### 7.5 모니터링 지점
 `/api/v1/health` 외부 감시 · `docker logs` `ERROR`/`WARN` 집계(4xx는 기본 미기록 — "로그 없음 ≠ 성공") · MySQL 디스크·`sharptalk_uploads` 사용량 · RabbitMQ 큐 적체(`:15672` 관리 UI는 내부에서만) · 보존 퍼지 실행 로그 · Anthropic/Voyage 실패율(콘솔 AI 사용량 탭 stub 폴백 경고).
@@ -258,7 +258,7 @@ DB만 백업하면 "대화는 있는데 사진이 없는" 시스템이 됩니다
 - [ ] 첨부 이미지 업로드 → 서명 링크 200 → `docker exec sharptalk_api ls /data/uploads/<tenantId>`
 - [ ] 커스텀 위젯 [사용함] → `/widget-design/live/<shop>.json` 200
 - [ ] 상담원 인계 → 콘솔 라이브챗 알림
-- [ ] 백업 스크립트 1회 실행 → 두 파일 생성
+- [ ] 백업 스크립트 1회 실행 → `db.sql.gz`·`uploads.tar.gz`(·`qdrant-snapshots.tar`)·`manifest.txt`·`SHA256SUMS` 생성(암호화 시 `.enc`), `LAST_SUCCESS` 갱신
 - [ ] `SEED_ON_BOOT=false` 확인
 
 ---
@@ -268,7 +268,7 @@ DB만 백업하면 "대화는 있는데 사진이 없는" 시스템이 됩니다
 | 항목 | 상태 | 대응 |
 |---|---|---|
 | `docker/production/` 스택에 pwa 없음, `/app` 라우트 없음 | 설계 | PWA가 필요하면 self-hosted/staging 스택 참고해 추가 |
-| 코드 폴백이 한국 스테이징을 가리킴(`APP_PUBLIC_URL`·`VITE_WIDGET_URL`·`ALERT_EMAIL_FROM`·Cafe24·pwa/mobile config·`shopify.app.toml`) | 갭 | env를 **비우지 말 것**. 목록: 로컬 가이드 §4 G14·G15 |
+| 코드 폴백이 한국 스테이징을 가리킴 — **해소(PLN-261012 SG-80)**: 콘솔 임베드 스니펫(`VITE_WIDGET_URL`은 API 베이스/자기 오리진에서 유도), `ALERT_EMAIL_FROM`(Amoeba 주소 폴백 없음), `AI_ALERT_EMAIL`, 시드 테넌트·계정, 매뉴얼 호스트. **남음**: `APP_PUBLIC_URL`(푸시 링크 폴백)·Cafe24·pwa/mobile config·`shopify.app.toml` | 부분 | `APP_PUBLIC_URL`은 **비우지 말 것**(배포 스크립트가 비어 있으면 거부). 목록: 로컬 가이드 §4 G14·G15 |
 | 기본 언어 `en` 고정, 타임존 목록에 호찌민 없음, 베트남 전화 PII 패턴 없음, AI 고지 "미국" 고정, 시드 KB 미국 화장품 | 갭 | 베트남 착수 전 선행 요구사항(로컬 가이드 §4 P0) |
 | 저장소는 로컬 볼륨만(S3 없음) | 설계 | 데이터 상주 = 호스트 리전으로 해결 |
 | 보존 기간은 배포 전역 | 설계 | 국가 단위 배포 원칙(§0)으로 해결 |

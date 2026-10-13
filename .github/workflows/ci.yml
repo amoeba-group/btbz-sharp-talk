@@ -46,6 +46,19 @@ jobs:
       - name: Migration manifest is current
         run: node scripts/check-migrations.mjs --check
 
+      # A FIRST INSTALL builds its schema from docker/init-sql/01-schema.sql alone
+      # (DB_SYNCHRONIZE=false). Six migrations once reached sql/ without reaching
+      # that file, and a fresh install answered 500 on the first query touching
+      # them (REQ-261012 D-18). The manifest above only proves sql/ is described;
+      # this proves the first-boot DDL contains what it describes.
+      - name: init-sql carries every migration
+        run: npm run initsql:check
+
+      # Deploy/ops script logic (init-sql guard, dry-run bundle/deploy/rollback,
+      # backup encryption) against fake docker/curl — no stack is started.
+      - name: Hosting script tests
+        run: npm run scripts:test
+
       # A component with a fixed radius ignores the tenant's 모서리 setting and
       # says nothing about it — how 47 call sites drifted before FIX-260917.
       - name: Widget radius tokens

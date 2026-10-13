@@ -8,10 +8,10 @@ import { Tenant } from '../../../domain/tenant/entity/tenant.entity';
 import { AiUsageService } from '../../../domain/ai-engine/ai-usage.service';
 import { RedisService } from '../../cache/redis.service';
 import { MailerService } from '../mailer.service';
+import { resolveAlertRecipient } from '../alert-address.util';
 
 /** One alert per engine per this window while the outage lasts (PLN-261007-AI-Credit-Alert D2). */
 export const CREDIT_ALERT_TTL_SEC = 6 * 60 * 60;
-const DEFAULT_RECIPIENT = 'dev@amoeba.group';
 
 export interface CreditAlertFacts {
   env: string;
@@ -127,8 +127,13 @@ export class AiCreditAlertService {
     return `ai:credit-alert:${engineId}`;
   }
 
-  private recipient(): string {
-    return process.env.AI_ALERT_EMAIL?.trim() || DEFAULT_RECIPIENT;
+  /**
+   * AI_ALERT_EMAIL, else ALERT_EMAIL_TO, else nobody (PLN-261012 SG-80). It used to
+   * default to Amoeba's own mailbox, which on a customer's infrastructure mailed
+   * their tenant names and failure details to a third party.
+   */
+  private recipient(): string | null {
+    return resolveAlertRecipient(process.env);
   }
 
   private env(): string {
@@ -165,6 +170,14 @@ export class AiCreditAlertService {
           ? (await this.tenantRepo.find({ where: { id: In(ids) }, select: { id: true, slug: true } })).map((t) => t.slug)
           : [];
       }
+      const to = this.recipient();
+      if (!to) {
+        // The claim above already limits this line to once per window per engine.
+        this.logger.warn(
+          `credit alert for engine ${engineId} NOT mailed: neither AI_ALERT_EMAIL nor ALERT_EMAIL_TO is set`,
+        );
+        return;
+      }
       const today = await this.usage.todayByEngine(now);
       const mail = creditAlertMail({
         env: this.env(),
@@ -179,8 +192,8 @@ export class AiCreditAlertService {
         detail: detail.slice(0, 300),
         affectedTenants: affected,
       });
-      const sent = await this.mailer.send({ to: this.recipient(), ...mail });
-      this.logger.warn(`credit alert for engine ${engineId} ${sent ? 'mailed' : 'NOT mailed'} to ${this.recipient()}`);
+      const sent = await this.mailer.send({ to, ...mail });
+      this.logger.warn(`credit alert for engine ${engineId} ${sent ? 'mailed' : 'NOT mailed'} to ${to}`);
     } catch (e) {
       this.logger.warn(`credit alert failed for engine ${engineId}: ${(e as Error).message}`);
     }
@@ -209,6 +222,8 @@ export class AiCreditAlertService {
         engine.tenantId != null
           ? await this.tenantRepo.findOne({ where: { id: Number(engine.tenantId) }, select: { id: true, slug: true } })
           : null;
+      const to = this.recipient();
+      if (!to) return; // no one was alerted, so there is no one to tell it recovered
       const mail = creditRecoveredMail({
         env: this.env(),
         engineName: engine.name,
@@ -217,7 +232,7 @@ export class AiCreditAlertService {
         since: since ? new Date(since) : null,
         recoveredAt: now,
       });
-      await this.mailer.send({ to: this.recipient(), ...mail });
+      await this.mailer.send({ to, ...mail });
       this.logger.log(`credit recovery mailed for engine ${engineId}`);
     } catch (e) {
       this.logger.warn(`credit recovery mail failed for engine ${engineId}: ${(e as Error).message}`);

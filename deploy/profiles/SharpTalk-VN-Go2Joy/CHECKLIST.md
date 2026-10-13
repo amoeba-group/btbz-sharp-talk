@@ -23,7 +23,8 @@
 - [ ] 서버 사양·UTC·Docker 24+·egress 허용
 - [ ] `cp deploy/profiles/SharpTalk-VN-Go2Joy/.env.SharpTalk-VN-Go2Joy.example docker/self-hosted/.env.self-hosted` → `<DOMAIN>` 치환
 - [ ] `bash scripts/gen-secrets.sh` → 붙여넣기
-- [ ] `bash scripts/deploy-self-hosted.sh --check` 통과
+- [ ] `bash scripts/deploy-self-hosted.sh --check` 통과 (번들 설치: `--bundle . --dry-run`; 런북 §3~§4)
+- [ ] 시드 env(`SEED_TENANT_SLUG/NAME/DOMAIN`, `SEED_ADMIN_EMAIL`, `SEED_MASTER_EMAIL`) 채움 — Amoeba 테넌트·계정이 생기지 않게
 - [ ] `bash scripts/deploy-self-hosted.sh` → 헬스 ok
 - [ ] `SEED_ON_BOOT=false`로 변경 → API 재생성
 - [ ] Basic §9 스모크
@@ -32,7 +33,7 @@
 - [ ] AI 엔진 등록·활성
 - [ ] 테넌트 go2joy 생성(도메인 app.go2joy.vn 가정), 요금제·제공 메뉴·애드온
 - [ ] master/director 초대
-- [ ] 시드 테넌트 ivyusa 정지/삭제
+- [ ] 시드 테넌트 확인: 위 시드 env를 썼다면 `go2joy`만 존재, 아니면 `ivyusa` 정지/삭제
 
 ## 테넌트 이관 (§6)
 - [ ] 타임존 Asia/Ho_Chi_Minh → 설정 12항목 수동 입력(스냅샷 대조)
@@ -50,5 +51,6 @@
 - [ ] 모바일 SDK 실기기 스모크, Zalo E2E
 
 ## 운영 (§8)
-- [ ] 백업 일 1회 + 리허설 분기 1회 캘린더
+- [ ] 백업 타이머(`docker/self-hosted/ops/`)·암호화 키 보관·`BACKUP_KEEP_DAYS`, 복원 리허설 분기 1회(`restore-drill-self-hosted.sh`) 캘린더
+- [ ] 런북 `RUNBOOK-261013-Go2Joy-SelfHosted.md` 검토 + 연락처(§10.4) 채움 + CRED_ENC_KEY 보관자 2인 지정(§12)
 - [ ] 모니터링(health·디스크·Notion 동기화·허브 폴링)

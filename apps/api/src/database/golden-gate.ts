@@ -8,13 +8,15 @@ import { GOLDEN_RUN_KIND } from '../domain/ai-coach/entity/golden-run.entity';
 import { GateResult, gateFailed, gateMail, parseGateTargets } from '../domain/ai-coach/golden-gate.util';
 import { MailerService } from '../infrastructure/external/mailer.service';
 import { OpsAlertService } from '../infrastructure/observability/ops-alert.service';
+import { resolveAlertRecipient } from '../infrastructure/external/alert-address.util';
 import { closeAndExit } from './cli-exit';
 
 /**
  * CLI: `npm run golden:gate` (PLN-261008). Runs each `GOLDEN_GATE` target's
  * graded regression set on the code that was just deployed, compares with the
- * previous run, and mails `AI_ALERT_EMAIL ?? dev@amoeba.group` when anything
- * failed. Exit code 1 on failure (for the log only — the deploy script runs
+ * previous run, and mails `AI_ALERT_EMAIL ?? ALERT_EMAIL_TO` when anything
+ * failed (no Amoeba default since PLN-261012 SG-80 — unset means the failure is
+ * only in the log and the exit code). Exit code 1 on failure (for the log only — the deploy script runs
  * this in the background and never rolls back).
  */
 async function main(): Promise<void> {
@@ -59,8 +61,11 @@ async function main(): Promise<void> {
   }
   if (results.some(gateFailed)) {
     const mail = gateMail(results, process.env.NODE_ENV || 'development', label);
-    const sent = await app.get(MailerService).send({ to: process.env.AI_ALERT_EMAIL?.trim() || 'dev@amoeba.group', ...mail });
-    console.log(`golden gate: FAILED — alert ${sent ? 'mailed' : 'NOT mailed'}`);
+    const to = resolveAlertRecipient(process.env);
+    const sent = to ? await app.get(MailerService).send({ to, ...mail }) : false;
+    console.log(
+      `golden gate: FAILED — alert ${sent ? 'mailed' : to ? 'NOT mailed' : 'NOT mailed (AI_ALERT_EMAIL / ALERT_EMAIL_TO not set)'}`,
+    );
     // The generic ops channel as well (PLN-261012 SG-83): OPS_ALERT_EMAIL / OPS_ALERT_WEBHOOK_URL, no built-in recipient.
     const failedCount = results.filter(gateFailed).length;
     const ops = await app.get(OpsAlertService).alert({

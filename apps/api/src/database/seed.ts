@@ -6,10 +6,13 @@ import { runSeed } from './seed.runner';
 async function main(): Promise<void> {
   await AppDataSource.initialize();
   try {
-    await runSeed(AppDataSource);
+    const seeded = await runSeed(AppDataSource);
     console.log('✅ Seed complete.');
-    console.log('   System Admin: admin@amoeba.group / amb2026!@');
-    console.log('   Tenant Master (ivyusa): dev@amoeba.group / amb2026!@');
+    // Development keeps printing its well-known login; a generated or env-supplied
+    // password is never echoed here (the generated one is logged once by runSeed).
+    const shown = seeded.passwordSource === 'dev-default' ? ' / amb2026!@' : '';
+    console.log(`   System Admin: ${seeded.adminEmail}${shown}`);
+    console.log(`   Tenant Master (${seeded.tenantSlug}): ${seeded.masterEmail}${shown}`);
   } finally {
     await AppDataSource.destroy();
   }

@@ -75,6 +75,7 @@ flush() {
 
 while IFS=$'\t' read -r file kind table name; do
   [[ "$file" == \#* || -z "$file" ]] && continue
+  name="${name%$'\r'}"   # a CRLF checkout (Windows) must not turn every artefact into "missing"
   if [[ "$file" != "$current" ]]; then
     flush
     current="$file"; have=0; want=0; missing=""
@@ -105,8 +106,18 @@ fi
 
 if [[ ${#pending[@]} -gt 0 ]]; then
   echo
-  echo "  NOT applied (${#pending[@]}):"
-  for f in "${pending[@]}"; do echo "    sql/$f"; done
+  echo "  NOT applied (${#pending[@]}) — listed in RELEASE order, apply top to bottom:"
+  # Release order (first appearance in git history, or the bundle's frozen
+  # release-order.txt), not the filename order the manifest happens to use: the
+  # undated migration_*.sql files are the oldest yet sort last (PLN-261012 SG-80).
+  if [[ -f "$SCRIPT_DIR/lib/migrations.sh" ]]; then
+    # shellcheck source=lib/migrations.sh
+    . "$SCRIPT_DIR/lib/migrations.sh"
+    while IFS= read -r f; do [[ -n "$f" ]] && echo "    sql/$f"; done \
+      < <(printf '%s\n' "${pending[@]}" | migration_sort_release "$REPO_ROOT/sql")
+  else
+    for f in "${pending[@]}"; do echo "    sql/$f"; done
+  fi
   echo
   echo "  Apply them BEFORE deploying the code, oldest first (the order they were"
   echo "  released). Filename order is NOT dependency order: several files use"

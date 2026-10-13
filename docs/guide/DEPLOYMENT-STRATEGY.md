@@ -60,7 +60,7 @@ feature/*  ──PR+squash──▶  main  ──(promote)──▶  production
 
 1. **Dev** — `npm run db:up && npm run db:seed && npm run dev`; `npm run typecheck && npm test && npm run build` green.
 2. **PR → main** — squash-merge after review + CI. `main` must stay build-green.
-3. **Staging** — on the host: `git pull` (on `main`) → `bash docker/staging/deploy-staging.sh` → verify `/api/v1/health` = `db:up`, admin login, widget RAG. UAT/demo here.
+3. **Staging** — on the host: `git pull` (on `main`) → `bash docker/staging/deploy-staging.sh` → verify `/api/v1/health` = `ok` (public liveness only — it does not touch the DB), a protected route (`/api/v1/auth/me`) = 401, admin login, widget RAG. UAT/demo here.
 4. **Production** (planned) — promote the vetted commit to `production`; provision host + `.env.production`; `bash docker/production/deploy-production.sh`; smoke-test; turn `SEED_ON_BOOT` off.
 
 Each step is a gate: don't promote a commit that hasn't passed the prior environment.
@@ -70,6 +70,7 @@ Each step is a gate: don't promote a commit that hasn't passed the prior environ
 ## 4. Build & runtime model (빌드·런타임)
 
 - **Monorepo build in-image**: Docker build context = repo root (`../..`) so Turbo compiles the whole workspace; root `.dockerignore` keeps host `node_modules`/`dist` out.
+- **Customer infrastructure ships as a release bundle** (PLN-261012 SG-80): `scripts/build-release-bundle.sh` builds the images once (pinned bases, `npm ci`, tags `<prefix>/{api,web,widget}:<version>`), saves them with `SHA256SUMS`, `manifest.json` and the classified migration list; the host runs `deploy-self-hosted.sh --bundle` with no registry, no internet and no build. Operator manual: [RUNBOOK-261013-Go2Joy-SelfHosted](RUNBOOK-261013-Go2Joy-SelfHosted.md).
 - **Frontend is build-time baked**: `VITE_API_BASE_URL` (+ widget `VITE_BASE=/widget/`) are compiled into the static bundle — changing the API URL requires a **web/widget rebuild**, not just a restart.
 - **Edge nginx** routes `/`→web, `/api/`→api, `/widget`→widget, using the docker DNS resolver + variable `proxy_pass` so recreated containers (new IPs) don't cause stale 404/502.
 - **Health gating**: `GET /api/v1/health` (liveness + DB readiness) drives the api container healthcheck; web/nginx `depends_on` api health.
@@ -80,10 +81,10 @@ Each step is a gate: don't promote a commit that hasn't passed the prior environ
 
 | | Staging | Production |
 |---|---|---|
-| Schema source | TypeORM `synchronize=true` (no init-sql mount) | init-sql `sql/01-schema.sql`, `synchronize=false` (migrations) |
+| Schema source | TypeORM `synchronize=true` (no init-sql mount) | init-sql `docker/init-sql/01-schema.sql`, `synchronize=false` (migrations; `npm run initsql:check` keeps it equal to `sql/artefacts.tsv`) |
 | Bootstrap | `SEED_ON_BOOT=true` on first boot → **set `false` after** | `SEED_ON_BOOT=true` first boot → **set `false` after**, strong `SEED_PASSWORD`, `SEED_DEMO_DATA=false` |
 
-- Seed is **idempotent**: creates tenant `ivyusa` + `admin@`/`dev@` (must-change-password) and backfills `tenant_id`.
+- Seed is **idempotent**: creates tenant `ivyusa` + `admin@`/`dev@` (must-change-password) and backfills `tenant_id`. Customer deployments set `SEED_TENANT_SLUG/NAME/DOMAIN`, `SEED_ADMIN_EMAIL`, `SEED_MASTER_EMAIL` instead and, in production with no `SEED_PASSWORD`, get generated one-time passwords printed once in the API log (PLN-261012 SG-80).
 - **Critical policy — keep `SEED_ON_BOOT=false` after first boot.** With it left on, restarts re-seed and **reset `admin@`/`dev@` to `SEED_PASSWORD`**, silently reverting in-app password changes ("password drift" — see staging history). Rotate credentials via the app change-password / temp-password flow, not re-seed.
 
 ---
@@ -104,6 +105,7 @@ bash docker/staging/deploy-staging.sh        # or deploy-production.sh
 ```
 - Data volumes (`sharptalk_mysql_*_data` (staging physical names stay `staging_ivy_*`, pinned via `name:`), redis, rabbitmq) **persist** across redeploys — rollback is code-only, data survives.
 - Full wipe (staging only): `docker compose -f docker/staging/docker-compose.staging.yml down -v`.
+- **Self-hosted / customer stacks**: use `scripts/rollback-self-hosted.sh` (previous image tag; it reads the migrations applied between the two releases and refuses when one is not reversible — see the runbook §7). `git checkout` + redeploy above is the staging/production-stack procedure.
 - **Gotcha:** editing `nginx.conf` needs `up -d --force-recreate nginx` (bind-mounted config isn't hot-reloaded).
 
 ---
@@ -144,7 +146,7 @@ bash docker/staging/deploy-staging.sh        # or deploy-production.sh
 ssh -i secrets/ssh/ivy_staging_ed25519 shoptalk@211.110.140.172   # key auth (password auth also enabled)
 cd /home/shoptalk/btbz-sharptalk && git pull            # on main
 bash docker/staging/deploy-staging.sh
-curl -s https://shoptalk.amoeba.site/api/v1/health               # {"status":"ok","db":"up"}
+curl -s https://shoptalk.amoeba.site/api/v1/health               # {"status":"ok"} — liveness only; DB readiness is /health/ready (admin)
 ```
 
 **Production — LIVE (2026-09-14, PLN-260913-Production-Provisioning-Deploy).** Runs as a second stack on the staging host until a dedicated host exists: `https://sharptalk.amoeba.site` → host nginx (LE cert, expires 2026-12-13, certbot.timer) → `127.0.0.1:8081` → `docker/self-hosted` stack in `/home/shoptalk/sharptalk-production` (containers `sharptalk_*`, MySQL `127.0.0.1:3318`, backups `~/backups/sharptalk-production/`). Deploy: `git pull --ff-only origin production && bash scripts/deploy-self-hosted.sh` (SQL first: `MYSQL_CONTAINER=sharptalk_mysql bash scripts/check-migrations.sh`). Secrets: `secrets/SharpTalk-KR-Production-server.md`. Original dedicated-host plan (kept for later):
@@ -161,6 +163,6 @@ curl -s https://shoptalk.amoeba.site/api/v1/health               # {"status":"ok
 - [ ] `.env.{staging,production}` present with real secrets; `VITE_API_BASE_URL` matches the public URL.
 - [ ] `npm run build` / `typecheck` / `test` green before merge.
 - [ ] `bash docker/<env>/deploy-<env>.sh` → all containers healthy.
-- [ ] `GET /api/v1/health` → `{"status":"ok","db":"up"}`; admin login OK; widget RAG OK.
+- [ ] `GET /api/v1/health` → `{"status":"ok"}` (liveness only); `GET /api/v1/auth/me` → 401 (404 = old code, 502 = API down); admin login OK; widget RAG OK.
 - [ ] `SEED_ON_BOOT` reverted to `false` after first successful boot.
 - [ ] nginx reloaded / `--force-recreate`d if config changed; TLS/DNS resolves.
