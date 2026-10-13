@@ -165,3 +165,49 @@ describe('RagService.groundingReport', () => {
     });
   });
 });
+
+/**
+ * CHARACTERISATION (not a change) of a residual of REQ D-16 found while building SG-51: real
+ * embeddings ran, but NO vector hit survived the scope — Qdrant knows nothing about categories, so a
+ * guest's top-24 neighbours may all be out of scope — and the chunks come from the keyword leg alone.
+ * `confidence()` only reads a similarity when one exists; otherwise it falls to the count estimate, and
+ * the ngram FULLTEXT index matches almost any text, so the figure is 0.5 + 0.12 per document (>= 0.62):
+ * above any guest bar a calibration would pick. `groundingConfidence()` keeps these numbers exactly (the
+ * brief); `gate:calibrate` warns about the samples it affects.
+ */
+describe('RagService.groundingReport — keyword-only grounding under REAL embeddings', () => {
+  const kwChunk = (id: number) => ({ id, title: `t${id}`, category: 'Public FAQ', group: 'counsel', source: 'knowledge_store', url: null, snippet: 's', similarity: null });
+  const build = (chunks: unknown[], vectorProvider: string | null) => {
+    const svc = new RagService(
+      { createQueryBuilder: () => ({}) } as never,
+      { findOne: async () => null } as never,
+      { complete: jest.fn() } as never,
+      { enabled: true, search: jest.fn() } as never,
+      { getPersonaRules: jest.fn(), effectiveAgentId: jest.fn() } as never,
+    );
+    (svc as unknown as { retrieveHybrid: unknown }).retrieveHybrid = async () => ({ chunks, vectorProvider });
+    return svc;
+  };
+  const saved = { ...process.env };
+  afterEach(() => {
+    process.env = { ...saved };
+  });
+
+  it('voyage ran, only keyword hits survived the scope: the count estimate (0.62 for one document), no similarity', async () => {
+    delete process.env.VOYAGE_API_KEY;
+
+    const r = await build([kwChunk(1)], 'voyage').groundingReport(4, 'a question the public documents do not answer', 1, { guestOnly: true });
+
+    expect(r.confidence).toBeCloseTo(0.62);
+    expect(r.topSimilarity).toBeNull();
+    expect(r.vectorProvider).toBe('voyage');
+    expect(r.degraded).toBe(false);
+  });
+
+  it('...whereas a real in-scope vector hit below the floor reads 0.2: the difference the calibration warns about', async () => {
+    const weak = { ...kwChunk(1), similarity: 0.3 };
+
+    expect((await build([weak], 'voyage').groundingReport(4, 'q', 1, { guestOnly: true })).confidence).toBe(0.2);
+    expect((await build([kwChunk(1), kwChunk(2)], 'voyage').groundingReport(4, 'q', 1, { guestOnly: true })).confidence).toBeCloseTo(0.74);
+  });
+});

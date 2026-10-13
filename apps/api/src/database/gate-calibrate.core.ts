@@ -159,6 +159,8 @@ export async function runCalibration(input: {
     `agent guest policy now: ${c.guestPolicy ?? 'unknown'} (calibration measures guests as if it were login_guidance); GUEST_GATE_CONFIDENCE in force: ${c.currentThreshold}`,
   ];
   const lines = [...header, ''];
+  for (const w of meaningfulness.warnings) lines.push(`WARNING: ${w}`);
+  if (meaningfulness.warnings.length) lines.push('');
   if (!meaningfulness.meaningful) lines.push(notMeaningfulBanner(meaningfulness), '', '(the table below is for illustration only — it is NOT calibration data)', '');
   lines.push(formatCalibration(safeReport));
   if (!meaningfulness.meaningful) lines.push('', notMeaningfulBanner(meaningfulness));
@@ -173,6 +175,7 @@ export async function runCalibration(input: {
     currentThreshold: c.currentThreshold,
     meaningful: meaningfulness.meaningful,
     notMeaningfulReasons: meaningfulness.reasons,
+    warnings: meaningfulness.warnings,
     providers: meaningfulness.providers,
     exitCode,
     report: safeReport,

@@ -287,6 +287,12 @@ export interface Meaningfulness {
   /** Samples measured while the vector leg was degraded (Voyage / Qdrant failed). */
   degradedSamples: number;
   reasons: string[];
+  /**
+   * Things that do NOT make the run meaningless but change how to read it. Today: guest questions whose
+   * confidence came from KEYWORD hits only (real embeddings ran, yet no in-scope vector hit survived the
+   * scope), so the figure is the hit-count estimate (>= 0.62), not a similarity.
+   */
+  warnings: string[];
 }
 
 /**
@@ -316,7 +322,24 @@ export function assessMeaningfulness(samples: CalibrationSample[]): Meaningfulne
   if (degradedSamples > 0) {
     reasons.push(`the vector leg was degraded for ${degradedSamples} question(s): Voyage or Qdrant failed, and the 0.2 sentinel is not a measurement`);
   }
-  return { meaningful: reasons.length === 0, providers, degradedSamples, reasons };
+  // Real embeddings, yet the deciding figure is the count estimate: RagService.confidence() only reads a
+  // similarity when a vector hit survived the scope; otherwise any keyword hit (the ngram index matches
+  // almost anything) reads 0.5 + 0.12 per document. Such a question can never be told apart by the bar.
+  const keywordOnly = samples.filter(
+    (s) =>
+      s.thresholdSensitive &&
+      s.vectorProvider === 'voyage' &&
+      !s.degraded &&
+      s.topSimilarity == null &&
+      (s.grounded ?? 0) > CONFIDENCE_SCALE.sentinel,
+  ).length;
+  const warnings: string[] = [];
+  if (keywordOnly > 0) {
+    warnings.push(
+      `${keywordOnly} guest question(s) grounded on KEYWORD hits only (no in-scope vector hit): their confidence is a hit count (>= 0.62), not a similarity, so no bar above 0.5 separates them — see REQ D-16`,
+    );
+  }
+  return { meaningful: reasons.length === 0, providers, degradedSamples, reasons, warnings };
 }
 
 export const NOT_MEANINGFUL_EXIT_CODE = 3;

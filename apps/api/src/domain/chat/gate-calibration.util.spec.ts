@@ -430,3 +430,24 @@ describe('notMeaningfulBanner layout', () => {
     expect(mixed).not.toContain('stub embeddings — gate never closes');
   });
 });
+
+describe('assessMeaningfulness — keyword-only grounding under real embeddings (a warning, not a refusal)', () => {
+  const kw = (over: Partial<CalibrationSample> = {}) => guest('refuse', 0.62, { topSimilarity: null, ...over });
+
+  it('warns when a guest question was decided by the hit-count estimate although Voyage ran', () => {
+    const m = assessMeaningfulness([kw(), kw(), guest('allow', 0.8)]);
+
+    expect(m.meaningful).toBe(true); // the run is real...
+    expect(m.warnings).toHaveLength(1); // ...but a figure of 0.62 with no similarity cannot be separated by a bar
+    expect(m.warnings[0]).toMatch(/2 guest question\(s\) grounded on KEYWORD hits only/);
+    expect(m.warnings[0]).toMatch(/D-16/);
+  });
+
+  it('a real similarity, a 0.2 sentinel, a signed-in viewer or a stub provider do not trigger it', () => {
+    expect(assessMeaningfulness([guest('allow', 0.8)]).warnings).toEqual([]);
+    expect(assessMeaningfulness([kw({ grounded: 0.2 })]).warnings).toEqual([]); // nothing matched at all: a real "no"
+    expect(assessMeaningfulness([kw({ thresholdSensitive: false })]).warnings).toEqual([]);
+    expect(assessMeaningfulness([kw({ vectorProvider: 'stub' })]).warnings).toEqual([]); // already NOT meaningful
+    expect(assessMeaningfulness([kw({ degraded: true })]).warnings).toEqual([]);
+  });
+});

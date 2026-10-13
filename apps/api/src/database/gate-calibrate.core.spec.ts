@@ -202,3 +202,39 @@ describe('runCalibration — the stub / keyword-only guard (REQ D-16)', () => {
     expect(sampleOf(1, items[0], { ...d, guestGated: false })).toMatchObject({ thresholdSensitive: false });
   });
 });
+
+describe('runCalibration — keyword-only grounding warning', () => {
+  it('a real-embedding run still exits on its recommendation, with the warning in the text and the JSON', async () => {
+    const items: LabelledItem[] = [
+      { question: 'Làm sao đăng ký?', audience: 'guest', expect: 'allow' },
+      { question: 'Hạn đối soát?', audience: 'guest', expect: 'refuse' },
+    ];
+    const measure = async (item: LabelledItem): Promise<GateDecision> =>
+      decideGate(
+        asGateRag(
+          makeRag({
+            policy: 'open',
+            tiers: true,
+            // The refuse question grounds on keyword hits only: voyage ran, no similarity, 0.62.
+            guest: item.question.startsWith('Làm sao') ? { confidence: 0.8, topSimilarity: 0.8 } : { confidence: 0.62, topSimilarity: null },
+            audience: { confidence: 0.2 },
+            manager: { confidence: 0.2 },
+          }),
+        ),
+        { tenantId: 1, agentId: AGENT_ID, identity: simulatedIdentity(item.audience), query: item.question },
+        { assumeGuestPolicy: 'login_guidance' },
+      );
+
+    const run = await runCalibration({
+      items,
+      measure,
+      args: { from: 0.45, to: 0.95, step: 0.05, delayMs: 0 },
+      context: { tenantId: 1, agentId: AGENT_ID, source: 'csv', guestPolicy: 'open', voyageKeySet: true, qdrantEnabled: true, currentThreshold: 0.45 },
+    });
+
+    expect(run.meaningfulness.meaningful).toBe(true);
+    expect(run.meaningfulness.warnings).toHaveLength(1);
+    expect(run.text).toContain('WARNING: 1 guest question(s) grounded on KEYWORD hits only');
+    expect((run.json.warnings as string[])[0]).toMatch(/KEYWORD hits only/);
+  });
+});
