@@ -1,0 +1,13 @@
+/*
+ * Base font stylesheet for the widget iframe (PLN-261012 SG-82).
+ *
+ * This is the DEFAULT: the Pretendard stylesheet from jsDelivr, exactly what
+ * index.html used to link directly. Images built from docker/production or
+ * docker/self-hosted replace this path at runtime from WIDGET_FONT_CSS_URL
+ * (nginx.widget.conf), so a deployment can point it at its own copy of the font —
+ * or at nothing — without rebuilding. The staging image and the Vite dev server
+ * serve this file as is.
+ *
+ * Self-hosting steps: docs/guide/GUIDE-261013-Go2Joy-HotelAdmin-CSP-CORS.md §5.
+ */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');

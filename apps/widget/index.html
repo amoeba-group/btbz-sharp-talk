@@ -4,10 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SharpTalk</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css"
-    />
+    <!-- Base font (PLN-261012 SG-82). Same-origin on purpose: public/base-font.css
+         ships the Pretendard CDN @import as the default, and a deployment replaces
+         where the font comes from (own copy, or none) with WIDGET_FONT_CSS_URL on
+         the widget container — no rebuild, and no third-party request if it asks
+         for none. Not a hosted font PRESET: those (Inter, Noto Sans KR) are chosen
+         per tenant in the console and load from Google Fonts. -->
+    <link rel="stylesheet" href="/base-font.css" />
   </head>
   <body>
     <div id="root"></div>

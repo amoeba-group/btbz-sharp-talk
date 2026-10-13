@@ -120,6 +120,8 @@ Copy the `.example` to the real filename on the server and fill in secrets — t
 | `IDLE_CLOSE_AFTER_SEC` | 60 | 60 | 60 | 그 질문 후 대기 시간 |
 | `IDLE_STALE_AFTER_DAYS` | 7 | 7 | 7 | 이보다 오래된 방치는 질문 없이 종료 |
 | `CONVERSATION_LOG_RETENTION_DAYS` | 365 | 90 | 365 | POL-003 retention purge. Blank/0/invalid = **365, not "forever"**. The `vn_pdpl` consent notice quotes this same value (`{{retentionDays}}`, PLN-261012 SG-70) |
+| `WIDGET_FRAME_ANCESTORS` | — | — | — | **Widget container** (compose env, `docker/production` + `docker/self-hosted`; PLN-261012 SG-82): space-separated origins allowed to frame the widget → `Content-Security-Policy: frame-ancestors …`. Blank = no header (any site may embed) |
+| `WIDGET_FONT_CSS_URL` | jsDelivr | jsDelivr | jsDelivr | **Widget container**: base font stylesheet served as `/widget/base-font.css`. Unset = Pretendard on jsDelivr; path/URL = self-hosted; empty = system fonts only |
 | `CUSTOMER_RETENTION_DAYS` | — (off) | — (off) | — (off) | **Opt-in** (PLN-261012 SG-70): customers with no session/order activity for N days are *anonymised* (not deleted) by the retention scheduler. Blank/0 = off. No per-customer legal hold — switch off before the next run while a hold applies |
 | `AUDIT_LOG_RETENTION_DAYS` | — (off) | — (off) | — (off) | **Opt-in** (PLN-261012 SG-70): `audit_logs` older than N days are deleted (floor 90). Also removes consent evidence (`consent.*`) and DSAR records (`dsar.*`) — choose N ≥ the longest period you may have to prove a consent |
 | `KB_STORAGE_DIR` | ./storage/kb | — | — | local KB uploads (dev) |
