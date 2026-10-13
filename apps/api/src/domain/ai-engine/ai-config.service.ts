@@ -22,6 +22,7 @@ import {
 } from './entity/tenant-ai-config.entity';
 import { AiAgent } from './entity/ai-agent.entity';
 import { sanitizeRegionRouting } from './region-routing.util';
+import { maskHandoffForRead, sanitizeHandoffExtras } from './handoff-config.util';
 import {
   SCENARIOS,
   SCRIPT_BY_BUTTON_ACTION,
@@ -245,7 +246,8 @@ export class AiConfigService {
       rules,
       scenarioButtons: row?.scenarioButtons ?? DEFAULT_SCENARIO_BUTTONS,
       scenarioOverrides: row?.scenarioOverrides ?? {},
-      handoffConfig: row?.handoffConfig ?? null,
+      // A stored regional Slack webhook is a credential: the console only ever sees the mask.
+      handoffConfig: maskHandoffForRead(row?.handoffConfig),
       answerFooter: row?.answerFooter ?? null,
       guestGuidance: row?.guestGuidance ?? null,
     };
@@ -263,10 +265,18 @@ export class AiConfigService {
    * here (PLN-261012 SG-65): it is rejected with E5095 when malformed and stored
    * cleaned; everything else in the JSON passes through exactly as before.
    */
-  private checkedHandoff(handoff: HandoffConfig | null): HandoffConfig | null {
-    if (!handoff || handoff.regionRouting === undefined) return handoff;
-    const { regionRouting, ...rest } = handoff;
-    const clean = sanitizeRegionRouting(regionRouting);
+  private checkedHandoff(
+    handoff: HandoffConfig | null,
+    /** The stored config, so a regional webhook the console echoed back masked is kept (SG-67). */
+    previous?: HandoffConfig | null,
+  ): HandoffConfig | null {
+    if (!handoff) return handoff;
+    // The routing-extras fields (unclaimed alerts, regional mailboxes, per-team hours) are
+    // checked first; a config that uses none of them passes through as the same object.
+    const checked = sanitizeHandoffExtras(handoff);
+    if (checked.regionRouting === undefined) return checked;
+    const { regionRouting, ...rest } = checked;
+    const clean = sanitizeRegionRouting(regionRouting, previous?.regionRouting);
     return clean ? { ...rest, regionRouting: clean } : rest;
   }
 
@@ -371,7 +381,9 @@ export class AiConfigService {
     if (input.scenarioOverrides !== undefined) {
       row.scenarioOverrides = this.sanitizeOverrides(input.scenarioOverrides);
     }
-    if (input.handoffConfig !== undefined) row.handoffConfig = this.checkedHandoff(input.handoffConfig);
+    if (input.handoffConfig !== undefined) {
+      row.handoffConfig = this.checkedHandoff(input.handoffConfig, row.handoffConfig);
+    }
     if (input.answerFooter !== undefined) row.answerFooter = sanitizeAnswerFooter(input.answerFooter);
     if (input.guestGuidance !== undefined) {
       row.guestGuidance = this.sanitizeGuestGuidance(input.guestGuidance);

@@ -1,8 +1,15 @@
 import { HttpStatus } from '@nestjs/common';
-import { REGION_CATEGORIES, REGION_CATEGORY_DEFAULT_TEAM, SESSION_LANGUAGE_CODES, USER_REGION } from '@sharptalk/types';
+import {
+  REGION_CATEGORIES,
+  REGION_CATEGORY_DEFAULT_TEAM,
+  REGION_ROUTING_MODE,
+  SESSION_LANGUAGE_CODES,
+  USER_REGION,
+} from '@sharptalk/types';
 import type { LocalizedText, RegionCategory, RegionCategoryRule, RegionRoutingConfig, UserRegion } from '@sharptalk/types';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { hasWebhook, isMaskedWebhook, isSlackWebhookUrl, sealWebhook } from './slack-webhook.util';
 
 /** Longest province name or code a table row may hold ("Bà Rịa - Vũng Tàu" is 17). */
 export const REGION_PROVINCE_MAX_LEN = 80;
@@ -19,6 +26,63 @@ function invalid(problem: string): never {
   });
 }
 
+/** Longest a strict-mode widening delay may be: one day. */
+export const REGION_WIDEN_AFTER_MAX_MIN = 1440;
+
+/**
+ * The strict-mode fields of the table (PLN-261012 SG-67): `mode`, `widenAfterMinutes`
+ * and the per-team Slack webhooks. Each is optional and only copied across when set,
+ * so a table without them is stored exactly as before.
+ */
+function sanitizeStrictFields(
+  raw: Record<string, unknown>,
+  out: RegionRoutingConfig,
+  previous?: RegionRoutingConfig | null,
+): void {
+  if (raw.mode !== undefined && raw.mode !== null) {
+    if (raw.mode !== REGION_ROUTING_MODE.PREFER && raw.mode !== REGION_ROUTING_MODE.STRICT) {
+      invalid(`mode must be ${REGION_ROUTING_MODE.PREFER} or ${REGION_ROUTING_MODE.STRICT}`);
+    }
+    out.mode = raw.mode;
+  }
+
+  if (raw.widenAfterMinutes !== undefined && raw.widenAfterMinutes !== null && raw.widenAfterMinutes !== '') {
+    const n = Number(raw.widenAfterMinutes);
+    if (!Number.isInteger(n) || n < 0 || n > REGION_WIDEN_AFTER_MAX_MIN) {
+      invalid(`widenAfterMinutes must be a whole number of minutes from 0 to ${REGION_WIDEN_AFTER_MAX_MIN}`);
+    }
+    // 0 = "never widen", which is what leaving it out means.
+    if (n > 0) out.widenAfterMinutes = n;
+  }
+
+  if (raw.slackByRegion === undefined || raw.slackByRegion === null) return;
+  if (typeof raw.slackByRegion !== 'object' || Array.isArray(raw.slackByRegion)) {
+    invalid('slackByRegion must be an object');
+  }
+  const byRegion = raw.slackByRegion as Record<string, unknown>;
+  const sealed: Partial<Record<UserRegion, string>> = {};
+  for (const [team, value] of Object.entries(byRegion)) {
+    if (!TEAMS.includes(team)) invalid(`slackByRegion.${team} is not a team (${TEAMS.join(', ')})`);
+    if (value === undefined || value === null || value === '') continue; // cleared
+    if (typeof value !== 'string') invalid(`slackByRegion.${team} must be text`);
+    if (isMaskedWebhook(value)) {
+      // Untouched in the console: keep what is stored, or nothing when nothing was.
+      const kept = previous?.slackByRegion?.[team as UserRegion];
+      if (hasWebhook(kept)) sealed[team as UserRegion] = kept as string;
+      continue;
+    }
+    if (!isSlackWebhookUrl(value.trim())) {
+      invalid(`slackByRegion.${team} must be a Slack incoming webhook (https://hooks.slack.com/services/…)`);
+    }
+    try {
+      sealed[team as UserRegion] = sealWebhook(value.trim());
+    } catch {
+      invalid('the server cannot store a webhook because its encryption key is not configured');
+    }
+  }
+  if (Object.keys(sealed).length) out.slackByRegion = sealed;
+}
+
 /**
  * Validate and clean `handoff_config.regionRouting` before it is stored
  * (PLN-261012 SG-65, REQ D-14). The console is the only writer today, but the
@@ -33,14 +97,23 @@ function invalid(problem: string): never {
  * Cleans silently: blank provinces are dropped, entries are trimmed, exact
  * repeats inside one category collapse, unknown row fields are not stored.
  * `null` removes the table. An absent `team` takes the category's default team.
+ *
+ * Strict-mode fields (PLN-261012 SG-67) are optional: `mode` (prefer | strict),
+ * `widenAfterMinutes` (0..1440, 0 = never) and `slackByRegion` (Slack incoming webhooks,
+ * sealed at rest — see slack-webhook.util). Anything else in the object is not stored.
  */
-export function sanitizeRegionRouting(input: unknown): RegionRoutingConfig | undefined {
+export function sanitizeRegionRouting(
+  input: unknown,
+  /** The stored table, for keeping a sealed webhook the console echoed back masked (SG-67). */
+  previous?: RegionRoutingConfig | null,
+): RegionRoutingConfig | undefined {
   if (input === null || input === undefined) return undefined;
   if (typeof input !== 'object' || Array.isArray(input)) invalid('regionRouting must be an object');
   const raw = input as Record<string, unknown>;
 
   if (raw.enabled !== undefined && typeof raw.enabled !== 'boolean') invalid('enabled must be true or false');
   const out: RegionRoutingConfig = { enabled: raw.enabled === true };
+  sanitizeStrictFields(raw, out, previous);
 
   if (raw.categories === undefined || raw.categories === null) return out;
   if (!Array.isArray(raw.categories)) invalid('categories must be an array');
