@@ -123,3 +123,33 @@ export function isExpectGate(value: unknown): value is ExpectGate {
 export function gateMatchesExpectation(expect: ExpectGate, decision: GateDecisionValue): boolean {
   return expect === EXPECT_GATE.ALLOW ? decision === GATE_DECISION.ALLOW : decision !== GATE_DECISION.ALLOW;
 }
+
+/** The badge colour of a decision in the console (Badge `tone`): answered = success, a gate that did its job = warning, an outage = error. */
+export function gateDecisionTone(decision: GateDecisionValue): 'success' | 'warning' | 'error' {
+  if (decision === GATE_DECISION.ALLOW) return 'success';
+  return decision === GATE_DECISION.EMBEDDER_DEGRADED ? 'error' : 'warning';
+}
+
+/**
+ * Notes the simulator card adds so an operator does not misread a result (i18n keys under
+ * `qa.gate.note_*`):
+ *  policyOpen  a signed-out visitor of an agent whose guest policy is `open`: the guest gate is not
+ *              applied at all, so "allowed" says nothing about what is public
+ *  degraded    the vector leg was down: the figures are the 0.2 sentinel, not a measurement
+ *  stub        stub / keyword-only embeddings (local dev): the confidence is a hit count and the gate
+ *              cannot close on topic — do not judge thresholds here (REQ D-16)
+ */
+export type GateNoteKey = 'policyOpen' | 'degraded' | 'stub';
+
+export function gateNoteKeys(g: {
+  as: GateAs;
+  guestPolicy: string | null;
+  vectorProvider: string | null;
+  degraded: boolean;
+}): GateNoteKey[] {
+  const out: GateNoteKey[] = [];
+  if (g.as === GATE_AS.GUEST && g.guestPolicy !== 'login_guidance') out.push('policyOpen');
+  if (g.degraded) out.push('degraded');
+  else if (g.vectorProvider !== 'voyage') out.push('stub');
+  return out;
+}

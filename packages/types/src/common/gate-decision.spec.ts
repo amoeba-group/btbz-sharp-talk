@@ -4,7 +4,9 @@ import {
   GATE_AS,
   GATE_AS_OPTIONS,
   GATE_DECISION,
+  gateDecisionTone,
   gateMatchesExpectation,
+  gateNoteKeys,
   gateRefuses,
   isExpectGate,
   isGateAs,
@@ -82,5 +84,40 @@ describe('golden expectation', () => {
     expect(isExpectGate('refuse')).toBe(true);
     expect(isExpectGate('guest_gate')).toBe(false);
     expect(isExpectGate(null)).toBe(false);
+  });
+});
+
+describe('the simulator card helpers', () => {
+  it('colours a decision: answered green, a working gate amber, an outage red', () => {
+    expect(gateDecisionTone(GATE_DECISION.ALLOW)).toBe('success');
+    expect(gateDecisionTone(GATE_DECISION.GUEST_GATE)).toBe('warning');
+    expect(gateDecisionTone(GATE_DECISION.ROLE_MANAGER_ONLY)).toBe('warning');
+    expect(gateDecisionTone(GATE_DECISION.LOW_CONFIDENCE)).toBe('warning');
+    expect(gateDecisionTone(GATE_DECISION.EMBEDDER_DEGRADED)).toBe('error');
+  });
+
+  const base = { as: 'guest' as const, guestPolicy: 'login_guidance', vectorProvider: 'voyage', degraded: false };
+
+  it('a healthy run on real embeddings needs no note', () => {
+    expect(gateNoteKeys(base)).toEqual([]);
+  });
+
+  it('a guest of an OPEN agent is told the guest gate was not applied', () => {
+    expect(gateNoteKeys({ ...base, guestPolicy: 'open' })).toEqual(['policyOpen']);
+    expect(gateNoteKeys({ ...base, guestPolicy: null })).toEqual(['policyOpen']);
+  });
+
+  it('a signed-in viewer never gets the guest-policy note (the policy is not read for them)', () => {
+    expect(gateNoteKeys({ ...base, as: 'receptionist', guestPolicy: null })).toEqual([]);
+  });
+
+  it('the stub embedder or a keyword-only turn says the gate cannot be judged here; a degraded one says it was an outage', () => {
+    expect(gateNoteKeys({ ...base, vectorProvider: 'stub' })).toEqual(['stub']);
+    expect(gateNoteKeys({ ...base, vectorProvider: null })).toEqual(['stub']);
+    expect(gateNoteKeys({ ...base, vectorProvider: null, degraded: true })).toEqual(['degraded']);
+  });
+
+  it('notes combine', () => {
+    expect(gateNoteKeys({ ...base, guestPolicy: 'open', vectorProvider: 'stub' })).toEqual(['policyOpen', 'stub']);
   });
 });

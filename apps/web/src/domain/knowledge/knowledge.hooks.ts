@@ -6,6 +6,7 @@ import type { CatalogSyncJob, DocumentListParams } from './knowledge.service';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
 import type { Audience } from '../../../../../packages/types/src/common/audience';
+import type { GateAs } from '../../../../../packages/types/src/common/gate-decision';
 
 export function useSources() {
   const tenantKey = useTenantKey();
@@ -259,9 +260,10 @@ export function useCategories(group?: string) {
 /** Ask the KB a question. A mutation, not a query: it runs on demand only. */
 export function useAskKnowledge() {
   return useMutation({
-    mutationFn: (vars: { question: string; language: string; aiAgentId?: number | null }) =>
-      knowledgeService.ask(vars.question, vars.language, vars.aiAgentId),
-    onError: (err: Error) => toast.error(err.message),
+    mutationFn: (vars: { question: string; language: string; aiAgentId?: number | null; asAudience?: GateAs | null }) =>
+      knowledgeService.ask(vars.question, vars.language, vars.aiAgentId, vars.asAudience),
+    // An error stays until dismissed (a failed simulation must not vanish before it is read).
+    onError: (err: Error) => toast.error(err.message, { sticky: true }),
   });
 }
 

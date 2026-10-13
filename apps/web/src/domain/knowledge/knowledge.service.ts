@@ -3,6 +3,7 @@ import type { Paginated } from '@/lib/types';
 // Source deep-import, not '@sharptalk/types': the package's CJS runtime exports are invisible to the
 // browser build (see KbVersionSection).
 import type { Audience } from '../../../../../packages/types/src/common/audience';
+import type { GateAs, GateDecisionValue } from '../../../../../packages/types/src/common/gate-decision';
 
 /** Shapes mirror KnowledgeMapper (apps/api knowledge.mapper.ts). */
 export interface GdriveCredentialStatus {
@@ -122,12 +123,51 @@ export interface KnowledgeSource_ {
   versionState?: 'match' | 'mismatch' | 'unversioned' | 'unchecked' | null;
 }
 
+/** A category the retrieval matched, with the tier that decides who may read it (SG-51). */
+export interface GateCategory {
+  category: string | null;
+  group: string | null;
+  tier: Audience | null;
+  similarity: number | null;
+  docCount: number;
+}
+
+/**
+ * What the gate decided for a simulated viewer (PLN-261012 SG-51, mirrors GateReport in
+ * apps/api gate-simulator.service.ts). Present only when the question was asked "as" someone.
+ */
+export interface GateReport {
+  as: GateAs;
+  agentId: number | null;
+  /** The agent's guest policy (open | login_guidance); null when not read (a signed-in viewer). */
+  guestPolicy: string | null;
+  audience: Audience;
+  decision: GateDecisionValue;
+  /** guest = the guest gate decided; answer = the answerability / low-confidence check. */
+  stage: 'guest' | 'answer';
+  refused: boolean;
+  guestGated: boolean;
+  threshold: number;
+  /** The deciding measurement; null when no gate applied. */
+  confidence: number | null;
+  topSimilarity: number | null;
+  matchedCategories: GateCategory[];
+  /** voyage | stub | null (keyword only). */
+  vectorProvider: string | null;
+  degraded: boolean;
+  degradedReason: string | null;
+  /** The exact words the visitor would read when refused; null when the question is answered. */
+  reply: string | null;
+}
+
 export interface KnowledgeAnswer {
   answer: string;
   confidence: number;
   /** True when moderation would block this answer — the text is withheld. */
   blocked: boolean;
   sources: KnowledgeSource_[];
+  /** The gate's decision, when asked "as" a viewer (Test as…, SG-51). */
+  gate?: GateReport;
 }
 
 export interface CategoryCount {
@@ -550,13 +590,15 @@ export const knowledgeService = {
       `/knowledge/usage-guides/${key}`,
       body,
     ),
-  ask: (question: string, language: string, aiAgentId?: number | null) =>
+  ask: (question: string, language: string, aiAgentId?: number | null, asAudience?: GateAs | null) =>
     apiPost<KnowledgeAnswer>('/knowledge/ask', {
       question,
       language,
       // Omitted = answer from everything the tenant has, which is what an
       // operator managing the knowledge base needs to see.
       ...(aiAgentId ? { ai_agent_id: aiAgentId } : {}),
+      // "Test as…" (SG-51): what this kind of viewer would be told, gate decision included.
+      ...(asAudience ? { as_audience: asAudience } : {}),
     }),
   conflicts: (params: { status?: string; page: number; size: number }) =>
     apiGetList<KnowledgeConflict>('/knowledge/conflicts', params),
