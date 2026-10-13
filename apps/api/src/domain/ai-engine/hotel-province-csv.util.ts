@@ -18,8 +18,21 @@ export interface HotelCsvRow {
   province: string;
 }
 
+/** Machine-readable reason of a malformed row — the console localises by this, `reason` is the English log text. */
+export const HOTEL_CSV_PROBLEM = {
+  HOTEL_SN_EMPTY: 'hotel_sn_empty',
+  HOTEL_SN_LONG: 'hotel_sn_long',
+  HOTEL_SN_CONTROL: 'hotel_sn_control',
+  PROVINCE_EMPTY: 'province_empty',
+  PROVINCE_LONG: 'province_long',
+  PROVINCE_CONTROL: 'province_control',
+  HOTEL_SN_CONFLICT: 'hotel_sn_conflict',
+} as const;
+export type HotelCsvProblemCode = (typeof HOTEL_CSV_PROBLEM)[keyof typeof HOTEL_CSV_PROBLEM];
+
 export interface HotelCsvProblem {
   line: number;
+  code: HotelCsvProblemCode;
   reason: string;
   hotelSn?: string;
 }
@@ -82,14 +95,19 @@ export function parseHotelProvinceCsv(text: string): ParsedHotelCsv {
     const line = i + 2; // the header is row 1
     const hotelSn = (cells[hotelCol] ?? '').trim();
     const province = (cells[provinceCol] ?? '').trim();
-    const problem = (reason: string) => problems.push({ line, reason, ...(hotelSn ? { hotelSn: hotelSn.slice(0, HOTEL_SN_MAX_LEN) } : {}) });
+    const problem = (code: HotelCsvProblemCode, reason: string) =>
+      problems.push({ line, code, reason, ...(hotelSn ? { hotelSn: hotelSn.slice(0, HOTEL_SN_MAX_LEN) } : {}) });
 
-    if (!hotelSn) return problem('hotel_sn is empty');
-    if (hotelSn.length > HOTEL_SN_MAX_LEN) return problem(`hotel_sn is longer than ${HOTEL_SN_MAX_LEN} characters`);
-    if (CONTROL_CHARS.test(hotelSn)) return problem('hotel_sn holds a control character');
-    if (!province) return problem('province is empty');
-    if (province.length > REGION_PROVINCE_MAX_LEN) return problem(`province is longer than ${REGION_PROVINCE_MAX_LEN} characters`);
-    if (CONTROL_CHARS.test(province)) return problem('province holds a control character');
+    if (!hotelSn) return problem(HOTEL_CSV_PROBLEM.HOTEL_SN_EMPTY, 'hotel_sn is empty');
+    if (hotelSn.length > HOTEL_SN_MAX_LEN) {
+      return problem(HOTEL_CSV_PROBLEM.HOTEL_SN_LONG, `hotel_sn is longer than ${HOTEL_SN_MAX_LEN} characters`);
+    }
+    if (CONTROL_CHARS.test(hotelSn)) return problem(HOTEL_CSV_PROBLEM.HOTEL_SN_CONTROL, 'hotel_sn holds a control character');
+    if (!province) return problem(HOTEL_CSV_PROBLEM.PROVINCE_EMPTY, 'province is empty');
+    if (province.length > REGION_PROVINCE_MAX_LEN) {
+      return problem(HOTEL_CSV_PROBLEM.PROVINCE_LONG, `province is longer than ${REGION_PROVINCE_MAX_LEN} characters`);
+    }
+    if (CONTROL_CHARS.test(province)) return problem(HOTEL_CSV_PROBLEM.PROVINCE_CONTROL, 'province holds a control character');
 
     const key = hotelSn.toLowerCase();
     const earlier = seen.get(key);
@@ -98,7 +116,7 @@ export function parseHotelProvinceCsv(text: string): ParsedHotelCsv {
         duplicates += 1;
         return;
       }
-      return problem(`hotel_sn repeats row ${earlier.line} with a different province`);
+      return problem(HOTEL_CSV_PROBLEM.HOTEL_SN_CONFLICT, `hotel_sn repeats row ${earlier.line} with a different province`);
     }
     seen.set(key, { province, line });
     rows.push({ line, hotelSn, province });

@@ -81,6 +81,13 @@ describe('parseHotelProvinceCsv', () => {
     );
     expect(out.rows.map((r) => r.hotelSn)).toEqual(['1', '7']);
     expect(out.problems.map((p) => p.line)).toEqual([3, 4, 5, 6, 7]);
+    expect(out.problems.map((p) => p.code)).toEqual([
+      'hotel_sn_empty',
+      'province_empty',
+      'hotel_sn_long',
+      'province_control',
+      'province_long',
+    ]);
     expect(out.problems[0].reason).toContain('hotel_sn is empty');
     expect(out.problems[1].reason).toContain('province is empty');
     expect(out.problems[2].reason).toContain('longer than 64');
@@ -92,7 +99,9 @@ describe('parseHotelProvinceCsv', () => {
     const out = parseHotelProvinceCsv(csv('hotel_sn,province', '1,Hà Nội', '1,Hà Nội', '2,Đà Nẵng', '2,Cần Thơ'));
     expect(out.rows.map((r) => r.hotelSn)).toEqual(['1', '2']);
     expect(out.duplicates).toBe(1);
-    expect(out.problems).toEqual([{ line: 5, hotelSn: '2', reason: 'hotel_sn repeats row 4 with a different province' }]);
+    expect(out.problems).toEqual([
+      { line: 5, hotelSn: '2', code: 'hotel_sn_conflict', reason: 'hotel_sn repeats row 4 with a different province' },
+    ]);
   });
 
   it('compares hotel_sn case-insensitively, like the unique key will', () => {
