@@ -15,8 +15,8 @@ import type {
 import {
   GUEST_POLICY,
   SCENARIO_AUDIENCE,
-  SESSION_IDENTITY,
   SESSION_LANGUAGE_CODES,
+  audienceOf,
   languageBySession,
 } from '@sharptalk/types';
 import {
@@ -37,6 +37,7 @@ import {
   isValidFollowUpId,
 } from '../chat/scenario-scripts';
 import { resolveScenarioLabel } from './scenario-label.util';
+import { scenarioAudienceShows } from './scenario-audience.util';
 import { AiAgentService } from './ai-agent.service';
 import { Session } from '../session/entity/session.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
@@ -333,6 +334,17 @@ export class AiConfigService {
   }
 
   /**
+   * The tenant's scenario buttons as configured (the shipped defaults until first saved).
+   * The click-time audience check reads this (PLN-261012 SG-10): what the widget was SHOWN
+   * is not what a press may RUN.
+   */
+  async getScenarioButtons(tenantId: number | null): Promise<ScenarioButton[]> {
+    if (tenantId == null) return DEFAULT_SCENARIO_BUTTONS;
+    const row = await this.configRepo.findOne({ where: { tenantId } });
+    return row?.scenarioButtons ?? DEFAULT_SCENARIO_BUTTONS;
+  }
+
+  /**
    * One action's tenant edits, or null when it uses the built-in script.
    * Read on every scenario turn — shares the persona cache TTL policy by
    * being a single indexed row read (no extra cache layer for now).
@@ -601,23 +613,31 @@ export class AiConfigService {
       return s && HTTPS_URL.test(s) ? s : null;
     };
     const read = (camel: string, snake: string): unknown => input[camel] ?? input[snake];
-    const notice: Partial<Record<string, string>> = {};
-    const rawNotice = read('notice', 'notice');
-    if (rawNotice && typeof rawNotice === 'object') {
-      for (const lang of SESSION_LANGUAGE_CODES) {
-        const v = (rawNotice as Record<string, unknown>)[lang];
-        const text = typeof v === 'string' ? v.trim().slice(0, GUIDANCE_NOTICE_MAX) : '';
-        if (text) notice[lang] = text;
+    // One per-language map reader for both lines a tenant may reword: the sign-in prompt
+    // (`notice`) and the "ask your hotel's manager" line (`managerNotice`, PLN-261012 SG-10).
+    const noticeMap = (raw: unknown): Partial<Record<string, string>> => {
+      const out: Partial<Record<string, string>> = {};
+      if (raw && typeof raw === 'object') {
+        for (const lang of SESSION_LANGUAGE_CODES) {
+          const v = (raw as Record<string, unknown>)[lang];
+          const text = typeof v === 'string' ? v.trim().slice(0, GUIDANCE_NOTICE_MAX) : '';
+          if (text) out[lang] = text;
+        }
       }
-    }
+      return out;
+    };
+    const notice = noticeMap(read('notice', 'notice'));
+    const managerNotice = noticeMap(read('managerNotice', 'manager_notice'));
     const template = url(read('hostLinkTemplate', 'host_link_template'));
     const out: GuestGuidance = {
       loginUrl: url(read('loginUrl', 'login_url')),
       signupUrl: url(read('signupUrl', 'signup_url')),
       ...(Object.keys(notice).length ? { notice } : {}),
+      ...(Object.keys(managerNotice).length ? { managerNotice } : {}),
       hostLinkTemplate: template && template.includes('{hotelSn}') ? template : null,
     };
-    const empty = !out.loginUrl && !out.signupUrl && !out.notice && !out.hostLinkTemplate;
+    const empty =
+      !out.loginUrl && !out.signupUrl && !out.notice && !out.managerNotice && !out.hostLinkTemplate;
     return empty ? null : out;
   }
 
@@ -650,19 +670,17 @@ export class AiConfigService {
     // Lapsed signed claims read as a guest, so a guest-audience button comes back
     // instead of the partner menu of someone no longer signed in (PLN-261012 SG-03).
     // Sessions without signed claims have nothing to age and cost no tenant read.
-    const verified =
+    // The viewer's tier (PLN-261012 SG-10) adds the manager-only button; guest / verified
+    // read the same way as before (public vs anything signed in).
+    const viewer = audienceOf(
       effectiveIdentity(
         session,
         session.identityClaims?.signed ? await this.identityPolicies.get(tenantId) : null,
-      ).level === SESSION_IDENTITY.VERIFIED;
+      ),
+    );
     const scoped = buttons
       .filter((b) => b.enabled)
-      .filter((b) => {
-        const audience = b.audience ?? SCENARIO_AUDIENCE.ALL;
-        if (audience === SCENARIO_AUDIENCE.GUEST) return !verified;
-        if (audience === SCENARIO_AUDIENCE.VERIFIED) return verified;
-        return true;
-      })
+      .filter((b) => scenarioAudienceShows(b.audience, viewer))
       // The button's own question resolves the same way its label does, so the
       // widget receives one string per field and never sees the language map.
       .map((b) => ({
@@ -795,7 +813,9 @@ export class AiConfigService {
         // Audience (PLN-261001 v1.1): stored only when narrowed, for the same
         // byte-identical reason as agentIds. Unknown values read as `all`.
         const audience =
-          b.audience === SCENARIO_AUDIENCE.GUEST || b.audience === SCENARIO_AUDIENCE.VERIFIED
+          b.audience === SCENARIO_AUDIENCE.GUEST ||
+          b.audience === SCENARIO_AUDIENCE.VERIFIED ||
+          b.audience === SCENARIO_AUDIENCE.MANAGER
             ? b.audience
             : undefined;
         return {
