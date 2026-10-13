@@ -58,6 +58,7 @@ import { OdooModule } from './domain/odoo/odoo.module';
 import { HaravanModule } from './domain/haravan/haravan.module';
 import { WooModule } from './domain/woocommerce/woocommerce.module';
 import { ShopifyProxyModule } from './domain/shopify-proxy/shopify-proxy.module';
+import { PartnerDataModule } from './domain/partner-data/partner-data.module';
 
 @Module({
   imports: [
@@ -118,6 +119,7 @@ import { ShopifyProxyModule } from './domain/shopify-proxy/shopify-proxy.module'
     AuditModule,
     AiEngineModule,
     AiCoachModule,
+    PartnerDataModule,
     AnalyticsModule,
     JourneyModule,
     PrivacyModule,
