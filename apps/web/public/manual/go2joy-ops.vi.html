@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sổ tay vận hành Go2Joy: CS và Sales Admin</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --accent:#2B7FFF; --accent-deep:#1D5FD6; --accent-tint:#EAF2FF;
+  --ink:#1B2430; --muted:#5C6675; --line:#E3E8F0;
+  --bg:#FAFBFD; --card:#FFFFFF; --soft:#F1F5FB;
+  --tip-bg:#EAF2FF; --tip-edge:#2B7FFF;
+  --warn-bg:#FFF7E6; --warn-edge:#D97706; --warn-ink:#8A4B04;
+  --code-bg:#EEF2F8; --mono-ink:#31435E;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --accent:#5C9BFF; --accent-deep:#82B4FF; --accent-tint:#16243C;
+    --ink:#E6EBF3; --muted:#93A0B4; --line:#28313F;
+    --bg:#0F141B; --card:#161C25; --soft:#1B222D;
+    --tip-bg:#152238; --tip-edge:#5C9BFF;
+    --warn-bg:#2A2010; --warn-edge:#E8A23D; --warn-ink:#EFC584;
+    --code-bg:#1E2632; --mono-ink:#B9C7DC;
+  }
+}
+:root[data-theme="dark"]{
+  --accent:#5C9BFF; --accent-deep:#82B4FF; --accent-tint:#16243C;
+  --ink:#E6EBF3; --muted:#93A0B4; --line:#28313F;
+  --bg:#0F141B; --card:#161C25; --soft:#1B222D;
+  --tip-bg:#152238; --tip-edge:#5C9BFF;
+  --warn-bg:#2A2010; --warn-edge:#E8A23D; --warn-ink:#EFC584;
+  --code-bg:#1E2632; --mono-ink:#B9C7DC;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Segoe UI",sans-serif;
+  font-size:16px;line-height:1.75}
+.shell{max-width:1120px;margin:0 auto;padding:0 24px 96px;
+  display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+@media(max-width:860px){.shell{display:block}}
+header.hero{grid-column:1/-1;padding:56px 0 8px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+h1{font-family:"Gothic A1",sans-serif;font-weight:800;font-size:clamp(28px,4.5vw,40px);
+  line-height:1.25;margin:10px 0 12px;text-wrap:balance}
+.meta{color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.lead{max-width:68ch;color:var(--muted);margin-top:14px}
+nav.toc{position:sticky;top:24px;align-self:start;font-size:13.5px;padding-top:24px}
+@media(max-width:860px){nav.toc{position:static;border:1px solid var(--line);border-radius:10px;
+  background:var(--card);padding:14px 16px;margin:20px 0}}
+nav.toc .toc-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+nav.toc a{display:flex;gap:8px;color:var(--muted);text-decoration:none;padding:4px 0;line-height:1.4}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent)}
+nav.toc a .n{font-family:"IBM Plex Mono",monospace;color:var(--accent);font-size:12px;min-width:18px;padding-top:1px}
+main{min-width:0;max-width:74ch}
+section{padding-top:40px}
+.ch{display:flex;align-items:baseline;gap:12px;border-top:2px solid var(--ink);padding-top:14px}
+.ch .num{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;color:var(--accent)}
+h2{font-family:"Gothic A1",sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.35;text-wrap:balance}
+.actor{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 12px;
+  background:var(--accent-tint);color:var(--accent-deep);margin-top:10px}
+h3{font-family:"Gothic A1",sans-serif;font-weight:700;font-size:17.5px;margin:30px 0 8px}
+p{margin:10px 0;max-width:68ch}
+a{color:var(--accent-deep)}
+strong{font-weight:700}
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:14px 0}
+th{font-size:12.5px;letter-spacing:.04em;color:var(--muted);text-align:left;font-weight:700;
+  border-bottom:2px solid var(--line);padding:7px 12px 7px 0}
+td{border-bottom:1px solid var(--line);padding:8px 12px 8px 0;vertical-align:top}
+.tablewrap{overflow-x:auto}
+.terms{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 18px 14px;margin:16px 0}
+.terms .t-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:12px 0 2px}
+.terms td:first-child{font-weight:700;white-space:nowrap;padding-right:18px}
+.callout{border-left:3px solid var(--tip-edge);background:var(--tip-bg);border-radius:0 10px 10px 0;
+  padding:12px 18px;margin:16px 0;font-size:14.5px}
+.callout .c-label{font-weight:700;color:var(--accent-deep)}
+.callout.warn{border-left-color:var(--warn-edge);background:var(--warn-bg);color:var(--warn-ink)}
+.callout.warn .c-label{color:var(--warn-ink)}
+.callout p{margin:6px 0}
+.callout ul{margin:6px 0}
+code,kbd{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--code-bg);
+  color:var(--mono-ink);border-radius:5px;padding:1px 6px}
+pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+  overflow-x:auto;font-size:13px;line-height:1.6}
+pre code{background:none;padding:0;color:var(--mono-ink)}
+ol.steps{padding-left:0;margin:14px 0;list-style:none;counter-reset:st}
+ol.steps>li{counter-increment:st;position:relative;padding:0 0 14px 40px}
+ol.steps>li::before{content:counter(st);position:absolute;left:0;top:1px;width:24px;height:24px;
+  border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;font-family:"IBM Plex Mono",monospace}
+ul{margin:10px 0;padding-left:22px}
+li{margin:4px 0}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:30px;position:relative}
+.check li::before{content:"";position:absolute;left:2px;top:6px;width:14px;height:14px;
+  border:2px solid var(--accent);border-radius:4px}
+.faq dt{font-weight:700;margin-top:18px}
+.faq dd{margin:4px 0 0;color:var(--muted)}
+.next{margin-top:56px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:20px 24px}
+.pagenav{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;padding-top:18px;color:var(--muted)}
+.pagenav a{color:var(--muted);text-decoration:none}
+.pagenav a:hover,.pagenav a:focus-visible{color:var(--accent)}
+.pagenav .cur{color:var(--accent-deep);font-weight:700}
+figure.shot{margin:18px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+figure.shot img{display:block;width:100%}
+figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+<nav class="pagenav" aria-label="Điều hướng sổ tay"><a href="./">← Danh sách sổ tay</a><span>·</span><span class="cur">Tiếng Việt</span><a href="go2joy-ops.en.html">English</a><span>·</span><a href="go2joy-ops.vi.md">Bản MD</a></nav>
+<header class="hero">
+  <div class="eyebrow">Tài liệu SharpTalk · Vận hành Go2Joy</div>
+  <h1>Sổ tay vận hành Go2Joy: CS và Sales Admin</h1>
+  <div class="meta"><span>Phiên bản 1.0 (bản nháp để Go2Joy rà soát) · 2026-10-13 · Biên soạn dựa trên mã nguồn và báo cáo triển khai PLN-261012 (SG-85)</span><span>Đối tượng: nhân viên CS và Sales Admin (SA) (chương 1–4 và 10) · trưởng nhóm (thêm chương 9) · master/director của Go2Joy (chương 5–8) · bản tóm tắt tiếng Anh cho Amoeba: <a href="go2joy-ops.en.html">go2joy-ops.en.md</a> và phụ lục A</span></div>
+  <p class="lead">Sổ tay này dành cho hai nhóm người ở Go2Joy: <strong>nhân viên CS và Sales Admin</strong> trực hàng chờ chuyển người từ khách sạn đối tác, và <strong>master/director</strong> cấu hình cho hàng chờ đó chạy đúng. Mọi nhãn, đường dẫn menu và thông báo trích trong sổ tay được đối chiếu với giao diện tiếng Việt của bản console hiện tại; mọi hành vi được dẫn về mã nguồn hoặc báo cáo triển khai (phụ lục D). Phần nào chưa kiểm chứng trên môi trường thật được ghi rõ ở §0.3.</p>
+</header>
+
+<nav class="toc" aria-label="Mục lục">
+  <div class="toc-label">Mục lục</div>
+  <a href="#ch0"><span class="n">0</span>Trước khi bắt đầu</a>
+  <a href="#ch1"><span class="n">1</span>Bắt đầu một ca trực</a>
+  <a href="#ch2"><span class="n">2</span>Đọc một hội thoại</a>
+  <a href="#ch3"><span class="n">3</span>Hỏi đội và định tuyến</a>
+  <a href="#ch4"><span class="n">4</span>Ngoài giờ làm việc</a>
+  <a href="#ch5"><span class="n">5</span>Người dùng và nhãn (master)</a>
+  <a href="#ch6"><span class="n">6</span>Cài đặt chuyển cho nhân viên</a>
+  <a href="#ch7"><span class="n">7</span>Khách chưa đăng nhập, quyền xem tri thức, phiên bản giao diện</a>
+  <a href="#ch8"><span class="n">8</span>Đăng nhập có chữ ký, phạm vi thí điểm, dữ liệu đối tác, quyền riêng tư</a>
+  <a href="#ch9"><span class="n">9</span>Thống kê thí điểm</a>
+  <a href="#ch10"><span class="n">10</span>Xử lý sự cố</a>
+  <a href="#ch11"><span class="n">11</span>Bộ tài liệu đào tạo</a>
+  <a href="#ch12"><span class="n">12</span>Phụ lục</a>
+</nav>
+
+<main>
+
+<section id="ch0">
+  <div class="ch"><span class="num">00</span><h2>Trước khi bắt đầu</h2></div>
+  <h3>0.1 Ai đọc chương nào</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Bạn là</th><th>Đọc</th><th>Ghi chú</th></tr>
+    <tr><td>Nhân viên CS hoặc SA (cấp bậc staff)</td><td>Chương 1, 2, 3, 4, 10, rồi làm bài tập ở chương 11</td><td>Bạn cần nhãn công việc <strong>CS</strong> hoặc <strong>SA</strong> thì mới thấy <strong>Trò chuyện trực tiếp</strong> (xem §5)</td></tr>
+    <tr><td>Trưởng nhóm CS/SA (manager)</td><td>Thêm chương 9</td><td>Cấp manager mở được <strong>Thống kê</strong> và <strong>Cài đặt AI</strong>, nhưng mặc định không mở được <strong>Cài đặt gian hàng</strong></td></tr>
+    <tr><td>master hoặc director</td><td>Toàn bộ, nhất là chương 5–8</td><td>Chương 6 (chuyển người) và các thẻ quyền riêng tư: master và director đều sửa được. Chỉ master sửa được <strong>Chính sách đăng nhập có chữ ký (SSO)</strong> và <strong>Phạm vi pilot theo khách sạn</strong>; thẻ <strong>Tra cứu dữ liệu đối tác</strong> chỉ master nhìn thấy</td></tr>
+  </table></div>
+  <h3>0.2 Năm điều cần nhớ</h3>
+  <ol class="steps">
+    <li><strong>Bật Đang trực khi bắt đầu ca, tắt khi hết ca.</strong> Chỉ người đang trực và để console mở mới được hệ thống báo trước (§1).</li>
+    <li><strong>Nhìn dấu "đã ký" trước khi tin khách sạn và vai trò.</strong> "hết hạn" nghĩa là chữ ký đã quá 8 giờ và khách được coi như khách vãng lai; "tự khai" (hiếm gặp) nghĩa là chưa ai xác nhận (§2).</li>
+    <li><strong>Hội thoại chọn nhầm đội không cần bắt khách làm lại.</strong> Dùng <strong>Chuyển sang…</strong> để chuyển cho đội đúng; khách không nhận thông báo nào (§3.6).</li>
+    <li><strong>Bộ lọc "Vùng của tôi" có thể giấu hội thoại.</strong> Hội thoại của vùng khác, hoặc chưa xác định vùng, không hiện cho tới khi bạn chọn <strong>Tất cả vùng</strong> (§3.7).</li>
+    <li><strong>Ngoài giờ, nhân viên không bị gọi dậy.</strong> Hội thoại ngoài giờ chờ đến sáng; việc đầu tiên của ca sáng là xử lý chúng (§4).</li>
+  </ol>
+  <h3>0.3 Tình trạng của các tính năng trong sổ tay</h3>
+  <ul>
+    <li>Mọi tính năng được xây và kiểm thử cục bộ; <strong>chưa triển khai</strong> lên máy chủ nào của Go2Joy. Khi lên staging hoặc UAT, các kiểm tra khói vẫn phải làm lại (xem checklist ở phụ lục B).</li>
+    <li><strong>API dữ liệu đối tác thật của Go2Joy chưa được giao</strong> (yêu cầu R8/R9): tra cứu dữ liệu đối tác (§8.3) mới chạy với dữ liệu mẫu. Giữ nó <strong>tắt</strong> cho tới khi Amoeba xác nhận chế độ dữ liệu thật.</li>
+    <li><strong>Chức năng "thử với tư cách" (Khách / Lễ tân / Quản lý) trong Kho tri thức chưa có</strong> ở bản này; nó sẽ đến cùng bộ mô phỏng cổng khách đang được xây. Hiện chỉ có thể kiểm bằng chat thật với tài khoản thử (§7.4).</li>
+    <li><strong>Chưa hiệu chỉnh ngưỡng của cổng khách với embedding thật</strong> (Voyage). Hãy hiệu chỉnh trên staging trước khi bật <strong>Chỉ hướng dẫn đăng nhập hoặc đăng ký</strong> cho khách hàng thật (§7.1).</li>
+    <li>Câu chữ pháp lý của thông báo quyền riêng tư (§8.4) và bản dịch tiếng Việt trên giao diện là <strong>bản nháp</strong>, cần luật sư và người bản ngữ rà soát.</li>
+    <li>Ảnh chụp màn hình trong sổ tay lấy từ môi trường thử nghiệm của Amoeba với <strong>dữ liệu mẫu hư cấu</strong> (khách sạn "(demo)", email <code>@go2joy.example</code>) và AI giả: các con số (ví dụ ở <strong>Thống kê › Thí điểm</strong>) và nội dung câu trả lời trong ảnh <strong>không phải kết quả thật</strong>. Tên khách hàng trong console được che (<code>L* t*n C*a S**g</code>).</li>
+  </ul>
+  <h3>0.4 Thuật ngữ tối thiểu</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Từ</th><th>Nghĩa</th></tr>
+    <tr><td>Đối tác</td><td>Nhân viên của khách sạn đang chat từ <strong>Hotel Admin</strong> (lễ tân, quản lý, nhân viên nội bộ)</td></tr>
+    <tr><td>Hệ thống chủ</td><td>Chính Hotel Admin, nơi "ký" danh tính người dùng gửi cho widget</td></tr>
+    <tr><td>Đã ký</td><td>Hệ thống chủ đã ký xác nhận mã khách sạn (<code>hotelSn</code>) và vai trò của người đang chat</td></tr>
+    <tr><td>Đội</td><td>Lựa chọn khách chọn khi xin gặp nhân viên: <strong>Hỗ trợ khách hàng</strong> (CS) hoặc <strong>Hỗ trợ kinh doanh</strong> (Business, do SA phụ trách)</td></tr>
+    <tr><td>Vùng</td><td>Đội Bắc hoặc đội Nam, suy ra từ tỉnh của khách sạn</td></tr>
+    <tr><td>Trực</td><td>Công tắc <strong>Đang trực / Không trực</strong> ở đầu trang <strong>Trò chuyện trực tiếp</strong></td></tr>
+  </table></div>
+  <p>Bảng thuật ngữ Việt - Anh đầy đủ ở §11.3.</p>
+</section>
+
+<section id="ch1">
+  <div class="ch"><span class="num">01</span><h2>Bắt đầu một ca trực</h2></div>
+  <p><em>(Dành cho: nhân viên CS và SA, mọi cấp bậc có nhãn CS hoặc SA)</em></p>
+  <h3>1.1 Đăng nhập</h3>
+  <ul>
+    <li>Mở địa chỉ đăng nhập của gian hàng (dạng <code>/user/&lt;slug&gt;</code>; theo hồ sơ triển khai Go2Joy thì slug là <code>go2joy</code>). Nhập <strong>Email</strong> và <strong>Mật khẩu</strong> rồi bấm <strong>Đăng nhập</strong>.</li>
+    <li>Lần đầu đăng nhập bằng mật khẩu tạm, màn hình <strong>Bạn cần đổi mật khẩu</strong> hiện ra: mật khẩu mới tối thiểu 10 ký tự, có ít nhất 3 trong 4 loại (chữ thường, chữ hoa, chữ số, ký tự đặc biệt), không phải mật khẩu phổ biến.</li>
+    <li>Khi gian hàng bật bắt buộc xác thực hai yếu tố (hiện áp dụng cho cấp bậc master và director), console yêu cầu thiết lập ở <strong>Trang của tôi</strong> (mã 6 chữ số từ ứng dụng xác thực).</li>
+  </ul>
+  <h3>1.2 Công tắc Đang trực / Không trực</h3>
+  <p>Ở góc phải trên cùng trang <strong>Trò chuyện trực tiếp</strong> có một nút tròn dạng công tắc:</p>
+  <ul>
+    <li><strong>Đang trực</strong> (nút xanh): bạn nằm trong nhóm được báo khi có yêu cầu chuyển người mới. Bấm bật sẽ hiện thông báo: <em>Bạn đã bật trực. Các yêu cầu chuyển người mới của đội bạn sẽ báo cho bạn trước.</em></li>
+    <li><strong>Không trực</strong> (nút xám): bạn không được báo trước. Bấm tắt sẽ hiện: <em>Bạn đã tắt trực. Các yêu cầu chuyển người mới sẽ báo cho nhân viên khác.</em></li>
+  </ul>
+  <p>Rê chuột lên nút để đọc chú thích: <em>Khi đang trực, bạn được báo trước với các yêu cầu chuyển người mới. Hãy giữ console này mở: sau khi đóng khoảng 90 giây bạn sẽ tự rời trạng thái trực.</em> (90 giây là giá trị mặc định; IT đổi được bằng <code>AGENT_PRESENCE_TTL_SEC</code>, còn chú thích trên giao diện luôn ghi 90.)</p>
+  <figure class="shot"><img src="img/go2joy-ops-duty-toggle.vi.jpg" alt="Hình 1. Đầu trang Trò chuyện trực tiếp với nút Đang trực" loading="lazy"><figcaption>Hình 1. Đầu trang Trò chuyện trực tiếp với nút Đang trực</figcaption></figure>
+  <figure class="shot"><img src="img/go2joy-ops-duty-toggle-off.vi.jpg" alt="Hình 2. Cùng nút ở trạng thái Không trực" loading="lazy"><figcaption>Hình 2. Cùng nút ở trạng thái Không trực</figcaption></figure>
+  <p><strong>Quy tắc hiện diện (rất quan trọng):</strong> hệ thống chỉ coi bạn là <strong>online</strong> khi đồng thời</p>
+  <ol class="steps">
+    <li>công tắc ở <strong>Đang trực</strong>, <strong>và</strong></li>
+    <li>console của bạn gửi tín hiệu trong vòng <strong>90 giây</strong> gần nhất.</li>
+  </ol>
+  <p>Tín hiệu là lần console hỏi danh sách cảnh báo, khoảng <strong>10 giây một lần</strong>, ở bất kỳ trang nào của console (kể cả tab đang ở nền), miễn là tài khoản bạn có quyền xử lý hội thoại. Đóng tab, tắt máy hoặc để máy ngủ thì sau khoảng 90 giây bạn không còn được tính.</p>
+  <p>Hai điều ít ai ngờ:</p>
+  <ul>
+    <li>Công tắc được <strong>lưu theo tài khoản</strong>: nếu hôm qua bạn quên tắt, sáng nay mở console là bạn đã <strong>Đang trực</strong> và được tính ngay. Hãy nhìn công tắc đầu mỗi ca.</li>
+    <li>Tài khoản chưa từng bật công tắc được coi là <strong>Không trực</strong>; lần bật đầu tiên tự tạo hồ sơ.</li>
+  </ul>
+  <h3>1.3 Vì sao hàng chờ có yêu cầu "chưa ai nhận" dù mọi người đang ngồi máy</h3>
+  <p>Không có thông báo nào ghi "không ai trực". Điều bạn thấy là hội thoại ở trạng thái <strong>Đang chờ</strong> với dòng <strong>N chưa ai nhận · lâu nhất mm:ss</strong> phía trên danh sách (§3.8). Hãy kiểm tra theo thứ tự:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Kiểm tra</th><th>Cách xem</th></tr>
+    <tr><td>Có ai thực sự đang trực</td><td><strong>Người dùng &amp; nhãn</strong>: cột <strong>Trực</strong> phải là <strong>Đang trực · thấy N giây trước</strong> (xanh)</td></tr>
+    <tr><td>Người trực bị gạch vì mất kết nối</td><td>Cột <strong>Trực</strong> hiện <strong>Đang trực · không kết nối</strong> (vàng): đã bật trực nhưng console không gửi tín hiệu gần đây, nên yêu cầu mới <strong>bỏ qua người này</strong></td></tr>
+    <tr><td>Người trực có đúng nhãn và đúng vùng</td><td>Yêu cầu <strong>Hỗ trợ kinh doanh</strong> chỉ báo trước cho người có nhãn <strong>SA</strong>; yêu cầu <strong>Hỗ trợ khách hàng</strong> cho người có nhãn <strong>CS</strong>. Khách sạn ở miền Nam báo trước cho người <strong>Miền Nam</strong> (§3.2)</td></tr>
+    <tr><td>Người trực đã đủ số hội thoại</td><td>Mỗi người giữ tối đa <strong>3</strong> hội thoại cùng lúc (mặc định); đủ 3 thì không được báo và bấm <strong>Nhận</strong> không thành (§3.9)</td></tr>
+    <tr><td>Tài khoản bị tạm ngưng</td><td>Chỉ người dùng ở trạng thái đang hoạt động mới được báo</td></tr>
+  </table></div>
+  <p>Nếu không ai đạt điều kiện ở các bước của §3.2 (kể cả khi danh sách <strong>Nhân viên được phân công</strong> để trống), yêu cầu <strong>phát chung</strong> cho mọi người có quyền xử lý hội thoại (ở chế độ <strong>Nghiêm ngặt</strong> chỉ trong vùng), và sau 5 phút (mặc định) hệ thống báo lại (§3.4). Vì vậy tình huống "không ai trực" làm chậm chứ không làm mất yêu cầu.</p>
+  <h3>1.4 Hộp thoại báo (alarm) và nhận hội thoại</h3>
+  <p>Khi có yêu cầu chuyển người cho bạn (hoặc phát chung), console bật hộp thoại <strong>Chuyển tiếp hội thoại</strong> ở bất kỳ trang nào:</p>
+  <ul>
+    <li>Dòng đầu: <strong>Hội thoại #&lt;số&gt; cần nhân viên hỗ trợ.</strong> Dòng thứ hai là lý do, ví dụ <strong>Khách hàng yêu cầu gặp nhân viên.</strong>, <strong>Chưa ai nhận cuộc trò chuyện này.</strong>, <strong>Một nhân viên đã chuyển cuộc trò chuyện này sang đội của bạn.</strong>, <strong>Công cụ AI tạm thời không hoạt động nên không trả lời được. Cần nhân viên tiếp nhận.</strong></li>
+    <li>Khung chi tiết (chỉ hiện dòng có dữ liệu): <strong>Đội</strong>, <strong>Vùng</strong>, <strong>Khách sạn</strong> (tên, mã và vai trò; vai trò ở đây hiện bằng chữ tiếng Anh như <code>manager</code>, <code>receptionist</code>), <strong>Đang chờ</strong> (đồng hồ đếm), <strong>Thông báo cho</strong> (ví dụ <strong>Chỉ đội Nam</strong>) và đoạn xem trước tin nhắn của khách. Đoạn xem trước là <strong>tin cuối cùng của khách</strong>: khi khách vừa bấm chip chọn đội thì đó chính là tên đội (ví dụ <em>Hỗ trợ kinh doanh</em>), không phải câu hỏi; hãy mở hội thoại để đọc câu hỏi thật.</li>
+    <li>Hai nút: <strong>Mở hội thoại</strong> (đưa bạn tới đúng hội thoại) và <strong>Bỏ qua</strong>.</li>
+  </ul>
+  <figure class="shot"><img src="img/go2joy-ops-alarm.vi.jpg" alt="Hình 3. Hộp thoại Chuyển tiếp hội thoại" loading="lazy"><figcaption>Hình 3. Hộp thoại Chuyển tiếp hội thoại</figcaption></figure>
+  <div class="callout warn"><span class="c-label">⚠️ Lưu ý</span>
+    <p><strong>Bỏ qua</strong> (và cả <strong>Mở hội thoại</strong>, khi bạn chưa <strong>Nhận</strong>) chỉ xác nhận đã xem thông báo và <strong>đóng thông báo đó cho mọi đồng nghiệp</strong> (một thông báo phát chung chỉ có một bản); nó <strong>không</strong> nhận hội thoại. Hội thoại vẫn ở <strong>Đang chờ</strong>; nếu không ai nhận, hệ thống tạo thông báo mới sau 5 phút (§3.4). Hộp thoại không hiện khi bạn đang mở đúng hội thoại đó.</p></div>
+  <p><strong>Nhận hội thoại:</strong> mở hội thoại rồi bấm <strong>Nhận</strong> (hàng nút phía trên khung tin nhắn). Hội thoại chuyển sang <strong>Nhân viên xử lý</strong>, tên bạn xuất hiện ở <strong>Phụ trách</strong>, và các thông báo đang mở về hội thoại này được đóng cho đồng nghiệp. Khi xong việc: <strong>Kết thúc</strong>. Muốn trả hội thoại cho AI mà không kết thúc: <strong>Trả lại cho AI</strong>.</p>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>nếu bấm <strong>Nhận</strong> mà không có gì xảy ra, rất có thể bạn đang giữ đủ 3 hội thoại. Console hiện không hiện lỗi trong trường hợp này (xem §3.9).</p></div>
+</section>
+
+<section id="ch2">
+  <div class="ch"><span class="num">02</span><h2>Đọc một hội thoại</h2></div>
+  <p><em>(Dành cho: nhân viên CS và SA)</em></p>
+  <h3>2.1 Một dòng trong danh sách</h3>
+  <p>Danh sách bên trái của <strong>Trò chuyện trực tiếp</strong> có các tab <strong>Tất cả</strong>, <strong>Cần nhân viên</strong> (đang chờ hoặc đang có nhân viên xử lý), <strong>Đã kết thúc</strong> và <strong>Nhóm</strong>. Mỗi dòng gồm:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Phần tử</th><th>Ý nghĩa</th></tr>
+    <tr><td>Dòng khách sạn: tên · mã hiển thị, kèm <strong>đã ký</strong> (xanh), <strong>hết hạn</strong> (vàng) hoặc, hiếm gặp, <strong>tự khai</strong> (vàng)</td><td>Khách sạn đối tác của phiên và độ tin cậy của thông tin đó (§2.3)</td></tr>
+    <tr><td>Huy hiệu đội: <strong>Hỗ trợ khách hàng</strong> hoặc <strong>Kinh doanh</strong></td><td>Đội khách đã chọn khi xin gặp nhân viên</td></tr>
+    <tr><td>Huy hiệu vùng: <strong>Bắc</strong> hoặc <strong>Nam</strong></td><td>Đội vùng phụ trách khách sạn này</td></tr>
+    <tr><td>Huy hiệu <strong>?</strong> màu cam</td><td>Tỉnh của khách sạn <strong>không có</strong> trong bảng vùng (§2.4)</td></tr>
+    <tr><td><strong>Chờ mm:ss</strong></td><td>Đã chờ nhân viên bao lâu. Sau 5 phút chuyển đỏ kèm ⚠</td></tr>
+    <tr><td><strong>AI tắt</strong></td><td>AI không trả lời phiên này và chưa có nhân viên nào nhận</td></tr>
+    <tr><td>Trạng thái: <strong>AI đang trả lời</strong>, <strong>Đang chờ</strong>, <strong>Nhân viên xử lý</strong>, <strong>Đã kết thúc</strong></td><td>Ai đang giữ hội thoại</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/go2joy-ops-livechat-queue-all.vi.jpg" alt="Hình 4. Danh sách hội thoại có chip đội, vùng, huy hiệu" loading="lazy"><figcaption>Hình 4. Danh sách hội thoại có chip đội, vùng, huy hiệu</figcaption></figure>
+  <p>Ô <strong>Tên hoặc mã khách sạn</strong> (dưới ô tìm khách hàng) lọc theo <strong><code>hotelSn</code></strong> chính xác (số trong ngoặc ở dải đối tác, ví dụ 91001) hoặc một phần tên; <strong>không</strong> tìm theo mã hiển thị như <code>SM-01</code>. Chỉ tìm trong các phiên đối tác đã ký.</p>
+  <h3>2.2 Dải ngữ cảnh đối tác ở đầu hội thoại</h3>
+  <p>Mở một hội thoại sẽ thấy hàng huy hiệu (trạng thái, <strong>AI: &lt;tên&gt;</strong>, <strong>Đội: …</strong>, <strong>Vùng: …</strong>, <strong>?</strong>, <strong>Chờ …</strong>, <strong>Phụ trách: …</strong>) và bên dưới là dải đối tác:</p>
+  <p><code>Quản lý @ Khách sạn Sao Mai · SM-01 (hotelSn 91001) · Hà Nội  [đã ký]  &lt;giờ xác minh&gt;</code></p>
+  <ul>
+    <li>Vai trò hiển thị bằng tiếng Việt: <strong>Quản lý</strong>, <strong>Lễ tân</strong>, <strong>Nhân viên nội bộ</strong>.</li>
+    <li>Chữ ký chỉ bao gồm <strong><code>hotelSn</code></strong>, vai trò và tỉnh. <strong>Tên khách sạn và mã hiển thị (như <code>SM-01</code>) không nằm trong chữ ký</strong>, chỉ là chữ hiển thị và có thể sai. Khi cần xác nhận khách sạn, hãy dựa vào mã <code>hotelSn</code>.</li>
+    <li>Tỉnh hiện sau dấu chấm giữa nếu hệ thống chủ gửi kèm.</li>
+    <li>Nút <strong>Mở trong hệ thống</strong> (nếu có) mở trang khách sạn đó trong hệ thống của Go2Joy; chỉ có khi master đã đặt mẫu link (§7.1).</li>
+  </ul>
+  <figure class="shot"><img src="img/go2joy-ops-conversation-header.vi.jpg" alt="Hình 5. Đầu hội thoại: huy hiệu, dải đối tác, các nút" loading="lazy"><figcaption>Hình 5. Đầu hội thoại: huy hiệu, dải đối tác, các nút</figcaption></figure>
+  <figure class="shot"><img src="img/go2joy-ops-expired-row.vi.jpg" alt="Hình 6. Dòng hội thoại trong danh sách với dấu hết hạn" loading="lazy"><figcaption>Hình 6. Dòng hội thoại trong danh sách với dấu hết hạn</figcaption></figure>
+  <p>Hàng nút bên dưới: <strong>Ghim</strong>, <strong>Chỉ định</strong> (giao cho AI agent hoặc, từ cấp manager, cho một nhân viên), <strong>Chuyển sang…</strong> (§3.6), <strong>Đăng ký vấn đề</strong>, <strong>Đồng bộ</strong>, <strong>Nhận</strong>, <strong>Trả lại cho AI</strong> (chỉ khi đang có nhân viên xử lý) và <strong>Kết thúc</strong>.</p>
+  <h3>2.3 "đã ký", "tự khai", "hết hạn" nghĩa là gì</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Dấu</th><th>Nghĩa</th><th>Bạn nên</th></tr>
+    <tr><td><strong>đã ký</strong> (chú thích: <em>Hệ thống chủ đã ký khách sạn và vai trò này.</em>)</td><td>Hotel Admin đã dùng khoá bí mật dùng chung để ký <code>hotelSn</code> và vai trò (và tỉnh nếu có) của người chat. Hệ thống tin <code>hotelSn</code> và vai trò này; tên khách sạn thì không được ký</td><td>Xử lý bình thường theo vai trò. Tra cứu dữ liệu và định tuyến theo vùng chỉ dùng thông tin <strong>đã ký</strong></td></tr>
+    <tr><td><strong>tự khai</strong> (chú thích: <em>Do trang tự khai, chưa ký — hãy xác minh trước khi xử lý.</em>)</td><td><strong>Hiếm gặp</strong>: máy chủ từ chối thông tin đối tác không có chữ ký hợp lệ khi người dùng đăng nhập vào widget, nên dấu này chủ yếu thuộc về dữ liệu cũ hoặc bất thường</td><td>Xác minh qua kênh khác trước khi chia sẻ thông tin nhạy cảm và báo IT. Tỉnh chưa ký <strong>không</strong> được dùng để chọn đội vùng</td></tr>
+    <tr><td><strong>hết hạn</strong> (chú thích: <em>Phiên đăng nhập này đã quá thời hạn cho phép. Khách được xem là khách vãng lai cho đến khi hệ thống chủ ký lại.</em>)</td><td>Chữ ký đã cũ hơn thời hạn (mặc định <strong>8 giờ</strong>; master đổi được từ 1 đến 720 giờ, §8.1)</td><td>Coi người chat là chưa đăng nhập: trợ lý có thể nhắc đăng nhập lại, tra cứu dữ liệu đối tác bị từ chối, yêu cầu mới không chọn đội theo vùng. Nhờ họ tải lại hoặc đăng nhập lại Hotel Admin</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/go2joy-ops-expired.vi.jpg" alt="Hình 7. Dòng hội thoại có dấu hết hạn" loading="lazy"><figcaption>Hình 7. Dòng hội thoại có dấu hết hạn</figcaption></figure>
+  <p>Khi Hotel Admin đã tích hợp đúng, widget phát sự kiện <code>identity-expired</code> và hệ thống chủ ký lại <strong>ngầm</strong>, nên người dùng đang làm việc thường không bị gián đoạn. Dấu <strong>hết hạn</strong> trong console chủ yếu xuất hiện với phiên bị bỏ quên lâu.</p>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>hội thoại vẫn giữ tên khách sạn dù đã hết hạn (đó là lịch sử), nhưng dấu <strong>đã ký</strong> được thay bằng <strong>hết hạn</strong> để bạn không tin nhầm vào một phiên đã cũ.</p></div>
+  <h3>2.4 Huy hiệu "?" và tỉnh chưa ánh xạ</h3>
+  <p>Huy hiệu <strong>?</strong> màu cam nghĩa là khách sạn có tỉnh đã ký nhưng <strong>tỉnh đó không có trong bảng vùng</strong> của gian hàng, nên hội thoại không có đội vùng. Rê chuột để đọc: <em>Chưa xác định vùng — tỉnh "&lt;tên tỉnh&gt;" không có trong bảng vùng</em>. Trong hộp thoại báo, dòng vùng ghi <strong>? (chưa ánh xạ: &lt;tên tỉnh&gt;)</strong>.</p>
+  <p>Việc cần làm:</p>
+  <ul>
+    <li>Bạn vẫn xử lý bình thường; hội thoại chỉ được chọn đội theo nhãn (CS hoặc SA), không theo vùng.</li>
+    <li>Báo cho master/director để thêm đúng cách viết của tỉnh đó vào bảng vùng (§6.4). Nguyên nhân hay gặp: bảng chưa nạp bộ tỉnh có sẵn hoặc thiếu tỉnh, tên tỉnh viết khác (sai chính tả, thêm chữ thừa). Việc so khớp đã bỏ qua dấu, hoa thường và tiền tố như "TP.", và bộ có sẵn đã có cả tên cũ trước sáp nhập tháng 7/2025 lẫn cách viết thường gặp như "TP.HCM".</li>
+    <li>Có thể lọc nhanh: ở ô chọn vùng, mục <strong>Tỉnh chưa ánh xạ</strong> (chỉ hiện khi đang có hội thoại như vậy).</li>
+  </ul>
+  <p>Hội thoại <strong>không có vùng</strong> vì lý do khác (khách sạn chưa gửi tỉnh, tính năng vùng đang tắt, người chat chưa ký) hiện trong ô chọn vùng ở mục <strong>Chưa xác định vùng</strong>.</p>
+</section>
+
+<section id="ch3">
+  <div class="ch"><span class="num">03</span><h2>Hỏi đội và định tuyến</h2></div>
+  <p><em>(Dành cho: nhân viên CS và SA; thiết lập ở chương 6)</em></p>
+  <h3>3.1 Khách đối tác nhìn thấy gì</h3>
+  <p>Khi người dùng Hotel Admin xin gặp nhân viên (bấm chip <strong>Gặp nhân viên hỗ trợ</strong> hoặc nút <strong>Kết nối nhân viên hỗ trợ</strong>, hoặc gõ yêu cầu), nếu gian hàng bật <strong>Hỏi khách chọn đội</strong> thì trợ lý hỏi trước:</p>
+  <ul>
+    <li>Câu hỏi mặc định: <strong>Bạn cần hỗ trợ về việc gì?</strong> (master sửa được).</li>
+    <li>Hai lựa chọn mặc định: <strong>Hỗ trợ khách hàng</strong> (phục vụ bởi nhân viên có nhãn CS) và <strong>Hỗ trợ kinh doanh</strong> (nhân viên có nhãn SA).</li>
+    <li>Lựa chọn của khách được ghi vào hội thoại như một tin của chính họ, để nhân viên đọc lại biết khách đã xin gì.</li>
+    <li>Trong giờ làm việc, khách đọc: <strong>Tôi đang kết nối bạn với nhân viên hỗ trợ có thể giúp việc này.</strong> Ngoài giờ: xem chương 4.</li>
+  </ul>
+  <p>Mọi lối vào do <strong>khách chủ động</strong> (chip, nút, kịch bản kết nối nhân viên, gõ tay "gặp nhân viên") đều đi qua cùng một câu hỏi đội. Chuyển người <strong>tự động</strong> do hệ thống (AI không đủ căn cứ, quy tắc chuyển bắt buộc theo chủ đề, AI lỗi, kiểm duyệt chặn) <strong>không</strong> hỏi đội: hội thoại không có huy hiệu đội, dùng giờ làm việc chung, và người nhận được chọn theo nhãn CS nếu đã biết vùng, nếu không thì theo danh sách phân công hoặc phát chung.</p>
+  <h3>3.2 Ai được báo: thang chọn người</h3>
+  <p>Khi khách chọn xong đội, hệ thống tìm người nhận theo thứ tự (chế độ mặc định <strong>Báo đội của khách sạn trước, sau đó báo tất cả</strong>):</p>
+  <ol class="steps">
+    <li>Người có <strong>nhãn của đội</strong> (CS với <strong>Hỗ trợ khách hàng</strong>, SA với <strong>Hỗ trợ kinh doanh</strong>), <strong>cùng vùng</strong> với khách sạn, đang <strong>online</strong> (§1.2) và còn dưới giới hạn 3 hội thoại. Nếu có nhiều người, chọn người <strong>ít việc nhất</strong> (số hội thoại đang giữ cộng số thông báo đã gửi mà họ chưa xác nhận); hòa thì chọn người có mã nhỏ hơn.</li>
+    <li>Nếu không có: người có nhãn đó và để <strong>Khu vực: Toàn quốc</strong>, đang online.</li>
+    <li>Nếu không có: <strong>người đầu tiên</strong> trong danh sách <strong>Nhân viên được phân công</strong> do master chọn ở mục chuyển người. Bước này <strong>không</strong> kiểm tra online, giới hạn 3 hội thoại, trạng thái tài khoản hay vùng; ở chế độ <strong>Nghiêm ngặt</strong> (§3.3) chỉ lấy người đang hoạt động thuộc vùng đó hoặc <strong>Toàn quốc</strong>.</li>
+    <li>Nếu vẫn không có: <strong>phát chung</strong> cho mọi người có quyền xử lý hội thoại.</li>
+  </ol>
+  <p>Quy tắc đi kèm:</p>
+  <ul>
+    <li>Người của <strong>vùng bên kia không bao giờ</strong> được chọn ở bước 1–2.</li>
+    <li>Ở bước 1–2 chỉ tài khoản <strong>đang hoạt động</strong> mới được chọn (không phải bị tạm ngưng hay chưa nhận lời mời).</li>
+    <li>Nếu khách sạn chưa xác định được vùng (§2.4), bước chọn chỉ dùng nhãn.</li>
+    <li>Một thông báo <strong>gửi riêng cho một người</strong> chỉ hiện cho người đó. Thông báo <strong>phát chung</strong> hiện cho mọi người trong gian hàng. Ngoài hộp thoại báo, nếu IT đã cấu hình, tóm tắt còn đi qua Slack và email với các dòng <strong>Reason, Team, Region, Partner</strong>.</li>
+  </ul>
+  <p>Vùng được suy ra từ tỉnh đã ký của khách sạn: miền Bắc và Bắc Trung Bộ (đến Huế) thuộc <strong>đội Bắc</strong>; Nam Trung Bộ (từ Đà Nẵng) và miền Nam thuộc <strong>đội Nam</strong>. Tên gọi chi tiết của bảng ở §6.4.</p>
+  <h3>3.3 Chế độ nghiêm ngặt (nếu master bật)</h3>
+  <p>Ở chế độ <strong>Nghiêm ngặt — không tự ra khỏi vùng của khách sạn</strong>, chỉ nhân viên cùng vùng và nhân viên <strong>Toàn quốc</strong> được báo và nhìn thấy thông báo. Hội thoại chỉ sang đội còn lại sau số phút đặt ở <strong>Mở rộng sang vùng còn lại sau (phút)</strong>; để trống hoặc 0 là không bao giờ mở rộng. Việc mở rộng chỉ xảy ra ở <strong>lần nhắc "chưa ai nhận" đầu tiên sau mốc đó</strong> (§3.4), nên cần bộ nhắc đang bật; cho tới lúc đó các lần nhắc cũng chỉ dành cho đội của vùng và nhân viên <strong>Toàn quốc</strong>. Thông báo hiển thị dòng <strong>Thông báo cho: Chỉ đội Nam</strong> (hoặc Bắc).</p>
+  <h3>3.4 Báo lại khi chưa ai nhận</h3>
+  <p>Thông báo gửi riêng chỉ người được gửi mới thấy, nên một hội thoại có thể nằm đó mà không ai nhìn. Vì vậy:</p>
+  <ul>
+    <li>Nếu hội thoại <strong>Đang chờ</strong>, <strong>chưa ai nhận</strong> sau <strong>5 phút</strong> (mặc định), hệ thống tạo <strong>thông báo mới phát chung</strong> (ở chế độ <strong>Nghiêm ngặt</strong>: chỉ cho vùng đó và <strong>Toàn quốc</strong>, cho tới khi mở rộng) và gửi tin lên Slack và email. Tin gồm dòng <strong>Reason: UNCLAIMED — nobody has taken this conversation yet</strong>, dòng <strong>Waiting: N min (reminder k of m)</strong> và các dòng Team, Region, Partner; tiêu đề email dạng <code>[IVY Chat] UNCLAIMED — conversation #N</code> (tin gửi cho nhân viên bằng tiếng Anh). Trong console, hộp thoại báo hiện lý do <strong>Chưa ai nhận cuộc trò chuyện này.</strong></li>
+    <li>Nhắc lại sau mỗi 5 phút, <strong>tối đa 3 lần</strong> cho một lượt chờ. Sau đó hệ thống thôi nhắc, nhưng đồng hồ <strong>Chờ</strong> và dòng <strong>chưa ai nhận</strong> vẫn còn đó.</li>
+    <li>Số phút và số lần là <strong>cài đặt phía máy chủ</strong> (IT), không chỉnh được trong console. Trong console, master chọn <strong>Tự động / Bật / Tắt</strong> ở mục <strong>Báo lại khi chưa ai nhận cuộc trò chuyện</strong> (§6.1). <strong>Tự động</strong> nghĩa là bật khi gian hàng đã chọn người nhận, định tuyến theo đội hoặc theo vùng; Go2Joy có hai mục này nên mặc định là bật.</li>
+    <li>Hội thoại ngoài giờ đang chờ trả lời bằng email <strong>không</strong> bị nhắc (§4), để không đánh thức ai lúc nửa đêm.</li>
+  </ul>
+  <figure class="shot"><img src="img/go2joy-ops-alarm-unclaimed.vi.jpg" alt="Hình 8. Hộp thoại báo nhắc lại: lý do Chưa ai nhận cuộc trò chuyện. và đồng hồ Chờ chuyển đỏ" loading="lazy"><figcaption>Hình 8. Hộp thoại báo nhắc lại: lý do Chưa ai nhận cuộc trò chuyện. và đồng hồ Chờ chuyển đỏ</figcaption></figure>
+  <h3>3.5 Nhận hội thoại</h3>
+  <p>Trong lúc hội thoại <strong>Đang chờ</strong> mà <strong>chưa ai nhận</strong>, <strong>AI vẫn tiếp tục trả lời</strong> các câu hỏi tiếp theo của khách (để khách không phải chờ trong im lặng); ở đầu hội thoại, nhãn <strong>AI đang trả lời</strong> cùng ô <strong>Mặc định của kênh (Bật)</strong> cho biết điều này. Vì vậy hãy đọc cả phần AI đã trả lời trước khi bạn viết. Khi một nhân viên <strong>Nhận</strong>, AI giữ im lặng (<em>Một nhân viên đang phụ trách hội thoại này nên AI giữ im lặng.</em>).</p>
+  <p><strong>Nhận</strong> gán hội thoại cho bạn và đóng các thông báo còn mở của nó. Việc nhận không phụ thuộc bạn có phải người được báo hay không: bất kỳ ai có quyền (nhãn CS hoặc SA) đều nhận được.</p>
+  <h3>3.6 Chuyển hội thoại sang đội khác: Chuyển sang…</h3>
+  <p>Dùng khi khách chọn nhầm đội (ví dụ chọn <strong>Hỗ trợ khách hàng</strong> nhưng hỏi về hợp đồng) hoặc bạn thấy hội thoại thuộc người khác.</p>
+  <ol class="steps">
+    <li>Mở hội thoại, bấm <strong>Chuyển sang…</strong> ở hàng nút (có chú thích <em>Chuyển cuộc trò chuyện này sang đội khác</em>).</li>
+    <li>Hộp thoại <strong>Chuyển cuộc trò chuyện</strong> nói rõ: <em>Cuộc trò chuyện quay lại hàng chờ của đội bạn chọn và đội đó được báo. Khách hàng không nhận được thông báo nào.</em> Dòng <strong>Hiện tại: &lt;đội&gt; · &lt;vùng&gt;</strong> cho biết trạng thái hiện hành.</li>
+    <li>Chọn <strong>Chuyển sang</strong> (một trong các đội của gian hàng). Nếu có định tuyến theo vùng, chọn thêm <strong>Vùng</strong>: <strong>Giữ vùng hiện tại</strong>, <strong>Bắc</strong>, <strong>Nam</strong> hoặc <strong>Không có vùng</strong>.</li>
+    <li>Bấm <strong>Chuyển</strong>. Hộp thoại xác nhận tồn tại để một cú bấm nhầm trên ô chọn không gọi nhầm đội khác. Lưu ý hộp thoại mở sẵn với <strong>đội hiện tại</strong>, nên nút <strong>Chuyển</strong> bấm được ngay; bấm mà không đổi gì vẫn gọi lại đội đó và tính lại đồng hồ chờ, vì vậy hãy chọn đội mới trước.</li>
+  </ol>
+  <figure class="shot"><img src="img/go2joy-ops-reroute.vi.jpg" alt="Hình 9. Hộp thoại Chuyển cuộc trò chuyện" loading="lazy"><figcaption>Hình 9. Hộp thoại Chuyển cuộc trò chuyện</figcaption></figure>
+  <p>Điều gì xảy ra:</p>
+  <ul>
+    <li>Hội thoại về trạng thái <strong>Đang chờ</strong> của đội mới; người đang giữ nó (nếu có) bị gỡ; đồng hồ <strong>Chờ</strong> và bộ nhắc "chưa ai nhận" tính lại từ đầu.</li>
+    <li>Thang chọn người ở §3.2 chạy lại; thông báo mới với lý do <strong>Một nhân viên đã chuyển cuộc trò chuyện này sang đội của bạn.</strong> được gửi cho người nhận mới. Thông báo cũ của hội thoại bị thay thế.</li>
+    <li>Console hiện thông báo thành công cho biết <strong>ai đã được báo</strong>: <em>Đã chuyển sang &lt;đội&gt;. Tất cả người có thể nhận đã được báo.</em>, hoặc (chế độ <strong>Nghiêm ngặt</strong>) <em>Đã chuyển sang &lt;đội&gt;. Đội &lt;vùng&gt; đã được báo.</em>. Có một câu thứ ba, <em>Đã chuyển sang &lt;đội&gt;. &lt;tên&gt; đã được báo.</em>, chỉ hiện khi người được báo có <strong>tên hiển thị</strong>; hiện tài khoản người dùng <strong>không có chỗ nhập tên</strong> (lời mời không hỏi tên, và không có màn hình sửa tên), nên trên thực tế bạn luôn thấy câu đầu, <strong>kể cả khi chỉ một người được báo</strong>. Muốn biết chính xác ai nhận, hỏi người đó hoặc xem hộp thoại báo trên máy họ.</li>
+    <li>Một <strong>ghi chú nội bộ</strong> (thẻ <strong>Ghi chú</strong> ở cột bên phải, mục <strong>Cuộc trò chuyện</strong>; chỉ nhân viên thấy) ghi lại ai đã chuyển sang đội nào. Nội dung ghi bằng tiếng Anh, ví dụ "Routed to Business Support (South) by user #2" (tên người chuyển hiện dạng mã số vì tài khoản chưa có tên, và tác giả hiện là <strong>Không rõ</strong>); ghi chú chỉ hiện sau khi bạn tải lại trang; nhật ký kiểm toán cũng ghi <code>agent.conversation_rerouted</code>. Khách không nhận tin nhắn nào; nếu trước đó đã có nhân viên nhận, widget chỉ đổi lại sang chỉ báo <em>Đang chờ nhân viên hỗ trợ — câu trả lời sẽ hiển thị tại đây.</em></li>
+    <li>Chuyển sang đội khác <strong>không áp dụng quy tắc ngoài giờ</strong>: bạn gọi đội đó ngay lúc này, nên đội được báo ngay thay vì đi theo luồng hộp thư ngoài giờ. Slack và email tóm tắt (nếu IT đã cấu hình) vẫn được gửi như một yêu cầu mới. Một hội thoại ngoài giờ cũ vẫn giữ kênh trả lời qua email (§4).</li>
+  </ul>
+  <figure class="shot"><img src="img/go2joy-ops-reroute-after.vi.jpg" alt="Hình 10. Đầu hội thoại sau khi chuyển sang Hỗ trợ kinh doanh: Đội đổi, vùng giữ nguyên, đồng hồ Chờ bắt đầu lại từ 00:01" loading="lazy"><figcaption>Hình 10. Đầu hội thoại sau khi chuyển sang Hỗ trợ kinh doanh: Đội đổi, vùng giữ nguyên, đồng hồ Chờ bắt đầu lại từ 00:01</figcaption></figure>
+  <p>Ai làm được: <strong>bất kỳ nhân viên có nhãn CS hoặc SA, kể cả cấp bậc staff</strong>, không cần là manager (giao hội thoại cho một <strong>người cụ thể</strong> bằng <strong>Chỉ định</strong> thì từ cấp manager). Nút ẩn khi gian hàng không bật câu hỏi đội và mờ khi hội thoại đã <strong>Đã kết thúc</strong> (<em>Cuộc trò chuyện đã kết thúc</em>).</p>
+  <p>Các lỗi bạn có thể gặp: <em>Cuộc trò chuyện đã kết thúc nên không thể chuyển.</em> · <em>Đội hoặc vùng đó không khả dụng.</em> · <em>Chưa bật định tuyến theo đội.</em></p>
+  <figure class="shot"><img src="img/go2joy-ops-alarm-rerouted.vi.jpg" alt="Hình 11. Hộp thoại báo mà đội nhận thấy sau khi một nhân viên chuyển hội thoại sang đội của họ" loading="lazy"><figcaption>Hình 11. Hộp thoại báo mà đội nhận thấy sau khi một nhân viên chuyển hội thoại sang đội của họ</figcaption></figure>
+  <h3>3.7 Bộ lọc vùng "Vùng của tôi"</h3>
+  <p>Ở hàng bộ lọc phía trên danh sách (cạnh ô chọn kênh và ô chọn AI agent) có một ô chọn vùng. Nếu tài khoản của bạn có khu vực (<strong>Miền Bắc</strong> hoặc <strong>Miền Nam</strong>), ô này <strong>mặc định là "Vùng của tôi (Nam)"</strong> (hoặc Bắc): chỉ hiện hội thoại đã được xếp đúng vùng của bạn.</p>
+  <div class="callout warn"><span class="c-label">⚠️ Lưu ý</span>
+    <p>bộ lọc mặc định này <strong>giấu</strong> hội thoại của vùng kia, hội thoại <strong>Chưa xác định vùng</strong> và hội thoại <strong>Tỉnh chưa ánh xạ</strong>. Nếu bạn nghi hàng chờ "thiếu" hội thoại (hoặc khi vùng bạn không có ai trực), chọn <strong>Tất cả vùng</strong>. Nhân viên <strong>Toàn quốc</strong> không có mục "Vùng của tôi", mặc định xem tất cả.</p></div>
+  <p>Ô chọn còn có các mục kèm số đếm: <strong>Tất cả vùng</strong>, <strong>Bắc</strong>, <strong>Nam</strong>, <strong>Chưa xác định vùng</strong>, <strong>Tỉnh chưa ánh xạ</strong>.</p>
+  <p>Bộ lọc áp dụng theo <strong>vùng của hội thoại</strong>, kể cả hội thoại <strong>bạn đang giữ</strong>: nếu bạn ở Miền Nam nhưng đang giữ một hội thoại của khách sạn miền Bắc (ví dụ do nhận hộ), hội thoại đó cũng biến mất khỏi danh sách cho tới khi bạn chọn <strong>Tất cả vùng</strong>.</p>
+  <figure class="shot"><img src="img/go2joy-ops-livechat-queue.vi.jpg" alt="Hình 12. Khi bộ lọc Vùng của tôi (Nam) đang bật, chip đội cho thấy 6 hội thoại nhưng danh sách chỉ hiện 2" loading="lazy"><figcaption>Hình 12. Khi bộ lọc Vùng của tôi (Nam) đang bật, chip đội cho thấy 6 hội thoại nhưng danh sách chỉ hiện 2</figcaption></figure>
+  <h3>3.8 Bộ đếm hàng chờ và tuổi hội thoại</h3>
+  <p>Phía trên danh sách là các <strong>chip đội</strong>: <strong>Tất cả đội N</strong>, rồi mỗi đội một chip kèm số (ví dụ <strong>Hỗ trợ khách hàng 9</strong>, <strong>Kinh doanh 5</strong>). Bấm chip để lọc theo đội, bấm lần nữa để bỏ lọc. Dưới chip là dòng:</p>
+  <p><strong>N chưa ai nhận · lâu nhất mm:ss</strong></p>
+  <p>đếm các hội thoại <strong>Đang chờ</strong> mà <strong>không ai giữ</strong>, kèm thời gian của hội thoại chờ lâu nhất. Khi quá 5 phút, dòng này chuyển <strong>đỏ kèm ⚠</strong>. Trên từng dòng hội thoại, huy hiệu <strong>Chờ mm:ss</strong> (xám) cũng chuyển đỏ sau 5 phút; rê chuột sẽ thấy <em>Chưa ai nhận cuộc trò chuyện này</em> hoặc <em>Đang chờ nhân viên từ &lt;giờ&gt;</em>. Số đếm làm mới khoảng 5 giây một lần. Các chip đội theo tab (<strong>Tất cả</strong>, <strong>Cần nhân viên</strong>, <strong>Đã kết thúc</strong>) và kênh đang chọn, và chỉ hiện cho đội có ít nhất một hội thoại; chúng <strong>không</strong> theo bộ lọc vùng, ô tìm khách hàng hay ô khách sạn. Dòng <strong>chưa ai nhận</strong> đếm mọi hội thoại <strong>Đang chờ</strong> chưa ai giữ của gian hàng, không theo tab hay kênh. Vì vậy khi bộ lọc <strong>Vùng của tôi</strong> đang bật, số trên chip có thể lớn hơn số dòng trong danh sách.</p>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>ngưỡng 5 phút của huy hiệu đỏ là cố định trong console; còn ngưỡng nhắc lại bằng Slack/email là cài đặt máy chủ. Hai số này mặc định khớp nhau.</p></div>
+  <h3>3.9 Giới hạn số hội thoại cùng lúc</h3>
+  <p>Mỗi nhân viên <strong>đã có hồ sơ trực</strong> (tức đã từng bật <strong>Đang trực</strong>) giữ tối đa <strong>3</strong> hội thoại đang xử lý (giá trị mặc định của hồ sơ; chưa chỉnh được trên giao diện). Người chưa từng bật trực thì <strong>Nhận</strong> không bị giới hạn. Đủ 3 thì:</p>
+  <ul>
+    <li>không còn được chọn khi định tuyến;</li>
+    <li>bấm <strong>Nhận</strong> bị máy chủ từ chối (mã 409).</li>
+  </ul>
+  <p>Ở bản console hiện tại, thao tác <strong>Nhận</strong> <strong>không</strong> hiện thông báo lỗi khi bị từ chối. Cách xử lý: <strong>Kết thúc</strong> hoặc <strong>Trả lại cho AI</strong> bớt một hội thoại rồi nhận lại. Đây là điểm cần cải thiện, đã ghi ở phụ lục C.</p>
+</section>
+
+<section id="ch4">
+  <div class="ch"><span class="num">04</span><h2>Ngoài giờ làm việc</h2></div>
+  <p><em>(Dành cho: nhân viên CS và SA; thiết lập giờ ở §6.1)</em></p>
+  <h3>4.1 Giờ nào được tính là ngoài giờ</h3>
+  <p>Master đặt <strong>Giờ làm việc</strong> ở thẻ <strong>Chuyển cho nhân viên</strong>: <strong>Múi giờ</strong> (ví dụ <code>Asia/Ho_Chi_Minh</code>), <strong>Từ</strong>, <strong>Đến</strong>, <strong>Các ngày</strong> (T2 đến CN), và tùy chọn <strong>Giờ nghỉ (không có ai trực)</strong>: <em>Câu hỏi trong giờ nghỉ được xử lý như ngoài giờ.</em> Mỗi đội có thể có <strong>giờ làm việc riêng</strong> (CS và SA khác nhau); đội không đặt thì theo giờ chung.</p>
+  <div class="callout warn"><span class="c-label">⚠️ Lưu ý</span>
+    <p>hệ thống chỉ biết <strong>thứ trong tuần và giờ</strong>, <strong>không có lịch ngày lễ</strong>. Vào ngày lễ (ví dụ Tết) trùng khung giờ làm việc thường lệ, hệ thống vẫn coi là "trong giờ" và báo nhân viên. Master cần chủ động đổi <strong>Các ngày</strong> hoặc giờ trước kỳ nghỉ.</p></div>
+  <h3>4.2 Khách nhìn thấy gì</h3>
+  <p>Khi xin gặp nhân viên ngoài giờ (và đã chọn đội nếu có hỏi đội), hội thoại <strong>không</strong> hứa có người trực:</p>
+  <ul>
+    <li>Nếu hệ thống <strong>chưa có email</strong> của khách, trợ lý nói: <em>Hiện tại đang ngoài giờ hỗ trợ. Bạn hãy để lại địa chỉ email muốn nhận câu trả lời, đội ngũ của chúng tôi sẽ phản hồi ngay khi làm việc trở lại.</em> Widget hiện khung <strong>Chúng tôi nên gửi câu trả lời tới đâu?</strong> (ô email, nút <strong>Lưu</strong>, chú thích <em>Chỉ dùng để trả lời câu hỏi này.</em>). Lưu xong, khách đọc: <em>Cảm ơn bạn — chúng tôi sẽ gửi câu trả lời tới địa chỉ đó.</em> Lưu email yêu cầu khách đã đồng ý thông báo quyền riêng tư.</li>
+    <li>Nếu đã có email, khách đọc câu mặc định: <em>Hiện tại đang ngoài giờ hỗ trợ. Tôi đã chuyển tin nhắn của bạn cho đội ngũ của chúng tôi — họ sẽ trả lời qua email ngay khi làm việc trở lại.</em> (master thay được bằng <strong>Thông báo ngoài giờ gửi cho khách hàng</strong>).</li>
+  </ul>
+  <h3>4.3 Phía nhân viên: điều gì đã xảy ra trong đêm</h3>
+  <ul>
+    <li>Hội thoại ở trạng thái <strong>Đang chờ</strong> và được đánh dấu nội bộ là "trả lời qua email" (console không hiển thị dấu này).</li>
+    <li>Bản tóm tắt (lý do, đội, vùng, khách sạn, đoạn xem trước tối đa 300 ký tự) gửi tới <strong>Email ngoài giờ</strong> (hoặc hộp thư riêng của đội Bắc/Nam nếu master đã đặt, §6.4). Slack không bị gọi.</li>
+    <li>Một thông báo vẫn được tạo trong console ngay lúc khách yêu cầu (ai đang mở console lúc đó thấy ngay; ở chế độ <strong>Nghiêm ngặt</strong> chỉ đội vùng và <strong>Toàn quốc</strong>). Khi một người bấm <strong>Bỏ qua</strong> thì thông báo đóng cho mọi người, nên <strong>sáng hôm sau, người mở console đầu tiên có thể thấy hộp thoại báo</strong> cho các yêu cầu đêm qua mà chưa ai xác nhận (đọc từ mã nguồn, chưa chạy thực tế; xem phụ lục E).</li>
+    <li>Nếu master <strong>chưa</strong> đặt <strong>Email ngoài giờ</strong>, hệ thống không có nơi để chuyển nên <strong>vẫn báo nhân viên</strong> ngay cả ngoài giờ (cảnh báo trong cài đặt: <em>Nếu không có email, các yêu cầu ngoài giờ vẫn sẽ báo cho nhân viên.</em>).</li>
+    <li>Hội thoại ngoài giờ <strong>không</strong> bị nhắc "chưa ai nhận" (§3.4).</li>
+  </ul>
+  <h3>4.4 Việc đầu tiên của ca sáng</h3>
+  <ol class="steps">
+    <li>Mở hộp thư <strong>Email ngoài giờ</strong> và console. Bật <strong>Đang trực</strong>.</li>
+    <li>Ở tab <strong>Cần nhân viên</strong>, đặt vùng về <strong>Tất cả vùng</strong>, lọc theo đội của bạn; hội thoại cũ nhất đứng ở <strong>Chờ</strong> lớn nhất.</li>
+    <li>Mở từng hội thoại, đọc cả lịch sử, bấm <strong>Nhận</strong>.</li>
+    <li>Trả lời ngay trong console. Với hội thoại này, <strong>câu trả lời được gửi tới email khách</strong> nếu khách đã có hồ sơ kèm email và máy chủ gửi được thư; tiêu đề theo ngôn ngữ của phiên (với khách dùng tiếng Việt: <em>[SharpTalk] Phản hồi cho câu hỏi của bạn</em>), và trong luồng xuất hiện ghi chú hệ thống <em>Phản hồi này đã được gửi tới email của khách hàng.</em> <strong>Nếu không thấy ghi chú này, email chưa đi</strong>: hãy kiểm tra với IT. Tệp đính kèm không đi theo email: email chỉ nhắc khách mở khung chat để xem tệp.</li>
+    <li>Xong thì <strong>Kết thúc</strong>. Nếu trong lúc đó khách nhắn lại ngay trong widget <strong>trong giờ làm việc</strong>, hội thoại trở về kênh widget.</li>
+  </ol>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>vì nhân viên không bị đánh thức, hãy đặt lịch kiểm tra hộp thư và hàng chờ vào đầu ca và sau giờ nghỉ trưa (giờ nghỉ cũng được coi là ngoài giờ).</p></div>
+</section>
+
+<section id="ch5">
+  <div class="ch"><span class="num">05</span><h2>Người dùng và nhãn (master)</h2></div>
+  <p><em>(Dành cho: master. Mặc định chỉ master thấy menu này; director không có trừ khi master cấp)</em></p>
+  <p>Menu <strong>Người dùng &amp; nhãn</strong> (trang <strong>Người dùng</strong>). Bảng có các cột <strong>Email</strong>, <strong>Cấp bậc</strong>, <strong>Vai trò</strong>, <strong>Khu vực</strong>, <strong>Trực</strong>, <strong>Trạng thái</strong>, <strong>Ngày tạo</strong>; có hai bộ lọc <strong>Lọc theo vai trò</strong> và <strong>Lọc theo khu vực</strong>.</p>
+  <figure class="shot"><img src="img/go2joy-ops-users.vi.jpg" alt="Hình 13. Bảng Người dùng với cột Vai trò, Khu vực, Trực" loading="lazy"><figcaption>Hình 13. Bảng Người dùng với cột Vai trò, Khu vực, Trực</figcaption></figure>
+  <h3>5.1 Mời người dùng</h3>
+  <p><strong>Mời người dùng</strong> → nhập <strong>Email</strong>, chọn <strong>Cấp bậc</strong>, tick <strong>Vai trò</strong>, chọn <strong>Khu vực</strong> → <strong>Gửi lời mời</strong>. Màn hình hiện <strong>Mật khẩu tạm thời</strong> (chỉ một lần); gửi cho người đó qua kênh an toàn, họ phải đổi mật khẩu ở lần đăng nhập đầu. Muốn cấp lại: nút <strong>Mật khẩu tạm</strong> trên dòng người dùng.</p>
+  <h3>5.2 Vai trò: CS, SA và "Khác"</h3>
+  <p>Mỗi vai trò là một <strong>nhãn công việc</strong>. Với Go2Joy:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Vai trò</th><th>Mã</th><th>Dùng để</th></tr>
+    <tr><td><strong>CS</strong></td><td><code>consult</code></td><td>Nhận câu hỏi <strong>Hỗ trợ khách hàng</strong>; vào <strong>Trò chuyện trực tiếp</strong>, <strong>Bảng yêu cầu</strong>, <strong>Hành trình</strong> (<strong>Lịch sử</strong> chỉ từ cấp manager trở lên)</td></tr>
+    <tr><td><strong>SA</strong> (Sales Admin)</td><td><code>sales_admin</code></td><td>Nhận câu hỏi <strong>Hỗ trợ kinh doanh</strong>; làm được mọi việc của CS trong chat, cộng thêm <strong>Đơn hàng</strong> (và <strong>Khách hàng</strong> từ cấp manager trở lên)</td></tr>
+    <tr><td>Kế toán, Vận hành</td><td><code>accounting</code>, <code>operations</code></td><td>Không liên quan tới hàng chờ chuyển người; nhãn <strong>Vận hành</strong> mở <strong>Kho tri thức</strong>, <strong>Sản phẩm</strong>, <strong>Chiến dịch</strong> cho cấp bậc được phép (riêng sửa tri thức cần quyền từ cấp director)</td></tr>
+    <tr><td><strong>Khác</strong></td><td>(không chọn gì)</td><td><em>Không chọn vai trò = Khác (không nhận hội thoại chuyển người, không mở màn hình theo vai trò).</em></td></tr>
+  </table></div>
+  <div class="callout warn"><span class="c-label">⚠️ Lưu ý về tên nhãn</span>
+    <p>tên hiển thị của nhãn là dữ liệu trong cơ sở dữ liệu, <strong>mặc định bằng tiếng Hàn</strong> (ví dụ 상담, 영업관리). Console <strong>không có màn hình đổi tên nhãn</strong>; việc này làm qua API <code>PATCH /api/v1/job-labels/&lt;id&gt;</code> bằng tài khoản master (tên 1 đến 64 ký tự). Amoeba sẽ đổi tên thành CS và SA trước khi go-live (mục checklist C).</p></div>
+  <h3>5.3 Khu vực</h3>
+  <p><strong>Khu vực</strong> của người dùng: <strong>Toàn quốc</strong>, <strong>Miền Bắc</strong>, <strong>Miền Nam</strong>. Khu vực quyết định ai được báo trước cho khách sạn vùng nào (§3.2). <strong>Toàn quốc</strong> là người dự phòng của cả hai vùng. Thay khu vực có hiệu lực ngay cho các thông báo <strong>chưa xử lý</strong> đang gửi riêng cho người đó: hệ thống chọn lại người khác nếu họ không còn thuộc vùng.</p>
+  <h3>5.4 Cột Trực</h3>
+  <p>Cột <strong>Trực</strong> làm mới 15 giây một lần:</p>
+  <ul>
+    <li><strong>Đang trực · thấy N giây trước</strong> (xanh): đang được tính.</li>
+    <li><strong>Đang trực · không kết nối</strong> (vàng): đã bật trực nhưng gần đây không thấy console (<em>Đã bật trực nhưng gần đây không thấy console, nên các yêu cầu chuyển người mới sẽ bỏ qua người này.</em>).</li>
+    <li><strong>Không trực</strong> (xám).</li>
+  </ul>
+  <h3>5.5 Cấp bậc và việc liên quan tới hàng chờ</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Cấp bậc</th><th>Làm được trong phạm vi sổ tay này</th></tr>
+    <tr><td>staff</td><td><strong>Trò chuyện trực tiếp</strong> (cần nhãn CS hoặc SA): bật trực, nhận, trả lời, <strong>Chuyển sang…</strong>, kết thúc</td></tr>
+    <tr><td>manager</td><td>Như staff, thêm <strong>Chỉ định</strong> hội thoại cho người cụ thể, <strong>Thống kê</strong> (kể cả <strong>Thí điểm</strong>), <strong>Cài đặt AI</strong></td></tr>
+    <tr><td>director</td><td>Như manager, thêm <strong>Cài đặt gian hàng</strong> (xem nhiều thẻ), <strong>Kho tri thức</strong> đầy đủ, xuất CSV thí điểm, tra cứu và xóa dữ liệu theo yêu cầu (§8.5). Không mở <strong>Người dùng &amp; nhãn</strong> theo mặc định</td></tr>
+    <tr><td>master</td><td>Mọi thứ, <strong>chỉ master</strong> sửa được các thẻ chính sách đăng nhập, phạm vi thí điểm, tra cứu dữ liệu đối tác</td></tr>
+  </table></div>
+  <p>Cột <strong>Cấp bậc</strong> hiện bằng chữ tiếng Anh (<code>master</code>, <code>director</code>, <code>manager</code>, <code>staff</code>) vì giao diện chưa có bản dịch cho các giá trị này.</p>
+</section>
+
+<section id="ch6">
+  <div class="ch"><span class="num">06</span><h2>Cài đặt chuyển cho nhân viên</h2></div>
+  <p><em>(Dành cho: master, director. Menu <strong>Cài đặt gian hàng</strong> → tab <strong>Cơ bản</strong> → thẻ <strong>Chuyển cho nhân viên</strong>)</em></p>
+  <p>Toàn bộ thẻ lưu bằng <strong>một nút Lưu</strong> ở cuối thẻ (riêng <strong>Bảng khách sạn → tỉnh</strong> tác dụng ngay, §6.5). Lưu thành công hiện thông báo bằng <strong>tiếng Anh</strong>: <em>AI configuration saved.</em> (chuỗi này chưa được dịch). Lưu sai cấu hình hiện lỗi cụ thể, ví dụ <em>Chưa lưu bảng vùng: …</em> hoặc <em>Chưa lưu cài đặt chuyển người: …</em>. Trong trang <strong>Cài đặt AI</strong>, cuối trang có dòng chỉ dẫn tới đây (<em>Giờ làm việc và định tuyến ngoài giờ nay nằm trong phần Cài đặt gian hàng.</em>).</p>
+  <figure class="shot"><img src="img/go2joy-ops-handoff-team.vi.jpg" alt="Hình 14. Thẻ Chuyển cho nhân viên: báo lại, giờ làm việc, email ngoài giờ, hỏi đội" loading="lazy"><figcaption>Hình 14. Thẻ Chuyển cho nhân viên: báo lại, giờ làm việc, email ngoài giờ, hỏi đội</figcaption></figure>
+  <h3>6.1 Nhân viên được phân công, báo lại, giờ làm việc</h3>
+  <ul>
+    <li><strong>Nhân viên được phân công</strong>: chip theo email của người có nhãn tư vấn. <em>Để trống để báo cho tất cả nhân viên — ai nhận trước sẽ phụ trách cuộc hội thoại.</em> Đây là bước thứ 3 của thang ở §3.2.</li>
+    <li><strong>Báo lại khi chưa ai nhận cuộc trò chuyện</strong>: <strong>Tự động (bật khi đã chọn người nhận, định tuyến theo đội hoặc theo vùng)</strong>, <strong>Bật</strong>, <strong>Tắt</strong>. Số phút do IT đặt (<code>ALERT_UNCLAIMED_MINUTES</code>, mặc định 5; đặt 0 là tắt toàn hệ thống).</li>
+    <li><strong>Chỉ chuyển cho nhân viên trong giờ làm việc</strong>: tick để bật <strong>Múi giờ</strong>, <strong>Từ</strong>, <strong>Đến</strong>, <strong>Giờ nghỉ (không có ai trực)</strong>, <strong>Các ngày</strong> (T2 đến T7, CN). Không tick = lúc nào cũng "trong giờ".</li>
+    <li><strong>Mục tiêu SLA của bảng yêu cầu</strong> (<strong>Thông thường (giờ)</strong>, <strong>Khẩn (giờ)</strong>, 1–168 giờ; mặc định 24 giờ và 4 giờ) chỉ liên quan <strong>Bảng yêu cầu</strong>, không liên quan hàng chờ chat.</li>
+    <li><strong>Bắt buộc chuyển tiếp theo chính sách (danh sách chặn)</strong>: mỗi dòng gồm các từ khóa (cách nhau bằng dấu phẩy), một <strong>loại</strong> yêu cầu, một <strong>nhãn</strong> nhận (<strong>Tư vấn</strong>, <strong>Sales Admin</strong>, <strong>Kế toán</strong>, <strong>Vận hành</strong>) và cách khách được báo: <strong>Không trả lời</strong> (chuyển cho nhân viên mà không phản hồi) hoặc <strong>Trả lời rồi chuyển</strong> (trả lời từ kho tri thức trước rồi vẫn chuyển). <em>Tin nhắn khớp bất kỳ từ khóa nào sẽ được chuyển thẳng cho nhân viên — không hỏi AI.</em> Loại và nhãn được gán cho yêu cầu được tạo, và quy tắc này vẫn ưu tiên hơn cổng khách (§7.1). Dùng cho chủ đề bạn muốn luôn có người xử lý, ví dụ đổi tài khoản ngân hàng.</li>
+  </ul>
+  <figure class="shot"><img src="img/go2joy-ops-handoff-hours.vi.jpg" alt="Hình 15. Mục Báo lại khi chưa ai nhận, Giờ làm việc và Email ngoài giờ" loading="lazy"><figcaption>Hình 15. Mục Báo lại khi chưa ai nhận, Giờ làm việc và Email ngoài giờ</figcaption></figure>
+  <h3>6.2 Email ngoài giờ và thông báo ngoài giờ</h3>
+  <ul>
+    <li><strong>Email ngoài giờ</strong>: hộp thư nhận bản tóm tắt ngoài giờ. Để một hộp thư <strong>có người xem mỗi sáng</strong> (hộp thư nhóm, không phải email cá nhân). Cần cấu hình SMTP phía máy chủ.</li>
+    <li><strong>Thông báo ngoài giờ gửi cho khách hàng</strong>: có <strong>tab ngôn ngữ</strong>; để trống dùng câu mặc định ở §4.2.</li>
+  </ul>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>ở các ô có tab ngôn ngữ trong thẻ này (thông báo ngoài giờ, <strong>Câu hỏi</strong> và <strong>Tên hiển thị cho khách</strong> của đội), tab đang chọn lúc mở trang là <strong>KO</strong> (tiếng Hàn), không phải <strong>VI</strong>. Hãy bấm tab <strong>VI</strong> trước khi gõ câu tiếng Việt, nếu không câu bạn gõ được lưu cho tiếng Hàn.</p></div>
+  <h3>6.3 Hỏi đội hỗ trợ khi khách yêu cầu gặp nhân viên</h3>
+  <p>Mục <strong>Hỏi đội hỗ trợ khi khách yêu cầu gặp nhân viên</strong> (<em>Chỉ hiện sau khi khách yêu cầu gặp người… Mỗi lựa chọn báo cho nhân viên giữ vai trò đó; không ai online thì báo cho mọi nhân viên và hàng chờ gắn nhãn đội.</em>):</p>
+  <ol class="steps">
+    <li>Tick <strong>Hỏi khách chọn đội</strong>. Lần bật đầu tự điền cặp mặc định.</li>
+    <li><strong>Câu hỏi</strong>: theo ngôn ngữ (tab); để trống = câu mặc định (<em>Để trống = dùng câu mặc định</em>).</li>
+    <li>Bảng lựa chọn: <strong>Mã</strong>, <strong>Tên hiển thị cho khách</strong>, <strong>Chuyển tới vai trò</strong> (<strong>Tư vấn</strong>, <strong>Sales Admin</strong>, <strong>Kế toán</strong>, <strong>Vận hành</strong>). Tối đa <strong>4</strong> lựa chọn (<strong>+ Thêm lựa chọn</strong>).</li>
+    <li>Mỗi lựa chọn có thể có <strong>giờ làm việc riêng</strong> (mục xổ <strong>Giờ làm việc: theo giờ chung</strong> hoặc <strong>Giờ làm việc riêng</strong>): <em>Ngoài khung giờ này, khách yêu cầu đội này sẽ được báo là sẽ nhận phản hồi qua email thay vì nhân viên trực tiếp.</em></li>
+  </ol>
+  <p>Cặp mặc định: mã <code>cs</code> → vai trò <strong>Tư vấn</strong> (CS), tên cho khách <strong>Hỗ trợ khách hàng</strong>; mã <code>business</code> → vai trò <strong>Sales Admin</strong>, tên <strong>Hỗ trợ kinh doanh</strong>. Tên các vai trò trong ô <strong>Chuyển tới vai trò</strong> là cố định (<strong>Tư vấn</strong> = nhãn CS, <strong>Sales Admin</strong> = nhãn SA), không đổi theo tên nhãn bạn đặt ở màn hình <strong>Người dùng</strong>.</p>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>giữ nguyên <strong>Mã</strong> <code>cs</code> và <code>business</code>. Chip đội và hộp thoại báo của console chỉ có tên tiếng Việt cho hai mã này (<strong>Hỗ trợ khách hàng</strong>, <strong>Kinh doanh</strong>); mã khác sẽ hiện nguyên chữ mã.</p></div>
+  <h3>6.4 Chuyển theo vùng của khách sạn</h3>
+  <p>Mục <strong>Chuyển theo vùng của khách sạn</strong>. Tick <strong>Chuyển hội thoại cho đội phụ trách vùng của khách sạn</strong>. Cần Hotel Admin gửi <strong>tỉnh của khách sạn kèm chữ ký</strong> khi người dùng đăng nhập vào trợ lý (<em>Cần hệ thống của đối tác gửi tỉnh của khách sạn, có chữ ký…</em>), hoặc dùng bảng khách sạn → tỉnh ở §6.5.</p>
+  <figure class="shot"><img src="img/go2joy-ops-handoff-region.vi.jpg" alt="Hình 16. Bảng vùng sau khi nạp bộ tỉnh Việt Nam, ô Thử một tỉnh, chế độ nghiêm ngặt" loading="lazy"><figcaption>Hình 16. Bảng vùng sau khi nạp bộ tỉnh Việt Nam, ô Thử một tỉnh, chế độ nghiêm ngặt</figcaption></figure>
+  <p><strong>Nạp bộ tỉnh Việt Nam có sẵn:</strong></p>
+  <ol class="steps">
+    <li>Bấm <strong>Nạp bộ tỉnh Việt Nam có sẵn</strong>. Bộ gồm 63 tỉnh thành trước tháng 7/2025 và 34 đơn vị sau sáp nhập, kèm các cách viết thường gặp (ví dụ "Sài Gòn", "HCMC", "TT Huế").</li>
+    <li>Nếu bảng đã có tỉnh, console hỏi xác nhận vì thao tác <strong>thay</strong> toàn bộ tỉnh và đội phụ trách của cả bốn vùng.</li>
+    <li>Xuất hiện thông báo <em>Đã nạp bộ Việt Nam (N tên). Kiểm tra rồi bấm Lưu.</em> <strong>Chưa lưu gì</strong> cho đến khi bạn bấm <strong>Lưu</strong> ở cuối thẻ.</li>
+  </ol>
+  <p>Bảng có 4 dòng:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Vùng</th><th>Đội phụ trách mặc định</th><th>Gồm (theo bộ có sẵn)</th></tr>
+    <tr><td><strong>Miền Bắc</strong></td><td><strong>Đội Bắc</strong></td><td>Đồng bằng sông Hồng, Đông Bắc, Tây Bắc (Hà Nội, Hải Phòng, Quảng Ninh…)</td></tr>
+    <tr><td><strong>Bắc Trung Bộ</strong></td><td><strong>Đội Bắc</strong></td><td>Thanh Hóa, Nghệ An, Hà Tĩnh, Quảng Trị (kèm Quảng Bình), Huế</td></tr>
+    <tr><td><strong>Nam Trung Bộ</strong></td><td><strong>Đội Nam</strong></td><td>Đà Nẵng (kèm Quảng Nam), Quảng Ngãi, Gia Lai, Đắk Lắk, Khánh Hòa, Lâm Đồng… và Tây Nguyên</td></tr>
+    <tr><td><strong>Miền Nam</strong></td><td><strong>Đội Nam</strong></td><td>TP. Hồ Chí Minh, Đồng Nai, Tây Ninh, Cần Thơ, Vĩnh Long, Đồng Tháp, Cà Mau, An Giang</td></tr>
+  </table></div>
+  <ul>
+    <li>Chỉ có <strong>hai đội</strong> (Bắc, Nam); Tây Nguyên, Đông Nam Bộ và đồng bằng sông Cửu Long không phải vùng riêng mà là tỉnh nằm trong các vùng trên. Cột <strong>Đội phụ trách</strong> đổi được cho từng vùng.</li>
+    <li>Mỗi dòng nhập tỉnh <strong>mỗi dòng một tỉnh hoặc cách nhau bằng dấu phẩy</strong>. So khớp <strong>không phân biệt hoa thường và dấu</strong>, bỏ tiền tố hành chính ("Tỉnh", "TP.").</li>
+    <li>Một tỉnh có ở nhiều vùng: cảnh báo <em>Có trong nhiều vùng (vùng đứng trước được dùng): …</em>.</li>
+    <li><strong>Thử một tỉnh</strong>: gõ một tên tỉnh vào ô, ví dụ <em>Đà Nẵng</em>; kết quả xanh <strong>&lt;Vùng&gt; · &lt;Đội&gt;</strong> hoặc cam <em>Chưa có trong bảng, nên các khách sạn này chỉ được chuyển theo đội.</em> Hãy thử với cách viết thật mà Hotel Admin gửi, đặc biệt tên cũ và viết tắt.</li>
+    <li>Thứ tự báo, theo chữ trên giao diện: nhân viên của vùng khách sạn, rồi nhân viên chưa gán vùng (<strong>Toàn quốc</strong>), cuối cùng là mọi nhân viên. Khách sạn chưa xác định được tỉnh chỉ được chuyển theo đội.</li>
+  </ul>
+  <p><strong>Chế độ khi đội vùng không nhận được</strong> (ô <strong>Khi đội của khách sạn không nhận được</strong>):</p>
+  <ul>
+    <li><strong>Báo đội của khách sạn trước, sau đó báo tất cả (mặc định)</strong>;</li>
+    <li><strong>Nghiêm ngặt — không tự ra khỏi vùng của khách sạn</strong>: thêm ô <strong>Mở rộng sang vùng còn lại sau (phút)</strong>. Việc mở rộng chỉ chạy qua bộ nhắc "chưa ai nhận" (§3.4): nếu <strong>Báo lại khi chưa ai nhận cuộc trò chuyện</strong> đang <strong>Tắt</strong>, hoặc IT đặt <code>ALERT_UNCLAIMED_MINUTES=0</code>, hội thoại không bao giờ sang vùng còn lại.</li>
+  </ul>
+  <p><strong>Kênh của từng đội theo vùng</strong>: với mỗi đội (Bắc, Nam) có hai ô tùy chọn <strong>Hộp thư ngoài giờ — &lt;Đội&gt;</strong> và <strong>Webhook Slack — &lt;Đội&gt;</strong> (<code>https://hooks.slack.com/services/…</code>). Webhook được lưu mã hóa, <strong>không hiển thị lại</strong> (<em>Đã lưu một webhook. Dán URL mới để thay thế, hoặc xóa trống ô này để gỡ.</em>). Để trống = dùng hộp thư chung và webhook mặc định của máy chủ. Lưu webhook cần khoá mã hóa <code>CRED_ENC_KEY</code> phía máy chủ.</p>
+  <h3>6.5 Bảng khách sạn → tỉnh (tệp CSV)</h3>
+  <p>Dùng khi Hotel Admin ký khách sạn nhưng <strong>không</strong> gửi tỉnh. Thẻ nằm ngay dưới bảng vùng và chỉ hiện khi đã tick <strong>Chuyển hội thoại cho đội phụ trách vùng của khách sạn</strong>. Nếu bạn vừa tick mà chưa bấm <strong>Lưu</strong> (hoặc vùng đã lưu đang tắt), kết quả <strong>Xem trước</strong> báo <em>Đang tắt định tuyến theo vùng. Bảng vẫn được lưu nhưng chưa có tác dụng cho đến khi bật.</em>; hãy <strong>Lưu</strong> bảng vùng trước. Tệp tối đa 2 MB và 20.000 dòng.</p>
+  <figure class="shot"><img src="img/go2joy-ops-hotel-csv.vi.jpg" alt="Hình 17. Thẻ Bảng khách sạn → tỉnh sau bước Xem trước" loading="lazy"><figcaption>Hình 17. Thẻ Bảng khách sạn → tỉnh sau bước Xem trước</figcaption></figure>
+  <ol class="steps">
+    <li>Chuẩn bị tệp <strong>CSV, UTF-8, có dòng tiêu đề và hai cột <code>hotel_sn</code>, <code>province</code></strong> (các cột khác bị bỏ qua).</li>
+    <li><strong>Chọn tệp</strong> (nút chọn tệp của trình duyệt) → <strong>Xem trước</strong>. Kết quả: <em>N khách sạn · N tỉnh · N dòng lặp · N lỗi</em>, kèm danh sách <em>N tỉnh chưa có trong bảng vùng — khách sạn thuộc các tỉnh này sẽ chỉ được chuyển theo nhãn</em>.</li>
+    <li>Lỗi trong tệp (<code>hotel_sn</code> trống hoặc dài quá 64 ký tự, <code>province</code> trống hoặc dài quá 80 ký tự, ký tự điều khiển, cùng <code>hotel_sn</code> xuất hiện với tỉnh khác) <strong>chặn</strong> việc thay bảng: <em>Hãy sửa các dòng này trong tệp rồi xem trước lại; tệp còn lỗi không thể thay thế bảng.</em></li>
+    <li><strong>Thay thế bảng</strong>: <em>Thay N khách sạn hiện có trong bảng bằng N khách sạn trong tệp này.</em> Hành động có hiệu lực ngay, không cần bấm <strong>Lưu</strong>. <strong>Xóa bảng</strong> để xóa toàn bộ.</li>
+    <li>Quy tắc dùng: tỉnh đã ký trong thông tin nhận diện <strong>luôn thắng</strong> bảng này; bảng chỉ tra bằng <strong>số khách sạn đã ký</strong>, tên khách sạn không bao giờ được dùng.</li>
+  </ol>
+</section>
+
+<section id="ch7">
+  <div class="ch"><span class="num">07</span><h2>Khách chưa đăng nhập, quyền xem tri thức, phiên bản giao diện</h2></div>
+  <p><em>(Dành cho: master, director; một số mục từ cấp manager. Menu <strong>Cài đặt AI</strong> và <strong>Kho tri thức</strong>)</em></p>
+  <h3>7.1 Khách chưa đăng nhập: "Chỉ hướng dẫn đăng nhập"</h3>
+  <p>Mỗi <strong>Nhân viên AI</strong> (AI agent; đừng nhầm với nhân viên là người) có ô <strong>Khách chưa đăng nhập</strong> (Cài đặt AI → thẻ <strong>Nhân viên AI</strong> → sửa agent):</p>
+  <ul>
+    <li><strong>Trả lời như bình thường</strong>;</li>
+    <li><strong>Chỉ hướng dẫn đăng nhập hoặc đăng ký</strong>.</li>
+  </ul>
+  <p>Với lựa chọn thứ hai, một người <strong>chưa đăng nhập hoặc có chữ ký đã hết hạn</strong> chỉ được trả lời từ các danh mục <strong>Công khai</strong> (§7.2) khi trợ lý đủ căn cứ. Câu hỏi khác nhận lời nhắc đăng nhập mà <strong>không gọi mô hình AI</strong>. Khách vẫn chào hỏi được và vẫn xin gặp nhân viên được. Quy tắc <strong>Bắt buộc chuyển tiếp theo chính sách (danh sách chặn)</strong> (§6.1) vẫn ưu tiên. Có hiệu lực từ tin nhắn kế tiếp, không cần triển khai lại.</p>
+  <p>Nội dung khách đọc nằm ở thẻ <strong>Hướng dẫn khách (chưa đăng nhập)</strong> (Cài đặt AI): <strong>URL đăng nhập</strong>, <strong>URL đăng ký</strong> (phải bắt đầu bằng <code>https://</code>), <strong>Lời nhắc đăng nhập</strong> (câu mặc định: <em>Nội dung này dành cho đối tác đã đăng nhập. Vui lòng đăng nhập tài khoản đối tác để tôi hướng dẫn chi tiết.</em>), <strong>Lời nhắc chỉ dành cho Quản lý</strong> (§7.2) và <strong>Mẫu link "Mở trong hệ thống của bạn"</strong> (phải bắt đầu bằng <code>https://</code> và chứa <code>{hotelSn}</code>; để trống thì ẩn nút <strong>Mở trong hệ thống</strong> ở §2.2). Trong widget khách thấy <strong>Đăng nhập</strong>, <strong>Đăng ký trở thành đối tác</strong>, <strong>Tiếp tục với tư cách khách</strong>.</p>
+  <div class="callout warn"><span class="c-label">⚠️ Lưu ý</span>
+    <p>ngưỡng quyết định "đủ căn cứ" của cổng này <strong>chưa được hiệu chỉnh với embedding thật</strong>. Chưa bật <strong>Chỉ hướng dẫn đăng nhập hoặc đăng ký</strong> cho khách hàng thật cho tới khi Amoeba chạy hiệu chỉnh trên staging.</p></div>
+  <h3>7.2 Quyền xem của danh mục: Công khai, Đối tác đã đăng nhập, Chỉ Quản lý</h3>
+  <p>Menu <strong>Kho tri thức</strong> → thẻ <strong>Danh mục</strong> (danh mục chia theo tab nhóm <strong>Thông tin tư vấn</strong>, <strong>Thông tin sản phẩm</strong>, <code>OperationInfo</code>; chọn đúng tab chứa danh mục cần chỉnh). Mỗi danh mục có một ô chọn quyền xem (rê chuột để đọc chú thích <strong>Ai được xem</strong>; chữ hiển thị là mức đang chọn) với ba mức:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Mức</th><th>Ai đọc được</th></tr>
+    <tr><td><strong>Công khai</strong></td><td>Cả người chưa đăng nhập (khi agent đặt hướng dẫn đăng nhập, đây là phần duy nhất họ được trả lời)</td></tr>
+    <tr><td><strong>Đối tác đã đăng nhập</strong></td><td>Mọi đối tác đã đăng nhập, kể cả <strong>Lễ tân</strong>. <strong>Mặc định của mọi danh mục mới</strong></td></tr>
+    <tr><td><strong>Chỉ Quản lý</strong></td><td>Chỉ tài khoản <strong>Quản lý</strong> hoặc nội bộ của khách sạn</td></tr>
+  </table></div>
+  <div class="callout warn"><span class="c-label">⚠️ Lưu ý</span>
+    <p>sự khác nhau giữa <strong>Công khai</strong> và <strong>Đối tác đã đăng nhập</strong> chỉ có tác dụng khi agent được đặt <strong>Chỉ hướng dẫn đăng nhập hoặc đăng ký</strong> (§7.1). Với lựa chọn mặc định <strong>Trả lời như bình thường</strong>, người chưa đăng nhập vẫn được trả lời từ cả hai mức; <strong>chỉ mức Chỉ Quản lý luôn bị giữ lại</strong> với mọi người dưới cấp Quản lý. Danh mục bị khóa (biểu tượng ổ khóa, sinh từ danh mục sản phẩm) và danh mục chưa đăng ký không có ô <strong>Ai được xem</strong>.</p></div>
+  <figure class="shot"><img src="img/go2joy-ops-kb-access.vi.jpg" alt="Hình 18. Thẻ Danh mục với ô Ai được xem và dòng cảnh báo" loading="lazy"><figcaption>Hình 18. Thẻ Danh mục với ô Ai được xem và dòng cảnh báo</figcaption></figure>
+  <p>Ai thuộc mức nào: người chưa đăng nhập, hoặc có chữ ký đã <strong>hết hạn</strong>, được tính là <strong>Công khai</strong>; <strong>quản lý</strong> hoặc <strong>nhân viên nội bộ</strong> đã <strong>ký</strong> là mức Quản lý; mọi người đã đăng nhập khác (lễ tân, đăng nhập không kèm khách sạn và vai trò, thông tin <strong>tự khai</strong> không có chữ ký) là mức đối tác. Thông tin tự khai không bao giờ nâng người dùng lên mức Quản lý.</p>
+  <p>Điều cần biết khi đổi mức:</p>
+  <ul>
+    <li><strong>Mở rộng</strong> quyền xem hỏi xác nhận: <em>Cho phép đọc N tài liệu mà không cần đăng nhập?</em> hoặc <em>Cho phép mọi đối tác đã đăng nhập, kể cả Lễ tân, đọc N tài liệu hiện chỉ dành cho Quản lý?</em></li>
+    <li>Chọn <strong>Chỉ Quản lý</strong> hiện dòng cảnh báo <em>Lễ tân hỏi về nội dung này sẽ được hướng dẫn nhờ tài khoản Quản lý của khách sạn.</em> và thông báo <em>Phân loại chỉ còn dành cho Quản lý. Các câu trả lời đã lưu đã được xóa.</em> (mọi câu trả lời đã lưu của gian hàng bị xóa để không phát lại cho lễ tân).</li>
+    <li>Gộp một danh mục <strong>Chỉ Quản lý</strong> vào danh mục ít hạn chế hơn bị từ chối (<em>Hãy đặt phân loại đích thành "Chỉ Quản lý" trước.</em>).</li>
+    <li>Nhập hàng loạt bằng CSV <strong>không</strong> ghi mức: danh mục mới từ tệp nhập luôn là <strong>Đối tác đã đăng nhập</strong> cho tới khi bạn chỉnh trong console. Chuyển một tài liệu sang danh mục <strong>Chỉ Quản lý</strong> không xóa các câu trả lời đã lưu trước đó; chúng hết hạn sau khoảng 30 ngày, nên hãy đặt mức trước khi nạp nội dung.</li>
+    <li>Mọi thay đổi mức đều được ghi vào nhật ký kiểm toán (<code>kb.category_access_changed</code>).</li>
+  </ul>
+  <p><strong>Lễ tân hỏi một chủ đề của Quản lý (ví dụ đổi tài khoản ngân hàng đối soát)</strong> sẽ thấy:</p>
+  <p><em>Nội dung này chỉ được cung cấp cho tài khoản Quản lý của khách sạn. Bạn vui lòng nhờ Quản lý khách sạn tra cứu giúp, hoặc cho tôi biết nếu bạn muốn được kết nối với nhân viên hỗ trợ.</em></p>
+  <p>kèm chip <strong>Gặp nhân viên hỗ trợ</strong>. Master thay lời nhắc ở <strong>Lời nhắc chỉ dành cho Quản lý</strong> (§7.1). Điều này <strong>không</strong> tạo thông báo cho CS: chỉ khi khách bấm chip mới có yêu cầu chuyển người. Câu trả lời này chỉ xuất hiện khi trợ lý <strong>không</strong> tìm được nội dung phù hợp ở mức lễ tân <strong>và</strong> nội dung Quản lý lại khớp; nó cho lễ tân biết rằng có chủ đề như vậy tồn tại (chủ ý của thiết kế). Trong <strong>Thống kê › Thí điểm</strong> lý do này hiện là <strong>Chỉ dành cho Quản lý</strong>.</p>
+  <p>Ai đổi mức: master hoặc director.</p>
+  <h3>7.3 Phiên bản giao diện: gán phiên bản, phiên bản tham chiếu, lưu ý</h3>
+  <p>Mục đích: tài liệu hướng dẫn mô tả giao diện Hotel Admin ở một <strong>phiên bản</strong> nào đó; nếu người dùng đang dùng phiên bản khác, trợ lý nên báo trước.</p>
+  <p><strong>1. Gán phiên bản cho tài liệu</strong>: Kho tri thức → mở tài liệu → ô <strong>Phiên bản giao diện</strong> (ví dụ <code>v23.3.0</code> hoặc <code>0.12.0</code>; 1–16 ký tự: chữ, số và <code>. _ + -</code>). Danh sách tài liệu có cột phiên bản, huy hiệu (<strong>Chưa gán</strong>, hoặc phiên bản; xanh khi khớp, vàng khi khác) và bộ lọc <strong>Phiên bản: tất cả / Phiên bản khác / Chưa gán phiên bản</strong> (bộ lọc "khác" cần đã đặt phiên bản tham chiếu). Nhập CSV: cột <code>ui_version</code>; <strong>tệp không có cột này thì không đụng tới phiên bản</strong>, còn <strong>ô trống trong cột này sẽ xóa</strong> phiên bản.</p>
+  <figure class="shot"><img src="img/go2joy-ops-kb-docs.vi.jpg" alt="Hình 19. Cột Phiên bản giao diện trong danh sách tài liệu: v0.12.0 (xanh), v0.9.2 (vàng, khác phiên bản tham chiếu) và Chưa gán" loading="lazy"><figcaption>Hình 19. Cột Phiên bản giao diện trong danh sách tài liệu: v0.12.0 (xanh), v0.9.2 (vàng, khác phiên bản tham chiếu) và Chưa gán</figcaption></figure>
+  <p><strong>2. Đặt phiên bản tham chiếu</strong>: Cài đặt AI → thẻ <strong>Phiên bản giao diện tham chiếu</strong>:</p>
+  <ul>
+    <li><strong>Phiên bản hiện hành</strong>: phiên bản người dùng đang dùng.</li>
+    <li><strong>Khi tài liệu được gán phiên bản khác</strong>: <strong>Thêm lưu ý vào câu trả lời</strong> / <strong>Ẩn tài liệu</strong> / <strong>Tắt</strong>.</li>
+    <li><strong>Nội dung lưu ý</strong> (chỉ hiện khi chọn <strong>Thêm lưu ý vào câu trả lời</strong>; có tab ngôn ngữ): để trống thì dùng câu mặc định tiếng Việt <em>Lưu ý: hướng dẫn này được viết cho một phiên bản giao diện khác, nên một số màn hình hoặc nút bấm có thể khác với những gì bạn đang thấy.</em> (màu xám, một câu).</li>
+  </ul>
+  <figure class="shot"><img src="img/go2joy-ops-kb-version.vi.jpg" alt="Hình 20. Thẻ Phiên bản giao diện tham chiếu" loading="lazy"><figcaption>Hình 20. Thẻ Phiên bản giao diện tham chiếu</figcaption></figure>
+  <p><strong>3. Hành vi</strong>:</p>
+  <ul>
+    <li>Mức <strong>lưu ý</strong>: câu trả lời gửi như thường, thêm <strong>một câu cố định</strong> ở cuối, <strong>sau bước kiểm duyệt</strong>, trước khối liên hệ cuối câu (§7.5). Chỉ thêm khi tài liệu được trích dẫn có phiên bản <strong>khác</strong> phiên bản tham chiếu.</li>
+    <li>Mức <strong>Ẩn tài liệu</strong>: tài liệu khác phiên bản bị loại khỏi tìm kiếm (tài liệu chưa gán phiên bản vẫn dùng bình thường).</li>
+    <li><strong>Tài liệu chưa gán phiên bản không bao giờ gây lưu ý</strong> (console chỉ đánh dấu <strong>Chưa gán</strong>, và chỉ khi đã đặt phiên bản tham chiếu); vì vậy hãy gán phiên bản cho mọi tài liệu về giao diện.</li>
+    <li>So sánh chỉ là <strong>bằng nhau</strong> sau khi chuẩn hóa (bỏ hoa/thường và một chữ <code>v</code> đứng đầu): <code>v0.12.0</code> = <code>V0.12.0</code> = <code>0.12.0</code>, còn <code>0.12.0</code> khác <code>0.12.1</code>. <strong>Không có thứ tự lớn nhỏ</strong>.</li>
+    <li>Đổi phiên bản tham chiếu hoặc chế độ sẽ <strong>vô hiệu hóa các câu trả lời đã lưu</strong>.</li>
+  </ul>
+  <div class="callout warn"><span class="c-label">⚠️ Lưu ý (chưa chốt)</span>
+    <p>bảng chính sách của Go2Joy ghi giao diện Hotel Admin <strong>v23.3.0/v23.4.0</strong>, còn yêu cầu nghiệp vụ nhắc <strong>v0.4.1 – v0.12.0</strong>. Hệ thống không chọn trục nào; Go2Joy cần quyết định và gán đúng. Trong bảng tính, hãy ghi kèm chữ <code>v</code> (ví dụ <code>v0.10</code>) để Excel không đổi <code>0.10</code> thành <code>0.1</code>.</p></div>
+  <p>Ai làm: gán phiên bản cho tài liệu cần quyền Kho tri thức; đặt tham chiếu cần quyền Cài đặt AI (manager trở lên).</p>
+  <h3>7.4 Kiểm tra câu trả lời: thẻ "Hỏi kho tri thức"</h3>
+  <p>Trên <strong>Kho tri thức</strong> có thẻ <strong>Hỏi kho tri thức</strong>: gõ câu hỏi, xem câu trả lời, <strong>Nguồn đã dùng</strong>, <strong>độ tin cậy</strong>, <strong>độ khớp</strong>, cảnh báo <strong>Có mâu thuẫn</strong>, <strong>Bị kiểm duyệt chặn</strong>, huy hiệu phiên bản và câu lưu ý phiên bản. Thẻ này <strong>hỏi như người quản trị</strong>, thấy cả nội dung <strong>Chỉ Quản lý</strong> (ô chọn AI agent <strong>Tất cả (chế độ quản trị)</strong> chỉ hiện khi gian hàng có nhiều hơn một agent; thẻ luôn hỏi ở chế độ quản trị), nên <strong>không</strong> cho biết lễ tân hay khách sẽ thấy gì.</p>
+  <p>Chức năng <strong>thử với tư cách</strong> Khách / Lễ tân / Quản lý <strong>chưa có ở bản này</strong>; nó sẽ đến cùng bộ mô phỏng cổng khách. Cho đến lúc đó, kiểm bằng chat thật: đăng nhập thử vào Hotel Admin với một tài khoản lễ tân, một tài khoản quản lý và một phiên chưa đăng nhập, rồi hỏi cùng một câu.</p>
+  <h3>7.5 Chân trang liên hệ của câu trả lời</h3>
+  <p>Thẻ <strong>Chân trang liên hệ cho câu trả lời</strong> (Cài đặt AI): tick <strong>Bật</strong>, nhập nội dung theo ngôn ngữ (ví dụ email hỗ trợ, hotline, giờ làm việc). Hệ thống <strong>gắn cùng một khối liên hệ vào cuối mọi câu trả lời tri thức</strong> của AI, để AI không tự viết thông tin liên hệ nữa (số điện thoại không bị đổi hay che). Mục <strong>Liên hệ chính thức (không che)</strong>: email và số điện thoại trong chân trang tự được thêm; mỗi giá trị một dòng. Thứ tự cuối câu: câu trả lời → câu lưu ý phiên bản (nếu có) → chân trang.</p>
+</section>
+
+<section id="ch8">
+  <div class="ch"><span class="num">08</span><h2>Đăng nhập có chữ ký, phạm vi thí điểm, dữ liệu đối tác, quyền riêng tư</h2></div>
+  <p><em>(Dành cho: master và director; quyền chi tiết ghi ở từng mục. Menu <strong>Cài đặt gian hàng</strong>)</em></p>
+  <h3>8.1 Chính sách đăng nhập có chữ ký (SSO)</h3>
+  <p>Tab <strong>Widget</strong> → thẻ <strong>Chính sách đăng nhập có chữ ký (SSO)</strong>:</p>
+  <ul>
+    <li><strong>Tin cậy đăng nhập đã ký trong</strong>: <strong>Mặc định của nền tảng (8 giờ)</strong> hoặc <strong>Tùy chỉnh</strong> (1 đến 720 giờ). Sau thời gian này, người đó được xem là khách vãng lai cho đến khi Hotel Admin ký lại; widget phát sự kiện <code>identity-expired</code> để <code>ShopTalk.identify()</code> chạy ngầm. Dòng <strong>Đang áp dụng: N giờ</strong> cho biết giá trị hiệu lực.</li>
+    <li><strong>Từ chối đăng nhập không có khách sạn và vai trò (v1)</strong>: <em>Chữ ký v1 không bao giờ hết hạn và không cho biết người dùng thao tác cho khách sạn nào, với vai trò gì. Hãy bật khi ứng dụng của bạn đã ký kèm claims (v2).</em> Chỉ bật sau khi Hotel Admin đã chuyển sang ký v2.</li>
+    <li>Chỉ <strong>master</strong> đổi được (<em>Chỉ tài khoản chủ (master) mới đổi được mục này.</em>); director xem.</li>
+  </ul>
+  <figure class="shot"><img src="img/go2joy-ops-identity-policy.vi.jpg" alt="Hình 21. Thẻ Chính sách đăng nhập có chữ ký (SSO)" loading="lazy"><figcaption>Hình 21. Thẻ Chính sách đăng nhập có chữ ký (SSO)</figcaption></figure>
+  <p>Máy chủ lưu đệm chính sách khoảng 15 giây (và danh sách thí điểm khoảng 60 giây), nên thay đổi có thể mất tối đa khoảng 1 phút mới có hiệu lực ở mọi lượt chat.</p>
+  <h3>8.2 Phạm vi thí điểm theo khách sạn</h3>
+  <p>Tab <strong>Widget</strong> → thẻ <strong>Phạm vi pilot theo khách sạn</strong> (cạnh thẻ <strong>Giới hạn hiển thị (chế độ thử nghiệm)</strong> theo IP/URL, là cơ chế khác). Huy hiệu ở góc thẻ: <strong>Đang bật — N khách sạn</strong> hoặc <strong>Đang tắt — phục vụ mọi khách sạn</strong>.</p>
+  <figure class="shot"><img src="img/go2joy-ops-pilot.vi.jpg" alt="Hình 22. Thẻ Phạm vi pilot theo khách sạn" loading="lazy"><figcaption>Hình 22. Thẻ Phạm vi pilot theo khách sạn</figcaption></figure>
+  <p>Cài đặt (cần bấm <strong>Lưu</strong>; thay đổi danh sách khách sạn thì <strong>có tác dụng ngay</strong>):</p>
+  <ul>
+    <li>Tick <strong>Chỉ phục vụ các khách sạn trong danh sách</strong>.</li>
+    <li><strong>Khách sạn ngoài danh sách</strong>: <strong>Ẩn widget</strong> (nút mở widget bị gỡ với khách sạn đó) hoặc <strong>Hiện thông báo</strong> (nút còn, mở ra thấy thông báo thay cho khung chat).</li>
+    <li><strong>Khách chưa có khách sạn đã ký</strong>: tick <strong>Vẫn phục vụ (trang đăng nhập, phiên đăng nhập hết hạn)</strong>; bỏ tick thì widget cũng ẩn ở trang đăng nhập.</li>
+    <li><strong>Thông báo</strong> (theo ngôn ngữ): để trống thì dùng câu mặc định <em>Chưa áp dụng cho khách sạn của bạn. Nếu cần hỗ trợ, vui lòng liên hệ quản lý tài khoản của bạn.</em></li>
+    <li><strong>Khách sạn (N)</strong>: nút <strong>Thêm</strong>, <strong>Dán danh sách</strong>, <strong>Nhập CSV</strong> (mỗi dòng một số serial kèm ghi chú; <strong>Xem trước</strong> rồi <strong>Thêm N khách sạn</strong>), và ở từng dòng: bấm huy hiệu trạng thái (<strong>Đang bật</strong> / <strong>Tạm dừng</strong>) để tạm dừng hoặc bật lại khách sạn đó (chú thích <em>Tạm dừng khách sạn này</em> / <em>Bật lại khách sạn này</em>); nút <strong>Xóa</strong> có hộp xác nhận. Mỗi thay đổi có thông báo và ghi nhật ký. Director mở được thẻ nhưng mọi nút lưu sẽ bị từ chối (chỉ master sửa được).</li>
+  </ul>
+  <p>Cách hoạt động: máy chủ so <strong>số khách sạn đã ký</strong> với danh sách ở <strong>mỗi lượt chat</strong>, nên thêm một khách sạn có hiệu lực ngay ở tin kế tiếp, không cần đăng nhập lại. Khách sạn ngoài danh sách cũng <strong>không</strong> gọi được <strong>Gặp nhân viên hỗ trợ</strong>. Phiên <strong>tự khai</strong>, <strong>hết hạn</strong> hoặc không có khách sạn được coi là khách (theo công tắc <strong>Khách chưa có khách sạn đã ký</strong>).</p>
+  <div class="callout warn"><span class="c-label">⚠️ Lưu ý</span>
+    <p>bật mà <strong>danh sách trống</strong> nghĩa là <strong>mọi khách sạn đã đăng nhập đều bị từ chối</strong> (thẻ có cảnh báo màu vàng). Việc "nhận diện" khách sạn ngoài danh sách vẫn lưu một hồ sơ khách hàng; đây là điểm quyền riêng tư cần DPO biết (RPT-261013-w2b §6.d).</p></div>
+  <h3>8.3 Tra cứu dữ liệu đối tác</h3>
+  <p>Tab <strong>Cài đặt khác</strong> → thẻ <strong>Tra cứu dữ liệu đối tác</strong> (master).</p>
+  <figure class="shot"><img src="img/go2joy-ops-partner-data.vi.jpg" alt="Hình 23. Thẻ Tra cứu dữ liệu đối tác" loading="lazy"><figcaption>Hình 23. Thẻ Tra cứu dữ liệu đối tác</figcaption></figure>
+  <ul>
+    <li><strong>Là gì</strong>: trợ lý trả lời người dùng khách sạn đã đăng nhập về <strong>giá phòng, chính sách, đặt phòng và đối soát của chính khách sạn họ</strong>, lấy từ API dữ liệu đối tác. <strong>Chỉ đọc</strong> (hệ thống chỉ gửi yêu cầu lấy dữ liệu, không ghi gì vào hệ thống của Go2Joy).</li>
+    <li><strong>Khách sạn luôn lấy từ danh tính đã ký</strong>, không bao giờ từ nội dung tin nhắn: hỏi về khách sạn khác sẽ bị từ chối (<em>Tôi chỉ tra cứu được dữ liệu của khách sạn bạn đang đăng nhập…</em>).</li>
+    <li><strong>Theo vai trò</strong>: lễ tân hỏi đối soát nhận <em>Thông tin này chỉ dành cho tài khoản Quản lý. Vui lòng nhờ quản lý của khách sạn tra cứu, hoặc yêu cầu gặp nhân viên để được hỗ trợ.</em></li>
+    <li><strong>Công tắc</strong>: <strong>Tra cứu dữ liệu trực tiếp của khách sạn khi người dùng đã đăng nhập hỏi</strong> (mặc định tắt); thêm công tắc toàn máy chủ <code>PARTNER_DATA_ENABLED</code>. Nếu máy chủ chưa bật, thẻ báo <em>Đang tắt trên toàn máy chủ (PARTNER_DATA_ENABLED)…</em></li>
+    <li><strong>Huy hiệu ở góc thẻ</strong>: <strong>Dữ liệu mẫu (mock): câu trả lời dùng khách sạn mẫu có sẵn, không phải dữ liệu thật.</strong> hoặc <strong>Dữ liệu thật: câu trả lời dùng API đối tác thực tế.</strong></li>
+    <li><strong>Kết nối</strong>: ở mục <strong>Kết nối</strong> có ô <strong>API dữ liệu đối tác Go2Joy</strong> (trạng thái <strong>Chưa kiểm tra</strong> khi chưa cấu hình). Bấm <strong>Cấu hình</strong> để nhập <strong>URL gốc</strong>, <strong>Khóa API</strong>, <strong>Khóa ký yêu cầu (tùy chọn)</strong> và dùng nút <strong>Kiểm tra kết nối</strong>. Thông tin lưu mã hóa.</li>
+    <li><strong>Cách thực hiện tra cứu</strong>: ba lựa chọn <strong>Mặc định của máy chủ (…)</strong>, <strong>Tiêu chuẩn</strong> (máy chủ lấy trước dữ liệu mà bộ nhận diện từ khóa chỉ ra, rồi AI trả lời dựa trên đó) hoặc <strong>Có AI hỗ trợ</strong> (AI tự chọn các lượt tra cứu chỉ-đọc cần thiết, cho câu hỏi nhiều chủ đề; tốn thêm một lượt gọi AI mỗi câu). Nếu AI engine không hỗ trợ, hệ thống tự dùng cách tiêu chuẩn và thẻ nói rõ.</li>
+    <li>Số tiền trong câu trả lời <strong>do máy chủ tính và kiểm lại</strong>; nếu AI viết ra một số không có trong dữ liệu, câu trả lời bị hạ xuống "sẽ xác nhận lại" và chuyển cho nhân viên.</li>
+  </ul>
+  <div class="callout warn"><span class="c-label">⚠️ Lưu ý</span>
+    <p>ở chế độ <strong>mock</strong>, câu trả lời dùng <strong>khách sạn mẫu, không phải dữ liệu thật</strong>. <strong>Không bật</strong> cho đối tác thật cho tới khi Amoeba xác nhận chế độ dữ liệu thật đã chạy và đã kiểm chứng với API Go2Joy.</p></div>
+  <p><strong>Khi API đối tác bị gián đoạn, khách và nhân viên thấy gì</strong>:</p>
+  <ul>
+    <li>Khách đọc: <em>Hiện tôi chưa tra cứu được dữ liệu khách sạn từ hệ thống nên sẽ không đoán số liệu. Chúng tôi sẽ xác nhận lại và nhân viên sẽ hỗ trợ bạn ngay tại đây.</em></li>
+    <li>Hội thoại được chuyển cho nhân viên theo thang ở §3.2. Hộp thoại báo hiện lý do chung <strong>AI không tìm được câu trả lời trong kho tri thức.</strong> (chưa có dòng riêng cho lỗi dữ liệu đối tác); nguyên nhân thật nằm ở tin hệ thống cuối cùng trong hội thoại (trong giờ làm việc; ngoài giờ tin cuối là thông báo ngoài giờ, hãy đọc tin hệ thống ngay trước đó). Trong <strong>Thống kê › Thí điểm</strong> lý do này hiện là <strong>Không tra cứu được dữ liệu đối tác</strong>.</li>
+    <li>Nhân viên <strong>không đoán số liệu</strong>; kiểm tra trực tiếp trong hệ thống của Go2Joy rồi trả lời.</li>
+    <li>Các lỗi khách tự sửa được (sai vai trò, đăng nhập hết hạn, hỏi khách sạn khác) chỉ hiện thông báo cho khách, <strong>không</strong> gọi nhân viên.</li>
+  </ul>
+  <h3>8.4 Thông báo quyền riêng tư (vn_pdpl)</h3>
+  <p>Tab <strong>Thông báo quyền riêng tư</strong> (master, director). Chọn <strong>Văn bản theo ngành</strong>: <strong>Việt Nam (luật dữ liệu cá nhân)</strong> (mã <code>vn_pdpl</code>). Có các dòng chỉnh theo ngôn ngữ: <strong>Tiêu đề</strong>, <strong>Nội dung</strong>, <strong>Chúng tôi thu thập</strong>, <strong>Mục đích</strong>, <strong>Thời gian lưu</strong>, <strong>Xử lý bằng AI</strong>, <strong>Bên kiểm soát dữ liệu &amp; liên hệ</strong>, <strong>Chuyển dữ liệu ra nước ngoài</strong>, <strong>Quyền của chủ thể dữ liệu</strong>.</p>
+  <figure class="shot"><img src="img/go2joy-ops-privacy-notice.vi.jpg" alt="Hình 24. Thẻ Cài đặt thông báo đồng ý với hồ sơ Việt Nam, ngôn ngữ chỉnh sửa Tiếng Việt và dòng Bên kiểm soát dữ liệu &amp; liên hệ đã điền" loading="lazy"><figcaption>Hình 24. Thẻ Cài đặt thông báo đồng ý với hồ sơ Việt Nam, ngôn ngữ chỉnh sửa Tiếng Việt và dòng Bên kiểm soát dữ liệu &amp; liên hệ đã điền</figcaption></figure>
+  <ul>
+    <li>Ô <strong>Ngôn ngữ chỉnh sửa</strong> mở ra ở <strong>한국어</strong> (tiếng Hàn). <strong>Chọn Tiếng Việt trước</strong> khi đọc hoặc sửa các dòng: mỗi ngôn ngữ được lưu riêng, nên câu bạn gõ khi đang ở KO chỉ áp dụng cho khách dùng tiếng Hàn. Với <code>vn_pdpl</code>, văn bản chuẩn có sẵn bằng tiếng Việt và tiếng Anh (các ngôn ngữ khác hiện dòng tiếng Anh); hãy điền dòng <strong>Bên kiểm soát dữ liệu &amp; liên hệ</strong> cho <strong>từng</strong> ngôn ngữ mà khách sẽ đọc.</li>
+    <li>Dùng <code>{{retentionDays}}</code> và <code>{{region}}</code> trong dòng bất kỳ: máy chủ điền <strong>thời hạn lưu</strong> và <strong>khu vực xử lý AI</strong> thật của hệ thống.</li>
+    <li><strong>Bản nháp</strong>: <em>Nội dung dành cho Việt Nam là bản nháp. Trước khi bật cho khách, hãy nhờ luật sư xác nhận luật áp dụng và căn cứ pháp lý…</em> và <strong>người bản ngữ tiếng Việt</strong> rà soát câu chữ.</li>
+    <li>Nếu dòng <strong>Bên kiểm soát dữ liệu &amp; liên hệ</strong> còn chỗ trống dạng <code>[[…]]</code>, thẻ cảnh báo <em>Thông báo khách sẽ đọc vẫn còn chỗ trống dạng [[…]]…</em>. Điền pháp nhân, địa chỉ và đầu mối bảo vệ dữ liệu trước khi dùng. Cảnh báo <strong>liệt kê từng ngôn ngữ còn <code>[[…]]</code></strong> (ví dụ ES, KO, JA, ZH): nó chỉ biến mất khi dòng này được điền cho <strong>mọi</strong> ngôn ngữ được liệt kê, kể cả khi khách của bạn chỉ dùng tiếng Việt.</li>
+    <li><strong>Phiên bản thông báo đồng ý</strong>: đổi phiên bản (ô <strong>Phiên bản thông báo đồng ý</strong>, hoặc tick <em>Đây là thay đổi quan trọng — tăng phiên bản thông báo và hỏi lại những người đã đồng ý.</em>; chỉ sửa chữ thì phiên bản không đổi) <strong>buộc mọi khách đồng ý lại</strong> (<em>Đổi phiên bản sẽ yêu cầu mọi khách hàng đồng ý lại…</em>). Sau khi chốt câu chữ pháp lý, hãy đổi phiên bản một lần để mọi người xác nhận bản mới.</li>
+    <li>Việc đồng ý, từ chối, rút lại được ghi bằng chứng vào nhật ký kiểm toán (không ghi IP, không ghi thông tin cá nhân).</li>
+    <li>Cho tới khi chọn <code>vn_pdpl</code>, banner đồng ý trong widget dùng văn bản chuẩn của sản phẩm với nội dung kiểu Hoa Kỳ (CCPA, 365 ngày, Google Analytics): <strong>không phù hợp cho Go2Joy</strong>.</li>
+    <li>Thời hạn lưu hội thoại do IT đặt (<code>CONVERSATION_LOG_RETENTION_DAYS</code>; để trống hoặc 0 là <strong>365 ngày</strong>, không phải "mãi mãi"; hồ sơ nháp của Go2Joy ghi 180 ngày). Hai bộ dọn tùy chọn cho hồ sơ khách hàng và nhật ký kiểm toán mặc định <strong>tắt</strong>.</li>
+  </ul>
+  <h3>8.5 Yêu cầu dữ liệu (DSAR phía vận hành)</h3>
+  <p>Tab <strong>Yêu cầu dữ liệu</strong> (master, director): tra cứu, <strong>xuất</strong> hoặc <strong>xóa</strong> dữ liệu cá nhân của một khách khi họ yêu cầu qua email hoặc điện thoại. Mọi bước được ghi nhật ký kiểm toán (<code>dsar.lookup</code>, <code>dsar.export</code>, <code>dsar.delete</code>; từ khóa tìm <strong>không</strong> được lưu).</p>
+  <figure class="shot"><img src="img/go2joy-ops-dsar.vi.jpg" alt="Hình 25. Màn hình Yêu cầu dữ liệu với kết quả tra cứu" loading="lazy"><figcaption>Hình 25. Màn hình Yêu cầu dữ liệu với kết quả tra cứu</figcaption></figure>
+  <p>Quy trình:</p>
+  <ol class="steps">
+    <li><strong>Xác minh danh tính người yêu cầu trước, theo quy trình của Go2Joy.</strong> Màn hình không thể biết người yêu cầu có đúng là chủ dữ liệu hay không (<em>Hãy xác minh danh tính người yêu cầu trước…</em>).</li>
+    <li>Chọn <strong>Tìm theo</strong>: <strong>Địa chỉ email</strong>, <strong>Số điện thoại</strong> hoặc <strong>ID bên ngoài</strong>; nhập ít nhất 3 ký tự; có thể nhập <strong>Mã tham chiếu yêu cầu</strong> (mã phiếu hoặc email) để truy ngược về yêu cầu gốc. Bấm <strong>Tìm kiếm</strong>.</li>
+    <li>Kết quả (<strong>Kết quả khớp</strong>) hiện thông tin liên hệ <strong>bị che</strong>. Tìm theo <strong>email</strong> và <strong>ID bên ngoài</strong> là khớp chính xác; tìm theo <strong>số điện thoại</strong> (ít nhất 6 chữ số) phải quét từng hồ sơ nên chỉ quét tối đa 20.000 khách có số điện thoại, <strong>từ khách cũ nhất</strong>, và khách mới hơn có thể không được quét. Nếu thông báo <em>Có nhiều khách hàng khớp hơn số đang hiển thị, hoặc tìm theo số điện thoại đã dừng sớm</em> thì hãy thu hẹp điều kiện.</li>
+    <li><strong>Xuất dữ liệu</strong>: tải về tệp đầy đủ hồ sơ của khách (có chứa thông tin không che; xử lý tệp như dữ liệu nhạy cảm).</li>
+    <li><strong>Xóa</strong>: hộp thoại <strong>Xóa dữ liệu của khách hàng này?</strong>: khách và các tin nhắn trò chuyện của họ bị <strong>ẩn danh vĩnh viễn, không hoàn tác</strong>: tên, email, số điện thoại, ID bên ngoài bị gỡ; tin nhắn và tệp đính kèm bị che hoặc xóa; danh tính được ghi nhớ để lần đồng bộ sau không tạo lại hồ sơ. Phải <strong>nhập đúng ID khách hàng</strong> rồi bấm <strong>Xóa dữ liệu</strong>.</li>
+    <li><strong>Ghi chú về khoá pháp lý (legal hold)</strong>: hộp thoại nhắc <em>Hãy kiểm tra xem có yêu cầu lưu giữ theo pháp luật hoặc yêu cầu đang chờ từ cơ quan chức năng hay không trước khi tiếp tục.</em> Sản phẩm <strong>chưa có cờ "giữ lại theo pháp luật" cho từng khách</strong>; việc kiểm tra này là thủ tục của người xử lý. Nếu có hold, <strong>không xóa</strong>.</li>
+    <li>Ghi vào <strong>sổ DSAR ngoài hệ thống</strong> của Go2Joy (ngày nhận, người yêu cầu, ngày xử lý, ai xử lý). Khôi phục bản sao lưu sẽ hoàn tác cả việc xóa, nên sau mỗi lần khôi phục cần xử lý lại các yêu cầu đã hoàn tất sau ngày của bản sao lưu (RUNBOOK §11).</li>
+  </ol>
+  <figure class="shot"><img src="img/go2joy-ops-dsar-erase.vi.jpg" alt="Hình 26. Hộp thoại Xóa dữ liệu của khách hàng này? (chỉ nút Xóa dữ liệu sau khi nhập đúng ID mới bật; ảnh dừng ở bước nhập ID)" loading="lazy"><figcaption>Hình 26. Hộp thoại Xóa dữ liệu của khách hàng này? (chỉ nút Xóa dữ liệu sau khi nhập đúng ID mới bật; ảnh dừng ở bước nhập ID)</figcaption></figure>
+</section>
+
+<section id="ch9">
+  <div class="ch"><span class="num">09</span><h2>Thống kê thí điểm</h2></div>
+  <p><em>(Dành cho: manager trở lên xem; master, director xuất CSV. Menu <strong>Thống kê</strong> → tab <strong>Thí điểm</strong>)</em></p>
+  <p>Tab <strong>Thí điểm</strong> trả lời câu hỏi "trợ lý hoạt động ra sao theo từng khách sạn và vai trò trong đợt thí điểm". Chọn khoảng ngày bằng bộ chọn phía trên (mặc định 30 ngày; tối đa <strong>92 ngày mỗi lần xem</strong>, dài hơn thì trang báo <em>Chế độ xem thí điểm chỉ đọc tối đa N ngày mỗi lần…</em> chứ không cắt ngầm). <strong>Nhóm theo</strong>: <strong>Khách sạn</strong>, <strong>Vai trò</strong> hoặc <strong>Ngày</strong> (ngày tính theo múi giờ của gian hàng; hội thoại tính vào ngày bắt đầu). Số liệu được tính trực tiếp từ nhật ký hội thoại, nên <strong>chỉ truy được đến giới hạn lưu giữ của nhật ký</strong> (dòng ghi chú xám phía trên bảng: <em>Tính trực tiếp từ nhật ký hội thoại, nên chỉ truy được đến giới hạn lưu trữ của nhật ký.</em>).</p>
+  <figure class="shot"><img src="img/go2joy-ops-stats-pilot.vi.jpg" alt="Hình 27. Thống kê, tab Thí điểm" loading="lazy"><figcaption>Hình 27. Thống kê, tab Thí điểm</figcaption></figure>
+  <h3>9.1 Đọc bảng kết quả</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Cột</th><th>Ý nghĩa</th></tr>
+    <tr><td><strong>Hội thoại</strong></td><td>Số hội thoại trong nhóm</td></tr>
+    <tr><td><strong>AI tự xử lý</strong></td><td>Tỉ lệ (và số) hội thoại <strong>không có ai trong nhóm tham gia</strong> (không chuyển người, không có tin của nhân viên) <strong>và</strong> trợ lý đã đưa ra ít nhất một câu trả lời <strong>có căn cứ</strong> (màn hình ghi "trong kho tri thức"; thực tế hệ thống đếm mọi câu trả lời của AI có điểm tin cậy, kể cả câu dựa trên dữ liệu đối tác hoặc câu phát lại từ kho câu trả lời đã lưu)</td></tr>
+    <tr><td><strong>Chuyển cho nhân viên</strong></td><td>Hội thoại đã được chuyển tiếp, hoặc nhân viên đã nhắn, hoặc thông báo chuyển người đã hiện ra; kèm hai lý do hàng đầu (mỗi lý do tính một lần mỗi hội thoại)</td></tr>
+    <tr><td><strong>Từ chối / chưa trả lời</strong></td><td>Hai số: <strong>từ chối</strong> (chỉ hiện thông báo yêu cầu đăng nhập hoặc không đủ quyền) và <strong>chưa trả lời</strong> (chưa có câu nào có căn cứ: xã giao hoặc đang chờ)</td></tr>
+    <tr><td><strong>Độ tin cậy TB</strong>, <strong>Không có nguồn</strong></td><td>Tính theo từng câu trả lời; "không có nguồn" là câu không dẫn tài liệu nào</td></tr>
+    <tr><td><strong>CSAT</strong></td><td>Điểm trung bình (số lượt đánh giá)</td></tr>
+  </table></div>
+  <p>Bốn kết quả <strong>AI tự xử lý + Chuyển cho nhân viên + Từ chối + Chưa trả lời</strong> cộng lại bằng tổng số hội thoại. <strong>"AI tự xử lý" không phải tỉ lệ "đã giải quyết" của tab Kết quả</strong>, vì tab đó còn tính cả hội thoại do nhân viên đã đóng. Bảng thứ hai có <strong>Lần yêu cầu đăng nhập</strong>, <strong>Từ chối khác</strong>, <strong>Kiểm duyệt (chặn / chỉnh sửa)</strong>, <strong>Tra cứu đối tác (ổn / từ chối / lỗi)</strong>, <strong>Người dùng</strong> (đã đăng nhập và phiên khách) và <strong>Thời gian trả lời P50 / P95</strong>. Mục <strong>Cách đọc các số liệu này</strong> ở cuối trang nhắc lại các định nghĩa.</p>
+  <h3>9.2 Khách sạn "im lặng"</h3>
+  <p>Thẻ <strong>Khách sạn</strong> ở đầu tab:</p>
+  <ul>
+    <li><strong>Đã hoạt động X / danh sách thí điểm Y</strong>: X là số khách sạn <strong>trong danh sách</strong> đã có hội thoại trong khoảng ngày; Y chỉ đếm khách sạn <strong>đang bật</strong> (khách sạn tạm dừng không tính, nên nếu nó vẫn chat sẽ hiện trong dòng "ngoài danh sách").</li>
+    <li><strong>Khách sạn ngoài danh sách cũng đã chat: N</strong> (nếu có).</li>
+    <li><strong>Có trong danh sách nhưng chưa chat: N</strong> và liên kết <strong>Xem các khách sạn này</strong> hiện danh sách số serial (<strong>và N khách sạn nữa</strong> nếu nhiều).</li>
+  </ul>
+  <p>"Im lặng" nghĩa là <strong>không có hội thoại nào</strong> trong khoảng ngày được chọn; một khách sạn đã đăng nhập Hotel Admin nhưng không mở chat cũng tính là im lặng. Nếu danh sách thí điểm đang tắt, thẻ ghi <em>Danh sách thí điểm đang tắt nên mọi khách sạn đều được phục vụ…</em>.</p>
+  <h3>9.3 Những gì không đếm được</h3>
+  <p>Lượt bị từ chối do <strong>chưa đồng ý quyền riêng tư</strong> hoặc <strong>khách sạn ngoài thí điểm</strong> không được lưu nên <strong>không có số đếm</strong>; trang ghi chú dòng <em>Không được ghi lại (không lưu nên không có số đếm): …</em> thay vì in số 0. Thời gian trả lời P50/P95 chỉ tính các lượt AI trả lời, không tính lượt từ chối hay chuyển người.</p>
+  <h3>9.4 Xuất CSV để chấm tay</h3>
+  <p>Nút <strong>Xuất hội thoại (CSV)</strong> (chỉ <strong>master, director</strong>): mỗi hội thoại một dòng, kèm nội dung trao đổi đã che thông tin cá nhân, để chấm câu trả lời bằng tay. Các cột theo thứ tự: <code>conversation_id, started_at, hotel_sn, role, ai_agent_id, language, outcome, handoff_reason, refusals, csat, message_count, avg_confidence, transcript</code>.</p>
+  <ul>
+    <li><code>outcome</code> là một trong <code>ai_only</code>, <code>handoff</code>, <code>refused</code>, <code>no_answer</code> (đúng bốn kết quả ở §9.1).</li>
+    <li>Tệp UTF-8 có BOM (mở được bằng Excel với tiếng Việt), tối đa <strong>5.000 hội thoại</strong> mỗi lần; quá thì có thông báo và bạn thu hẹp khoảng ngày để lấy phần còn lại.</li>
+    <li>Mỗi lần xuất được ghi nhật ký kiểm toán (chỉ số lượng và khoảng ngày, không ghi nội dung).</li>
+    <li>Tệp chứa nội dung hội thoại: gửi và lưu theo quy định dữ liệu của Go2Joy.</li>
+  </ul>
+</section>
+
+<section id="ch10">
+  <div class="ch"><span class="num">10</span><h2>Xử lý sự cố</h2></div>
+  <p><em>(Dành cho: nhân viên CS và SA, và người phụ trách vận hành)</em></p>
+  <h3>10.1 AI gián đoạn</h3>
+  <p><strong>Khách thấy</strong>: khi động cơ AI không trả lời được (lỗi, quá tải, ngắt mạch tự động sau nhiều lần lỗi), khách nhận thông báo riêng, không phải câu "không tìm được đáp án" như trước:</p>
+  <p><em>Trợ lý tự động hiện đang tạm thời gián đoạn nên tôi chưa thể trả lời ngay. Tôi đã chuyển câu hỏi của bạn cho đội hỗ trợ — chúng tôi sẽ xác nhận lại với bạn trong giây lát và sẽ có nhân viên hỗ trợ bạn ngay tại đây.</em></p>
+  <p>Hội thoại <strong>tự chuyển cho nhân viên</strong>. Nếu lỗi xảy ra lúc gửi tin, widget báo <em>Rất tiếc, tin nhắn chưa gửi được. Vui lòng thử lại.</em> và cho thử lại hoặc gặp nhân viên.</p>
+  <p><strong>Nhân viên thấy</strong>: hộp thoại báo với lý do <strong>Công cụ AI tạm thời không hoạt động nên không trả lời được. Cần nhân viên tiếp nhận.</strong> Bạn nhận và trả lời trực tiếp. Trong <strong>Thống kê › Thí điểm</strong>, lý do là <strong>Sự cố hệ thống AI</strong>.</p>
+  <p><strong>Khi chỉ phần tìm kiếm vector gián đoạn</strong>: trợ lý vẫn trả lời bằng tìm kiếm từ khóa nếu câu hỏi có căn cứ rõ trong tài liệu (độ tin cậy bị giới hạn ở mức thấp hơn), nếu không thì chuyển người. Tình trạng này chỉ ghi trong vết truy xuất của câu trả lời; <strong>Thống kê chưa có dòng riêng</strong> cho trường hợp này.</p>
+  <p><strong>Cần làm</strong>: nhận các hội thoại bị chuyển, báo cho đầu mối vận hành (§10.3 và danh bạ), ghi lại giờ bắt đầu và kết thúc sự cố. Nếu IT đã cài kênh cảnh báo vận hành (email hoặc webhook), cảnh báo đi theo kênh đó. Hệ thống tự thử lại và tự phục hồi sau khi dịch vụ AI trở lại (đã thử cục bộ với nhà cung cấp AI giả, chưa thử với Anthropic hay Voyage thật).</p>
+  <h3>10.2 Kiểm duyệt chặn</h3>
+  <ul>
+    <li><strong>Câu trả lời của AI bị chặn</strong>: hội thoại chuyển cho nhân viên, lý do <strong>Câu trả lời của AI bị kiểm duyệt chặn.</strong></li>
+    <li><strong>Tin nhắn của bạn bị chặn khi gửi</strong>: console hiện <strong>Tin nhắn bị kiểm duyệt chặn.</strong> và <strong>giữ nguyên chữ bạn vừa gõ</strong> trong ô soạn để bạn sửa. Nếu bạn nghĩ chặn nhầm, báo cho người quản lý cài đặt AI (quy tắc ở <strong>Cài đặt AI</strong> → <strong>Quy tắc kiểm duyệt</strong>); không tìm cách lách qua.</li>
+    <li>Hệ thống an toàn theo hướng chặn: nếu bộ kiểm duyệt gặp lỗi, nội dung bị giữ lại chứ không đi ra, và hội thoại chuyển cho nhân viên với lý do <strong>Công cụ AI tạm thời không hoạt động…</strong> (tính vào <strong>Sự cố hệ thống AI</strong>), không phải lý do kiểm duyệt.</li>
+  </ul>
+  <h3>10.3 Nghi ngờ lộ dữ liệu</h3>
+  <p>Ví dụ: hội thoại cho thấy dữ liệu của khách sạn khác; trả lời nhầm cho người khác; gửi nhầm tệp CSV hoặc bản xuất DSAR; nội dung <strong>Chỉ Quản lý</strong> xuất hiện với lễ tân.</p>
+  <ol class="steps">
+    <li><strong>Dừng ngay</strong>: không chuyển tiếp, không sao chép, không xóa gì.</li>
+    <li>Ghi lại <strong>giờ phát hiện</strong>, mã hội thoại, mã khách sạn (<code>hotelSn</code>) và điều bạn thấy.</li>
+    <li>Báo ngay cho <strong>người chỉ huy sự cố</strong> của Go2Joy theo danh bạ dưới đây. Đồng hồ <strong>72 giờ</strong> của việc thông báo cơ quan chuyên trách (Cục A05, Bộ Công an theo Nghị định 13/2023/NĐ-CP) tính <strong>từ lúc phát hiện</strong>; điều khoản, biểu mẫu và kênh nộp do <strong>pháp chế Go2Joy xác nhận</strong>, sổ tay này không thay thế tư vấn pháp lý.</li>
+    <li>Chi tiết xử lý kỹ thuật và quy trình đầy đủ: <code>docs/guide/INCIDENT-RESPONSE.md</code> (thang SEV1–SEV3, cách ly, bằng chứng, thông báo) và <code>docs/guide/RUNBOOK-261013-Go2Joy-SelfHosted.md</code> mục 10 (sự cố khả dụng và dữ liệu cá nhân) và mục 10.4 (danh bạ).</li>
+  </ol>
+  <div class="tablewrap"><table>
+    <tr><th>Vai trò</th><th>Họ tên</th><th>Điện thoại / email</th></tr>
+    <tr><td>Chỉ huy sự cố Go2Joy</td><td>〔cần chỉ định〕</td><td></td></tr>
+    <tr><td>DPO / pháp chế Go2Joy (thông báo A05)</td><td>〔cần chỉ định〕</td><td></td></tr>
+    <tr><td>Hạ tầng trực của Go2Joy</td><td>〔cần chỉ định〕</td><td></td></tr>
+    <tr><td>Đầu mối hỗ trợ của Amoeba</td><td>〔cần chỉ định〕</td><td></td></tr>
+  </table></div>
+  <div class="callout warn"><span class="c-label">⚠️ Lưu ý</span>
+    <p>các ô trên đang để trống có chủ ý. <strong>Cho tới khi Go2Joy điền, quy trình chưa thể bảo đảm kịp thời hạn 72 giờ</strong>; đây là mục bắt buộc trong checklist trước go-live (phụ lục B).</p></div>
+  <h3>10.4 Bảng khắc phục nhanh</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Hiện tượng</th><th>Nguyên nhân thường gặp</th><th>Cách xử lý</th></tr>
+    <tr><td>Hàng chờ có hội thoại "chưa ai nhận"</td><td>Không ai online đúng nhãn, đúng vùng</td><td>§1.3; sau 5 phút hệ thống phát chung</td></tr>
+    <tr><td>Hàng chờ "thiếu" hội thoại so với chip</td><td>Bộ lọc <strong>Vùng của tôi</strong> hoặc chip đội đang bật</td><td>Chọn <strong>Tất cả vùng</strong>, bỏ chọn chip (§3.7)</td></tr>
+    <tr><td>Bấm <strong>Nhận</strong> không có gì xảy ra</td><td>Đang giữ đủ 3 hội thoại</td><td>Kết thúc hoặc trả lại bớt một hội thoại (§3.9)</td></tr>
+    <tr><td>Thấy <strong>?</strong> cam</td><td>Tỉnh chưa có trong bảng vùng</td><td>Báo master thêm tên tỉnh (§2.4, §6.4)</td></tr>
+    <tr><td>Thấy <strong>hết hạn</strong></td><td>Chữ ký quá 8 giờ</td><td>Nhờ người dùng tải lại hoặc đăng nhập lại Hotel Admin (§2.3)</td></tr>
+    <tr><td>Không thấy nút <strong>Chuyển sang…</strong></td><td>Gian hàng chưa bật câu hỏi đội</td><td>Nhờ master (§6.3)</td></tr>
+    <tr><td>Không thấy menu <strong>Cài đặt gian hàng</strong></td><td>Cấp bậc staff/manager không có quyền</td><td>Nhờ master/director</td></tr>
+    <tr><td>Trang <strong>Tổng quan</strong> toàn số 0</td><td>Cấp bậc staff không có quyền xem các số liệu đó (lỗi bị bỏ qua, không hiện thông báo)</td><td>Bình thường; làm việc ở <strong>Trò chuyện trực tiếp</strong>, đừng coi các số 0 là hệ thống không có hội thoại</td></tr>
+    <tr><td>Hội thoại ngoài giờ không thấy ai nhắc</td><td>Bình thường: ngoài giờ không nhắc</td><td>Kiểm tra hộp thư và hàng chờ đầu ca (§4.4)</td></tr>
+    <tr><td>Nút <strong>Xuất hội thoại (CSV)</strong> mờ hoặc không thấy</td><td>Khoảng ngày quá 92 ngày (nút mờ kèm cảnh báo) hoặc tài khoản không phải master/director (nút ẩn)</td><td>Thu hẹp khoảng ngày; nhờ master/director xuất</td></tr>
+  </table></div>
+</section>
+
+<section id="ch11">
+  <div class="ch"><span class="num">11</span><h2>Bộ tài liệu đào tạo</h2></div>
+  <p>Dành cho buổi đào tạo CS và SA (khoảng 2 giờ) trên môi trường thử nghiệm: 10 bài tập thực hành, một bảng tóm tắt một trang, bảng thuật ngữ và một bài kiểm tra ngắn.</p>
+  <h3>11.1 Mười bài tập thực hành</h3>
+  <p>Mỗi bài có <strong>Chuẩn bị</strong>, <strong>Cách làm</strong> và <strong>Kết quả mong đợi</strong>. Người hướng dẫn tạo sẵn các hội thoại mẫu (khách sạn "(demo)").</p>
+  <p><strong>Bài 1. Bắt đầu ca trực.</strong> Chuẩn bị: tài khoản CS có khu vực <strong>Miền Nam</strong>. Cách làm: đăng nhập, mở <strong>Trò chuyện trực tiếp</strong>, bật <strong>Đang trực</strong>, mở <strong>Người dùng &amp; nhãn</strong> bằng tài khoản master và xem cột <strong>Trực</strong>. Kết quả: thông báo <em>Bạn đã bật trực…</em>, cột <strong>Trực</strong> hiện <strong>Đang trực · thấy vài giây trước</strong> (xanh). Đóng tab trên 90 giây, cột chuyển <strong>Đang trực · không kết nối</strong> (vàng).</p>
+  <p><strong>Bài 2. Khách ở Đà Nẵng xin hỗ trợ kinh doanh: ai được báo, bạn thấy gì?</strong> Chuẩn bị: bảng vùng đã nạp bộ tỉnh Việt Nam; hai người dùng SA (một <strong>Miền Nam</strong> đang trực, một <strong>Miền Bắc</strong> đang trực); một quản lý của khách sạn ở Đà Nẵng đã ký. Cách làm: quản lý bấm <strong>Gặp nhân viên hỗ trợ</strong>, chọn <strong>Hỗ trợ kinh doanh</strong>. Kết quả: Đà Nẵng thuộc <strong>Nam Trung Bộ</strong> nên đội phụ trách là <strong>Đội Nam</strong>; <strong>chỉ SA Miền Nam</strong> nhận hộp thoại báo (SA Miền Bắc <strong>không</strong> được chọn). Hộp thoại hiện <strong>Đội: Kinh doanh</strong>, <strong>Vùng: Nam</strong>, <strong>Khách sạn: &lt;tên&gt; (&lt;mã&gt;) · manager</strong>. Trong danh sách thấy huy hiệu <strong>Kinh doanh</strong>, <strong>Nam</strong>, và <strong>Chờ</strong> đang đếm. Bấm <strong>Nhận</strong> để nhận.</p>
+  <p><strong>Bài 3. Chuyển lại hội thoại chọn nhầm đội.</strong> Chuẩn bị: một hội thoại khách đã chọn <strong>Hỗ trợ khách hàng</strong> nhưng hỏi về điều khoản hợp đồng. Cách làm: nhận hội thoại, bấm <strong>Chuyển sang…</strong>, chọn <strong>Hỗ trợ kinh doanh</strong>, để vùng <strong>Giữ vùng hiện tại</strong>, bấm <strong>Chuyển</strong>. Kết quả: thông báo <em>Đã chuyển sang Hỗ trợ kinh doanh. Tất cả người có thể nhận đã được báo.</em> (xem §3.6 về lý do câu này hiện ngay cả khi chỉ một người được báo); hội thoại về <strong>Đang chờ</strong> của đội Kinh doanh, mất <strong>Phụ trách</strong>, đồng hồ <strong>Chờ</strong> về 00:00; thẻ <strong>Ghi chú</strong> có ghi chú nội bộ (sau khi tải lại trang); khách không nhận thông báo nào.</p>
+  <p><strong>Bài 4. Lễ tân hỏi về đổi tài khoản ngân hàng.</strong> Chuẩn bị: danh mục <strong>Đối soát &amp; tài khoản ngân hàng</strong> ở mức <strong>Chỉ Quản lý</strong>; một phiên lễ tân đã ký. Cách làm: lễ tân hỏi "Tôi muốn đổi tài khoản ngân hàng nhận tiền đối soát". Kết quả: lễ tân nhận câu <em>Nội dung này chỉ được cung cấp cho tài khoản Quản lý của khách sạn…</em> kèm chip <strong>Gặp nhân viên hỗ trợ</strong>; <strong>không</strong> có hộp thoại báo nào cho CS cho tới khi lễ tân bấm chip. Lặp lại với phiên quản lý: quản lý nhận câu trả lời nội dung. Giải thích: khác nhau vì mức <strong>Ai được xem</strong>. Lưu ý cho người hướng dẫn: kết quả phụ thuộc độ khớp của tìm kiếm; với AI giả hoặc tài liệu quá ít, hệ thống có thể chuyển người như thường thay vì trả lời "nhờ Quản lý".</p>
+  <p><strong>Bài 5. Phiên đăng nhập đã ký bị hết hạn.</strong> Chuẩn bị: một hội thoại có dấu <strong>hết hạn</strong> (trên môi trường học, người hướng dẫn chỉnh thời điểm xác minh của phiên mẫu về hơn 8 giờ trước, hoặc tạm đặt thời hạn ở §8.1 là 1 giờ rồi chờ). Cách làm: mở hội thoại, đọc dải đối tác, rồi để khách nhắn tiếp. Kết quả: dải đối tác hiện <strong>hết hạn</strong> thay vì <strong>đã ký</strong>; nếu agent đặt <strong>Chỉ hướng dẫn đăng nhập</strong>, khách nhận lời nhắc đăng nhập; tra cứu dữ liệu đối tác (nếu bật) nhận thông báo <em>…cần phiên đăng nhập còn hiệu lực…</em>. Việc cần làm: nhờ khách đăng nhập lại Hotel Admin, không chia sẻ thông tin nhạy cảm cho tới khi thấy lại dấu <strong>đã ký</strong>.</p>
+  <p><strong>Bài 6. Tìm các khách sạn thí điểm "im lặng".</strong> Chuẩn bị: danh sách thí điểm gồm 6 khách sạn, 4 khách sạn đã chat. Cách làm: <strong>Thống kê → Thí điểm</strong>, chọn khoảng 30 ngày, đọc thẻ <strong>Khách sạn</strong>, bấm <strong>Xem các khách sạn này</strong>. Kết quả: <strong>Đã hoạt động 4 / danh sách thí điểm 6</strong>; dòng <strong>Có trong danh sách nhưng chưa chat: 2</strong> và hai số serial. Câu hỏi thêm: khách sạn nào "ngoài danh sách cũng đã chat"? Nó có bị phục vụ không (chỉ khi công tắc <strong>Chỉ phục vụ các khách sạn trong danh sách</strong> đang tắt).</p>
+  <p><strong>Bài 7. Huy hiệu "?".</strong> Chuẩn bị: khách sạn có tỉnh "Tp Quy Nhơn" (không có trong bảng). Cách làm: mở hội thoại, rê chuột vào <strong>?</strong>, rồi bằng tài khoản master vào <strong>Cài đặt gian hàng → Cơ bản</strong>, dùng <strong>Thử một tỉnh</strong> với "Quy Nhơn". Kết quả: chú thích <em>Chưa xác định vùng — tỉnh "Tp Quy Nhơn" không có trong bảng vùng</em>; ô thử báo <em>Chưa có trong bảng…</em>. Sửa: thêm "Tp Quy Nhơn" vào dòng <strong>Nam Trung Bộ</strong> rồi <strong>Lưu</strong>; hội thoại <strong>mới</strong> của khách sạn này được xếp vào <strong>Đội Nam</strong> (hội thoại cũ giữ nguyên hoặc dùng <strong>Chuyển sang…</strong> để chọn vùng).</p>
+  <p><strong>Bài 8. Ca sáng sau đêm có yêu cầu ngoài giờ.</strong> Chuẩn bị: một hội thoại tạo lúc 22:00 (ngoài giờ), khách đã để email. Cách làm: 08:30 bật <strong>Đang trực</strong>, mở tab <strong>Cần nhân viên</strong>, chọn <strong>Tất cả vùng</strong>, mở hội thoại, <strong>Nhận</strong>, trả lời. Kết quả: hội thoại có dấu chờ lâu; câu trả lời của bạn được gửi tới email khách và trong luồng có ghi chú <em>Phản hồi này đã được gửi tới email của khách hàng.</em>; bạn <strong>Kết thúc</strong> sau khi xong.</p>
+  <p><strong>Bài 9. Khi API dữ liệu đối tác không trả lời.</strong> Chuẩn bị: bật tra cứu dữ liệu đối tác ở chế độ mock và tắt kết nối (người hướng dẫn mô phỏng). Cách làm: quản lý hỏi "giá phòng theo giờ của khách sạn tôi". Kết quả: khách nhận <em>Hiện tôi chưa tra cứu được dữ liệu khách sạn…</em> và hội thoại chuyển cho nhân viên; hộp thoại báo hiện lý do <strong>AI không tìm được câu trả lời trong kho tri thức.</strong>; bạn đọc tin hệ thống cuối để biết nguyên nhân, <strong>không đoán số liệu</strong>, rồi kiểm tra trong hệ thống của Go2Joy.</p>
+  <p><strong>Bài 10. Yêu cầu xóa dữ liệu của một khách.</strong> Chuẩn bị: một khách mẫu có email <code>khach.demo@go2joy.example</code>; quy trình xác minh danh tính (bước giả định đã xong). Cách làm: master <strong>Cài đặt gian hàng → Yêu cầu dữ liệu</strong>, <strong>Tìm theo Địa chỉ email</strong>, gõ email, <strong>Tìm kiếm</strong>, bấm <strong>Xuất dữ liệu</strong> (kiểm tra tệp), rồi bấm <strong>Xóa</strong>, đọc hộp thoại, <strong>dừng ở bước nhập ID</strong> (không xóa trên môi trường học). Kết quả: bảng kết quả chỉ hiện thông tin đã che; hộp thoại liệt kê ba tác động, nhắc kiểm tra khoá pháp lý và đòi nhập đúng ID; nút <strong>Xóa dữ liệu</strong> chỉ bật khi ID khớp.</p>
+  <h3>11.2 Bảng tóm tắt một trang cho nhân viên</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Tình huống</th><th>Làm gì</th><th>Ở đâu</th></tr>
+    <tr><td>Vào ca</td><td>Bật <strong>Đang trực</strong>, mở console, giữ tab mở</td><td>Đầu trang <strong>Trò chuyện trực tiếp</strong></td></tr>
+    <tr><td>Có hộp thoại <strong>Chuyển tiếp hội thoại</strong></td><td><strong>Mở hội thoại</strong> rồi <strong>Nhận</strong>; <strong>Bỏ qua</strong> chỉ là đã xem</td><td>Hộp thoại báo</td></tr>
+    <tr><td>Muốn thấy mọi hội thoại</td><td>Đặt <strong>Lọc theo vùng</strong> = <strong>Tất cả vùng</strong>, bỏ chip đội</td><td>Trên danh sách</td></tr>
+    <tr><td>Chờ quá 5 phút</td><td>Huy hiệu <strong>Chờ</strong> đỏ, hệ thống nhắc lại Slack/email tối đa 3 lần</td><td>Danh sách, dòng <strong>chưa ai nhận</strong></td></tr>
+    <tr><td>Khách chọn nhầm đội</td><td><strong>Chuyển sang…</strong> → chọn đội → <strong>Chuyển</strong></td><td>Hàng nút của hội thoại</td></tr>
+    <tr><td>Thấy <strong>tự khai</strong></td><td>Xác minh qua kênh khác trước khi xử lý</td><td>Dải đối tác</td></tr>
+    <tr><td>Thấy <strong>hết hạn</strong></td><td>Coi như chưa đăng nhập; nhờ đăng nhập lại Hotel Admin</td><td>Dải đối tác</td></tr>
+    <tr><td>Thấy <strong>?</strong></td><td>Báo master thêm tên tỉnh</td><td>Huy hiệu cam</td></tr>
+    <tr><td>Ngoài giờ</td><td>Không bị gọi dậy; đầu ca xử lý hộp thư và hàng chờ</td><td>Email ngoài giờ, tab <strong>Cần nhân viên</strong></td></tr>
+    <tr><td>AI gián đoạn</td><td>Nhận hội thoại, trả lời trực tiếp, báo vận hành</td><td>Lý do <strong>Công cụ AI tạm thời không hoạt động…</strong></td></tr>
+    <tr><td>API dữ liệu đối tác lỗi</td><td>Không đoán số liệu, kiểm tra trong hệ thống Go2Joy</td><td>Tin hệ thống cuối trong hội thoại</td></tr>
+    <tr><td>Nghi lộ dữ liệu</td><td>Dừng, ghi giờ phát hiện, báo chỉ huy sự cố; đồng hồ 72 giờ</td><td>§10.3</td></tr>
+    <tr><td>Hết ca</td><td>Tắt <strong>Đang trực</strong>, <strong>Kết thúc</strong> hoặc bàn giao hội thoại đang giữ</td><td>Công tắc trực</td></tr>
+  </table></div>
+  <h3>11.3 Bảng thuật ngữ Việt - Anh (theo giao diện)</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Tiếng Việt trên giao diện</th><th>Tiếng Anh trên giao diện</th><th>Ghi chú</th></tr>
+    <tr><td>Trò chuyện trực tiếp</td><td>Live Chat</td><td>Trang chính của CS/SA</td></tr>
+    <tr><td>Đang trực / Không trực</td><td>On duty / Off duty</td><td>Công tắc hiện diện</td></tr>
+    <tr><td>Chuyển tiếp hội thoại</td><td>Chat escalation</td><td>Hộp thoại báo (alarm)</td></tr>
+    <tr><td>Mở hội thoại / Bỏ qua</td><td>Open chat / Dismiss</td><td>Nút của hộp thoại báo</td></tr>
+    <tr><td>Nhận</td><td>Accept</td><td>Nhận hội thoại</td></tr>
+    <tr><td>Cần nhân viên</td><td>Needs agent</td><td>Tab hàng chờ (đang chờ hoặc có nhân viên xử lý)</td></tr>
+    <tr><td>Chuyển sang…</td><td>Hand over to…</td><td>Chuyển đội/vùng</td></tr>
+    <tr><td>Trả lại cho AI</td><td>Hand back to AI</td><td>Bỏ giữ mà không kết thúc</td></tr>
+    <tr><td>Hỗ trợ khách hàng / Kinh doanh</td><td>Customer Service / Business</td><td>Hai đội mặc định (khách thấy "Hỗ trợ kinh doanh")</td></tr>
+    <tr><td>Vùng của tôi</td><td>My region</td><td>Bộ lọc vùng</td></tr>
+    <tr><td>Tỉnh chưa ánh xạ</td><td>Unlisted province</td><td>Tỉnh không có trong bảng vùng</td></tr>
+    <tr><td>đã ký / tự khai / hết hạn</td><td>signed / self-declared / expired</td><td>Độ tin cậy của danh tính</td></tr>
+    <tr><td>Hệ thống chủ</td><td>Host system</td><td>Hotel Admin</td></tr>
+    <tr><td>Quản lý / Lễ tân / Nhân viên nội bộ</td><td>Manager / Receptionist / Internal</td><td>Vai trò đối tác</td></tr>
+    <tr><td>Chuyển cho nhân viên</td><td>Agent handoff</td><td>Thẻ cấu hình chuyển người</td></tr>
+    <tr><td>Hỏi khách chọn đội</td><td>Ask which team (checkbox)</td><td>Câu hỏi đội</td></tr>
+    <tr><td>Chuyển theo vùng của khách sạn</td><td>Route by the hotel's region</td><td>Bảng vùng</td></tr>
+    <tr><td>Nạp bộ tỉnh Việt Nam có sẵn</td><td>Load Vietnam preset</td><td>Điền bảng vùng</td></tr>
+    <tr><td>Thử một tỉnh</td><td>Try a province</td><td>Ô thử tỉnh</td></tr>
+    <tr><td>Nghiêm ngặt</td><td>Strict</td><td>Chế độ vùng nghiêm ngặt</td></tr>
+    <tr><td>Bảng khách sạn → tỉnh</td><td>Hotel → province table</td><td>Tệp CSV</td></tr>
+    <tr><td>Báo lại khi chưa ai nhận cuộc trò chuyện</td><td>Alert again when nobody takes a conversation</td><td>Nhắc UNCLAIMED</td></tr>
+    <tr><td>Giờ làm việc / Email ngoài giờ</td><td>Business hours / Off-hours email</td><td>Ngoài giờ</td></tr>
+    <tr><td>Khách chưa đăng nhập</td><td>Visitors who are not signed in</td><td>Chính sách của AI agent</td></tr>
+    <tr><td>Chỉ hướng dẫn đăng nhập hoặc đăng ký</td><td>Only guide them to sign in or register</td><td>Cổng khách</td></tr>
+    <tr><td>Ai được xem</td><td>Who can read</td><td>Quyền xem danh mục</td></tr>
+    <tr><td>Công khai / Đối tác đã đăng nhập / Chỉ Quản lý</td><td>Public / Signed-in partners / Managers only</td><td>Ba mức quyền</td></tr>
+    <tr><td>Phiên bản giao diện (tham chiếu)</td><td>UI version / Reference UI version</td><td>Phiên bản tài liệu</td></tr>
+    <tr><td>Chân trang liên hệ cho câu trả lời</td><td>Answer contact footer</td><td>Khối liên hệ cuối câu</td></tr>
+    <tr><td>Chính sách đăng nhập có chữ ký (SSO)</td><td>Signed sign-in (SSO) policy</td><td>Hạn tin cậy 8 giờ</td></tr>
+    <tr><td>Phạm vi pilot theo khách sạn</td><td>Pilot scope by hotel</td><td>Danh sách thí điểm</td></tr>
+    <tr><td>Tra cứu dữ liệu đối tác</td><td>Partner data lookup</td><td>Chỉ đọc</td></tr>
+    <tr><td>Thông báo quyền riêng tư</td><td>Privacy Notice</td><td>Hồ sơ vn_pdpl</td></tr>
+    <tr><td>Yêu cầu dữ liệu</td><td>Data requests</td><td>DSAR của vận hành</td></tr>
+    <tr><td>Thí điểm</td><td>Pilot</td><td>Tab thống kê</td></tr>
+    <tr><td>AI tự xử lý</td><td>AI-only resolved</td><td>Không có người tham gia</td></tr>
+  </table></div>
+  <h3>11.4 Bài kiểm tra ngắn (12 câu)</h3>
+  <ol class="steps">
+    <li>Điều kiện để hệ thống coi bạn là "online" khi chọn người nhận? </li>
+    <li>Bấm <strong>Bỏ qua</strong> trên hộp thoại báo có nghĩa là gì?</li>
+    <li>Ba tình huống khiến hàng chờ có hội thoại "chưa ai nhận" dù mọi người đang ở bàn làm việc?</li>
+    <li>Một khách sạn ở Huế và một khách sạn ở Đà Nẵng cùng xin hỗ trợ kinh doanh. Mỗi nơi thuộc đội nào?</li>
+    <li>Dấu <strong>tự khai</strong> khác <strong>đã ký</strong> ở điểm nào? Điều gì <strong>không</strong> dùng thông tin tự khai?</li>
+    <li>Chữ ký hết hạn sau bao lâu theo mặc định, và ai đổi được?</li>
+    <li>Ai được dùng <strong>Chuyển sang…</strong>? Khách có biết hội thoại bị chuyển không?</li>
+    <li>Bạn mở console, thấy dòng danh sách khá ít so với chip <strong>Tất cả đội 14</strong>. Nên kiểm tra điều gì đầu tiên?</li>
+    <li>Lễ tân hỏi về nội dung của Quản lý: họ thấy gì, CS có bị gọi không?</li>
+    <li>"AI tự xử lý" khác gì với tỉ lệ "đã giải quyết" ở tab <strong>Kết quả</strong>?</li>
+    <li>Khách sạn "im lặng" nghĩa là gì và xem ở đâu?</li>
+    <li>Bạn nghi một bản xuất CSV đã gửi nhầm người. Việc đầu tiên, và đồng hồ nào bắt đầu chạy?</li>
+  </ol>
+  <p><strong>Đáp án</strong></p>
+  <ol class="steps">
+    <li>Công tắc <strong>Đang trực</strong> bật <strong>và</strong> console gửi tín hiệu trong 90 giây gần nhất (§1.2).</li>
+    <li>Chỉ xác nhận đã xem và đóng thông báo cho mọi đồng nghiệp; không nhận hội thoại. Hội thoại vẫn <strong>Đang chờ</strong> và hệ thống tạo thông báo mới sau 5 phút nếu chưa ai nhận (§1.4, §3.4).</li>
+    <li>Ví dụ: không ai online có đúng nhãn/vùng; người online đang giữ đủ 3 hội thoại; người trực mất kết nối (<strong>Đang trực · không kết nối</strong>) hoặc tài khoản bị tạm ngưng; vì thế yêu cầu phát chung (§1.3).</li>
+    <li>Huế thuộc <strong>Bắc Trung Bộ</strong> → <strong>Đội Bắc</strong>; Đà Nẵng thuộc <strong>Nam Trung Bộ</strong> → <strong>Đội Nam</strong> (bộ tỉnh có sẵn, §6.4).</li>
+    <li><strong>đã ký</strong>: Hotel Admin ký <code>hotelSn</code> và vai trò (không ký tên khách sạn). <strong>tự khai</strong>: không có chữ ký, hiếm gặp vì máy chủ từ chối đăng nhập thiếu chữ ký. Chọn đội theo vùng và tra cứu dữ liệu đối tác chỉ dùng thông tin <strong>đã ký</strong> (§2.3).</li>
+    <li><strong>8 giờ</strong>; master đổi được (1–720 giờ) ở <strong>Chính sách đăng nhập có chữ ký (SSO)</strong> (§8.1).</li>
+    <li>Bất kỳ nhân viên có nhãn CS/SA, kể cả staff. Khách <strong>không</strong> nhận thông báo (§3.6).</li>
+    <li>Bộ lọc <strong>Vùng của tôi</strong> đang bật; chọn <strong>Tất cả vùng</strong> và kiểm tra chip đội (§3.7).</li>
+    <li>Họ thấy câu <em>Nội dung này chỉ được cung cấp cho tài khoản Quản lý…</em> kèm chip gặp nhân viên; CS <strong>không</strong> bị gọi trừ khi khách bấm chip (§7.2).</li>
+    <li>"AI tự xử lý" đòi hỏi <strong>không có người tham gia và có ít nhất một câu có căn cứ</strong>; tỉ lệ "đã giải quyết" tính cả hội thoại do nhân viên đã đóng (§9.1).</li>
+    <li>Khách sạn <strong>có trong danh sách thí điểm nhưng không có hội thoại</strong> trong khoảng ngày; xem ở thẻ <strong>Khách sạn</strong> của <strong>Thống kê → Thí điểm</strong> (§9.2).</li>
+    <li>Dừng, ghi giờ phát hiện, báo chỉ huy sự cố của Go2Joy; đồng hồ <strong>72 giờ</strong> thông báo cơ quan chuyên trách bắt đầu từ lúc phát hiện (§10.3).</li>
+  </ol>
+</section>
+
+<section id="ch12">
+  <div class="ch"><span class="num">12</span><h2>Phụ lục</h2></div>
+  <h3>Phụ lục A. English summary (for Amoeba)</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Feature</th><th>Where in the console</th><th>Who may use it</th><th>One-line behaviour</th></tr>
+    <tr><td>On duty / Off duty switch</td><td>Live Chat, page header</td><td>Any user with the CS or SA label</td><td>Counts you for routing only while on duty AND the console polled within 90 s; persisted per account</td></tr>
+    <tr><td>Escalation alarm + Accept</td><td>Modal on any page; Live Chat header buttons</td><td>CS / SA (CONVERSATION_HANDLE)</td><td>Directed alert shows only to its addressee; broadcast to everyone; Dismiss only acknowledges</td></tr>
+    <tr><td>Partner context header</td><td>Live Chat, list row and conversation header</td><td>CS / SA</td><td>Role @ hotel (hotelSn) · province with signed / self-declared / expired mark; claims lapse after 8 h</td></tr>
+    <tr><td>Team question</td><td>Widget (customer); Tenant Settings &gt; Basic &gt; Agent handoff</td><td>Customer; master/director configure</td><td>Asks CS or Business after an agent request; choice stored on the conversation</td></tr>
+    <tr><td>Routing ladder</td><td>Automatic</td><td>System</td><td>Label + region + online, then label + nationwide, then configured assignees, then broadcast</td></tr>
+    <tr><td>Unclaimed sweep</td><td>Automatic; Tenant Settings &gt; Basic (Auto/On/Off)</td><td>System; master/director toggle</td><td>After ALERT_UNCLAIMED_MINUTES (5) re-broadcasts and posts UNCLAIMED to Slack/email, max 3 times</td></tr>
+    <tr><td>Hand over to…</td><td>Live Chat conversation header</td><td>CS / SA, staff rank included</td><td>Moves the conversation to another team/region, pages them, internal note + audit, customer not told</td></tr>
+    <tr><td>Queue counters, My region</td><td>Live Chat list</td><td>CS / SA</td><td>Team chips, unclaimed summary, waiting age (red after 5 min); My region hides other and unknown regions</td></tr>
+    <tr><td>Off-hours handling</td><td>Widget; Tenant Settings &gt; Basic hours and mailbox</td><td>Customer; master/director</td><td>Customer asked for an email; summary to off-hours mailbox; agent reply is emailed; no re-alert</td></tr>
+    <tr><td>Users &amp; Labels</td><td>Users &amp; Labels</td><td>Master (default)</td><td>Roles CS/SA/Others, Region North/South/Nationwide, presence column; label names are DB data (default Korean)</td></tr>
+    <tr><td>Agent handoff settings</td><td>Tenant Settings &gt; Basic &gt; Agent handoff</td><td>Master, director (AI_SETTINGS_MANAGE)</td><td>Assignees, hours, mailbox, team table, region table with Load Vietnam preset and Try a province, strict mode, regional mailbox/webhook</td></tr>
+    <tr><td>Hotel → province CSV</td><td>Same card, under the region table</td><td>Master, director</td><td>Preview then replace-all; matched by signed hotelSn only; signed province wins</td></tr>
+    <tr><td>Guest policy</td><td>AI Settings &gt; AI agents &gt; Visitors who are not signed in</td><td>Master, director, manager</td><td>Only guide to sign in; answers only from Public categories; calibration of the gate threshold still open</td></tr>
+    <tr><td>KB category access</td><td>Knowledge &gt; Categories &gt; Who can read</td><td>Master, director</td><td>Public / Signed-in partners / Managers only; receptionist asking a manager topic gets the manager-account line</td></tr>
+    <tr><td>KB UI version stamping</td><td>Knowledge document editor; AI Settings &gt; Reference UI version</td><td>Knowledge managers; manager+ for the reference</td><td>Equality-only match; caveat sentence after moderation or hide; unversioned never flagged; axis (v23.x vs v0.x) undecided</td></tr>
+    <tr><td>"Test as" gate simulator</td><td>Knowledge &gt; Ask the knowledge base</td><td>n/a</td><td>NOT in this build; arrives with the gate simulator (in development)</td></tr>
+    <tr><td>Signed sign-in (SSO) policy</td><td>Tenant Settings &gt; Widget</td><td>Master edits, director views</td><td>Claims max age (default 8 h, 1 to 720) and refuse-v1 switch</td></tr>
+    <tr><td>Pilot scope by hotel</td><td>Tenant Settings &gt; Widget</td><td>Master edits, director views</td><td>Allow-list by signed hotelSn each turn; hide widget or notice; list actions apply immediately</td></tr>
+    <tr><td>Partner data lookup</td><td>Tenant Settings &gt; Other settings</td><td>Master</td><td>Read-only; hotel from signed identity; mock until Go2Joy API (R8/R9) exists; notice + hand-off when down</td></tr>
+    <tr><td>Answer footer</td><td>AI Settings</td><td>Manager+</td><td>Fixed contact block on every KB answer, after moderation</td></tr>
+    <tr><td>Privacy notice (vn_pdpl)</td><td>Tenant Settings &gt; Privacy Notice</td><td>Master, director</td><td>Vietnam profile with server-filled retention/region; changing the version forces re-consent; wording is draft</td></tr>
+    <tr><td>Operator DSAR</td><td>Tenant Settings &gt; Data requests</td><td>Master, director</td><td>Lookup, export, erase (anonymise) with typed-ID confirmation; no per-customer legal-hold flag</td></tr>
+    <tr><td>Statistics &gt; Pilot</td><td>Statistics &gt; Pilot</td><td>Manager+ view; master/director CSV</td><td>AI-only resolved vs handoff vs refused vs no answer; silent hotels; per-conversation CSV for manual grading</td></tr>
+  </table></div>
+  <p>The English edition of this manual (summary, go-live checklist, verification status, open questions) is <a href="go2joy-ops.en.html">go2joy-ops.en.md</a>.</p>
+  <h3>Phụ lục B. Checklist trước go-live (dành cho Go2Joy)</h3>
+  <p><strong>A. Liên hệ và sự cố</strong></p>
+  <ul class="check">
+    <li>Điền danh bạ ở §10.3 (chỉ huy sự cố, DPO/pháp chế, hạ tầng, đầu mối Amoeba) và <code>INCIDENT-RESPONSE.md</code> mục 6, <code>RUNBOOK</code> mục 10.4; xác nhận kênh nộp thông báo cho cơ quan chuyên trách và đồng hồ 72 giờ với pháp chế</li>
+    <li>Chỉ định người xử lý DSAR và lập sổ DSAR ngoài hệ thống (§8.5)</li>
+    <li>Quyết định kênh cảnh báo vận hành (email hoặc webhook) cho IT: sự cố AI, sao lưu, dịch vụ phụ</li>
+  </ul>
+  <p><strong>B. Giờ làm việc và hộp thư</strong></p>
+  <ul class="check">
+    <li>Xác nhận giờ làm việc của CS và của SA (có thể khác nhau), múi giờ <code>Asia/Ho_Chi_Minh</code>, giờ nghỉ, và quy trình đổi giờ cho kỳ nghỉ lễ (hệ thống không có lịch ngày lễ)</li>
+    <li><strong>Email ngoài giờ</strong> là hộp thư nhóm có người xem mỗi sáng; nếu dùng hộp thư riêng theo vùng thì cung cấp địa chỉ Bắc và Nam</li>
+    <li>SMTP (và Slack nếu dùng, kể cả webhook theo vùng) đã cấu hình và thử gửi</li>
+    <li>Câu <strong>Thông báo ngoài giờ gửi cho khách hàng</strong> bằng tiếng Việt do Go2Joy duyệt (hoặc chấp nhận câu mặc định)</li>
+  </ul>
+  <p><strong>C. Nhân sự</strong></p>
+  <ul class="check">
+    <li>Đổi tên nhãn thành <strong>CS</strong> và <strong>SA</strong> qua API (§5.2); xác nhận tên hai nút tiếng Việt khách thấy (<strong>Hỗ trợ khách hàng</strong>, <strong>Hỗ trợ kinh doanh</strong>)</li>
+    <li>Tạo tài khoản, chọn cấp bậc, vai trò, <strong>Khu vực</strong> (Bắc/Nam/Toàn quốc), ghi nhận rằng chưa có chỗ nhập tên hiển thị (thông báo chuyển đội sẽ không nêu tên người nhận, §3.6); mọi người đã đổi mật khẩu tạm; MFA nếu bắt buộc</li>
+    <li>Có ít nhất một CS và một SA cho mỗi vùng trong từng ca; quyết định cách xử lý khi <strong>không có SA</strong> trực</li>
+    <li>Mọi người đã làm bài tập 1–10 (§11.1) và đạt bài kiểm tra (§11.4)</li>
+  </ul>
+  <p><strong>D. Khách sạn và vùng</strong></p>
+  <ul class="check">
+    <li>Danh sách khách sạn thí điểm (số serial) đã nhập; chọn <strong>Ẩn widget</strong> hay <strong>Hiện thông báo</strong>; duyệt câu thông báo tiếng Việt</li>
+    <li>Hotel Admin ký danh tính v2 gồm khách sạn, vai trò và (nếu có) tỉnh; xác nhận khi nào gọi lại <code>identify</code></li>
+    <li>Nếu Hotel Admin không gửi tỉnh: tệp CSV khách sạn → tỉnh đã tải lên</li>
+    <li><strong>Bảng vùng</strong>: đã nạp bộ tỉnh Việt Nam, đối chiếu với cách viết tỉnh thực tế của Hotel Admin (tên cũ, viết tắt); quyết định chế độ mặc định hay <strong>Nghiêm ngặt</strong> và số phút mở rộng</li>
+  </ul>
+  <p><strong>E. Tri thức</strong></p>
+  <ul class="check">
+    <li>Danh mục và <strong>Ai được xem</strong>: liệt kê các chủ đề <strong>Chỉ Quản lý</strong> (ví dụ đối soát, tài khoản ngân hàng) và đặt mức trước khi nạp tài liệu</li>
+    <li>Chọn trục phiên bản giao diện (v23.x hay v0.x), gán phiên bản cho tài liệu, đặt <strong>Phiên bản hiện hành</strong> và chế độ <strong>Thêm lưu ý</strong> hay <strong>Ẩn tài liệu</strong></li>
+    <li>Nhập <strong>Chân trang liên hệ cho câu trả lời</strong> và <strong>Hướng dẫn khách</strong> (URL đăng nhập, URL đăng ký, lời nhắc)</li>
+    <li>Hiệu chỉnh ngưỡng cổng khách với embedding thật <strong>trước</strong> khi bật <strong>Chỉ hướng dẫn đăng nhập hoặc đăng ký</strong></li>
+  </ul>
+  <p><strong>F. Quyền riêng tư và pháp lý</strong></p>
+  <ul class="check">
+    <li>Chọn <code>vn_pdpl</code>, điền dòng <strong>Bên kiểm soát dữ liệu &amp; liên hệ</strong> (không còn <code>[[…]]</code>), luật sư và người bản ngữ đã rà soát toàn bộ văn bản</li>
+    <li>Quyết định thời hạn lưu (hội thoại, hồ sơ khách hàng, nhật ký kiểm toán) và đặt biến môi trường tương ứng</li>
+    <li>Sau khi chốt câu chữ: đổi <strong>Phiên bản thông báo đồng ý</strong> một lần để mọi người đồng ý lại</li>
+    <li>Quyết định và ghi nhận về chuyển dữ liệu ra nước ngoài (AI xử lý ở Hoa Kỳ), hồ sơ đánh giá tác động, hợp đồng với bên xử lý</li>
+  </ul>
+  <p><strong>G. Đăng nhập và dữ liệu đối tác</strong></p>
+  <ul class="check">
+    <li>Chốt thời hạn tin cậy chữ ký (mặc định 8 giờ); quyết định thời điểm bật <strong>Từ chối đăng nhập không có khách sạn và vai trò (v1)</strong></li>
+    <li><strong>Tra cứu dữ liệu đối tác</strong> giữ <strong>tắt</strong> cho tới khi Go2Joy giao API và Amoeba xác nhận chế độ dữ liệu thật</li>
+    <li>Giá trị hiển thị trong thẻ <strong>Liên hệ hỗ trợ</strong> của widget (điện thoại, email, giờ) là của Go2Joy (xem phụ lục C)</li>
+  </ul>
+  <h3>Phụ lục C. Nhãn và hành vi tiếng Việt cần lưu ý (phát hiện khi viết sổ tay)</h3>
+  <div class="tablewrap"><table>
+    <tr><th>#</th><th>Điểm cần lưu ý</th><th>Ghi chú</th></tr>
+    <tr><td>1</td><td>Tên nhãn công việc mặc định bằng tiếng Hàn, console không có màn hình đổi tên</td><td>Đổi qua API trước go-live (§5.2)</td></tr>
+    <tr><td>2</td><td>Cột <strong>Cấp bậc</strong> và trạng thái hiển thị chữ tiếng Anh (<code>master</code>, <code>director</code>, <code>manager</code>, <code>staff</code>, <code>active</code>)</td><td>Chưa dịch trên giao diện</td></tr>
+    <tr><td>3</td><td>Chữ <strong>Nhân viên AI</strong> (AI agent) và <strong>nhân viên</strong> (người) dễ nhầm</td><td>Sổ tay luôn viết "nhân viên AI" cho AI</td></tr>
+    <tr><td>4</td><td>Gợi ý của ô <strong>Khách chưa đăng nhập</strong> vẫn nói "phân loại đánh dấu <strong>Công khai cho khách</strong>", nhưng nhãn hiện tại ở Kho tri thức là <strong>Công khai</strong> (ô <strong>Ai được xem</strong>)</td><td>Chuỗi cũ chưa cập nhật (cả tiếng Anh lẫn tiếng Việt)</td></tr>
+    <tr><td>5</td><td>Chip đội của console ghi <strong>Kinh doanh</strong>, còn khách thấy <strong>Hỗ trợ kinh doanh</strong></td><td>Khác nhau có chủ ý hai chỗ; chỉ có tên cho mã <code>cs</code> và <code>business</code></td></tr>
+    <tr><td>6</td><td>Nhãn vùng ở hội thoại là <strong>Bắc / Nam</strong>, ở Người dùng là <strong>Miền Bắc / Miền Nam</strong></td><td>Nhất quán nội bộ nhưng hai kiểu</td></tr>
+    <tr><td>7</td><td>Hộp thoại báo hiện <strong>AI không tìm được câu trả lời trong kho tri thức.</strong> khi dữ liệu đối tác không tra cứu được</td><td>Chưa có dòng riêng; nguyên nhân ở tin hệ thống cuối</td></tr>
+    <tr><td>8</td><td>Thao tác <strong>Nhận</strong>, <strong>Kết thúc</strong>, <strong>Trả lại cho AI</strong> không có thông báo lỗi; bị từ chối (ví dụ đủ 3 hội thoại) thì im lặng</td><td>Cần bổ sung thông báo</td></tr>
+    <tr><td>9</td><td>Banner đồng ý mặc định trong widget (tiếng Việt) còn nội dung CCPA, Google Analytics, 365 ngày, Hoa Kỳ cho tới khi chọn <code>vn_pdpl</code></td><td>Chọn hồ sơ trước go-live (§8.4)</td></tr>
+    <tr><td>10</td><td>Thẻ <strong>Liên hệ hỗ trợ</strong> trong widget dùng giá trị mặc định của IVY (số <code>1588-0000</code>, email <code>help@ivy.com</code>) và chưa cấu hình được theo gian hàng</td><td>Không bật nút/kịch bản Liên hệ hỗ trợ cho Go2Joy, hoặc nhờ Amoeba thay giá trị</td></tr>
+    <tr><td>11</td><td>Hộp thoại báo hiện vai trò của đối tác bằng mã tiếng Anh (<code>manager</code>, <code>receptionist</code>), trong khi dải đối tác ở hội thoại hiện <strong>Quản lý</strong>, <strong>Lễ tân</strong></td><td>Chưa dịch ở hộp thoại báo</td></tr>
+    <tr><td>12</td><td>Các tab ngôn ngữ trong thẻ <strong>Chuyển cho nhân viên</strong> mở ra ở <strong>KO</strong>, và tab nhóm của <strong>Danh mục</strong> có tên <code>OperationInfo</code> chưa dịch</td><td>Dễ nhập nhầm tiếng Hàn; nên mặc định theo ngôn ngữ giao diện</td></tr>
+    <tr><td>13</td><td><code>RUNBOOK</code> mục 11.1/11.3 vẫn ghi chưa có công cụ DSAR phía vận hành và hai bảng chưa nằm trong cửa sổ lưu giữ</td><td>Đã lỗi thời: công cụ đã có (§8.5) và các bộ dọn tùy chọn đã có</td></tr>
+    <tr><td>14</td><td>Tài khoản người dùng không có tên hiển thị và không có chỗ nhập tên (lời mời không hỏi tên, không có màn hình sửa tên)</td><td>Thông báo chuyển đội nêu tên người nhận không bao giờ hiện; ghi chú chuyển đội hiện "user #N", tác giả "Không rõ"</td></tr>
+    <tr><td>15</td><td>Thông báo lưu thành công của thẻ <strong>Chuyển cho nhân viên</strong> là tiếng Anh <em>AI configuration saved.</em>; một số thông báo thành công khác của Kho tri thức cũng chưa dịch</td><td>Cần dịch; không phải lỗi lưu</td></tr>
+    <tr><td>16</td><td>Đoạn xem trước trong hộp thoại báo là tin cuối của khách, thường là tên đội khi khách vừa chọn chip</td><td>Dễ tưởng là câu hỏi; hãy mở hội thoại</td></tr>
+    <tr><td>17</td><td>Cột <strong>Hạng</strong> ở panel khách bên phải hiện chữ <code>guest</code> và dòng <code>(hotelSn …)</code> ở dải đối tác là chữ tiếng Anh cố định</td><td>Chưa dịch</td></tr>
+    <tr><td>18</td><td>Ô <strong>Chuyển tới vai trò</strong> trong bảng đội dùng tên cố định (<strong>Tư vấn</strong>, <strong>Sales Admin</strong>…), không theo tên nhãn đã đổi</td><td>Dễ nhầm CS với Tư vấn</td></tr>
+    <tr><td>19</td><td>Email và Slack báo chuyển người, nhắc "chưa ai nhận" và thông báo ngoài giờ gửi cho nhân viên bằng tiếng Anh, tiêu đề email dạng <code>[IVY Chat] …</code></td><td>Nhãn thương hiệu IVY còn trong tiêu đề cảnh báo</td></tr>
+  </table></div>
+  <h3>Phụ lục D. Nguồn (truy vết từng chương)</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Chương</th><th>Nguồn</th></tr>
+    <tr><td>1 (trực, hiện diện, hộp thoại báo)</td><td>PLN-261012 §3.3 SG-60; <code>apps/web/src/domain/live-chat/DutyToggle.tsx</code>, <code>EscalationAlarm.tsx</code>; <code>apps/api/src/domain/agent/agent-alert.service.ts</code> (<code>leastLoadedOnline</code>, <code>touchPresence</code>), <code>agent-console.controller.ts</code> (<code>alerts</code>), <code>global/util/presence.util.ts</code>; CONFIG.md §4.2</td></tr>
+    <tr><td>2 (đọc hội thoại, đã ký, hết hạn, "?")</td><td>RPT-261013-s1b-identity-audit §1 (SG-03), RPT-261007-Hotel-Region-Routing §1; <code>PartnerContext.tsx</code>, <code>QueueBadges.tsx</code>, <code>LiveChatPage.tsx</code>; locale <code>livechat.json</code> (<code>partner.*</code>, <code>region.*</code>)</td></tr>
+    <tr><td>3 (đội, thang chọn người, quét, chuyển, vùng, bộ đếm)</td><td>RPT-261007-Handoff-Team-Routing §1; RPT-261007-Hotel-Region-Routing §1; RPT-261013-s3b-Routing-Extras §1, §3; <code>handoff-router.service.ts</code> (<code>teamQuestion</code>, <code>route</code>), <code>agent-alert.service.ts</code> (<code>chooseTarget</code>, <code>pickLabelAgent</code>), <code>unclaimed-sweep.service.ts</code>, <code>unclaimed-plan.util.ts</code>, <code>agent-routing.service.ts</code> (<code>reroute</code>, <code>queueCounts</code>), <code>packages/types/src/common/routing-queue.ts</code>, <code>RerouteControl.tsx</code></td></tr>
+    <tr><td>3.9 (giới hạn 3, Nhận im lặng)</td><td><code>agent.service.ts</code> (<code>accept</code>, <code>upsertProfile</code>), <code>entity/agent-profile.entity.ts</code>, <code>live-chat.hooks.ts</code> (<code>useConversationActions</code>)</td></tr>
+    <tr><td>4 (ngoài giờ)</td><td><code>chat.service.ts</code> (<code>handoff</code>, <code>escalate</code>, <code>saveContactEmail</code>, <code>SYSTEM_MESSAGES</code>), <code>handoff-router.service.ts</code> (<code>route</code>, <code>withinBusinessHours</code>), <code>agent.service.ts</code> (<code>mailReplyIfOffHoursThread</code>, <code>REPLY_EMAIL_COPY</code>); widget <code>i18n/locales/vi.ts</code> (<code>chat.contactEmail</code>)</td></tr>
+    <tr><td>5 (người dùng, nhãn, khu vực)</td><td>RPT-261007 PLN/TCR User-Role-Region; <code>UsersPage.tsx</code>, <code>job-label.controller.ts</code>, <code>tenant.service.ts</code> (<code>DEFAULT_JOB_LABELS</code>), <code>packages/common/src/rbac/permission-matrix.ts</code>, <code>menu-access.ts</code></td></tr>
+    <tr><td>6 (cài đặt chuyển người)</td><td>RPT-261013-s3b §1; RPT-261007-Handoff-Team-Routing; RPT-261007-Hotel-Region-Routing; <code>HandoffSection.tsx</code>, <code>RegionStrictFields.tsx</code>, <code>HotelProvinceCard.tsx</code>, <code>region-vn.ts</code>; CONFIG.md §4.2</td></tr>
+    <tr><td>7.1 (cổng khách)</td><td>PLN-261012 §3.2 SG-51 và §8 (rủi ro hiệu chỉnh); <code>chat.service.ts</code> (<code>guestGated</code>), <code>GuestGuidanceSection.tsx</code></td></tr>
+    <tr><td>7.2 (quyền xem danh mục)</td><td>RPT-261013-w2a-access-tiers §1, §3, §6; <code>CategoryAccessSelect.tsx</code>, <code>kb-category.service.ts</code>, <code>chat.service.ts</code> (<code>managerOnly</code>); locale <code>knowledge.json</code> (<code>categoryAccess*</code>)</td></tr>
+    <tr><td>7.3 (phiên bản giao diện)</td><td>RPT-261013-s2b-KB-UI-Version §1, §4, §8; <code>KbVersionSection.tsx</code>, <code>KbVersionBadge.tsx</code>, <code>packages/types/src/common/kb-version.ts</code></td></tr>
+    <tr><td>7.4, 7.5</td><td><code>KnowledgeQaPanel.tsx</code>, <code>AnswerFooterSection.tsx</code>; RPT-261013-w2a §3 mục 10 (mô phỏng chưa có)</td></tr>
+    <tr><td>8.1</td><td>RPT-261013-s1b §1 (SG-03/04); <code>IdentityPolicyCard.tsx</code>; CONFIG.md §4.2</td></tr>
+    <tr><td>8.2</td><td>RPT-261013-s5d-pilot-flag §1, §6, §7; <code>PilotAccessCard.tsx</code>, <code>pilot.controller.ts</code></td></tr>
+    <tr><td>8.3</td><td>RPT-261013-Partner-Data §1, §6, §7; RPT-261013-w2c-tool-loop; <code>PartnerDataCard.tsx</code>, <code>partner-messages.ts</code>, <code>chat.service.ts</code> (<code>answerWithPartnerNotice</code>); CONFIG.md §4.2</td></tr>
+    <tr><td>8.4, 8.5</td><td>RPT-261013-s5a-Compliance-Embed-NFR §1, §3; GUIDE-261013-Go2Joy-PDPL-Checklist; <code>PrivacyNoticePage.tsx</code>, <code>DsarPage.tsx</code>, <code>operator-dsar.controller.ts</code>; RUNBOOK-261013 §11</td></tr>
+    <tr><td>9</td><td>RPT-261013-w2b-analytics-pilot §1, §4, §6, §8; <code>PilotSection.tsx</code>, <code>analytics-pilot.controller.ts</code></td></tr>
+    <tr><td>10.1</td><td>RPT-261013-Resilience-Observability §1, §3; <code>chat.service.ts</code> (<code>SYSTEM_MESSAGES.engineUnavailable</code>), <code>EscalationAlarm.tsx</code>; GUIDE-261013-Observability-Alerting</td></tr>
+    <tr><td>10.2</td><td><code>LiveChatPage.tsx</code> (<code>onSend</code>), <code>chat.service.ts</code>, <code>moderation.service.ts</code></td></tr>
+    <tr><td>10.3</td><td><code>docs/guide/INCIDENT-RESPONSE.md</code> §3.5, §6; <code>docs/guide/RUNBOOK-261013-Go2Joy-SelfHosted.md</code> mục 10</td></tr>
+    <tr><td>11</td><td>Tổng hợp từ các chương trên; không thêm hành vi mới</td></tr>
+    <tr><td>Ảnh chụp và chạy thử</td><td><code>scripts/manual-screenshots-go2joy-ops.mjs</code> (nạp dữ liệu mẫu và chụp trên cơ sở dữ liệu <code>scratch_w3b</code>); TCR-261013-w3b-ops-manual §4–§5; RPT-261013-w3b-ops-manual §4</td></tr>
+  </table></div>
+  <h3>Phụ lục E. Điều chưa kiểm chứng</h3>
+  <ul>
+    <li>Không có lần chạy nào trên máy chủ thật của Go2Joy hoặc staging; mọi tính năng chỉ chạy cục bộ với AI giả (stub) và dữ liệu mẫu.</li>
+    <li>Slack và email thật chưa được thử cho thông báo UNCLAIMED, ngoài giờ và cảnh báo vận hành. Các thao tác trong chương 1–4 và các màn hình ở chương 5–9 đã được chạy trên môi trường thử cục bộ (hai bộ rà soát độc lập và một lần chạy trình duyệt, xem báo cáo RPT-261013-w3b), nhưng với AI giả.</li>
+    <li>Hành vi "sáng hôm sau người mở console đầu tiên thấy hộp thoại báo cho các yêu cầu ngoài giờ" (§4.3) suy ra từ mã nguồn, chưa chạy thực tế.</li>
+    <li>Hiện diện hoạt động thế nào khi tab chạy nền lâu hoặc máy ngủ trên các trình duyệt cụ thể chưa được đo.</li>
+    <li>API dữ liệu đối tác thật chưa tồn tại: hợp đồng, mã lỗi và chữ ký đều là giả định của Amoeba.</li>
+    <li>Bản dịch tiếng Việt trên giao diện và trong sổ tay cần người bản ngữ ở Go2Joy rà soát.</li>
+  </ul>
+</section>
+
+<div class="next">
+  <strong>Xem thêm →</strong> <a href="knowledge-ai.vi.html">Sổ tay tri thức &amp; AI</a> (đăng ký tri thức, cài đặt AI), <a href="user-manual.vi.html">Sổ tay tổng hợp</a> (toàn bộ màn hình console), <a href="go2joy-ops.en.html">English summary and go-live checklist</a>.
+</div>
+
+</main>
+</div>
+
+</body>
+</html>
