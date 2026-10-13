@@ -110,6 +110,19 @@ export const useRoutingOptions = (language: string, enabled = true) => {
 };
 
 /**
+ * The wording of a team in the console language (w3c, ops-manual finding 7 and the label-consistency
+ * point): what the tenant configured for that team option - the same words the customer's chips and
+ * the Slack/e-mail alert carry - and only when team routing is off or the options have not loaded,
+ * the built-in `team.<id>` locale line (then the raw id). Before this the queue chips, the badges and
+ * the alarm showed the locale line only, so a renamed or extra team rendered as its raw id.
+ */
+export function useTeamLabel(): (id: string) => string {
+  const { t, i18n } = useTranslation('livechat');
+  const { data } = useRoutingOptions(i18n.language);
+  return (id: string) => data?.teams.find((o) => o.id === id)?.label || t(`team.${id}`, { defaultValue: id });
+}
+
+/**
  * Hand the open conversation over to another team/region (PLN-261012 SG-64). The toast says who was
  * asked; the errors the API names by code get their own localised line.
  */
@@ -559,6 +572,7 @@ export function useAskKnowledge() {
 
 /** Send an answer to the knowledge owners for review (PLN-260810 S4). */
 export function useProposeAnswer() {
+  const { t } = useTranslation('livechat');
   return useMutation({
     mutationFn: (v: { conversationId?: number; question: string; answer: string }) =>
       liveChatService.proposeAnswer({
@@ -566,12 +580,22 @@ export function useProposeAnswer() {
         question: v.question,
         answer: v.answer,
       }),
-    onSuccess: () => toast.success('Sent for review'),
+    onSuccess: () => toast.success(t('toast.proposeSent')),
     onError: (err: Error) => toast.error(err.message),
   });
 }
 
+/**
+ * Accept, end, send and hand back.
+ *
+ * Accept, End and Hand back used to have no `onError`: at the concurrency cap the API answers 409
+ * (E5022) and the console said nothing, so the agent clicked again and wondered (w3c, ops-manual
+ * finding 6, reproduced in a browser). Each now names the failure in the console language, as an
+ * error toast that stays until dismissed. `send` reports through its caller (the composer keeps
+ * the draft and distinguishes a moderation block).
+ */
 export function useConversationActions(id: string | null) {
+  const { t } = useTranslation('livechat');
   const qc = useQueryClient();
   const tenantKey = useTenantKey();
   const invalidate = () => {
@@ -582,11 +606,18 @@ export function useConversationActions(id: string | null) {
   const accept = useMutation({
     mutationFn: () => liveChatService.accept(id as string),
     onSuccess: invalidate,
+    onError: (e: Error & { code?: string }) =>
+      toast.error(
+        // E5022: the agent is at max_concurrent. The server's English sentence is not shown.
+        e.code === 'E5022' ? t('actionError.acceptCapacity') : e.message || t('actionError.accept'),
+        { sticky: true },
+      ),
   });
 
   const end = useMutation({
     mutationFn: () => liveChatService.end(id as string),
     onSuccess: invalidate,
+    onError: (e: Error) => toast.error(e.message || t('actionError.end'), { sticky: true }),
   });
 
   const send = useMutation({
@@ -601,6 +632,7 @@ export function useConversationActions(id: string | null) {
   const handBack = useMutation({
     mutationFn: () => liveChatService.handBack(id as string),
     onSuccess: invalidate,
+    onError: (e: Error) => toast.error(e.message || t('actionError.handBack'), { sticky: true }),
   });
 
   return { accept, end, send, handBack };

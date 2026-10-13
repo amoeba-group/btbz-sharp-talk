@@ -142,7 +142,7 @@
     "filterLabel": "Lọc theo đội",
     "filterAll": "Tất cả đội",
     "cs": "Hỗ trợ khách hàng",
-    "business": "Kinh doanh",
+    "business": "Hỗ trợ kinh doanh",
     "badgeTitle": "Đội",
     "unassigned": "Chưa có đội"
   },
@@ -481,5 +481,16 @@
     "errorEnded": "Cuộc trò chuyện đã kết thúc nên không thể chuyển.",
     "errorTarget": "Đội hoặc vùng đó không khả dụng.",
     "errorNotEnabled": "Chưa bật định tuyến theo đội."
-  }
+  },
+  "toast": {
+    "proposeSent": "Đã gửi để xem xét."
+  },
+  "actionError": {
+    "acceptCapacity": "Bạn đang xử lý số cuộc trò chuyện tối đa cùng lúc. Hãy kết thúc hoặc trả lại một cuộc cho AI, rồi nhận lại cuộc này.",
+    "accept": "Không nhận được cuộc trò chuyện.",
+    "end": "Không kết thúc được cuộc trò chuyện.",
+    "handBack": "Không trả được cuộc trò chuyện về cho AI."
+  },
+  "alarmReasonPartnerUnavailable": "Hiện chưa đọc được dữ liệu của đối tác nên AI không đưa được số liệu. Cần nhân viên xác nhận.",
+  "alarmReasonPartnerUnverified": "AI đã giữ lại câu trả lời vì có số liệu không đối chiếu được với dữ liệu khách sạn. Cần nhân viên xác nhận."
 }

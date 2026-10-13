@@ -332,6 +332,8 @@ export class AgentConsoleController {
       query.hotel,
       query.support_type,
       regionFilter,
+      // "My region" keeps the threads the caller holds, even of the other region (w3c, finding 22).
+      query.support_region === 'mine' && regionFilter !== 'all' ? actorIdOf(user) : undefined,
     );
     return new Paginated(
       items.map(

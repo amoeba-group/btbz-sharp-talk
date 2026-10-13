@@ -10,6 +10,7 @@ import {
   waitingSince,
 } from '../../../../../packages/types/src/common/routing-queue';
 import type { QueueCountsView } from './live-chat.service';
+import { useTeamLabel } from './live-chat.hooks';
 
 /**
  * How long a conversation has been waiting for a person (PLN-261012 SG-66): "Waiting 07:42", amber with a
@@ -75,6 +76,7 @@ export function QueueChips({
   onSelect: (team: string) => void;
 }) {
   const { t } = useTranslation('livechat');
+  const teamLabel = useTeamLabel();
   const now = useNow(1000, !!counts && counts.unclaimed > 0);
   const summary = unclaimedSummary(counts, now);
   if (!counts) return null;
@@ -94,7 +96,7 @@ export function QueueChips({
                 : 'border-gray-200 text-gray-500 hover:bg-gray-50',
             )}
           >
-            {chip.id === 'all' ? t('team.filterAll') : t(`team.${chip.id}`, { defaultValue: chip.id })}
+            {chip.id === 'all' ? t('team.filterAll') : teamLabel(chip.id)}
             <span className="ml-1 font-semibold tabular-nums">{chip.count}</span>
           </button>
         ))}

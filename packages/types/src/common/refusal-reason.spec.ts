@@ -104,6 +104,8 @@ describe('buildHandoffTrace', () => {
     ['moderation_blocked', 'moderation'],
     ['policy', 'policy_deny'],
     ['engine_unavailable', 'engine_unavailable'],
+    ['partner_unavailable', 'partner_unavailable'],
+    ['partner_unverified', 'partner_unverified'],
     ['user_request', 'user_request'],
   ])('maps the escalation word %s to the stored reason %s', (escalation, stored) => {
     expect(buildHandoffTrace(escalation, 3)).toEqual({ reason: stored, agentId: 3 });

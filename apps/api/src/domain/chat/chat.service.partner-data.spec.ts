@@ -19,6 +19,7 @@ import { PartnerDataStep } from '../partner-data/partner-data.step';
 import type { PartnerFlagService } from '../partner-data/partner-flag.service';
 import type { PartnerLookupLogService } from '../partner-data/partner-lookup-log.service';
 import { DEFAULT_MOCK_SET } from '../partner-data/fixtures/mock-set-default';
+import { partnerError } from '../partner-data/partner-data.constants';
 
 /**
  * Partner data inside handleUserMessage (PLN-261012 SG-31). A signed-in hotel
@@ -248,13 +249,31 @@ describe('ChatService — partner data', () => {
       // no AI turn with the invented figure was persisted
       expect(aiTurn(b.saved)).toBeUndefined();
       expect(b.saved.map((m) => m.body).join('\n')).not.toContain('480.000');
-      // the notice carries the error on its trace; the escalation event is a normal low-confidence page
+      // the notice carries the error on its trace; the escalation event names the same cause (w3c, ops-manual
+      // finding 5) instead of masquerading as a low-confidence page
       const notice = b.saved.find((m) => m.senderType === 'system');
       expect(traceOf(notice)).toMatchObject({ reason: 'partner_unverified', partnerError: 'E5107' });
-      expect(b.bus.publish).toHaveBeenCalledWith(EVENTS.ESCALATION, expect.objectContaining({ reason: 'low_confidence', conversationId: 77 }));
+      expect(b.bus.publish).toHaveBeenCalledWith(EVENTS.ESCALATION, expect.objectContaining({ reason: 'partner_unverified', conversationId: 77 }));
       expect(b.answerReuse.recordAiAnswer).not.toHaveBeenCalled();
       // and the lookup log says it
       expect(b.record).toHaveBeenCalledWith(expect.objectContaining({ status: 'unverified', errorCode: 'E5107' }));
+    });
+
+    it('a partner API outage pages as partner_unavailable, not as a knowledge-base miss (w3c, ops-manual finding 5)', async () => {
+      jest.spyOn(MockGo2JoyClient.prototype, 'get').mockRejectedValueOnce(partnerError.unavailable('upstream_timeout'));
+      const b = build();
+      const res = await b.svc.handleUserMessage(b.session, 'Giá qua đêm phòng Deluxe hôm nay?');
+
+      expect(res.escalate).toBe(true);
+      expect(res.reply?.senderType).toBe('system');
+      const notice = b.saved.find((m) => m.senderType === 'system');
+      expect(traceOf(notice)).toMatchObject({ reason: 'partner_unavailable', partnerError: 'E5100' });
+      // The alarm, the Slack/e-mail text and the handoff metric read THIS word.
+      expect(b.bus.publish).toHaveBeenCalledWith(
+        EVENTS.ESCALATION,
+        expect.objectContaining({ reason: 'partner_unavailable', conversationId: 77 }),
+      );
+      expect(b.bus.publish).not.toHaveBeenCalledWith(EVENTS.ESCALATION, expect.objectContaining({ reason: 'low_confidence' }));
     });
 
     it('does not page a thread that is already queued — it still tells the customer', async () => {

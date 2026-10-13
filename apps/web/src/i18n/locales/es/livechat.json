@@ -481,5 +481,16 @@
     "errorEnded": "Esta conversación ha terminado y no se puede traspasar.",
     "errorTarget": "Ese equipo o región no está disponible.",
     "errorNotEnabled": "El enrutamiento por equipos no está activado."
-  }
+  },
+  "toast": {
+    "proposeSent": "Enviado para revisión."
+  },
+  "actionError": {
+    "acceptCapacity": "Ya tienes el máximo de conversaciones simultáneas. Finaliza o devuelve una y vuelve a aceptar esta.",
+    "accept": "No se pudo aceptar la conversación.",
+    "end": "No se pudo finalizar la conversación.",
+    "handBack": "No se pudo devolver la conversación a la IA."
+  },
+  "alarmReasonPartnerUnavailable": "No se pudieron leer los datos del socio en este momento, así que la IA no pudo dar cifras. Una persona debe confirmarlas.",
+  "alarmReasonPartnerUnverified": "La IA retuvo su respuesta porque una cifra no se pudo comprobar con los datos del hotel. Una persona debe confirmarla."
 }
