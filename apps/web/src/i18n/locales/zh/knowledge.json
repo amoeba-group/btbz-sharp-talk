@@ -160,7 +160,7 @@
     "all": "全部",
     "counsel": "咨询信息",
     "product": "商品信息",
-    "operation": "OperationInfo"
+    "operation": "运营信息"
   },
   "importRequiredColumns": "必需列：商品名称 · Handle · 详情",
   "importUpsertHint": "已有商品按 Handle 匹配并更新，不会产生重复。",

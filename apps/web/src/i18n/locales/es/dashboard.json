@@ -29,5 +29,10 @@
     "yotpo": "Yotpo",
     "cafe24": "Cafe24",
     "notion": "Notion"
+  },
+  "noStats": {
+    "title": "Las cifras de resumen son para gerentes y superiores",
+    "body": "Tu rol trabaja en la cola de conversaciones. Las cifras de resumen de aquí (chats activos, tasa de resolución por IA, pedidos) se muestran a las cuentas de Gerente, Director y Máster, así que en esta página no se cuenta nada para ti; no es un fallo.",
+    "goTo": "Ir a:"
   }
 }

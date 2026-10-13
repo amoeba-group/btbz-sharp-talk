@@ -7,6 +7,7 @@ import { Badge } from '@/components/Badge';
 import { Modal } from '@/components/Modal';
 import { FormRow, Input } from '@/components/Field';
 import { cn } from '@/lib/cn';
+import { useCopyLang } from '@/lib/copy-lang';
 import { toast } from '@/store/toast-store';
 import { useShopifySettings } from '../settings/settings.hooks';
 import { LanguageTabs } from './LanguageTabs';
@@ -139,7 +140,8 @@ function AgentModal({
   // Widget-facing identity (REQ-260825 R3/R4): blank = tenant-level fallback.
   const [displayName, setDisplayName] = useState('');
   const [greeting, setGreeting] = useState<Record<string, string>>({});
-  const [greetLang, setGreetLang] = useState<ScenarioLang>('KO');
+  const defaultGreetLang = useCopyLang();
+  const [greetLang, setGreetLang] = useState<ScenarioLang>(defaultGreetLang);
   // Guest policy (PLN-261001 W1): what an unidentified visitor may be told.
   const [guestPolicy, setGuestPolicy] = useState<GuestPolicy>('open');
   // Seed once per open — key the modal content on the agent id via `open` effect-free reset.

@@ -9,6 +9,7 @@ import { Modal } from '@/components/Modal';
 import { FormRow, Input, Select, Label } from '@/components/Field';
 import { Table, type Column } from '@/components/Table';
 import { cn } from '@/lib/cn';
+import { useCopyLang } from '@/lib/copy-lang';
 import { AiStudioPanel } from './AiStudioPanel';
 import { RegressionSection } from './RegressionSection';
 import { ConfigHistorySection } from './ConfigHistorySection';
@@ -281,7 +282,8 @@ function ScenarioButtonsSection() {
   const [note, setNote] = useState('');
   // One tab bar for the whole label column: an operator translates a menu
   // language by language, not button by button.
-  const [labelLang, setLabelLang] = useState<ScenarioLang>('KO');
+  const defaultLabelLang = useCopyLang();
+  const [labelLang, setLabelLang] = useState<ScenarioLang>(defaultLabelLang);
 
   useEffect(() => {
     if (config) {

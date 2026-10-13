@@ -29,5 +29,10 @@
     "yotpo": "Yotpo",
     "cafe24": "Cafe24",
     "notion": "Notion"
+  },
+  "noStats": {
+    "title": "Summary numbers are for managers and above",
+    "body": "Your role works in the conversation queue. The summary numbers here (active chats, AI resolution rate, orders) are shown to Manager, Director and Master accounts, so nothing is counted for you on this page — that is not a fault.",
+    "goTo": "Go to:"
   }
 }

@@ -15,6 +15,9 @@ export type Capability =
   | 'work_log'
   | 'statistics'
   | 'customer_pii_reveal'
+  // The dashboard's KPI numbers (`GET /analytics/dashboard` is `ANALYTICS_READ`): master, director,
+  // manager. Staff reach the Dashboard page but not these numbers (w3c, ops-manual finding 15).
+  | 'analytics_read'
   | 'dashboard';
 
 // Label codes mapped to capability groups.
@@ -47,6 +50,7 @@ const RANK_EXTRA: Record<Rank, Capability[]> = {
     // (PLN-260920). The server enforces it; this only decides whether the
     // console offers the control.
     'customer_pii_reveal',
+    'analytics_read',
   ],
   director: [
     'dashboard',
@@ -63,8 +67,9 @@ const RANK_EXTRA: Record<Rank, Capability[]> = {
     'work_log',
     'statistics',
     'customer_pii_reveal',
+    'analytics_read',
   ],
-  manager: ['dashboard', 'ai_settings', 'statistics'],
+  manager: ['dashboard', 'ai_settings', 'statistics', 'analytics_read'],
   staff: ['dashboard'],
 };
 

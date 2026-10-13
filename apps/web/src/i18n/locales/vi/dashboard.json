@@ -29,5 +29,10 @@
     "yotpo": "Yotpo",
     "cafe24": "Cafe24",
     "notion": "Notion"
+  },
+  "noStats": {
+    "title": "Số liệu tổng quan dành cho Quản lý trở lên",
+    "body": "Vai trò của bạn làm việc trong hàng chờ hội thoại. Các số liệu tổng quan ở đây (cuộc trò chuyện đang mở, tỷ lệ AI giải quyết, đơn hàng) chỉ hiển thị cho tài khoản Quản lý, Giám đốc và Master, nên trang này không đếm gì cho bạn — đây không phải lỗi.",
+    "goTo": "Đi tới:"
   }
 }

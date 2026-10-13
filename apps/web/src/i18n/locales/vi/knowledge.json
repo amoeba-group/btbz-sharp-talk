@@ -160,7 +160,7 @@
     "all": "Tất cả",
     "counsel": "Thông tin tư vấn",
     "product": "Thông tin sản phẩm",
-    "operation": "OperationInfo"
+    "operation": "Thông tin vận hành"
   },
   "importRequiredColumns": "Cột bắt buộc: Tên sản phẩm · Handle · Chi tiết",
   "importUpsertHint": "Sản phẩm đã có được đối chiếu theo Handle và cập nhật — không tạo bản trùng.",

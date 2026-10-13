@@ -435,7 +435,7 @@
     "guestPolicy": "Khách chưa đăng nhập",
     "guestPolicy_open": "Trả lời như bình thường",
     "guestPolicy_login_guidance": "Chỉ hướng dẫn đăng nhập hoặc đăng ký",
-    "guestPolicyHint": "Khi chọn hướng dẫn đăng nhập, khách chưa đăng nhập chỉ được trả lời từ các phân loại đánh dấu \"Công khai cho khách\"; câu hỏi khác nhận lời nhắc đăng nhập (sửa ở mục Hướng dẫn khách bên dưới). Có hiệu lực từ tin nhắn tiếp theo — không cần deploy."
+    "guestPolicyHint": "Khi chọn hướng dẫn đăng nhập, khách chưa đăng nhập chỉ được trả lời từ các phân loại có \"Ai được xem\" là \"Công khai\"; câu hỏi khác nhận lời nhắc đăng nhập (sửa ở mục Hướng dẫn khách bên dưới). Có hiệu lực từ tin nhắn tiếp theo — không cần deploy."
   },
   "agentScope": {
     "button": "Agent",
@@ -532,5 +532,11 @@
     "hostLinkTemplate": "Mẫu link \"Mở trong hệ thống của bạn\"",
     "hostLinkTemplateHint": "{hotelSn} được thay bằng mã khách sạn đã ký; console sẽ hiện nút \"Mở trong hệ thống\" ở hội thoại đối tác. Để trống = ẩn nút.",
     "hostLinkTemplateInvalid": "Phải là URL https:// có chứa {hotelSn}."
+  },
+  "toast": {
+    "configSaved": "Đã lưu cấu hình AI.",
+    "settingUpdated": "Đã cập nhật thiết lập AI.",
+    "ruleAdded": "Đã thêm quy tắc.",
+    "ruleDeleted": "Đã xóa quy tắc."
   }
 }
