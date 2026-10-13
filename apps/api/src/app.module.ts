@@ -52,6 +52,7 @@ import { CustomerModule } from './domain/customer/customer.module';
 import { JourneyModule } from './domain/journey/journey.module';
 import { PrivacyModule } from './domain/privacy/privacy.module';
 import { HealthModule } from './domain/health/health.module';
+import { PilotModule } from './domain/pilot/pilot.module';
 import { ShopifyOAuthModule } from './domain/shopify-oauth/shopify-oauth.module';
 import { Cafe24Module } from './domain/cafe24/cafe24.module';
 import { OdooModule } from './domain/odoo/odoo.module';
@@ -122,6 +123,8 @@ import { ShopifyProxyModule } from './domain/shopify-proxy/shopify-proxy.module'
     JourneyModule,
     PrivacyModule,
     HealthModule,
+    // Pilot allowlist by hotel (PLN-261012 SG-40) — console API; Chat/Session/Embed import it too.
+    PilotModule,
   ],
   providers: [
     // Throttle first (cheap, before auth work), then authenticate.

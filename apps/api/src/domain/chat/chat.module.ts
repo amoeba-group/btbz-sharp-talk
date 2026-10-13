@@ -22,6 +22,7 @@ import { OrderModule } from '../order/order.module';
 import { CustomerModule } from '../customer/customer.module';
 import { AnswerReuseModule } from '../answer-reuse/answer-reuse.module';
 import { IssueModule } from '../issue/issue.module';
+import { PilotModule } from '../pilot/pilot.module';
 
 @Module({
   imports: [
@@ -57,6 +58,8 @@ import { IssueModule } from '../issue/issue.module';
     AnswerReuseModule,
     // Issue P1: customer end-chat closes a settled issue.
     IssueModule,
+    // Pilot allowlist gate on the turn paths (PLN-261012 SG-40).
+    PilotModule,
   ],
   controllers: [ChatController],
   providers: [ChatService, RagService, ScenarioService, IdleConversationService],

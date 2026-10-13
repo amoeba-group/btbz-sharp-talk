@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Optional, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { EmbedService } from './embed.service';
@@ -6,6 +6,7 @@ import { EmbedIdentifyRequest, EmbedLogoutRequest } from './dto/request/embed.re
 import { SessionService } from '../session/session.service';
 import { SessionMapper } from '../session/session.mapper';
 import { Public } from '../../global/decorator/public.decorator';
+import { PilotService } from '../pilot/pilot.service';
 
 /**
  * Widget-facing embed endpoints (PLN-260819 S2).
@@ -21,6 +22,8 @@ export class EmbedController {
   constructor(
     private readonly embedService: EmbedService,
     private readonly sessionService: SessionService,
+    // Optional so a controller built without the pilot module (specs) still works.
+    @Optional() private readonly pilotService?: PilotService,
   ) {}
 
   @Post('identify')
@@ -52,6 +55,9 @@ export class EmbedController {
       session,
       notice,
       await this.sessionService.customerDisplayName(session),
+      // Whether this hotel is on the pilot list (PLN-261012 SG-40) — what the widget
+      // needs to get out of the way for one that is not.
+      (await this.pilotService?.hintFor(session)) ?? { eligible: null },
     );
   }
 

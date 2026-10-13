@@ -1,4 +1,4 @@
-import type { SessionResponse } from '@sharptalk/types';
+import type { PilotStatus, SessionResponse } from '@sharptalk/types';
 import { Session } from './entity/session.entity';
 import { PrivacyNoticeInfo } from './session.service';
 
@@ -13,6 +13,8 @@ export class SessionMapper {
     s: Session,
     notice: PrivacyNoticeInfo,
     customerName: string | null = null,
+    /** Pilot allowlist verdict (PLN-261012 SG-40); omitted = the key is not sent. */
+    pilot?: PilotStatus,
   ): SessionResponse {
     return {
       sessionToken: s.sessionToken,
@@ -35,6 +37,7 @@ export class SessionMapper {
       widgetCopy: notice.widgetCopy,
       aiProcessingRegion: notice.aiProcessingRegion ?? 'US',
       issueFeed: notice.issueFeed ?? false,
+      ...(pilot ? { pilot } : {}),
     };
   }
 }

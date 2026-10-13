@@ -50,6 +50,7 @@ import {
 } from './conversation-history.util';
 import { footerFor, footerVariants, stripFooters } from '../ai-engine/answer-footer.util';
 import { envNumber } from '../../global/util/env-number.util';
+import { PilotService } from '../pilot/pilot.service';
 
 const ESCALATION_CONFIDENCE = 0.45;
 /**
@@ -319,6 +320,8 @@ export interface EscalateOutcome {
    * team-question and preview paths.
    */
   needsContactEmail?: boolean;
+  /** Refused by the pilot allowlist (PLN-261012 SG-40): `body` is the notice, nobody was paged. */
+  pilotDenied?: boolean;
 }
 
 /**
@@ -355,6 +358,8 @@ export class ChatService {
     private readonly statRepo?: Repository<AgentDailyStat>,
     /** Files uploaded before the send call are claimed here (PLN-260814). */
     private readonly attachments?: AttachmentService,
+    /** Pilot allowlist by hotel (PLN-261012 SG-40); appended so positional specs keep working. */
+    private readonly pilot?: PilotService,
   ) {}
 
   /**
@@ -624,6 +629,25 @@ export class ChatService {
         reply: { senderType: 'system', body: sysMsg('consentRequired', session.language) },
         escalate: false,
         needsAuth: false,
+      };
+    }
+
+    // Pilot allowlist gate (PLN-261012 SG-40) — the authoritative half, judged on the
+    // SIGNED hotel of this session (never on anything typed or on what the widget
+    // chose to show). A hotel outside the list gets the tenant's notice as a soft
+    // system line, exactly like the consent block above: the turn is neither
+    // persisted nor sent to a model, no conversation is opened and no CJM event
+    // fires. The refusal is logged by PilotService (reason pilot_denied) — with
+    // nothing stored there is no message row to carry a trace. Preview is exempt for
+    // the same reason it skips consent: the console admin is not a hotel.
+    const pilotDenial = isPreview ? null : await this.pilot?.denialFor(session);
+    if (pilotDenial) {
+      return {
+        conversationId: null,
+        reply: { senderType: 'system', body: pilotDenial.body },
+        escalate: false,
+        needsAuth: false,
+        pilotDenied: true,
       };
     }
 
@@ -1470,6 +1494,15 @@ export class ChatService {
       throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
     const tenantId = session.tenantId ?? conversation.tenantId ?? 0;
+
+    // Pilot allowlist (PLN-261012 SG-40): a hotel outside the list must not page the
+    // support team either — a person is as much "the agent" as the model is. A session
+    // that identified AFTER chatting as a guest is the way an open conversation can
+    // belong to a non-pilot hotel. Soft reply, nothing stored, nobody paged.
+    const pilotDenial = session.channel === 'preview' ? null : await this.pilot?.denialFor(session);
+    if (pilotDenial) {
+      return { escalated: false, choose: false, body: pilotDenial.body, pilotDenied: true };
+    }
 
     // Team routing (PLN-261007): first call asks, second call (with the chip's
     // option id) routes. A tenant that switched the question off in between

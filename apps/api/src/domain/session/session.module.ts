@@ -7,6 +7,7 @@ import { AiAgent } from '../ai-engine/entity/ai-agent.entity';
 import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { SessionService } from './session.service';
 import { SessionController } from './session.controller';
+import { PilotModule } from '../pilot/pilot.module';
 
 @Module({
   // Customer is registered for the repository only (display name lookup) — no
@@ -14,7 +15,8 @@ import { SessionController } from './session.controller';
   // AiAgent likewise (agent-code → id pinning) — AiEngineModule imports THIS
   // module, so importing it back would be a cycle. TenantAiConfig the same
   // way, for the guest guidance the session response carries (PLN-261001 v1.1).
-  imports: [TypeOrmModule.forFeature([Session, Tenant, Customer, AiAgent, TenantAiConfig])],
+  // PilotModule: the pilot verdict the session response carries (PLN-261012 SG-40).
+  imports: [TypeOrmModule.forFeature([Session, Tenant, Customer, AiAgent, TenantAiConfig]), PilotModule],
   controllers: [SessionController],
   providers: [SessionService],
   exports: [SessionService],
