@@ -35,6 +35,7 @@ import {
   UpdateGoldenQuestionRequest,
 } from './dto/request/golden.request';
 import { GOLDEN_MAX_QUESTIONS, GoldenService } from './golden.service';
+import { partnerCtxFromBody } from '../partner-data/partner-golden.util';
 import { GOLDEN_RUN_KIND, GoldenRunKind } from './entity/golden-run.entity';
 
 /**
@@ -198,7 +199,7 @@ export class AiCoachController {
   @ApiOperation({ summary: 'Add a regression question' })
   async addGolden(@CurrentUser() user: Principal, @Body() body: CreateGoldenQuestionRequest) {
     const { tenantId, userId } = this.tenantUser(user);
-    const row = await this.golden.addQuestion(tenantId, userId, body);
+    const row = await this.golden.addQuestion(tenantId, userId, { ...body, partnerCtx: partnerCtxFromBody(body) });
     return AiCoachMapper.toGoldenQuestion(row);
   }
 
@@ -219,7 +220,10 @@ export class AiCoachController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateGoldenQuestionRequest,
   ) {
-    const row = await this.golden.updateQuestion(this.tenantUser(user).tenantId, id, body);
+    const row = await this.golden.updateQuestion(this.tenantUser(user).tenantId, id, {
+      ...body,
+      partnerCtx: partnerCtxFromBody(body),
+    });
     return AiCoachMapper.toGoldenQuestion(row);
   }
 

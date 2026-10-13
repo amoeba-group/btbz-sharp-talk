@@ -30,6 +30,9 @@ import { decryptSecret } from '../../global/util/crypto.util';
 import { REVISION_KIND } from './entity/kb-document-revision.entity';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { verifyNumbers } from '../partner-data/partner-numbers.util';
+import { partnerNoticeText } from '../partner-data/partner-messages';
+import type { PartnerPrepared } from '../partner-data/partner-data.step';
 
 /**
  * Knowledge source / RAG corpus management (FR-064, FR-065). All operations are
@@ -327,6 +330,14 @@ export class KnowledgeService {
     language = 'EN',
     preferGroup?: string,
     aiAgentId?: number | null,
+    /**
+     * A partner-data turn prepared for a golden question (PLN-261012 SG-31).
+     * This console path does not go through ChatService, so the regression runner
+     * hands in what the chat step would have produced: a data block to ground the
+     * answer in (then the same moderation protect list and number check apply), or
+     * a fixed notice that stands as the answer. Never set from a request.
+     */
+    partner?: PartnerPrepared | null,
   ): Promise<{
     answer: string;
     confidence: number;
@@ -345,6 +356,11 @@ export class KnowledgeService {
       conflicted: boolean;
     }>;
   }> {
+    // A refusal/degradation of the partner step is itself the answer: fixed,
+    // localized server text, no model call (the same as in the chat).
+    if (partner?.kind === 'notice') {
+      return { answer: partner.body, confidence: 1, blocked: false, sources: [] };
+    }
     const result = await this.rag.answer(
       tenantId,
       question,
@@ -353,14 +369,34 @@ export class KnowledgeService {
       preferGroup,
       undefined,
       aiAgentId ?? null,
+      undefined,
+      undefined,
+      partner ? { partnerData: partner.block } : undefined,
     );
     const moderated = await this.moderation.moderate({
       tenantId,
       scope: 'ai',
       authorType: 'ai',
       text: result.text,
+      ...(partner ? { protect: partner.protect } : {}),
     });
     const blocked = moderated.decision === MODERATION_DECISION.BLOCKED;
+    // Same number check as the chat: a figure the data block does not hold means
+    // the answer is withheld (the golden run then shows the degrade text, which
+    // fails any graded fact — exactly what an invented number should do).
+    let answerText = blocked ? '' : moderated.text;
+    let confidence = result.confidence;
+    if (partner && !blocked) {
+      const check = verifyNumbers(answerText, {
+        block: partner.block,
+        question,
+        kbTexts: result.citations.map((c) => c.snippet ?? ''),
+      });
+      if (!check.ok) {
+        answerText = partnerNoticeText('unverified', language);
+        confidence = 0;
+      }
+    }
 
     // Provenance/freshness/conflict markers for the cited documents.
     const citedIds = result.citations.map((c) => Number(c.id)).filter(Number.isFinite);
@@ -371,8 +407,8 @@ export class KnowledgeService {
     const docsById = new Map(citedDocs.map((d) => [Number(d.id), d]));
 
     return {
-      answer: blocked ? '' : moderated.text,
-      confidence: result.confidence,
+      answer: answerText,
+      confidence,
       blocked,
       sources: result.citations.map((c) => {
         const doc = docsById.get(Number(c.id));

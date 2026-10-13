@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, Index, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { bigintTransformer } from '../../../global/util/transformers';
+import type { GoldenPartnerCtx } from '../../partner-data/partner-golden.util';
 
 /**
  * golden_questions — the questions a tenant re-asks to see what a config change
@@ -39,6 +40,15 @@ export class GoldenQuestion {
   /** Text the answer must not contain, on top of the built-in masks. */
   @Column({ type: 'json', nullable: true })
   forbidden: string[] | null;
+
+  /**
+   * Hotel, role and mock fixture set this question runs under (PLN-261012 SG-31):
+   * `{ hotelSn, role, mockSet }`. NULL = an ordinary knowledge question, asked
+   * exactly as before. Set = the question is first run through the partner-data
+   * step against that MOCK set, so partner-data answers can be graded too.
+   */
+  @Column({ name: 'partner_ctx', type: 'json', nullable: true })
+  partnerCtx: GoldenPartnerCtx | null;
 
   @Column({ name: 'created_by', type: 'bigint', nullable: true, transformer: bigintTransformer })
   createdBy: number | null;
