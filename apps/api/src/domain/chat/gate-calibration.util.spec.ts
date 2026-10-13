@@ -407,3 +407,26 @@ describe('the starter set reference/go2joy-gate-calibration-set.csv (DRAFT, for 
     expect(new Set(items.map((i) => i.question)).size).toBe(items.length);
   });
 });
+
+describe('notMeaningfulBanner layout', () => {
+  const stub = (over: Partial<CalibrationSample> = {}) => guest('allow', 0.8, { vectorProvider: 'stub', ...over });
+
+  it('every line is a closed 78-column box and no sentence is cut off', () => {
+    const banner = notMeaningfulBanner(assessMeaningfulness([stub()]));
+
+    for (const line of banner.split('\n')) {
+      expect(line).toHaveLength(78);
+      expect(line.startsWith('#') && line.endsWith('#')).toBe(true);
+    }
+    // The long reason wraps instead of being truncated (it was, once: "as soon as one d#").
+    expect(banner.replace(/#|\n/g, ' ').replace(/\s+/g, ' ')).toContain('as soon as one document matches), so the gate never closes on topic');
+  });
+
+  it('a stub-only run says stub; a mixed or degraded run says what it is', () => {
+    expect(notMeaningfulBanner(assessMeaningfulness([stub(), stub()]))).toContain('NOT MEANINGFUL: stub embeddings — gate never closes');
+
+    const mixed = notMeaningfulBanner(assessMeaningfulness([guest('allow', 0.8, { degraded: true }), stub()]));
+    expect(mixed).toContain('NOT MEANINGFUL: the vector leg was not real for every question');
+    expect(mixed).not.toContain('stub embeddings — gate never closes');
+  });
+});

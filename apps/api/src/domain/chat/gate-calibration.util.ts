@@ -324,13 +324,36 @@ export const NOT_MEANINGFUL_EXIT_CODE = 3;
 export const NO_SAFE_BAR_EXIT_CODE = 2;
 
 export function notMeaningfulBanner(m: Meaningfulness): string {
-  const bar = '#'.repeat(78);
+  const width = 78;
+  const bar = '#'.repeat(width);
+  // One boxed row per line; a long sentence wraps instead of being cut off.
+  const rows = (text: string, bullet = ''): string[] => {
+    const room = width - 5 - bullet.length;
+    const lines: string[] = [];
+    let line = '';
+    for (const word of text.split(' ')) {
+      if (line && `${line} ${word}`.length > room) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = line ? `${line} ${word}` : word;
+      }
+    }
+    if (line) lines.push(line);
+    return lines.map((l, i) => `#  ${i === 0 ? bullet : ' '.repeat(bullet.length)}${l}`.padEnd(width - 1) + '#');
+  };
   return [
     bar,
-    '#  NOT MEANINGFUL: stub embeddings — gate never closes'.padEnd(77) + '#',
-    '#  Do NOT use any number below: it was measured without real Voyage + Qdrant.'.padEnd(77) + '#',
-    ...m.reasons.map((r) => `#  - ${r}`.slice(0, 77).padEnd(77) + '#'),
-    '#  Run this against an environment with VOYAGE_API_KEY, Qdrant and an indexed KB.'.padEnd(77) + '#',
+    // No question reached real embeddings: the stub (or keyword-only) case the guard exists for. A mix, or a
+    // degraded vector leg, says what it is instead.
+    ...rows(
+      Object.keys(m.providers).length > 0 && !('voyage' in m.providers)
+        ? 'NOT MEANINGFUL: stub embeddings — gate never closes'
+        : 'NOT MEANINGFUL: the vector leg was not real for every question',
+    ),
+    ...rows('Do NOT use any number below: it was measured without real Voyage + Qdrant.'),
+    ...m.reasons.flatMap((r) => rows(r, '- ')),
+    ...rows('Run this against an environment with VOYAGE_API_KEY, Qdrant and an indexed knowledge base.'),
     bar,
   ].join('\n');
 }

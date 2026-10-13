@@ -1,4 +1,5 @@
 import { EVENTS } from '../../infrastructure/infrastructure.module';
+import { isHandoffReason, normalizeStoredReason } from '../analytics/analytics-pilot.util';
 import { AGENT_ID, buildChat, makeRag } from './testing/gate-harness';
 import type { World } from './testing/gate-harness';
 
@@ -191,5 +192,50 @@ describe('role_manager_only keeps its trace and gains the measurement', () => {
       followUps: [{ id: 'agent_connect', label: expect.any(String) }],
     });
     expect(JSON.stringify(system)).not.toMatch(/ZZ-SECRET|0901234567/);
+  });
+});
+
+/**
+ * Pilot analytics (PLN-261012 SG-52, `GET /analytics/pilot`) groups by `trace.reason` and counts an
+ * AI turn as an "answer" when `trace.confidence` is numeric. The gate trace adds keys NEXT to those
+ * and must never move them: `embedder_degraded` is a gate decision (`trace.gate`), NOT a stored reason,
+ * because analytics files that reason under "refused without a hand-off" while the chat does hand off.
+ */
+describe('the new trace keys leave what analytics reads untouched', () => {
+  it('a vector-down hand-off is still stored as low_confidence — a hand-off — with the gate beside it', async () => {
+    const { system } = await ask(world({ policy: 'open', tiers: false, audience: { confidence: 0.2, degraded: true, vectorProvider: null } }), 'partner');
+
+    expect(normalizeStoredReason(system[0].reason)).toBe('low_confidence');
+    expect(isHandoffReason(String(system[0].reason))).toBe(true);
+    expect(system[0].gate).toBe('embedder_degraded');
+  });
+
+  it('a guest-gate refusal is still guest_gate (refused, not handed off); a manager-only one still role_manager_only', async () => {
+    const guestGate = await ask(world({ guest: { confidence: 0.2 } }));
+    const managerOnly = await ask(world({ policy: 'open', audience: { confidence: 0.2 }, manager: { confidence: 0.85 } }), 'receptionist');
+
+    expect(normalizeStoredReason(guestGate.system[0].reason)).toBe('guest_gate');
+    expect(isHandoffReason('guest_gate')).toBe(false);
+    expect(normalizeStoredReason(managerOnly.system[0].reason)).toBe('role_manager_only');
+    expect(isHandoffReason('role_manager_only')).toBe(false);
+  });
+
+  it('an answered gated turn is still an "answer" for analytics: numeric confidence and a citations array', async () => {
+    const { ai } = await ask(world());
+
+    expect(typeof ai[0].confidence).toBe('number');
+    expect(Array.isArray(ai[0].citations)).toBe(true);
+    // ...and the gate pass carries NO `reason`, so it can never be counted as a refusal.
+    expect(ai[0]).not.toHaveProperty('reason');
+  });
+
+  it('the only stored reasons are members of the closed vocabulary', async () => {
+    const turns = [
+      await ask(world({ guest: { confidence: 0.2 } })),
+      await ask(world({ guest: { confidence: 0.2, degraded: true, vectorProvider: null } })),
+      await ask(world({ policy: 'open', tiers: false, audience: { confidence: 0.2 } }), 'partner'),
+      await ask(world({ policy: 'open', audience: { confidence: 0.2 }, manager: { confidence: 0.85 } }), 'receptionist'),
+    ];
+    for (const t of turns) for (const trace of t.system) expect(normalizeStoredReason(trace.reason)).not.toBe('other');
   });
 });

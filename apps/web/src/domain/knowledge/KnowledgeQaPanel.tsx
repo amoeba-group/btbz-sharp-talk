@@ -52,7 +52,7 @@ export function KnowledgeQaPanel({ onEditSource }: { onEditSource: (documentId: 
     <Card
       title={t('qa.title')}
       action={
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {agents.length > 1 ? (
             <Select value={String(agentId)} onChange={(e) => setAgentId(Number(e.target.value))}>
               {/* A simulated viewer talks to the default agent when none is picked — never to "everything". */}
