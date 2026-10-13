@@ -384,12 +384,19 @@ export function UsersPage() {
 
   const columns: Column<TenantUser>[] = [
     {
-      key: 'name',
-      header: t('name'),
-      // No name yet: the e-mail's words are what the re-route toast and notes use, so say it's unset.
-      render: (u) => u.name || <span className="text-gray-400">{t('nameUnset')}</span>,
+      // Name over e-mail in one column: a separate Name column squeezed the action buttons.
+      key: 'user',
+      header: t('title'),
+      render: (u) => (
+        <div className="min-w-0">
+          {/* No name yet: the e-mail's words are what the re-route toast and notes use, so say it's unset. */}
+          <div className="font-medium text-gray-900">
+            {u.name || <span className="font-normal text-gray-400">{t('nameUnset')}</span>}
+          </div>
+          <div className="truncate text-xs text-gray-500">{u.email}</div>
+        </div>
+      ),
     },
-    { key: 'email', header: t('email'), render: (u) => u.email },
     {
       key: 'rank',
       header: t('rank'),

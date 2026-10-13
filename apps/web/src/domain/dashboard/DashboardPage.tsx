@@ -9,7 +9,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '@/store/auth-store';
-import { makeCan } from '@/lib/rbac';
+import { canListOrders, makeCan } from '@/lib/rbac';
 import { PageHeader } from '@/components/PageHeader';
 import { KpiCard } from '@/components/KpiCard';
 import { Card } from '@/components/Card';
@@ -41,9 +41,10 @@ export function DashboardPage() {
   // order list the operations/sales-admin label. A staff member used to get six zeros (the 403s were
   // swallowed), which read as "nothing is happening"; now the numbers are not requested and the page
   // says why, with the screens the person does work in.
-  const can = makeCan(useAuthStore((s) => s.principal));
+  const principal = useAuthStore((s) => s.principal);
+  const can = makeCan(principal);
   const canStats = can('analytics_read');
-  const canOrders = can('orders');
+  const canOrders = canListOrders(principal);
   const { data, isLoading } = useDashboard(canStats);
   const { data: integrations, isLoading: intLoading } = useIntegrationStatus();
   const { data: recentOrders, isLoading: ordLoading, isError: ordError } = useRecentOrders(canOrders);
@@ -51,7 +52,7 @@ export function DashboardPage() {
   const shortcuts: Array<{ to: string; label: string }> = [
     ...(can('live_chat') ? [{ to: '/live-chat', label: tn('liveChat') }] : []),
     ...(can('history') ? [{ to: '/history', label: tn('history') }] : []),
-    ...(canOrders ? [{ to: '/orders', label: tn('orders') }] : []),
+    ...(can('orders') ? [{ to: '/orders', label: tn('orders') }] : []),
   ];
 
   return (

@@ -107,6 +107,18 @@ export function capabilitiesFor(principal: Principal | null): Set<Capability> {
   return caps;
 }
 
+/**
+ * May this user call `GET /admin/orders`? The API needs MODULE_OPERATIONS, which is label-gated for
+ * everyone except master (`userCan`): the OPERATIONS label, whatever the rank. `can('orders')` is wider
+ * (a director by rank, a Sales Admin by label) because it decides which MENU shows, so using it to decide
+ * whether to CALL the endpoint sent those users a 403 on every Dashboard load (w3c, ops-manual finding 15).
+ * Sales Admin gets the Orders screen but not this endpoint today - reported, not changed here.
+ */
+export function canListOrders(principal: Principal | null): boolean {
+  if (!principal || principal.actorType === 'admin') return false;
+  return principal.rank === 'master' || (principal.labels ?? []).includes('operations');
+}
+
 export function makeCan(principal: Principal | null) {
   const caps = capabilitiesFor(principal);
   return (capability: Capability) => caps.has(capability);

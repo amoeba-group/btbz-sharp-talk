@@ -116,9 +116,11 @@ export const useRoutingOptions = (language: string, enabled = true) => {
  * the built-in `team.<id>` locale line (then the raw id). Before this the queue chips, the badges and
  * the alarm showed the locale line only, so a renamed or extra team rendered as its raw id.
  */
-export function useTeamLabel(): (id: string) => string {
+export function useTeamLabel(enabled = true): (id: string) => string {
   const { t, i18n } = useTranslation('livechat');
-  const { data } = useRoutingOptions(i18n.language);
+  // `enabled: false` for a caller that may not read routing options (GET /agent/routing-options needs
+  // CONVERSATION_HANDLE): the global alarm mounts for every console user and must not collect a 403.
+  const { data } = useRoutingOptions(i18n.language, enabled);
   return (id: string) => data?.teams.find((o) => o.id === id)?.label || t(`team.${id}`, { defaultValue: id });
 }
 

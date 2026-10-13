@@ -26,7 +26,7 @@ export function EscalationAlarm() {
   const canHandle = makeCan(principal)('live_chat');
   const { data: alerts } = useAgentAlerts(canHandle);
   const ack = useAckAlert();
-  const teamLabel = useTeamLabel();
+  const teamLabel = useTeamLabel(canHandle);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
   const current: AgentAlert | undefined = useMemo(

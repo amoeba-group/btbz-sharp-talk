@@ -12,6 +12,7 @@ import { cn } from '@/lib/cn';
 
 export function Sidebar() {
   const { t } = useTranslation('nav');
+  const { t: tUsers } = useTranslation('users');
   const principal = useAuthStore((s) => s.principal);
   const tenantName = useAuthStore((s) => s.tenantName);
   const tenantSlug = useAuthStore((s) => s.tenantSlug);
@@ -107,7 +108,11 @@ export function Sidebar() {
             <p className="truncate text-xs font-medium text-gray-800">{principal?.email}</p>
             <div className="mt-1">
               <Badge tone={isAdmin ? 'primary' : 'info'}>
-                {isAdmin ? 'admin' : principal?.rank ?? 'user'}
+                {isAdmin
+                  ? 'admin'
+                  : principal?.rank
+                    ? tUsers(`rankName.${principal.rank}`, { defaultValue: principal.rank })
+                    : 'user'}
               </Badge>
             </div>
           </div>
