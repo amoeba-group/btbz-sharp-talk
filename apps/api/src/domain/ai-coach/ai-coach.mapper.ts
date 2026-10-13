@@ -67,6 +67,8 @@ export class AiCoachMapper {
       active: q.active === 1,
       expected: q.expected ?? [],
       forbidden: q.forbidden ?? [],
+      // The partner context the question runs under (PLN-261012 SG-31), or null.
+      partnerCtx: q.partnerCtx ?? null,
       createdAt: q.createdAt,
     };
   }

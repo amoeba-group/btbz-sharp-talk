@@ -1,3 +1,6 @@
+import { sanitizePartnerCtx } from '../partner-data/partner-golden.util';
+import type { GoldenPartnerCtx } from '../partner-data/partner-golden.util';
+
 /**
  * Grading for regression answers (PLN-261007-Golden-Graded-Regression S2).
  *
@@ -72,18 +75,39 @@ export function gradeAnswer(
 }
 
 /**
- * One line of the bulk-import paste: `question<TAB>fact1|fact2<TAB>forbidden1|…`.
+ * Optional 4th TSV column: the partner context the question runs under
+ * (PLN-261012 SG-31), `hotel=1721|role=manager|mock=default` (mock optional).
+ * Returns undefined when the column is absent or malformed, which leaves an
+ * existing question's context untouched on a re-paste.
+ */
+export function parsePartnerColumn(cell: string | undefined): GoldenPartnerCtx | undefined {
+  if (!cell?.trim()) return undefined;
+  const kv = new Map(
+    cell
+      .split('|')
+      .map((p) => p.split('=') as [string, string | undefined])
+      .map(([k, v]) => [k.trim().toLowerCase(), (v ?? '').trim()] as const),
+  );
+  return (
+    sanitizePartnerCtx({ hotelSn: kv.get('hotel'), role: kv.get('role'), mockSet: kv.get('mock') }) ?? undefined
+  );
+}
+
+/**
+ * One line of the bulk-import paste: `question<TAB>fact1|fact2<TAB>forbidden1|…<TAB>hotel=…|role=…|mock=…`.
  * Blank lines and lines starting with # are skipped.
  */
-export function parseBulkLines(text: string): Array<{ question: string; expected: string[] | null; forbidden: string[] | null }> {
+export function parseBulkLines(
+  text: string,
+): Array<{ question: string; expected: string[] | null; forbidden: string[] | null; partnerCtx?: GoldenPartnerCtx }> {
   return (text ?? '')
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter((l) => l && !l.startsWith('#'))
     .map((l) => {
-      const [q, e = '', f = ''] = l.split('\t');
+      const [q, e = '', f = '', partner] = l.split('\t');
       const split = (s: string) => sanitizeChecks(s.split('|'));
-      return { question: q.trim(), expected: split(e), forbidden: split(f) };
+      return { question: q.trim(), expected: split(e), forbidden: split(f), partnerCtx: parsePartnerColumn(partner) };
     })
     .filter((r) => r.question.length >= 2);
 }

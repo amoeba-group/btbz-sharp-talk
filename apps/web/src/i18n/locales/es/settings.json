@@ -173,7 +173,9 @@
       "secret_key": "Clave secreta",
       "subdomain": "Subdominio de la cuenta",
       "email": "Email de la cuenta",
-      "webhook_secret": "Secreto del webhook (estado L2)"
+      "webhook_secret": "Secreto del webhook (estado L2)",
+      "base_url": "URL base",
+      "signing_secret": "Clave de firma de solicitudes (opcional)"
     },
     "ph": {
       "mall_id": "your-mall",
@@ -184,7 +186,8 @@
       "shop_domain": "your-store.myharavan.com",
       "subdomain": "su-empresa (de su-empresa.gorgias.com)",
       "email": "agente@ejemplo.com",
-      "app_key": "yotpo app key"
+      "app_key": "yotpo app key",
+      "base_url": "https://partner-api.example.go2joy.vn"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -216,6 +219,10 @@
     "gorgias": {
       "title": "Gorgias",
       "subtitle": "Helpdesk — los chats escalados pueden transferirse como tickets de Gorgias."
+    },
+    "go2joy_partner_api": {
+      "title": "API de datos del socio Go2Joy",
+      "subtitle": "Conecta la API de solo lectura con las tarifas, políticas, reservas y liquidaciones del hotel con sesión iniciada."
     },
     "syncing": "Sincronizando…",
     "syncProducts": "Importar productos",
@@ -901,5 +908,18 @@
     "saveError": "No se pudo guardar la restricción",
     "keyIssued": "Enlace emitido",
     "keyError": "No se pudo emitir el enlace"
+  },
+  "partnerData": {
+    "title": "Consulta de datos del socio",
+    "subtitle": "Permite que el asistente responda a un usuario de hotel con sesión iniciada sobre las tarifas, políticas, reservas y liquidaciones de su propio hotel, con datos en vivo de la API de datos del socio (Go2Joy). Desactivado por defecto.",
+    "enable": "Consultar los datos en vivo del hotel cuando pregunta un usuario con sesión iniciada",
+    "hint": "Solo para usuarios que iniciaron sesión desde Hotel Admin con hotel y rol verificados. El hotel siempre sale de la identidad firmada, nunca del mensaje del chat.",
+    "serverOff": "Desactivado en todo el servidor (PARTNER_DATA_ENABLED). Este interruptor no tiene efecto hasta que el operador lo active.",
+    "modeMock": "Datos de muestra (mock): las respuestas usan hoteles de ejemplo integrados, no datos reales.",
+    "modeLive": "Datos reales: las respuestas usan la API real del socio.",
+    "notConfigured": "La conexión (URL base y clave de API) aún no está guardada. Es necesaria en modo real.",
+    "connection": "Conexión",
+    "saved": "Configuración de consulta de datos del socio guardada",
+    "saveError": "No se pudo guardar la configuración de consulta de datos del socio"
   }
 }

@@ -9,6 +9,9 @@ import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { GoldenQuestion } from './entity/golden-question.entity';
 import { GOLDEN_RUN_KIND, GoldenRun, GoldenRunItem, GoldenRunKind } from './entity/golden-run.entity';
 import { gradeAnswer, parseBulkLines, sanitizeChecks } from './golden-grade.util';
+import { PartnerGoldenService } from '../partner-data/partner-golden.service';
+import { sanitizePartnerCtx } from '../partner-data/partner-golden.util';
+import type { PartnerPrepared } from '../partner-data/partner-data.step';
 
 /**
  * Per-run cap. Every question costs a retrieval (embedding) plus a completion,
@@ -56,6 +59,9 @@ export class GoldenService implements OnModuleInit {
     @InjectRepository(GoldenRunItem) private readonly itemRepo: Repository<GoldenRunItem>,
     private readonly aiConfig: AiConfigService,
     private readonly knowledge: KnowledgeService,
+    // Appended and optional (specs build this service positionally): runs a
+    // question's partner context through the partner-data step (PLN-261012 SG-31).
+    private readonly partnerGolden?: PartnerGoldenService,
   ) {}
 
   /**
@@ -85,7 +91,15 @@ export class GoldenService implements OnModuleInit {
   async addQuestion(
     tenantId: number,
     userId: number,
-    input: { question: string; language?: string; note?: string; expected?: unknown; forbidden?: unknown },
+    input: {
+      question: string;
+      language?: string;
+      note?: string;
+      expected?: unknown;
+      forbidden?: unknown;
+      /** `{ hotelSn, role, mockSet }` — run under a partner context (PLN-261012 SG-31). */
+      partnerCtx?: unknown;
+    },
   ): Promise<GoldenQuestion> {
     return this.questionRepo.save(
       this.questionRepo.create({
@@ -95,6 +109,7 @@ export class GoldenService implements OnModuleInit {
         note: input.note?.trim() || null,
         expected: sanitizeChecks(input.expected),
         forbidden: sanitizeChecks(input.forbidden),
+        partnerCtx: sanitizePartnerCtx(input.partnerCtx),
         active: 1,
         createdBy: userId,
       }),
@@ -125,6 +140,8 @@ export class GoldenService implements OnModuleInit {
       if (hit) {
         hit.expected = r.expected;
         hit.forbidden = r.forbidden;
+        // A re-paste without the 4th column leaves the context as it was.
+        if (r.partnerCtx) hit.partnerCtx = r.partnerCtx;
         hit.language = language;
         await this.questionRepo.save(hit);
         updated++;
@@ -139,6 +156,7 @@ export class GoldenService implements OnModuleInit {
         language,
         expected: r.expected,
         forbidden: r.forbidden,
+        partnerCtx: r.partnerCtx,
       });
       byText.set(saved.question.trim(), saved);
       created++;
@@ -157,6 +175,7 @@ export class GoldenService implements OnModuleInit {
       active?: number;
       expected?: unknown;
       forbidden?: unknown;
+      partnerCtx?: unknown;
     },
   ): Promise<GoldenQuestion> {
     const row = await this.questionRepo.findOne({ where: { id, tenantId } });
@@ -167,6 +186,7 @@ export class GoldenService implements OnModuleInit {
     if (input.active !== undefined) row.active = input.active ? 1 : 0;
     if (input.expected !== undefined) row.expected = sanitizeChecks(input.expected);
     if (input.forbidden !== undefined) row.forbidden = sanitizeChecks(input.forbidden);
+    if (input.partnerCtx !== undefined) row.partnerCtx = sanitizePartnerCtx(input.partnerCtx);
     return this.questionRepo.save(row);
   }
 
@@ -252,7 +272,16 @@ export class GoldenService implements OnModuleInit {
     let fail = 0;
     for (const q of questions) {
       try {
-        const res = await this.knowledge.ask(tenantId, q.question, q.language, undefined, run.aiAgentId ?? null);
+        // A question with a partner context is first run through the partner-data
+        // step against its MOCK fixture set (never the live API), so partner-data
+        // answers — figures, role refusals, cross-hotel isolation — are graded too.
+        // A question that names a context must not silently run without it.
+        let partner: PartnerPrepared | null = null;
+        if (q.partnerCtx) {
+          if (!this.partnerGolden) throw new Error('partner-data golden support is not available');
+          partner = await this.partnerGolden.prepare(tenantId, q.partnerCtx, q.question, q.language);
+        }
+        const res = await this.knowledge.ask(tenantId, q.question, q.language, undefined, run.aiAgentId ?? null, partner);
         const grade = res.blocked
           ? { verdict: q.expected?.length ? ('fail' as const) : null, failedChecks: q.expected?.length ? ['blocked'] : [] }
           : gradeAnswer(res.answer, q.expected, q.forbidden);

@@ -11,6 +11,14 @@ export class CreateGoldenQuestionRequest {
   /** Facts the answer must contain (PLN-261007 R7); shape enforced by sanitizeChecks. */
   @IsOptional() @IsArray() expected?: string[];
   @IsOptional() @IsArray() forbidden?: string[];
+  /**
+   * Run the question as a signed-in hotel user against a MOCK fixture set
+   * (PLN-261012 SG-31): hotel, role and fixture-set name. Shape enforced by
+   * sanitizePartnerCtx — a malformed context is dropped, not stored.
+   */
+  @IsOptional() @IsString() @MaxLength(32) partner_hotel_sn?: string;
+  @IsOptional() @IsString() @MaxLength(16) partner_role?: string;
+  @IsOptional() @IsString() @MaxLength(32) partner_mock_set?: string;
 }
 
 export class UpdateGoldenQuestionRequest {
@@ -20,6 +28,10 @@ export class UpdateGoldenQuestionRequest {
   @IsOptional() @Type(() => Number) @IsInt() active?: number;
   @IsOptional() @IsArray() expected?: string[];
   @IsOptional() @IsArray() forbidden?: string[];
+  /** Empty `partner_hotel_sn` clears the context; absent leaves it unchanged. */
+  @IsOptional() @IsString() @MaxLength(32) partner_hotel_sn?: string;
+  @IsOptional() @IsString() @MaxLength(16) partner_role?: string;
+  @IsOptional() @IsString() @MaxLength(32) partner_mock_set?: string;
 }
 
 /** POST /ai-coach/golden/questions/bulk — TSV paste (PLN-261007 R7 S4). */

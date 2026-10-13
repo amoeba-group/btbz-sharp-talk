@@ -770,6 +770,7 @@ CREATE TABLE `golden_questions` (
   `created_by` bigint DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  `partner_ctx` json DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_golden_q_tenant` (`tenant_id`,`active`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1457,6 +1458,32 @@ CREATE TABLE `orders_cache` (
   KEY `idx_ordc_tenant_ordered` (`tenant_id`,`ordered_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `partner_lookup_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `partner_lookup_logs` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `conversation_id` bigint DEFAULT NULL,
+  `message_id` bigint DEFAULT NULL COMMENT 'the customer turn that triggered the lookup',
+  `session_id` bigint DEFAULT NULL,
+  `hotel_sn` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'from the verified claims, never from the message',
+  `actor_role` varchar(16) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `topic` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `params` json DEFAULT NULL COMMENT 'scrubbed; for a rejected lookup only {rejectedKeys:[...]}',
+  `status` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ok | denied | rejected | error | unverified',
+  `error_code` varchar(8) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'E5100..E5108',
+  `reason` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `source` varchar(8) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'mock | live',
+  `latency_ms` int DEFAULT NULL,
+  `snapshot_hash` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  KEY `idx_pll_tenant_created` (`tenant_id`,`created_at`),
+  KEY `idx_pll_tenant_hotel` (`tenant_id`,`hotel_sn`,`created_at`),
+  KEY `idx_pll_conversation` (`conversation_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `product_saves`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1798,6 +1825,7 @@ CREATE TABLE `tenants` (
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `storefront_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'customer-facing shop origin, e.g. https://ivyusa.com',
+  `partner_data_enabled` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_tenant_shop` (`shop_domain`),
   UNIQUE KEY `uk_tenant_slug` (`slug`),

@@ -223,6 +223,15 @@ export class Tenant {
   @Column({ name: 'commerce_enabled', type: 'tinyint', width: 1, default: 1 })
   commerceEnabled: number;
 
+  /**
+   * Partner data lookup (PLN-261012 SG-31): 1 lets signed-in hotel users' rate /
+   * policy / booking / settlement questions be answered from the partner API.
+   * Default 0 — the tenant's chat is exactly what it was. Takes effect only while
+   * the server-wide PARTNER_DATA_ENABLED env is on too.
+   */
+  @Column({ name: 'partner_data_enabled', type: 'tinyint', width: 1, default: 0 })
+  partnerDataEnabled: number;
+
   /** Live custom widget (widget_designs.id); NULL = the basic widget (PLN-260910 P3). */
   @Column({ name: 'active_widget_design_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
   activeWidgetDesignId: number | null;

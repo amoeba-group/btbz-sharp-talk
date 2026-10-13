@@ -43,6 +43,39 @@ export async function assertPublicUrl(rawUrl: string): Promise<void> {
   }
 }
 
+/** Hostnames an OPERATOR (env, never a tenant) allows even though they are private or plain http. */
+export function privatePartnerHosts(): string[] {
+  return (process.env.PARTNER_API_PRIVATE_HOSTS ?? '')
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/**
+ * SSRF guard for the partner-data API base URL (PLN-261012 SG-32), shared by the
+ * live client and the "Test connection" probe. A tenant-supplied URL must be
+ * https and resolve to a public address — the same rule as every probe here.
+ * When Go2Joy hosts the API on THEIR private network the operator lists the host
+ * in PARTNER_API_PRIVATE_HOSTS; plain http is then allowed outside production
+ * only. The tenant can never widen this list.
+ */
+export async function assertPartnerApiUrl(baseUrl: string): Promise<void> {
+  let parsed: URL;
+  try {
+    parsed = new URL(baseUrl);
+  } catch {
+    throw new SsrfBlockedError('URL is malformed');
+  }
+  if (privatePartnerHosts().includes(parsed.hostname.toLowerCase())) {
+    if (parsed.protocol === 'http:' && process.env.NODE_ENV === 'production') {
+      throw new SsrfBlockedError('plain http is not allowed in production');
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new SsrfBlockedError('unsupported scheme');
+    return;
+  }
+  await assertPublicUrl(baseUrl);
+}
+
 /** True for loopback / private / link-local / CGNAT / metadata / unspecified IPs. */
 function isBlockedAddress(addr: string): boolean {
   const v = isIP(addr);
@@ -113,6 +146,8 @@ export async function probeEcommerce(
         return await probeYotpo(config);
       case 'gorgias':
         return await probeGorgias(config);
+      case 'go2joy_partner_api':
+        return await probePartnerApi(config);
       default:
         return { ok: false, detail: 'Unsupported provider' };
     }
@@ -244,6 +279,31 @@ async function probeGorgias(c: Record<string, string>): Promise<ProbeResult> {
   if (res.ok) return { ok: true, detail: 'Connected' };
   if (res.status === 401) return { ok: false, detail: 'Gorgias credentials invalid' };
   return { ok: false, detail: `Gorgias returned ${res.status}` };
+}
+
+/**
+ * Go2Joy partner-data API (PLN-261012 SG-32) — `GET /v0/ping` with the service
+ * key. Proves the host is reachable and the key is accepted; needs no hotel, so
+ * it says nothing about a hotel's scope. Built against OUR draft contract
+ * (docs/guide/API-REQ-Go2Joy-Partner-Data.openapi.yaml): until Go2Joy publishes
+ * theirs, a failure here may be a contract difference rather than a bad key.
+ */
+async function probePartnerApi(c: Record<string, string>): Promise<ProbeResult> {
+  const base = (c.base_url ?? '').trim().replace(/\/+$/, '');
+  const key = (c.api_key ?? '').trim();
+  if (!base || !key) return missing();
+  if (!ASCII.test(key)) return { ok: false, detail: 'API key contains invalid characters' };
+  await assertPartnerApiUrl(base); // SEC-M3: tenant-supplied base URL
+  const res = await httpFetch(`${base}/v0/ping`, {
+    // No redirects: one could point at an internal host after the guard passed.
+    redirect: 'error',
+    headers: { Authorization: `Bearer ${key}`, Accept: 'application/json' },
+  });
+  if (res.ok) return { ok: true, detail: 'Connected' };
+  if (res.status === 401 || res.status === 403) {
+    return { ok: false, detail: 'Partner API key was rejected' };
+  }
+  return { ok: false, detail: `Partner API returned ${res.status}` };
 }
 
 /** Haravan Admin API (Shopify-compatible) — Bearer access token against shop.json. */
