@@ -270,6 +270,13 @@ export const ERROR_CODE = {
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },
+
+  // E5110-E5111 — KB UI version stamping (PLN-261012 SG-20). E5112-E5114 stay reserved for this stream.
+  KB_UI_VERSION_INVALID: {
+    code: 'E5110',
+    message: 'The UI version must be 1-16 characters: letters, digits and . _ + - (for example v0.12.0)',
+  },
+  KB_VERSION_POLICY_INVALID: { code: 'E5111', message: 'The reference UI version setting is invalid' },
 } as const;
 
 export type ErrorCodeEntry = { code: string; message: string };

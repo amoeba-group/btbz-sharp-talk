@@ -1,6 +1,6 @@
 import type { AnswerFooter } from '../answer-footer.util';
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
-import type { GuestGuidance, LocalizedText, RegionRoutingConfig } from '@sharptalk/types';
+import type { GuestGuidance, KbVersionPolicy, LocalizedText, RegionRoutingConfig } from '@sharptalk/types';
 import { bigintTransformer } from '../../../global/util/transformers';
 
 /** Scenario button shown in the widget menu (FR-003 / FN-009). */
@@ -206,6 +206,14 @@ export class TenantAiConfig {
    */
   @Column({ name: 'guest_guidance', type: 'json', nullable: true })
   guestGuidance: GuestGuidance | null;
+  /**
+   * Reference UI version for KB documents (PLN-261012 SG-20): `{ referenceVersion,
+   * onMismatch: 'caveat' | 'hide' | 'off', notice? }`. NULL = no stamping, which
+   * is every existing tenant — answers and retrieval are untouched. Written only
+   * through sanitizeKbVersionPolicy. Explicit `type: 'json'` — see ai-agent.entity (A-1).
+   */
+  @Column({ name: 'kb_version_policy', type: 'json', nullable: true })
+  kbVersionPolicy: KbVersionPolicy | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -145,4 +145,15 @@ export class KbDocument {
   /** Set when a conflict review picks the other document as the one to follow. */
   @Column({ name: 'superseded_by', type: 'bigint', nullable: true, transformer: bigintTransformer })
   supersededBy: number | null;
+
+  /**
+   * The product UI version this document describes (PLN-261012 SG-20), as the
+   * operator typed it ("v23.3.0", "0.12.0"). An opaque label — the version axis
+   * is undecided, so the only operation is equality after normalisation
+   * (@sharptalk/types kb-version.ts). NULL = unversioned: never caveated in an
+   * answer, flagged in the console. The "verified on" date is the existing
+   * `reviewedAt`, not a second column.
+   */
+  @Column({ name: 'ui_version', type: 'varchar', length: 16, nullable: true })
+  uiVersion: string | null;
 }
