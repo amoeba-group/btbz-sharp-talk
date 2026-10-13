@@ -35,6 +35,8 @@ export function toSessionResponse(
   aiAgent: { id: number | null; name: string | null } = { id: null, name: null },
   identityClaims: IdentityClaims | null = null,
   partnerLink: string | null = null,
+  /** The signed claims have lapsed (PLN-261012 SG-03). */
+  identityExpired = false,
 ) {
   return {
     id: c.id,
@@ -50,6 +52,8 @@ export function toSessionResponse(
     identityClaims,
     /** Tenant host-system link for that hotel (W6); null = no template or unsigned. */
     partnerLink,
+    /** Present (true) only when the claims have lapsed — the header says so instead of showing a stale login. */
+    ...(identityExpired ? { identityExpired: true } : {}),
     // The session this row belongs to. The row id is a CONVERSATION id (the
     // console calls it a session), so the real session id has to travel too —
     // the alias hangs off the session, not the conversation (PLN-260812).

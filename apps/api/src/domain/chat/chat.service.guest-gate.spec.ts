@@ -17,7 +17,15 @@ describe('ChatService — guest gate helpers', () => {
       hotelName: 'A In Hotel Del Luna',
       hotelCode: 'HCM_001_001721-TC-000',
       signed: true,
-      verifiedAt: '2026-10-06T00:00:00.000Z',
+      // Fresh on purpose: claims older than IDENTITY_MAX_AGE_HOURS read as a guest
+      // (PLN-261012 SG-03), so a fixed past date would make every helper go quiet.
+      verifiedAt: new Date().toISOString(),
+    },
+  } as unknown as Pick<Session, 'identityClaims'>;
+  const lapsed = {
+    identityClaims: {
+      ...(signed.identityClaims as object),
+      verifiedAt: new Date(Date.now() - 9 * 3_600_000).toISOString(),
     },
   } as unknown as Pick<Session, 'identityClaims'>;
 
@@ -37,6 +45,10 @@ describe('ChatService — guest gate helpers', () => {
       ).toBeUndefined();
     });
 
+    it('is absent once the signed claims are older than the max age (SG-03)', () => {
+      expect(partnerContextOf(lapsed)).toBeUndefined();
+    });
+
     it('falls back to a neutral name when the display name is missing', () => {
       expect(
         partnerContextOf({
@@ -52,6 +64,9 @@ describe('ChatService — guest gate helpers', () => {
     });
     it('is absent without signed claims', () => {
       expect(partnerLabelOf({ identityClaims: null } as Pick<Session, 'identityClaims'>)).toBeUndefined();
+    });
+    it('is absent once the signed claims are older than the max age (SG-03)', () => {
+      expect(partnerLabelOf(lapsed)).toBeUndefined();
     });
   });
 

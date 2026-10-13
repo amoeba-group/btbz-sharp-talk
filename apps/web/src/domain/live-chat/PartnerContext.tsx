@@ -30,7 +30,15 @@ export function hotelLabel(claims: IdentityClaims): string {
 }
 
 /** One line under a queue row: hotel, key, signed/unsigned. */
-export function PartnerLine({ claims, className }: { claims: IdentityClaims; className?: string }) {
+export function PartnerLine({
+  claims,
+  className,
+  expired,
+}: {
+  claims: IdentityClaims;
+  className?: string;
+  expired?: boolean;
+}) {
   return (
     <p
       className={cn('mt-0.5 flex min-w-0 items-center gap-1 text-[11px] text-gray-500', className)}
@@ -38,8 +46,21 @@ export function PartnerLine({ claims, className }: { claims: IdentityClaims; cla
     >
       <Building2 className="h-3 w-3 shrink-0 text-gray-400" />
       <span className="truncate">{hotelLabel(claims)}</span>
-      <SignedMark claims={claims} />
+      {expired ? <ExpiredMark /> : <SignedMark claims={claims} />}
     </p>
+  );
+}
+
+/**
+ * The signed sign-in lapsed (PLN-261012 SG-03): the visitor is treated as a guest until the
+ * host system signs again, so the "signed" tick must not keep vouching for them.
+ */
+export function ExpiredMark() {
+  const { t } = useTranslation('livechat');
+  return (
+    <span className="inline-flex shrink-0 items-center gap-0.5 text-warning" title={t('partner.expiredHint')}>
+      <ShieldAlert className="h-3 w-3" /> {t('partner.expired')}
+    </span>
   );
 }
 
@@ -64,9 +85,12 @@ export function SignedMark({ claims }: { claims: IdentityClaims }) {
 export function PartnerHeader({
   claims,
   partnerLink,
+  expired,
 }: {
   claims: IdentityClaims;
   partnerLink?: string | null;
+  /** The signed claims lapsed (PLN-261012 SG-03). */
+  expired?: boolean;
 }) {
   const { t } = useTranslation('livechat');
   const verifiedAt = (() => {
@@ -89,7 +113,7 @@ export function PartnerHeader({
           </span>
         )}
       </span>
-      <SignedMark claims={claims} />
+      {expired ? <ExpiredMark /> : <SignedMark claims={claims} />}
       {verifiedAt && (
         <span className="text-[11px] text-gray-400" title={t('partner.verifiedAt')}>
           {verifiedAt}

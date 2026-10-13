@@ -854,6 +854,24 @@
       "delete": "已删除快照"
     }
   },
+  "identityPolicy": {
+    "title": "签名登录(SSO)策略",
+    "description": "设置您自己的服务器为小部件签名的登录信息可信多久，以及是否接受不带酒店和角色的登录。",
+    "maxAge": "签名登录的有效时长",
+    "maxAgeDefault": "平台默认({{hours}} 小时)",
+    "maxAgeDefaultNever": "平台默认(永不过期)",
+    "maxAgeCustom": "自定义",
+    "hours": "小时",
+    "maxAgeHint": "超过此时长后，访客将按访客处理，直到您的应用重新签名。小部件会触发 identity-expired 事件，以便静默重新调用 ShopTalk.identify()。范围 1–720 小时。",
+    "refuseV1": "拒绝不带酒店和角色的登录(v1)",
+    "refuseV1Hint": "v1 签名永不过期，也无法说明此人代表哪家酒店、担任什么角色。待您的应用改为携带 claims(v2)签名后再开启。",
+    "inForce": "当前生效:{{hours}} 小时",
+    "inForceNever": "当前生效:永不过期",
+    "masterOnly": "只有账户主管理员可以修改。",
+    "invalidHours": "请输入 1–720 之间的整数小时数。",
+    "saved": "已保存登录策略",
+    "saveError": "未能保存登录策略"
+  },
   "widgetAccess": {
     "title": "展示限制（测试模式）",
     "on": "已启用",

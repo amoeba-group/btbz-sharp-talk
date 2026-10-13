@@ -11,6 +11,7 @@ import {
   rateChat,
 } from '../services/chatService';
 import type { ChatAttachment, ChatMessage, ChatReply, ScenarioPostAction } from '../lib/types';
+import { identityExpiry } from '../lib/identity-expiry';
 
 export interface SendResult {
   escalate: boolean;
@@ -55,6 +56,9 @@ export function useChat(sessionToken: string | null) {
     queryFn: async () => {
       const after = lastServerId.current;
       const conv = await getConversation(sessionToken!, after);
+      // The signed identity lapsed while the panel was open (PLN-261012 SG-03): the
+      // host is told once, and signs again on the same session.
+      if (conv.identityExpired) identityExpiry.reportExpired(sessionToken);
       if (!inFlight.current) {
         if (conv.status) setStatus(conv.status);
         // The server decides whether rating is still open (24h window); the
@@ -109,6 +113,7 @@ export function useChat(sessionToken: string | null) {
           attachments?.map((a) => a.id),
         );
         setConversationId(res.conversationId);
+        if (res.identityExpired) identityExpiry.reportExpired(sessionToken);
         // A message after an ended thread opened a fresh conversation — clear
         // the ended banner now rather than waiting for the next poll.
         setStatus((s) => (s === 'ended' ? 'ai_active' : s));
@@ -177,6 +182,7 @@ export function useChat(sessionToken: string | null) {
       try {
         const res = await sendScenario(sessionToken, action, text);
         setConversationId(res.conversationId);
+        if (res.identityExpired) identityExpiry.reportExpired(sessionToken);
         // An empty body means the turn produced no visible reply — agent mode,
         // where the human answers through polling (PLN-261001 §1-2). Appending
         // it would draw an empty bubble under the shopper's own message.

@@ -422,6 +422,8 @@
     "signedHint": "El sistema anfitrión firmó este hotel y rol.",
     "unsignedHint": "Declarado por la página, sin firmar: verifícalo antes de actuar.",
     "verifiedAt": "Verificado el",
+    "expired": "caducado",
+    "expiredHint": "Este inicio de sesión supera la antigüedad permitida. El visitante se trata como invitado hasta que el sistema anfitrión vuelva a firmar.",
     "openInHost": "Abrir en el sistema anfitrión",
     "briefingLine": "Socio de {{hotel}} · {{role}}",
     "role": {

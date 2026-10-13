@@ -903,6 +903,17 @@
     }
     // Everything else must come from our widget iframe origin.
     if (e.origin !== baseOrigin) return;
+    // Widget → host events (PLN-261012 SG-03). The widget has always posted
+    // `ivy:event`, and this loader used to drop it. Only the named events below reach
+    // the page's ShopTalk.on(); `identity-expired` is the host's cue to sign again and
+    // call identify() on the same session. Only our own iframe may raise one.
+    if (d.type === 'ivy:event') {
+      if (e.source === frame.contentWindow) {
+        if (d.event === 'identity-expired') emit('identity-expired', {});
+        else if (d.event === 'identified') emit('identified', { ok: d.ok === true });
+      }
+      return;
+    }
     if (d.type === 'ivy:resize') {
       isOpen = !!d.open;
       if (isOpen) openedAt = Date.now();

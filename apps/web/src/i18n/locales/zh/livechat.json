@@ -422,6 +422,8 @@
     "signedHint": "主系统已对该酒店和角色签名。",
     "unsignedHint": "由页面申报、未签名 — 处理前请核实。",
     "verifiedAt": "验证时间",
+    "expired": "已过期",
+    "expiredHint": "此登录已超过允许时长。在宿主系统重新签名之前，访客将按访客处理。",
     "openInHost": "在主系统中打开",
     "briefingLine": "{{hotel}} 的合作伙伴 · {{role}}",
     "role": {

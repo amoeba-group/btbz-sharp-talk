@@ -422,6 +422,8 @@
     "signedHint": "호스트 시스템이 이 호텔과 역할을 서명했습니다.",
     "unsignedHint": "페이지가 신고한 값으로 서명되지 않았습니다 — 처리 전 확인하세요.",
     "verifiedAt": "확인 시각",
+    "expired": "만료됨",
+    "expiredHint": "허용 시간이 지난 로그인입니다. 호스트 시스템이 다시 서명할 때까지 방문자는 게스트로 처리됩니다.",
     "openInHost": "호스트 시스템에서 열기",
     "briefingLine": "{{hotel}} 파트너 · {{role}}",
     "role": {

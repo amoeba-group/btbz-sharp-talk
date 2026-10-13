@@ -1,6 +1,7 @@
 import type { SessionResponse } from '@sharptalk/types';
 import { Session } from './entity/session.entity';
 import { PrivacyNoticeInfo } from './session.service';
+import type { EffectiveIdentity } from './identity.util';
 
 /**
  * Response shape lives in `@sharptalk/types` — the widget imports the same contract, so
@@ -13,12 +14,23 @@ export class SessionMapper {
     s: Session,
     notice: PrivacyNoticeInfo,
     customerName: string | null = null,
+    /**
+     * What the session may be treated as right now (PLN-261012 SG-03). Omitted =
+     * the stored binding as is, which is every caller that predates expiry.
+     */
+    identity?: EffectiveIdentity,
   ): SessionResponse {
     return {
       sessionToken: s.sessionToken,
       language: s.language,
       consentState: s.consentState,
-      authenticated: s.customerId != null,
+      // Lapsed signed claims no longer count as a login: the widget shows a guest
+      // until the host signs again.
+      authenticated: (identity ? identity.customerId : s.customerId) != null,
+      // Present only when there is something to say, so tenants and widgets that
+      // never see signed claims get the exact response they always had.
+      ...(identity?.expired ? { identityExpired: true } : {}),
+      ...(identity?.expiresAt ? { identityExpiresAt: identity.expiresAt } : {}),
       customerName,
       privacyPolicyUrl: notice.privacyPolicyUrl,
       consentNoticeVersion: notice.consentNoticeVersion,

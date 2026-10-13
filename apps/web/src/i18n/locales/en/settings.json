@@ -854,6 +854,24 @@
       "delete": "Snapshot deleted"
     }
   },
+  "identityPolicy": {
+    "title": "Signed sign-in (SSO) policy",
+    "description": "How long the sign-in your own server signs for the widget stays trusted, and whether sign-ins without a hotel and role are accepted.",
+    "maxAge": "Trust a signed sign-in for",
+    "maxAgeDefault": "Platform default ({{hours}} hours)",
+    "maxAgeDefaultNever": "Platform default (never expires)",
+    "maxAgeCustom": "Custom",
+    "hours": "hours",
+    "maxAgeHint": "After this, the visitor is treated as a guest until your app signs again. The widget raises the identity-expired event so ShopTalk.identify() can run silently. 1 to 720 hours.",
+    "refuseV1": "Refuse sign-ins without hotel and role (v1)",
+    "refuseV1Hint": "A v1 signature never expires and cannot say which hotel or role the person acts for. Turn this on once your app signs with claims (v2).",
+    "inForce": "In force now: {{hours}} hours",
+    "inForceNever": "In force now: no expiry",
+    "masterOnly": "Only the account master can change this.",
+    "invalidHours": "Enter a whole number of hours from 1 to 720.",
+    "saved": "Sign-in policy saved",
+    "saveError": "Could not save the sign-in policy"
+  },
   "widgetAccess": {
     "title": "Exposure restriction (test mode)",
     "on": "On",

@@ -422,6 +422,8 @@
     "signedHint": "Hệ thống chủ đã ký khách sạn và vai trò này.",
     "unsignedHint": "Do trang tự khai, chưa ký — hãy xác minh trước khi xử lý.",
     "verifiedAt": "Xác minh lúc",
+    "expired": "hết hạn",
+    "expiredHint": "Phiên đăng nhập này đã quá thời hạn cho phép. Khách được xem là khách vãng lai cho đến khi hệ thống chủ ký lại.",
     "openInHost": "Mở trong hệ thống",
     "briefingLine": "Đối tác của {{hotel}} · {{role}}",
     "role": {

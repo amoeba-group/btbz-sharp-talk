@@ -35,6 +35,7 @@ import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { EventBusService, EVENTS, MailerService } from '../../infrastructure/infrastructure.module';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { SessionService, sessionCacheKey } from '../session/session.service';
+import { effectiveIdentity } from '../session/identity.util';
 import { PROMPT_LANGUAGE_NAMES } from './prompt-language';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
@@ -336,6 +337,8 @@ export class AgentService {
       identityClaims: IdentityClaims | null;
       /** Deep link into the tenant's own system for that partner (W6); null = no template/claims. */
       partnerLink: string | null;
+      /** The signed claims have lapsed (PLN-261012 SG-03) — the console marks the header. */
+      identityExpired: boolean;
     }>;
     total: number;
   }> {
@@ -454,6 +457,8 @@ export class AgentService {
     // One read per page, not per row: the "open in host system" template is
     // tenant-wide; only the substituted hotel differs (REQ-261006 W6).
     const hostTemplate = await this.hostLinkTemplate(tenantId);
+    // One policy read per page for the same reason (PLN-261012 SG-03).
+    const identityPolicy = await this.identityPolicy(tenantId);
     const items = conversations.map((conversation) => {
       const state = stateBySession.get(String(conversation.sessionId));
       const pinned = state?.aiAgentId ?? null;
@@ -476,6 +481,7 @@ export class AgentService {
             : agentDisplay.defaultLabel,
         identityClaims: state?.identityClaims ?? null,
         partnerLink: partnerLinkOf(hostTemplate, state?.identityClaims ?? null),
+        identityExpired: effectiveIdentity({ identityClaims: state?.identityClaims ?? null }, identityPolicy).expired,
       };
     });
     return { items, total };
@@ -613,6 +619,8 @@ export class AgentService {
     identityClaims: IdentityClaims | null;
     /** "Open in host system" link for that partner (W6); null without template/claims. */
     partnerLink: string | null;
+    /** The signed claims have lapsed (PLN-261012 SG-03). */
+    identityExpired: boolean;
   }> {
     const state = (await this.sessionStates([sessionId])).get(String(sessionId));
     const hostTemplate = tenantId != null ? await this.hostLinkTemplate(tenantId) : null;
@@ -637,7 +645,20 @@ export class AgentService {
           : display.defaultLabel,
       identityClaims: state?.identityClaims ?? null,
       partnerLink: partnerLinkOf(hostTemplate, state?.identityClaims ?? null),
+      identityExpired: effectiveIdentity(
+        { identityClaims: state?.identityClaims ?? null },
+        await this.identityPolicy(tenantId),
+      ).expired,
     };
+  }
+
+  /** The tenant's identity policy, or null (default) — never throws (PLN-261012 SG-03). */
+  private async identityPolicy(tenantId?: number | null) {
+    try {
+      return (await this.sessionService.identityPolicyFor?.(tenantId)) ?? null;
+    } catch {
+      return null;
+    }
   }
 
   /** session id → alias + auto-reply mode (+ AI agent pin, partner claims), one query per page. */

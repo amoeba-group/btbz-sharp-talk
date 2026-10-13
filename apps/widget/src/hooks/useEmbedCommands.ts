@@ -23,6 +23,7 @@ import {
   resetToGuest,
   type SessionSwapPorts,
 } from '../lib/session-swap';
+import { identityExpiry } from '../lib/identity-expiry';
 import i18n, { LANG_STORAGE_KEY, SUPPORTED_LANGUAGES } from '../i18n/i18n';
 
 const TABS: TabKey[] = ['chat', 'orders', 'notifications'];
@@ -56,21 +57,24 @@ export function useEmbedCommands(): void {
     const swap: SessionSwapPorts = {
       clearCache: () => queryClient.clear(),
       detach: () => {
+        // No session, nothing to lapse: stop the timer and forget what was reported.
+        identityExpiry.cancel();
         const s = useWidgetStore.getState();
         s.setSessionToken(null);
         s.setAuthenticated(false);
         s.setCustomerName(null);
         s.resetSessionScopedState();
       },
-      adopt: (res) => {
+      adopt: (res, opts) => {
         const s = useWidgetStore.getState();
         s.setAuthenticated(!!res.authenticated);
         s.setCustomerName(res.customerName ?? null);
-        // A fresh guest session starts consent 'pending' and the first message
-        // would be refused as "consent required": replay the choice made in this
-        // browser, exactly as the first ensure does. A forked session already
-        // carries the consent from the server and just reports it.
-        adoptSessionConsent(res);
+        // The consent the server decided: carried when the same person switched
+        // hotel or role, pending for a different person — whom the notice is shown
+        // to again instead of replaying the previous person's stored yes (the swap
+        // module passes `replayConsent: false` for exactly those cases).
+        adoptSessionConsent(res, { replay: opts?.replayConsent });
+        identityExpiry.observe(res);
         // Token last: it re-keys the panels, which must find the rest in place.
         s.setSessionToken(res.sessionToken);
       },
@@ -108,6 +112,8 @@ export function useEmbedCommands(): void {
           // Asked once per token elsewhere (useSessionProfile); the answer
           // already carries it, and it must follow the identity.
           store.setCustomerName(res.customerName ?? null);
+          // The host just signed: re-arm the lapse timer for the new signature.
+          identityExpiry.observe(res);
           // The menu is audience-filtered server-side (PLN-261001 V4): a
           // signed-in partner gets the business chips, not the sign-in ones. The
           // list was fetched once for a guest, so ask again now.

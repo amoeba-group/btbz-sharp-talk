@@ -24,8 +24,15 @@ export interface TraceCitation {
 export interface MessageTrace {
   citations?: TraceCitation[];
   confidence?: number;
-  /** Handoff reason on system turns: low_confidence / moderation_blocked / user_request. */
+  /**
+   * Why a system turn was sent, from the closed refusal vocabulary (PLN-261012 SG-50):
+   * guest_gate / auth_gate / moderation / low_confidence / policy_deny / identity_expired …,
+   * or user_request for a handoff the customer asked for. Older rows carry the escalation
+   * words (moderation_blocked, policy).
+   */
   reason?: string;
+  /** The AI agent that was speaking on a refusal / system turn. */
+  agentId?: number;
   scenario?: string;
 }
 

@@ -47,6 +47,8 @@ export interface AgentSession {
   identityClaims?: IdentityClaims | null;
   /** "Open in host system" link the API resolved for that hotel; null = none. */
   partnerLink?: string | null;
+  /** The signed claims lapsed (PLN-261012 SG-03): the visitor is a guest until the host signs again. */
+  identityExpired?: boolean;
   /** Origin surface: widget | telegram | viber | zalo | line | kakao | sms | email … */
   channel?: string | null;
   /** Team the customer picked when asking for a human (PLN-261007 Team Routing). */
@@ -143,6 +145,7 @@ export interface ConversationDetail {
   /** Signed partner context for the header (REQ-261006 W6). */
   identityClaims?: IdentityClaims | null;
   partnerLink?: string | null;
+  identityExpired?: boolean;
   messages: ChatMessage[];
   /** Older messages exist before the first one returned (PLN-260807). */
   hasMore?: boolean;

@@ -333,6 +333,7 @@ export class AgentConsoleController {
           aiAgentName,
           identityClaims,
           partnerLink,
+          identityExpired,
         }) =>
           toSessionResponse(
             conversation,
@@ -343,6 +344,7 @@ export class AgentConsoleController {
             { id: aiAgentId, name: aiAgentName },
             identityClaims,
             partnerLink,
+            identityExpired,
           ),
       ),
       buildPagination(page, size, total),

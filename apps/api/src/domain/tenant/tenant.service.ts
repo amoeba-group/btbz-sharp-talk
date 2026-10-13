@@ -16,6 +16,9 @@ import {
   NOTIFICATION_CATEGORY,
   WIDGET_TABS_DEFAULT,
   normalizeWidgetTabs,
+  IDENTITY_MAX_AGE_HOURS_MAX,
+  IDENTITY_MAX_AGE_HOURS_MIN,
+  normalizeIdentityPolicy,
 } from '@sharptalk/types';
 
 /** Real categories the policy may mention ('all' is a query filter, not a kind). */
@@ -56,6 +59,7 @@ import {
   UpdateWidgetAccessRequest,
   UpdateWidgetThemeRequest,
   UpdateShopifySettingsRequest,
+  UpdateIdentityPolicyRequest,
 } from './dto/request/tenant.request';
 import { AuditService } from '../audit/audit.service';
 import { TenantAssetService } from '../tenant-asset/tenant-asset.service';
@@ -576,6 +580,45 @@ export class TenantService {
       action: 'tenant.embed_origins_updated',
       target: cleaned.length ? cleaned.join(', ') : '(default: storefront only)',
     });
+    return saved;
+  }
+
+  /**
+   * How this tenant's signed identity is treated (PLN-261012 SG-03 / SG-04): how long
+   * signed claims stay trusted, and whether v1 identify (no claims) is refused. Sent
+   * whole; nothing set clears the column back to NULL, which is the platform default.
+   *
+   * The hour count is validated, not coerced: 0 or a huge value would switch the expiry
+   * off, which a typo must not be able to do. Effective within the identity-policy
+   * cache window (15 s) on every API process.
+   */
+  async updateIdentityPolicy(
+    tenantId: number,
+    actorId: number,
+    body: UpdateIdentityPolicyRequest,
+  ): Promise<Tenant> {
+    const hours = body.max_age_hours;
+    if (
+      hours != null &&
+      (!Number.isInteger(hours) || hours < IDENTITY_MAX_AGE_HOURS_MIN || hours > IDENTITY_MAX_AGE_HOURS_MAX)
+    ) {
+      this.logger.warn(`identity policy rejected: max_age_hours out of range (tenant ${tenantId})`);
+      throw new BusinessException(ERROR_CODE.IDENTITY_POLICY_INVALID, HttpStatus.BAD_REQUEST);
+    }
+    const tenant = await this.findById(tenantId);
+    const next = normalizeIdentityPolicy({ maxAgeHours: hours, refuseV1: body.refuse_v1 });
+    tenant.identityPolicy = next;
+    const saved = await this.tenantRepo.save(tenant);
+    await this.audit
+      .write({
+        tenantId,
+        actorType: 'user',
+        actorId,
+        action: 'tenant.identity_policy_updated',
+        target: 'identity policy',
+        metadata: next ? { ...next } : { cleared: true },
+      })
+      .catch(() => undefined);
     return saved;
   }
 

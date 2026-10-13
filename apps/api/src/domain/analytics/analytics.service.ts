@@ -524,6 +524,8 @@ export class AnalyticsService {
     if (Array.isArray(t.citations)) out.citations = t.citations;
     if (typeof t.confidence === 'number') out.confidence = t.confidence;
     if (typeof t.reason === 'string') out.reason = t.reason;
+    // The AI agent behind a refusal / system turn (PLN-261012 SG-50).
+    if (typeof t.agentId === 'number') out.agentId = t.agentId;
     if (typeof t.scenario === 'string') out.scenario = t.scenario;
     return Object.keys(out).length > 0 ? out : null;
   }

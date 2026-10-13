@@ -15,7 +15,9 @@ import {
   WIDGET_TABS_DEFAULT,
   normalizeWidgetTabs,
   DEFAULT_BRAND,
+  normalizeIdentityPolicy,
 } from '@sharptalk/types';
+import { platformMaxAgeMs, resolveMaxAgeMs } from '../session/identity.util';
 import {
   CredentialResponse,
   PrivacyNoticeResponse,
@@ -162,6 +164,29 @@ export class TenantMapper {
       /** Whether the window is open right now — drives the console badge. */
       activeNow: access?.enabled ? isWithinWindow(access, new Date()) : false,
       shopDomain: tenant.shopDomain ?? null,
+    };
+  }
+
+  /**
+   * The identity policy for the console (PLN-261012 SG-03 / SG-04). `maxAgeHours` /
+   * `refuseV1` are what is STORED (null / false = never configured); `effectiveHours`
+   * is what the gate will actually use — the override, else the platform default, or
+   * null when the operator switched expiry off platform-wide — so the screen can say
+   * which one is in force instead of leaving the operator to infer it.
+   */
+  static toIdentityPolicy(t: Tenant): {
+    maxAgeHours: number | null;
+    refuseV1: boolean;
+    effectiveHours: number | null;
+    platformDefaultHours: number | null;
+  } {
+    const policy = normalizeIdentityPolicy(t.identityPolicy);
+    const hours = (ms: number | null) => (ms == null ? null : ms / 3_600_000);
+    return {
+      maxAgeHours: policy?.maxAgeHours ?? null,
+      refuseV1: policy?.refuseV1 === true,
+      effectiveHours: hours(resolveMaxAgeMs(policy)),
+      platformDefaultHours: hours(platformMaxAgeMs()),
     };
   }
 

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { WidgetThemeCard, WidgetTabsCard, WidgetBehaviorCard, InstallGuideCard } from './SettingsPage';
 import { EmbedCard } from './EmbedCard';
+import { IdentityPolicyCard } from './IdentityPolicyCard';
 import { WidgetAccessCard } from './WidgetAccessCard';
 import { DesignAssetsCard } from './DesignAssetsCard';
 import { WidgetDesignsCard } from './WidgetDesignsCard';
@@ -23,6 +24,9 @@ export function SettingsWidgetPage() {
       {/* Where the widget may be embedded, and how a host proves its visitor
           (PLN-260819). Sits next to the install guide because it is the same job. */}
       <EmbedCard />
+      {/* The other half of the same handshake: how long the host's signed sign-in is
+          trusted, and whether a sign-in without hotel and role is accepted (PLN-261012). */}
+      <IdentityPolicyCard />
       {/* Who may SEE the widget while it is being tested (PLN-260929). Next to
           the embed card because both answer "where does this widget appear" —
           that one for installs, this one for a limited rollout. */}
