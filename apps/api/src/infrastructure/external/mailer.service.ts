@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { resolveMailFrom } from './alert-address.util';
 
 export interface MailMessage {
   to: string;
@@ -49,7 +50,12 @@ export class MailerService {
         auth: user ? { user, pass: this.config.get<string>('SMTP_PASS') } : undefined,
       });
       await transport.sendMail({
-        from: this.config.get<string>('ALERT_EMAIL_FROM') ?? user ?? 'noreply@ivyusa.local',
+        // Blank-safe and never Amoeba's: see resolveMailFrom (PLN-261012 SG-80).
+        from: resolveMailFrom({
+          from: this.config.get<string>('ALERT_EMAIL_FROM'),
+          smtpUser: user,
+          appPublicUrl: this.config.get<string>('APP_PUBLIC_URL'),
+        }),
         to: mail.to,
         subject: mail.subject,
         text: mail.text,

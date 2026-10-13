@@ -1,3 +1,5 @@
+import { resolveWidgetUrl } from './widget-url-resolve';
+
 /**
  * Where the widget SPA and its storefront loader are served.
  *
@@ -9,11 +11,16 @@
  * as a script, and the widget simply never appears — nothing in the network tab
  * looks red (FIX-260917-Embed-Snippet-Url).
  *
- * The env override lets each build target its own host; the default is staging.
+ * Where it points — an explicit VITE_WIDGET_URL, else THIS deployment's own origin —
+ * is decided in widget-url-resolve.ts (PLN-261012 SG-80): the default used to be
+ * Amoeba's staging host, which every self-hosted build inherited.
  */
-export const WIDGET_URL = (
-  (import.meta.env.VITE_WIDGET_URL as string | undefined) || 'https://shoptalk.amoeba.site/widget'
-).replace(/\/+$/, '');
+export const WIDGET_URL = resolveWidgetUrl({
+  explicit: import.meta.env.VITE_WIDGET_URL as string | undefined,
+  apiBase: import.meta.env.VITE_API_BASE_URL as string | undefined,
+  origin: typeof window !== 'undefined' ? window.location.origin : undefined,
+  dev: import.meta.env.DEV,
+});
 
 /**
  * The versioned loader a storefront should install.

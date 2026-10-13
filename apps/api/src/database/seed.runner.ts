@@ -21,6 +21,7 @@ import { OrderItem } from '../domain/order/entity/order-item.entity';
 import { Fulfillment } from '../domain/order/entity/fulfillment.entity';
 import { Notification } from '../domain/notification/entity/notification.entity';
 import { IntegrationStatusEntity } from '../domain/integration/entity/integration-status.entity';
+import { resolveSeedIdentity, type SeedPasswordSource } from './seed-identity';
 
 /**
  * Functions given an explicit stub row at bootstrap.
@@ -52,8 +53,23 @@ const AI_FUNCTION_MAX_TOKENS: Record<string, number> = {
   moderation: 1024, // verdict JSON *and* full-message rephrase
 };
 
+/** What a seed run created, so callers (the CLI) can tell the operator without re-deriving it. */
+export interface SeedResult {
+  tenantSlug: string;
+  adminEmail: string;
+  masterEmail: string;
+  passwordSource: SeedPasswordSource;
+  /** One-time passwords, present only for accounts created in this run with a generated secret. */
+  generated: { admin?: string; master?: string };
+}
+
 export interface SeedOptions {
-  /** Bootstrap password for admin@ / dev@ (default from SEED_PASSWORD or 'amb2026!@'). */
+  /**
+   * Bootstrap password for the platform admin and the tenant master. Default:
+   * SEED_ADMIN_PASSWORD, then SEED_PASSWORD, then 'amb2026!@' in development — or a
+   * generated one-time password when NODE_ENV=production and none is configured
+   * (PLN-261012 SG-80; see seed-identity.ts).
+   */
   password?: string;
   /** Seed demo customer/orders/notifications (default true; set false for clean prod). */
   includeDemoData?: boolean;
@@ -66,23 +82,40 @@ export interface SeedOptions {
  * the CLI (`npm run db:seed`) and the optional SEED_ON_BOOT hook in main.ts so
  * staging/production can self-bootstrap without ts-node in the runtime image.
  */
-export async function runSeed(ds: DataSource, opts: SeedOptions = {}): Promise<void> {
+export async function runSeed(ds: DataSource, opts: SeedOptions = {}): Promise<SeedResult> {
   const logger = new Logger('Seed');
-  const password = opts.password ?? process.env.SEED_PASSWORD ?? 'amb2026!@';
-  const includeDemoData = opts.includeDemoData ?? process.env.SEED_DEMO_DATA !== 'false';
-  const kbProfile = opts.kbProfile ?? (process.env.SEED_KB_PROFILE === 'none' ? 'none' : 'us-cosmetics');
+  // Tenant slug/name/domain and the bootstrap accounts are configurable so a
+  // customer's own infrastructure does not boot with Amoeba's identity (SG-80).
+  const identity = resolveSeedIdentity(process.env, { password: opts.password });
+  // Left blank, a custom tenant gets neither the demo orders (IVY-1001, USD) nor the
+  // US-cosmetics policy documents — they are Amoeba's sample content, not a
+  // customer's. An explicit value still wins; the default tenant is unchanged.
+  const demoEnv = (process.env.SEED_DEMO_DATA ?? '').trim();
+  const kbEnv = (process.env.SEED_KB_PROFILE ?? '').trim();
+  const includeDemoData = opts.includeDemoData ?? (demoEnv === '' ? !identity.customTenant : demoEnv !== 'false');
+  const kbProfile =
+    opts.kbProfile ?? (kbEnv === 'none' || (kbEnv === '' && identity.customTenant) ? 'none' : 'us-cosmetics');
   if (kbProfile === 'none') logger.log('SEED_KB_PROFILE=none — baseline KB documents skipped');
-  const hash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+  const adminHash = await bcrypt.hash(identity.adminPassword, BCRYPT_ROUNDS);
+  const masterHash =
+    identity.masterPassword === identity.adminPassword
+      ? adminHash
+      : await bcrypt.hash(identity.masterPassword, BCRYPT_ROUNDS);
+  const generatedCredentials: SeedResult['generated'] = {};
 
   const tenantRepo = ds.getRepository(Tenant);
-  let tenant = await tenantRepo.findOne({ where: { name: 'ivyusa' } });
+  // By slug OR name: rows that predate the slug column are still found by name,
+  // which is how the default tenant has always been located.
+  let tenant = await tenantRepo.findOne({
+    where: [{ slug: identity.tenantSlug }, { name: identity.tenantName }],
+  });
   if (!tenant) {
     tenant = await tenantRepo.save(
       tenantRepo.create({
         uuid: randomUUID(),
-        shopDomain: 'ivyusa.myshopify.com',
-        slug: 'ivyusa',
-        name: 'ivyusa',
+        shopDomain: identity.tenantDomain,
+        slug: identity.tenantSlug,
+        name: identity.tenantName,
         status: 'active',
         plan: 'custom',
       }),
@@ -91,7 +124,7 @@ export async function runSeed(ds: DataSource, opts: SeedOptions = {}): Promise<v
     // Rows predating the slug/uuid columns get their identifiers backfilled.
     let dirty = false;
     if (!tenant.slug) {
-      tenant.slug = 'ivyusa';
+      tenant.slug = identity.tenantSlug;
       dirty = true;
     }
     if (!tenant.uuid) {
@@ -102,20 +135,31 @@ export async function runSeed(ds: DataSource, opts: SeedOptions = {}): Promise<v
   }
 
   // System admin + tenant master — bootstrap credentials (re)asserted each run.
+  // Exception: a GENERATED password is applied to NEW accounts only, so a restart
+  // with SEED_ON_BOOT left on cannot overwrite a password the operator already
+  // changed with one nobody has seen.
+  const randomPasswords = identity.passwordSource === 'generated';
   const adminRepo = ds.getRepository(AdminUser);
+  const existingAdmin = await adminRepo.findOne({ where: { email: identity.adminEmail } });
   const admin =
-    (await adminRepo.findOne({ where: { email: 'admin@amoeba.group' } })) ??
-    adminRepo.create({ email: 'admin@amoeba.group', level: 'super_admin', status: 'active' });
-  admin.passwordHash = hash;
-  admin.mustChangePassword = 1;
+    existingAdmin ?? adminRepo.create({ email: identity.adminEmail, level: 'super_admin', status: 'active' });
+  if (!randomPasswords || !existingAdmin) {
+    admin.passwordHash = adminHash;
+    admin.mustChangePassword = 1;
+    if (randomPasswords) generatedCredentials.admin = identity.adminPassword;
+  }
   await adminRepo.save(admin);
 
   const userRepo = ds.getRepository(User);
+  const existingMaster = await userRepo.findOne({ where: { tenantId: tenant.id, email: identity.masterEmail } });
   const master =
-    (await userRepo.findOne({ where: { tenantId: tenant.id, email: 'dev@amoeba.group' } })) ??
-    userRepo.create({ tenantId: tenant.id, email: 'dev@amoeba.group', name: 'Master Owner', rank: 'master', status: 'active' });
-  master.passwordHash = hash;
-  master.mustChangePassword = 1;
+    existingMaster ??
+    userRepo.create({ tenantId: tenant.id, email: identity.masterEmail, name: 'Master Owner', rank: 'master', status: 'active' });
+  if (!randomPasswords || !existingMaster) {
+    master.passwordHash = masterHash;
+    master.mustChangePassword = 1;
+    if (randomPasswords) generatedCredentials.master = identity.masterPassword;
+  }
   await userRepo.save(master);
 
   // Job labels + assign all to master
@@ -295,5 +339,30 @@ export async function runSeed(ds: DataSource, opts: SeedOptions = {}): Promise<v
     await ds.query(`UPDATE ${table} SET tenant_id = ? WHERE tenant_id IS NULL`, [tenant.id]);
   }
 
-  logger.log('Seed complete (tenant=ivyusa, admin@amoeba.group / dev@amoeba.group).');
+  logger.log(`Seed complete (tenant=${identity.tenantSlug}, ${identity.adminEmail} / ${identity.masterEmail}).`);
+  if (generatedCredentials.admin || generatedCredentials.master) {
+    // Printed ONCE, to this process's stdout only (docker logs). Both accounts are
+    // flagged must-change-password, so the value is dead after the first sign-in.
+    logger.warn(
+      [
+        '',
+        '================ SEED CREDENTIALS (shown once — change on first sign-in) ================',
+        ...(generatedCredentials.admin ? [`  platform admin : ${identity.adminEmail}  /  ${generatedCredentials.admin}`] : []),
+        ...(generatedCredentials.master
+          ? [`  tenant master  : ${identity.masterEmail}  /  ${generatedCredentials.master}   (tenant "${identity.tenantSlug}")`]
+          : []),
+        '  Set SEED_ON_BOOT=false after this boot. Store the new passwords in your password manager.',
+        '=========================================================================================',
+      ].join('\n'),
+    );
+  } else if (identity.passwordSource === 'generated') {
+    logger.log('Seed accounts already exist — no password was generated or changed.');
+  }
+  return {
+    tenantSlug: identity.tenantSlug,
+    adminEmail: identity.adminEmail,
+    masterEmail: identity.masterEmail,
+    passwordSource: identity.passwordSource,
+    generated: generatedCredentials,
+  };
 }

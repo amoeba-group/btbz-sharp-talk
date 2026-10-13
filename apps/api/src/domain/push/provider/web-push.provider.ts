@@ -39,7 +39,14 @@ export class WebPushProvider implements PushProvider {
       }
       return false;
     }
-    webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:dev@amoeba.group', pub, priv);
+    // The VAPID subject is the contact a push service may use to reach THIS
+    // deployment's operator, so it must not name Amoeba on a customer's host: an
+    // https APP_PUBLIC_URL is a valid subject and is always the deployment's own.
+    // The Amoeba mailbox survives only as the last resort for local development.
+    const publicUrl = process.env.APP_PUBLIC_URL?.trim();
+    const subject =
+      process.env.VAPID_SUBJECT || (publicUrl && /^https:\/\//i.test(publicUrl) ? publicUrl : 'mailto:dev@amoeba.group');
+    webpush.setVapidDetails(subject, pub, priv);
     this.vapidReady = true;
     return true;
   }
