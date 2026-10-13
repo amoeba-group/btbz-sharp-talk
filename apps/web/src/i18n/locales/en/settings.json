@@ -927,7 +927,15 @@
     "notConfigured": "The connection (base URL and API key) is not saved yet. It is needed in live mode.",
     "connection": "Connection",
     "saved": "Partner data lookup setting saved",
-    "saveError": "Could not save the partner data lookup setting"
+    "saveError": "Could not save the partner data lookup setting",
+    "methodTitle": "How lookups are made",
+    "methodInherit": "Server default ({{mode}})",
+    "modePrefetch": "Standard",
+    "modeTools": "AI-assisted",
+    "methodPrefetch": "Standard — the server fetches the data a keyword detector names, then the assistant answers from it.",
+    "methodTools": "AI-assisted — the assistant chooses which read-only lookups to make, for questions that span several topics or are loosely worded. Same safety checks, one extra AI call per question.",
+    "toolsUnsupported": "The AI engine that answers customers cannot run lookup tools yet (its capabilities need “tools”), so the standard lookup is used.",
+    "toolsOff": "AI-assisted lookup is switched off for the whole server (PARTNER_TOOLS_ENABLED), so the standard lookup is used."
   },
   "pilot": {
     "title": "Pilot scope by hotel",
