@@ -33,6 +33,7 @@ import { NotionCredentialService } from './notion-credential.service';
 import { UsageTypeService } from './usage-type.service';
 import { KbCategoryService } from './kb-category.service';
 import { BoardReviewService } from './board-review.service';
+import { GateSimulatorService } from './gate-simulator.service';
 import { KnowledgeMapper } from './knowledge.mapper';
 import { BULK_IMPORT_GROUPS, DOC_GROUP } from './entity/kb-document.entity';
 import { BulkExportService } from './bulk-export.service';
@@ -93,6 +94,8 @@ export class KnowledgeController {
     private readonly ingest: KnowledgeIngestService,
     private readonly bulkExport: BulkExportService,
     private readonly boardReview: BoardReviewService,
+    // Appended and optional so positional specs stay valid (PLN-261012 SG-51); always present in the app.
+    private readonly gateSimulator?: GateSimulatorService,
   ) {}
 
   // ---- Knowledge-gap proposals (P5, 결정 9: human approval only) ----
@@ -380,8 +383,20 @@ export class KnowledgeController {
   @RequireCapability(CAPABILITY.KNOWLEDGE_SOURCE_MANAGE)
   @ApiOperation({ summary: 'Answer a question from the KB and return its source documents' })
   async ask(@CurrentUser() user: Principal, @Body() body: AskKnowledgeRequest) {
+    const tenantId = this.tenantUser(user).tenantId;
+    // "Test as…" (PLN-261012 SG-51): the viewer must reach the gate decision and retrieval, not be
+    // dropped here (knowledge-ask-agent-scope.spec documents the last control that did exactly that).
+    if (body.as_audience) {
+      return this.gateSimulator!.simulate(tenantId, {
+        question: body.question,
+        language: body.language ?? 'EN',
+        group: body.group,
+        aiAgentId: body.ai_agent_id ?? null,
+        as: body.as_audience,
+      });
+    }
     return this.knowledgeService.ask(
-      this.tenantUser(user).tenantId,
+      tenantId,
       body.question,
       body.language ?? 'EN',
       body.group,
