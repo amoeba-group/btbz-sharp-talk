@@ -33,7 +33,7 @@ Go2Joy's two-week pilot is judged on numbers by hotel and by role, and graded by
 | `fbae1f18` | feat(metrics): per-stage chat-turn latency histograms on /metrics |
 | `13431bf3` | feat(analytics): pilot analytics by hotel/role/day + CSV export for manual grading (+ migration, init-sql, manifest) |
 | `8b69683c` | feat(console): Statistics > Pilot tab (+ shared bounds in packages/types, locales ×6) |
-| (docs) | docs: TCR/RPT-261013-w2b-analytics-pilot |
+| `d1f124fd` | docs(analytics): TCR + RPT (also: a blank `?group=` means the default) |
 
 ## 3. Files
 
