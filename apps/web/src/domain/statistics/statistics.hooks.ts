@@ -7,6 +7,8 @@ import type {
   ChannelRow,
   CsatListParams,
   HourGrid,
+  PilotParams,
+  PilotReport,
   QuestionStatsParams,
   ResolutionBreakdown,
 } from './statistics.service';
@@ -115,5 +117,20 @@ export const useHourStats = (from: string, to: string) => {
     queryKey: ['stats-hours', tenantKey, from, to],
     queryFn: () => statisticsService.hours(from, to),
     placeholderData: keepWithinTenant<HourGrid>(tenantKey),
+  });
+};
+
+/**
+ * Pilot numbers by hotel / role / day (PLN-261012 SG-52). `tenantId` is in the key and stale rows are
+ * never carried across tenants; `enabled` lets the page hold a request it already knows the server
+ * would refuse (a range longer than the cap) instead of showing an error it caused.
+ */
+export const usePilotStats = (params: PilotParams, enabled = true) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['stats-pilot', tenantKey, params.group, params.from, params.to],
+    queryFn: () => statisticsService.pilot(params),
+    enabled,
+    placeholderData: keepWithinTenant<PilotReport>(tenantKey),
   });
 };

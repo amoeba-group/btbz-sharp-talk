@@ -35,7 +35,8 @@
     "resolution": "Resultados",
     "hours": "Horas",
     "access": "Acceso",
-    "journey": "Recorrido"
+    "journey": "Recorrido",
+    "pilot": "Piloto"
   },
   "csat": {
     "avgTitle": "Puntuación media",
@@ -160,5 +161,102 @@
     "details": "Detalle",
     "notExclusive": "Una conversación derivada también se valora y finaliza — pueden sumar más que el total.",
     "collectionNote": "Impresiones y accesos se recogen desde 2026-09-20; antes se empieza en conversaciones."
+  },
+  "pilot": {
+    "title": "Resultados del piloto",
+    "subtitle": "Cómo rinde el asistente por hotel y por rol: las cifras con las que se juzga el piloto.",
+    "groupBy": "Agrupar por",
+    "group": {
+      "hotel": "Hotel",
+      "role": "Rol",
+      "day": "Día"
+    },
+    "total": "Todos",
+    "unknown": "Sin identificar (invitado o datos antiguos)",
+    "export": "Exportar conversaciones (CSV)",
+    "exporting": "Exportando…",
+    "exportHint": "Una fila por conversación con su transcripción, con los datos personales ocultos: para calificar las respuestas a mano. Disponible para cuentas master y director.",
+    "exportDone": "Se descargó el CSV.",
+    "exportTruncated": "El archivo se detiene en {{max}} conversaciones. Reduce el rango de fechas para obtener el resto.",
+    "exportFailed": "No se pudo crear la exportación. Inténtalo de nuevo.",
+    "windowTooLong": "La vista del piloto lee como máximo {{max}} días a la vez. Elige un rango de fechas más corto.",
+    "truncatedNote": "Este rango tiene más conversaciones que el límite de lectura ({{max}}); las cifras cubren las {{scanned}} más antiguas. Elige un rango más corto.",
+    "empty": "No hay conversaciones en este rango.",
+    "retry": "Reintentar",
+    "adoption": {
+      "title": "Hoteles",
+      "line": "Activos {{active}} / lista del piloto {{listed}}",
+      "outside": "Hoteles fuera de la lista que también chatearon: {{count}}",
+      "silent": "En la lista pero sin conversaciones: {{count}}",
+      "allActive": "Todos los hoteles de la lista han chateado en este rango.",
+      "showSilent": "Ver estos hoteles",
+      "hideSilent": "Ocultar",
+      "silentMore": "y {{count}} más",
+      "listOff": "La lista del piloto está desactivada, así que se atiende a todos los hoteles; las cifras de aquí corresponden a la lista actual.",
+      "noList": "No hay una lista de piloto configurada para este tenant."
+    },
+    "col": {
+      "conversations": "Conversaciones",
+      "aiOnly": "Resueltas solo por la IA",
+      "handoff": "Derivadas a una persona",
+      "other": "Rechazadas / sin respuesta",
+      "confidence": "Confianza media",
+      "noSource": "Sin fuente",
+      "csat": "CSAT",
+      "guestGate": "Avisos de inicio de sesión",
+      "refusals": "Otros rechazos",
+      "moderation": "Moderación (bloqueadas / editadas)",
+      "partner": "Consultas al socio (ok / rechazadas / caídas)",
+      "users": "Usuarios",
+      "latency": "Tiempo de respuesta P50 / P95"
+    },
+    "cell": {
+      "users": "{{users}} con sesión · {{guests}} sesiones de invitado",
+      "csat": "{{avg}} ({{count}})"
+    },
+    "reason": {
+      "low_confidence": "Sin base suficiente",
+      "user_request": "El cliente pidió una persona",
+      "moderation": "Detenida por moderación",
+      "policy_deny": "Tema que va a una persona",
+      "engine_unavailable": "Caída del motor de IA",
+      "partner_unavailable": "Datos del socio no disponibles",
+      "partner_unverified": "Cifras no verificables",
+      "guest_gate": "Requiere iniciar sesión",
+      "auth_gate": "Requiere sesión para pedidos",
+      "identity_expired": "Sesión caducada",
+      "role_manager_only": "Solo para gerencia",
+      "partner_role_denied": "El rol no puede ver esos datos",
+      "partner_claims_stale": "Volver a iniciar sesión",
+      "partner_param_rejected": "Preguntó por otro hotel",
+      "embedder_degraded": "Búsqueda vectorial degradada",
+      "consent": "Aviso de privacidad no aceptado",
+      "pilot_denied": "Hotel fuera del piloto",
+      "other": "Otro motivo",
+      "unknown": "Motivo no registrado"
+    },
+    "stage": {
+      "total": "Total",
+      "classify": "Entender",
+      "retrieve": "Buscar",
+      "generate": "Redactar",
+      "moderate": "Control de seguridad"
+    },
+    "latencyTitle": "Tiempo de respuesta por etapa (todas las filas)",
+    "stageCol": "Etapa",
+    "samples": "Medidas",
+    "notRecorded": "No se registra (no se guarda, por eso no hay recuento): {{reasons}}.",
+    "definitions": {
+      "title": "Cómo leer estas cifras",
+      "aiOnly": "Resueltas solo por la IA: nadie del equipo intervino (sin derivación ni mensajes de agentes) y el asistente dio al menos una respuesta basada en la base de conocimiento. No es la tasa de «resueltas» de la pestaña Resultados, que también cuenta las conversaciones cerradas por un agente.",
+      "handoff": "Derivadas a una persona: la conversación se escaló, un agente escribió en ella o se mostró un aviso de derivación. Cada motivo se cuenta una vez por conversación.",
+      "other": "Rechazadas: solo se mostraron avisos de inicio de sesión o de permisos. Sin respuesta: no se dijo nada con base (solo charla, o a la espera).",
+      "confidence": "La confianza media y «Sin fuente» se calculan por respuesta; «Sin fuente» es una respuesta que no citó ningún documento.",
+      "window": "Los días siguen la zona horaria del tenant ({{zone}}) y cada conversación se cuenta el día en que empezó."
+    },
+    "error": {
+      "E5140": "La solicitud no es válida. Revisa las fechas y la agrupación.",
+      "E5141": "La vista del piloto lee como máximo {{max}} días a la vez."
+    }
   }
 }

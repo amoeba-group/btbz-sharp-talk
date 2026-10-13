@@ -1,4 +1,12 @@
-import { REFUSAL_REASON } from '@sharptalk/types';
+import {
+  PILOT_ANALYTICS_DEFAULT_WINDOW_DAYS,
+  PILOT_ANALYTICS_GROUP,
+  PILOT_ANALYTICS_GROUPS,
+  PILOT_ANALYTICS_MAX_WINDOW_DAYS,
+  PILOT_ANALYTICS_UNKNOWN_KEY,
+  REFUSAL_REASON,
+} from '@sharptalk/types';
+import type { PilotAnalyticsGroup } from '@sharptalk/types';
 import { summarizeLatency } from '../chat/turn-latency.util';
 import type { LatencySummary } from '../chat/turn-latency.util';
 
@@ -55,17 +63,19 @@ import type { LatencySummary } from '../chat/turn-latency.util';
  * ──────────────────────────────────────────────────────────────────────────────────────────
  */
 
-export const PILOT_GROUP = { HOTEL: 'hotel', ROLE: 'role', DAY: 'day' } as const;
-export type PilotGroup = (typeof PILOT_GROUP)[keyof typeof PILOT_GROUP];
-export const PILOT_GROUPS = Object.values(PILOT_GROUP) as PilotGroup[];
+// The group vocabulary and the window bounds are shared with the console (packages/types), so the server
+// that refuses a request (E5140 / E5141) and the screen that stops one cannot drift apart.
+export const PILOT_GROUP = PILOT_ANALYTICS_GROUP;
+export type PilotGroup = PilotAnalyticsGroup;
+export const PILOT_GROUPS = PILOT_ANALYTICS_GROUPS;
 
 /** Group key of a conversation that carries no stamp (legacy rows, guests, v1 identities). */
-export const PILOT_UNKNOWN_KEY = 'unknown';
+export const PILOT_UNKNOWN_KEY = PILOT_ANALYTICS_UNKNOWN_KEY;
 
 /** Default window: two weeks, the length of the pilot. */
-export const PILOT_DEFAULT_WINDOW_DAYS = 14;
+export const PILOT_DEFAULT_WINDOW_DAYS = PILOT_ANALYTICS_DEFAULT_WINDOW_DAYS;
 /** Longest window a request may ask for; bounds the rows one request can scan. */
-export const PILOT_MAX_WINDOW_DAYS = 92;
+export const PILOT_MAX_WINDOW_DAYS = PILOT_ANALYTICS_MAX_WINDOW_DAYS;
 /** Conversations scanned for one report; past it the report is flagged `truncated`. */
 export const PILOT_MAX_CONVERSATIONS = 50_000;
 /** Rows of the group table returned (by volume); a hotel group can be thousands for a big tenant. */
