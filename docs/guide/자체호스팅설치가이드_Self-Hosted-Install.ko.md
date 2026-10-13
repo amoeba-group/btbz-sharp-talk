@@ -69,6 +69,18 @@ bash scripts/deploy-self-hosted.sh
     boot log : 1 x 'successfully started'
 ```
 
+### 2-5. 번들로 설치 (인터넷·레지스트리 없는 서버)
+
+서버에서 빌드하지 않고 Amoeba가 만든 **릴리스 번들**(이미지 tar + `SHA256SUMS` + `manifest.json` + 스크립트)을 복사해 설치할 수 있습니다. 이미지는 버전 태그가 붙고(`sharptalk/{api,web,widget}:<version>`) 기반 이미지는 버전이 고정되며, MySQL·Redis·RabbitMQ·Qdrant·nginx도 번들에 들어 있어 서버가 Docker Hub·npm·GitHub에 나갈 필요가 없습니다.
+
+```bash
+cd sharptalk-<version> && sha256sum -c SHA256SUMS
+bash scripts/deploy-self-hosted.sh --bundle . --dry-run   # 모든 동작 출력, 실행 없음
+bash scripts/deploy-self-hosted.sh --bundle .
+```
+
+**첫 설치에서도 마이그레이션 검사를 합니다**: DB 컨테이너만 먼저 띄워 init-sql이 만든 스키마를 `sql/artefacts.tsv`와 대조하고, 어긋나면 앱 컨테이너를 띄우지 않고 멈춥니다. 설정 파일은 번들 밖(`SHARPTALK_ENV_FILE`)에 두고 릴리스 기록(`SHARPTALK_STATE_DIR`)도 번들 밖에 두어야 롤백이 가능합니다. 전체 절차: [RUNBOOK-261013-Go2Joy-SelfHosted.md](RUNBOOK-261013-Go2Joy-SelfHosted.md).
+
 ## 3. TLS 연결
 
 이 스택은 TLS를 끝내지 않습니다. 고객사의 로드밸런서나 nginx가 `https://talk.example.com` →
@@ -101,6 +113,8 @@ bash scripts/check-migrations.sh
 > 파일이 만드는 컬럼을 참조합니다. **릴리스된 순서(오래된 것부터)** 로 적용하고, `Unknown column`
 > 오류가 나면 그 컬럼을 만드는 파일을 먼저 적용한 뒤 다시 실행하세요.
 
+**롤백**: `bash scripts/rollback-self-hosted.sh --dry-run`(먼저) → 실행. 이전 이미지 태그로 재기동하며, 두 릴리스 사이에 `breaking`/`destructive`/`unknown` 마이그레이션이 있으면 **거부**합니다(그땐 배포 전 백업 복원 또는 전진 수정). 이전 이미지를 지우는 `docker image prune -a`는 금지.
+
 ## 6. 백업 — 반드시 두 개
 
 ```bash
@@ -120,7 +134,9 @@ bash scripts/restore-self-hosted.sh /backup/shoptalk/20260820
 복원 후 **첨부 행과 실제 파일이 일치하는지 자동으로 확인**하고, 어긋나면 실패로 알립니다
 (백업 두 개를 서로 다른 시점에 뜬 경우가 여기서 걸립니다).
 
-정기 실행은 고객사의 스케줄러(cron, systemd timer 등)에 맡깁니다.
+**추가 기능(모두 기본 꺼짐)**: `BACKUP_ENCRYPT_KEY_FILE`(openssl AES-256-CBC, `*.enc`; 키는 백업과 **다른 곳**에 보관), `BACKUP_KEEP_DAYS`(성공 후 오래된 백업 삭제), Qdrant 스냅샷 자동 포함(`BACKUP_QDRANT=auto`), 모든 아카이브 읽기 검증, `SHA256SUMS`, 성공/실패 마커 `LAST_SUCCESS`/`LAST_FAILURE`. 복원 리허설은 **운영 스택을 건드리지 않고** 임시 MySQL 컨테이너에서 수행합니다: `bash scripts/restore-drill-self-hosted.sh --latest <백업루트>`(분기 1회; 결과는 `DRILL_LOG`).
+
+정기 실행 예시는 `docker/self-hosted/ops/`(systemd timer·cron·`backup.env.example`)에 있습니다. 상세: [RUNBOOK-261013-Go2Joy-SelfHosted.md](RUNBOOK-261013-Go2Joy-SelfHosted.md) §8.
 
 ## 7. 바꾸면 안 되는 것
 

@@ -3,6 +3,7 @@
 > 버전 1.0 · 2026-09-13 · 코드 기준(main `48b3e31`) · 근거 REQ/PLN-260913-Locale-Deployment-Guides
 > 공통 절차는 [SharpTalk-Basic 세팅 가이드](GUIDE-260913-SharpTalk-Basic-Setup.md), 항목별 위치는 [로컬 커스터마이징 가이드](GUIDE-260913-Locale-Customization.md). 이 문서는 **프로필 차이만** 적습니다.
 > 프로필 파일: `deploy/profiles/SharpTalk-VN-Go2Joy/` · 시크릿: `secrets/SharpTalk-VN-Go2Joy-server.md`(gitignored)
+> **Go2Joy 자체 인프라(단일 테넌트) 운영**은 번들 설치·롤백·암호화 백업·키 보관·사고 대응까지 [RUNBOOK-261013-Go2Joy-SelfHosted.md](RUNBOOK-261013-Go2Joy-SelfHosted.md)(베트남어)에 있습니다. 이 문서의 스테이징 절차와 겹치는 부분은 런북이 우선합니다.
 
 ---
 
@@ -60,7 +61,7 @@
 | `SHOPIFY_*`, `CAFE24_*` | 비움 | 미사용. `SHOPIFY_WEBHOOK_SECRET`·`FULFILLMENT_WEBHOOK_SECRET`은 production 검사 때문에 **임의 강한 값** 필요 |
 | `HARAVAN_SYNC_INTERVAL_MIN` | 0(수동) → 사용 시 60 | |
 | `NOTION_MAX_REQUESTS_PER_PAGE` / `_PAGES_PER_SYNC` | 30 / 200 | 큰 페이지 `truncated` 시 상향 |
-| `SMTP_*`, `ALERT_EMAIL_FROM` | 베트남 발신 도메인 | 폴백 `noreply@ivyusa.local` 금지 |
+| `SMTP_*`, `ALERT_EMAIL_FROM` | 베트남 발신 도메인 | 비우면 `SMTP_USER` → `noreply@<APP_PUBLIC_URL 호스트>`로 폴백(Amoeba·`ivyusa.local` 주소는 더 이상 쓰지 않음). `AI_ALERT_EMAIL`/`ALERT_EMAIL_TO`는 Go2Joy 수신처로 지정 — 둘 다 비면 알림 메일 없음 |
 | `AI_PROCESSING_REGION` | 실제 추론 지역(현행 `US`) | 위젯 AI 고지에 지역명으로 표시(G7) |
 | `SEED_KB_PROFILE` | `none` | 첫 부팅에 미국 화장품 KB를 넣지 않음(G11) |
 | `VITE_GA4_MEASUREMENT_ID` | 비움 | 동의 모드 있어도 PDPD 검토 전 미사용 |
@@ -69,7 +70,7 @@
 
 ## 4. 스키마·배포·검증
 Basic §4·§7 그대로. 프로필 특이점:
-- 첫 부팅 후 시드 테넌트 `ivyusa`가 생깁니다 → §6에서 정리(삭제 또는 비활성).
+- 프로필 env의 `SEED_TENANT_SLUG=go2joy`·`SEED_TENANT_NAME`·`SEED_TENANT_DOMAIN`·`SEED_ADMIN_EMAIL`·`SEED_MASTER_EMAIL`을 채우면 첫 부팅에 **테넌트 `go2joy`와 Go2Joy 계정이 직접 생성**됩니다(`ivyusa`·`@amoeba.group` 계정 없음, 데모 데이터·미국 화장품 KB 없음, `SEED_PASSWORD`를 비우면 일회용 비밀번호를 로그에 한 번 출력). 기본값으로 부팅했다면 시드 테넌트 `ivyusa`가 생기므로 §5에서 정리합니다.
 - 위젯 `widget-config.js`가 `talk-vn` API를 가리키는지 확인(`curl https://talk-vn.<domain>/widget/widget-config.js`).
 - 정적 라이브 테마 `/widget-design/live/<shop>.json`은 shop 도메인 키로 저장됩니다. Go2Joy는 스토어 도메인이 없으므로 **스토어프런트 설정에 앱 식별용 도메인**(예 `app.go2joy.vn`)을 넣어 두는 것이 위젯 세션 키·미리보기·라이브 파일에 필요합니다.
 
@@ -81,7 +82,7 @@ Basic §4·§7 그대로. 프로필 특이점:
 | 제공 메뉴 | 플랜 기본 + 필요 시 오버라이드(지식·AI 설정·통계) |
 | 애드온 | 워크플로우 `base`(현행), 커스텀 CSS **끔**(요청 시) |
 | 관리자 | Go2Joy 운영자 master 1 + director 1 초대(임시 비밀번호 1회 표시), Amoeba 운영 계정 별도 |
-| 시드 테넌트 | `ivyusa` 정지 또는 삭제(데모 데이터 없음이면 삭제) |
+| 시드 테넌트 | 위 시드 env로 `go2joy`를 직접 시드했다면 해당 없음. 기본값으로 부팅했다면 `ivyusa` 정지 또는 삭제(데모 데이터 없음이면 삭제) |
 
 ## 6. 테넌트 초기화 (한국 스테이징 `go2joy`에서 이관)
 [로컬 가이드 §3](GUIDE-260913-Locale-Customization.md#3-테넌트-설정-이관) 절차. Go2Joy 특이점:
@@ -113,7 +114,7 @@ Basic §4·§7 그대로. 프로필 특이점:
 
 ## 8. 운영
 - 배포 루틴·검증·백업·롤백: Basic §7. `MYSQL_CONTAINER=sharptalk_mysql`.
-- 백업 보관: 베트남 내, 일 1회, 복원 리허설 분기 1회.
+- 백업 보관: 베트남 내, 일 1회, 복원 리허설 분기 1회 — 스케줄 `docker/self-hosted/ops/`(systemd timer·cron), 암호화 `BACKUP_ENCRYPT_KEY_FILE`, 보존 `BACKUP_KEEP_DAYS`, 리허설 `restore-drill-self-hosted.sh`(운영 스택 무접촉, `DRILL_LOG` 기록). 런북 §8.
 - 모니터링: Basic §7.5 + Notion 동기화 실패(감사 로그 `source.sync` 실패 기록), 허브 폴링 지연.
 - 사고 대응: `INCIDENT-RESPONSE.md` 절차 + PDPD 72h + 현지 법무.
 - 시크릿: `secrets/SharpTalk-VN-Go2Joy-server.md`(구조는 Basic §8).

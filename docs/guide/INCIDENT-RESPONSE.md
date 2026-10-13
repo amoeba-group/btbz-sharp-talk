@@ -14,7 +14,7 @@
 
 | 등급 | 정의 | 예시 | 초동 대응 시한 |
 |---|---|---|---|
-| **SEV1** | 개인정보 **유출 확인**(외부 반출 증거) 또는 대규모(다수 정보주체/테넌트 전체) 노출, 암호화 키(`CRED_ENC_KEY`, `JWT_SECRET`) 탈취 | DB 덤프 유출, 크로스-테넌트 데이터 노출, 키 노출 커밋 | 즉시(1시간 내 지휘체계 소집) |
+| **SEV1** | 개인정보 **유출 확인**(외부 반출 증거) 또는 대규모(다수 정보주체/테넌트 전체) 노출, 암호화 키(`CRED_ENC_KEY`, `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET`) 탈취 | DB 덤프 유출, 크로스-테넌트 데이터 노출, 키 노출 커밋 | 즉시(1시간 내 지휘체계 소집) |
 | **SEV2** | 유출 **가능성 높음** — 취약점 악용 흔적, 자격증명 도용 의심, 소수 정보주체 노출 | 관리자 계정 탈취 의심, 인증 우회 발견, 로그에 비정상 DSAR/export 대량 호출 | 4시간 내 |
 | **SEV3** | 유출 정황 없는 보안 이벤트 — 정책 위반, 스캔 시도, 내부 오조작(즉시 회수) | 잘못된 수신자에게 내부 자료 발송 후 회수, 반복 로그인 실패 | 1영업일 내 |
 
@@ -53,7 +53,7 @@
 
 | 수단 | 방법(코드 근거) |
 |---|---|
-| **JWT 전면 무효화** | 해당 계정 비밀번호 변경 → `auth.service.ts`가 `password_changed_at`을 스탬프하고, 토큰 검증 시 `assertIssuedAfterPasswordChange`가 그 이전 발급(iat) 토큰을 전부 거부. 전 계정 무효화가 필요하면 `JWT_SECRET` 교체 후 API 재기동 |
+| **JWT 전면 무효화** | 해당 계정 비밀번호 변경 → `auth.service.ts`가 `password_changed_at`을 스탬프하고, 토큰 검증 시 `assertIssuedAfterPasswordChange`가 그 이전 발급(iat) 토큰을 전부 거부. 전 계정 무효화가 필요하면 `JWT_ACCESS_SECRET`·`JWT_REFRESH_SECRET`(두 값은 서로 달라야 함) 교체 후 API 재기동 |
 | **위젯 세션 무효화** | `sessions` 행 삭제(또는 `session_token` 회전) + Redis 캐시 `sess:tok:{token}` 삭제(`sessionCacheKey`). 캐시 TTL 30초이므로 지연은 최대 30초 |
 | **연동 자격증명 회전** | `integration_credentials.secret_enc` 재발급(콘솔/API 경유, AES-256-GCM 재암호화), `ai_engines.api_key_encrypted` 갱신, env 기반 키(`ANTHROPIC_API_KEY`, `VOYAGE_API_KEY`, `SLACK_WEBHOOK_URL`, `SMTP_*`) 회전 후 재배포 |
 | **암호화 키 유출 시** | `CRED_ENC_KEY`(PII·자격증명 암호화 + `email_hash` HMAC 키) 회전 — 단순 env 교체만으로는 기존 암호문 복호화 불가이므로 **재암호화 마이그레이션 필요**(사전 리허설 없이는 SEV1 상황에서 수행 금지, 별도 런북 필요 — 미결) |
@@ -68,7 +68,7 @@
 ### 3.4 복구
 
 - 침해 경로 패치 → 스테이징 검증 → 배포(배포 검증 규칙: boot 로그 `successfully started`, 컨테이너 age, 라우트 401/404/502 판별 — CLAUDE.md §7).
-- 회전한 자격증명으로 연동 재개, 세션/토큰 정상 발급 확인, 백업 부재 상태이므로 데이터 복구는 현행 볼륨 기준(Doc-A G-8 — 백업 도입 전까지 복구 수단 제한적임을 인지).
+- 회전한 자격증명으로 연동 재개, 세션/토큰 정상 발급 확인, 데이터 복구는 백업에서 합니다(self-hosted 스택: `scripts/backup-self-hosted.sh`·`restore-self-hosted.sh`; 복원 뒤 보존 퍼지를 다시 돌리고 백업 이후에 처리한 DSAR을 재처리해야 함 — [RUNBOOK-261013-Go2Joy-SelfHosted.md](RUNBOOK-261013-Go2Joy-SelfHosted.md) §8.5·§11).
 
 ### 3.5 통지
 
@@ -93,7 +93,7 @@
 
 - 격리 조치 **전에** 가능하면 상태 스냅샷 확보: 관련 `audit_logs`/서버 로그 export, 컨테이너 로그 덤프, 의심 세션/계정 행의 사본. 원본 테이블은 변조하지 않는다(조사는 사본으로).
 - 증거 파일은 접근 통제된 별도 위치에 사고 티켓 ID로 보관, 해시(sha256) 기록.
-- 로그 로테이션으로 인한 소실 방지: 사고 인지 즉시 해당 기간 로그를 먼저 복사(현재 로테이션 정책 미정 — Doc-A G-7).
+- 로그 로테이션으로 인한 소실 방지: 사고 인지 즉시 해당 기간 로그를 먼저 복사(self-hosted·production 스택은 컨테이너당 json-file 5×20MB(`LOG_MAX_SIZE`/`LOG_MAX_FILE`)만 남기므로 인지 즉시 복사).
 - 증거 내 PII는 조사 목적 외 열람 금지, 종결 후 보존기간(법무 지정, TBD) 경과 시 파기.
 
 ## 5. 훈련 일정 템플릿
