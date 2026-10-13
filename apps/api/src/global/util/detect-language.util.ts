@@ -16,13 +16,29 @@
  * acutes. Two Vietnamese turns then moved a Go2Joy session to Spanish. The
  * order below puts the marks only Vietnamese writes first, and lets the
  * session's current language settle the marks that several languages share.
+ *
+ * PLN-261012 SG-53 (found by the labelled eval, detect-language.eval.spec.ts):
+ *  - Vietnamese typed WITHOUT tone marks read as English; a vocabulary check
+ *    (vietnamese-ascii.util.ts) now catches it before the shared-mark rules.
+ *  - Japanese and Chinese returned null even though both are session languages
+ *    (widget ships ja/zh): kana decides Japanese, Han without kana Chinese. A
+ *    kanji-only Japanese phrase is the one case script alone cannot settle and
+ *    reads as Chinese — the documented limit.
  */
+
+import { looksLikeUnaccentedVietnamese } from './vietnamese-ascii.util';
 
 /** Below this many letters a message says nothing about language (D5). */
 const MIN_MEANINGFUL_CHARS = 4;
 
 /** Hangul syllables. Jamo alone ("ㅇㅇ") is filler, not language. */
 const HANGUL = /[가-힣]/;
+
+/** Hiragana, katakana (incl. extensions and half-width) — only Japanese writes these. */
+const KANA = /[぀-ヿㇰ-ㇿｦ-ﾟ]/;
+
+/** Han ideographs. With kana around it is Japanese; alone, Chinese. */
+const HAN = /[㐀-䶿一-鿿]/;
 
 /**
  * Letters and tone marks that, among Latin-script languages, only Vietnamese
@@ -55,7 +71,7 @@ const ACUTE = /[áéíóúÁÉÍÓÚ]/;
 
 const LATIN_LETTER = /[a-zA-ZÀ-ɏẠ-ỹ]/;
 
-export type DetectedLanguage = 'EN' | 'ES' | 'KO' | 'VI';
+export type DetectedLanguage = 'EN' | 'ES' | 'KO' | 'VI' | 'JA' | 'ZH';
 
 /** Letters only — digits, punctuation, emoji and spaces carry no signal. */
 function meaningfulLength(text: string): number {
@@ -81,10 +97,16 @@ export function detectLanguage(
   if (meaningfulLength(value) < MIN_MEANINGFUL_CHARS) return null;
 
   if (HANGUL.test(value)) return 'KO';
+  // Kana before Han: Japanese text is mostly kanji + kana, and the kana is what
+  // tells it from Chinese. Both come after Hangul, so Korean with Hanja stays Korean.
+  if (KANA.test(value)) return 'JA';
+  if (HAN.test(value)) return 'ZH';
   if (VIETNAMESE_ONLY.test(value)) return 'VI';
   if (SPANISH_ONLY.test(value)) return 'ES';
 
   const preferVietnamese = String(bias ?? '').toUpperCase() === 'VI';
+  // Vietnamese without (or with only some) tone marks: judged by vocabulary.
+  if (looksLikeUnaccentedVietnamese(value, preferVietnamese)) return 'VI';
   if (VIETNAMESE_SHARED.test(value)) {
     if (preferVietnamese) return 'VI';
     // Shared marks with an acute alongside ("está" next to an "à") keep the
