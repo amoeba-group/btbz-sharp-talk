@@ -15,7 +15,9 @@
  *                    manager-only KB categories cover (SG-10); the notice points to the manager account
  *  moderation        the answer was blocked by the outbound moderation gate
  *  low_confidence    the knowledge base could not ground an answer
- *  embedder_degraded the vector leg was down, so grounding could not be measured (reserved)
+ *  embedder_degraded the vector leg was down, so grounding could not be measured (reserved as a stored
+ *                    `reason`; the gate decision of that name is recorded next to the reason as
+ *                    `trace.gate` — PLN-261012 SG-51 — so a hand-off stays a hand-off in analytics)
  *  policy_deny       a deny-list topic goes to a person whatever the AI could say
  *  identity_expired  the signed identity lapsed (SG-03), so a gate that needed it refused
  *  engine_unavailable the AI engine (or its safety check) was down — an outage, not missing
@@ -67,6 +69,17 @@ export interface RefusalTraceExtra {
   grounded?: number;
   threshold?: number;
   topSimilarity?: number;
+  /**
+   * What the gate measured and decided (PLN-261012 SG-51, REQ D-13/D-16) — calibration data, never
+   * the visitor's words: the tier the answer was FOR, the gate decision word (gate-decision.ts), the
+   * vector provider ('voyage' | 'stub' | 'degraded' | 'none'), the top-3 matched category NAMES (operator
+   * content) and top-3 document ids. Primitives and short arrays of primitives only.
+   */
+  audience?: string | null;
+  gate?: string | null;
+  vectorProvider?: string | null;
+  categories?: string[] | null;
+  docIds?: number[] | null;
 }
 
 /** `retrieval_trace` of a refusal / system turn. */
@@ -76,8 +89,47 @@ export interface RefusalTrace extends RefusalTraceExtra {
   agentId: number | null;
 }
 
-const STRING_KEYS = ['actorRole', 'requiredRole'] as const;
+const STRING_KEYS = ['actorRole', 'requiredRole', 'audience', 'gate', 'vectorProvider'] as const;
 const NUMBER_KEYS = ['grounded', 'threshold', 'topSimilarity'] as const;
+
+/** Most matched categories / documents a trace keeps, and the longest category name (SG-51). */
+export const TRACE_TOP_MATCHES = 3;
+const TRACE_CATEGORY_MAX = 48;
+
+/** Four decimals: a similarity is not that precise, and the column is kept for a year. */
+const round4 = (n: number): number => Math.round(n * 10_000) / 10_000;
+
+/**
+ * The whitelisted extras of a trace, validated and capped — for a refusal AND for the turn that
+ * PASSED a gate (SG-51), which has no `reason` but must say what was measured. Unknown keys are
+ * dropped, strings are capped, arrays are cut to the top matches. Never takes free text.
+ */
+export function sanitizeTraceExtras(extra: RefusalTraceExtra = {}): RefusalTraceExtra {
+  const out: RefusalTraceExtra = {};
+  for (const key of STRING_KEYS) {
+    const v = extra[key];
+    if (typeof v === 'string' && v) out[key] = v.slice(0, 32);
+  }
+  for (const key of NUMBER_KEYS) {
+    const v = extra[key];
+    if (typeof v === 'number' && Number.isFinite(v)) out[key] = round4(v);
+  }
+  if (extra.expired === true) out.expired = true;
+  if (Array.isArray(extra.categories)) {
+    const names = extra.categories
+      .filter((c): c is string => typeof c === 'string' && c.length > 0)
+      .slice(0, TRACE_TOP_MATCHES)
+      .map((c) => c.slice(0, TRACE_CATEGORY_MAX));
+    if (names.length) out.categories = names;
+  }
+  if (Array.isArray(extra.docIds)) {
+    const ids = extra.docIds
+      .filter((d): d is number => typeof d === 'number' && Number.isInteger(d))
+      .slice(0, TRACE_TOP_MATCHES);
+    if (ids.length) out.docIds = ids;
+  }
+  return out;
+}
 
 /** Build the trace of a refusal. Unknown extras are dropped, strings are capped. */
 export function buildRefusalTrace(
@@ -85,17 +137,7 @@ export function buildRefusalTrace(
   agentId: number | null | undefined,
   extra: RefusalTraceExtra = {},
 ): RefusalTrace {
-  const out: RefusalTrace = { reason, agentId: agentId != null ? Number(agentId) : null };
-  for (const key of STRING_KEYS) {
-    const v = extra[key];
-    if (typeof v === 'string' && v) out[key] = v.slice(0, 32);
-  }
-  for (const key of NUMBER_KEYS) {
-    const v = extra[key];
-    if (typeof v === 'number' && Number.isFinite(v)) out[key] = v;
-  }
-  if (extra.expired === true) out.expired = true;
-  return out;
+  return { reason, agentId: agentId != null ? Number(agentId) : null, ...sanitizeTraceExtras(extra) };
 }
 
 /**

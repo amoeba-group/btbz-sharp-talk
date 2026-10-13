@@ -28,6 +28,8 @@ import {
   degradedFulltextConfidence,
 } from './rag-degraded-confidence.util';
 import { m } from '../../infrastructure/observability/app-metrics';
+import { buildGroundingReport, summarizeGrounding } from './grounding-report.util';
+import type { GroundingReport, GroundingSummary } from './grounding-report.util';
 
 export interface RetrievedChunk {
   id: number;
@@ -134,6 +136,12 @@ export interface RagAnswer {
   vectorDegraded?: string;
   /** Where the time went (PLN-261012 SG-53): search, then the answering call. */
   timings?: { retrieveMs: number; generateMs: number };
+  /**
+   * What this answer's retrieval found — top similarity, top-3 categories / document ids, the vector
+   * provider and the degraded flag (PLN-261012 SG-51). Feeds the stored trace of a hand-off so a
+   * refusal carries calibration data; absent on a replayed answer and on an engine outage.
+   */
+  grounding?: GroundingSummary;
 }
 
 /**
@@ -536,6 +544,29 @@ export class RagService {
      */
     opts?: RetrievalOpts,
   ): Promise<number> {
+    return (await this.groundingReport(tenantId, query, aiAgentId, opts)).confidence;
+  }
+
+  /**
+   * `groundingConfidence()` plus what the retrieval found (PLN-261012 SG-51): the retrieved
+   * documents' ids / categories / similarities, the top similarity, the vector provider and
+   * whether the vector leg was down. The confidence is the SAME figure on the SAME scale —
+   * `groundingConfidence()` is a one-line wrapper — so the guest gate and the out-of-scope
+   * override are untouched. In particular, while the vector leg is down the confidence stays at
+   * `VECTOR_DOWN_GROUNDING_CONFIDENCE` (0.2) so an outage never loosens the gate; `degraded`
+   * is what tells that sentinel apart from a genuinely ungrounded question.
+   *
+   * `queries` is for the one caller that wants to see what a delivered answer would be judged
+   * on: with them a degraded vector leg may earn the capped keyword confidence, exactly as
+   * `answer()` computes it. Omitted (every gate), the strict sentinel applies.
+   */
+  async groundingReport(
+    tenantId: number,
+    query: string,
+    aiAgentId?: number | null,
+    opts?: RetrievalOpts,
+    queries?: Array<string | undefined>,
+  ): Promise<GroundingReport> {
     const { chunks, vectorProvider } = await this.retrieveHybrid(
       tenantId,
       query,
@@ -544,7 +575,12 @@ export class RagService {
       aiAgentId ?? null,
       opts,
     );
-    return this.confidence(chunks, vectorProvider);
+    return buildGroundingReport(
+      chunks,
+      vectorProvider,
+      this.vectorDegradedReason(vectorProvider),
+      this.confidence(chunks, vectorProvider, queries),
+    );
   }
 
   // Every scope argument is REQUIRED (pass `undefined` on purpose). It used to
@@ -1005,6 +1041,10 @@ export class RagService {
       tokensOut: res.tokensOut,
       ...(vectorDegraded ? { vectorDegraded } : {}),
       timings: { retrieveMs, generateMs },
+      // What the retrieval found, for the stored trace of a hand-off (PLN-261012 SG-51). The
+      // pre-citation `chunks`: the question is what the knowledge base could ground, not what
+      // the model chose to cite.
+      grounding: summarizeGrounding(chunks, vectorProvider, !!vectorDegraded),
     };
   }
 

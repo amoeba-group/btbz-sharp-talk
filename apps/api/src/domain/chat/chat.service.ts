@@ -4,16 +4,14 @@ import { In, IsNull, LessThan, Repository } from 'typeorm';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import {
-  AUDIENCE,
   AUDIENCE_RANK,
   CJM_STAGE,
   CONSENT_STATE,
   CONVERSATION_STATUS,
-  GUEST_POLICY,
+  GATE_DECISION,
   MODERATION_DECISION,
   REFUSAL_REASON,
   SENDER_TYPE,
-  SESSION_IDENTITY,
   audienceOf,
   buildHandoffTrace,
   buildRefusalTrace,
@@ -59,7 +57,6 @@ import {
   retrievalQuery,
 } from './conversation-history.util';
 import { footerFor, footerVariants, stripFooters } from '../ai-engine/answer-footer.util';
-import { envNumber } from '../../global/util/env-number.util';
 import { PartnerDataStep } from '../partner-data/partner-data.step';
 import type { PartnerNotice } from '../partner-data/partner-data.step';
 import { PilotService } from '../pilot/pilot.service';
@@ -67,17 +64,17 @@ import { ObserveChatTurn, markTurnOutcome, observeTurnLatency } from '../../infr
 import { partnerLabelOfClaims } from '../../global/util/partner-label.util';
 import { FOLLOW_UP_AGENT } from './scenario-scripts';
 import { historyExceedsViewer } from './conversation-audience.util';
+import {
+  ESCALATION_CONFIDENCE,
+  decideGuestGate,
+  decideLowConfidence,
+  gateTraceExtras,
+} from './gate-decision';
+import type { GateDecision } from './gate-decision';
 
-const ESCALATION_CONFIDENCE = 0.45;
-/**
- * Guest gate bar (PLN-261001): how confidently the GUEST-VISIBLE categories
- * must ground a question before a signed-out visitor is answered from them.
- * Defaults to the handoff bar; an operator can raise it per environment when
- * domain-near public documents (same product, same vocabulary) clear 0.45 for
- * questions that should have asked for a sign-in. Only meaningful with real
- * embeddings — the stub's count estimate never falls below it.
- */
-const GUEST_GATE_CONFIDENCE = envNumber('GUEST_GATE_CONFIDENCE', ESCALATION_CONFIDENCE);
+// ESCALATION_CONFIDENCE (the handoff bar) and GUEST_GATE_CONFIDENCE (the guest gate's bar, PLN-261001)
+// now live with the gate decision they parameterise, so chat and the console simulator read ONE
+// definition (PLN-261012 SG-51).
 
 /**
  * How sure the classifier must be before a message counts as "get me a person"
@@ -1128,9 +1125,16 @@ export class ChatService {
     // branches on purpose: a guest can still reach a person and still be
     // greeted. Deny rules keep their priority — a matched topic is handed to
     // a human exactly as it would be for an identified visitor.
-    const guestGated =
-      identity.level !== SESSION_IDENTITY.VERIFIED &&
-      (await this.rag.agentGuestPolicy(tenantId, effectiveAgentId)) === GUEST_POLICY.LOGIN_GUIDANCE;
+    // The decision is `decideGuestGate` (gate-decision.ts) — the very function the console simulator
+    // calls, so "Test as a visitor" cannot differ from this (PLN-261012 SG-51). It reads the agent's
+    // policy first and measures only for an unverified visitor of a login_guidance agent.
+    const gate = await decideGuestGate(this.rag, {
+      tenantId,
+      agentId: effectiveAgentId,
+      identity,
+      query: retrievalQuery(history, egressText),
+    });
+    const guestGated = gate.guestGated;
     if (guestGated) {
       // Same bar as the handoff decision below (ESCALATION_CONFIDENCE), measured
       // on the guest-visible categories alone. "Any hit at all" was the first
@@ -1138,20 +1142,14 @@ export class ChatService {
       // for every query once a single public document exists, so a partner
       // asking about reconciliation was answered from the sign-up guide instead
       // of being asked to sign in (found in the S3 local run, TCR-261006 §7).
-      const grounded = await this.rag.groundingConfidence(
-        tenantId,
-        retrievalQuery(history, egressText),
-        effectiveAgentId,
-        // `audience` too (SG-10): the gate asks "is it public?", this asks "may this audience read
-        // it?" — a category left guest-visible by a hand edit must still not leak a manager topic.
-        { guestOnly: true, audience },
-      );
-      if (grounded < GUEST_GATE_CONFIDENCE) {
+      if (gate.decision !== GATE_DECISION.ALLOW) {
         if (denyAnswersFirst) return denyHandoffNow();
         const body = await this.loginRequiredMessage(tenantId, session.language);
         // Why this visitor was turned away, in the closed vocabulary (PLN-261012
         // SG-50): a visitor whose signed claims LAPSED is told apart from one who
-        // never signed in — the first is fixed by the host re-signing.
+        // never signed in — the first is fixed by the host re-signing. The measurement
+        // rides along (SG-51): how close the public knowledge came, which categories it
+        // matched, and whether the vector leg was even up (`gate: embedder_degraded`).
         await this.persist(
           tenantId,
           conversation.id,
@@ -1161,12 +1159,13 @@ export class ChatService {
           buildRefusalTrace(
             identity.expired ? REFUSAL_REASON.IDENTITY_EXPIRED : REFUSAL_REASON.GUEST_GATE,
             effectiveAgentId,
-            { grounded, threshold: GUEST_GATE_CONFIDENCE },
+            gateTraceExtras(gate),
           ),
         );
         this.logger.log(
           `guest gate: sign-in prompt conversation=${conversation.id} agent=${effectiveAgentId ?? 'default'}` +
-            (identity.expired ? ' (identity expired)' : ''),
+            (identity.expired ? ' (identity expired)' : '') +
+            (gate.decision === GATE_DECISION.EMBEDDER_DEGRADED ? ' (vector leg degraded)' : ''),
         );
         return {
           conversationId: String(conversation.id),
@@ -1373,19 +1372,27 @@ export class ChatService {
       // Nothing grounded for THIS audience — but is it a topic only a manager may read? Then the
       // receptionist is told so (and offered a person) instead of a vague "no answer" handoff
       // (PLN-261012 SG-10). Not for an outage, and not when a deny rule already requires the page.
-      const managerOnly =
-        engineDown || denyAnswersFirst
-          ? null
-          : await this.managerOnlyTurn({
-              conversationId: conversation.id,
-              session,
-              tenantId,
-              identity,
-              audience,
-              effectiveAgentId,
-              searchText: retrievalQuery(history, egressText),
-            });
-      if (managerOnly) return managerOnly;
+      // The WHY of the hand-off is `decideLowConfidence` (gate-decision.ts, the simulator's too): a
+      // manager-only topic, a vector leg that was down (embedder_degraded — the 0.2 sentinel says
+      // nothing about the question), or genuinely nothing grounded. An outage keeps its own reason.
+      const lowDecision = engineDown
+        ? null
+        : await decideLowConfidence(
+            this.rag,
+            { tenantId, agentId: effectiveAgentId, identity, query: retrievalQuery(history, egressText) },
+            { confidence: answer.confidence, grounding: (answer as Partial<RagAnswer>).grounding },
+            { guestGated, skipRoleTier: denyAnswersFirst },
+          );
+      if (lowDecision?.decision === GATE_DECISION.ROLE_MANAGER_ONLY) {
+        return this.managerOnlyReply({
+          conversationId: conversation.id,
+          session,
+          tenantId,
+          identity,
+          effectiveAgentId,
+          decision: lowDecision,
+        });
+      }
       const handoff = await this.handoff(
         conversation.id,
         session,
@@ -1394,7 +1401,8 @@ export class ChatService {
         // not that the knowledge base has no answer (PLN-261012 SG-84).
         engineDown ? 'engine_unavailable' : 'low_confidence',
         text,
-        denyStamp,
+        // The measurement rides on the stored notice (SG-51): refusals are calibration data too.
+        lowDecision ? { ...denyStamp, trace: { ...gateTraceExtras(lowDecision) } } : denyStamp,
       );
       return {
         conversationId: String(conversation.id),
@@ -1473,6 +1481,11 @@ export class ChatService {
       // counts the confidence next to them.
       ...(partner ? { partnerEvidence: partner.evidence, answeredFrom: 'partner_data', ...(partner.trace ?? {}) } : {}),
       ...(caveat ? { uiVersionCaveat: true } : {}),
+      // A gate PASS is recorded too (PLN-261012 SG-51, D-13): without it a leak is invisible — the
+      // only trace of the gate would be its refusals. Which tier, how grounded against which bar,
+      // which categories matched. Only when a gate was actually asked (a guest of a login_guidance
+      // agent): an open agent or a signed-in session never measured anything. Never the question.
+      ...(guestGated ? gateTraceExtras(gate) : {}),
       // The vector leg was down and this answer stands on the keyword leg alone (PLN-261012 SG-84).
       ...(vectorDegraded ? { vectorProvider: 'degraded', vectorDegraded } : {}),
       // A replayed answer carries no `timings`: its retrieve/generate stay null, not 0.
@@ -2078,6 +2091,34 @@ export class ChatService {
   }
 
   /**
+   * The customer-facing words a gate decision gives, for the console simulator (PLN-261012
+   * SG-51): the very text each refusal branch above sends, read through the same helpers, so what
+   * an operator sees under "Test as…" is what a visitor of that kind reads. `allow` has no text of
+   * its own (the answer is the answer). A hand-off reads the STOCK notice — the live one also
+   * depends on business hours and routing, which the simulator does not run.
+   */
+  async gateReplyText(
+    tenantId: number | null,
+    language: string,
+    d: Pick<GateDecision, 'decision' | 'stage'>,
+  ): Promise<string | null> {
+    switch (d.decision) {
+      case GATE_DECISION.GUEST_GATE:
+        return this.loginRequiredMessage(tenantId, language);
+      case GATE_DECISION.ROLE_MANAGER_ONLY:
+        return this.managerOnlyMessage(tenantId, language);
+      case GATE_DECISION.EMBEDDER_DEGRADED:
+        // At the guest gate an outage keeps the gate CLOSED, so the visitor is told what any
+        // closed gate says; past it, the same outage ends in the ordinary hand-off notice.
+        return d.stage === 'guest' ? this.loginRequiredMessage(tenantId, language) : sysMsg('handoff', language);
+      case GATE_DECISION.LOW_CONFIDENCE:
+        return sysMsg('handoff', language);
+      default:
+        return null;
+    }
+  }
+
+  /**
    * May the conversation's earlier turns go to the model for this viewer? (PLN-261012 SG-11.)
    * No when the thread was held at a higher tier than the viewer's tier now — the claims lapsed
    * mid-conversation, or the role that opened it is no longer the one asking — AND the tenant
@@ -2093,33 +2134,21 @@ export class ChatService {
   }
 
   /**
-   * A receptionist asked a topic only manager-only categories cover (PLN-261012 SG-10). Called
-   * from the low-confidence branch, i.e. when the audience-scoped answer found nothing to stand
-   * on: a SECOND grounding check with the manager audience (one extra embed, only on this branch
-   * and only when the tenant has a manager-only category). If that grounds, the content is NOT
-   * shown — the reply points to the hotel's manager account and offers a person, the trace carries
-   * `role_manager_only`, and nobody is paged (no CS page). Null = does not apply, the caller
-   * hands off as usual.
+   * A receptionist asked a topic only manager-only categories cover (PLN-261012 SG-10). Reached
+   * from the low-confidence branch once `decideLowConfidence` (the SECOND grounding check, with
+   * the manager audience — one extra embed, only on that branch and only when the tenant has a
+   * manager-only category) ruled `role_manager_only`. The content is NOT shown — the reply points
+   * to the hotel's manager account and offers a person, the trace carries `role_manager_only`, and
+   * nobody is paged (no CS page).
    */
-  private async managerOnlyTurn(ctx: {
+  private async managerOnlyReply(ctx: {
     conversationId: number;
     session: Session;
     tenantId: number;
     identity: EffectiveIdentity;
-    audience: Audience;
     effectiveAgentId: number | null;
-    searchText: string;
-  }): Promise<ChatTurnResult | null> {
-    // A signed-in partner below manager. A guest is told to sign in (the gate) or handed off.
-    if (ctx.audience !== AUDIENCE.PARTNER) return null;
-    if (!(await this.rag.hasAudienceTiers?.(ctx.tenantId))) return null;
-    const grounded = await this.rag.groundingConfidence(
-      ctx.tenantId,
-      ctx.searchText,
-      ctx.effectiveAgentId,
-      { audience: AUDIENCE.MANAGER },
-    );
-    if (grounded < ESCALATION_CONFIDENCE) return null;
+    decision: GateDecision;
+  }): Promise<ChatTurnResult> {
     const body = await this.managerOnlyMessage(ctx.tenantId, ctx.session.language);
     const followUps = [agentConnectChip(ctx.session.language)];
     // Chips ride on the trace like the team question's, so they survive the poll and a reload.
@@ -2127,8 +2156,9 @@ export class ChatService {
       ...buildRefusalTrace(REFUSAL_REASON.ROLE_MANAGER_ONLY, ctx.effectiveAgentId, {
         actorRole: ctx.identity.claims?.role ?? null,
         requiredRole: 'manager',
-        grounded,
-        threshold: ESCALATION_CONFIDENCE,
+        // grounded / threshold are the MANAGER-scope measurement against the handoff bar, plus what
+        // it matched (SG-51): the categories named here are the manager-only ones that held the answer.
+        ...gateTraceExtras(ctx.decision),
       }),
       followUps,
     });
