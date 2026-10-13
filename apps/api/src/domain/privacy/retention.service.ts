@@ -16,6 +16,7 @@ import { isCliContext } from '../../global/util/cli-context.util';
 import { OpsAlertService } from '../../infrastructure/observability/ops-alert.service';
 import { conversationRetentionDays } from '../../global/util/retention-policy.util';
 import { OptInRetentionService } from './opt-in-retention.service';
+import { PartnerLookupLog } from '../partner-data/entity/partner-lookup-log.entity';
 
 export interface RetentionPurgeResult {
   retentionDays: number;
@@ -34,6 +35,8 @@ export interface RetentionPurgeResult {
   moderationLogs: number;
   /** Escalation alerts disposed of — they carry a message preview. */
   agentAlerts: number;
+  /** Partner-data lookup log rows disposed of — hotel serial, role, topic and a data-snapshot hash. */
+  partnerLookupLogs: number;
   /**
    * Opt-in disposal (PLN-261012 SG-70): customers anonymised and audit rows
    * deleted. Both stay 0 with a null window unless the operator turned them on.
@@ -77,6 +80,9 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     // Opt-in customers / audit_logs disposal (PLN-261012 SG-70). Trailing and
     // optional so positional specs stay valid; absent = both stay off.
     private readonly optIn?: OptInRetentionService,
+    // Partner-data lookup log (PLN-261012 SG-31/SG-52 follow-up). Trailing and optional for the
+    // same reason; absent = the table is simply not touched (what every spec before it expects).
+    @Optional() @InjectRepository(PartnerLookupLog) private readonly partnerLogRepo?: Repository<PartnerLookupLog>,
   ) {}
 
   onModuleInit(): void {
@@ -168,6 +174,19 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     const moderation = await this.moderationRepo.delete({ createdAt: LessThan(cutoff) });
     const alerts = await this.alertRepo.delete({ createdAt: LessThan(cutoff) });
 
+    // The partner-data lookup log names the hotel, the role and the topic of every question a
+    // hotel user asked about their own rates / settlement, so it ages out on the conversation
+    // clock like the rows that explain it (PLN-261012 SG-31/SG-52 follow-up). A failure here is
+    // logged and must not swallow the audit row for the purge that already happened.
+    let partnerLookupLogs = 0;
+    try {
+      if (this.partnerLogRepo) {
+        partnerLookupLogs = (await this.partnerLogRepo.delete({ createdAt: LessThan(cutoff) })).affected ?? 0;
+      }
+    } catch (err) {
+      this.logger.error(`partner lookup log retention failed: ${String(err)}`);
+    }
+
     // AI usage on its own clock: keyed by `stat_date`, not a row timestamp, and
     // held longer than conversations (see aiUsageRetentionDays).
     const aiUsageRetentionDays = this.aiUsageRetentionDays();
@@ -213,6 +232,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       aiUsageRetentionDays,
       moderationLogs: moderation.affected ?? 0,
       agentAlerts: alerts.affected ?? 0,
+      partnerLookupLogs,
       customersAnonymised: optIn.customersAnonymised,
       customerRetentionDays: optIn.customerRetentionDays,
       auditLogs: optIn.auditLogs,
@@ -238,6 +258,7 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
         aiUsageRetentionDays: result.aiUsageRetentionDays,
         moderationLogs: result.moderationLogs,
         agentAlerts: result.agentAlerts,
+        partnerLookupLogs: result.partnerLookupLogs,
         customersAnonymised: result.customersAnonymised,
         customerRetentionDays: result.customerRetentionDays,
         auditLogs: result.auditLogs,
