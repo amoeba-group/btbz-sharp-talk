@@ -104,6 +104,17 @@ export class Counter extends Metric {
     return (this.series.get(key) as { value: number } | undefined)?.value ?? 0;
   }
 
+  /** The distinct values one label has taken so far (empty strings excluded). */
+  distinct(label: string): string[] {
+    const i = this.labelNames.indexOf(label);
+    if (i < 0) return [];
+    const out = new Set<string>();
+    for (const s of this.series.values() as Iterable<{ labelValues: string[] }>) {
+      if (s.labelValues[i]) out.add(s.labelValues[i]);
+    }
+    return [...out];
+  }
+
   /** Sum of every series whose given labels match (others ignored). */
   sum(match: Labels = {}): number {
     let total = 0;
@@ -232,8 +243,13 @@ export class MetricsRegistry {
     return m;
   }
 
-  addCollector(c: Collector): void {
+  /** Returns a disposer, so a module that registers a collector can remove it on shutdown. */
+  addCollector(c: Collector): () => void {
     this.collectors.push(c);
+    return () => {
+      const i = this.collectors.indexOf(c);
+      if (i >= 0) this.collectors.splice(i, 1);
+    };
   }
 
   /** @internal called by a metric that refused a new series. */

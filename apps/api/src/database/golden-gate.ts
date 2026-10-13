@@ -7,6 +7,7 @@ import { GoldenService } from '../domain/ai-coach/golden.service';
 import { GOLDEN_RUN_KIND } from '../domain/ai-coach/entity/golden-run.entity';
 import { GateResult, gateFailed, gateMail, parseGateTargets } from '../domain/ai-coach/golden-gate.util';
 import { MailerService } from '../infrastructure/external/mailer.service';
+import { OpsAlertService } from '../infrastructure/observability/ops-alert.service';
 import { closeAndExit } from './cli-exit';
 
 /**
@@ -60,6 +61,16 @@ async function main(): Promise<void> {
     const mail = gateMail(results, process.env.NODE_ENV || 'development', label);
     const sent = await app.get(MailerService).send({ to: process.env.AI_ALERT_EMAIL?.trim() || 'dev@amoeba.group', ...mail });
     console.log(`golden gate: FAILED — alert ${sent ? 'mailed' : 'NOT mailed'}`);
+    // The generic ops channel as well (PLN-261012 SG-83): OPS_ALERT_EMAIL / OPS_ALERT_WEBHOOK_URL, no built-in recipient.
+    const failedCount = results.filter(gateFailed).length;
+    const ops = await app.get(OpsAlertService).alert({
+      key: 'golden_gate_failed',
+      kind: 'golden_gate_failed',
+      severity: 'warning',
+      title: 'Post-deploy answer-quality gate failed',
+      detail: `${failedCount} of ${results.length} gate target(s) regressed or failed after deploy ${label}. See the golden run in the console.`,
+    });
+    console.log(`golden gate: ops alert ${ops.outcome}`);
     process.exitCode = 1;
   } else {
     console.log('golden gate: passed');
