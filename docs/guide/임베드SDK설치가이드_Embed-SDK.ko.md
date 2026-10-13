@@ -26,6 +26,11 @@
 | `locale` | 초기 언어 (`en`·`ko`·`es`·`vi`·`ja`·`zh`). 생략 시 페이지의 `lang` |
 | `widgetUrl` | 위젯이 다른 도메인에 있을 때만 |
 | `ga4Id` | GA4 측정 ID (선택) |
+| `title` | iframe의 접근성 이름(스크린리더). 기본 `IVY USA Support` — 자사 브랜드로 바꾸세요 (PLN-261012 SG-82) |
+| `identityProbe` | Shopify 앱 프록시(`/apps/ivy/identity`) 호출. 기본은 자동 — Shopify 페이지(`window.Shopify` 또는 `*.myshopify.com`)에서만 호출합니다. `false` = 호출 안 함, `true` = 강제. **`init()`이 아닌 `SHARPTALK_WIDGET_CONFIG`에** 두세요(스크립트 로드 시점에 읽힘) |
+| `identityPath` | 호스트 자체의 "로그인한 사용자" 엔드포인트(JSON `{authenticated, sessionToken}`). 서명형 `identify()`를 쓰면 필요 없습니다 |
+
+> CSP/CORS 설정은 `GUIDE-261013-Go2Joy-HotelAdmin-CSP-CORS.md`를 보세요.
 
 > 설정 전역 방식(`window.SHARPTALK_WIDGET_CONFIG` 설정 후 스크립트 삽입)도 **그대로
 > 동작합니다.** 2026-09-10 이전 이름인 `window.IVY_WIDGET_CONFIG`도 영구히 인식하므로
