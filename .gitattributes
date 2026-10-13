@@ -1,0 +1,12 @@
+# Files that run on Linux — in a container build, on a customer host, or in CI — must be LF in
+# every checkout (PLN-261012 SG-80). With core.autocrlf=true a Windows checkout otherwise gets
+# CRLF: `bash script.sh` then fails on "$'\r': command not found", a Dockerfile COPYs a
+# CRLF build-step script into an alpine image, and sql/artefacts.tsv makes every artefact read
+# as "missing" in scripts/check-migrations.sh. The repository already stores them as LF.
+*.sh text eol=lf
+docker/**/Dockerfile.* text eol=lf
+docker/**/*.conf text eol=lf
+docker/**/*.service text eol=lf
+docker/**/*.timer text eol=lf
+docker/**/*.cron text eol=lf
+sql/artefacts.tsv text eol=lf
