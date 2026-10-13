@@ -50,6 +50,8 @@ import {
 } from './conversation-history.util';
 import { footerFor, footerVariants, stripFooters } from '../ai-engine/answer-footer.util';
 import { envNumber } from '../../global/util/env-number.util';
+import { PartnerDataStep } from '../partner-data/partner-data.step';
+import type { PartnerNotice } from '../partner-data/partner-data.step';
 
 const ESCALATION_CONFIDENCE = 0.45;
 /**
@@ -355,6 +357,13 @@ export class ChatService {
     private readonly statRepo?: Repository<AgentDailyStat>,
     /** Files uploaded before the send call are claimed here (PLN-260814). */
     private readonly attachments?: AttachmentService,
+    /**
+     * Partner data lookup (PLN-261012 SG-31): grounds a signed-in hotel user's
+     * rate / policy / booking / settlement question in the hotel's own live data.
+     * Appended last and optional, like the others — specs that predate it build
+     * the service without it and see exactly the old behaviour.
+     */
+    private readonly partnerData?: PartnerDataStep,
   ) {}
 
   /**
@@ -995,6 +1004,35 @@ export class ChatService {
         ? await this.buildOrderContext(tenantId, session.customerId)
         : undefined;
 
+    // Partner data (PLN-261012 SG-31), the hotel-side counterpart of the order
+    // context above: a signed-in hotel user asking about THEIR hotel's rates,
+    // policies, bookings or settlement gets a server-built, server-formatted data
+    // block (hotel from the verified claims, never from the message) — or, when
+    // that is refused or impossible, a fixed notice instead of a model reply.
+    // Null for every tenant/session/message the feature does not apply to, which
+    // leaves this turn exactly as it was.
+    const partner = this.partnerData
+      ? await this.partnerData.prepare({
+          tenantId,
+          session,
+          conversationId: conversation.id,
+          messageId: userTurn.id,
+          text,
+          language: session.language,
+        })
+      : null;
+    if (partner?.kind === 'notice') {
+      if (denyAnswersFirst) return denyHandoffNow();
+      return this.answerWithPartnerNotice(partner, {
+        conversationId: conversation.id,
+        session,
+        tenantId,
+        text,
+        denyStamp,
+        queued,
+      });
+    }
+
     // RAG answer (FN-016/017). The shopper's own words go out scrubbed (Stage 5);
     // `orderContext` does not, on purpose — we build it ourselves from our own
     // database, it already excludes every contact field (see buildOrderContext), and
@@ -1016,8 +1054,12 @@ export class ChatService {
     // that says it, and a stored answer cannot know which. A gated guest never
     // replays either: the store holds answers given with the full scope.
     const contextual = hasAssistantTurn(history);
+    // A partner-data answer is about ONE hotel and its live figures; the reuse
+    // store is keyed by tenant, language and agent only, so replaying it would
+    // hand one hotel's numbers to another (REQ-261012 D-06). Bypassed here AND
+    // at the record site below.
     const reused =
-      needsOrderData || !this.answerReuse || contextual || guestGated
+      needsOrderData || !this.answerReuse || contextual || guestGated || partner
         ? null
         : await this.answerReuse.lookup(
             tenantId,
@@ -1050,7 +1092,11 @@ export class ChatService {
           history,
           // Guest scope for gated visitors (PLN-261001 v1.1); signed partner
           // context for identified ones (REQ-261006 H6).
-          { guestOnly: guestGated, partnerContext: partnerContextOf(session) },
+          {
+            guestOnly: guestGated,
+            partnerContext: partnerContextOf(session),
+            ...(partner ? { partnerData: partner.block } : {}),
+          },
         );
 
     // Mandatory moderation gate (FR-069).
@@ -1060,6 +1106,9 @@ export class ChatService {
       authorType: 'ai',
       conversationId: conversation.id,
       text: answer.text,
+      // The ids and amounts of OUR data block must survive the PII masks (the
+      // 13-16 digit rule would eat a long booking code) — this call only.
+      ...(partner ? { protect: partner.protect } : {}),
     });
     // A privacy token the model copied despite the rule (PLN-260929 S7).
     const replyText = replacePiiTokens(moderated.text, session.language);
@@ -1118,6 +1167,30 @@ export class ChatService {
       };
     }
 
+    // Every number in a partner-data answer must be one the data block holds
+    // (PLN-261012 SG-31): the model is told to copy figures, and this is what
+    // makes that more than a request. A figure that is not there withholds the
+    // answer and degrades the turn to "we will confirm" + hand-off. Runs on the
+    // moderated text and BEFORE the contact footer (whose phone numbers are ours).
+    if (partner) {
+      // `partner` is only ever set when the step exists.
+      const verdict = await this.partnerData!.verify(partner, replyText, {
+        question: text,
+        kbTexts: answer.citations.map((c) => c.snippet ?? ''),
+        language: session.language,
+      });
+      if (!verdict.ok) {
+        return this.answerWithPartnerNotice(verdict.notice, {
+          conversationId: conversation.id,
+          session,
+          tenantId,
+          text,
+          denyStamp,
+          queued,
+        });
+      }
+    }
+
     // The tenant's contact footer (PLN-261007 R4): fixed operator text, added
     // after moderation and never stored in the reuse cache with the answer.
     const footer = footerFor(footerCfg, session.language);
@@ -1148,10 +1221,17 @@ export class ChatService {
       // Console diagnostics: which answers came from the reuse store (D-C2:
       // the customer sees no marker; the trace always records it).
       ...(reused ? { answeredFrom: 'reuse', reuseId: reused.reuseId } : {}),
+      // What the answer's figures were read from (PLN-261012 SG-31). Kept OUT of
+      // `citations` on purpose: the widget receives citations wholesale, the
+      // statistics read them as knowledge-document ids, and issue auto-resolve
+      // counts the confidence next to them.
+      ...(partner ? { partnerEvidence: partner.evidence, answeredFrom: 'partner_data' } : {}),
     });
     if (reused) {
       void this.answerReuse?.recordHit(reused.reuseId);
-    } else if (!contextual && !guestGated) {
+    } else if (!contextual && !guestGated && !partner) {
+      // (Not a partner-data answer either: it is one hotel's live figures, and
+      // the store has no hotel dimension.)
       // A gated guest's answer came from the guest-only scope; stored, it
       // would replay for identified visitors as if it were the full answer.
       // A freshly generated, delivered answer becomes a reuse candidate (the
@@ -1369,7 +1449,14 @@ export class ChatService {
     tenantId: number,
     reason: EscalationReason,
     preview: string,
-    stamp?: { issueType?: string; issueLabel?: string },
+    stamp?: {
+      issueType?: string;
+      issueLabel?: string;
+      /** Replaces the stock notice (not the off-hours ones) — e.g. "the data system is unreachable". */
+      notice?: string;
+      /** Merged into the persisted notice's trace after `reason` (PLN-261012 SG-31). */
+      trace?: Record<string, unknown>;
+    },
   ): Promise<HandoffOutcome> {
     // Routing decides both who gets paged and what the customer is told:
     // outside business hours the message goes to a mailbox and the shopper is
@@ -1387,8 +1474,11 @@ export class ChatService {
       ? sysMsg('offHoursNeedEmail', session.language)
       : route.mode === 'email' && route.notice
         ? route.notice
-        : sysMsg(reason === 'user_request' ? 'connectingAgent' : 'handoff', session.language);
-    await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, body, session.language, { reason });
+        : (stamp?.notice ?? sysMsg(reason === 'user_request' ? 'connectingAgent' : 'handoff', session.language));
+    await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, body, session.language, {
+      reason,
+      ...stamp?.trace,
+    });
     // Preview sandbox: show the real handoff notice but never page the agents —
     // no WAITING flip (the bot keeps answering for iterative testing), no alert
     // fan-out, no console-queue entry.
@@ -1596,6 +1686,47 @@ export class ChatService {
       followUps,
     });
     return { body: teams.prompt, followUps };
+  }
+
+  /**
+   * A turn answered with a fixed partner-data notice instead of a model reply
+   * (PLN-261012 SG-31). Two kinds, told apart by `notice.handoff`:
+   *  - a refusal the customer can act on (role may not read it, sign in again,
+   *    "that is another hotel") — the notice alone, nobody is paged;
+   *  - the facts could not be fetched or verified — "we will confirm" and a real
+   *    hand-off, so a person gives the figures. A thread already waiting for an
+   *    agent is not paged twice (the same rule as every other handoff here).
+   * Never throws a partner error to the customer; the error code rides on the
+   * message trace for the logs and the refusal analytics.
+   */
+  private async answerWithPartnerNotice(
+    notice: PartnerNotice,
+    ctx: {
+      conversationId: number;
+      session: Session;
+      tenantId: number;
+      text: string;
+      denyStamp?: { issueType?: string; issueLabel?: string };
+      queued: boolean;
+    },
+  ): Promise<ChatTurnResult> {
+    const conversationId = String(ctx.conversationId);
+    if (notice.handoff && !ctx.queued) {
+      const handoff = await this.handoff(ctx.conversationId, ctx.session, ctx.tenantId, 'low_confidence', ctx.text, {
+        ...ctx.denyStamp,
+        notice: notice.body,
+        trace: notice.trace,
+      });
+      return {
+        conversationId,
+        reply: { senderType: 'system', body: handoff.body },
+        escalate: true,
+        needsAuth: false,
+        needsContactEmail: handoff.needsContactEmail,
+      };
+    }
+    await this.persist(ctx.tenantId, ctx.conversationId, SENDER_TYPE.SYSTEM, notice.body, ctx.session.language, notice.trace);
+    return { conversationId, reply: { senderType: 'system', body: notice.body }, escalate: false, needsAuth: false };
   }
 
   // ---- helpers ----

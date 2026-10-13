@@ -18,6 +18,19 @@ import {
 /** TTL for the per-tenant active-rules cache (PERF-11). */
 const MOD_RULES_CACHE_TTL_SEC = 60;
 
+/**
+ * The tenant's published values plus a per-call list, longest first (the shield
+ * replaces in that order, so "2610140000123456" is swapped out before any
+ * shorter value it contains). Entries under 3 characters would match inside
+ * ordinary words and are dropped.
+ */
+export function mergeProtected(tenantValues: string[], perCall?: string[]): string[] {
+  if (!perCall?.length) return tenantValues;
+  return [...new Set([...tenantValues, ...perCall.filter((v) => typeof v === 'string' && v.length >= 3)])].sort(
+    (a, b) => b.length - a.length,
+  );
+}
+
 /** Exported so the rule CRUD endpoints can invalidate on change. */
 export function moderationRulesCacheKey(tenantId: number): string {
   return `modrules:${tenantId}`;
@@ -30,6 +43,15 @@ export interface ModerateInput {
   authorId?: number | null;
   conversationId?: number | null;
   text: string;
+  /**
+   * Values the PII mask rules must leave alone for THIS call only (PLN-261012
+   * SG-31): ids and amounts present in a server-built data block (booking
+   * codes, settlement references). The default 13-16 digit rule would otherwise
+   * mask a long booking code that is the whole point of the answer. Only
+   * pass values taken from a trusted block — never from user text — and only
+   * values >= 3 characters are honoured. Merged with the tenant's own list.
+   */
+  protect?: string[];
 }
 
 export interface ModerateResult {
@@ -103,7 +125,10 @@ export class ModerationService {
       // Published contacts (support e-mail, hotline, the account customers pay
       // into) are shielded from word/regex rules: the e-mail rule masked
       // support@go2joy.vn in 48 of 50 answers (REQ-261007 I-1).
-      const shield = shieldProtected(input.text, await this.protectedValues(input.tenantId));
+      const shield = shieldProtected(
+        input.text,
+        mergeProtected(await this.protectedValues(input.tenantId), input.protect),
+      );
 
       let working = shield.text;
       let warnedRuleId: number | undefined;

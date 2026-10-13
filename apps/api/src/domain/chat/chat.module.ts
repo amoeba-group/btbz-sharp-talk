@@ -22,6 +22,7 @@ import { OrderModule } from '../order/order.module';
 import { CustomerModule } from '../customer/customer.module';
 import { AnswerReuseModule } from '../answer-reuse/answer-reuse.module';
 import { IssueModule } from '../issue/issue.module';
+import { PartnerDataModule } from '../partner-data/partner-data.module';
 
 @Module({
   imports: [
@@ -57,6 +58,9 @@ import { IssueModule } from '../issue/issue.module';
     AnswerReuseModule,
     // Issue P1: customer end-chat closes a settled issue.
     IssueModule,
+    // Partner data lookup (PLN-261012 SG-31): the chat step that grounds a turn in
+    // the hotel's live data. PartnerData does not depend on Chat, so this stays acyclic.
+    PartnerDataModule,
   ],
   controllers: [ChatController],
   providers: [ChatService, RagService, ScenarioService, IdleConversationService],
