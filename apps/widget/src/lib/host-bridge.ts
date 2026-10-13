@@ -197,13 +197,28 @@ function installNativeInbox(): void {
 }
 installNativeInbox();
 
-export function onHostMessage(handler: Handler): () => void {
-  const onWindowMessage = (event: MessageEvent) => {
+/**
+ * ONE window listener for however many subscribers there are (PLN-261012 S1 follow-up).
+ * Each `onHostMessage` call used to add its own `message` listener, and every listener
+ * `deliver()`s to ALL handlers — so with three hooks subscribed a single host message
+ * reached each handler three times. For `identify` that meant three API calls per sign-in
+ * (found driving the real widget in a browser: two `identified` events per identify),
+ * and on a session fork they could race into more than one new session.
+ */
+let windowListener: ((event: MessageEvent) => void) | null = null;
+
+function installWindowListener(): void {
+  if (windowListener) return;
+  windowListener = (event: MessageEvent) => {
     if (event.source !== window.parent || event.source === window) return;
     if (!isTrustedOrigin(event.origin)) return;
     deliver((event.data ?? {}) as HostMessage, event.origin);
   };
-  window.addEventListener('message', onWindowMessage);
+  window.addEventListener('message', windowListener);
+}
+
+export function onHostMessage(handler: Handler): () => void {
+  installWindowListener();
   handlers.add(handler);
 
   // Anything the host said while nobody was listening arrives next tick, in
@@ -211,8 +226,11 @@ export function onHostMessage(handler: Handler): () => void {
   scheduleFlush();
 
   return () => {
-    window.removeEventListener('message', onWindowMessage);
     handlers.delete(handler);
+    if (handlers.size === 0 && windowListener) {
+      window.removeEventListener('message', windowListener);
+      windowListener = null;
+    }
   };
 }
 
