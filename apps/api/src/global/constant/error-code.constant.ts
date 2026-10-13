@@ -270,6 +270,29 @@ export const ERROR_CODE = {
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },
+
+  // E5100-E5109 — Partner data lookup (PLN-261012 SG-31/32). Recorded in
+  // partner_lookup_logs and mapped to a localized notice (+ hand-off); the chat
+  // path itself never throws these to the customer.
+  /** The partner API did not answer (timeout, 5xx, breaker open) or served an unusable reply. */
+  PARTNER_API_UNAVAILABLE: { code: 'E5100', message: 'The partner data service is not reachable right now' },
+  /** The signed-in role may not read this topic (e.g. a receptionist asking for settlement). */
+  PARTNER_ROLE_DENIED: { code: 'E5101', message: 'This role may not look up that partner data' },
+  /** Claims missing, unsigned or older than the maximum age — the user must sign in again. */
+  PARTNER_CLAIMS_STALE: { code: 'E5102', message: 'A current signed partner identity is required' },
+  /** Topic not on the allow-list. */
+  PARTNER_TOPIC_UNKNOWN: { code: 'E5103', message: 'Unknown partner data topic' },
+  /** Parameters outside the closed schema — in particular any hotel identifier. */
+  PARTNER_PARAM_REJECTED: { code: 'E5104', message: 'Partner data parameters were rejected' },
+  /** Reply failed schema/echo/invariant validation and was dropped. */
+  PARTNER_RESPONSE_INVALID: { code: 'E5105', message: 'The partner data reply was invalid and was discarded' },
+  /** Lookup is on for the tenant but the connection (base URL / key) is not configured. */
+  PARTNER_NOT_CONFIGURED: { code: 'E5106', message: 'The partner data connection is not configured' },
+  /** A number in the drafted answer is not in the trusted data block — answer withheld. */
+  PARTNER_ANSWER_UNVERIFIED: { code: 'E5107', message: 'The drafted answer contained figures that could not be verified' },
+  /** The partner API throttled us (429). */
+  PARTNER_RATE_LIMITED: { code: 'E5108', message: 'The partner data service is rate limiting requests' },
+  // E5109 is reserved for this block.
 } as const;
 
 export type ErrorCodeEntry = { code: string; message: string };

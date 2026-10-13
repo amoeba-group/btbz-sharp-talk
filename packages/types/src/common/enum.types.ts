@@ -402,6 +402,8 @@ export const INTEGRATION_PROVIDER = {
   GORGIAS: 'gorgias',
   GOOGLE_DRIVE: 'google_drive',
   NOTION: 'notion',
+  /** Go2Joy partner-data API: live hotel policies/rates/bookings/settlement (PLN-261012 SG-30/31/32). */
+  GO2JOY_PARTNER_API: 'go2joy_partner_api',
 } as const;
 export type IntegrationProvider = (typeof INTEGRATION_PROVIDER)[keyof typeof INTEGRATION_PROVIDER];
 
@@ -433,11 +435,20 @@ export type MarketingProvider = (typeof MARKETING_PROVIDERS)[number];
 export const HELPDESK_PROVIDERS = [INTEGRATION_PROVIDER.GORGIAS] as const;
 export type HelpdeskProvider = (typeof HELPDESK_PROVIDERS)[number];
 
+/**
+ * Partner data sources the assistant reads live hotel facts from (PLN-261012
+ * SG-30..32). Same generic credential flow, kept as its own axis so the console
+ * can show it next to the switch that turns the lookup on.
+ */
+export const PARTNER_DATA_PROVIDERS = [INTEGRATION_PROVIDER.GO2JOY_PARTNER_API] as const;
+export type PartnerDataProvider = (typeof PARTNER_DATA_PROVIDERS)[number];
+
 /** Every provider served by the generic settings/save/test flow. */
 export const GENERIC_INTEGRATION_PROVIDERS = [
   ...ECOMMERCE_PROVIDERS,
   ...MARKETING_PROVIDERS,
   ...HELPDESK_PROVIDERS,
+  ...PARTNER_DATA_PROVIDERS,
 ] as const;
 export type GenericIntegrationProvider = (typeof GENERIC_INTEGRATION_PROVIDERS)[number];
 
@@ -499,6 +510,16 @@ export const INTEGRATION_FIELDS: Record<GenericIntegrationProvider, IntegrationF
     // L2 status webhook auth token (POST /webhooks/gorgias) — optional until the
     // tenant wires the Gorgias HTTP Integration (PLN-260809 P3).
     { key: 'webhook_secret', secret: true, required: false },
+  ],
+  // Go2Joy partner-data API (PLN-261012 SG-30/32): service key + the host it is
+  // served from. `signing_secret` is OPTIONAL and only meaningful once Go2Joy
+  // provisions one next to the key (the request-signing design in
+  // docs/guide/API-REQ-Go2Joy-Partner-Data.openapi.yaml) — until then requests go
+  // out unsigned and Go2Joy decides whether to accept that.
+  go2joy_partner_api: [
+    { key: 'base_url', secret: false, required: true },
+    { key: 'api_key', secret: true, required: true },
+    { key: 'signing_secret', secret: true, required: false },
   ],
 };
 
