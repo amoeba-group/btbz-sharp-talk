@@ -38,6 +38,13 @@ import { maskPii } from '../../global/util/pii.util';
 import { blindIndex } from '../../global/util/crypto.util';
 
 const REDACTED = '[redacted]';
+
+/** Who ran a DSAR on a customer's behalf - the operator console, not the customer. */
+export interface DsarActor {
+  userId: number;
+  /** Free-text request reference (ticket / email id) the operator typed; audit only. */
+  reference?: string | null;
+}
 const EXTERNAL_CHANNELS = ['email', 'sms', 'web_push', 'push'];
 const PREF_CATEGORIES = ['payment', 'shipping', 'event', 'review', 'chat'];
 
@@ -268,6 +275,17 @@ export class PrivacyService {
    */
   async exportData(sessionToken: string) {
     const customerId = await this.requireVerifiedCustomerId(sessionToken);
+    return this.exportCustomer(customerId);
+  }
+
+  /**
+   * The export itself, addressed by customer id (PLN-261012 SG-70). The widget
+   * path above resolves the id from a verified session; the operator DSAR tool
+   * resolves it from a console lookup - the same compilation either way, so a
+   * request handled by staff can never return less (or more) than the shopper
+   * would have got. `actor` only changes who the audit row names.
+   */
+  async exportCustomer(customerId: number, actor?: DsarActor) {
     const customer = await this.customerRepo.findOne({ where: { id: customerId } });
 
     const [orders, notifications, reviews, inquiries, cjmEvents, subscriptions, restocks, prefs, affiliates, saves, nudges, diaryNotes] =
@@ -315,12 +333,16 @@ export class PrivacyService {
     try {
       await this.audit.write({
         tenantId: customer?.tenantId ?? null,
-        actorType: 'system',
-        actorId: 0,
+        actorType: actor ? 'user' : 'system',
+        actorId: actor?.userId ?? 0,
         action: 'dsar.export',
         target: maskPii(customer?.email ?? null),
         result: 'success',
-        metadata: { kind: 'export', customerId },
+        metadata: {
+          kind: 'export',
+          customerId,
+          ...(actor ? { via: 'operator', reference: actor.reference ?? null } : {}),
+        },
       });
     } catch (err) {
       this.logger.warn(`dsar.export audit write failed: ${String(err)}`);
@@ -336,6 +358,11 @@ export class PrivacyService {
             phone: customer.phone,
             tier: customer.tier,
             shopifyCustomerId: customer.shopifyCustomerId,
+            // The id the customer's own system uses and the last signed
+            // hotel/role it sent: personal data we hold about this person, so
+            // part of the access right (PLN-261012 SG-70).
+            externalCustomerId: customer.externalCustomerId,
+            lastClaims: customer.lastClaims,
             createdAt: customer.createdAt,
           }
         : null,
@@ -434,6 +461,15 @@ export class PrivacyService {
       throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.BAD_REQUEST);
     }
     const customerId = await this.requireVerifiedCustomerId(sessionToken);
+    await this.eraseCustomer(customerId);
+  }
+
+  /**
+   * Erase one customer by id - shared by the widget request above and the
+   * operator DSAR tool (PLN-261012 SG-70). Same scrub, same suppression record,
+   * same upstream propagation; only the audit actor differs.
+   */
+  async eraseCustomer(customerId: number, actor?: DsarActor): Promise<void> {
     const customer = await this.customerRepo.findOne({ where: { id: customerId } });
     // The shopper asked us directly, so the request goes upstream as well — leaving
     // it in Shopify is what let the next order sync hand their data straight back.
@@ -443,15 +479,31 @@ export class PrivacyService {
         propagate: true,
       });
     }
-    // Machine-executed erasure — 'system' actor, not a phantom admin (Stage 4).
+    // Machine-executed erasure — 'system' actor, not a phantom admin (Stage 4);
+    // an operator-run one names the operator who ran it.
     await this.audit.write({
       tenantId: customer?.tenantId ?? null,
-      actorType: 'system',
-      actorId: 0,
+      actorType: actor ? 'user' : 'system',
+      actorId: actor?.userId ?? 0,
       action: 'dsar.delete',
       target: String(customerId),
-      metadata: { kind: 'erasure' },
+      metadata: {
+        kind: 'erasure',
+        ...(actor ? { via: 'operator', reference: actor.reference ?? null } : {}),
+      },
     });
+  }
+
+  /**
+   * Retention-driven scrub of a customer who has been inactive past the
+   * opt-in window (PLN-261012 SG-70). The same scrub as an erasure, but it does
+   * NOT enter the suppression list and does not go upstream: the person did not
+   * object, their data merely aged out - so if they come back (an SDK sign-in,
+   * a new Shopify order) a fresh row is a legitimate new relationship, which a
+   * suppression record would wrongly forbid.
+   */
+  async anonymizeInactiveCustomer(customer: Customer): Promise<void> {
+    await this.anonymizeCustomer(customer, { suppress: false });
   }
 
   // ---- CCPA / CPRA "Do Not Sell or Share" ----
@@ -527,7 +579,7 @@ export class PrivacyService {
    */
   private async anonymizeCustomer(
     customer: Customer,
-    opts: { source?: ErasureSource; propagate?: boolean } = {},
+    opts: { source?: ErasureSource; propagate?: boolean; suppress?: boolean } = {},
   ): Promise<void> {
     const customerId = customer.id;
     // FIRST, before anything is scrubbed: remember the identity. The scrub below
@@ -535,11 +587,13 @@ export class PrivacyService {
     // can recognise this person when Shopify feeds them back on the next sync. If
     // this throws we have not destroyed anything yet — the caller fails and can
     // retry, rather than scrubbing the row and quietly losing the enforcement key.
-    await this.suppression.record(
-      customer.tenantId,
-      { emailHash: customer.emailHash, shopifyCustomerId: customer.shopifyCustomerId },
-      opts.source ?? ERASURE_SOURCE.DSAR,
-    );
+    if (opts.suppress !== false) {
+      await this.suppression.record(
+        customer.tenantId,
+        { emailHash: customer.emailHash, shopifyCustomerId: customer.shopifyCustomerId },
+        opts.source ?? ERASURE_SOURCE.DSAR,
+      );
+    }
     if (opts.propagate) {
       await this.propagateErasureToShopify(customer);
     }
@@ -632,6 +686,13 @@ export class PrivacyService {
     customer.tier = 'guest';
     // The Customers screen's "last known hotel and role" summary (identify v2).
     customer.lastClaims = null;
+    // The id the customer's own system uses (SDK identify) and the Cafe24 member
+    // identifiers are keys back to a named person in someone else's database;
+    // leaving them on an "anonymised" row kept that link alive (PLN-261012
+    // SG-70). A later sign-in simply mints a fresh row, as for a new customer.
+    customer.externalCustomerId = null;
+    customer.cafe24UserIdentifier = null;
+    customer.cafe24MemberId = null;
     await this.customerRepo.save(customer);
   }
 

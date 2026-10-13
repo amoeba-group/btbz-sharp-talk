@@ -29,6 +29,10 @@ const TABS: Tab[] = [
   // Consent notice moved in here from its own nav entry: it is a setting, and
   // it was the odd one out sitting beside twenty screens of daily work.
   { to: '/settings/privacy', labelKey: 'privacyNotice', code: 'privacy_notice' },
+  // Operator-run export / erase for a data subject (PLN-261012 SG-70). Judged
+  // by the same screen code as the notice: it is the other half of the same
+  // privacy duty, and the server restricts it to master/director regardless.
+  { to: '/settings/data-requests', labelKey: 'dataRequests', code: 'privacy_notice' },
 ];
 
 /**

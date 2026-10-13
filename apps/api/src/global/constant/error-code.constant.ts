@@ -266,6 +266,10 @@ export const ERROR_CODE = {
   JOURNEY_STAGE_IN_USE: { code: 'E5094', message: 'Move the journeys out of a stage before removing it' },
   // E5095 — Hotel region routing table (PLN-261012 SG-65).
   REGION_ROUTING_INVALID: { code: 'E5095', message: 'The region routing table is invalid' },
+  // E5115-E5117 — Operator-side data-subject requests (PLN-261012 SG-70).
+  DSAR_LOOKUP_INVALID: { code: 'E5115', message: 'Enter at least 3 characters to look up a customer' },
+  DSAR_CUSTOMER_NOT_FOUND: { code: 'E5116', message: 'No such customer in this tenant' },
+  DSAR_CONFIRM_MISMATCH: { code: 'E5117', message: 'The confirmation does not match the customer id' },
 
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },

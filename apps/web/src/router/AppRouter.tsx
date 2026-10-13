@@ -46,6 +46,7 @@ const SettingsMarketingPage = lazy(() => import('@/domain/settings/SettingsMarke
 const SettingsMessengersPage = lazy(() => import('@/domain/settings/SettingsMessengersPage').then((m) => ({ default: m.SettingsMessengersPage })));
 const SettingsEtcPage = lazy(() => import('@/domain/settings/SettingsEtcPage').then((m) => ({ default: m.SettingsEtcPage })));
 const PrivacyNoticePage = lazy(() => import('@/domain/privacy-notice/PrivacyNoticePage').then((m) => ({ default: m.PrivacyNoticePage })));
+const DsarPage = lazy(() => import('@/domain/dsar/DsarPage').then((m) => ({ default: m.DsarPage })));
 const MyPage = lazy(() => import('@/domain/my-page/MyPage').then((m) => ({ default: m.MyPage })));
 const AdminOverviewPage = lazy(() => import('@/domain/admin/AdminOverviewPage').then((m) => ({ default: m.AdminOverviewPage })));
 const TenantsPage = lazy(() => import('@/domain/admin/TenantsPage').then((m) => ({ default: m.TenantsPage })));
@@ -120,6 +121,8 @@ const router = createBrowserRouter([
           { path: 'etc', element: <SettingsEtcPage /> },
           // Same page as before, reached as a tab now.
           { path: 'privacy', element: <PrivacyNoticePage /> },
+          // Operator-side data-subject requests (PLN-261012 SG-70).
+          { path: 'data-requests', element: <DsarPage /> },
         ],
       },
       // Moved into settings; the old link is kept so bookmarks survive.
