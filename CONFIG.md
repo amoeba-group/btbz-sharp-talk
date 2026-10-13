@@ -140,6 +140,16 @@ regardless of these.
 available for alert routing only while "On duty" in the console AND the console polled within this
 many seconds (the 10 s alert poll is the heartbeat). Blank or non-positive = default.
 
+**Signed identity (PLN-261012 SG-03 / SG-04):** `IDENTITY_MAX_AGE_HOURS` (default 8) — signed claims from
+`ShopTalk.identify()` older than this are treated as a guest (guest gate, partner prompt line, region
+routing, console header, scenario menu); the widget raises `identity-expired` so the host signs again.
+A tenant overrides it with `tenants.identity_policy.maxAgeHours` (console: Settings > Widget > Signed
+sign-in policy, MASTER). `0` switches expiry off platform-wide — an emergency rollback, not a setting.
+Anything that is not a plain non-negative number falls back to 8. `IDENTIFY_REPLAY_GUARD` (default on) —
+a verified v2 signature is remembered in Redis for 2 x the 10-minute iat window and refused when another
+session presents it; `false` turns the guard off. Without Redis the guard fails open (logged, audited).
+`identity_policy.refuseV1` rejects `identify` calls that carry no claims.
+
 ### 4.3 Shopify (optional — features default-safe/disabled when unset)
 | Variable | Purpose |
 |---|---|

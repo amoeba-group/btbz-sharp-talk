@@ -616,9 +616,15 @@ export class PrivacyService {
     // Sessions: unbind the customer (+ drop their token→session cache entries).
     // identify v2 also left the signed hotel, its name and the user's role on the
     // session row — personal context that survives a customer erasure unless it
-    // is cleared with the binding (PLN-261012 SG-05, REQ D-07).
+    // is cleared with the binding (PLN-261012 SG-05, REQ D-07). The identity LEVEL
+    // goes back to guest with it: a session with no customer that still said
+    // 'verified' passed the guest gate and was handed the partner scenario menu
+    // (PLN-261012 S1 follow-up).
     if (sessionIds.length) {
-      await this.sessionRepo.update({ customerId }, { customerId: null, identityClaims: null });
+      await this.sessionRepo.update(
+        { customerId },
+        { customerId: null, identityClaims: null, identityLevel: SESSION_IDENTITY.GUEST },
+      );
       for (const s of sessions) {
         await this.redis.del(sessionCacheKey(s.sessionToken));
       }

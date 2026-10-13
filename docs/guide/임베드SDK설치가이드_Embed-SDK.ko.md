@@ -143,7 +143,9 @@ $hash  = hash_hmac('sha256', $canon, getenv('SHOPTALK_EMBED_SECRET'));
   만들고 새 세션 토큰을 돌려줍니다.** 위젯이 그 토큰으로 자동 전환하므로 호스트가 할 일은 없고,
   이전 사용자의 대화는 이어지지 않습니다. 같은 사용자·호텔·역할로 다시 호출하거나 게스트에서 로그인으로
   바뀌는 경우에는 같은 세션이 유지됩니다. 로그인 중이던 세션에서 `identify`가 실패하면(서명 오류 등)
-  위젯은 새 게스트 세션으로 초기화됩니다.
+  위젯은 새 게스트 세션으로 초기화됩니다. **다른 사용자**로 바뀌면 개인정보 처리 동의가 이어지지 않고
+  새 사용자에게 안내가 다시 표시됩니다(같은 사용자가 호텔·역할만 바꾸면 동의는 유지됩니다). 공용 PC에서는
+  로그아웃 시 반드시 `ShopTalk.logout()`을 호출해 주세요 — 이전 사용자의 동의 기록도 함께 지워집니다.
 - `ShopTalk.logout()`은 위젯만 비우던 것에서 한 단계 더 나아가 **서버의 로그인 연결(호텔·역할 포함)도
   해제**하고, AI가 진행 중이던 대화를 종료한 뒤 새 게스트 세션을 엽니다. 상담원이 맡았거나 상담원
   대기 중인 대화는 닫지 않고 로그인 연결만 해제합니다.
@@ -152,6 +154,25 @@ $hash  = hash_hmac('sha256', $canon, getenv('SHOPTALK_EMBED_SECRET'));
 - 에이전트가 "로그인 안내만" 정책이면 identify 전의 방문자는 게스트 공개 카테고리로만 답을 받고,
   그 밖의 질문에는 로그인 안내(설정한 로그인/가입 URL 카드)가 나갑니다. 위젯이 그 URL을 열 때
   이 로더에 `ivy:open-url`을 보내며, 로더는 **위젯 iframe에서 온 https URL만** 따라갑니다.
+
+### 3.5 서명 유효 시간과 재서명
+
+- 서명된 로그인(`claims` 포함)은 **기본 8시간**(테넌트 설정으로 변경 가능) 동안만 신뢰됩니다. 그보다 오래되면
+  서버는 방문자를 게스트로 처리하고, 위젯이 **`identity-expired`** 이벤트를 보냅니다. 이때 서버에서 **새로
+  서명**한 값으로 같은 세션에 `identify`를 다시 호출하면 대화는 그대로 이어집니다.
+
+```js
+ShopTalk.on('identity-expired', async () => {
+  const signed = await fetch('/api/shoptalk/sign').then(r => r.json()); // 서버가 새 iat로 서명
+  ShopTalk.identify(signed);
+});
+```
+
+- **서명마다 `iat`를 새로** 넣으세요. 한 번 검증된 서명은 **하나의 위젯 세션에서만** 쓸 수 있고(같은 세션의
+  재전송은 무방), 다른 세션이 같은 서명을 20분 안에 보내면 E5048로 거부됩니다. 서명을 캐시해 여러 탭·
+  페이지에 돌려 쓰는 구성은 동작하지 않습니다.
+- 테넌트가 **v1(claims 없는 identify) 거부**를 켜면 `userId`만 서명한 호출은 E5048로 거부됩니다. 먼저 v2로
+  옮긴 뒤 켜세요(콘솔 → 설정 → 위젯 → 서명 로그인 정책).
 
 ## 4. 자바스크립트 API
 
@@ -163,7 +184,7 @@ $hash  = hash_hmac('sha256', $canon, getenv('SHOPTALK_EMBED_SECRET'));
 | `ShopTalk.identify({ userId, hash, claims?, … })` | 로그인 사용자 전달 (`claims` = v2 호텔·역할 컨텍스트, §3.4) |
 | `ShopTalk.logout()` | 서버의 로그인 연결 해제 + 새 게스트 세션 (§3.4) |
 | `ShopTalk.setLocale('vi')` | 언어 변경 |
-| `ShopTalk.on(event, fn)` / `off` | 이벤트 구독 |
+| `ShopTalk.on(event, fn)` / `off` | 이벤트 구독 — `open` · `close` · `unread` · `identified`(`{ ok }`) · `identity-expired`(§3.5) |
 
 스크립트 로드 전에 호출해야 한다면 큐를 씁니다:
 

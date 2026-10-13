@@ -1,5 +1,6 @@
 import { CLAIMS_IAT_WINDOW_SEC, EmbedService } from './embed.service';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { fakeRedis } from './embed-test-doubles-spec';
 
 /**
  * identify v2 — signed partner claims (PLN-261001 v1.1 H1 / REQ-261006).
@@ -44,7 +45,8 @@ function build() {
     findOne: jest.fn(async () => session),
     save: jest.fn(async (s: typeof session) => s),
   };
-  const redis = { del: jest.fn(async () => undefined) };
+  // A real SET NX store: the replay guard runs for every v2 identify.
+  const redis = fakeRedis();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const service = new EmbedService(tenantRepo as any, customerRepo as any, sessionRepo as any, redis as any);
   return { service, session, customerUpdates };
