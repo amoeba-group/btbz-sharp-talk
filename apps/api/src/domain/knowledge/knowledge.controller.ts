@@ -737,10 +737,12 @@ export class KnowledgeController {
     @Param('id') id: string,
     @Body() body: SetCategoryGuestVisibleRequest,
   ) {
+    const actor = this.tenantUser(user);
     const row = await this.kbCategories.setGuestVisible(
-      this.tenantUser(user).tenantId,
+      actor.tenantId,
       Number(id),
       body.guest_visible,
+      { userId: actor.userId },
     );
     return KnowledgeMapper.toCategory(row);
   }

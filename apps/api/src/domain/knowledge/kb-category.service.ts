@@ -6,6 +6,7 @@ import { KbDocument } from './entity/kb-document.entity';
 import { AiAgent } from '../ai-engine/entity/ai-agent.entity';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { AuditService } from '../audit/audit.service';
 
 export interface KbCategorySummary {
   id: string;
@@ -40,6 +41,8 @@ export class KbCategoryService {
     @InjectRepository(KbDocument) private readonly docRepo: Repository<KbDocument>,
     @InjectRepository(AiAgent) private readonly agentRepo: Repository<AiAgent>,
     private readonly dataSource: DataSource,
+    // Appended last so positional test doubles stay valid; every use is `?.`-guarded.
+    private readonly audit?: AuditService,
   ) {}
 
   /**
@@ -282,14 +285,39 @@ export class KbCategoryService {
    * product knowledge has no sign-in story, and an operator flipping it would
    * be configuring something retrieval never reads.
    */
-  async setGuestVisible(tenantId: number, id: number, visible: boolean): Promise<KbCategory> {
+  async setGuestVisible(
+    tenantId: number,
+    id: number,
+    visible: boolean,
+    /** The console user making the change, for the audit trail (PLN-261012 SG-50). */
+    actor?: { userId: number },
+  ): Promise<KbCategory> {
     const row = await this.find(tenantId, id);
     if (row.origin === CATEGORY_ORIGIN.CATALOG) {
       throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.CONFLICT);
     }
+    const was = row.guestVisible === 1;
     row.guestVisible = visible ? 1 : 0;
     this.logger.log(`kb category guest_visible: tenant=${tenantId} id=${id} → ${row.guestVisible}`);
-    return this.repo.save(row);
+    const saved = await this.repo.save(row);
+    // Who opened (or closed) a category to signed-out visitors is exactly the
+    // question after a guest-gate incident, and the flip used to leave no record
+    // beyond a log line. Only a real change is audited; a repeated PUT is not news.
+    // Best effort: the flip is already saved and a failing audit write must not
+    // turn it into an error the operator reads as "nothing happened".
+    if (was !== visible) {
+      await this.audit
+        ?.write({
+          tenantId,
+          actorType: actor ? 'user' : 'system',
+          actorId: actor?.userId ?? 0,
+          action: 'kb.category_guest_visible_changed',
+          target: `kb_category:${id}`,
+          metadata: { category: row.name, from: was, to: visible },
+        })
+        .catch((e: Error) => this.logger.warn(`guest_visible audit write failed: ${e.message}`));
+    }
+    return saved;
   }
 
   async reorder(tenantId: number, ids: number[]): Promise<void> {

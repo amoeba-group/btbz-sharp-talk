@@ -530,6 +530,9 @@ export class MessengerIngestService {
         status: CONVERSATION_STATUS.AI_ACTIVE,
         escalated: 0,
         agentId: null,
+        // Stamped like a widget conversation (PLN-261012 SG-50): channel sessions are
+        // guests, so in practice this carries the effective AI agent.
+        ...((await this.chatService.conversationStamps?.(session)) ?? {}),
       }),
     );
     await this.threadRepo.update({ id: thread.id }, { conversationId: Number(conversation.id) });
