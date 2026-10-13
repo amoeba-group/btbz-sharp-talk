@@ -4,7 +4,7 @@ import { PARTNER_API_CLIENT, validateEnvelope } from './partner-api.client';
 import type { PartnerApiClient } from './partner-api.client';
 import type { PartnerCtx } from './partner-ctx';
 import { PARTNER_LOOKUP_STATUS, PartnerError, partnerError } from './partner-data.constants';
-import type { PartnerApiMode, PartnerLookupStatus, PartnerTopic } from './partner-data.constants';
+import type { PartnerApiMode, PartnerCallMode, PartnerLookupStatus, PartnerTopic } from './partner-data.constants';
 import { PartnerLookupLogService } from './partner-lookup-log.service';
 import type { PartnerQuery } from './partner-params.util';
 import { asDateTime } from './partner-project.util';
@@ -18,6 +18,8 @@ export interface PartnerCallMeta {
   sessionId?: number | null;
   /** Session language — the data block's money is formatted for it. */
   language?: string;
+  /** What triggered this lookup; logged as partner_lookup_logs.mode. Default `prefetch` (PLN-261012 SG-33). */
+  mode?: PartnerCallMode;
 }
 
 /** What goes on the answer's trace as `partnerEvidence` — deliberately NOT in `citations`. */
@@ -87,8 +89,8 @@ function statusOf(e: PartnerError): PartnerLookupStatus {
  *
  * `ctx` is a branded PartnerCtx (see partner-ctx.ts). `topic` and `params` are
  * `string` / `unknown` on purpose: they are the untrusted part (a detector's
- * output today, a model's tool arguments in wave 2), and everything below treats
- * them that way.
+ * output, or a model's tool arguments in tools mode — PLN-261012 SG-33), and
+ * everything below treats them that way: the model's calls take exactly this path.
  */
 @Injectable()
 export class PartnerDataService {
@@ -201,6 +203,8 @@ export class PartnerDataService {
       sessionId: meta.sessionId ?? null,
       hotelSn: ctx.hotelSn,
       role: ctx.role,
+      // Only a tool-driven lookup says so; a prefetch row keeps the shape it always had.
+      ...(meta.mode ? { mode: meta.mode } : {}),
     };
   }
 }

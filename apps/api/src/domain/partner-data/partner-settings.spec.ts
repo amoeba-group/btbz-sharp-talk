@@ -92,6 +92,9 @@ describe('partner data switches and credentials', () => {
       const flags = {
         tenantFlag: jest.fn(async () => flag),
         setTenantFlag: jest.fn(async () => undefined),
+        // Lookup mode (PLN-261012 SG-33): no override unless a test sets one.
+        tenantMode: jest.fn(async () => null),
+        setTenantMode: jest.fn(async () => undefined),
         serverEnabled: () => true,
         mode: () => 'mock' as const,
       };
@@ -102,9 +105,10 @@ describe('partner data switches and credentials', () => {
 
     it('reads the switch, the server state and whether a connection is saved', async () => {
       const { svc } = build(true, { secretEnc: Buffer.from('x'), status: 'connected' });
-      expect(await svc.get(1)).toEqual({ enabled: true, serverEnabled: true, mode: 'mock', configured: true, connectionStatus: 'connected' });
+      const mode = { dataMode: null, effectiveMode: 'prefetch', serverMode: 'prefetch', toolsAllowed: true };
+      expect(await svc.get(1)).toEqual({ enabled: true, serverEnabled: true, mode: 'mock', configured: true, connectionStatus: 'connected', ...mode });
       const none = build(false, null);
-      expect(await none.svc.get(1)).toEqual({ enabled: false, serverEnabled: true, mode: 'mock', configured: false, connectionStatus: null });
+      expect(await none.svc.get(1)).toEqual({ enabled: false, serverEnabled: true, mode: 'mock', configured: false, connectionStatus: null, ...mode });
     });
 
     it('turning it on or off is audited', async () => {

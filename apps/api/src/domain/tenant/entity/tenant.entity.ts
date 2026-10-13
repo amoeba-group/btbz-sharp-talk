@@ -232,6 +232,14 @@ export class Tenant {
   @Column({ name: 'partner_data_enabled', type: 'tinyint', width: 1, default: 0 })
   partnerDataEnabled: number;
 
+  /**
+   * How partner questions are answered for this tenant (PLN-261012 SG-33): NULL = inherit the
+   * server's `PARTNER_DATA_MODE` (default `prefetch`), or an explicit `prefetch` | `tools`. Only
+   * matters while the lookup is on. Explicit `type`: a union without it makes TypeORM infer `Object`.
+   */
+  @Column({ name: 'partner_data_mode', type: 'varchar', length: 8, nullable: true })
+  partnerDataMode: string | null;
+
   /** Live custom widget (widget_designs.id); NULL = the basic widget (PLN-260910 P3). */
   @Column({ name: 'active_widget_design_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
   activeWidgetDesignId: number | null;

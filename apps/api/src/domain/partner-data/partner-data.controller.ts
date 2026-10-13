@@ -16,19 +16,26 @@ export class PartnerDataController {
 
   @Get('settings')
   @RequireRank(USER_RANK.MASTER, USER_RANK.DIRECTOR)
-  @ApiOperation({ summary: "This tenant's partner data lookup switch and connection state" })
+  @ApiOperation({ summary: "This tenant's partner data lookup switch, lookup mode and connection state" })
   async getSettings(@CurrentUser() user: Principal) {
     return this.settings.get(this.tenantId(user));
   }
 
   @Put('settings')
   @RequireRank(USER_RANK.MASTER)
-  @ApiOperation({ summary: 'Turn the partner data lookup on or off for this tenant' })
+  @ApiOperation({ summary: 'Turn the partner data lookup on or off, and/or choose its lookup mode, for this tenant' })
   async updateSettings(@CurrentUser() user: Principal, @Body() body: UpdatePartnerDataSettingsRequest) {
     if (user.actorType !== 'user') {
       throw new BusinessException(ERROR_CODE.FORBIDDEN, HttpStatus.FORBIDDEN);
     }
-    return this.settings.setEnabled(user.tenantId, user.userId, body.enabled);
+    // At least one field (PLN-261012 SG-33 made both optional so the old switch-only client still works).
+    if (body.enabled === undefined && body.data_mode === undefined) {
+      throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.BAD_REQUEST);
+    }
+    let result = null;
+    if (body.enabled !== undefined) result = await this.settings.setEnabled(user.tenantId, user.userId, body.enabled);
+    if (body.data_mode !== undefined) result = await this.settings.setDataMode(user.tenantId, user.userId, body.data_mode);
+    return result;
   }
 
   private tenantId(user: Principal): number {

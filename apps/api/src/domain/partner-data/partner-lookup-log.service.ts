@@ -3,7 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { scrubPii } from '../../global/util/pii-scrub.util';
 import { PartnerLookupLog } from './entity/partner-lookup-log.entity';
-import type { PartnerLookupStatus } from './partner-data.constants';
+import { PARTNER_CALL_MODE } from './partner-data.constants';
+import type { PartnerCallMode, PartnerLookupStatus } from './partner-data.constants';
 
 export interface LookupLogEntry {
   tenantId: number;
@@ -24,6 +25,8 @@ export interface LookupLogEntry {
   source?: string | null;
   latencyMs?: number | null;
   snapshotHash?: string | null;
+  /** Default `prefetch`; `tool` for a lookup the model asked for (PLN-261012 SG-33). */
+  mode?: PartnerCallMode;
 }
 
 const PARAM_VALUE_MAX = 64;
@@ -78,6 +81,7 @@ export class PartnerLookupLogService {
           source: entry.source ?? null,
           latencyMs: entry.latencyMs ?? null,
           snapshotHash: entry.snapshotHash ?? null,
+          mode: entry.mode ?? PARTNER_CALL_MODE.PREFETCH,
         }),
       );
     } catch (e) {

@@ -1194,6 +1194,9 @@ export class ChatService {
           text,
           language: session.language,
           identity,
+          // Read only in tools mode (PLN-261012 SG-33): what the planning model may see.
+          modelText: egressText,
+          history,
         })
       : null;
     if (partner?.kind === 'notice') {
@@ -1418,7 +1421,7 @@ export class ChatService {
       // `citations` on purpose: the widget receives citations wholesale, the
       // statistics read them as knowledge-document ids, and issue auto-resolve
       // counts the confidence next to them.
-      ...(partner ? { partnerEvidence: partner.evidence, answeredFrom: 'partner_data' } : {}),
+      ...(partner ? { partnerEvidence: partner.evidence, answeredFrom: 'partner_data', ...(partner.trace ?? {}) } : {}),
       ...(caveat ? { uiVersionCaveat: true } : {}),
       // The vector leg was down and this answer stands on the keyword leg alone (PLN-261012 SG-84).
       ...(vectorDegraded ? { vectorProvider: 'degraded', vectorDegraded } : {}),
