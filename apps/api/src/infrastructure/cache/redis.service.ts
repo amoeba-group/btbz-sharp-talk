@@ -36,6 +36,16 @@ export class RedisService implements OnModuleDestroy {
     return this.client?.status === 'ready';
   }
 
+  /**
+   * Round-trip PING for readiness (PLN-261012 SG-83). Unlike `available()` this asks the server, so
+   * a connection that is up on paper but not answering is caught. Throws when Redis cannot answer.
+   */
+  async ping(): Promise<void> {
+    if (!this.client || this.client.status !== 'ready') throw new Error('Redis is not connected');
+    const reply = await this.client.ping();
+    if (reply !== 'PONG') throw new Error(`unexpected PING reply: ${reply}`);
+  }
+
   async get(key: string): Promise<string | null> {
     try {
       return (await this.client?.get(key)) ?? null;

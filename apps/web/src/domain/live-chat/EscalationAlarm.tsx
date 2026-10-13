@@ -53,7 +53,10 @@ export function EscalationAlarm() {
       ? 'alarmReasonLowConfidence'
       : current.reason === 'moderation_blocked'
         ? 'alarmReasonModeration'
-        : 'alarmReasonUserRequest';
+        : // The AI engine was down — an outage, not missing knowledge (PLN-261012 SG-84).
+          current.reason === 'engine_unavailable'
+          ? 'alarmReasonEngine'
+          : 'alarmReasonUserRequest';
 
   const dismiss = () => {
     setDismissed((prev) => new Set(prev).add(current.id));

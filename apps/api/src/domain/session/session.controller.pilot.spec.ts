@@ -56,6 +56,8 @@ describe('pilot verdict on the session responses', () => {
       ensure: jest.fn(async () => s),
       privacyNotice: jest.fn(async () => notice),
       customerDisplayName: jest.fn(async () => null),
+      // The expiry-aware identity the controllers now pass to the mapper (SG-03).
+      identityOf: jest.fn(async () => undefined),
       findByToken: jest.fn(async () => s),
     }) as never;
 
@@ -149,7 +151,7 @@ describe('pilot verdict on the session responses', () => {
 
     it('adds `pilot` only when one is given — a response built without it keeps its old shape', () => {
       expect(SessionMapper.toResponse(base, notice as never)).not.toHaveProperty('pilot');
-      expect(SessionMapper.toResponse(base, notice as never, null, { eligible: null })).toMatchObject({ pilot: { eligible: null } });
+      expect(SessionMapper.toResponse(base, notice as never, null, undefined, { eligible: null })).toMatchObject({ pilot: { eligible: null } });
     });
   });
 });

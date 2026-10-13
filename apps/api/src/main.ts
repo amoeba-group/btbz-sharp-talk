@@ -13,6 +13,7 @@ import { LoggingInterceptor } from './global/interceptor/logging.interceptor';
 import { CacheControlInterceptor } from './global/interceptor/cache-control.interceptor';
 import { runSeed } from './database/seed.runner';
 import { collectSecretProblems } from './global/config/assert-secrets';
+import { ErrorReporterService } from './infrastructure/observability/error-reporter';
 
 async function bootstrap(): Promise<void> {
   // rawBody: preserve the exact request bytes so webhook HMAC (Shopify) can be
@@ -56,11 +57,13 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  app.setGlobalPrefix(prefix);
+  // `/metrics` stays at the root (Prometheus convention); every product route is prefixed (PLN-261012 SG-83).
+  app.setGlobalPrefix(prefix, { exclude: ['metrics'] });
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: false }),
   );
-  app.useGlobalFilters(new AllExceptionFilter());
+  // The reporter hears about 5xx and unhandled errors only (PLN-261012 SG-83).
+  app.useGlobalFilters(new AllExceptionFilter(app.get(ErrorReporterService)));
   // CacheControl (outer-most) stamps `no-store` before anything can write a
   // response; Tenant context wraps the handler in AsyncLocalStorage; Transform
   // wraps the response; Logging (inner-most) records method/path/status/duration

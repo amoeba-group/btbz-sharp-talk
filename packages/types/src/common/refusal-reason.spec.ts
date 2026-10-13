@@ -16,6 +16,7 @@ describe('REFUSAL_REASON', () => {
         'auth_gate',
         'consent',
         'embedder_degraded',
+        'engine_unavailable',
         'guest_gate',
         'identity_expired',
         'low_confidence',
@@ -82,6 +83,7 @@ describe('buildHandoffTrace', () => {
     ['low_confidence', 'low_confidence'],
     ['moderation_blocked', 'moderation'],
     ['policy', 'policy_deny'],
+    ['engine_unavailable', 'engine_unavailable'],
     ['user_request', 'user_request'],
   ])('maps the escalation word %s to the stored reason %s', (escalation, stored) => {
     expect(buildHandoffTrace(escalation, 3)).toEqual({ reason: stored, agentId: 3 });

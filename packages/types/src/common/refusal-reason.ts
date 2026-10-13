@@ -17,6 +17,8 @@
  *  embedder_degraded the vector leg was down, so grounding could not be measured (reserved)
  *  policy_deny       a deny-list topic goes to a person whatever the AI could say
  *  identity_expired  the signed identity lapsed (SG-03), so a gate that needed it refused
+ *  engine_unavailable the AI engine (or its safety check) was down — an outage, not missing
+ *                    knowledge; the customer is told a person will follow up (SG-84)
  */
 export const REFUSAL_REASON = {
   GUEST_GATE: 'guest_gate',
@@ -29,6 +31,7 @@ export const REFUSAL_REASON = {
   EMBEDDER_DEGRADED: 'embedder_degraded',
   POLICY_DENY: 'policy_deny',
   IDENTITY_EXPIRED: 'identity_expired',
+  ENGINE_UNAVAILABLE: 'engine_unavailable',
 } as const;
 export type RefusalReason = (typeof REFUSAL_REASON)[keyof typeof REFUSAL_REASON];
 
@@ -100,6 +103,8 @@ export function buildHandoffTrace(
         ? REFUSAL_REASON.POLICY_DENY
         : escalationReason === 'user_request'
           ? 'user_request'
-          : REFUSAL_REASON.LOW_CONFIDENCE;
+          : escalationReason === 'engine_unavailable'
+            ? REFUSAL_REASON.ENGINE_UNAVAILABLE
+            : REFUSAL_REASON.LOW_CONFIDENCE;
   return buildRefusalTrace(reason, agentId, extra);
 }

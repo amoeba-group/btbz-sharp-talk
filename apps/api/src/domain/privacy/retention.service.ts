@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThan, Repository } from 'typeorm';
@@ -13,6 +13,7 @@ import { AiUsageDaily } from '../ai-engine/entity/ai-usage-daily.entity';
 import { ModerationLog } from '../moderation/entity/moderation-log.entity';
 import { AgentAlert } from '../agent/entity/agent-alert.entity';
 import { isCliContext } from '../../global/util/cli-context.util';
+import { OpsAlertService } from '../../infrastructure/observability/ops-alert.service';
 
 export interface RetentionPurgeResult {
   retentionDays: number;
@@ -61,6 +62,8 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
     private readonly config: ConfigService,
     private readonly audit: AuditService,
     private readonly attachments: AttachmentService,
+    // Appended and optional so positional test doubles that predate it stay valid (PLN-261012 SG-83).
+    @Optional() private readonly opsAlert?: OpsAlertService,
   ) {}
 
   onModuleInit(): void {
@@ -91,6 +94,15 @@ export class RetentionService implements OnModuleInit, OnModuleDestroy {
       );
     } catch (err) {
       this.logger.error(`Scheduled retention purge failed: ${String(err)}`);
+      // A purge that silently stops is a retention-policy breach nobody sees until an audit does
+      // (PLN-261012 SG-83). Deduped by the alert service, so a daily failure mails once per cooldown.
+      void this.opsAlert?.alert({
+        key: 'retention_purge_failed',
+        kind: 'retention_purge_failed',
+        severity: 'critical',
+        title: 'Scheduled data-retention purge failed',
+        detail: `${(err as Error)?.message ?? String(err)} — conversation data older than the retention window is NOT being disposed of until this is fixed.`,
+      });
     }
   }
 

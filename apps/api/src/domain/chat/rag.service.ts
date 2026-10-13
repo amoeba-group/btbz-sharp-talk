@@ -17,6 +17,11 @@ import { signKbVideo } from '../../global/util/crypto.util';
 import { kbVideoPath, parseVideoRef } from '../knowledge/video-ref.util';
 import { activeKbReference, kbVersionKeepSql } from '../knowledge/kb-version.util';
 import { CONVERSATION_RULES, transcript, withCurrentTurn } from './conversation-history.util';
+import {
+  VECTOR_DOWN_GROUNDING_CONFIDENCE,
+  degradedFulltextConfidence,
+} from './rag-degraded-confidence.util';
+import { m } from '../../infrastructure/observability/app-metrics';
 
 export interface RetrievedChunk {
   id: number;
@@ -100,6 +105,18 @@ export interface RagAnswer {
   candidateResults?: RetrievedChunk[];
   tokensIn: number;
   tokensOut: number;
+  /**
+   * The engine failed and the stub's text was withheld (PLN-261012 SG-84): the caller hands off with
+   * the "assistant temporarily unavailable" notice instead of "no confident answer", because the
+   * knowledge was never consulted by a model — this is an outage, not missing knowledge.
+   */
+  engineDegraded?: boolean;
+  /**
+   * Why the vector leg was unavailable on this turn, when it was (`embedding_fallback` = Voyage
+   * failed and the gateway fell back to the stub embedder; `qdrant_error` = the index search
+   * failed or was skipped by its breaker). Recorded in the retrieval trace (PLN-261012 SG-84).
+   */
+  vectorDegraded?: string;
 }
 
 /**
@@ -229,7 +246,7 @@ export class RagService {
    */
   private static readonly UNBIASED_RESERVE = 3;
   /** Confidence when real embeddings are expected but missing — under escalation (FIX-260930). */
-  private static readonly DEGRADED_CONFIDENCE = 0.2;
+  private static readonly DEGRADED_CONFIDENCE = VECTOR_DOWN_GROUNDING_CONFIDENCE;
   /**
    * Documents handed to the model per answer. Was 4, which is too few for this
    * KB: the policy import splits one topic across several short sections
@@ -785,11 +802,21 @@ export class RagService {
     // their own: an order question answered from the customer's real orders must
     // not be escalated just because no help article matched.
     const hasPartnerData = !!opts?.partnerData?.trim();
+    // `query` + the context-enriched retrieval text: when the vector leg is down the keyword leg
+    // earns a capped confidence from lexical evidence instead of the old blanket handoff
+    // (PLN-261012 SG-84, D-19 — see rag-degraded-confidence.util.ts).
     const confidence = Math.max(
-      this.confidence(chunks, vectorProvider),
+      this.confidence(chunks, vectorProvider, [query, retrievalQuery]),
       hasOrderContext ? ORDER_CONTEXT_CONFIDENCE : 0,
       hasPartnerData ? PARTNER_DATA_CONFIDENCE : 0,
     );
+    const vectorDegraded = this.vectorDegradedReason(vectorProvider);
+    if (vectorDegraded) {
+      m.vectorDegradedTurns.inc({
+        reason: vectorDegraded,
+        result: confidence > RagService.DEGRADED_CONFIDENCE ? 'fulltext_answer' : 'withheld',
+      });
+    }
 
     // Persona + response rules of the session's AI agent (FR-047 / PLN-260820);
     // null falls back to the tenant's default agent.
@@ -857,7 +884,15 @@ export class RagService {
     // for you: [category] title" as if it were one.
     if (res.degraded) {
       this.logger.warn(`answer withheld: engine degraded to stub (tenant ${tenantId})`);
-      return { text: '', confidence: 0, citations: [], tokensIn: res.tokensIn, tokensOut: res.tokensOut };
+      return {
+        text: '',
+        confidence: 0,
+        citations: [],
+        tokensIn: res.tokensIn,
+        tokensOut: res.tokensOut,
+        engineDegraded: true,
+        ...(vectorDegraded ? { vectorDegraded } : {}),
+      };
     }
 
     // Show only what the answer stands on. The retrieved set is the top matches,
@@ -877,6 +912,7 @@ export class RagService {
       ...(extraCandidates?.length ? { candidateResults: chunks.filter((c) => c.candidate) } : {}),
       tokensIn: res.tokensIn,
       tokensOut: res.tokensOut,
+      ...(vectorDegraded ? { vectorDegraded } : {}),
     };
   }
 
@@ -936,19 +972,35 @@ export class RagService {
    * all (Qdrant disabled/down) there is no similarity — both cases fall back
    * to the legacy count-based estimate, i.e. the pre-hybrid behavior.
    */
-  private confidence(chunks: RetrievedChunk[], vectorProvider: string | null): number {
+  private confidence(
+    chunks: RetrievedChunk[],
+    vectorProvider: string | null,
+    /**
+     * The texts the retrieval ran on. Supplied only by `answer()`: with them a degraded vector leg
+     * can still earn a capped confidence from lexical evidence. Omitted by `groundingConfidence()`
+     * (the guest gate and the out-of-scope override), which keeps the strict sentinel — an outage
+     * must not loosen the gate (PLN-261012 SG-84; see VECTOR_DOWN_GROUNDING_CONFIDENCE).
+     */
+    queries?: Array<string | undefined>,
+  ): number {
     // Real embeddings are configured but this turn did not get them — the
     // gateway fell back to the stub, or the vector leg threw (FIX-260930 D2).
     // The count formula below then scored full-text noise at 0.95: ivyusa's
     // "What is your return policy?" was answered "I don't have that
     // information" with six unrelated products and nobody paged. Without the
     // signal we trust, "don't know → hand off" (policy §0.4) is the safe
-    // reading, so the turn goes to a person instead.
+    // reading, so the turn goes to a person instead — unless the keyword leg
+    // itself shows the documents contain the question's own words, in which
+    // case it answers at a capped confidence (PLN-261012 SG-84, D-19).
     // Qdrant switched off is configuration, not failure — that keeps the
     // count-based estimate below, exactly as before.
-    if (process.env.VOYAGE_API_KEY && this.qdrant.enabled && vectorProvider !== 'voyage') {
-      this.logger.warn(`vector leg degraded (provider=${vectorProvider ?? 'none'}) — confidence withheld`);
-      return RagService.DEGRADED_CONFIDENCE;
+    const degraded = this.vectorDegradedReason(vectorProvider);
+    if (degraded) {
+      const d = degradedFulltextConfidence(chunks, queries);
+      this.logger.warn(
+        `vector leg degraded (${degraded}, provider=${vectorProvider ?? 'none'}) — confidence ${d.confidence} (${d.result}, lexical coverage ${d.coverage.toFixed(2)})`,
+      );
+      return d.confidence;
     }
     const best = chunks.reduce<number | null>(
       (m, c) => (c.similarity !== null && (m === null || c.similarity > m) ? c.similarity : m),
@@ -959,6 +1011,15 @@ export class RagService {
       return best >= minSim ? Math.min(0.95, Math.max(0.5, best)) : 0.2;
     }
     return chunks.length ? Math.min(0.95, 0.5 + chunks.length * 0.12) : 0.2;
+  }
+
+  /**
+   * Why the vector leg did not run on this turn, or null when it did (or was never expected to:
+   * no real embeddings configured, or Qdrant switched off by configuration).
+   */
+  private vectorDegradedReason(vectorProvider: string | null): string | null {
+    if (!(process.env.VOYAGE_API_KEY && this.qdrant.enabled && vectorProvider !== 'voyage')) return null;
+    return vectorProvider === 'stub' ? 'embedding_fallback' : 'qdrant_error';
   }
 
   /**
@@ -1017,6 +1078,10 @@ export class RagService {
       tenantId,
       function: AI_FUNCTION.CHAT,
       feature: 'chat_rewrite',
+      // A short JSON label, not an essay: a classifier that has not answered in 10 s will not,
+      // and waiting the full completion deadline for it only delays the stub fallback
+      // (PLN-261012 SG-84).
+      timeoutMs: envNumber('AI_CLASSIFY_TIMEOUT_MS', 10_000),
       system:
         // A closed set, not free text (PLN-260813 P1). Handing off when the
         // shopper asks for a person needs an intent value that arrives

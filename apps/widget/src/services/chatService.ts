@@ -16,12 +16,18 @@ export function sendMessage(
   sessionToken: string,
   message: string,
   attachmentIds?: string[],
+  /** Give up after this long and surface the failure (PLN-261012 SG-84). */
+  timeoutMs?: number,
 ): Promise<ChatReply> {
-  return apiClient.post<ChatReply>('/chat/message', {
-    session_token: sessionToken,
-    message,
-    attachment_ids: attachmentIds?.length ? attachmentIds : undefined,
-  });
+  return apiClient.post<ChatReply>(
+    '/chat/message',
+    {
+      session_token: sessionToken,
+      message,
+      attachment_ids: attachmentIds?.length ? attachmentIds : undefined,
+    },
+    { timeoutMs },
+  );
 }
 
 /**

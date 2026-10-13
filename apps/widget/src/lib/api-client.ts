@@ -151,8 +151,10 @@ export const apiClient = {
   get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
     return unwrap<T>(raw.get(url, { params }));
   },
-  post<T>(url: string, body?: unknown): Promise<T> {
-    return unwrap<T>(raw.post(url, body));
+  post<T>(url: string, body?: unknown, opts?: { timeoutMs?: number }): Promise<T> {
+    // A per-call deadline (PLN-261012 SG-84): without one a hung server left the composer
+    // disabled forever. axios treats 0 as "no timeout", which stays the default.
+    return unwrap<T>(raw.post(url, body, opts?.timeoutMs ? { timeout: opts.timeoutMs } : undefined));
   },
   put<T>(url: string, body?: unknown): Promise<T> {
     return unwrap<T>(raw.put(url, body));

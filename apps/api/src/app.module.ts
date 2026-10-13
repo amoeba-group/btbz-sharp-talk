@@ -11,6 +11,8 @@ import { VectorModule } from './infrastructure/external/vector/vector.module';
 import { JwtAuthGuard } from './global/guard/jwt-auth.guard';
 import { XffThrottlerGuard } from './global/guard/xff-throttler.guard';
 import { RequestContextMiddleware } from './global/middleware/request-context.middleware';
+import { ObservabilityModule } from './infrastructure/observability/observability.module';
+import { HttpMetricsMiddleware } from './infrastructure/observability/http-metrics.middleware';
 
 // Domain modules
 import { AuthModule } from './domain/auth/auth.module';
@@ -78,6 +80,8 @@ import { PartnerDataModule } from './domain/partner-data/partner-data.module';
     InfrastructureModule,
     AiModule,
     VectorModule,
+    // metrics, readiness, ops alerts, error tracking (PLN-261012 SG-83)
+    ObservabilityModule,
     // domains
     AuthModule,
     SessionModule,
@@ -138,5 +142,7 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer): void {
     // Request-context (requestId + client IP) for audit traceability — all routes.
     consumer.apply(RequestContextMiddleware).forRoutes('*');
+    // Request count + latency by route group for /metrics (PLN-261012 SG-83).
+    consumer.apply(HttpMetricsMiddleware).forRoutes('*');
   }
 }

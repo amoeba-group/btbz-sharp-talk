@@ -1,5 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { runWithTimeout, qdrantRequestTimeoutMs } from '../../resilience/resilience';
 
 /** Payload stored with every reuse-question point. */
 export interface ReuseVectorPayload {
@@ -139,15 +140,20 @@ export class ReuseQdrantService implements OnModuleInit {
   }
 
   private async request(method: string, path: string, body?: unknown): Promise<unknown> {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      method,
-      headers: { 'content-type': 'application/json' },
-      body: body === undefined ? undefined : JSON.stringify(body),
+    // Deadline for the answer-reuse index too (PLN-261012 SG-84) — a lookup runs before every
+    // chat answer, so a hung Qdrant would stall the turn here as well.
+    return runWithTimeout(qdrantRequestTimeoutMs(), 'Qdrant', async (signal) => {
+      const res = await fetch(`${this.baseUrl}${path}`, {
+        method,
+        signal,
+        headers: { 'content-type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const detail = await res.text().catch(() => '');
+        throw new Error(`Qdrant ${method} ${path} → ${res.status} ${detail.slice(0, 200)}`);
+      }
+      return res.json().catch(() => ({}));
     });
-    if (!res.ok) {
-      const detail = await res.text().catch(() => '');
-      throw new Error(`Qdrant ${method} ${path} → ${res.status} ${detail.slice(0, 200)}`);
-    }
-    return res.json().catch(() => ({}));
   }
 }

@@ -316,6 +316,14 @@ export const ERROR_CODE = {
     code: 'E5134',
     message: 'The pasted list or CSV could not be read (empty, too large, or no hotel serial column)',
   },
+  // E5120-E5124 — Observability, readiness and ops alerting (PLN-261012 SG-83).
+  /** Wrong or missing bearer on /metrics, /health/readiness or the ops-alert hook. */
+  OPS_TOKEN_INVALID: { code: 'E5120', message: 'Missing or invalid operations token' },
+  OPS_ALERT_KIND_INVALID: { code: 'E5121', message: 'Unknown operational alert kind' },
+  /** A REQUIRED dependency (READINESS_REQUIRED, default: the database) is down. */
+  READINESS_FAILED: { code: 'E5122', message: 'A required dependency is not ready' },
+  /** The hook was called but no alert channel took it (none configured, or every channel failed). */
+  OPS_ALERT_NOT_DELIVERED: { code: 'E5123', message: 'The operational alert could not be delivered' },
 } as const;
 
 export type ErrorCodeEntry = { code: string; message: string };

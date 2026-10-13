@@ -161,6 +161,38 @@ never opts in behaves exactly as before. Draft API contract: `docs/guide/API-REQ
 | `PARTNER_API_BUDGET_MS` | 7000 | wall-clock cap across attempts |
 | `PARTNER_API_PRIVATE_HOSTS` | — | comma list of hostnames/IPs the OPERATOR allows even though private or plain http (e.g. when the partner API is on Go2Joy's own network); plain http is refused in production. Tenants cannot widen it |
 | `PARTNER_CLAIMS_MAX_AGE_SEC` | 28800 | identity claims older than this (8 h) no longer allow a data lookup — the user is asked to sign in again |
+### 4.2b Resilience, observability and ops alerting (PLN-261012 SG-83 / SG-84)
+All optional; every default is safe. Full meaning, thresholds and example Prometheus rules:
+[docs/guide/GUIDE-261013-Observability-Alerting.md](docs/guide/GUIDE-261013-Observability-Alerting.md).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `AI_REQUEST_TIMEOUT_MS` | 25000 | whole-call deadline for one LLM completion (floor 1000) |
+| `AI_CLASSIFY_TIMEOUT_MS` | 10000 | deadline for the intent classifier (a short JSON call) |
+| `EMBED_REQUEST_TIMEOUT_MS` | 8000 | deadline for one embedding request (live chat waits on it) |
+| `QDRANT_REQUEST_TIMEOUT_MS` | 5000 | deadline for one Qdrant REST call |
+| `AI_MAX_RETRIES` | 1 | retries of a completion — network error / 5xx / 429 only, never a timeout or 4xx |
+| `EMBED_QUERY_RETRIES` / `EMBED_DOCUMENT_RETRIES` | 1 / 2 | embedding retries (full jitter); document batches also retry a timeout |
+| `AI_BREAKER_FAILURE_THRESHOLD` | 5 | consecutive engine-level failures that open an engine's breaker |
+| `AI_BREAKER_OPEN_SEC` | 30 | how long calls are skipped before one half-open probe |
+| `AI_BREAKER_ENABLED` | on | `0`/`false` = kill switch (also covers the Qdrant search breaker) |
+| `RAG_DEGRADED_CONFIDENCE_CAP` | 0.55 | confidence of a keyword-only answer while the vector leg is down; ≤0.45 restores "always hand off" |
+| `RAG_DEGRADED_MIN_COVERAGE` | 0.6 | share of the question's distinctive words a document must contain to be trusted then |
+| `METRICS_TOKEN` | — | bearer for `GET /metrics` and `GET /api/v1/health/readiness`; **unset = both 404** |
+| `OPS_ALERT_TOKEN` | — | bearer for `POST /api/v1/internal/ops-alert` (backup/deploy failure hook); unset = 404 |
+| `OPS_ALERT_EMAIL` | — | comma-separated recipients of ops alerts (needs `SMTP_HOST`). **No built-in default** |
+| `OPS_ALERT_WEBHOOK_URL` | — | JSON POST target for ops alerts (Slack/Teams/Discord-compatible `text`/`content`) |
+| `OPS_ALERT_COOLDOWN_SEC` | 1800 | one alert per key per window; 0 = no dedupe |
+| `OPS_WATCHDOG_INTERVAL_SEC` | 30 | how often the watchdog evaluates the rules; 0 = off |
+| `OPS_LLM_WINDOW_SEC` / `OPS_LLM_FAILURE_RATE` / `OPS_LLM_MIN_CALLS` | 300 / 0.5 / 10 | LLM failure-rate alert: ratio over the window with at least this many calls |
+| `OPS_VECTOR_FAILURES` | 5 | Qdrant/embedding failures in the window that raise the vector-backend alert |
+| `OPS_DEP_FAILURES` | 2 | consecutive failed DB/Redis/Qdrant probes before alerting |
+| `OPS_WATCHDOG_SKIP` | — | csv of `db,redis,qdrant` to exclude (e.g. a deployment that runs without Redis) |
+| `READINESS_REQUIRED` | db | csv of dependencies whose failure makes `/health/readiness` return 503 |
+| `READINESS_CHECK_TIMEOUT_MS` | 2000 | per-dependency deadline of the readiness probe |
+| `ERROR_WEBHOOK_URL` | — | JSON POST of scrubbed 5xx/unhandled errors (rate-limited) |
+| `ERROR_REPORT_MAX_PER_MIN` / `ERROR_REPORT_DEDUPE_SEC` | 20 / 60 | error-reporter rate limits |
+| `SENTRY_DSN` | — | activates the optional Sentry adapter **only if `@sentry/node` is installed** (not a dependency of this repo; untested against a real Sentry) |
 
 ### 4.3 Shopify (optional — features default-safe/disabled when unset)
 | Variable | Purpose |

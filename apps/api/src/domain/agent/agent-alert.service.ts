@@ -12,6 +12,7 @@ import { JOB_LABEL } from '@sharptalk/types';
 import { EventBusService, EVENTS, MailerService } from '../../infrastructure/infrastructure.module';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { m, safeLabel } from '../../infrastructure/observability/app-metrics';
 import {
   isPresent,
   PRESENCE_TOUCH_THROTTLE_SEC,
@@ -75,6 +76,7 @@ const REASON_LABEL: Record<string, string> = {
   moderation_blocked: 'AI reply blocked by moderation',
   user_request: 'Customer asked for a human agent',
   policy: 'Policy deny-list — forced human handling',
+  engine_unavailable: 'AI engine unavailable — the assistant could not answer (outage, not missing knowledge)',
 };
 
 /**
@@ -154,6 +156,8 @@ export class AgentAlertService implements OnModuleInit {
         }),
       ));
     if (existing) return; // channels already notified for this escalation
+    // One count per NEW escalation, by reason (PLN-261012 SG-83) — the replayed duplicate above is skipped.
+    m.handoffs.inc({ reason: safeLabel(payload.reason ?? 'user_request') });
     const ctx: AlertContext = {
       partnerLabel: payload.partnerLabel,
       teamLabel: payload.supportLabel,
@@ -349,8 +353,10 @@ export class AgentAlertService implements OnModuleInit {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: `:rotating_light: ${this.summary(alert, ctx)}` }),
       });
+      m.alertSends.inc({ channel: 'slack', result: res.ok ? 'ok' : 'failed' });
       if (!res.ok) this.logger.warn(`Slack alert failed: HTTP ${res.status}`);
     } catch (e) {
+      m.alertSends.inc({ channel: 'slack', result: 'failed' });
       this.logger.warn(`Slack alert failed: ${(e as Error).message}`);
     }
   }
@@ -359,10 +365,14 @@ export class AgentAlertService implements OnModuleInit {
   private async notifyEmail(alert: AgentAlert, overrideTo: string | undefined, ctx: AlertContext): Promise<void> {
     const to = overrideTo ?? this.config.get<string>('ALERT_EMAIL_TO');
     if (!to) return;
-    await this.mailer.send({
+    const sent = await this.mailer.send({
       to,
       subject: `[IVY Chat] Escalation — conversation #${alert.conversationId}`,
       text: this.summary(alert, ctx),
+    });
+    m.alertSends.inc({
+      channel: 'email',
+      result: sent ? 'ok' : this.mailer.configured?.() === false ? 'unconfigured' : 'failed',
     });
   }
 }
