@@ -48,7 +48,7 @@ Sổ tay này dành cho hai nhóm người ở Go2Joy: **nhân viên CS và Sale
 
 - Mọi tính năng được xây và kiểm thử cục bộ; **chưa triển khai** lên máy chủ nào của Go2Joy. Khi lên staging hoặc UAT, các kiểm tra khói vẫn phải làm lại (xem checklist ở phụ lục B).
 - **API dữ liệu đối tác thật của Go2Joy chưa được giao** (yêu cầu R8/R9): tra cứu dữ liệu đối tác (§8.3) mới chạy với dữ liệu mẫu. Giữ nó **tắt** cho tới khi Amoeba xác nhận chế độ dữ liệu thật.
-- **Chức năng "thử với tư cách" (Khách / Lễ tân / Quản lý) trong Kho tri thức chưa có** ở bản này; nó sẽ đến cùng bộ mô phỏng cổng khách đang được xây. Hiện chỉ có thể kiểm bằng chat thật với tài khoản thử (§7.4).
+- **Chức năng "Thử với tư cách…" (Khách chưa đăng nhập / Đối tác đã đăng nhập / Lễ tân / Quản lý) đã có** trong thẻ **Hỏi kho tri thức** (§7.4). Nhưng trên môi trường chưa có embedding thật (Voyage + Qdrant) nó chỉ cho thấy cổng **không đóng theo chủ đề**: ngưỡng thật chưa được đo.
 - **Chưa hiệu chỉnh ngưỡng của cổng khách với embedding thật** (Voyage). Hãy hiệu chỉnh trên staging trước khi bật **Chỉ hướng dẫn đăng nhập hoặc đăng ký** cho khách hàng thật (§7.1).
 - Câu chữ pháp lý của thông báo quyền riêng tư (§8.4) và bản dịch tiếng Việt trên giao diện là **bản nháp**, cần luật sư và người bản ngữ rà soát.
 - Ảnh chụp màn hình trong sổ tay lấy từ môi trường thử nghiệm của Amoeba với **dữ liệu mẫu hư cấu** (khách sạn "(demo)", email `@go2joy.example`) và AI giả: các con số (ví dụ ở **Thống kê › Thí điểm**) và nội dung câu trả lời trong ảnh **không phải kết quả thật**. Tên khách hàng trong console được che (`L* t*n C*a S**g`).
@@ -570,9 +570,16 @@ Ai làm: gán phiên bản cho tài liệu cần quyền Kho tri thức; đặt 
 
 ### 7.4 Kiểm tra câu trả lời: thẻ "Hỏi kho tri thức"
 
-Trên **Kho tri thức** có thẻ **Hỏi kho tri thức**: gõ câu hỏi, xem câu trả lời, **Nguồn đã dùng**, **độ tin cậy**, **độ khớp**, cảnh báo **Có mâu thuẫn**, **Bị kiểm duyệt chặn**, huy hiệu phiên bản và câu lưu ý phiên bản. Thẻ này **hỏi như người quản trị**, thấy cả nội dung **Chỉ Quản lý** (ô chọn AI agent **Tất cả (chế độ quản trị)** chỉ hiện khi gian hàng có nhiều hơn một agent; thẻ luôn hỏi ở chế độ quản trị), nên **không** cho biết lễ tân hay khách sẽ thấy gì.
+Trên **Kho tri thức** có thẻ **Hỏi kho tri thức**: gõ câu hỏi, xem câu trả lời, **Nguồn đã dùng**, **độ tin cậy**, **độ khớp**, cảnh báo **Có mâu thuẫn**, **Bị kiểm duyệt chặn**, huy hiệu phiên bản và câu lưu ý phiên bản. Mặc định thẻ **hỏi như người quản trị** (**Góc nhìn quản trị (xem tất cả)**), thấy cả nội dung **Chỉ Quản lý** (ô chọn AI agent **Tất cả (chế độ quản trị)** chỉ hiện khi gian hàng có nhiều hơn một agent); để biết khách hay lễ tân sẽ thấy gì, dùng ô **Thử với tư cách…** bên dưới.
 
-Chức năng **thử với tư cách** Khách / Lễ tân / Quản lý **chưa có ở bản này**; nó sẽ đến cùng bộ mô phỏng cổng khách. Cho đến lúc đó, kiểm bằng chat thật: đăng nhập thử vào Hotel Admin với một tài khoản lễ tân, một tài khoản quản lý và một phiên chưa đăng nhập, rồi hỏi cùng một câu.
+Ô **Thử với tư cách…** (cùng quyền quản lý nguồn tri thức với thẻ này) có bốn lựa chọn: **Khách chưa đăng nhập**, **Đối tác đã đăng nhập**, **Lễ tân**, **Quản lý**. Sau khi hỏi, thẻ **Quyết định của cổng** cho biết:
+
+- kết quả: **Đã trả lời**, **Từ chối — cần đăng nhập**, **Từ chối — nội dung chỉ dành cho Quản lý**, **Chuyển nhân viên — không có tài liệu phù hợp** hoặc **Từ chối — tìm kiếm vector đang gián đoạn**;
+- **Độ tin cậy** so với **ngưỡng**, **Độ khớp cao nhất** và **Nhà cung cấp vector**;
+- **Được xem như** (bậc truy cập) và **Phân loại khớp** kèm bậc của từng phân loại: **Công khai**, **Đối tác đã đăng nhập** hoặc **Chỉ Quản lý**;
+- dòng **Khách sẽ đọc**: câu trả lời đúng như người đó sẽ thấy.
+
+Ba ghi chú có thể hiện ra: agent đang trả lời khách chưa đăng nhập như bình thường nên **không có cổng nào được áp dụng** (đổi sang **Chỉ hướng dẫn đăng nhập hoặc đăng ký** trong Cài đặt AI để thử cổng); tìm kiếm vector đang gián đoạn nên các số chỉ là giá trị dự phòng; môi trường chưa có embedding thật nên độ tin cậy chỉ là số tài liệu khớp và **cổng không thể đóng theo chủ đề** — hãy đánh giá ngưỡng trên staging có Voyage + Qdrant bằng lệnh `npm run gate:calibrate` (lệnh này in cảnh báo và thoát với mã 3 khi chỉ có embedding giả). Để kiểm tự động, câu hỏi trong bộ hồi quy có thêm hai trường **Hỏi với tư cách** và **Cổng cần**.
 
 ### 7.5 Chân trang liên hệ của câu trả lời
 
@@ -920,7 +927,7 @@ Mỗi bài có **Chuẩn bị**, **Cách làm** và **Kết quả mong đợi**.
 | Guest policy | AI Settings > AI agents > Visitors who are not signed in | Master, director, manager | Only guide to sign in; answers only from Public categories; calibration of the gate threshold still open |
 | KB category access | Knowledge > Categories > Who can read | Master, director | Public / Signed-in partners / Managers only; receptionist asking a manager topic gets the manager-account line |
 | KB UI version stamping | Knowledge document editor; AI Settings > Reference UI version | Knowledge managers; manager+ for the reference | Equality-only match; caveat sentence after moderation or hide; unversioned never flagged; axis (v23.x vs v0.x) undecided |
-| "Test as" gate simulator | Knowledge > Ask the knowledge base | n/a | NOT in this build; arrives with the gate simulator (in development) |
+| "Test as" gate simulator | Knowledge > Ask the knowledge base > Thử với tư cách… | Knowledge-source managers | Asks as guest / signed-in partner / receptionist / manager and shows the gate decision, confidence vs bar, matched categories with tier and the exact reply; with stub embeddings it only shows that the gate cannot close by topic |
 | Signed sign-in (SSO) policy | Tenant Settings > Widget | Master edits, director views | Claims max age (default 8 h, 1 to 720) and refuse-v1 switch |
 | Pilot scope by hotel | Tenant Settings > Widget | Master edits, director views | Allow-list by signed hotelSn each turn; hide widget or notice; list actions apply immediately |
 | Partner data lookup | Tenant Settings > Other settings | Master | Read-only; hotel from signed identity; mock until Go2Joy API (R8/R9) exists; notice + hand-off when down |
@@ -1003,7 +1010,7 @@ Bản đầu của phụ lục này liệt kê 19 điểm. Phần lớn là lỗ
 | 7.1 (cổng khách) | PLN-261012 §3.2 SG-51 và §8 (rủi ro hiệu chỉnh); `chat.service.ts` (`guestGated`), `GuestGuidanceSection.tsx` |
 | 7.2 (quyền xem danh mục) | RPT-261013-w2a-access-tiers §1, §3, §6; `CategoryAccessSelect.tsx`, `kb-category.service.ts`, `chat.service.ts` (`managerOnly`); locale `knowledge.json` (`categoryAccess*`) |
 | 7.3 (phiên bản giao diện) | RPT-261013-s2b-KB-UI-Version §1, §4, §8; `KbVersionSection.tsx`, `KbVersionBadge.tsx`, `packages/types/src/common/kb-version.ts` |
-| 7.4, 7.5 | `KnowledgeQaPanel.tsx`, `AnswerFooterSection.tsx`; RPT-261013-w2a §3 mục 10 (mô phỏng chưa có) |
+| 7.4, 7.5 | `KnowledgeQaPanel.tsx`, `AnswerFooterSection.tsx`; RPT-261013-w3a-gate-simulator (mô phỏng cổng, `gate:calibrate`) |
 | 8.1 | RPT-261013-s1b §1 (SG-03/04); `IdentityPolicyCard.tsx`; CONFIG.md §4.2 |
 | 8.2 | RPT-261013-s5d-pilot-flag §1, §6, §7; `PilotAccessCard.tsx`, `pilot.controller.ts` |
 | 8.3 | RPT-261013-Partner-Data §1, §6, §7; RPT-261013-w2c-tool-loop; `PartnerDataCard.tsx`, `partner-messages.ts`, `chat.service.ts` (`answerWithPartnerNotice`); CONFIG.md §4.2 |
