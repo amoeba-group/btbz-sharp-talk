@@ -310,6 +310,14 @@
   var ACCESS_KEY_KEY = 'st:access:' + (shop || 'default');
   var RESTRICTED_KEY = 'st:restricted:' + (shop || 'default');
   var accessDenied = false;
+  // Pilot allowlist (PLN-261012 SG-40): hide/show WITHOUT destroying the frame, so a
+  // host that switches hotel can bring the widget back. Unlike hideFrame() above.
+  var PILOT_KEY = 'st:pilot:' + (shop || 'default');
+  var PILOT_VERDICT_WAIT_MS = 10000;
+  var pilotHidden = false;
+  var pilotVerdictSeen = false;
+  var pilotHoldTimer = null;
+  var lastVisibleEmit = null;
 
   function lsGet(key) {
     try {
@@ -579,6 +587,12 @@
         if (typeof d.visible !== 'boolean') return; // unknown shape → leave as is
         // Remember only WHETHER this tenant restricts, never the verdict.
         lsSet(RESTRICTED_KEY, d.restricted ? '1' : null);
+        // The tenant keeps a pilot list: stay hidden until the widget reports whether
+        // THIS visitor may be served. Remembered per shop, so a repeat visit starts
+        // hidden instead of flashing (same trick as RESTRICTED_KEY).
+        var pilotOn = !!(d.pilot && d.pilot.enabled);
+        lsSet(PILOT_KEY, pilotOn ? '1' : null);
+        if (pilotOn) holdForPilotVerdict();
         if (d.visible) {
           revealFrame();
           return;
@@ -605,12 +619,40 @@
     frame.style.visibility = triggerMode && !isOpen ? 'hidden' : 'visible';
   }
 
+  /**
+   * Hide or show the frame for the pilot allowlist (PLN-261012 SG-40). `display`
+   * rather than `visibility`: the launcher/size code above owns `visibility`, and
+   * this must not fight it. The iframe keeps running while hidden — it still has to
+   * receive `ivy:identify` so a hotel switch can re-show it.
+   */
+  function setPilotHidden(hidden) {
+    if (accessDenied) return; // removed for good by the exposure restriction
+    pilotHidden = !!hidden;
+    frame.style.display = pilotHidden ? 'none' : '';
+  }
+
+  /**
+   * Stay hidden until the widget says whether this visitor may be served. Fails OPEN
+   * after a while: a widget build that predates `ivy:visibility` never answers, and
+   * hiding a pilot hotel's widget forever is worse than showing it to a non-pilot one
+   * the server refuses to serve anyway.
+   */
+  function holdForPilotVerdict() {
+    if (pilotVerdictSeen || pilotHoldTimer) return;
+    setPilotHidden(true);
+    pilotHoldTimer = setTimeout(function () {
+      pilotHoldTimer = null;
+      if (!pilotVerdictSeen) setPilotHidden(false);
+    }, PILOT_VERDICT_WAIT_MS);
+  }
+
   function boot() {
     if (booted || signInScreen) return;
     booted = true;
     // A store we have seen restrict before starts hidden and waits for the
     // verdict — one flash per browser instead of one on every page.
     if (lsGet(RESTRICTED_KEY) === '1') frame.style.visibility = 'hidden';
+    if (lsGet(PILOT_KEY) === '1') holdForPilotVerdict();
     checkVisibility();
     // `base` is resolved from cfg at load; if init() changed widgetUrl, honour it.
     if (cfg.widgetUrl) {
@@ -929,6 +971,24 @@
         mode: d.mode,
         offsetTop: d.offsetTop,
       });
+    } else if (d.type === 'ivy:visibility') {
+      // The widget's verdict for the pilot allowlist (PLN-261012 SG-40): reversible, so
+      // a host that switches hotel gets the widget back. Only OUR iframe may say it.
+      if (e.source === frame.contentWindow && typeof d.visible === 'boolean') {
+        pilotVerdictSeen = true;
+        if (pilotHoldTimer) {
+          clearTimeout(pilotHoldTimer);
+          pilotHoldTimer = null;
+        }
+        setPilotHidden(!d.visible);
+        // Once per CHANGE of the whole verdict, not just of `visible`: "shown with a
+        // notice" is news to a host even though the launcher was already on screen.
+        var verdictKey = d.visible + '|' + (d.reason || '') + '|' + (d.mode || '');
+        if (lastVisibleEmit !== verdictKey) {
+          lastVisibleEmit = verdictKey;
+          emit('visibility', { visible: d.visible, reason: d.reason || null, mode: d.mode || null });
+        }
+      }
     } else if (d.type === 'ivy:unread') {
       setBadge(d.count);
       emit('unread', { count: Number(d.count) || 0 });

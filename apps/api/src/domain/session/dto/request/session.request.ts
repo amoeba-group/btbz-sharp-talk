@@ -33,6 +33,11 @@ export class SessionOpenedRequest {
   @IsString() session_token: string;
 }
 
+/** Pilot-verdict re-check (PLN-261012 SG-40). Identified by session token, like the other widget calls. */
+export class SessionPilotRequest {
+  @IsString() session_token: string;
+}
+
 export class ConsentRequest {
   @IsString() session_token: string;
   @IsBoolean() granted: boolean;

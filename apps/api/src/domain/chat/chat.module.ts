@@ -23,6 +23,7 @@ import { CustomerModule } from '../customer/customer.module';
 import { AnswerReuseModule } from '../answer-reuse/answer-reuse.module';
 import { IssueModule } from '../issue/issue.module';
 import { PartnerDataModule } from '../partner-data/partner-data.module';
+import { PilotModule } from '../pilot/pilot.module';
 
 @Module({
   imports: [
@@ -61,6 +62,8 @@ import { PartnerDataModule } from '../partner-data/partner-data.module';
     // Partner data lookup (PLN-261012 SG-31): the chat step that grounds a turn in
     // the hotel's live data. PartnerData does not depend on Chat, so this stays acyclic.
     PartnerDataModule,
+    // Pilot allowlist gate on the turn paths (PLN-261012 SG-40).
+    PilotModule,
   ],
   controllers: [ChatController],
   providers: [ChatService, RagService, ScenarioService, IdleConversationService],

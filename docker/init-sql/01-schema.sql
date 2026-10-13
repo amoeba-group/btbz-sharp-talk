@@ -1761,6 +1761,21 @@ CREATE TABLE `tenant_menus` (
   UNIQUE KEY `uk_tenant_menu` (`tenant_id`,`menu_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `tenant_pilot_hotels`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tenant_pilot_hotels` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `hotel_sn` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
+  `note` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  `added_by` bigint DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_pilot_hotel` (`tenant_id`,`hotel_sn`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `tenant_role_menus`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -1829,6 +1844,7 @@ CREATE TABLE `tenants` (
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `storefront_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'customer-facing shop origin, e.g. https://ivyusa.com',
   `partner_data_enabled` tinyint(1) NOT NULL DEFAULT '0',
+  `pilot_access` json DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_tenant_shop` (`shop_domain`),
   UNIQUE KEY `uk_tenant_slug` (`slug`),

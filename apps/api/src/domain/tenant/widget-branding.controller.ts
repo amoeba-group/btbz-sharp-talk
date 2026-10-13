@@ -2,7 +2,7 @@ import { Controller, Get, HttpStatus, Query, Res } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import type { Response } from 'express';
-import { evaluateWidgetAccess } from '@sharptalk/types';
+import { evaluateWidgetAccess, readPilotAccess } from '@sharptalk/types';
 import { getRequestContext } from '../../global/middleware/request-context.middleware';
 import { TenantService } from './tenant.service';
 import { WidgetLogoService } from './widget-logo.service';
@@ -84,6 +84,11 @@ export class WidgetBrandingController {
       restricted: verdict.restricted || tenant.status === TENANT_SUSPENDED,
       // Echoed so the console can offer "add my IP" without a second service.
       yourIp: ip,
+      // Pilot allowlist by hotel (PLN-261012 SG-40): the tenant keeps a hotel list, so
+      // the loader holds the widget hidden until the widget reports whether THIS visitor
+      // may be served. Only the fact that a list exists — nothing about the list — and
+      // read straight off the tenant row already loaded above, so it costs nothing.
+      pilot: { enabled: readPilotAccess(tenant.pilotAccess)?.enabled === true },
     };
   }
 

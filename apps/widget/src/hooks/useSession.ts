@@ -3,6 +3,7 @@ import { useWidgetStore, type ConsentInfo } from '../store/widgetStore';
 import { ensureSession, setConsent } from '../services/sessionService';
 import { getShopDomain, getStoredSessionToken } from '../lib/api-client';
 import { applyTheme, cacheTheme } from '../lib/theme';
+import { adoptPilot } from './usePilotVisibility';
 import { apiOrigin } from '../lib/api-client';
 import { clearStoredConsent, getStoredConsentRecord, setStoredConsent } from '../lib/consent';
 import { identityExpiry } from '../lib/identity-expiry';
@@ -330,6 +331,8 @@ export function useEnsureSession() {
         // fresh pending session replays a version-matching local choice
         // instead of re-asking — see adoptSessionConsent below.
         adoptSessionConsent(res);
+        // Pilot allowlist verdict for this (guest) session (PLN-261012 SG-40).
+        adoptPilot(res);
 
         // Tie default UI language to the backend session, unless the user
         // has manually overridden it.

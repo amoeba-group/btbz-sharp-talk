@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { bigintTransformer } from '../../../global/util/transformers';
 import { decryptSecret, encryptSecret } from '../../../global/util/crypto.util';
-import type { IdentityPolicy, PrivacyNoticeCopy, WidgetAccess, WidgetTheme } from '@sharptalk/types';
+import type { IdentityPolicy, PilotAccess, PrivacyNoticeCopy, WidgetAccess, WidgetTheme } from '@sharptalk/types';
 
 /**
  * The embed secret is a credential, so it never sits in the database as text.
@@ -254,6 +254,14 @@ export class Tenant {
   // non-English shopper choice (REQ-260913-VN-Prerequisite-Gaps G1/G2).
   @Column({ name: 'default_language', type: 'varchar', length: 5, nullable: true })
   defaultLanguage: string | null;
+
+  /**
+   * Pilot allowlist switch (PLN-261012 SG-40): serve only the hotels listed in
+   * `tenant_pilot_hotels`, and what the others see. NULL = never configured =
+   * no list, so every tenant that does not opt in behaves exactly as before.
+   */
+  @Column({ name: 'pilot_access', type: 'json', nullable: true })
+  pilotAccess: PilotAccess | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

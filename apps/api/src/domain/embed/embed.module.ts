@@ -9,6 +9,7 @@ import { EmbedController } from './embed.controller';
 import { SessionModule } from '../session/session.module';
 import { AuditModule } from '../audit/audit.module';
 import { IssueModule } from '../issue/issue.module';
+import { PilotModule } from '../pilot/pilot.module';
 
 /**
  * Embed SDK (PLN-260819). Repositories are registered directly rather than
@@ -20,12 +21,14 @@ import { IssueModule } from '../issue/issue.module';
   // importing ChatModule would pull the whole chat graph into this one).
   // AuditModule: identity events (PLN-261012 SG-50). IssueModule: logout closes the
   // issue of the thread it ends — it imports only entities + Audit + Moderation, so
-  // there is no cycle back to this module.
+  // there is no cycle back to this module. PilotModule: identify answers with the
+  // pilot verdict (PLN-261012 SG-40).
   imports: [
     TypeOrmModule.forFeature([Tenant, Customer, Session, Conversation]),
     SessionModule,
     AuditModule,
     IssueModule,
+    PilotModule,
   ],
   controllers: [EmbedController],
   providers: [EmbedService],

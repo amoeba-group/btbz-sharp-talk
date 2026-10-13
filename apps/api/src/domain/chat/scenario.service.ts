@@ -12,6 +12,7 @@ import { Session } from '../session/entity/session.entity';
 import { ChatService, sysMsg } from './chat.service';
 import { ModerationService } from '../moderation/moderation.service';
 import { SessionService } from '../session/session.service';
+import { PilotService } from '../pilot/pilot.service';
 import { AiConfigService } from '../ai-engine/ai-config.service';
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
 import type {
@@ -53,6 +54,9 @@ export class ScenarioService {
     // Optional so the existing positional-constructor specs keep compiling;
     // Nest always supplies it.
     @Optional() private readonly bus?: EventBusService,
+    // Pilot allowlist by hotel (PLN-261012 SG-40). Trailing and optional so the
+    // positional-constructor specs keep compiling; Nest always supplies it.
+    @Optional() private readonly pilot?: PilotService,
   ) {}
 
   isScenarioAction(action: string): boolean {
@@ -100,6 +104,8 @@ export class ScenarioService {
         body: turn.reply?.body ?? '',
       },
       followUps: [],
+      // The chat path refused it for pilot scope (SG-40) — keep saying so.
+      ...(turn.pilotDenied ? { pilotDenied: true } : {}),
     };
   }
 
@@ -141,6 +147,20 @@ export class ScenarioService {
         conversationId: null,
         reply: { senderType: 'system', body: sysMsg('consentRequired', session.language) },
         followUps: [],
+      };
+    }
+
+    // Pilot allowlist gate (PLN-261012 SG-40) — the same authoritative check the chat
+    // path makes, on the SIGNED hotel of the session: a scripted button is a turn like
+    // any other, and a hotel outside the list must not be able to read the tenant's
+    // scripts or open a conversation through it. Soft system reply, nothing stored.
+    const pilotDenial = session.channel === 'preview' ? null : await this.pilot?.denialFor(session);
+    if (pilotDenial) {
+      return {
+        conversationId: null,
+        reply: { senderType: 'system', body: pilotDenial.body },
+        followUps: [],
+        pilotDenied: true,
       };
     }
 

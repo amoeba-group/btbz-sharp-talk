@@ -3,6 +3,7 @@ import { WidgetThemeCard, WidgetTabsCard, WidgetBehaviorCard, InstallGuideCard }
 import { EmbedCard } from './EmbedCard';
 import { IdentityPolicyCard } from './IdentityPolicyCard';
 import { WidgetAccessCard } from './WidgetAccessCard';
+import { PilotAccessCard } from './PilotAccessCard';
 import { DesignAssetsCard } from './DesignAssetsCard';
 import { WidgetDesignsCard } from './WidgetDesignsCard';
 
@@ -31,6 +32,9 @@ export function SettingsWidgetPage() {
           the embed card because both answer "where does this widget appear" —
           that one for installs, this one for a limited rollout. */}
       <WidgetAccessCard />
+      {/* Which HOTELS the agent serves while a pilot runs (PLN-261012 SG-40) — the same
+          "who sees the widget" question, answered per signed hotel rather than per IP. */}
+      <PilotAccessCard />
       <InstallGuideCard />
     </div>
   );

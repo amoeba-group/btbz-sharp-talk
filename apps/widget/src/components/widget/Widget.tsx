@@ -8,10 +8,13 @@ import { useEmbedIdentity } from '../../hooks/useEmbedIdentity';
 import { useEmbedCommands } from '../../hooks/useEmbedCommands';
 import { useLauncherReport } from '../../hooks/useLauncherReport';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
+import { usePilotVisibility } from '../../hooks/usePilotVisibility';
 import { useUnreadCount } from '../../hooks/useNotifications';
 import { usePurchaseSignal } from '../../hooks/usePurchaseSignal';
 import { useAnalytics } from '../../lib/analytics';
 import { WidgetPanel } from './WidgetPanel';
+import { PilotNoticePanel } from './PilotNoticePanel';
+import { effectivePilotView } from '../../lib/pilot';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { LAUNCHER_CLASSES, resolveLauncher } from '../../lib/launcher';
 import { assetUrl, logoUrl } from '../../lib/branding';
@@ -26,6 +29,8 @@ export function Widget() {
   // Report launcher geometry to the loader, which owns the iframe box (S4).
   useLauncherReport();
   useSessionProfile();
+  // Pilot allowlist (PLN-261012 SG-40): tells the loader to hide / re-show this frame.
+  usePilotVisibility();
   usePurchaseSignal();
   const analytics = useAnalytics();
   const panelOpen = useWidgetStore((s) => s.panelOpen);
@@ -47,6 +52,11 @@ export function Widget() {
   // A host app opens the widget from its own button and owns the whole screen,
   // so there is no floating launcher and nothing to open into.
   const appMode = isAppMode();
+  // Pilot verdict: 'hide' removes the launcher and the panel, 'notice' keeps the
+  // launcher and swaps the panel for a note. A host app cannot hide (its WebView is
+  // the screen), so there 'hide' shows the note too when the server sent one.
+  const pilot = effectivePilotView(useWidgetStore((s) => s.pilot), appMode);
+  const pilotHidden = pilot.kind === 'hide';
 
   // Returning from a redirect-mode sign-in: the loader consumed its one-shot
   // flag and passed ?reopen=<tab>, so bring the widget straight back up where
@@ -144,16 +154,16 @@ export function Widget() {
     <>
       {/* The launcher lives OUTSIDE this boundary on purpose: whatever happens to
           the panel, the shopper keeps a way to close and reopen the widget. */}
-      {panelOpen && (
+      {panelOpen && !pilotHidden && (
         <ErrorBoundary label="panel">
-          <WidgetPanel />
+          {pilot.kind === 'notice' ? <PilotNoticePanel notice={pilot.notice} /> : <WidgetPanel />}
         </ErrorBoundary>
       )}
 
       {/* Floating launcher — closed state only. While the panel is open the
           bottom-right X would duplicate the panel header's close button (and
           sit right under it on mobile), so closing is the header X / Esc. */}
-      {!panelOpen && !appMode && !triggerHidesLauncher && (
+      {!panelOpen && !appMode && !triggerHidesLauncher && !pilotHidden && (
         <button
           onClick={togglePanel}
           aria-label={t('a11y.openSupport')}

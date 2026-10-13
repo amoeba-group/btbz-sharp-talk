@@ -17,6 +17,7 @@ import {
   getShopDomain,
 } from './useSession';
 import { hostPresent, onHostMessage, postToHost } from '../lib/host-bridge';
+import { adoptPilot } from './usePilotVisibility';
 import {
   adoptForkedSession,
   isForkedSession,
@@ -75,6 +76,9 @@ export function useEmbedCommands(): void {
         // module passes `replayConsent: false` for exactly those cases).
         adoptSessionConsent(res, { replay: opts?.replayConsent });
         identityExpiry.observe(res);
+        // The new session's pilot verdict: a different hotel may be (or no longer be) on
+        // the list, and the loader has to hear it to hide or re-show the widget.
+        adoptPilot(res);
         // Token last: it re-keys the panels, which must find the rest in place.
         s.setSessionToken(res.sessionToken);
       },
@@ -114,6 +118,9 @@ export function useEmbedCommands(): void {
           store.setCustomerName(res.customerName ?? null);
           // The host just signed: re-arm the lapse timer for the new signature.
           identityExpiry.observe(res);
+          // Same session, possibly a different verdict (PLN-261012 SG-40): the hotel on a
+          // guest session just became a signed one.
+          adoptPilot(res);
           // The menu is audience-filtered server-side (PLN-261001 V4): a
           // signed-in partner gets the business chips, not the sign-in ones. The
           // list was fetched once for a guest, so ask again now.

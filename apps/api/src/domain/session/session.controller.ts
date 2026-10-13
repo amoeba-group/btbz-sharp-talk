@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Optional, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { SessionService } from './session.service';
@@ -8,14 +8,20 @@ import {
   EnsureSessionRequest,
   LanguageRequest,
   SessionOpenedRequest,
+  SessionPilotRequest,
 } from './dto/request/session.request';
 import { Public } from '../../global/decorator/public.decorator';
+import { PilotService } from '../pilot/pilot.service';
 
 /** Widget-facing session endpoints (public; identified by opaque session token). */
 @ApiTags('Session')
 @Controller('session')
 export class SessionController {
-  constructor(private readonly sessionService: SessionService) {}
+  constructor(
+    private readonly sessionService: SessionService,
+    // Optional so a controller built without the pilot module (specs) still works.
+    @Optional() private readonly pilotService?: PilotService,
+  ) {}
 
   @Post('ensure')
   @Public()
@@ -37,7 +43,22 @@ export class SessionController {
       notice,
       await this.sessionService.customerDisplayName(s),
       await this.sessionService.identityOf(s),
+      (await this.pilotService?.hintFor(s)) ?? { eligible: null },
     );
+  }
+
+  /**
+   * The pilot allowlist verdict for this session, re-asked without opening a
+   * session (PLN-261012 SG-40). The widget hides itself for a hotel that is not on
+   * the list; adding the hotel in the console is picked up here without the host
+   * identifying again. No side effects, nothing written.
+   */
+  @Post('pilot')
+  @Public()
+  @ApiOperation({ summary: 'Pilot allowlist verdict for a session (SG-40)' })
+  async pilot(@Body() body: SessionPilotRequest) {
+    const s = await this.sessionService.findByToken(body.session_token);
+    return { pilot: (await this.pilotService?.hintFor(s)) ?? { eligible: null } };
   }
 
   /**

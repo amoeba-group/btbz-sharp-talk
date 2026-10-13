@@ -3,6 +3,8 @@ import { setStoredSessionToken } from '../lib/api-client';
 import { initialLanguage } from '../i18n/i18n';
 import { WIDGET_TABS_DEFAULT } from '../lib/widget-tabs';
 import { isAppMode } from '../lib/host-bridge';
+import { PILOT_ALLOWED, reducePilot } from '../lib/pilot';
+import type { PilotView, PilotWire } from '../lib/pilot';
 import type {
   ConsentState,
   WidgetCopy,
@@ -111,6 +113,18 @@ interface WidgetState {
    * shopper opens the tab, since the messages are then on screen.
    */
   chatUnread: number;
+  /**
+   * Pilot allowlist verdict for the live session (PLN-261012 SG-40). 'allowed' until
+   * the server says otherwise — the widget never hides on a guess; the server is the
+   * one that refuses. Replaced by every ensure / identify / re-check.
+   */
+  pilot: PilotView;
+  /** True once any response carried a verdict — the loader may be waiting for the first. */
+  pilotKnown: boolean;
+  /** Bumped when a turn was refused for pilot scope, so the verdict is re-read at once. */
+  pilotRecheck: number;
+  setPilot: (p: PilotWire | null | undefined) => void;
+  requestPilotRecheck: () => void;
   setSessionToken: (t: string | null) => void;
   setActiveTab: (t: TabKey) => void;
   setPanelOpen: (open: boolean) => void;
@@ -187,6 +201,20 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   guestPolicy: 'open',
   guestGuidance: null,
   chatUnread: 0,
+  pilot: PILOT_ALLOWED,
+  pilotKnown: false,
+  pilotRecheck: 0,
+  setPilot: (p) =>
+    set((s) => {
+      const next = reducePilot(s, p, isAppMode());
+      return {
+        pilot: next.pilot,
+        pilotKnown: next.pilotKnown,
+        // A widget that has just been told to hide must not stay open on screen.
+        ...(next.closePanel ? { panelOpen: false } : {}),
+      };
+    }),
+  requestPilotRecheck: () => set((s) => ({ pilotRecheck: s.pilotRecheck + 1 })),
   setSessionToken: (t) => {
     setStoredSessionToken(t);
     set({ sessionToken: t });

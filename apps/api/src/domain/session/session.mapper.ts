@@ -1,4 +1,4 @@
-import type { SessionResponse } from '@sharptalk/types';
+import type { PilotStatus, SessionResponse } from '@sharptalk/types';
 import { Session } from './entity/session.entity';
 import { PrivacyNoticeInfo } from './session.service';
 import type { EffectiveIdentity } from './identity.util';
@@ -19,6 +19,8 @@ export class SessionMapper {
      * the stored binding as is, which is every caller that predates expiry.
      */
     identity?: EffectiveIdentity,
+    /** Pilot allowlist verdict (PLN-261012 SG-40); omitted = the key is not sent. */
+    pilot?: PilotStatus,
   ): SessionResponse {
     return {
       sessionToken: s.sessionToken,
@@ -47,6 +49,7 @@ export class SessionMapper {
       widgetCopy: notice.widgetCopy,
       aiProcessingRegion: notice.aiProcessingRegion ?? 'US',
       issueFeed: notice.issueFeed ?? false,
+      ...(pilot ? { pilot } : {}),
     };
   }
 }
