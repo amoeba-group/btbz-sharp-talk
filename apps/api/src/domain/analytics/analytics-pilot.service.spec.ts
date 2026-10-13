@@ -126,6 +126,9 @@ describe('AnalyticsPilotService.report — grouping and totals', () => {
     const { svc } = build({ rows });
     expect((await svc.report(TENANT, {}, NOW)).group).toBe('hotel');
     expect((await svc.report(TENANT, { group: ' ROLE ' }, NOW)).group).toBe('role');
+    // a blank `?group=` is "not given"
+    expect((await svc.report(TENANT, { group: '' }, NOW)).group).toBe('hotel');
+    expect((await svc.report(TENANT, { group: '   ' }, NOW)).group).toBe('hotel');
   });
 
   it('by day: drawn in the tenant timezone, chronological', async () => {

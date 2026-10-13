@@ -105,7 +105,8 @@ export class AnalyticsPilotService {
 
   /** The group, or E5140. Absent = hotel. */
   parseGroup(raw: string | undefined): PilotGroup {
-    const group = (raw ?? PILOT_GROUPS[0]).trim().toLowerCase();
+    // An absent or blank value (`?group=`) is "not given": the default, not an error.
+    const group = (raw ?? '').trim().toLowerCase() || PILOT_GROUPS[0];
     if (!(PILOT_GROUPS as string[]).includes(group)) this.invalid(`unknown group '${String(raw).slice(0, 20)}'`);
     return group as PilotGroup;
   }
