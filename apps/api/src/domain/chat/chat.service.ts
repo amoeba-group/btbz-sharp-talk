@@ -719,7 +719,12 @@ export class ChatService {
     return latest.reverse();
   }
 
-  /** Agent display names for the given messages, so the widget can show who replied. */
+  /**
+   * Agent display names for the given messages, so the widget can show who replied. Customer-facing:
+   * only the `users.name` a tenant chose to give is shown. The staff-facing e-mail-words fallback
+   * (`displayNameOf`) is deliberately NOT used here - it would put part of an address into a
+   * customer's chat (w3c, ops-manual finding 13; pinned by staff-display-name.spec.ts).
+   */
   async resolveSenderNames(messages: Message[]): Promise<Map<string, string>> {
     const map = new Map<string, string>();
     const ids = [
