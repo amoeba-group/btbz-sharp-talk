@@ -173,7 +173,9 @@
       "secret_key": "Secret key",
       "subdomain": "Account subdomain",
       "email": "Account email",
-      "webhook_secret": "Webhook secret (L2 status)"
+      "webhook_secret": "Webhook secret (L2 status)",
+      "base_url": "Base URL",
+      "signing_secret": "Signing secret (optional)"
     },
     "ph": {
       "mall_id": "your-mall",
@@ -184,7 +186,8 @@
       "shop_domain": "your-store.myharavan.com",
       "subdomain": "your-company (from your-company.gorgias.com)",
       "email": "agent@example.com",
-      "app_key": "yotpo app key"
+      "app_key": "yotpo app key",
+      "base_url": "https://partner-api.example.go2joy.vn"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -216,6 +219,10 @@
     "gorgias": {
       "title": "Gorgias",
       "subtitle": "Helpdesk — escalated chats can be handed off as Gorgias tickets."
+    },
+    "go2joy_partner_api": {
+      "title": "Go2Joy partner data API",
+      "subtitle": "Connect the read-only API that serves the signed-in hotel’s rates, policies, bookings and settlement."
     },
     "syncing": "Syncing…",
     "syncProducts": "Import products",
@@ -883,5 +890,18 @@
     "saveError": "Could not save the exposure restriction",
     "keyIssued": "Invite link issued",
     "keyError": "Could not issue the invite link"
+  },
+  "partnerData": {
+    "title": "Partner data lookup",
+    "subtitle": "Let the assistant answer a signed-in hotel user’s questions about their own hotel’s rates, policies, bookings and settlement from the partner (Go2Joy) data API. Off by default.",
+    "enable": "Look up the hotel’s live data when a signed-in user asks",
+    "hint": "Only for users signed in through Hotel Admin with a verified hotel and role. The hotel always comes from the signed identity, never from the chat message.",
+    "serverOff": "Turned off for the whole server (PARTNER_DATA_ENABLED). This switch has no effect until the operator turns it on.",
+    "modeMock": "Sample data (mock): answers use built-in sample hotels, not real data.",
+    "modeLive": "Live: answers use the real partner API.",
+    "notConfigured": "The connection (base URL and API key) is not saved yet. It is needed in live mode.",
+    "connection": "Connection",
+    "saved": "Partner data lookup setting saved",
+    "saveError": "Could not save the partner data lookup setting"
   }
 }

@@ -5,6 +5,7 @@ import { IntegrationCredentialsCard } from './IntegrationCredentialsCard';
 import { SettingsSnapshotsCard } from './SettingsSnapshotsCard';
 import { JourneyCriteriaCard } from '../journey/JourneyCriteriaCard';
 import { JourneyStagesCard } from '../journey/JourneyStagesCard';
+import { PartnerDataCard } from '../partner-data/PartnerDataCard';
 import { useAuthStore } from '@/store/auth-store';
 
 /** Tenant settings — etc (PLN-260824 B). Composition only; every card moved here unchanged. */
@@ -26,6 +27,8 @@ export function SettingsEtcPage() {
       {isMaster && <JourneyCriteriaCard />}
       {/* Journey board columns (PLN-261006 P3) — same API gate as the criteria. */}
       {isMaster && <JourneyStagesCard />}
+      {/* Live hotel data for signed-in partner users (PLN-261012 SG-31); the API gates it on MASTER too. */}
+      {isMaster && <PartnerDataCard />}
       <IntegrationCredentialsCard />
       {/* Settings backup/restore in the tenant's own folder (PLN-260910 P4). Master/director gate is on the API. */}
       <SettingsSnapshotsCard />

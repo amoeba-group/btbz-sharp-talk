@@ -14,7 +14,13 @@ export type EcommerceProvider = 'cafe24' | 'woocommerce' | 'odoo' | 'haravan';
 /** Marketing platforms + helpdesks on the same generic flow (PLN-260808). */
 export type MarketingProvider = 'klaviyo' | 'yotpo';
 export type HelpdeskProvider = 'gorgias';
-export type GenericIntegrationProvider = EcommerceProvider | MarketingProvider | HelpdeskProvider;
+/** Live partner data the assistant looks hotel facts up from (PLN-261012 SG-30..32). */
+export type PartnerDataProvider = 'go2joy_partner_api';
+export type GenericIntegrationProvider =
+  | EcommerceProvider
+  | MarketingProvider
+  | HelpdeskProvider
+  | PartnerDataProvider;
 
 export interface IntegrationFieldSpec {
   key: string;
@@ -29,6 +35,7 @@ export const ECOMMERCE_PROVIDERS: EcommerceProvider[] = [
 ];
 export const MARKETING_PROVIDERS: MarketingProvider[] = ['klaviyo', 'yotpo'];
 export const HELPDESK_PROVIDERS: HelpdeskProvider[] = ['gorgias'];
+export const PARTNER_DATA_PROVIDERS: PartnerDataProvider[] = ['go2joy_partner_api'];
 
 export const INTEGRATION_FIELDS: Record<GenericIntegrationProvider, IntegrationFieldSpec[]> = {
   cafe24: [
@@ -62,6 +69,11 @@ export const INTEGRATION_FIELDS: Record<GenericIntegrationProvider, IntegrationF
     { key: 'email', secret: false, required: true },
     { key: 'api_key', secret: true, required: true },
     { key: 'webhook_secret', secret: true, required: false },
+  ],
+  go2joy_partner_api: [
+    { key: 'base_url', secret: false, required: true },
+    { key: 'api_key', secret: true, required: true },
+    { key: 'signing_secret', secret: true, required: false },
   ],
 };
 

@@ -173,7 +173,9 @@
       "secret_key": "시크릿 키",
       "subdomain": "계정 서브도메인",
       "email": "계정 이메일",
-      "webhook_secret": "웹훅 시크릿 (L2 상태회신)"
+      "webhook_secret": "웹훅 시크릿 (L2 상태회신)",
+      "base_url": "기본 URL",
+      "signing_secret": "요청 서명 키(선택)"
     },
     "ph": {
       "mall_id": "your-mall",
@@ -184,7 +186,8 @@
       "shop_domain": "your-store.myharavan.com",
       "subdomain": "your-company (your-company.gorgias.com의 앞부분)",
       "email": "agent@example.com",
-      "app_key": "yotpo app key"
+      "app_key": "yotpo app key",
+      "base_url": "https://partner-api.example.go2joy.vn"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -216,6 +219,10 @@
     "gorgias": {
       "title": "Gorgias",
       "subtitle": "헬프데스크 — 에스컬레이션된 상담을 Gorgias 티켓으로 전달할 수 있습니다."
+    },
+    "go2joy_partner_api": {
+      "title": "Go2Joy 파트너 데이터 API",
+      "subtitle": "로그인한 호텔의 요금, 정책, 예약, 정산을 제공하는 읽기 전용 API를 연결합니다."
     },
     "syncing": "동기화 중…",
     "syncProducts": "상품 가져오기",
@@ -883,5 +890,18 @@
     "saveError": "노출 제한을 저장하지 못했습니다",
     "keyIssued": "초대 링크를 발급했습니다",
     "keyError": "초대 링크를 발급하지 못했습니다"
+  },
+  "partnerData": {
+    "title": "파트너 데이터 조회",
+    "subtitle": "로그인한 호텔 사용자가 자신의 호텔 요금, 정책, 예약, 정산에 대해 물으면 파트너(Go2Joy) 데이터 API의 실시간 데이터로 답변합니다. 기본값은 꺼짐입니다.",
+    "enable": "로그인한 사용자가 질문하면 호텔의 실시간 데이터를 조회",
+    "hint": "Hotel Admin으로 로그인하여 호텔과 역할이 검증된 사용자에게만 적용됩니다. 호텔은 항상 서명된 신원에서 가져오며 채팅 메시지에서는 절대 가져오지 않습니다.",
+    "serverOff": "서버 전체에서 꺼져 있습니다(PARTNER_DATA_ENABLED). 운영자가 켜기 전에는 이 스위치가 적용되지 않습니다.",
+    "modeMock": "샘플 데이터(mock): 실제 데이터가 아닌 내장 샘플 호텔로 답변합니다.",
+    "modeLive": "실데이터: 실제 파트너 API로 답변합니다.",
+    "notConfigured": "연결 정보(기본 URL, API 키)가 아직 저장되지 않았습니다. 실데이터 모드에서 필요합니다.",
+    "connection": "연결",
+    "saved": "파트너 데이터 조회 설정을 저장했습니다",
+    "saveError": "파트너 데이터 조회 설정을 저장하지 못했습니다"
   }
 }

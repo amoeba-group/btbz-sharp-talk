@@ -173,7 +173,9 @@
       "secret_key": "Secret key",
       "subdomain": "账户子域名",
       "email": "账户邮箱",
-      "webhook_secret": "Webhook secret（L2 状态）"
+      "webhook_secret": "Webhook secret（L2 状态）",
+      "base_url": "基础 URL",
+      "signing_secret": "请求签名密钥（可选）"
     },
     "ph": {
       "mall_id": "your-mall",
@@ -184,7 +186,8 @@
       "shop_domain": "your-store.myharavan.com",
       "subdomain": "your-company（取自 your-company.gorgias.com）",
       "email": "agent@example.com",
-      "app_key": "yotpo app key"
+      "app_key": "yotpo app key",
+      "base_url": "https://partner-api.example.go2joy.vn"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -216,6 +219,10 @@
     "gorgias": {
       "title": "Gorgias",
       "subtitle": "工单系统——升级的会话可作为 Gorgias 工单转交。"
+    },
+    "go2joy_partner_api": {
+      "title": "Go2Joy 合作伙伴数据 API",
+      "subtitle": "连接只读 API，提供已登录酒店的价格、政策、预订和结算数据。"
     },
     "syncing": "同步中…",
     "syncProducts": "导入商品",
@@ -883,5 +890,18 @@
     "saveError": "未能保存展示限制",
     "keyIssued": "已生成邀请链接",
     "keyError": "未能生成邀请链接"
+  },
+  "partnerData": {
+    "title": "合作伙伴数据查询",
+    "subtitle": "已登录的酒店用户询问自己酒店的价格、政策、预订和结算时，助手会使用合作伙伴（Go2Joy）数据 API 的实时数据作答。默认关闭。",
+    "enable": "已登录用户提问时查询酒店的实时数据",
+    "hint": "仅适用于通过 Hotel Admin 登录且酒店和角色已验证的用户。酒店始终来自已签名的身份，绝不来自聊天消息。",
+    "serverOff": "整个服务器已关闭（PARTNER_DATA_ENABLED）。运维人员开启之前，此开关不会生效。",
+    "modeMock": "示例数据（mock）：回答使用内置示例酒店，而非真实数据。",
+    "modeLive": "真实数据：回答使用真实的合作伙伴 API。",
+    "notConfigured": "尚未保存连接信息（基础 URL 和 API 密钥），真实数据模式需要。",
+    "connection": "连接",
+    "saved": "已保存合作伙伴数据查询设置",
+    "saveError": "无法保存合作伙伴数据查询设置"
   }
 }

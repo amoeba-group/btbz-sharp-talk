@@ -140,6 +140,19 @@ regardless of these.
 available for alert routing only while "On duty" in the console AND the console polled within this
 many seconds (the 10 s alert poll is the heartbeat). Blank or non-positive = default.
 
+**Partner data lookup (PLN-261012 SG-30/31/32)** — lets a signed-in hotel user's rate / policy / booking /
+settlement questions be answered from the partner (Go2Joy) data API. **Everything defaults OFF** and a tenant that
+never opts in behaves exactly as before. Draft API contract: `docs/guide/API-REQ-Go2Joy-Partner-Data.openapi.yaml`
+(Go2Joy's real spec and key, requirements R8/R9, are not delivered yet).
+| Variable | Default | Purpose |
+|---|---|---|
+| `PARTNER_DATA_ENABLED` | off | server-wide switch (`1`/`true`/`yes`/`on`); the tenant must ALSO turn it on in Settings → Etc (`tenants.partner_data_enabled`) |
+| `PARTNER_API_MODE` | `mock` | `mock` = built-in sample hotels (no real data); `live` = real HTTP API using the tenant's `go2joy_partner_api` credentials (base URL, API key, optional signing secret). Anything but `live` is `mock` |
+| `PARTNER_API_TIMEOUT_MS` | 3000 | per attempt (GET only, one jittered retry on network error/5xx) |
+| `PARTNER_API_BUDGET_MS` | 7000 | wall-clock cap across attempts |
+| `PARTNER_API_PRIVATE_HOSTS` | — | comma list of hostnames/IPs the OPERATOR allows even though private or plain http (e.g. when the partner API is on Go2Joy's own network); plain http is refused in production. Tenants cannot widen it |
+| `PARTNER_CLAIMS_MAX_AGE_SEC` | 28800 | identity claims older than this (8 h) no longer allow a data lookup — the user is asked to sign in again |
+
 ### 4.3 Shopify (optional — features default-safe/disabled when unset)
 | Variable | Purpose |
 |---|---|

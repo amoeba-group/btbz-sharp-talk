@@ -173,7 +173,9 @@
       "secret_key": "Secret key",
       "subdomain": "Subdomain tài khoản",
       "email": "Email tài khoản",
-      "webhook_secret": "Webhook secret (trạng thái L2)"
+      "webhook_secret": "Webhook secret (trạng thái L2)",
+      "base_url": "URL gốc",
+      "signing_secret": "Khóa ký yêu cầu (tùy chọn)"
     },
     "ph": {
       "mall_id": "gian-hang-cua-ban",
@@ -184,7 +186,8 @@
       "shop_domain": "cua-hang-cua-ban.myharavan.com",
       "subdomain": "cong-ty-cua-ban (từ cong-ty-cua-ban.gorgias.com)",
       "email": "agent@example.com",
-      "app_key": "yotpo app key"
+      "app_key": "yotpo app key",
+      "base_url": "https://partner-api.example.go2joy.vn"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -216,6 +219,10 @@
     "gorgias": {
       "title": "Gorgias",
       "subtitle": "Helpdesk — các cuộc trò chuyện được chuyển tiếp có thể chuyển thành ticket Gorgias."
+    },
+    "go2joy_partner_api": {
+      "title": "API dữ liệu đối tác Go2Joy",
+      "subtitle": "Kết nối API chỉ đọc cung cấp giá phòng, chính sách, đặt phòng và đối soát của khách sạn đã đăng nhập."
     },
     "syncing": "Đang đồng bộ…",
     "syncProducts": "Nhập sản phẩm",
@@ -883,5 +890,18 @@
     "saveError": "Không lưu được giới hạn hiển thị",
     "keyIssued": "Đã phát hành liên kết mời",
     "keyError": "Không phát hành được liên kết mời"
+  },
+  "partnerData": {
+    "title": "Tra cứu dữ liệu đối tác",
+    "subtitle": "Cho phép trợ lý trả lời người dùng khách sạn đã đăng nhập về giá phòng, chính sách, đặt phòng và đối soát của chính khách sạn họ, lấy từ API dữ liệu đối tác (Go2Joy). Mặc định tắt.",
+    "enable": "Tra cứu dữ liệu trực tiếp của khách sạn khi người dùng đã đăng nhập hỏi",
+    "hint": "Chỉ áp dụng cho người dùng đăng nhập qua Hotel Admin với khách sạn và vai trò đã xác minh. Khách sạn luôn lấy từ danh tính đã ký, không bao giờ từ nội dung tin nhắn.",
+    "serverOff": "Đang tắt trên toàn máy chủ (PARTNER_DATA_ENABLED). Công tắc này chưa có hiệu lực cho đến khi bên vận hành bật.",
+    "modeMock": "Dữ liệu mẫu (mock): câu trả lời dùng khách sạn mẫu có sẵn, không phải dữ liệu thật.",
+    "modeLive": "Dữ liệu thật: câu trả lời dùng API đối tác thực tế.",
+    "notConfigured": "Chưa lưu kết nối (URL gốc và khóa API). Cần khi chạy chế độ dữ liệu thật.",
+    "connection": "Kết nối",
+    "saved": "Đã lưu cài đặt tra cứu dữ liệu đối tác",
+    "saveError": "Không thể lưu cài đặt tra cứu dữ liệu đối tác"
   }
 }
