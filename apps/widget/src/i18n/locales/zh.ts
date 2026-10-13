@@ -167,16 +167,16 @@ export const zh: Translation = {
 
   contact: {
     title: '联系客服',
-    phone: '1588-0000',
-    hours: '周一至周五 10:00–18:00',
-    email: 'help@ivy.com',
+    // No `phone`, `email`, `hours` or `emailHours` here on purpose (w3c, ops-manual finding 8): they used
+    // to hold IVY's own placeholder phone, address and opening hours, which every other tenant's
+    // customers then saw. ContactCard reads them with an empty default and draws a method only when
+    // it has a value (lib/contact-card.ts), so a bundle without them offers just "chat with an agent".
     chatAgent: '与客服聊天',
     methods: {
       phone: '电话咨询',
       email: '邮件咨询',
       chat: '在线客服',
     },
-    emailHours: '24 小时受理 · 1 个工作日内回复',
   },
 
   affiliate: {

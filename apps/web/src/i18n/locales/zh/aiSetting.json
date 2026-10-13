@@ -448,7 +448,7 @@
     "guestPolicy": "未登录的访客",
     "guestPolicy_open": "照常回答",
     "guestPolicy_login_guidance": "仅引导登录或注册",
-    "guestPolicyHint": "选择登录引导后，未登录访客只会从标记为\"对访客可见\"的分类中获得回答；其他问题会收到登录提示（在下方\"访客引导\"中编辑）。从下一条消息起生效，无需部署。"
+    "guestPolicyHint": "选择登录引导后，未登录访客只会从“可查看对象”为“公开”的分类中获得回答；其他问题会收到登录提示（在下方“访客引导”中编辑）。从下一条消息起生效，无需部署。"
   },
   "agentScope": {
     "button": "客服",
@@ -545,5 +545,11 @@
     "hostLinkTemplate": "\"在您的系统中打开\"链接模板",
     "hostLinkTemplateHint": "{hotelSn} 会替换为已签名的酒店键；控制台将在合作伙伴会话中显示\"在主系统中打开\"按钮。留空 = 不显示按钮。",
     "hostLinkTemplateInvalid": "必须是包含 {hotelSn} 的 https:// URL。"
+  },
+  "toast": {
+    "configSaved": "AI 配置已保存。",
+    "settingUpdated": "AI 设置已更新。",
+    "ruleAdded": "已添加规则。",
+    "ruleDeleted": "已删除规则。"
   }
 }

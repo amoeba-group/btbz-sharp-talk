@@ -2,9 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { dashboardService } from './dashboard.service';
 import { useTenantKey } from '@/lib/use-tenant-key';
 
-export const useDashboard = () => {
+/** `enabled: false` for a rank the API would answer 403 (staff): no request, no swallowed error. */
+export const useDashboard = (enabled = true) => {
   const tenantKey = useTenantKey();
-  return useQuery({ queryKey: ['dashboard', tenantKey], queryFn: dashboardService.dashboard });
+  return useQuery({ queryKey: ['dashboard', tenantKey], queryFn: dashboardService.dashboard, enabled });
 };
 
 export const useIntegrationStatus = () => {
@@ -15,12 +16,13 @@ export const useIntegrationStatus = () => {
   });
 };
 
-export const useRecentOrders = () => {
+export const useRecentOrders = (enabled = true) => {
   const tenantKey = useTenantKey();
   return useQuery({
     queryKey: ['dashboard', tenantKey, 'recent-orders'],
     queryFn: dashboardService.recentOrders,
     // Needs the operations capability; don't retry on RBAC/errors on the dashboard.
     retry: false,
+    enabled,
   });
 };

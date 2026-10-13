@@ -104,6 +104,8 @@ export class UserService {
     actorType: 'user' | 'admin' = 'user',
     /** Operational region (PLN-261007); ''/undefined = nationwide. */
     region?: string | null,
+    /** Display name (w3c, ops-manual finding 13); blank/undefined = none yet. */
+    name?: string | null,
   ): Promise<InviteUserResponse> {
     const existing = await this.userRepo.findOne({ where: { tenantId, email } });
     if (existing) {
@@ -124,6 +126,7 @@ export class UserService {
         mustChangePassword: 1,
         invitedAt: now,
         region: region || null,
+        name: name?.trim() ? name.trim().slice(0, 80) : null,
       }),
     );
 
@@ -277,6 +280,29 @@ export class UserService {
     return this.toResponseWithLabels(user);
   }
 
+  /**
+   * Set or clear a user's display name (w3c, ops-manual finding 13). '' clears it, after which the
+   * console shows the e-mail's words (`displayNameOf`) and the customer's widget shows no name.
+   * Audited without the name itself: the audit row says WHO was renamed, not what the value was.
+   */
+  async updateName(tenantId: number, userId: number, name: string, actorId?: number): Promise<UserResponse> {
+    const user = await this.getTenantUser(tenantId, userId);
+    const clean = String(name ?? '').trim().slice(0, 80);
+    user.name = clean || null;
+    await this.userRepo.save(user);
+    if (actorId != null) {
+      await this.audit.write({
+        tenantId,
+        actorType: 'user',
+        actorId,
+        action: 'user.name_changed',
+        target: `user:${user.id}`,
+        metadata: { cleared: !clean },
+      });
+    }
+    return this.toResponseWithLabels(user);
+  }
+
   async updateStatus(tenantId: number, userId: number, status: string): Promise<UserResponse> {
     const user = await this.getTenantUser(tenantId, userId);
     user.status = status;
@@ -307,13 +333,44 @@ export class UserService {
     return JobLabelMapper.toResponse(label);
   }
 
-  async updateLabel(tenantId: number, id: number, name: string): Promise<JobLabelResponse> {
+  /**
+   * Rename a job label (w3c, ops-manual finding 1: the Users screen now has a "Role names"
+   * dialog). The name is trimmed, must not be blank, and must not repeat another label's name in
+   * the tenant (two roles called "CS" would be indistinguishable in every dropdown). Audited with
+   * the old and new wording - role names are configuration, not personal data.
+   */
+  async updateLabel(tenantId: number, id: number, name: string, actorId?: number): Promise<JobLabelResponse> {
     const label = await this.labelRepo.findOne({ where: { id, tenantId } });
     if (!label) {
       throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
-    label.name = name;
+    const clean = String(name ?? '').trim();
+    if (!clean) {
+      throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.BAD_REQUEST, {
+        name: ['must not be blank'],
+      });
+    }
+    const siblings = await this.labelRepo.find({ where: { tenantId } });
+    const clash = siblings.some((l) => String(l.id) !== String(label.id) && l.name.trim().toLowerCase() === clean.toLowerCase());
+    if (clash) {
+      this.logger.warn(`label rename refused: tenant=${tenantId} label=${label.code} name already used by another role`);
+      throw new BusinessException(ERROR_CODE.DUPLICATE_RESOURCE, HttpStatus.CONFLICT, {
+        name: ['another role already has this name'],
+      });
+    }
+    const before = label.name;
+    label.name = clean;
     await this.labelRepo.save(label);
+    if (actorId != null && before !== clean) {
+      await this.audit.write({
+        tenantId,
+        actorType: 'user',
+        actorId,
+        action: 'job_label.renamed',
+        target: `job_label:${label.id}`,
+        metadata: { code: label.code, from: before, to: clean },
+      });
+    }
     return JobLabelMapper.toResponse(label);
   }
 

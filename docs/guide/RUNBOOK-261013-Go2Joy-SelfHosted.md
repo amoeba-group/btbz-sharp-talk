@@ -488,20 +488,20 @@ Dùng thang SEV1/SEV2/SEV3 của `INCIDENT-RESPONSE.md` cho sự cố dữ liệ
 
 ### 11.1 Quy tắc lưu giữ (đã kiểm chứng trong mã)
 
-* `CONVERSATION_LOG_RETENTION_DAYS`: **để trống hoặc `0` KHÔNG có nghĩa là giữ mãi** — mã dùng **365 ngày** (`retention.service.ts`). (Chú thích trong mẫu env nói "giữ mãi" là sai; việc sửa chú thích thuộc SG-70.) Hồ sơ Go2Joy đang đặt 180 (bản nháp — cần khớp với thông báo quyền riêng tư đã công bố).
+* `CONVERSATION_LOG_RETENTION_DAYS`: **để trống hoặc `0` KHÔNG có nghĩa là giữ mãi** — mã dùng **365 ngày** (`retention.service.ts`). (Chú thích "giữ mãi" sai trong các mẫu env đã được sửa ở SG-70.) Hồ sơ Go2Joy đang đặt 180 (bản nháp — cần khớp với thông báo quyền riêng tư đã công bố).
 * Bộ lập lịch chạy mỗi `RETENTION_PURGE_INTERVAL_HOURS` (mặc định 24; lần đầu 5 phút sau khi khởi động; `0` tắt).
 * Mỗi lần xoá: tệp đính kèm (cả tệp trên đĩa) → tin nhắn → hội thoại → sự kiện hành trình → thông báo → phiên cũ → bản ghi kiểm duyệt và cảnh báo chuyển người (chúng trích dẫn tin nhắn). Số liệu sử dụng AI có cửa sổ riêng `AI_USAGE_RETENTION_DAYS` (400 ngày) vì chỉ là bộ đếm.
-* **Chưa nằm trong cửa sổ lưu giữ**: bảng `customers` và `audit_logs` (đang được mở rộng trong SG-70). Cho tới khi đó, hai bảng này giữ dữ liệu lâu hơn thời hạn công bố — pháp chế cần biết.
+* **Hai bảng có bộ dọn riêng, TẮT theo mặc định (SG-70, `opt-in-retention.service.ts`)**: `CUSTOMER_RETENTION_DAYS` — khách không còn hoạt động (phiên, đơn hàng) sau N ngày được **ẩn danh** (không xoá hàng, vì đơn hàng, thông báo và phiên còn giữ id khách); `AUDIT_LOG_RETENTION_DAYS` — xoá `audit_logs` cũ hơn N ngày, với **sàn 90 ngày** (việc này cũng xoá bằng chứng đồng ý `consent.*` và hồ sơ `dsar.*` cũ hơn N, nên chọn N không ngắn hơn thời gian dài nhất bạn có thể phải chứng minh một sự đồng ý hay một yêu cầu). Để trống hoặc `0` = không dọn. Hai bộ dọn chạy cùng bộ lập lịch ở trên và cùng nút kích hoạt tay (11.2). Đây là quyết định pháp lý: chỉ bật sau khi pháp chế chốt thời hạn. **Chưa có cờ "giữ lại theo pháp luật" cho từng khách**: khi có yêu cầu giữ lại, hãy tắt hoặc nâng thời hạn **trước** lần chạy kế tiếp (phần đã ẩn danh hoặc đã xoá không khôi phục được). Nếu không đặt hai biến này, hai bảng vẫn giữ dữ liệu lâu hơn thời hạn công bố — pháp chế cần biết.
 
 ### 11.2 Kích hoạt tay và sau khôi phục
 
-Quản trị nền tảng có thể kích hoạt ngay: `POST /api/v1/privacy/retention/purge` với token của tài khoản `super_admin`/`admin`. Làm việc này **sau mỗi lần khôi phục bản sao lưu**: dữ liệu đã quá hạn nhưng nằm trong bản sao lưu sẽ quay lại.
+Quản trị nền tảng có thể kích hoạt ngay: `POST /api/v1/privacy/retention/purge` với token của tài khoản `super_admin`/`admin` (cũng chạy hai bộ dọn tùy chọn ở 11.1 nếu đã đặt biến). Làm việc này **sau mỗi lần khôi phục bản sao lưu**: dữ liệu đã quá hạn nhưng nằm trong bản sao lưu sẽ quay lại.
 
 ### 11.3 Yêu cầu của chủ thể dữ liệu (DSAR)
 
 Hiện có (kiểm chứng trong `privacy.controller.ts`): người dùng widget tự xuất (`GET /api/v1/privacy/export`) và xoá/ẩn danh (`POST /api/v1/privacy/delete`) dữ liệu của mình bằng session token — **chỉ với danh tính đã được xác minh**, khách vãng lai bị từ chối (và việc từ chối được ghi `dsar.denied`); tắt chia sẻ (`opt-out`). Mọi thao tác ghi `audit_logs` (`dsar.export`, `dsar.delete`, `dsar.denied`). Sau khi xoá, danh tính được nhớ trong bảng `erased_identities` (dưới dạng blind index) để không bị nhập lại.
 
-Chưa có: công cụ DSAR phía vận hành (SG-70). Cho tới khi có, yêu cầu gửi trực tiếp tới Go2Joy được xử lý theo mục 13 (hỗ trợ Amoeba, có ticket); **Amoeba không tự ý truy cập dữ liệu**.
+**Công cụ DSAR phía vận hành đã có (SG-70)**: trong console, **Cài đặt gian hàng → tab Yêu cầu dữ liệu** (master và director; xem sổ tay vận hành Go2Joy mục 8.5). Người xử lý tra cứu khách theo email, số điện thoại hoặc ID bên ngoài (kết quả bị che), **xuất** hoặc **xoá** (ẩn danh vĩnh viễn, phải nhập đúng ID khách), mọi bước ghi `audit_logs` (`dsar.lookup`, `dsar.export`, `dsar.delete`; từ khoá tìm không được lưu). API tương ứng: `POST /api/v1/privacy/operator/{lookup,export,delete}`. Hạn chế đã biết: không có cờ giữ lại theo pháp luật cho từng khách; tìm theo số điện thoại chỉ quét tối đa 20.000 khách (cũ nhất trước). Yêu cầu gửi trực tiếp tới Go2Joy vẫn được người của Go2Joy xử lý bằng công cụ này; yêu cầu cần hỗ trợ Amoeba đi theo mục 13 (có ticket); **Amoeba không tự ý truy cập dữ liệu**.
 
 **Sổ đăng ký DSAR ngoài hệ thống**: cơ sở dữ liệu không phải chỗ an toàn để lưu bằng chứng đã xoá, vì khôi phục bản sao lưu sẽ hoàn tác cả việc xoá lẫn bản ghi `audit_logs` / `erased_identities`. Go2Joy giữ sổ riêng (ngày nhận, người yêu cầu, ngày xử lý, ai xử lý) và, sau mỗi lần khôi phục, **xử lý lại** mọi yêu cầu đã hoàn tất sau ngày của bản sao lưu.
 

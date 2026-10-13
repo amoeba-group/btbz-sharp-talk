@@ -1,5 +1,5 @@
 import { FindOperator } from 'typeorm';
-import { AgentAlertService } from './agent-alert.service';
+import { AgentAlertService, alertSubjectPrefix } from './agent-alert.service';
 import type { AgentAlert } from './entity/agent-alert.entity';
 import type { RoutingPolicy } from '../ai-engine/handoff-router.service';
 import { fakeRepo } from './testing/fake-table';
@@ -369,7 +369,28 @@ describe('AgentAlertService.pageUnclaimed — the UNCLAIMED re-page (SG-63)', ()
     expect(slackText()).toContain('Region: North');
     expect(slackText()).toContain('Partner: Sao Mai (1721) · manager');
     expect(slackText()).toContain('> Hoa hồng?');
-    expect(h.mailer.send.mock.calls[0][0]).toMatchObject({ to: 'ops@example.com', subject: '[IVY Chat] UNCLAIMED — conversation #42' });
+    // Neutral product prefix by default (w3c, ops-manual finding 17); an operator sets ALERT_EMAIL_SUBJECT_PREFIX.
+    expect(h.mailer.send.mock.calls[0][0]).toMatchObject({ to: 'ops@example.com', subject: '[SharpTalk] UNCLAIMED — conversation #42' });
+  });
+
+  it("uses the operator's ALERT_EMAIL_SUBJECT_PREFIX for the subject (an IVY deployment keeps its old filter)", async () => {
+    const h = build({
+      sessions,
+      env: { ALERT_EMAIL_TO: 'ops@example.com', ALERT_EMAIL_SUBJECT_PREFIX: '[IVY Chat]' },
+      alerts: [{ id: 5, tenantId: 1, conversationId: 42, reason: 'user_request', status: 'new', preview: 'Hoa hồng?' }],
+    });
+    await h.svc.pageUnclaimed(conv(), page);
+    expect(h.mailer.send.mock.calls[0][0]).toMatchObject({ subject: '[IVY Chat] UNCLAIMED — conversation #42' });
+  });
+
+  it('names a partner-data outage in the alert text instead of a knowledge miss (w3c, ops-manual finding 5)', () => {
+    const h = build({ sessions, env: {} });
+    const text = h.svc.summary({ id: 9, conversationId: 42, reason: 'partner_unavailable', preview: 'Giá hôm nay?' } as never, {});
+    expect(text).toContain('Partner data unavailable');
+    expect(text).not.toContain('knowledge base');
+    expect(h.svc.summary({ id: 9, conversationId: 42, reason: 'partner_unverified', preview: null } as never, {})).toContain(
+      'could not be verified',
+    );
   });
 
   it('shows the unmapped province instead of a region when the table did not list it', async () => {
@@ -561,5 +582,19 @@ describe('AgentAlertService — event wiring', () => {
     // The escalation handler creates an alert.
     await handlers.get('escalation.requested')!({ tenantId: 1, conversationId: 77, reason: 'user_request' });
     expect(h.alerts.table.some((a) => a.conversationId === 77)).toBe(true);
+  });
+});
+
+describe('alertSubjectPrefix', () => {
+  it('defaults to the neutral [SharpTalk] and never to a tenant brand', () => {
+    expect(alertSubjectPrefix(undefined)).toBe('[SharpTalk]');
+    expect(alertSubjectPrefix('')).toBe('[SharpTalk]');
+    expect(alertSubjectPrefix('   ')).toBe('[SharpTalk]');
+  });
+
+  it('takes the operator value, on one line and bounded', () => {
+    expect(alertSubjectPrefix(' [Go2Joy Chat] ')).toBe('[Go2Joy Chat]');
+    expect(alertSubjectPrefix('[A]\r\nBcc: x@y.z')).toBe('[A] Bcc: x@y.z');
+    expect(alertSubjectPrefix('x'.repeat(100)).length).toBe(40);
   });
 });

@@ -51,5 +51,48 @@
     "stale": "근무 중 · 접속 없음",
     "staleHint": "근무로 켜 두었지만 최근 콘솔 접속이 없어 새 상담 전환 알림이 이 사람을 건너뜁니다.",
     "off": "근무 외"
+  },
+  "name": "이름",
+  "namePlaceholder": "예: 홍길동",
+  "nameHint": "인계 메시지와 메모, 그리고 고객에게 보이는 상담원 이름으로 표시됩니다. 비워 두면 콘솔은 이메일 주소의 단어를 대신 사용합니다.",
+  "nameUnset": "(미설정)",
+  "rankName": {
+    "master": "마스터",
+    "director": "디렉터",
+    "manager": "매니저",
+    "staff": "스태프"
+  },
+  "statusName": {
+    "active": "활성",
+    "suspended": "정지됨",
+    "invited": "초대됨"
+  },
+  "invited": "사용자를 초대했습니다.",
+  "inviteError": "사용자를 초대하지 못했습니다.",
+  "tempPwError": "임시 비밀번호를 발급하지 못했습니다.",
+  "mfaResetError": "MFA를 초기화하지 못했습니다.",
+  "updated": "사용자를 수정했습니다.",
+  "updateError": "사용자를 수정하지 못했습니다.",
+  "roleNames": {
+    "open": "역할 이름",
+    "title": "역할 이름",
+    "intro": "아래 이름은 역할 열, 초대 양식, 필터, 팀 표에 표시됩니다. CS, SA처럼 팀에서 쓰는 말로 바꿔 보세요.",
+    "hint": "건드리지 않은 역할은 기본 이름을 유지하며 각자의 콘솔 언어로 표시됩니다. 직접 입력한 이름은 모든 언어에서 입력한 그대로 표시됩니다.",
+    "useDefault": "기본값 사용",
+    "nameOf": "역할 {{code}}의 이름",
+    "saved": "역할 이름을 저장했습니다.",
+    "saveError": "역할 이름을 저장하지 못했습니다.",
+    "errorDuplicate": "이미 같은 이름의 역할이 있습니다. 역할마다 다른 이름을 지정하세요.",
+    "errorBlank": "역할 이름은 비워 둘 수 없습니다.",
+    "consult": "상담",
+    "accounting": "회계",
+    "operations": "운영",
+    "sales_admin": "영업관리",
+    "meaning": {
+      "consult": "채팅 상담 처리",
+      "sales_admin": "상담과 고객·주문 조회",
+      "accounting": "제휴(어필리에이트)",
+      "operations": "주문, 고객, 캠페인, 리뷰, 지식"
+    }
   }
 }

@@ -4,6 +4,7 @@
 - Scope: a documentation stream. Deliverables under test: `apps/web/public/manual/go2joy-ops.{vi,en}.{md,html}`, the card in `apps/web/public/manual/index.html`, the per-document language list in `scripts/manual-md2html.mjs`, the 27 screenshots in `apps/web/public/manual/img/go2joy-ops-*.vi.jpg` (section 5), the capture script `scripts/manual-screenshots-go2joy-ops.mjs`.
 - Base: branch `feature/go2joy-s9-ops-manual` on `test/go2joy-integration` 689e9530. Environment for the browser checks: scratch DB `scratch_w3b`, API :3036 (AI engine = stub), console on Vite :5176, own Redis :6396. **Nothing deployed.**
 - No product code changed, so no jest/tsc/i18n run is owed by this stream (section 6 lists what was run anyway).
+- **Update (w3c, 2026-10-13):** the behaviours recorded here as defects (D6 silent Accept, D24 Korean label names and untranslated ranks, D48 KO language tab, D49 no display name, B4 toast cannot name the person, B5 silent 409, B9 Dashboard of zeros, B10 English save toast and KO tabs) were fixed later and re-verified: see [TCR-261013-w3c-polish](TCR-261013-w3c-polish.md). Read those rows as the state BEFORE the fixes; the manual was updated to the fixed behaviour.
 
 ## 1. Structure and serving
 

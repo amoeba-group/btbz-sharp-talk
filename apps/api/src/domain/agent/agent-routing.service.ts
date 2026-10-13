@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { CONVERSATION_STATUS, SENDER_TYPE, USER_REGION } from '@sharptalk/types';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Message } from '../chat/entity/message.entity';
@@ -14,6 +14,8 @@ import { AuditService } from '../audit/audit.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { partnerLabelOfClaims } from '../../global/util/partner-label.util';
+import { displayNameOf } from '../../global/util/user-display.util';
+import { escalationPreview } from '../chat/escalation-preview.util';
 
 const TEAMS: readonly string[] = Object.values(USER_REGION);
 /** English wording for a region team in alert channels and the thread note. */
@@ -174,10 +176,13 @@ export class AgentRoutingService {
 
     // Run the ladder again and page the new target. `supersede` is the de-dupe bypass.
     const policy = await this.router.routingPolicy(tenantId);
-    const lastUser = await this.msgRepo.findOne({
-      where: { conversationId, senderType: SENDER_TYPE.USER },
-      order: { id: 'DESC' },
-    });
+    // The question, not the team chip the customer pressed (w3c, ops-manual finding 16).
+    const preview = await escalationPreview((beforeId) =>
+      this.msgRepo.findOne({
+        where: { conversationId, senderType: SENDER_TYPE.USER, ...(beforeId != null ? { id: LessThan(beforeId) } : {}) },
+        order: { id: 'DESC' },
+      }),
+    );
     const session = await this.sessionRepo.findOne({
       where: { id: Number(conversation.sessionId) },
       select: { id: true, identityClaims: true },
@@ -188,7 +193,7 @@ export class AgentRoutingService {
         conversationId,
         sessionId: Number(conversation.sessionId),
         reason: 'rerouted',
-        preview: (lastUser?.body ?? '').slice(0, 300),
+        preview,
         targetUserIds: policy.assigneeUserIds,
         issueLabel: team.jobLabel,
         supportLabel: team.label,
@@ -327,8 +332,9 @@ export class AgentRoutingService {
 
   private async nameOf(tenantId: number, userId: number): Promise<string | null> {
     try {
-      const user = await this.userRepo.findOne({ where: { id: userId, tenantId }, select: { id: true, name: true } });
-      return user?.name?.trim() || null;
+      // Name, else the e-mail's words (w3c): the toast and the note then name the person.
+      const user = await this.userRepo.findOne({ where: { id: userId, tenantId }, select: { id: true, name: true, email: true } });
+      return displayNameOf(user);
     } catch {
       return null;
     }

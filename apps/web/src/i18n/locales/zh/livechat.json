@@ -481,5 +481,16 @@
     "errorEnded": "会话已结束，无法转交。",
     "errorTarget": "该团队或地区不可用。",
     "errorNotEnabled": "尚未开启团队分配。"
-  }
+  },
+  "toast": {
+    "proposeSent": "已提交审核。"
+  },
+  "actionError": {
+    "acceptCapacity": "您同时处理的会话数已达上限。请先结束或交还一个会话，再重新接入此会话。",
+    "accept": "无法接入该会话。",
+    "end": "无法结束该会话。",
+    "handBack": "无法将会话交还给 AI。"
+  },
+  "alarmReasonPartnerUnavailable": "暂时无法读取合作伙伴的数据，AI 无法给出数据。需要人工确认。",
+  "alarmReasonPartnerUnverified": "回答中的某个数据无法与酒店数据核对，AI 已暂缓回答。需要人工确认。"
 }

@@ -22,6 +22,7 @@ import { Fulfillment } from '../domain/order/entity/fulfillment.entity';
 import { Notification } from '../domain/notification/entity/notification.entity';
 import { IntegrationStatusEntity } from '../domain/integration/entity/integration-status.entity';
 import { resolveSeedIdentity, type SeedPasswordSource } from './seed-identity';
+import { DEFAULT_JOB_LABEL_NAME } from '@sharptalk/types';
 
 /**
  * Functions given an explicit stub row at bootstrap.
@@ -165,11 +166,13 @@ export async function runSeed(ds: DataSource, opts: SeedOptions = {}): Promise<S
   // Job labels + assign all to master
   const labelRepo = ds.getRepository(JobLabel);
   const ujlRepo = ds.getRepository(UserJobLabel);
+  // English-neutral default names (w3c): the console shows them in its own language until a
+  // master renames them in Users & Labels. Existing rows are never rewritten (findOne below).
   for (const [code, name] of [
-    ['consult', '상담'],
-    ['accounting', '회계'],
-    ['operations', '운영'],
-    ['sales_admin', '영업관리'], // PLN-261007
+    ['consult', DEFAULT_JOB_LABEL_NAME.consult],
+    ['accounting', DEFAULT_JOB_LABEL_NAME.accounting],
+    ['operations', DEFAULT_JOB_LABEL_NAME.operations],
+    ['sales_admin', DEFAULT_JOB_LABEL_NAME.sales_admin], // PLN-261007
   ]) {
     let label = await labelRepo.findOne({ where: { tenantId: tenant.id, code } });
     if (!label) label = await labelRepo.save(labelRepo.create({ tenantId: tenant.id, code, name }));

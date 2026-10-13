@@ -24,6 +24,7 @@ import { FormRow, Input, Select } from '@/components/Field';
 import { toast } from '@/store/toast-store';
 import { tenantLoginPath } from '@/lib/tenant-path';
 import type { JobLabel, TenantUser } from '@/domain/users/users.service';
+import { localizeJobLabels } from '@/domain/users/job-label-name';
 import {
   useAdminTenant,
   useInviteTenantUser,
@@ -60,7 +61,11 @@ export function TenantUsersPage() {
   const resetMfa = useResetTenantUserMfa(tenantUuid);
   const setUserStatus = useSetTenantUserStatus(tenantUuid);
 
-  const labels = useMemo<JobLabel[]>(() => jobLabels ?? [], [jobLabels]);
+  // Built-in role names read in the console language (w3c); renamed ones as typed.
+  const labels = useMemo<JobLabel[]>(
+    () => localizeJobLabels(jobLabels ?? [], (code) => tu(`roleNames.${code}`, { defaultValue: '' }) || undefined),
+    [jobLabels, tu],
+  );
 
   const [inviteOpen, setInviteOpen] = useState(false);
   const [email, setEmail] = useState('');
@@ -138,8 +143,18 @@ export function TenantUsersPage() {
 
   const columns: Column<TenantUser>[] = [
     { key: 'email', header: tu('email'), render: (u) => u.email },
-    { key: 'rank', header: tu('rank'), render: (u) => <Badge tone="primary">{u.rank}</Badge> },
-    { key: 'status', header: tu('status'), render: (u) => <StatusBadge status={u.status} /> },
+    {
+      key: 'rank',
+      header: tu('rank'),
+      render: (u) => <Badge tone="primary">{tu(`rankName.${u.rank}`, { defaultValue: u.rank })}</Badge>,
+    },
+    {
+      key: 'status',
+      header: tu('status'),
+      render: (u) => (
+        <StatusBadge status={u.status} label={tu(`statusName.${u.status}`, { defaultValue: u.status ?? '' })} />
+      ),
+    },
     { key: 'createdAt', header: tu('created'), render: (u) => fmtDate(u.createdAt) },
     {
       key: 'action',
@@ -280,7 +295,7 @@ export function TenantUsersPage() {
           <Select value={rank} onChange={(e) => setRank(e.target.value)}>
             {RANKS.map((r) => (
               <option key={r} value={r}>
-                {r}
+                {tu(`rankName.${r}`)}
               </option>
             ))}
           </Select>

@@ -21,3 +21,4 @@ export * from './common/kb-version';
 export * from './common/audience';
 export * from './common/kb-access';
 export * from './common/gate-decision';
+export * from './common/job-label-name';

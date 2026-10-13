@@ -448,7 +448,7 @@
     "guestPolicy": "Visitantes sin iniciar sesión",
     "guestPolicy_open": "Responder con normalidad",
     "guestPolicy_login_guidance": "Solo guiar para iniciar sesión o registrarse",
-    "guestPolicyHint": "Con la guía de inicio de sesión, un visitante sin sesión solo recibe respuestas de las categorías marcadas \"Visible para invitados\"; cualquier otra pregunta recibe el aviso de inicio de sesión (edítalo en Guía para invitados). Se aplica desde el siguiente mensaje, sin despliegue."
+    "guestPolicyHint": "Con la guía de inicio de sesión, un visitante sin sesión solo recibe respuestas de las categorías cuyo «Quién puede leer» es «Público»; cualquier otra pregunta recibe el aviso de inicio de sesión (edítalo en Guía para invitados). Se aplica desde el siguiente mensaje, sin despliegue."
   },
   "agentScope": {
     "button": "Agentes",
@@ -545,5 +545,11 @@
     "hostLinkTemplate": "Plantilla de enlace \"Abrir en tu sistema\"",
     "hostLinkTemplateHint": "{hotelSn} se sustituye por la clave de hotel firmada; la consola mostrará un botón \"Abrir en el sistema anfitrión\" en las conversaciones de socios. En blanco = sin botón.",
     "hostLinkTemplateInvalid": "Debe ser una URL https:// que contenga {hotelSn}."
+  },
+  "toast": {
+    "configSaved": "Configuración de IA guardada.",
+    "settingUpdated": "Ajuste de IA actualizado.",
+    "ruleAdded": "Regla añadida.",
+    "ruleDeleted": "Regla eliminada."
   }
 }

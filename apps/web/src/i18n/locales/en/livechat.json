@@ -481,5 +481,16 @@
     "errorEnded": "This conversation has ended and cannot be handed over.",
     "errorTarget": "That team or region is not available.",
     "errorNotEnabled": "Team routing is not switched on."
-  }
+  },
+  "toast": {
+    "proposeSent": "Sent for review."
+  },
+  "actionError": {
+    "acceptCapacity": "You already hold the maximum number of conversations at once. End or hand back one, then accept this one again.",
+    "accept": "Could not accept the conversation.",
+    "end": "Could not end the conversation.",
+    "handBack": "Could not hand the conversation back to the AI."
+  },
+  "alarmReasonPartnerUnavailable": "The partner's data could not be read just now, so the AI could not give figures. A person needs to confirm them.",
+  "alarmReasonPartnerUnverified": "The AI held back its answer because a figure in it could not be checked against the hotel data. A person needs to confirm it."
 }

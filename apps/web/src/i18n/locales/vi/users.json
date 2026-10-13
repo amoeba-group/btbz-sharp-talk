@@ -51,5 +51,48 @@
     "stale": "Đang trực · không kết nối",
     "staleHint": "Đã bật trực nhưng gần đây không thấy console, nên các yêu cầu chuyển người mới sẽ bỏ qua người này.",
     "off": "Không trực"
+  },
+  "name": "Tên",
+  "namePlaceholder": "ví dụ: Trần Linh",
+  "nameHint": "Hiện trong thông báo và ghi chú chuyển đội, và hiện cho khách hàng là tên nhân viên. Để trống thì console dùng chữ lấy từ địa chỉ email.",
+  "nameUnset": "(chưa đặt)",
+  "rankName": {
+    "master": "Master",
+    "director": "Giám đốc",
+    "manager": "Quản lý",
+    "staff": "Nhân viên"
+  },
+  "statusName": {
+    "active": "Hoạt động",
+    "suspended": "Bị tạm khóa",
+    "invited": "Đã mời"
+  },
+  "invited": "Đã mời người dùng.",
+  "inviteError": "Không mời được người dùng.",
+  "tempPwError": "Không cấp được mật khẩu tạm.",
+  "mfaResetError": "Không đặt lại được MFA.",
+  "updated": "Đã cập nhật người dùng.",
+  "updateError": "Không cập nhật được người dùng.",
+  "roleNames": {
+    "open": "Tên vai trò",
+    "title": "Tên vai trò",
+    "intro": "Các tên dưới đây hiện ở cột Vai trò, biểu mẫu mời, các bộ lọc và bảng đội. Hãy đổi thành cách gọi nhóm bạn dùng, ví dụ CS và SA.",
+    "hint": "Vai trò bạn không đụng tới giữ tên có sẵn và hiện theo ngôn ngữ console của từng người. Tên bạn gõ được hiện đúng như đã gõ, ở mọi ngôn ngữ.",
+    "useDefault": "Dùng tên mặc định",
+    "nameOf": "Tên của vai trò {{code}}",
+    "saved": "Đã lưu tên vai trò.",
+    "saveError": "Không lưu được tên vai trò.",
+    "errorDuplicate": "Đã có vai trò khác mang tên này. Hãy đặt mỗi vai trò một tên riêng.",
+    "errorBlank": "Tên vai trò không được để trống.",
+    "consult": "Hỗ trợ khách hàng",
+    "accounting": "Kế toán",
+    "operations": "Vận hành",
+    "sales_admin": "Hỗ trợ kinh doanh",
+    "meaning": {
+      "consult": "xử lý các cuộc trò chuyện",
+      "sales_admin": "trò chuyện, thêm khách hàng và đơn hàng",
+      "accounting": "cộng tác viên",
+      "operations": "đơn hàng, khách hàng, chiến dịch, đánh giá, tri thức"
+    }
   }
 }

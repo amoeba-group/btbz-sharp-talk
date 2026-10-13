@@ -4,7 +4,7 @@ import { BellRing } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Modal } from '@/components/Modal';
 import { Button } from '@/components/Button';
-import { useAgentAlerts, useAckAlert } from './live-chat.hooks';
+import { useAgentAlerts, useAckAlert, useTeamLabel } from './live-chat.hooks';
 import type { AgentAlert } from './live-chat.service';
 import { useAuthStore } from '@/store/auth-store';
 import { makeCan } from '@/lib/rbac';
@@ -26,6 +26,7 @@ export function EscalationAlarm() {
   const canHandle = makeCan(principal)('live_chat');
   const { data: alerts } = useAgentAlerts(canHandle);
   const ack = useAckAlert();
+  const teamLabel = useTeamLabel(canHandle);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
   const current: AgentAlert | undefined = useMemo(
@@ -61,7 +62,13 @@ export function EscalationAlarm() {
             : // The AI engine was down — an outage, not missing knowledge (PLN-261012 SG-84).
               current.reason === 'engine_unavailable'
               ? 'alarmReasonEngine'
-              : 'alarmReasonUserRequest';
+              : // The partner data could not be read / a figure could not be verified: their own words,
+                // not "no answer in the knowledge base" (w3c, ops-manual finding 5).
+                current.reason === 'partner_unavailable'
+                ? 'alarmReasonPartnerUnavailable'
+                : current.reason === 'partner_unverified'
+                  ? 'alarmReasonPartnerUnverified'
+                  : 'alarmReasonUserRequest';
   // Who the alert is about (PLN-261012 SG-66): the team, the region (or the province the table
   // does not list), the partner hotel, how long it has waited, and - in strict regional mode - which
   // team it is scoped to. Each line only when the conversation says it.
@@ -71,7 +78,8 @@ export function EscalationAlarm() {
       ? t('region.unmappedLine', { province: current.supportRegionHint })
       : null;
   const partner = current.partner
-    ? `${current.partner.hotelName || current.partner.hotelSn} (${current.partner.hotelSn}) · ${current.partner.role}`
+    ? // The role as the partner strip shows it (Manager / Receptionist), not the raw code (w3c, finding 4).
+      `${current.partner.hotelName || current.partner.hotelSn} (${current.partner.hotelSn}) · ${t(`partner.role.${current.partner.role}`, { defaultValue: current.partner.role })}`
     : null;
 
   const dismiss = () => {
@@ -112,7 +120,7 @@ export function EscalationAlarm() {
             {current.supportType && (
               <>
                 <dt className="text-gray-400">{t('alarmTeam')}</dt>
-                <dd>{t(`team.${current.supportType}`, { defaultValue: current.supportType })}</dd>
+                <dd>{teamLabel(current.supportType)}</dd>
               </>
             )}
             {regionLine && (

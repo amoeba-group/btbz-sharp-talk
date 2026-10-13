@@ -12,6 +12,7 @@ export const useAiSettings = () => {
 };
 
 export function useUpdateAiSetting() {
+  const { t } = useTranslation('aiSetting');
   const qc = useQueryClient();
   const tenantKey = useTenantKey();
   return useMutation({
@@ -26,7 +27,7 @@ export function useUpdateAiSetting() {
     }) => aiSettingsService.update(fn, { engine_id: engineId, params }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ai-settings', tenantKey] });
-      toast.success('AI setting updated.');
+      toast.success(t('toast.settingUpdated'));
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -60,7 +61,9 @@ export function useUpdateAiConfig() {
       qc.invalidateQueries({ queryKey: ['ai-config', tenantKey] });
       // Persona/rules live on the agent rows now — keep the agent bar in sync.
       qc.invalidateQueries({ queryKey: ['ai-agents', tenantKey] });
-      toast.success('AI configuration saved.');
+      // Localized (w3c, ops-manual finding 14): the Agent handoff card's Save used to read English
+      // in a Vietnamese console.
+      toast.success(t('toast.configSaved'));
     },
     // The server says WHICH row it refused (PLN-261012 SG-65): a region table or hand-off setting
     // that fails validation used to show only the generic code message. Error toasts stay until
@@ -85,26 +88,28 @@ export const useModerationRules = () => {
 };
 
 export function useCreateRule() {
+  const { t } = useTranslation('aiSetting');
   const qc = useQueryClient();
   const tenantKey = useTenantKey();
   return useMutation({
     mutationFn: aiSettingsService.createRule,
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['moderation', tenantKey, 'rules'] });
-      toast.success('Rule added.');
+      toast.success(t('toast.ruleAdded'));
     },
     onError: (e: Error) => toast.error(e.message),
   });
 }
 
 export function useDeleteRule() {
+  const { t } = useTranslation('aiSetting');
   const qc = useQueryClient();
   const tenantKey = useTenantKey();
   return useMutation({
     mutationFn: (id: string) => aiSettingsService.deleteRule(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['moderation', tenantKey, 'rules'] });
-      toast.success('Rule deleted.');
+      toast.success(t('toast.ruleDeleted'));
     },
     onError: (e: Error) => toast.error(e.message),
   });

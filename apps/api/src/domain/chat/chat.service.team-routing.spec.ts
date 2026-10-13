@@ -24,7 +24,7 @@ describe('ChatService.escalate — team routing', () => {
     ],
   };
 
-  function build(opts: { teams: TeamQuestion | null; channel?: string }) {
+  function build(opts: { teams: TeamQuestion | null; channel?: string; customerThread?: Array<Record<string, unknown>> }) {
     const conversation = { id: 77, sessionId: 5, tenantId: 1 } as Conversation;
     const convUpdate = jest.fn();
     const saved: Array<Record<string, unknown>> = [];
@@ -37,7 +37,17 @@ describe('ChatService.escalate — team routing', () => {
           saved.push(m);
           return m;
         }),
-        findOne: jest.fn(async () => ({ body: 'I need a person' })),
+        // Default: one plain customer message. A spec that wants a real thread (the chip is stored
+        // by escalate itself) passes `customerThread`; `id: LessThan(n)` steps back past a chip.
+        findOne: jest.fn(async (q?: { where?: { id?: { value?: number } } }) => {
+          if (!opts.customerThread) return { body: 'I need a person' };
+          const before = q?.where?.id?.value;
+          return (
+            [...opts.customerThread]
+              .sort((a, b) => Number(b.id) - Number(a.id))
+              .find((m) => before == null || Number(m.id) < before) ?? null
+          );
+        }),
       } as never,
       {} as never, // Session repo
       {} as never, // Tenant repo
@@ -111,6 +121,25 @@ describe('ChatService.escalate — team routing', () => {
       // The configured assignee still travels — the alert falls back to it
       // when no sales_admin agent is online.
       targetUserIds: [9],
+    });
+  });
+
+  it('the alert quotes the question the customer asked, not the team chip they pressed (w3c, ops-manual finding 16)', async () => {
+    const h = build({
+      teams: QUESTION,
+      customerThread: [
+        { id: 10, body: 'Hoa hồng tháng này là bao nhiêu?' },
+        // escalate stores this chip itself, right before it builds the event
+        { id: 12, body: 'Business Support', retrievalTrace: { kind: 'team_choice', supportType: 'business' } },
+      ],
+    });
+
+    await h.svc.escalate(h.session, 77, 'business');
+
+    expect(h.publish.mock.calls[0][1]).toMatchObject({
+      reason: 'user_request',
+      supportType: 'business',
+      preview: 'Hoa hồng tháng này là bao nhiêu?',
     });
   });
 

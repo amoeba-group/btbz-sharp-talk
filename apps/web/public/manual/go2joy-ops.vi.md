@@ -1,6 +1,6 @@
 # Sổ tay vận hành Go2Joy: CS và Sales Admin — Làm việc hằng ngày với hàng chờ chuyển người, vùng, quyền xem tri thức và số liệu thí điểm
 
-> Phiên bản 1.0 (bản nháp để Go2Joy rà soát) · 2026-10-13 · Biên soạn dựa trên mã nguồn và báo cáo triển khai PLN-261012 (SG-85)
+> Phiên bản 1.1 (bản nháp để Go2Joy rà soát) · 2026-10-13 · Biên soạn dựa trên mã nguồn và báo cáo triển khai PLN-261012 (SG-85); cập nhật sau khi sửa các lỗi sản phẩm tìm thấy lúc viết (RPT-261013-w3c-polish)
 > Đối tượng: **nhân viên CS và Sales Admin (SA)** (chương 1–4 và 10) · **trưởng nhóm** (thêm chương 9) · **master/director của Go2Joy** (chương 5–8) · bản tóm tắt tiếng Anh cho Amoeba: [go2joy-ops.en.md](go2joy-ops.en.md) và phụ lục A
 > Nhãn **in đậm** là đúng chữ trên giao diện tiếng Việt hiện tại; `mã` là giá trị kỹ thuật. Cài đặt ở các chương 5–8 nằm ở menu **Cài đặt gian hàng** và **Cài đặt AI**.
 > Bản trực tuyến: đường dẫn /manual của console (có bản HTML và Markdown). Tài liệu liên quan: [Sổ tay tri thức và cài đặt AI](knowledge-ai.vi.md) · [Sổ tay tổng hợp](user-manual.vi.md)
@@ -121,8 +121,8 @@ Nếu không ai đạt điều kiện ở các bước của §3.2 (kể cả kh
 
 Khi có yêu cầu chuyển người cho bạn (hoặc phát chung), console bật hộp thoại **Chuyển tiếp hội thoại** ở bất kỳ trang nào:
 
-- Dòng đầu: **Hội thoại #<số> cần nhân viên hỗ trợ.** Dòng thứ hai là lý do, ví dụ **Khách hàng yêu cầu gặp nhân viên.**, **Chưa ai nhận cuộc trò chuyện này.**, **Một nhân viên đã chuyển cuộc trò chuyện này sang đội của bạn.**, **Công cụ AI tạm thời không hoạt động nên không trả lời được. Cần nhân viên tiếp nhận.**
-- Khung chi tiết (chỉ hiện dòng có dữ liệu): **Đội**, **Vùng**, **Khách sạn** (tên, mã và vai trò; vai trò ở đây hiện bằng chữ tiếng Anh như `manager`, `receptionist`), **Đang chờ** (đồng hồ đếm), **Thông báo cho** (ví dụ **Chỉ đội Nam**) và đoạn xem trước tin nhắn của khách. Đoạn xem trước là **tin cuối cùng của khách**: khi khách vừa bấm chip chọn đội thì đó chính là tên đội (ví dụ *Hỗ trợ kinh doanh*), không phải câu hỏi; hãy mở hội thoại để đọc câu hỏi thật.
+- Dòng đầu: **Hội thoại #<số> cần nhân viên hỗ trợ.** Dòng thứ hai là lý do, ví dụ **Khách hàng yêu cầu gặp nhân viên.**, **Chưa ai nhận cuộc trò chuyện này.**, **Một nhân viên đã chuyển cuộc trò chuyện này sang đội của bạn.**, **Công cụ AI tạm thời không hoạt động nên không trả lời được. Cần nhân viên tiếp nhận.**, **Hiện chưa đọc được dữ liệu của đối tác nên AI không đưa được số liệu. Cần nhân viên xác nhận.** (API dữ liệu đối tác không đáp ứng) hoặc **AI đã giữ lại câu trả lời vì có số liệu không đối chiếu được với dữ liệu khách sạn. Cần nhân viên xác nhận.** Hai dòng sau chỉ khi tra cứu dữ liệu đối tác đang bật (§8.3); trước đây cả hai bị ghi nhầm là "AI không tìm được câu trả lời trong kho tri thức".
+- Khung chi tiết (chỉ hiện dòng có dữ liệu): **Đội**, **Vùng**, **Khách sạn** (tên, mã và vai trò; vai trò hiện như ở dải đối tác: **Quản lý**, **Lễ tân**, **Nhân viên nội bộ**), **Đang chờ** (đồng hồ đếm), **Thông báo cho** (ví dụ **Chỉ đội Nam**) và đoạn xem trước tin nhắn của khách. Đoạn xem trước là **câu khách đã hỏi**: tin gần nhất của khách, **không tính** chip chọn đội mà khách vừa bấm (tên đội đã nằm ở dòng **Đội**). Nếu khách chưa nhắn gì ngoài chip thì không có đoạn xem trước; hãy mở hội thoại để đọc đầy đủ.
 - Hai nút: **Mở hội thoại** (đưa bạn tới đúng hội thoại) và **Bỏ qua**.
 
 ![Hình 3. Hộp thoại Chuyển tiếp hội thoại](img/go2joy-ops-alarm.vi.jpg)
@@ -131,7 +131,7 @@ Khi có yêu cầu chuyển người cho bạn (hoặc phát chung), console b�
 
 **Nhận hội thoại:** mở hội thoại rồi bấm **Nhận** (hàng nút phía trên khung tin nhắn). Hội thoại chuyển sang **Nhân viên xử lý**, tên bạn xuất hiện ở **Phụ trách**, và các thông báo đang mở về hội thoại này được đóng cho đồng nghiệp. Khi xong việc: **Kết thúc**. Muốn trả hội thoại cho AI mà không kết thúc: **Trả lại cho AI**.
 
-💡 **Mẹo**: nếu bấm **Nhận** mà không có gì xảy ra, rất có thể bạn đang giữ đủ 3 hội thoại. Console hiện không hiện lỗi trong trường hợp này (xem §3.9).
+💡 **Mẹo**: nếu bạn đang giữ đủ số hội thoại tối đa (mặc định 3), bấm **Nhận** hiện thông báo đỏ *Bạn đang xử lý số cuộc trò chuyện tối đa cùng lúc. Hãy kết thúc hoặc trả lại một cuộc cho AI, rồi nhận lại cuộc này.* Thông báo đỏ nằm lại cho tới khi bạn đóng nó (xem §3.9).
 
 ---
 
@@ -146,7 +146,7 @@ Danh sách bên trái của **Trò chuyện trực tiếp** có các tab **Tất
 | Phần tử | Ý nghĩa |
 |---|---|
 | Dòng khách sạn: tên · mã hiển thị, kèm **đã ký** (xanh), **hết hạn** (vàng) hoặc, hiếm gặp, **tự khai** (vàng) | Khách sạn đối tác của phiên và độ tin cậy của thông tin đó (§2.3) |
-| Huy hiệu đội: **Hỗ trợ khách hàng** hoặc **Kinh doanh** | Đội khách đã chọn khi xin gặp nhân viên |
+| Huy hiệu đội: **Hỗ trợ khách hàng** hoặc **Hỗ trợ kinh doanh** | Đội khách đã chọn khi xin gặp nhân viên; chữ lấy từ tên đội của gian hàng (§6.3) |
 | Huy hiệu vùng: **Bắc** hoặc **Nam** | Đội vùng phụ trách khách sạn này |
 | Huy hiệu **?** màu cam | Tỉnh của khách sạn **không có** trong bảng vùng (§2.4) |
 | **Chờ mm:ss** | Đã chờ nhân viên bao lâu. Sau 5 phút chuyển đỏ kèm ⚠ |
@@ -243,7 +243,7 @@ Vùng được suy ra từ tỉnh đã ký của khách sạn: miền Bắc và 
 
 Thông báo gửi riêng chỉ người được gửi mới thấy, nên một hội thoại có thể nằm đó mà không ai nhìn. Vì vậy:
 
-- Nếu hội thoại **Đang chờ**, **chưa ai nhận** sau **5 phút** (mặc định), hệ thống tạo **thông báo mới phát chung** (ở chế độ **Nghiêm ngặt**: chỉ cho vùng đó và **Toàn quốc**, cho tới khi mở rộng) và gửi tin lên Slack và email. Tin gồm dòng **Reason: UNCLAIMED — nobody has taken this conversation yet**, dòng **Waiting: N min (reminder k of m)** và các dòng Team, Region, Partner; tiêu đề email dạng `[IVY Chat] UNCLAIMED — conversation #N` (tin gửi cho nhân viên bằng tiếng Anh). Trong console, hộp thoại báo hiện lý do **Chưa ai nhận cuộc trò chuyện này.**
+- Nếu hội thoại **Đang chờ**, **chưa ai nhận** sau **5 phút** (mặc định), hệ thống tạo **thông báo mới phát chung** (ở chế độ **Nghiêm ngặt**: chỉ cho vùng đó và **Toàn quốc**, cho tới khi mở rộng) và gửi tin lên Slack và email. Tin gồm dòng **Reason: UNCLAIMED — nobody has taken this conversation yet**, dòng **Waiting: N min (reminder k of m)** và các dòng Team, Region, Partner; tiêu đề email dạng `<tiền tố> UNCLAIMED — conversation #N` (tiền tố mặc định `[SharpTalk]`, IT đổi được bằng `ALERT_EMAIL_SUBJECT_PREFIX`; tin gửi cho nhân viên bằng tiếng Anh). Trong console, hộp thoại báo hiện lý do **Chưa ai nhận cuộc trò chuyện này.**
 - Nhắc lại sau mỗi 5 phút, **tối đa 3 lần** cho một lượt chờ. Sau đó hệ thống thôi nhắc, nhưng đồng hồ **Chờ** và dòng **chưa ai nhận** vẫn còn đó.
 - Số phút và số lần là **cài đặt phía máy chủ** (IT), không chỉnh được trong console. Trong console, master chọn **Tự động / Bật / Tắt** ở mục **Báo lại khi chưa ai nhận cuộc trò chuyện** (§6.1). **Tự động** nghĩa là bật khi gian hàng đã chọn người nhận, định tuyến theo đội hoặc theo vùng; Go2Joy có hai mục này nên mặc định là bật.
 - Hội thoại ngoài giờ đang chờ trả lời bằng email **không** bị nhắc (§4), để không đánh thức ai lúc nửa đêm.
@@ -271,8 +271,8 @@ Dùng khi khách chọn nhầm đội (ví dụ chọn **Hỗ trợ khách hàng
 
 - Hội thoại về trạng thái **Đang chờ** của đội mới; người đang giữ nó (nếu có) bị gỡ; đồng hồ **Chờ** và bộ nhắc "chưa ai nhận" tính lại từ đầu.
 - Thang chọn người ở §3.2 chạy lại; thông báo mới với lý do **Một nhân viên đã chuyển cuộc trò chuyện này sang đội của bạn.** được gửi cho người nhận mới. Thông báo cũ của hội thoại bị thay thế.
-- Console hiện thông báo thành công cho biết **ai đã được báo**: *Đã chuyển sang <đội>. Tất cả người có thể nhận đã được báo.*, hoặc (chế độ **Nghiêm ngặt**) *Đã chuyển sang <đội>. Đội <vùng> đã được báo.*. Có một câu thứ ba, *Đã chuyển sang <đội>. <tên> đã được báo.*, chỉ hiện khi người được báo có **tên hiển thị**; hiện tài khoản người dùng **không có chỗ nhập tên** (lời mời không hỏi tên, và không có màn hình sửa tên), nên trên thực tế bạn luôn thấy câu đầu, **kể cả khi chỉ một người được báo**. Muốn biết chính xác ai nhận, hỏi người đó hoặc xem hộp thoại báo trên máy họ.
-- Một **ghi chú nội bộ** (thẻ **Ghi chú** ở cột bên phải, mục **Cuộc trò chuyện**; chỉ nhân viên thấy) ghi lại ai đã chuyển sang đội nào. Nội dung ghi bằng tiếng Anh, ví dụ "Routed to Business Support (South) by user #2" (tên người chuyển hiện dạng mã số vì tài khoản chưa có tên, và tác giả hiện là **Không rõ**); ghi chú chỉ hiện sau khi bạn tải lại trang; nhật ký kiểm toán cũng ghi `agent.conversation_rerouted`. Khách không nhận tin nhắn nào; nếu trước đó đã có nhân viên nhận, widget chỉ đổi lại sang chỉ báo *Đang chờ nhân viên hỗ trợ — câu trả lời sẽ hiển thị tại đây.*
+- Console hiện thông báo thành công cho biết **ai đã được báo**: *Đã chuyển sang <đội>. Tất cả người có thể nhận đã được báo.*, hoặc (chế độ **Nghiêm ngặt**) *Đã chuyển sang <đội>. Đội <vùng> đã được báo.*. Khi hệ thống chọn được **một người cụ thể**, thông báo nêu tên người đó: *Đã chuyển sang <đội>. <tên> đã được báo.* (ví dụ *Đã chuyển sang Hỗ trợ kinh doanh. Lê Thị Hương đã được báo.*). <tên> là **Tên** đã nhập ở màn hình **Người dùng** (§5.1); nếu chưa nhập, console lấy chữ từ phần đầu địa chỉ email (`lan.pham@…` thành *Lan Pham*). Câu đầu (*Tất cả người có thể nhận đã được báo.*) chỉ hiện khi thực sự là phát chung.
+- Một **ghi chú nội bộ** (thẻ **Ghi chú** ở cột bên phải, mục **Cuộc trò chuyện**; chỉ nhân viên thấy) ghi lại ai đã chuyển sang đội nào. Nội dung ghi bằng tiếng Anh, ví dụ "Routed to Business Support (South) by user #2" (tên người chuyển là **Tên** của tài khoản, hoặc chữ lấy từ email nếu chưa có tên; `user #<số>` chỉ còn là dự phòng khi tài khoản không có cả tên lẫn email); tác giả của ghi chú hiện cùng tên đó; ghi chú chỉ hiện sau khi bạn tải lại trang; nhật ký kiểm toán cũng ghi `agent.conversation_rerouted`. Khách không nhận tin nhắn nào; nếu trước đó đã có nhân viên nhận, widget chỉ đổi lại sang chỉ báo *Đang chờ nhân viên hỗ trợ — câu trả lời sẽ hiển thị tại đây.*
 - Chuyển sang đội khác **không áp dụng quy tắc ngoài giờ**: bạn gọi đội đó ngay lúc này, nên đội được báo ngay thay vì đi theo luồng hộp thư ngoài giờ. Slack và email tóm tắt (nếu IT đã cấu hình) vẫn được gửi như một yêu cầu mới. Một hội thoại ngoài giờ cũ vẫn giữ kênh trả lời qua email (§4).
 
 ![Hình 10. Đầu hội thoại sau khi chuyển sang Hỗ trợ kinh doanh: Đội đổi, vùng giữ nguyên, đồng hồ Chờ bắt đầu lại từ 00:01](img/go2joy-ops-reroute-after.vi.jpg)
@@ -297,7 +297,7 @@ Bộ lọc áp dụng theo **vùng của hội thoại**, kể cả hội thoạ
 
 ### 3.8 Bộ đếm hàng chờ và tuổi hội thoại
 
-Phía trên danh sách là các **chip đội**: **Tất cả đội N**, rồi mỗi đội một chip kèm số (ví dụ **Hỗ trợ khách hàng 9**, **Kinh doanh 5**). Bấm chip để lọc theo đội, bấm lần nữa để bỏ lọc. Dưới chip là dòng:
+Phía trên danh sách là các **chip đội**: **Tất cả đội N**, rồi mỗi đội một chip kèm số (ví dụ **Hỗ trợ khách hàng 9**, **Hỗ trợ kinh doanh 5**; chữ lấy từ tên đội của gian hàng, §6.3). Bấm chip để lọc theo đội, bấm lần nữa để bỏ lọc. Dưới chip là dòng:
 
 **N chưa ai nhận · lâu nhất mm:ss**
 
@@ -312,7 +312,7 @@ Mỗi nhân viên **đã có hồ sơ trực** (tức đã từng bật **Đang 
 - không còn được chọn khi định tuyến;
 - bấm **Nhận** bị máy chủ từ chối (mã 409).
 
-Ở bản console hiện tại, thao tác **Nhận** **không** hiện thông báo lỗi khi bị từ chối. Cách xử lý: **Kết thúc** hoặc **Trả lại cho AI** bớt một hội thoại rồi nhận lại. Đây là điểm cần cải thiện, đã ghi ở phụ lục C.
+Khi **Nhận** bị từ chối, console hiện thông báo lỗi màu đỏ, nằm lại cho tới khi bạn đóng: *Bạn đang xử lý số cuộc trò chuyện tối đa cùng lúc. Hãy kết thúc hoặc trả lại một cuộc cho AI, rồi nhận lại cuộc này.* Cách xử lý: **Kết thúc** hoặc **Trả lại cho AI** bớt một hội thoại rồi nhận lại. **Kết thúc** và **Trả lại cho AI** cũng hiện thông báo lỗi nếu máy chủ từ chối. (Trước đây thao tác **Nhận** bị từ chối mà không hiện gì.)
 
 ---
 
@@ -357,13 +357,13 @@ Khi xin gặp nhân viên ngoài giờ (và đã chọn đội nếu có hỏi �
 
 *(Dành cho: master. Mặc định chỉ master thấy menu này; director không có trừ khi master cấp)*
 
-Menu **Người dùng & nhãn** (trang **Người dùng**). Bảng có các cột **Email**, **Cấp bậc**, **Vai trò**, **Khu vực**, **Trực**, **Trạng thái**, **Ngày tạo**; có hai bộ lọc **Lọc theo vai trò** và **Lọc theo khu vực**.
+Menu **Người dùng & nhãn** (trang **Người dùng**). Bảng có các cột **Người dùng** (tên ở trên, email ở dưới; tên chưa nhập hiện *(chưa đặt)*), **Cấp bậc**, **Vai trò**, **Khu vực**, **Trực**, **Trạng thái**, **Ngày tạo**; có hai bộ lọc **Lọc theo vai trò** và **Lọc theo khu vực**. Phía trên bảng có hai nút: **Tên vai trò** (§5.2) và **Mời người dùng**. Cấp bậc hiện bằng chữ tiếng Việt: **Master**, **Giám đốc** (director), **Quản lý** (manager), **Nhân viên** (staff); trạng thái: **Hoạt động**, **Bị tạm khóa**, **Đã mời**.
 
 ![Hình 13. Bảng Người dùng với cột Vai trò, Khu vực, Trực](img/go2joy-ops-users.vi.jpg)
 
 ### 5.1 Mời người dùng
 
-**Mời người dùng** → nhập **Email**, chọn **Cấp bậc**, tick **Vai trò**, chọn **Khu vực** → **Gửi lời mời**. Màn hình hiện **Mật khẩu tạm thời** (chỉ một lần); gửi cho người đó qua kênh an toàn, họ phải đổi mật khẩu ở lần đăng nhập đầu. Muốn cấp lại: nút **Mật khẩu tạm** trên dòng người dùng.
+**Mời người dùng** → nhập **Tên** (tùy chọn) và **Email**, chọn **Cấp bậc**, tick **Vai trò**, chọn **Khu vực** → **Gửi lời mời** (thông báo *Đã mời người dùng.*). **Tên** hiện trong thông báo và ghi chú chuyển đội, ở ô **Phụ trách** của hội thoại, và cho khách thấy là tên nhân viên khi họ trả lời trong widget; để trống thì console dùng chữ lấy từ email (khách thì không thấy tên nào). Đổi hoặc xóa tên sau này: **Sửa** → ô **Tên** (master, director; ghi nhật ký kiểm toán `user.name_changed`, không kèm nội dung tên). Màn hình hiện **Mật khẩu tạm thời** (chỉ một lần); gửi cho người đó qua kênh an toàn, họ phải đổi mật khẩu ở lần đăng nhập đầu. Muốn cấp lại: nút **Mật khẩu tạm** trên dòng người dùng.
 
 ### 5.2 Vai trò: CS, SA và "Khác"
 
@@ -376,7 +376,9 @@ Mỗi vai trò là một **nhãn công việc**. Với Go2Joy:
 | Kế toán, Vận hành | `accounting`, `operations` | Không liên quan tới hàng chờ chuyển người; nhãn **Vận hành** mở **Kho tri thức**, **Sản phẩm**, **Chiến dịch** cho cấp bậc được phép (riêng sửa tri thức cần quyền từ cấp director) |
 | **Khác** | (không chọn gì) | *Không chọn vai trò = Khác (không nhận hội thoại chuyển người, không mở màn hình theo vai trò).* |
 
-⚠️ **Lưu ý về tên nhãn**: tên hiển thị của nhãn là dữ liệu trong cơ sở dữ liệu, **mặc định bằng tiếng Hàn** (ví dụ 상담, 영업관리). Console **không có màn hình đổi tên nhãn**; việc này làm qua API `PATCH /api/v1/job-labels/<id>` bằng tài khoản master (tên 1 đến 64 ký tự). Amoeba sẽ đổi tên thành CS và SA trước khi go-live (mục checklist C).
+**Đổi tên vai trò** (master, director): nút **Tên vai trò** ở đầu trang **Người dùng**. Hộp thoại liệt kê bốn nhãn (`consult`, `accounting`, `operations`, `sales_admin`), mỗi nhãn một ô tên (tối đa 64 ký tự) và nút **Dùng tên mặc định**. **Lưu** chỉ gửi những ô bạn đã đổi (*Đã lưu tên vai trò.*). Tên bị từ chối nếu để trống hoặc trùng tên của vai trò khác (*Đã có vai trò khác mang tên này. Hãy đặt mỗi vai trò một tên riêng.*). Mỗi lần đổi ghi nhật ký kiểm toán `job_label.renamed` (tên cũ và mới). Với Go2Joy nên đặt **CS** và **SA** cho khớp cách gọi hằng ngày; tên mới hiện ở cột **Vai trò**, hộp **Mời người dùng** và **Sửa người dùng**, bộ lọc **Lọc theo vai trò** và ô **Chuyển tới vai trò** của bảng đội (§6.3).
+
+Cách hiển thị: nhãn **chưa đổi** (còn tên có sẵn) hiện theo **ngôn ngữ giao diện của từng người** (tiếng Việt: **Hỗ trợ khách hàng**, **Kế toán**, **Vận hành**, **Hỗ trợ kinh doanh**); tên bạn gõ hiện **đúng như đã gõ ở mọi ngôn ngữ**. **Dùng tên mặc định** trả nhãn về tên có sẵn (và lại theo ngôn ngữ). Gian hàng tạo trước đây có tên tiếng Hàn (상담, 영업관리…) vẫn đúng: được coi là tên có sẵn và hiện theo ngôn ngữ giao diện cho tới khi bạn đổi; gian hàng mới và dữ liệu mẫu được tạo với tên tiếng Anh trung tính (*Customer Support*, *Sales Admin*…). Quyền đổi tên là `LABEL_EDIT` của master và director; director chỉ thấy nút khi được cấp menu **Người dùng & nhãn**.
 
 ### 5.3 Khu vực
 
@@ -399,7 +401,7 @@ Cột **Trực** làm mới 15 giây một lần:
 | director | Như manager, thêm **Cài đặt gian hàng** (xem nhiều thẻ), **Kho tri thức** đầy đủ, xuất CSV thí điểm, tra cứu và xóa dữ liệu theo yêu cầu (§8.5). Không mở **Người dùng & nhãn** theo mặc định |
 | master | Mọi thứ, **chỉ master** sửa được các thẻ chính sách đăng nhập, phạm vi thí điểm, tra cứu dữ liệu đối tác |
 
-Cột **Cấp bậc** hiện bằng chữ tiếng Anh (`master`, `director`, `manager`, `staff`) vì giao diện chưa có bản dịch cho các giá trị này.
+Trong sổ tay này cấp bậc được viết bằng chữ tiếng Anh `master`, `director`, `manager`, `staff` cho dễ đối chiếu; trên giao diện là **Master**, **Giám đốc**, **Quản lý**, **Nhân viên** (cột **Cấp bậc**, hộp **Sửa người dùng**, thẻ cạnh email ở thanh bên và trang **Trang của tôi**).
 
 ---
 
@@ -407,7 +409,7 @@ Cột **Cấp bậc** hiện bằng chữ tiếng Anh (`master`, `director`, `ma
 
 *(Dành cho: master, director. Menu **Cài đặt gian hàng** → tab **Cơ bản** → thẻ **Chuyển cho nhân viên**)*
 
-Toàn bộ thẻ lưu bằng **một nút Lưu** ở cuối thẻ (riêng **Bảng khách sạn → tỉnh** tác dụng ngay, §6.5). Lưu thành công hiện thông báo bằng **tiếng Anh**: *AI configuration saved.* (chuỗi này chưa được dịch). Lưu sai cấu hình hiện lỗi cụ thể, ví dụ *Chưa lưu bảng vùng: …* hoặc *Chưa lưu cài đặt chuyển người: …*. Trong trang **Cài đặt AI**, cuối trang có dòng chỉ dẫn tới đây (*Giờ làm việc và định tuyến ngoài giờ nay nằm trong phần Cài đặt gian hàng.*).
+Toàn bộ thẻ lưu bằng **một nút Lưu** ở cuối thẻ (riêng **Bảng khách sạn → tỉnh** tác dụng ngay, §6.5). Lưu thành công hiện thông báo *Đã lưu cấu hình AI.* (theo ngôn ngữ giao diện). Lưu sai cấu hình hiện lỗi cụ thể, ví dụ *Chưa lưu bảng vùng: …* hoặc *Chưa lưu cài đặt chuyển người: …*. Trong trang **Cài đặt AI**, cuối trang có dòng chỉ dẫn tới đây (*Giờ làm việc và định tuyến ngoài giờ nay nằm trong phần Cài đặt gian hàng.*).
 
 ![Hình 14. Thẻ Chuyển cho nhân viên: báo lại, giờ làm việc, email ngoài giờ, hỏi đội](img/go2joy-ops-handoff-team.vi.jpg)
 
@@ -417,7 +419,7 @@ Toàn bộ thẻ lưu bằng **một nút Lưu** ở cuối thẻ (riêng **Bả
 - **Báo lại khi chưa ai nhận cuộc trò chuyện**: **Tự động (bật khi đã chọn người nhận, định tuyến theo đội hoặc theo vùng)**, **Bật**, **Tắt**. Số phút do IT đặt (`ALERT_UNCLAIMED_MINUTES`, mặc định 5; đặt 0 là tắt toàn hệ thống).
 - **Chỉ chuyển cho nhân viên trong giờ làm việc**: tick để bật **Múi giờ**, **Từ**, **Đến**, **Giờ nghỉ (không có ai trực)**, **Các ngày** (T2 đến T7, CN). Không tick = lúc nào cũng "trong giờ".
 - **Mục tiêu SLA của bảng yêu cầu** (**Thông thường (giờ)**, **Khẩn (giờ)**, 1–168 giờ; mặc định 24 giờ và 4 giờ) chỉ liên quan **Bảng yêu cầu**, không liên quan hàng chờ chat.
-- **Bắt buộc chuyển tiếp theo chính sách (danh sách chặn)**: mỗi dòng gồm các từ khóa (cách nhau bằng dấu phẩy), một **loại** yêu cầu, một **nhãn** nhận (**Tư vấn**, **Sales Admin**, **Kế toán**, **Vận hành**) và cách khách được báo: **Không trả lời** (chuyển cho nhân viên mà không phản hồi) hoặc **Trả lời rồi chuyển** (trả lời từ kho tri thức trước rồi vẫn chuyển). *Tin nhắn khớp bất kỳ từ khóa nào sẽ được chuyển thẳng cho nhân viên — không hỏi AI.* Loại và nhãn được gán cho yêu cầu được tạo, và quy tắc này vẫn ưu tiên hơn cổng khách (§7.1). Dùng cho chủ đề bạn muốn luôn có người xử lý, ví dụ đổi tài khoản ngân hàng.
+- **Bắt buộc chuyển tiếp theo chính sách (danh sách chặn)**: mỗi dòng gồm các từ khóa (cách nhau bằng dấu phẩy), một **loại** yêu cầu, một **nhãn** nhận (tên các vai trò ở §5.2, ví dụ **CS**, **SA**, **Kế toán**, **Vận hành**) và cách khách được báo: **Không trả lời** (chuyển cho nhân viên mà không phản hồi) hoặc **Trả lời rồi chuyển** (trả lời từ kho tri thức trước rồi vẫn chuyển). *Tin nhắn khớp bất kỳ từ khóa nào sẽ được chuyển thẳng cho nhân viên — không hỏi AI.* Loại và nhãn được gán cho yêu cầu được tạo, và quy tắc này vẫn ưu tiên hơn cổng khách (§7.1). Dùng cho chủ đề bạn muốn luôn có người xử lý, ví dụ đổi tài khoản ngân hàng.
 
 ![Hình 15. Mục Báo lại khi chưa ai nhận, Giờ làm việc và Email ngoài giờ](img/go2joy-ops-handoff-hours.vi.jpg)
 
@@ -426,7 +428,7 @@ Toàn bộ thẻ lưu bằng **một nút Lưu** ở cuối thẻ (riêng **Bả
 - **Email ngoài giờ**: hộp thư nhận bản tóm tắt ngoài giờ. Để một hộp thư **có người xem mỗi sáng** (hộp thư nhóm, không phải email cá nhân). Cần cấu hình SMTP phía máy chủ.
 - **Thông báo ngoài giờ gửi cho khách hàng**: có **tab ngôn ngữ**; để trống dùng câu mặc định ở §4.2.
 
-💡 **Mẹo**: ở các ô có tab ngôn ngữ trong thẻ này (thông báo ngoài giờ, **Câu hỏi** và **Tên hiển thị cho khách** của đội), tab đang chọn lúc mở trang là **KO** (tiếng Hàn), không phải **VI**. Hãy bấm tab **VI** trước khi gõ câu tiếng Việt, nếu không câu bạn gõ được lưu cho tiếng Hàn.
+💡 **Mẹo**: các ô có tab ngôn ngữ trong thẻ này (thông báo ngoài giờ, **Câu hỏi** và **Tên hiển thị cho khách** của đội) mở ở tab của **ngôn ngữ giao diện** (**VI** nếu bạn dùng console tiếng Việt; **EN** nếu giao diện dùng ngôn ngữ không có trong danh sách). Mỗi ngôn ngữ được lưu riêng: câu gõ ở tab EN chỉ khách dùng tiếng Anh thấy. Chấm nhỏ trên tab báo ngôn ngữ nào đã có chữ.
 
 ### 6.3 Hỏi đội hỗ trợ khi khách yêu cầu gặp nhân viên
 
@@ -434,12 +436,12 @@ Mục **Hỏi đội hỗ trợ khi khách yêu cầu gặp nhân viên** (*Ch�
 
 1. Tick **Hỏi khách chọn đội**. Lần bật đầu tự điền cặp mặc định.
 2. **Câu hỏi**: theo ngôn ngữ (tab); để trống = câu mặc định (*Để trống = dùng câu mặc định*).
-3. Bảng lựa chọn: **Mã**, **Tên hiển thị cho khách**, **Chuyển tới vai trò** (**Tư vấn**, **Sales Admin**, **Kế toán**, **Vận hành**). Tối đa **4** lựa chọn (**+ Thêm lựa chọn**).
+3. Bảng lựa chọn: **Mã**, **Tên hiển thị cho khách**, **Chuyển tới vai trò** (tên các vai trò ở §5.2). Tối đa **4** lựa chọn (**+ Thêm lựa chọn**).
 4. Mỗi lựa chọn có thể có **giờ làm việc riêng** (mục xổ **Giờ làm việc: theo giờ chung** hoặc **Giờ làm việc riêng**): *Ngoài khung giờ này, khách yêu cầu đội này sẽ được báo là sẽ nhận phản hồi qua email thay vì nhân viên trực tiếp.*
 
-Cặp mặc định: mã `cs` → vai trò **Tư vấn** (CS), tên cho khách **Hỗ trợ khách hàng**; mã `business` → vai trò **Sales Admin**, tên **Hỗ trợ kinh doanh**. Tên các vai trò trong ô **Chuyển tới vai trò** là cố định (**Tư vấn** = nhãn CS, **Sales Admin** = nhãn SA), không đổi theo tên nhãn bạn đặt ở màn hình **Người dùng**.
+Cặp mặc định: mã `cs` → vai trò **CS** (nhãn `consult`), tên cho khách **Hỗ trợ khách hàng**; mã `business` → vai trò **SA** (nhãn `sales_admin`), tên **Hỗ trợ kinh doanh**. Ô **Chuyển tới vai trò** (và ô nhãn của danh sách chặn ở §6.1) dùng tên vai trò hiện hành ở §5.2 nếu tài khoản mở được màn hình **Người dùng & nhãn**; nếu không (ví dụ director khi chưa được cấp menu đó) ô hiện tên chuẩn **Tư vấn**, **Sales Admin**, **Kế toán**, **Vận hành**.
 
-💡 **Mẹo**: giữ nguyên **Mã** `cs` và `business`. Chip đội và hộp thoại báo của console chỉ có tên tiếng Việt cho hai mã này (**Hỗ trợ khách hàng**, **Kinh doanh**); mã khác sẽ hiện nguyên chữ mã.
+💡 **Mẹo**: giữ nguyên **Mã** `cs` và `business` (mã được lưu cùng hội thoại). Chip đội, huy hiệu và hộp thoại báo của console dùng cột **Tên hiển thị cho khách** của bảng này theo ngôn ngữ giao diện, nên đổi tên ở đây là chúng đổi theo; để trống thì dùng tên mặc định của `cs` (**Hỗ trợ khách hàng**) và `business` (**Hỗ trợ kinh doanh**). Một mã khác tự thêm cũng hiện đúng tên đã đặt, không còn hiện nguyên chữ mã.
 
 ### 6.4 Chuyển theo vùng của khách sạn
 
@@ -642,7 +644,7 @@ Tab **Thông báo quyền riêng tư** (master, director). Chọn **Văn bản t
 
 ![Hình 24. Thẻ Cài đặt thông báo đồng ý với hồ sơ Việt Nam, ngôn ngữ chỉnh sửa Tiếng Việt và dòng Bên kiểm soát dữ liệu & liên hệ đã điền](img/go2joy-ops-privacy-notice.vi.jpg)
 
-- Ô **Ngôn ngữ chỉnh sửa** mở ra ở **한국어** (tiếng Hàn). **Chọn Tiếng Việt trước** khi đọc hoặc sửa các dòng: mỗi ngôn ngữ được lưu riêng, nên câu bạn gõ khi đang ở KO chỉ áp dụng cho khách dùng tiếng Hàn. Với `vn_pdpl`, văn bản chuẩn có sẵn bằng tiếng Việt và tiếng Anh (các ngôn ngữ khác hiện dòng tiếng Anh); hãy điền dòng **Bên kiểm soát dữ liệu & liên hệ** cho **từng** ngôn ngữ mà khách sẽ đọc.
+- Ô **Ngôn ngữ chỉnh sửa** mở ra ở ngôn ngữ của giao diện (**Tiếng Việt** nếu bạn dùng console tiếng Việt). Mỗi ngôn ngữ được lưu riêng, nên câu bạn gõ khi đang ở ngôn ngữ khác chỉ áp dụng cho khách dùng ngôn ngữ đó; hãy kiểm tra ô này trước khi gõ. Với `vn_pdpl`, văn bản chuẩn có sẵn bằng tiếng Việt và tiếng Anh (các ngôn ngữ khác hiện dòng tiếng Anh); hãy điền dòng **Bên kiểm soát dữ liệu & liên hệ** cho **từng** ngôn ngữ mà khách sẽ đọc.
 - Dùng `{{retentionDays}}` và `{{region}}` trong dòng bất kỳ: máy chủ điền **thời hạn lưu** và **khu vực xử lý AI** thật của hệ thống.
 - **Bản nháp**: *Nội dung dành cho Việt Nam là bản nháp. Trước khi bật cho khách, hãy nhờ luật sư xác nhận luật áp dụng và căn cứ pháp lý…* và **người bản ngữ tiếng Việt** rà soát câu chữ.
 - Nếu dòng **Bên kiểm soát dữ liệu & liên hệ** còn chỗ trống dạng `[[…]]`, thẻ cảnh báo *Thông báo khách sẽ đọc vẫn còn chỗ trống dạng [[…]]…*. Điền pháp nhân, địa chỉ và đầu mối bảo vệ dữ liệu trước khi dùng. Cảnh báo **liệt kê từng ngôn ngữ còn `[[…]]`** (ví dụ ES, KO, JA, ZH): nó chỉ biến mất khi dòng này được điền cho **mọi** ngôn ngữ được liệt kê, kể cả khi khách của bạn chỉ dùng tiếng Việt.
@@ -765,12 +767,12 @@ Ví dụ: hội thoại cho thấy dữ liệu của khách sạn khác; trả l
 |---|---|---|
 | Hàng chờ có hội thoại "chưa ai nhận" | Không ai online đúng nhãn, đúng vùng | §1.3; sau 5 phút hệ thống phát chung |
 | Hàng chờ "thiếu" hội thoại so với chip | Bộ lọc **Vùng của tôi** hoặc chip đội đang bật | Chọn **Tất cả vùng**, bỏ chọn chip (§3.7) |
-| Bấm **Nhận** không có gì xảy ra | Đang giữ đủ 3 hội thoại | Kết thúc hoặc trả lại bớt một hội thoại (§3.9) |
+| Bấm **Nhận** hiện thông báo đỏ *Bạn đang xử lý số cuộc trò chuyện tối đa cùng lúc…* | Đang giữ đủ 3 hội thoại | Kết thúc hoặc trả lại bớt một hội thoại (§3.9) |
 | Thấy **?** cam | Tỉnh chưa có trong bảng vùng | Báo master thêm tên tỉnh (§2.4, §6.4) |
 | Thấy **hết hạn** | Chữ ký quá 8 giờ | Nhờ người dùng tải lại hoặc đăng nhập lại Hotel Admin (§2.3) |
 | Không thấy nút **Chuyển sang…** | Gian hàng chưa bật câu hỏi đội | Nhờ master (§6.3) |
 | Không thấy menu **Cài đặt gian hàng** | Cấp bậc staff/manager không có quyền | Nhờ master/director |
-| Trang **Tổng quan** toàn số 0 | Cấp bậc staff không có quyền xem các số liệu đó (lỗi bị bỏ qua, không hiện thông báo) | Bình thường; làm việc ở **Trò chuyện trực tiếp**, đừng coi các số 0 là hệ thống không có hội thoại |
+| Trang **Tổng quan** chỉ có thẻ *Số liệu tổng quan dành cho Quản lý trở lên* | Cấp bậc **Nhân viên** (staff) không đọc được các số liệu tổng quan (quyền `ANALYTICS_READ` là của Quản lý, Giám đốc, Master); console không còn hiện sáu số 0 | Bình thường; làm việc ở **Trò chuyện trực tiếp** (các nút tắt nằm ngay trên thẻ) |
 | Hội thoại ngoài giờ không thấy ai nhắc | Bình thường: ngoài giờ không nhắc | Kiểm tra hộp thư và hàng chờ đầu ca (§4.4) |
 | Nút **Xuất hội thoại (CSV)** mờ hoặc không thấy | Khoảng ngày quá 92 ngày (nút mờ kèm cảnh báo) hoặc tài khoản không phải master/director (nút ẩn) | Thu hẹp khoảng ngày; nhờ master/director xuất |
 
@@ -834,7 +836,9 @@ Mỗi bài có **Chuẩn bị**, **Cách làm** và **Kết quả mong đợi**.
 | Cần nhân viên | Needs agent | Tab hàng chờ (đang chờ hoặc có nhân viên xử lý) |
 | Chuyển sang… | Hand over to… | Chuyển đội/vùng |
 | Trả lại cho AI | Hand back to AI | Bỏ giữ mà không kết thúc |
-| Hỗ trợ khách hàng / Kinh doanh | Customer Service / Business | Hai đội mặc định (khách thấy "Hỗ trợ kinh doanh") |
+| Hỗ trợ khách hàng / Hỗ trợ kinh doanh | Customer Service Support / Business Support | Hai đội mặc định; chữ lấy từ tên đội của gian hàng (§6.3) |
+| Tên vai trò | Role names | Nút ở trang **Người dùng** để đặt tên CS, SA… (§5.2) |
+| Nhân viên / Quản lý / Giám đốc / Master | staff / manager / director / master | Cấp bậc; sổ tay viết bằng chữ tiếng Anh cho dễ đối chiếu |
 | Vùng của tôi | My region | Bộ lọc vùng |
 | Tỉnh chưa ánh xạ | Unlisted province | Tỉnh không có trong bảng vùng |
 | đã ký / tự khai / hết hạn | signed / self-declared / expired | Độ tin cậy của danh tính |
@@ -910,7 +914,7 @@ Mỗi bài có **Chuẩn bị**, **Cách làm** và **Kết quả mong đợi**.
 | Hand over to… | Live Chat conversation header | CS / SA, staff rank included | Moves the conversation to another team/region, pages them, internal note + audit, customer not told |
 | Queue counters, My region | Live Chat list | CS / SA | Team chips, unclaimed summary, waiting age (red after 5 min); My region hides other and unknown regions |
 | Off-hours handling | Widget; Tenant Settings > Basic hours and mailbox | Customer; master/director | Customer asked for an email; summary to off-hours mailbox; agent reply is emailed; no re-alert |
-| Users & Labels | Users & Labels | Master (default) | Roles CS/SA/Others, Region North/South/Nationwide, presence column; label names are DB data (default Korean) |
+| Users & Labels | Users & Labels | Master (default) | Roles CS/SA/Others, Region North/South/Nationwide, presence column; a "Role names" dialog renames the labels (defaults shown in the console language), staff display names |
 | Agent handoff settings | Tenant Settings > Basic > Agent handoff | Master, director (AI_SETTINGS_MANAGE) | Assignees, hours, mailbox, team table, region table with Load Vietnam preset and Try a province, strict mode, regional mailbox/webhook |
 | Hotel → province CSV | Same card, under the region table | Master, director | Preview then replace-all; matched by signed hotelSn only; signed province wins |
 | Guest policy | AI Settings > AI agents > Visitors who are not signed in | Master, director, manager | Only guide to sign in; answers only from Public categories; calibration of the gate threshold still open |
@@ -941,8 +945,8 @@ The English edition of this manual (summary, go-live checklist, verification sta
 - [ ] Câu **Thông báo ngoài giờ gửi cho khách hàng** bằng tiếng Việt do Go2Joy duyệt (hoặc chấp nhận câu mặc định)
 
 **C. Nhân sự**
-- [ ] Đổi tên nhãn thành **CS** và **SA** qua API (§5.2); xác nhận tên hai nút tiếng Việt khách thấy (**Hỗ trợ khách hàng**, **Hỗ trợ kinh doanh**)
-- [ ] Tạo tài khoản, chọn cấp bậc, vai trò, **Khu vực** (Bắc/Nam/Toàn quốc), ghi nhận rằng chưa có chỗ nhập tên hiển thị (thông báo chuyển đội sẽ không nêu tên người nhận, §3.6); mọi người đã đổi mật khẩu tạm; MFA nếu bắt buộc
+- [ ] Đổi tên vai trò thành **CS** và **SA** ở **Người dùng & nhãn → Tên vai trò** (§5.2); xác nhận tên hai nút tiếng Việt khách thấy (**Hỗ trợ khách hàng**, **Hỗ trợ kinh doanh**)
+- [ ] Tạo tài khoản, chọn cấp bậc, vai trò, **Khu vực** (Bắc/Nam/Toàn quốc), nhập **Tên** cho từng người (thông báo và ghi chú chuyển đội nêu tên người nhận, §3.6; để trống thì dùng chữ lấy từ email); mọi người đã đổi mật khẩu tạm; MFA nếu bắt buộc
 - [ ] Có ít nhất một CS và một SA cho mỗi vùng trong từng ca; quyết định cách xử lý khi **không có SA** trực
 - [ ] Mọi người đã làm bài tập 1–10 (§11.1) và đạt bài kiểm tra (§11.4)
 
@@ -967,31 +971,23 @@ The English edition of this manual (summary, go-live checklist, verification sta
 **G. Đăng nhập và dữ liệu đối tác**
 - [ ] Chốt thời hạn tin cậy chữ ký (mặc định 8 giờ); quyết định thời điểm bật **Từ chối đăng nhập không có khách sạn và vai trò (v1)**
 - [ ] **Tra cứu dữ liệu đối tác** giữ **tắt** cho tới khi Go2Joy giao API và Amoeba xác nhận chế độ dữ liệu thật
-- [ ] Giá trị hiển thị trong thẻ **Liên hệ hỗ trợ** của widget (điện thoại, email, giờ) là của Go2Joy (xem phụ lục C)
+- [ ] Thẻ **Liên hệ hỗ trợ** của widget hiện không có số điện thoại hay email nào (bản dựng không còn giá trị mặc định); chỉ còn **Trò chuyện với nhân viên**. Nếu Go2Joy muốn hiện số điện thoại/email, cần một tùy chọn cấu hình theo gian hàng (chưa có; xem phụ lục C)
 
-### Phụ lục C. Nhãn và hành vi tiếng Việt cần lưu ý (phát hiện khi viết sổ tay)
+### Phụ lục C. Nhãn và hành vi cần lưu ý (phát hiện khi viết sổ tay)
+
+Bản đầu của phụ lục này liệt kê 19 điểm. Phần lớn là lỗi sản phẩm và **đã được sửa** trong đợt rà soát sau đó (tên vai trò đổi được, tên nhân viên, thông báo khi **Nhận** bị từ chối, cấp bậc và trạng thái được dịch, lý do chuyển người khi API đối tác lỗi, đoạn xem trước là câu hỏi thật, tên đội thống nhất, tiền tố tiêu đề email, tab ngôn ngữ mặc định theo giao diện, thẻ Liên hệ hỗ trợ không còn số mẫu, gợi ý cổng khách). Dưới đây là những điểm **còn lại**:
 
 | # | Điểm cần lưu ý | Ghi chú |
 |---|---|---|
-| 1 | Tên nhãn công việc mặc định bằng tiếng Hàn, console không có màn hình đổi tên | Đổi qua API trước go-live (§5.2) |
-| 2 | Cột **Cấp bậc** và trạng thái hiển thị chữ tiếng Anh (`master`, `director`, `manager`, `staff`, `active`) | Chưa dịch trên giao diện |
-| 3 | Chữ **Nhân viên AI** (AI agent) và **nhân viên** (người) dễ nhầm | Sổ tay luôn viết "nhân viên AI" cho AI |
-| 4 | Gợi ý của ô **Khách chưa đăng nhập** vẫn nói "phân loại đánh dấu **Công khai cho khách**", nhưng nhãn hiện tại ở Kho tri thức là **Công khai** (ô **Ai được xem**) | Chuỗi cũ chưa cập nhật (cả tiếng Anh lẫn tiếng Việt) |
-| 5 | Chip đội của console ghi **Kinh doanh**, còn khách thấy **Hỗ trợ kinh doanh** | Khác nhau có chủ ý hai chỗ; chỉ có tên cho mã `cs` và `business` |
-| 6 | Nhãn vùng ở hội thoại là **Bắc / Nam**, ở Người dùng là **Miền Bắc / Miền Nam** | Nhất quán nội bộ nhưng hai kiểu |
-| 7 | Hộp thoại báo hiện **AI không tìm được câu trả lời trong kho tri thức.** khi dữ liệu đối tác không tra cứu được | Chưa có dòng riêng; nguyên nhân ở tin hệ thống cuối |
-| 8 | Thao tác **Nhận**, **Kết thúc**, **Trả lại cho AI** không có thông báo lỗi; bị từ chối (ví dụ đủ 3 hội thoại) thì im lặng | Cần bổ sung thông báo |
-| 9 | Banner đồng ý mặc định trong widget (tiếng Việt) còn nội dung CCPA, Google Analytics, 365 ngày, Hoa Kỳ cho tới khi chọn `vn_pdpl` | Chọn hồ sơ trước go-live (§8.4) |
-| 10 | Thẻ **Liên hệ hỗ trợ** trong widget dùng giá trị mặc định của IVY (số `1588-0000`, email `help@ivy.com`) và chưa cấu hình được theo gian hàng | Không bật nút/kịch bản Liên hệ hỗ trợ cho Go2Joy, hoặc nhờ Amoeba thay giá trị |
-| 11 | Hộp thoại báo hiện vai trò của đối tác bằng mã tiếng Anh (`manager`, `receptionist`), trong khi dải đối tác ở hội thoại hiện **Quản lý**, **Lễ tân** | Chưa dịch ở hộp thoại báo |
-| 12 | Các tab ngôn ngữ trong thẻ **Chuyển cho nhân viên** mở ra ở **KO**, và tab nhóm của **Danh mục** có tên `OperationInfo` chưa dịch | Dễ nhập nhầm tiếng Hàn; nên mặc định theo ngôn ngữ giao diện |
-| 13 | `RUNBOOK` mục 11.1/11.3 vẫn ghi chưa có công cụ DSAR phía vận hành và hai bảng chưa nằm trong cửa sổ lưu giữ | Đã lỗi thời: công cụ đã có (§8.5) và các bộ dọn tùy chọn đã có |
-| 14 | Tài khoản người dùng không có tên hiển thị và không có chỗ nhập tên (lời mời không hỏi tên, không có màn hình sửa tên) | Thông báo chuyển đội nêu tên người nhận không bao giờ hiện; ghi chú chuyển đội hiện "user #N", tác giả "Không rõ" |
-| 15 | Thông báo lưu thành công của thẻ **Chuyển cho nhân viên** là tiếng Anh *AI configuration saved.*; một số thông báo thành công khác của Kho tri thức cũng chưa dịch | Cần dịch; không phải lỗi lưu |
-| 16 | Đoạn xem trước trong hộp thoại báo là tin cuối của khách, thường là tên đội khi khách vừa chọn chip | Dễ tưởng là câu hỏi; hãy mở hội thoại |
-| 17 | Cột **Hạng** ở panel khách bên phải hiện chữ `guest` và dòng `(hotelSn …)` ở dải đối tác là chữ tiếng Anh cố định | Chưa dịch |
-| 18 | Ô **Chuyển tới vai trò** trong bảng đội dùng tên cố định (**Tư vấn**, **Sales Admin**…), không theo tên nhãn đã đổi | Dễ nhầm CS với Tư vấn |
-| 19 | Email và Slack báo chuyển người, nhắc "chưa ai nhận" và thông báo ngoài giờ gửi cho nhân viên bằng tiếng Anh, tiêu đề email dạng `[IVY Chat] …` | Nhãn thương hiệu IVY còn trong tiêu đề cảnh báo |
+| 1 | Chữ **Nhân viên AI** (AI agent) và **nhân viên** (người) dễ nhầm; cấp bậc **Nhân viên** (staff) cũng trùng chữ | Sổ tay luôn viết "nhân viên AI" cho AI và ghi (staff) cạnh cấp bậc |
+| 2 | Nhãn vùng ở hội thoại là **Bắc / Nam**, ở Người dùng là **Miền Bắc / Miền Nam** | Nhất quán nội bộ nhưng hai kiểu |
+| 3 | Banner đồng ý mặc định trong widget (tiếng Việt) còn nội dung CCPA, Google Analytics, 365 ngày, Hoa Kỳ cho tới khi chọn `vn_pdpl` | Chọn hồ sơ trước go-live (§8.4) |
+| 4 | Thẻ **Liên hệ hỗ trợ** trong widget không còn số điện thoại, email hay giờ mặc định; chưa có ô cấu hình theo gian hàng | Chỉ còn nút **Trò chuyện với nhân viên**; muốn hiện số điện thoại/email cần thêm tính năng cấu hình |
+| 5 | Cột **Hạng** ở panel khách bên phải hiện chữ `guest` và dòng `(hotelSn …)` ở dải đối tác là chữ tiếng Anh cố định | Chưa dịch |
+| 6 | Email và Slack báo chuyển người, nhắc "chưa ai nhận" và thông báo ngoài giờ gửi cho nhân viên bằng tiếng Anh | Tiền tố tiêu đề email nay cấu hình được (`ALERT_EMAIL_SUBJECT_PREFIX`, mặc định `[SharpTalk]`); nội dung vẫn tiếng Anh |
+| 7 | Một số thông báo thành công của Kho tri thức vẫn bằng tiếng Anh (ví dụ *Document added*) | Không phải lỗi lưu |
+| 8 | Màn hình **Đơn hàng** mở được cho SA nhưng API danh sách đơn chỉ cho nhãn **Vận hành** (và master) | Go2Joy (không bán hàng) thường không dùng màn này |
+| 9 | Lỗi mất vector (tìm kiếm ngữ nghĩa) không có dòng thống kê riêng ở **Thống kê → Thí điểm** | Chỉ lỗi cả công cụ AI mới có dòng lý do |
 
 ### Phụ lục D. Nguồn (truy vết từng chương)
 
@@ -1000,9 +996,9 @@ The English edition of this manual (summary, go-live checklist, verification sta
 | 1 (trực, hiện diện, hộp thoại báo) | PLN-261012 §3.3 SG-60; `apps/web/src/domain/live-chat/DutyToggle.tsx`, `EscalationAlarm.tsx`; `apps/api/src/domain/agent/agent-alert.service.ts` (`leastLoadedOnline`, `touchPresence`), `agent-console.controller.ts` (`alerts`), `global/util/presence.util.ts`; CONFIG.md §4.2 |
 | 2 (đọc hội thoại, đã ký, hết hạn, "?") | RPT-261013-s1b-identity-audit §1 (SG-03), RPT-261007-Hotel-Region-Routing §1; `PartnerContext.tsx`, `QueueBadges.tsx`, `LiveChatPage.tsx`; locale `livechat.json` (`partner.*`, `region.*`) |
 | 3 (đội, thang chọn người, quét, chuyển, vùng, bộ đếm) | RPT-261007-Handoff-Team-Routing §1; RPT-261007-Hotel-Region-Routing §1; RPT-261013-s3b-Routing-Extras §1, §3; `handoff-router.service.ts` (`teamQuestion`, `route`), `agent-alert.service.ts` (`chooseTarget`, `pickLabelAgent`), `unclaimed-sweep.service.ts`, `unclaimed-plan.util.ts`, `agent-routing.service.ts` (`reroute`, `queueCounts`), `packages/types/src/common/routing-queue.ts`, `RerouteControl.tsx` |
-| 3.9 (giới hạn 3, Nhận im lặng) | `agent.service.ts` (`accept`, `upsertProfile`), `entity/agent-profile.entity.ts`, `live-chat.hooks.ts` (`useConversationActions`) |
+| 3.9 (giới hạn 3, lỗi khi Nhận bị từ chối) | `agent.service.ts` (`accept`, `upsertProfile`), `entity/agent-profile.entity.ts`, `live-chat.hooks.ts` (`useConversationActions`: `onError`, mã E5022); RPT-261013-w3c-polish §2 |
 | 4 (ngoài giờ) | `chat.service.ts` (`handoff`, `escalate`, `saveContactEmail`, `SYSTEM_MESSAGES`), `handoff-router.service.ts` (`route`, `withinBusinessHours`), `agent.service.ts` (`mailReplyIfOffHoursThread`, `REPLY_EMAIL_COPY`); widget `i18n/locales/vi.ts` (`chat.contactEmail`) |
-| 5 (người dùng, nhãn, khu vực) | RPT-261007 PLN/TCR User-Role-Region; `UsersPage.tsx`, `job-label.controller.ts`, `tenant.service.ts` (`DEFAULT_JOB_LABELS`), `packages/common/src/rbac/permission-matrix.ts`, `menu-access.ts` |
+| 5 (người dùng, nhãn, khu vực) | RPT-261007 PLN/TCR User-Role-Region; `UsersPage.tsx` (hộp thoại Tên vai trò), `users.hooks.ts`, `job-label.controller.ts`, `user.service.ts` (`updateLabel`, `updateName`), `packages/types/src/common/job-label-name.ts`, `global/util/user-display.util.ts`, `tenant.service.ts` (`DEFAULT_JOB_LABELS`), `packages/common/src/rbac/permission-matrix.ts`, `menu-access.ts`; RPT-261013-w3c-polish §2 |
 | 6 (cài đặt chuyển người) | RPT-261013-s3b §1; RPT-261007-Handoff-Team-Routing; RPT-261007-Hotel-Region-Routing; `HandoffSection.tsx`, `RegionStrictFields.tsx`, `HotelProvinceCard.tsx`, `region-vn.ts`; CONFIG.md §4.2 |
 | 7.1 (cổng khách) | PLN-261012 §3.2 SG-51 và §8 (rủi ro hiệu chỉnh); `chat.service.ts` (`guestGated`), `GuestGuidanceSection.tsx` |
 | 7.2 (quyền xem danh mục) | RPT-261013-w2a-access-tiers §1, §3, §6; `CategoryAccessSelect.tsx`, `kb-category.service.ts`, `chat.service.ts` (`managerOnly`); locale `knowledge.json` (`categoryAccess*`) |
@@ -1027,3 +1023,5 @@ The English edition of this manual (summary, go-live checklist, verification sta
 - Hiện diện hoạt động thế nào khi tab chạy nền lâu hoặc máy ngủ trên các trình duyệt cụ thể chưa được đo.
 - API dữ liệu đối tác thật chưa tồn tại: hợp đồng, mã lỗi và chữ ký đều là giả định của Amoeba.
 - Bản dịch tiếng Việt trên giao diện và trong sổ tay cần người bản ngữ ở Go2Joy rà soát.
+- Sau đợt sửa lỗi (RPT-261013-w3c-polish), các màn hình đã được chạy lại trên trình duyệt thật với dữ liệu mẫu: hộp thoại Tên vai trò, thông báo khi **Nhận** bị từ chối, Tổng quan của staff, tab ngôn ngữ mặc định, thông báo lưu đã dịch, tên người được báo khi chuyển đội, đoạn xem trước là câu hỏi, vai trò đối tác trong hộp thoại báo. Hai lý do mới của hộp thoại báo (dữ liệu đối tác không đọc được; số liệu không đối chiếu được) đã được xem bằng hàng thông báo tạo trực tiếp trong cơ sở dữ liệu thử, **chưa** chạy trọn luồng qua API đối tác.
+- Email và Slack thật chưa được thử với hai lý do mới và với tiền tố tiêu đề mới.

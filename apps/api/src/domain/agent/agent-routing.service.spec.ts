@@ -25,6 +25,7 @@ function build(
     raise?: unknown;
     assignments?: Row[];
     users?: Row[];
+    messages?: Row[];
   } = {},
 ) {
   const conv: Row | null =
@@ -47,7 +48,7 @@ function build(
   const convs = fakeRepo<Row>(conv ? [conv] : []);
   const assignments = fakeRepo<Row>(opts.assignments ?? []);
   const comments = fakeRepo<Row>([]);
-  const msgs = fakeRepo<Row>([{ id: 1, conversationId: 42, senderType: 'user', body: 'Hoa hồng tính thế nào?' }]);
+  const msgs = fakeRepo<Row>(opts.messages ?? [{ id: 1, conversationId: 42, senderType: 'user', body: 'Hoa hồng tính thế nào?' }]);
   const sessions = fakeRepo<Row>([{ id: 5, identityClaims: { signed: true, hotelSn: '1721', hotelName: 'Sao Mai', role: 'manager' } }]);
   const users = fakeRepo<Row>(opts.users ?? [{ id: 7, tenantId: 1, name: 'Lan', region: 'north' }, { id: 22, tenantId: 1, name: 'Minh', region: 'south' }]);
   const raise = jest.fn(async () => opts.raise ?? { alert: { id: 900 }, targetUserId: 22, targetRegion: null });
@@ -127,6 +128,43 @@ describe('AgentRoutingService.reroute', () => {
       targetUserIds: [3],
       preview: 'Hoa hồng tính thế nào?',
     });
+  });
+
+  it('quotes the question, not the team chip the customer pressed, in the new alert (w3c, ops-manual finding 16)', async () => {
+    const h = build({
+      messages: [
+        { id: 1, conversationId: 42, senderType: 'user', body: 'Hoa hồng tính thế nào?' },
+        { id: 2, conversationId: 42, senderType: 'system', body: 'Bạn cần hỗ trợ về việc gì?' },
+        { id: 3, conversationId: 42, senderType: 'user', body: 'Hỗ trợ khách hàng', retrievalTrace: { kind: 'team_choice', supportType: 'cs' } },
+      ],
+    });
+    await h.svc.reroute(42, 1, 7, { supportType: 'business' });
+    const [payload] = h.raise.mock.calls[0] as unknown as [Record<string, unknown>];
+    expect(payload.preview).toBe('Hoa hồng tính thế nào?');
+  });
+
+  it('names the paged person and the actor from the e-mail when no display name is set (w3c, ops-manual finding 13)', async () => {
+    const h = build({
+      users: [
+        { id: 7, tenantId: 1, name: null, email: 'lan.pham@go2joy.example', region: 'north' },
+        { id: 22, tenantId: 1, name: null, email: 'minh_tran@go2joy.example', region: 'south' },
+      ],
+    });
+    const out = await h.svc.reroute(42, 1, 7, { supportType: 'business' });
+    expect(out.notified).toEqual({ userId: 22, name: 'Minh Tran', region: null });
+    expect(h.comments.table[0].body).toContain('by Lan Pham');
+    expect(h.comments.table[0].body).not.toContain('user #');
+  });
+
+  it('prefers the real display name over the e-mail words', async () => {
+    const h = build({
+      users: [
+        { id: 7, tenantId: 1, name: 'Lan', email: 'lan.pham@go2joy.example', region: 'north' },
+        { id: 22, tenantId: 1, name: 'Minh (SA)', email: 'minh_tran@go2joy.example', region: 'south' },
+      ],
+    });
+    const out = await h.svc.reroute(42, 1, 7, { supportType: 'business' });
+    expect(out.notified.name).toBe('Minh (SA)');
   });
 
   it('tells the caller who was asked', async () => {

@@ -6,6 +6,7 @@ import { Conversation } from '../chat/entity/conversation.entity';
 import { User } from '../user/entity/user.entity';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { displayNameOf } from '../../global/util/user-display.util';
 
 const MAX_BODY_LENGTH = 2000;
 
@@ -120,8 +121,10 @@ export class ChatCommentService {
     const ids = [...new Set(comments.map((c) => Number(c.authorId)))];
     if (!ids.length) return map;
     const users = await this.userRepo.find({ where: { id: In(ids) } });
+    // Staff-facing: a user with no name set reads as their e-mail words, not "Unknown" (w3c).
     for (const u of users) {
-      if (u.name) map.set(String(u.id), u.name);
+      const name = displayNameOf(u);
+      if (name) map.set(String(u.id), name);
     }
     return map;
   }

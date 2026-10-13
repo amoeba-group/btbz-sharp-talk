@@ -193,7 +193,7 @@
     "all": "すべて",
     "counsel": "相談情報",
     "product": "商品情報",
-    "operation": "OperationInfo"
+    "operation": "運用情報"
   },
   "importRequiredColumns": "必須列：商品名 ・ Handle ・ 詳細",
   "importUpsertHint": "既存の商品はHandleで照合して更新します。重複は作成されません。",

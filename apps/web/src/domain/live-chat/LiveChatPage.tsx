@@ -47,6 +47,7 @@ import {
   useQueueCounts,
   useConversation,
   useConversationActions,
+  useTeamLabel,
   useAskKnowledge,
   useProposeAnswer,
   useCustomerActions,
@@ -326,8 +327,10 @@ export function LiveChatPage() {
   const setAiAgent = useSetSessionAiAgent(selected);
   const assignConv = useAssignConversation(selected);
   const fileIssueMut = useFileIssue(selected);
-  const { data: tenantUsers } = useUsers();
   const canAssign = ['master', 'director', 'manager'].includes(principal?.rank ?? '');
+  // useUsers() itself stays idle below manager rank (GET /users is manager-and-above), so a staff
+  // member's Live Chat no longer collects a silent 403 on every load (w3c, ops-manual finding 15).
+  const { data: tenantUsers } = useUsers();
   const canManageKnowledge =
     principal?.actorType === 'user' &&
     (principal.rank === 'master' || principal.rank === 'director');
@@ -368,6 +371,8 @@ export function LiveChatPage() {
     }
   };
   const { accept, end, send, handBack } = useConversationActions(selected);
+  // Team wording as the tenant configured it (w3c): same words as the alarm, chips and alerts.
+  const teamLabel = useTeamLabel();
   const [handBackOpen, setHandBackOpen] = useState(false);
 
   // Knowledge lookup (PLN-260810 S2/S3). Answer lives in component state, not
@@ -834,7 +839,7 @@ export function LiveChatPage() {
                           className="rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700"
                           title={t('team.badgeTitle')}
                         >
-                          {t(`team.${s.supportType}`, { defaultValue: s.supportType })}
+                          {teamLabel(s.supportType)}
                         </span>
                       )}
                       {s.supportRegion && (
@@ -936,7 +941,7 @@ export function LiveChatPage() {
                   )}
                   {convo?.supportType && (
                     <Badge tone="warning">
-                      {t('team.badgeTitle')}: {t(`team.${convo.supportType}`, { defaultValue: convo.supportType })}
+                      {t('team.badgeTitle')}: {teamLabel(convo.supportType)}
                     </Badge>
                   )}
                   {convo?.supportRegion && (

@@ -6,6 +6,7 @@ import {
   IsIn,
   IsOptional,
   IsString,
+  MaxLength,
   MinLength,
 } from 'class-validator';
 import { USER_RANK, USER_REGION } from '@sharptalk/types';
@@ -37,6 +38,15 @@ export class InviteUserRequest {
   @IsString()
   @IsIn(REGION_VALUES)
   region?: string;
+
+  /**
+   * Display name (w3c, ops-manual finding 13): shown in the re-route toast, the thread note and
+   * the assignee fields, and to customers as the agent's name. Optional; blank = none.
+   */
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  name?: string;
 }
 
 export class ListUsersQuery {
@@ -46,6 +56,13 @@ export class ListUsersQuery {
   @IsOptional() @IsString() label?: string;
   /** Filter by region; 'none' = nationwide only. */
   @IsOptional() @IsString() @IsIn([...REGION_VALUES, 'none']) region?: string;
+}
+
+/** '' clears the name (the console then shows the e-mail's words instead). */
+export class UpdateNameRequest {
+  @IsString()
+  @MaxLength(80)
+  name: string;
 }
 
 export class UpdateRegionRequest {

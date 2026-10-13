@@ -13,6 +13,7 @@ import { useAuthStore } from '@/store/auth-store';
 export function MyPage() {
   const { t } = useTranslation('mypage');
   const { t: ta } = useTranslation('auth');
+  const { t: tUsers } = useTranslation('users');
   const principal = useAuthStore((s) => s.principal);
   const tenantName = useAuthStore((s) => s.tenantName);
   const tenantSlug = useAuthStore((s) => s.tenantSlug);
@@ -34,7 +35,11 @@ export function MyPage() {
             <dt className="text-gray-500">{t('role')}</dt>
             <dd>
               <Badge tone={isAdmin ? 'primary' : 'info'}>
-                {isAdmin ? 'admin' : principal?.rank ?? 'user'}
+                {isAdmin
+                  ? 'admin'
+                  : principal?.rank
+                    ? tUsers(`rankName.${principal.rank}`, { defaultValue: principal.rank })
+                    : 'user'}
               </Badge>
             </dd>
           </div>

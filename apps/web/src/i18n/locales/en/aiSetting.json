@@ -448,7 +448,7 @@
     "guestPolicy": "Visitors who are not signed in",
     "guestPolicy_open": "Answer as usual",
     "guestPolicy_login_guidance": "Only guide them to sign in or register",
-    "guestPolicyHint": "With sign-in guidance, a visitor who has not signed in is answered only from categories marked \"Visible to guests\"; any other question gets the sign-in prompt (edit it under Guest guidance below). Applies from the next message — no deploy needed."
+    "guestPolicyHint": "With sign-in guidance, a visitor who has not signed in is answered only from categories whose \"Who can read\" is \"Public\"; any other question gets the sign-in prompt (edit it under Guest guidance below). Applies from the next message — no deploy needed."
   },
   "agentScope": {
     "button": "Agents",
@@ -545,5 +545,11 @@
     "hostLinkTemplate": "\"Open in your system\" link template",
     "hostLinkTemplateHint": "{hotelSn} is replaced with the signed hotel key; the console then shows an \"Open in host system\" button on partner conversations. Blank = no button.",
     "hostLinkTemplateInvalid": "Must be an https:// URL containing {hotelSn}."
+  },
+  "toast": {
+    "configSaved": "AI configuration saved.",
+    "settingUpdated": "AI setting updated.",
+    "ruleAdded": "Rule added.",
+    "ruleDeleted": "Rule deleted."
   }
 }

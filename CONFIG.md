@@ -162,6 +162,12 @@ Alert recipients no longer default to Amoeba: `AI_ALERT_EMAIL` (AI credit + gold
 `ALERT_EMAIL_FROM`, `ALERT_EMAIL_TO`. The DB-backed console alarm modal always works
 regardless of these.
 
+`ALERT_EMAIL_SUBJECT_PREFIX` (default `[SharpTalk]`) is the prefix of the alert e-mail subject
+(`<prefix> Escalation — conversation #N`, `<prefix> UNCLAIMED — conversation #N`). It used to be the literal
+`[IVY Chat]` for every deployment; an IVY deployment whose mailbox rules match that text sets
+`ALERT_EMAIL_SUBJECT_PREFIX=[IVY Chat]` (the `SharpTalk-USA-IVY` profile example does). One line, at most
+40 characters; blank = the default.
+
 **Agent presence (PLN-261012 SG-60):** `AGENT_PRESENCE_TTL_SEC` (default 90) — an agent counts as
 available for alert routing only while "On duty" in the console AND the console polled within this
 many seconds (the 10 s alert poll is the heartbeat). Blank or non-positive = default.
@@ -250,7 +256,7 @@ and cap live on `conversations.unclaimed_pages/unclaimed_paged_at`, so a restart
 cannot double-page.
 
 **Strict regional routing (PLN-261012 SG-67):** `handoff_config.regionRouting.mode='strict'` (console:
-AI settings > Handoff > region table). Needs `CRED_ENC_KEY` to store the per-team Slack webhooks
+Tenant Settings > Basic > Agent handoff > region table; the card is the one the hand-off settings live in, not a tab of AI Settings). Needs `CRED_ENC_KEY` to store the per-team Slack webhooks
 (`regionRouting.slackByRegion`, sealed AES-256-GCM, https://hooks.slack.com only, returned masked).
 `regionRouting.widenAfterMinutes` is the only cross-region path; the sweep above applies it, so it is
 effective only while `ALERT_UNCLAIMED_MINUTES` > 0.

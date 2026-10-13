@@ -62,6 +62,7 @@ import type { PartnerNotice } from '../partner-data/partner-data.step';
 import { PilotService } from '../pilot/pilot.service';
 import { ObserveChatTurn, markTurnOutcome, observeTurnLatency } from '../../infrastructure/observability/app-metrics';
 import { partnerLabelOfClaims } from '../../global/util/partner-label.util';
+import { escalationPreview } from './escalation-preview.util';
 import { FOLLOW_UP_AGENT } from './scenario-scripts';
 import { historyExceedsViewer } from './conversation-audience.util';
 import {
@@ -305,7 +306,14 @@ export type EscalationReason =
   | 'user_request'
   | 'policy'
   /** The AI engine or the moderation path failed — an outage, not missing knowledge (PLN-261012 SG-84). */
-  | 'engine_unavailable';
+  | 'engine_unavailable'
+  /**
+   * The partner-data step could not read the hotel's data / could not verify a figure (SG-31). They
+   * used to be published as `low_confidence`, which told the person paged "no answer in the
+   * knowledge base" for a partner-API outage (w3c, ops-manual finding 5).
+   */
+  | 'partner_unavailable'
+  | 'partner_unverified';
 
 /** What a handoff tells the caller: the notice shown, and whether we still need an address. */
 export interface HandoffOutcome {
@@ -708,7 +716,12 @@ export class ChatService {
     return latest.reverse();
   }
 
-  /** Agent display names for the given messages, so the widget can show who replied. */
+  /**
+   * Agent display names for the given messages, so the widget can show who replied. Customer-facing:
+   * only the `users.name` a tenant chose to give is shown. The staff-facing e-mail-words fallback
+   * (`displayNameOf`) is deliberately NOT used here - it would put part of an address into a
+   * customer's chat (w3c, ops-manual finding 13; pinned by staff-display-name.spec.ts).
+   */
   async resolveSenderNames(messages: Message[]): Promise<Map<string, string>> {
     const map = new Map<string, string>();
     const ids = [
@@ -1902,10 +1915,14 @@ export class ChatService {
     }
 
     if (session.channel === 'preview') return { escalated: true, choose: false, body: null }; // sandbox: never page the agents
-    const lastUser = await this.msgRepo.findOne({
-      where: { conversationId, senderType: SENDER_TYPE.USER },
-      order: { id: 'DESC' },
-    });
+    // What the alert quotes: the customer's last message that is NOT the team chip just stored above
+    // (w3c, ops-manual finding 16) - the question, not the name of the team they pressed.
+    const preview = await escalationPreview((beforeId) =>
+      this.msgRepo.findOne({
+        where: { conversationId, senderType: SENDER_TYPE.USER, ...(beforeId != null ? { id: LessThan(beforeId) } : {}) },
+        order: { id: 'DESC' },
+      }),
+    );
     // Same routing as the automatic handoff (PLN-AiSetting W3). Off hours the
     // widget's local "connecting you" line would be a lie, so persist the
     // off-hours notice — the conversation poll shows it to the customer.
@@ -1951,7 +1968,7 @@ export class ChatService {
       conversationId,
       sessionId: session.id,
       reason: 'user_request',
-      preview: (lastUser?.body ?? '').slice(0, 300),
+      preview,
       targetUserIds: route.targetUserIds,
       offHoursEmail: route.mode === 'email' ? route.email : undefined,
       partnerLabel: partnerLabelOf(session, identity),
@@ -2049,7 +2066,11 @@ export class ChatService {
   ): Promise<ChatTurnResult> {
     const conversationId = String(ctx.conversationId);
     if (notice.handoff && !ctx.queued) {
-      const handoff = await this.handoff(ctx.conversationId, ctx.session, ctx.tenantId, 'low_confidence', ctx.text, {
+      // Its own escalation word, not `low_confidence`: the alarm and the Slack/e-mail text name the real
+      // cause (the partner data could not be read / a figure could not be verified).
+      const reason: EscalationReason =
+        notice.reason === REFUSAL_REASON.PARTNER_UNVERIFIED ? 'partner_unverified' : 'partner_unavailable';
+      const handoff = await this.handoff(ctx.conversationId, ctx.session, ctx.tenantId, reason, ctx.text, {
         ...ctx.denyStamp,
         notice: notice.body,
         trace: notice.trace,

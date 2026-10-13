@@ -121,7 +121,23 @@ const REASON_LABEL: Record<string, string> = {
   unclaimed: 'UNCLAIMED — nobody has taken this conversation yet',
   // PLN-261012 SG-64: an agent handed it over to another team.
   rerouted: 'Handed over by an agent to this team',
+  // w3c (ops-manual finding 5): the partner-data step's two hand-offs used to read as a knowledge miss.
+  partner_unavailable: 'Partner data unavailable — the hotel data system did not answer usably (not missing knowledge)',
+  partner_unverified: 'AI answer withheld — a figure could not be verified against the hotel data',
 };
+
+/** Subject prefix of alert e-mails when ALERT_EMAIL_SUBJECT_PREFIX is not set (w3c, ops-manual finding 17). */
+export const ALERT_SUBJECT_PREFIX_DEFAULT = '[SharpTalk]';
+
+/**
+ * The subject prefix: the operator's `ALERT_EMAIL_SUBJECT_PREFIX`, else the neutral product default.
+ * It used to be the literal "[IVY Chat]" for every tenant of every deployment. One line, bounded,
+ * so a stray newline in an env file can never become a second mail header.
+ */
+export function alertSubjectPrefix(raw: string | undefined | null): string {
+  const clean = String(raw ?? '').replace(/[\r\n]+/g, ' ').trim().slice(0, 40);
+  return clean || ALERT_SUBJECT_PREFIX_DEFAULT;
+}
 
 /**
  * Escalation alarm fan-out (FR-S3, PLAN-Scenario-Handoff-Alert §3.3).
@@ -747,12 +763,13 @@ export class AgentAlertService implements OnModuleInit {
   private async notifyEmail(alert: AgentAlert, overrideTo: string | undefined, ctx: AlertContext): Promise<void> {
     const to = overrideTo ?? this.config.get<string>('ALERT_EMAIL_TO');
     if (!to) return;
+    const prefix = alertSubjectPrefix(this.config.get<string>('ALERT_EMAIL_SUBJECT_PREFIX'));
     const sent = await this.mailer.send({
       to,
       subject:
         alert.reason === 'unclaimed'
-          ? `[IVY Chat] UNCLAIMED — conversation #${alert.conversationId}`
-          : `[IVY Chat] Escalation — conversation #${alert.conversationId}`,
+          ? `${prefix} UNCLAIMED — conversation #${alert.conversationId}`
+          : `${prefix} Escalation — conversation #${alert.conversationId}`,
       text: this.summary(alert, ctx),
     });
     m.alertSends.inc({

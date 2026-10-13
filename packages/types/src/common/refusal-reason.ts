@@ -160,6 +160,13 @@ export function buildHandoffTrace(
           ? 'user_request'
           : escalationReason === 'engine_unavailable'
             ? REFUSAL_REASON.ENGINE_UNAVAILABLE
-            : REFUSAL_REASON.LOW_CONFIDENCE;
+            : // The partner-data step's two hand-offs keep their own word (w3c, ops-manual finding 5): they
+              // used to be published as `low_confidence`, so the alarm said "no answer in the knowledge
+              // base" for what was a partner-API outage.
+              escalationReason === 'partner_unavailable'
+              ? REFUSAL_REASON.PARTNER_UNAVAILABLE
+              : escalationReason === 'partner_unverified'
+                ? REFUSAL_REASON.PARTNER_UNVERIFIED
+                : REFUSAL_REASON.LOW_CONFIDENCE;
   return buildRefusalTrace(reason, agentId, extra);
 }

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { FormRow, Input, Select } from '@/components/Field';
+import { useCopyLang } from '@/lib/copy-lang';
 import { usePrivacyNotice, useUpdatePrivacyNotice } from './privacy-notice.hooks';
 import type { NoticeLineKey, NoticeLines } from './privacy-notice.service';
 import { LANGUAGES } from '../../../../../packages/types/src/common/language';
@@ -70,7 +71,9 @@ export function PrivacyNoticePage() {
   const [version, setVersion] = useState('');
   const [profile, setProfile] = useState<string>('');
   const [copy, setCopy] = useState<Record<string, NoticeLines>>({});
-  const [copyLang, setCopyLang] = useState<string>('KO');
+  // Opens on the console language, not on Korean (w3c, ops-manual finding 19).
+  const defaultCopyLang = useCopyLang();
+  const [copyLang, setCopyLang] = useState<string>(defaultCopyLang);
   const [bumpVersion, setBumpVersion] = useState(false);
   const [urlInvalid, setUrlInvalid] = useState(false);
   const [versionInvalid, setVersionInvalid] = useState(false);

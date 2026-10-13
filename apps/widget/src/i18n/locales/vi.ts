@@ -170,16 +170,16 @@ export const vi: Translation = {
 
   contact: {
     title: 'Liên hệ hỗ trợ',
-    phone: '1588-0000',
-    hours: 'Thứ Hai–Thứ Sáu 10:00–18:00',
-    email: 'help@ivy.com',
+    // No `phone`, `email`, `hours` or `emailHours` here on purpose (w3c, ops-manual finding 8): they used
+    // to hold IVY's own placeholder phone, address and opening hours, which every other tenant's
+    // customers then saw. ContactCard reads them with an empty default and draws a method only when
+    // it has a value (lib/contact-card.ts), so a bundle without them offers just "chat with an agent".
     chatAgent: 'Trò chuyện với nhân viên',
     methods: {
       phone: 'Gọi điện',
       email: 'Email',
       chat: 'Chat trực tuyến',
     },
-    emailHours: 'Tiếp nhận 24/7 · phản hồi trong 1 ngày làm việc',
   },
 
   affiliate: {

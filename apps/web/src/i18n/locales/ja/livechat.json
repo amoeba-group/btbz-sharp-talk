@@ -481,5 +481,16 @@
     "errorEnded": "終了した会話は引き継げません。",
     "errorTarget": "そのチームまたは地域は利用できません。",
     "errorNotEnabled": "チーム振り分けがオンになっていません。"
-  }
+  },
+  "toast": {
+    "proposeSent": "レビューに送信しました。"
+  },
+  "actionError": {
+    "acceptCapacity": "同時に担当できる会話数の上限に達しています。どれかを終了するかAIに戻してから、もう一度引き受けてください。",
+    "accept": "会話を引き受けられませんでした。",
+    "end": "会話を終了できませんでした。",
+    "handBack": "会話をAIに戻せませんでした。"
+  },
+  "alarmReasonPartnerUnavailable": "パートナーのデータを今は読み取れず、AIが数値を案内できませんでした。担当者による確認が必要です。",
+  "alarmReasonPartnerUnverified": "回答内の数値をホテルのデータで確認できなかったため、AIは回答を保留しました。担当者による確認が必要です。"
 }

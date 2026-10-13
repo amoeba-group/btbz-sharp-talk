@@ -15,6 +15,9 @@ export type Capability =
   | 'work_log'
   | 'statistics'
   | 'customer_pii_reveal'
+  // The dashboard's KPI numbers (`GET /analytics/dashboard` is `ANALYTICS_READ`): master, director,
+  // manager. Staff reach the Dashboard page but not these numbers (w3c, ops-manual finding 15).
+  | 'analytics_read'
   | 'dashboard';
 
 // Label codes mapped to capability groups.
@@ -47,6 +50,7 @@ const RANK_EXTRA: Record<Rank, Capability[]> = {
     // (PLN-260920). The server enforces it; this only decides whether the
     // console offers the control.
     'customer_pii_reveal',
+    'analytics_read',
   ],
   director: [
     'dashboard',
@@ -63,8 +67,9 @@ const RANK_EXTRA: Record<Rank, Capability[]> = {
     'work_log',
     'statistics',
     'customer_pii_reveal',
+    'analytics_read',
   ],
-  manager: ['dashboard', 'ai_settings', 'statistics'],
+  manager: ['dashboard', 'ai_settings', 'statistics', 'analytics_read'],
   staff: ['dashboard'],
 };
 
@@ -100,6 +105,18 @@ export function capabilitiesFor(principal: Principal | null): Set<Capability> {
   }
 
   return caps;
+}
+
+/**
+ * May this user call `GET /admin/orders`? The API needs MODULE_OPERATIONS, which is label-gated for
+ * everyone except master (`userCan`): the OPERATIONS label, whatever the rank. `can('orders')` is wider
+ * (a director by rank, a Sales Admin by label) because it decides which MENU shows, so using it to decide
+ * whether to CALL the endpoint sent those users a 403 on every Dashboard load (w3c, ops-manual finding 15).
+ * Sales Admin gets the Orders screen but not this endpoint today - reported, not changed here.
+ */
+export function canListOrders(principal: Principal | null): boolean {
+  if (!principal || principal.actorType === 'admin') return false;
+  return principal.rank === 'master' || (principal.labels ?? []).includes('operations');
 }
 
 export function makeCan(principal: Principal | null) {

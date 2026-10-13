@@ -54,6 +54,8 @@ What the browser run established (details in TCR §5): the duty toggle and prese
 
 ## 5. Wrong or missing Vietnamese labels and behaviours found (not fixed in this stream)
 
+> **Update (w3c, 2026-10-13):** every finding below that was a product defect was fixed afterwards on `feature/go2joy-s10-polish` and re-verified, see [RPT-261013-w3c-polish](RPT-261013-w3c-polish.md) §2 (the per-finding status is also the Status column of the findings table in `go2joy-ops.en.md` §4). The text of each row is what this stream observed BEFORE those fixes, and the manual (`go2joy-ops.vi.md` / `.en.md`) was updated to the fixed behaviour. Findings 9, 10, 20 and part of 14, 17 and 21 stay open there.
+
 | # | Finding | Where |
 |---|---|---|
 | 1 | Job label display names default to Korean (상담, 영업관리, …); the console has no screen to rename them (only `PATCH /api/v1/job-labels/:id`, master). The Users screen and the invite dialog therefore show Korean role names in a Vietnamese console | `seed.runner.ts`, `tenant.service.ts`, `UsersPage.tsx` |
@@ -91,10 +93,10 @@ Not deployed. No schema, SQL, entity or environment change, so no `## Migration`
 ## 8. Follow-ups
 
 - Gate simulator ("test as" Khách / Lễ tân / Quản lý): the manual states it is absent; update §7.4 and the English table when it lands.
-- Fix the findings in §5 (priorities before go-live: 1 label rename path, 6 silent Accept failure, 13 no display name, 5 alarm reason for partner outages, 8 widget contact card, 9 consent banner, 19 KO default language tabs).
+- ~~Fix the findings in §5~~ Done in w3c except 9 (consent banner, select `vn_pdpl`), 10, 20 and the open parts of 14, 17, 21 (see RPT-261013-w3c-polish §3).
 - Native-speaker review of the Vietnamese manual and of the console strings it quotes.
 - Re-capture the screenshots after Go2Joy renames the labels and when the wording is final (re-run the capture script against a scratch environment).
-- Update the runbook sections in finding 12 and the CONFIG.md path in finding 11.
+- ~~Update the runbook sections in finding 12 and the CONFIG.md path in finding 11.~~ Done in w3c.
 - Optional: regenerate the other manuals' HTML with the converter's new italic rule (`*text*;` used to print its asterisks) — not done here to keep the diff to this stream's files.
 
 ## 9. Commits

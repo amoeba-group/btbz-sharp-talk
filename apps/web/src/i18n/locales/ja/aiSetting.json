@@ -448,7 +448,7 @@
     "guestPolicy": "未ログインの訪問者",
     "guestPolicy_open": "通常どおり回答する",
     "guestPolicy_login_guidance": "ログイン・登録の案内のみ",
-    "guestPolicyHint": "ログイン案内を選ぶと、未ログインの訪問者は「ゲストに公開」のカテゴリからのみ回答を受け、それ以外の質問にはログイン案内文が返ります（下のゲスト案内で編集）。次のメッセージから適用され、デプロイは不要です。"
+    "guestPolicyHint": "ログイン案内を選ぶと、未ログインの訪問者は「閲覧できる人」が「公開」のカテゴリからのみ回答を受け、それ以外の質問にはログイン案内文が返ります（下のゲスト案内で編集）。次のメッセージから適用され、デプロイは不要です。"
   },
   "agentScope": {
     "button": "エージェント",
@@ -545,5 +545,11 @@
     "hostLinkTemplate": "「自社システムで開く」リンクのテンプレート",
     "hostLinkTemplateHint": "{hotelSn} が署名済みのホテルキーに置き換わり、コンソールのパートナー会話に「ホストシステムで開く」ボタンが表示されます。空欄ならボタンなし。",
     "hostLinkTemplateInvalid": "{hotelSn} を含む https:// のURLである必要があります。"
+  },
+  "toast": {
+    "configSaved": "AI設定を保存しました。",
+    "settingUpdated": "AI設定を更新しました。",
+    "ruleAdded": "ルールを追加しました。",
+    "ruleDeleted": "ルールを削除しました。"
   }
 }

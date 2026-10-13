@@ -4,7 +4,8 @@ import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Input, Label, Select } from '@/components/Field';
 import { cn } from '@/lib/cn';
-import { useUsers } from '../users/users.hooks';
+import { useJobLabels, useUsers } from '../users/users.hooks';
+import { useCopyLang } from '@/lib/copy-lang';
 import { useAiConfig, useUpdateAiConfig } from './ai-settings.hooks';
 import { LanguageTabs } from './LanguageTabs';
 import { DENY_MODE } from './ai-settings.service';
@@ -89,6 +90,11 @@ export function HandoffSection() {
   const { data: config, isLoading, error } = useAiConfig();
   const updateConfig = useUpdateAiConfig();
   const users = useUsers();
+  // Role names for the team table: what Users & Labels shows (renamed or localized), falling back
+  // to the static names when the caller may not read the label list (w3c, ops-manual finding 18).
+  const jobLabels = useJobLabels();
+  const roleName = (code: string): string =>
+    jobLabels.data?.find((l) => l.code === code)?.name || t(`handoff.denyLabel.${code}`);
 
   const [assignees, setAssignees] = useState<string[]>([]);
   // Tenant-wide business hours. One break window (lunch) is what tenants actually
@@ -99,7 +105,9 @@ export function HandoffSection() {
   const [unclaimed, setUnclaimed] = useState<'auto' | 'on' | 'off'>('auto');
   const [email, setEmail] = useState('');
   const [notice, setNotice] = useState<Partial<Record<ScenarioLang, string>>>({});
-  const [lang, setLang] = useState<ScenarioLang>('KO');
+  // Opens on the console language, not on Korean (w3c, ops-manual finding 19).
+  const defaultLang = useCopyLang();
+  const [lang, setLang] = useState<ScenarioLang>(defaultLang);
   // Policy deny-list rows (P2) — keywords edited as a comma-joined string.
   const [denyRows, setDenyRows] = useState<
     Array<{ keywords: string; type: string; label: string; mode: DenyMode }>
@@ -415,7 +423,7 @@ export function HandoffSection() {
                   >
                     {['consult', 'sales_admin', 'accounting', 'operations'].map((v) => (
                       <option key={v} value={v}>
-                        {t(`handoff.denyLabel.${v}`)}
+                        {roleName(v)}
                       </option>
                     ))}
                   </Select>
@@ -523,7 +531,7 @@ export function HandoffSection() {
                     >
                       {['consult', 'sales_admin', 'accounting', 'operations'].map((v) => (
                         <option key={v} value={v}>
-                          {t(`handoff.denyLabel.${v}`)}
+                          {roleName(v)}
                         </option>
                       ))}
                     </Select>

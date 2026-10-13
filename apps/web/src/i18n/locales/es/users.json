@@ -51,5 +51,48 @@
     "stale": "En servicio · sin conexión",
     "staleHint": "Activado, pero la consola no se ha visto recientemente, así que las nuevas escalaciones omiten a esta persona.",
     "off": "Fuera de servicio"
+  },
+  "name": "Nombre",
+  "namePlaceholder": "p. ej. Linh Tran",
+  "nameHint": "Se muestra en los mensajes y notas de traspaso, y a los clientes como nombre del agente. Si lo dejas en blanco, la consola usa las palabras del correo electrónico.",
+  "nameUnset": "(sin definir)",
+  "rankName": {
+    "master": "Máster",
+    "director": "Director",
+    "manager": "Gerente",
+    "staff": "Personal"
+  },
+  "statusName": {
+    "active": "Activo",
+    "suspended": "Suspendido",
+    "invited": "Invitado"
+  },
+  "invited": "Usuario invitado.",
+  "inviteError": "No se pudo invitar al usuario.",
+  "tempPwError": "No se pudo emitir la contraseña temporal.",
+  "mfaResetError": "No se pudo restablecer la MFA.",
+  "updated": "Usuario actualizado.",
+  "updateError": "No se pudo actualizar al usuario.",
+  "roleNames": {
+    "open": "Nombres de roles",
+    "title": "Nombres de roles",
+    "intro": "Los nombres de abajo aparecen en la columna Roles, el formulario de invitación, los filtros y la tabla de equipos. Cámbialos por las palabras que usa tu equipo, por ejemplo CS y SA.",
+    "hint": "Un rol que no toques conserva su nombre integrado y se muestra en el idioma de la consola de cada persona. Un nombre que escribas se muestra tal cual, en todos los idiomas.",
+    "useDefault": "Usar el predeterminado",
+    "nameOf": "Nombre del rol {{code}}",
+    "saved": "Nombres de roles guardados.",
+    "saveError": "No se pudieron guardar los nombres de roles.",
+    "errorDuplicate": "Otro rol ya tiene ese nombre. Da a cada rol su propio nombre.",
+    "errorBlank": "El nombre de un rol no puede estar vacío.",
+    "consult": "Atención al cliente",
+    "accounting": "Contabilidad",
+    "operations": "Operaciones",
+    "sales_admin": "Administración comercial",
+    "meaning": {
+      "consult": "atiende las conversaciones del chat",
+      "sales_admin": "conversaciones, además de clientes y pedidos",
+      "accounting": "afiliados",
+      "operations": "pedidos, clientes, campañas, reseñas, conocimiento"
+    }
   }
 }
