@@ -152,6 +152,20 @@ describe('partner data switches and credentials', () => {
       expect(await new PartnerCredentialService({ findOne: async () => ({ secretEnc: Buffer.from('not ciphertext at all, really') }) } as never).get(1)).toBeNull();
     });
 
+    it('remembers "nothing saved yet" only briefly, so a freshly saved connection is picked up', async () => {
+      const now = jest.spyOn(Date, 'now');
+      now.mockReturnValue(1_000_000);
+      let saved: { secretEnc: Buffer } | null = null;
+      const findOne = jest.fn(async () => saved);
+      const svc = new PartnerCredentialService({ findOne } as never);
+      expect(await svc.get(1)).toBeNull();
+      saved = { secretEnc: encrypt({ base_url: 'https://x', api_key: 'K' }) };
+      expect(await svc.get(1)).toBeNull(); // inside the short window
+      now.mockReturnValue(1_006_000); // 6 s later
+      expect(await svc.get(1)).toEqual({ baseUrl: 'https://x', apiKey: 'K' });
+      now.mockRestore();
+    });
+
     it('caches per tenant for a minute and can be invalidated', async () => {
       const findOne = jest.fn(async () => ({ secretEnc: encrypt({ base_url: 'https://x', api_key: 'K' }) }));
       const svc = new PartnerCredentialService({ findOne } as never);

@@ -8,6 +8,11 @@ import type { PartnerCredentials, PartnerCredentialSource } from './http-go2joy.
 
 /** How long a decrypted credential stays in memory. Saving a new key takes effect within this. */
 const CREDENTIAL_TTL_MS = 60_000;
+/**
+ * "Nothing saved yet" is remembered only briefly: an operator who has just saved
+ * the connection should not watch every lookup degrade for another minute.
+ */
+const MISSING_TTL_MS = 5_000;
 
 /**
  * Reads a tenant's partner-API connection (`base_url`, `api_key`, optional
@@ -19,7 +24,7 @@ const CREDENTIAL_TTL_MS = 60_000;
 @Injectable()
 export class PartnerCredentialService implements PartnerCredentialSource {
   private readonly logger = new Logger(PartnerCredentialService.name);
-  private readonly cache = new Map<number, { at: number; value: PartnerCredentials | null }>();
+  private readonly cache = new Map<number, { until: number; value: PartnerCredentials | null }>();
 
   constructor(
     @InjectRepository(IntegrationCredential)
@@ -28,9 +33,9 @@ export class PartnerCredentialService implements PartnerCredentialSource {
 
   async get(tenantId: number): Promise<PartnerCredentials | null> {
     const hit = this.cache.get(tenantId);
-    if (hit && Date.now() - hit.at < CREDENTIAL_TTL_MS) return hit.value;
+    if (hit && hit.until > Date.now()) return hit.value;
     const value = await this.load(tenantId);
-    this.cache.set(tenantId, { at: Date.now(), value });
+    this.cache.set(tenantId, { until: Date.now() + (value ? CREDENTIAL_TTL_MS : MISSING_TTL_MS), value });
     return value;
   }
 
