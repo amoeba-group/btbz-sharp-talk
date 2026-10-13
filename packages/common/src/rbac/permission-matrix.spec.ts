@@ -81,6 +81,13 @@ describe('permission-matrix — userCan', () => {
     ).toBe(false);
   });
 
+  it('master and director may rename role labels; manager and staff may not (w3c, ops-manual finding 1)', () => {
+    expect(userCan(USER_RANK.MASTER, [], CAPABILITY.LABEL_EDIT)).toBe(true);
+    expect(userCan(USER_RANK.DIRECTOR, [], CAPABILITY.LABEL_EDIT)).toBe(true);
+    expect(userCan(USER_RANK.MANAGER, [], CAPABILITY.LABEL_EDIT)).toBe(false);
+    expect(userCan(USER_RANK.STAFF, [JOB_LABEL.CONSULT], CAPABILITY.LABEL_EDIT)).toBe(false);
+  });
+
   it('both admin levels can read the audit trail (regression: nobody could)', () => {
     // The audit console lives on the system-admin route but GET /audit is
     // guarded by the tenant capability. Admins held only PLATFORM_AUDIT_READ,

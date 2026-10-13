@@ -51,5 +51,48 @@
     "stale": "On duty · not connected",
     "staleHint": "Switched on, but the console has not been seen lately, so new escalations skip this person.",
     "off": "Off duty"
+  },
+  "name": "Name",
+  "namePlaceholder": "e.g. Linh Tran",
+  "nameHint": "Shown in hand-over messages and notes, and to customers as the agent's name. Left blank, the console uses the words of the e-mail address instead.",
+  "nameUnset": "(not set)",
+  "rankName": {
+    "master": "Master",
+    "director": "Director",
+    "manager": "Manager",
+    "staff": "Staff"
+  },
+  "statusName": {
+    "active": "Active",
+    "suspended": "Suspended",
+    "invited": "Invited"
+  },
+  "invited": "User invited.",
+  "inviteError": "Could not invite the user.",
+  "tempPwError": "Could not issue a temporary password.",
+  "mfaResetError": "Could not reset MFA.",
+  "updated": "User updated.",
+  "updateError": "Could not update the user.",
+  "roleNames": {
+    "open": "Role names",
+    "title": "Role names",
+    "intro": "The names below appear in the Roles column, the invite form, the filters and the team table. Change them to the words your team uses, for example CS and SA.",
+    "hint": "A role you leave alone keeps its built-in name and is shown in each person's own console language. A name you type is shown as typed, in every language.",
+    "useDefault": "Use default",
+    "nameOf": "Name of role {{code}}",
+    "saved": "Role names saved.",
+    "saveError": "Could not save the role names.",
+    "errorDuplicate": "Another role already has that name. Give each role its own name.",
+    "errorBlank": "A role name cannot be empty.",
+    "consult": "Customer Support",
+    "accounting": "Accounting",
+    "operations": "Operations",
+    "sales_admin": "Sales Admin",
+    "meaning": {
+      "consult": "handles chat conversations",
+      "sales_admin": "conversations, plus customers and orders",
+      "accounting": "affiliates",
+      "operations": "orders, customers, campaigns, reviews, knowledge"
+    }
   }
 }

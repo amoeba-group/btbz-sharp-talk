@@ -87,6 +87,52 @@ describe('AgentService.listSessions', () => {
   });
 });
 
+describe('listSessions — "My region" keeps the threads the agent holds (w3c, ops-manual finding 22)', () => {
+  function run(region: string | undefined, heldBy?: number) {
+    const calls: Array<[string, Record<string, unknown> | undefined]> = [];
+    const qb: Record<string, unknown> = {
+      where: jest.fn(() => qb),
+      andWhere: jest.fn((c: string, p?: Record<string, unknown>) => {
+        calls.push([c, p]);
+        return qb;
+      }),
+      orderBy: jest.fn(() => qb),
+      addOrderBy: jest.fn(() => qb),
+      skip: jest.fn(() => qb),
+      take: jest.fn(() => qb),
+      getManyAndCount: jest.fn(async () => [[], 0]),
+    };
+    const svc = new AgentService(
+      { createQueryBuilder: () => qb } as never,
+      { createQueryBuilder: () => ({ select: () => ({ where: () => ({ getMany: async () => [] }) }) }) } as never,
+      {} as never,
+      { find: jest.fn(async () => []) } as never,
+      {} as never, {} as never, {} as never, {} as never, {} as never, {} as never, {} as never, {} as never, {} as never, {} as never,
+    );
+    return svc
+      .listSessions(1, 1, 50, undefined, 'all', undefined, undefined, undefined, undefined, region, heldBy)
+      .then(() => calls);
+  }
+
+  it('widens the region filter with the conversations the caller holds', async () => {
+    const calls = await run('south', 9);
+    const hit = calls.find(([c]) => c.includes('support_region'));
+    expect(hit?.[0]).toBe('(c.support_region = :supportRegion OR c.agent_id = :heldBy)');
+    expect(hit?.[1]).toEqual({ supportRegion: 'south', heldBy: 9 });
+  });
+
+  it('is the plain region filter when no holder is passed (every other caller is unchanged)', async () => {
+    const calls = await run('south');
+    const hit = calls.find(([c]) => c.includes('support_region'));
+    expect(hit?.[0]).toBe('c.support_region = :supportRegion');
+  });
+
+  it("does not touch the 'none' / 'unmapped' / 'all' filters", async () => {
+    expect((await run('none', 9)).find(([c]) => c.includes('IS NULL'))?.[0]).toBe('c.support_region IS NULL');
+    expect((await run('all', 9)).some(([c]) => c.includes('heldBy'))).toBe(false);
+  });
+});
+
 describe('listSessions — scope', () => {
   it.each([
     ['all', ['ai_active', 'waiting', 'agent']],

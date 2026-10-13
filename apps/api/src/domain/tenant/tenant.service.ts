@@ -19,6 +19,7 @@ import {
   IDENTITY_MAX_AGE_HOURS_MAX,
   IDENTITY_MAX_AGE_HOURS_MIN,
   normalizeIdentityPolicy,
+  DEFAULT_JOB_LABEL_NAME,
 } from '@sharptalk/types';
 
 /** Real categories the policy may mention ('all' is a query filter, not a kind). */
@@ -34,13 +35,19 @@ import { IntegrationStatusEntity } from '../integration/entity/integration-statu
 import { ContentFilterRule } from '../moderation/entity/content-filter-rule.entity';
 import { DEFAULT_MODERATION_RULES } from '../moderation/moderation.defaults';
 
-/** Job labels every new tenant starts with (matches the seed for tenant ivyusa). */
+/**
+ * Job labels every new tenant starts with (matches the seed for tenant ivyusa).
+ * Names are the English-neutral defaults (w3c, ops-manual finding 1): they used to be Korean, which a
+ * Vietnamese or English console then listed verbatim. The console shows a default name in the
+ * console language and a renamed one as typed (`isDefaultJobLabelName`), so no tenant has to be
+ * rewritten for this - tenants seeded earlier keep their rows and are recognised as defaults too.
+ */
 const DEFAULT_JOB_LABELS: ReadonlyArray<{ code: string; name: string }> = [
-  { code: 'consult', name: '상담' },
-  { code: 'accounting', name: '회계' },
-  { code: 'operations', name: '운영' },
+  { code: 'consult', name: DEFAULT_JOB_LABEL_NAME.consult },
+  { code: 'accounting', name: DEFAULT_JOB_LABEL_NAME.accounting },
+  { code: 'operations', name: DEFAULT_JOB_LABEL_NAME.operations },
   // Sales Admin (PLN-261007): partner/contract desk — consult screens + customers/orders.
-  { code: 'sales_admin', name: '영업관리' },
+  { code: 'sales_admin', name: DEFAULT_JOB_LABEL_NAME.sales_admin },
 ];
 import { IntegrationService } from '../integration/integration.service';
 import { BusinessException } from '../../global/exception/business.exception';

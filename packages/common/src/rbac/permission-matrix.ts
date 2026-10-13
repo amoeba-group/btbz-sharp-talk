@@ -68,6 +68,9 @@ const RANK_CAPS: Record<UserRank, Capability[]> = {
   ],
   [USER_RANK.DIRECTOR]: [
     CAPABILITY.USER_INVITE,
+    // Rename the role labels ("Role names" dialog, w3c ops-manual finding 1): wording only, so it sits
+    // with the director who already invites and assigns. The Users screen itself stays a menu grant.
+    CAPABILITY.LABEL_EDIT,
     CAPABILITY.LABEL_ASSIGN,
     CAPABILITY.AI_SETTINGS_MANAGE,
     CAPABILITY.KNOWLEDGE_SOURCE_MANAGE,

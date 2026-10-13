@@ -51,5 +51,48 @@
     "stale": "值班中 · 未连接",
     "staleHint": "已开启值班，但近期未检测到控制台在线，新的转人工提醒会跳过此人。",
     "off": "未值班"
+  },
+  "name": "姓名",
+  "namePlaceholder": "例如：陈琳",
+  "nameHint": "显示在转接消息和备注中，也会作为客服名称显示给客户。留空时，控制台改用邮箱地址中的文字。",
+  "nameUnset": "（未设置）",
+  "rankName": {
+    "master": "Master",
+    "director": "总监",
+    "manager": "经理",
+    "staff": "员工"
+  },
+  "statusName": {
+    "active": "启用",
+    "suspended": "已停用",
+    "invited": "已邀请"
+  },
+  "invited": "已邀请用户。",
+  "inviteError": "无法邀请该用户。",
+  "tempPwError": "无法签发临时密码。",
+  "mfaResetError": "无法重置 MFA。",
+  "updated": "已更新用户。",
+  "updateError": "无法更新该用户。",
+  "roleNames": {
+    "open": "角色名称",
+    "title": "角色名称",
+    "intro": "下列名称会显示在“角色”列、邀请表单、筛选器和团队表中。请改成团队习惯的叫法，例如 CS 和 SA。",
+    "hint": "未改动的角色保留内置名称，并按每位用户的控制台语言显示。您输入的名称在所有语言中都按原样显示。",
+    "useDefault": "使用默认",
+    "nameOf": "角色 {{code}} 的名称",
+    "saved": "已保存角色名称。",
+    "saveError": "无法保存角色名称。",
+    "errorDuplicate": "已有其他角色使用该名称，请为每个角色设置不同的名称。",
+    "errorBlank": "角色名称不能为空。",
+    "consult": "客户支持",
+    "accounting": "财务",
+    "operations": "运营",
+    "sales_admin": "销售管理",
+    "meaning": {
+      "consult": "处理聊天会话",
+      "sales_admin": "会话，以及客户和订单",
+      "accounting": "推广合作",
+      "operations": "订单、客户、营销活动、评价、知识库"
+    }
   }
 }

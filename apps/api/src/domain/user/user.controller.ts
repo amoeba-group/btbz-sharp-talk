@@ -24,6 +24,7 @@ import {
   IssueTempPasswordRequest,
   ListUsersQuery,
   UpdateLabelsRequest,
+  UpdateNameRequest,
   UpdateRankRequest,
   UpdateRegionRequest,
   UpdateStatusRequest,
@@ -65,6 +66,7 @@ export class UserController {
       body.label_codes,
       'user',
       body.region,
+      body.name,
     );
   }
 
@@ -117,6 +119,19 @@ export class UserController {
     @Body() body: UpdateLabelsRequest,
   ) {
     return this.userService.updateLabels(asTenantUser(user).tenantId, id, body.label_codes);
+  }
+
+  @Patch(':id/name')
+  // Same holders as inviting: who may add someone may also name them (w3c, finding 13).
+  @RequireCapability(CAPABILITY.USER_INVITE)
+  @ApiOperation({ summary: 'Set or clear a user display name' })
+  updateName(
+    @CurrentUser() user: Principal,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateNameRequest,
+  ) {
+    const actor = asTenantUser(user);
+    return this.userService.updateName(actor.tenantId, id, body.name, actor.userId);
   }
 
   @Patch(':id/region')

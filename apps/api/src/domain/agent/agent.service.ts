@@ -44,6 +44,7 @@ import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { UpsertProfileRequest } from './dto/request/agent.request';
 import { PROFILE_STATUS_ONLINE } from '../../global/util/presence.util';
+import { displayNameOf } from '../../global/util/user-display.util';
 import { ChannelThread } from '../messenger/entity/channel-thread.entity';
 import { MessengerChannel } from '../messenger/entity/messenger-channel.entity';
 import { ReplyDraft } from '../chat/entity/reply-draft.entity';
@@ -325,6 +326,12 @@ export class AgentService {
      * ones whose signed province the table does not list. 'all'/omitted = every region.
      */
     supportRegion?: string,
+    /**
+     * "My region" (w3c, ops-manual finding 22): also keep the conversations THIS agent holds, whatever
+     * their region, so a thread she is working never drops out of her own list because it belongs to
+     * the other team. Only meaningful with a concrete `supportRegion` team.
+     */
+    alsoHeldBy?: number,
   ): Promise<{
     items: Array<{
       conversation: Conversation;
@@ -392,7 +399,14 @@ export class AgentService {
       // A signed province the region table does not list (PLN-261012 SG-65): no team, but a hint.
       qb.andWhere('c.support_region IS NULL AND c.support_region_hint IS NOT NULL');
     } else if (regionFilter && regionFilter !== 'all') {
-      qb.andWhere('c.support_region = :supportRegion', { supportRegion: regionFilter });
+      if (alsoHeldBy != null) {
+        qb.andWhere('(c.support_region = :supportRegion OR c.agent_id = :heldBy)', {
+          supportRegion: regionFilter,
+          heldBy: alsoHeldBy,
+        });
+      } else {
+        qb.andWhere('c.support_region = :supportRegion', { supportRegion: regionFilter });
+      }
     }
 
     // AI-agent filter (REQ-260825 R7). Filtering by the DEFAULT agent must also
@@ -1368,8 +1382,11 @@ export class AgentService {
     ];
     if (ids.length === 0) return map;
     const users = await this.userRepo.find({ where: { id: In(ids) } });
+    // Console thread: a staff member with no name set reads as their e-mail words (w3c). The
+    // customer's widget resolves names in ChatService and keeps the real name only.
     for (const u of users) {
-      if (u.name) map.set(String(u.id), u.name);
+      const name = displayNameOf(u);
+      if (name) map.set(String(u.id), name);
     }
     return map;
   }
@@ -1383,7 +1400,7 @@ export class AgentService {
   /** Single agent's display name (for the just-sent message response). */
   async agentName(userId: number): Promise<string | null> {
     const user = await this.userRepo.findOne({ where: { id: userId } });
-    return user?.name ?? null;
+    return displayNameOf(user);
   }
 
   /**

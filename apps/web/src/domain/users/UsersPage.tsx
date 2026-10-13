@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { UserPlus, KeyRound, Copy, Check, ShieldOff, AlertTriangle } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { UserPlus, KeyRound, Copy, Check, ShieldOff, AlertTriangle, Tags } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/PageHeader';
 import { Card } from '@/components/Card';
@@ -11,6 +11,7 @@ import type { Column } from '@/components/Table';
 import { Modal } from '@/components/Modal';
 import { FormRow, Input, Select } from '@/components/Field';
 import { toast } from '@/store/toast-store';
+import { useAuthStore } from '@/store/auth-store';
 import {
   useUsers,
   useJobLabels,
@@ -18,7 +19,13 @@ import {
   useUpdateUser,
   useIssueTempPassword,
   useResetUserMfa,
+  useRenameJobLabels,
 } from './users.hooks';
+// Source deep-import: the package entry point is CJS and fails the browser build for values.
+import {
+  hasBlankJobLabelName,
+  planJobLabelRenames,
+} from '../../../../../packages/types/src/common/job-label-name';
 import { USER_REGIONS } from './users.service';
 import type { JobLabel, TenantUser, UpdateUserBody, UserPresence } from './users.service';
 
@@ -121,6 +128,110 @@ function LabelCheckboxes({
   );
 }
 
+/**
+ * "Role names" dialog (w3c, ops-manual finding 1): one input per role label, prefilled with what
+ * the console shows today. Only the rows the operator changed are saved; a label left alone keeps
+ * its built-in name and keeps following the console language. "Use default" writes the neutral
+ * English default back, which the console again shows in its own language.
+ */
+function RoleNamesModal({
+  open,
+  onClose,
+  labels,
+}: {
+  open: boolean;
+  onClose: () => void;
+  labels: JobLabel[];
+}) {
+  const { t } = useTranslation('users');
+  const { t: tc } = useTranslation('common');
+  const rename = useRenameJobLabels();
+  const [draft, setDraft] = useState<Record<string, string>>({});
+  // Rows marked "use default": saved as the English-neutral default, not as the text on screen.
+  const [reset, setReset] = useState<Set<string>>(new Set());
+
+  // Re-seed the inputs from the server list every time the dialog opens.
+  useEffect(() => {
+    if (open) {
+      setDraft(Object.fromEntries(labels.map((l) => [l.code, l.name])));
+      setReset(new Set());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const changes = planJobLabelRenames(labels, draft, reset);
+  const blank = hasBlankJobLabelName(labels, draft, reset);
+
+  const onSave = async () => {
+    if (changes.length === 0 || blank) return;
+    try {
+      await rename.mutateAsync(changes);
+      onClose();
+    } catch {
+      /* error toast handled by the hook; keep the dialog open */
+    }
+  };
+
+  return (
+    <Modal
+      open={open}
+      onClose={onClose}
+      title={t('roleNames.title')}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            {tc('cancel')}
+          </Button>
+          <Button onClick={onSave} disabled={rename.isPending || changes.length === 0 || blank}>
+            {rename.isPending ? tc('saving') : tc('save')}
+          </Button>
+        </>
+      }
+    >
+      <p className="mb-3 text-sm text-gray-600">{t('roleNames.intro')}</p>
+      <div className="space-y-3">
+        {labels.map((l) => (
+          <div key={l.code}>
+            <label className="mb-1 flex items-center gap-2 text-xs text-gray-500">
+              <code className="rounded bg-gray-100 px-1.5 py-0.5">{l.code}</code>
+              {t(`roleNames.meaning.${l.code}`, { defaultValue: '' })}
+            </label>
+            <div className="flex items-center gap-2">
+              <Input
+                value={draft[l.code] ?? l.name}
+                maxLength={64}
+                aria-label={t('roleNames.nameOf', { code: l.code })}
+                onChange={(e) => {
+                  setDraft((prev) => ({ ...prev, [l.code]: e.target.value }));
+                  setReset((prev) => {
+                    const next = new Set(prev);
+                    next.delete(l.code);
+                    return next;
+                  });
+                }}
+              />
+              <button
+                type="button"
+                className="shrink-0 text-xs font-medium text-primary-600 hover:underline"
+                onClick={() => {
+                  setDraft((prev) => ({
+                    ...prev,
+                    [l.code]: t(`roleNames.${l.code}`, { defaultValue: l.name }),
+                  }));
+                  setReset((prev) => new Set(prev).add(l.code));
+                }}
+              >
+                {t('roleNames.useDefault')}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-xs text-gray-400">{t('roleNames.hint')}</p>
+    </Modal>
+  );
+}
+
 export function UsersPage() {
   const { t } = useTranslation('users');
   const { t: tc } = useTranslation('common');
@@ -133,6 +244,11 @@ export function UsersPage() {
     { refetchMs: 15000 },
   );
   const { data: jobLabels } = useJobLabels();
+  // Naming people and renaming roles follow the API: master and director (USER_INVITE / LABEL_EDIT).
+  const principal = useAuthStore((s) => s.principal);
+  const canNameStaff =
+    principal?.actorType === 'user' && (principal.rank === 'master' || principal.rank === 'director');
+  const [roleNamesOpen, setRoleNamesOpen] = useState(false);
   const inviteUser = useInviteUser();
   const updateUser = useUpdateUser();
   const issueTempPw = useIssueTempPassword();
@@ -185,8 +301,10 @@ export function UsersPage() {
   const [inviteRank, setInviteRank] = useState<string>('staff');
   const [inviteCodes, setInviteCodes] = useState<string[]>([]);
   const [inviteRegion, setInviteRegion] = useState<string>('');
+  const [inviteName, setInviteName] = useState('');
 
   const [editing, setEditing] = useState<TenantUser | null>(null);
+  const [editName, setEditName] = useState('');
   const [editRank, setEditRank] = useState<string>('staff');
   const [editCodes, setEditCodes] = useState<string[]>([]);
   const [editRegion, setEditRegion] = useState<string>('');
@@ -200,6 +318,7 @@ export function UsersPage() {
     setInviteRank('staff');
     setInviteCodes([]);
     setInviteRegion('');
+    setInviteName('');
     setInviteOpen(true);
   };
 
@@ -209,6 +328,7 @@ export function UsersPage() {
       rank: inviteRank,
       label_codes: inviteCodes,
       region: inviteRegion,
+      ...(inviteName.trim() ? { name: inviteName.trim() } : {}),
     });
     setInviteOpen(false);
     // Show the generated temp password so the admin can relay it (besides email).
@@ -237,6 +357,7 @@ export function UsersPage() {
 
   const openEdit = (u: TenantUser) => {
     setEditing(u);
+    setEditName(u.name ?? '');
     setEditRank(u.rank);
     setEditCodes(u.labelCodes ?? []);
     setEditRegion(u.region ?? '');
@@ -250,6 +371,7 @@ export function UsersPage() {
     const codesChanged =
       prevCodes.length !== editCodes.length || editCodes.some((c) => !prevCodes.includes(c));
     const body: UpdateUserBody = {};
+    if (canNameStaff && editName.trim() !== (editing.name ?? '').trim()) body.name = editName.trim();
     if (editRank !== editing.rank) body.rank = editRank;
     if (codesChanged) body.label_codes = editCodes;
     if (editRegion !== (editing.region ?? '')) body.region = editRegion;
@@ -261,8 +383,18 @@ export function UsersPage() {
   };
 
   const columns: Column<TenantUser>[] = [
+    {
+      key: 'name',
+      header: t('name'),
+      // No name yet: the e-mail's words are what the re-route toast and notes use, so say it's unset.
+      render: (u) => u.name || <span className="text-gray-400">{t('nameUnset')}</span>,
+    },
     { key: 'email', header: t('email'), render: (u) => u.email },
-    { key: 'rank', header: t('rank'), render: (u) => <Badge tone="primary">{u.rank}</Badge> },
+    {
+      key: 'rank',
+      header: t('rank'),
+      render: (u) => <Badge tone="primary">{t(`rankName.${u.rank}`, { defaultValue: u.rank })}</Badge>,
+    },
     {
       key: 'labels',
       header: t('roles'),
@@ -288,7 +420,13 @@ export function UsersPage() {
       header: t('presence.header'),
       render: (u) => <PresenceCell presence={u.presence} />,
     },
-    { key: 'status', header: t('status'), render: (u) => <StatusBadge status={u.status} /> },
+    {
+      key: 'status',
+      header: t('status'),
+      render: (u) => (
+        <StatusBadge status={u.status} label={t(`statusName.${u.status}`, { defaultValue: u.status ?? '' })} />
+      ),
+    },
     { key: 'createdAt', header: t('created'), render: (u) => fmtDate(u.createdAt) },
     {
       key: 'action',
@@ -329,10 +467,18 @@ export function UsersPage() {
         title={t('title')}
         subtitle={t('subtitle')}
         action={
-          <Button onClick={openInvite}>
-            <UserPlus className="mr-1.5 h-4 w-4" />
-            {t('inviteUser')}
-          </Button>
+          <div className="flex items-center gap-2">
+            {canNameStaff && (
+              <Button variant="secondary" onClick={() => setRoleNamesOpen(true)}>
+                <Tags className="mr-1.5 h-4 w-4" />
+                {t('roleNames.open')}
+              </Button>
+            )}
+            <Button onClick={openInvite}>
+              <UserPlus className="mr-1.5 h-4 w-4" />
+              {t('inviteUser')}
+            </Button>
+          </div>
         }
       />
 
@@ -402,11 +548,20 @@ export function UsersPage() {
             placeholder={t('emailPlaceholder')}
           />
         </FormRow>
+        <FormRow label={t('name')}>
+          <Input
+            value={inviteName}
+            maxLength={80}
+            onChange={(e) => setInviteName(e.target.value)}
+            placeholder={t('namePlaceholder')}
+          />
+          <p className="mt-1 text-xs text-gray-400">{t('nameHint')}</p>
+        </FormRow>
         <FormRow label={t('rank')}>
           <Select value={inviteRank} onChange={(e) => setInviteRank(e.target.value)}>
             {RANKS.map((r) => (
               <option key={r} value={r}>
-                {r}
+                {t(`rankName.${r}`)}
               </option>
             ))}
           </Select>
@@ -438,11 +593,21 @@ export function UsersPage() {
           </>
         }
       >
+        <FormRow label={t('name')}>
+          <Input
+            value={editName}
+            maxLength={80}
+            disabled={!canNameStaff}
+            onChange={(e) => setEditName(e.target.value)}
+            placeholder={t('namePlaceholder')}
+          />
+          <p className="mt-1 text-xs text-gray-400">{t('nameHint')}</p>
+        </FormRow>
         <FormRow label={t('rank')}>
           <Select value={editRank} onChange={(e) => setEditRank(e.target.value)}>
             {RANKS.map((r) => (
               <option key={r} value={r}>
-                {r}
+                {t(`rankName.${r}`)}
               </option>
             ))}
           </Select>
@@ -461,12 +626,14 @@ export function UsersPage() {
           <Select value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>
             {STATUSES.map((s) => (
               <option key={s} value={s}>
-                {s}
+                {t(`statusName.${s}`)}
               </option>
             ))}
           </Select>
         </FormRow>
       </Modal>
+
+      <RoleNamesModal open={roleNamesOpen} onClose={() => setRoleNamesOpen(false)} labels={labels} />
 
       <Modal
         open={tempPwTarget !== null}

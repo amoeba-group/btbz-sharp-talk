@@ -1,8 +1,13 @@
 import { apiGet, apiPost, apiPatch } from '@/lib/api-client';
 
 export interface JobLabel {
+  /** Row id (a bigint, so it may arrive as a string); needed to rename the label. */
+  id?: string | number;
   code: string;
+  /** What the console shows: the localized default while the label still has its built-in name. */
   name: string;
+  /** The name as stored on the server (what the rename dialog edits and compares against). */
+  storedName?: string;
 }
 
 export interface TenantUser {
@@ -36,9 +41,13 @@ export interface InviteUserBody {
   label_codes: string[];
   /** '' = nationwide. */
   region?: string;
+  /** Display name (w3c): shown in the re-route toast, thread notes and to customers. */
+  name?: string;
 }
 
 export interface UpdateUserBody {
+  /** '' clears the name. */
+  name?: string;
   rank?: string;
   label_codes?: string[];
   /** '' clears to nationwide. */
@@ -73,10 +82,16 @@ export const usersService = {
       ...(filter.region ? { region: filter.region } : {}),
     }),
   jobLabels: () => apiGet<JobLabel[]>('/job-labels'),
+  // Rename one role label (master/director; audited server-side) — the "Role names" dialog.
+  renameJobLabel: (id: string | number, name: string) =>
+    apiPatch<JobLabel>(`/job-labels/${id}`, { name }),
   invite: (body: InviteUserBody) => apiPost<InviteResult>('/users/invite', body),
   // The API exposes per-field endpoints with distinct RBAC (rank/labels/status),
   // so fan out and only touch the fields that were provided.
   update: async (id: string, body: UpdateUserBody): Promise<void> => {
+    if (body.name !== undefined) {
+      await apiPatch<TenantUser>(`/users/${id}/name`, { name: body.name });
+    }
     if (body.rank !== undefined) {
       await apiPatch<TenantUser>(`/users/${id}/rank`, { rank: body.rank });
     }

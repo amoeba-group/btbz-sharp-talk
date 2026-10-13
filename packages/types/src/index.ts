@@ -20,3 +20,4 @@ export * from './common/refusal-reason';
 export * from './common/kb-version';
 export * from './common/audience';
 export * from './common/kb-access';
+export * from './common/job-label-name';

@@ -39,6 +39,7 @@ export class JobLabelController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateJobLabelRequest,
   ) {
-    return this.userService.updateLabel(asTenantUser(user).tenantId, id, body.name);
+    const actor = asTenantUser(user);
+    return this.userService.updateLabel(actor.tenantId, id, body.name, actor.userId);
   }
 }
