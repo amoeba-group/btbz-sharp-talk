@@ -164,7 +164,7 @@ bash scripts/deploy-self-hosted.sh
 ### 5.3 튜닝 (규제와 직결되는 것만)
 | 키 | 기본 | 결정 기준 |
 |---|---|---|
-| `CONVERSATION_LOG_RETENTION_DAYS` | 비움=영구 | **공개한 개인정보 처리방침의 보존 기간과 같게**. 배포 전역(테넌트별 불가) |
+| `CONVERSATION_LOG_RETENTION_DAYS` | 비움/0/잘못된 값=**365일**(영구 아님 — 2026-10-13 정정, 이전 표기는 틀렸음) | **공개한 개인정보 처리방침의 보존 기간과 같게**. 배포 전역(테넌트별 불가). `vn_pdpl` 동의 고지는 이 값을 그대로 인용함 |
 | `AI_USAGE_RETENTION_DAYS` | 400 | 토큰 카운터만, 개인정보 없음 |
 | `RETENTION_PURGE_INTERVAL_HOURS` | 24 | 0이면 스케줄러 정지 |
 | `MFA_ENFORCE_FROM` | 비움 | **프로덕션에서만**, 계정 발급 뒤 날짜로(컷오버 §3-1) |
