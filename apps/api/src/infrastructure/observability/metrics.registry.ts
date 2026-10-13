@@ -291,3 +291,9 @@ export class MetricsRegistry {
 export const HTTP_BUCKETS = [0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 30, 60] as const;
 /** Latency buckets (seconds) for one provider call; the default timeout is 25 s. */
 export const LLM_BUCKETS = [0.25, 0.5, 1, 2, 5, 10, 20, 30, 60] as const;
+/**
+ * Latency buckets (seconds) for one stage of a chat turn (PLN-261012 SG-52/SG-53). NFR-001 is
+ * "P95 <= 2 s first / <= 6 s complete", so 2 and 6 are real bucket edges: a histogram_quantile
+ * over them answers the NFR question exactly instead of interpolating across it.
+ */
+export const TURN_STAGE_BUCKETS = [0.05, 0.1, 0.25, 0.5, 1, 2, 3, 4, 6, 8, 12, 20, 30, 60] as const;

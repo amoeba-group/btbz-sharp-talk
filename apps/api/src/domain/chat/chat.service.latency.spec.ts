@@ -13,6 +13,7 @@ import { EventBusService } from '../../infrastructure/infrastructure.module';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { HandoffRouterService } from '../ai-engine/handoff-router.service';
 import { AnswerReuseService } from '../answer-reuse/answer-reuse.service';
+import { m } from '../../infrastructure/observability/app-metrics';
 
 /**
  * Per-turn latency in the persisted trace (PLN-261012 SG-53, NFR-001).
@@ -160,5 +161,49 @@ describe('ChatService — per-turn latency in the AI turn trace (SG-53)', () => 
     const l = h.aiTrace()?.latencyMs;
     expect(l?.retrieve).toBeNull();
     for (const k of ['total', 'classify', 'generate', 'moderate']) expect(typeof l?.[k]).toBe('number');
+  });
+
+  /**
+   * The same numbers feed the /metrics histograms (PLN-261012 SG-52 follow-up): observed at the
+   * point the trace is built, so the scrape and the persisted rows the pilot analytics read can
+   * never disagree.
+   */
+  describe('stage histograms on /metrics', () => {
+    // The histogram's own samples, read through the same render path /metrics uses.
+    const sample = (suffix: 'count' | 'sum', stage: string): number => {
+      const prefix = `sharptalk_chat_turn_stage_duration_seconds_${suffix}{stage="${stage}"} `;
+      const line = (m.turnStageDuration as unknown as { renderSamples(): string[] })
+        .renderSamples()
+        .find((l) => l.startsWith(prefix));
+      return line ? Number(line.slice(prefix.length)) : 0;
+    };
+    const count = (stage: string) => sample('count', stage);
+    const sumSeconds = (stage: string) => sample('sum', stage);
+    beforeEach(() => m.turnStageDuration.clear());
+
+    it('a knowledge answer observes total and all four stages once, in SECONDS', async () => {
+      const h = build();
+      await h.svc.handleUserMessage(h.session, 'Hoa hồng bao nhiêu?');
+      for (const stage of ['total', 'classify', 'retrieve', 'generate', 'moderate']) expect(count(stage)).toBe(1);
+      // retrieve 120 ms and generate 940 ms from the RAG timings, converted to seconds.
+      expect(sumSeconds('retrieve')).toBeCloseTo(0.12, 5);
+      expect(sumSeconds('generate')).toBeCloseTo(0.94, 5);
+    });
+
+    it('a replayed answer skips retrieve and generate: a null stage is NOT observed as zero', async () => {
+      const h = build({ reuseHit: true });
+      await h.svc.handleUserMessage(h.session, 'Hoa hồng bao nhiêu?');
+      expect(count('total')).toBe(1);
+      expect(count('moderate')).toBe(1);
+      expect(count('retrieve')).toBe(0);
+      expect(count('generate')).toBe(0);
+    });
+
+    it('the small-talk reply is observed too (classify, generate, moderate, total)', async () => {
+      const h = build({ intent: 'smalltalk' });
+      await h.svc.handleUserMessage(h.session, 'Xin chào bạn');
+      for (const stage of ['total', 'classify', 'generate', 'moderate']) expect(count(stage)).toBe(1);
+      expect(count('retrieve')).toBe(0);
+    });
   });
 });

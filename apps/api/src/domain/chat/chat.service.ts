@@ -60,7 +60,7 @@ import { envNumber } from '../../global/util/env-number.util';
 import { PartnerDataStep } from '../partner-data/partner-data.step';
 import type { PartnerNotice } from '../partner-data/partner-data.step';
 import { PilotService } from '../pilot/pilot.service';
-import { ObserveChatTurn, markTurnOutcome } from '../../infrastructure/observability/app-metrics';
+import { ObserveChatTurn, markTurnOutcome, observeTurnLatency } from '../../infrastructure/observability/app-metrics';
 import { partnerLabelOfClaims } from '../../global/util/partner-label.util';
 
 const ESCALATION_CONFIDENCE = 0.45;
@@ -1073,7 +1073,7 @@ export class ChatService {
         answeredFrom: 'no_knowledge',
         nonQuestionKind: nonQuestion,
         intentConfidence: intent.confidence ?? null,
-        latencyMs: buildTurnLatency(turnStartedAt, { classify: classifyMs, generate: draftMs, moderate: checkMs }),
+        latencyMs: observeTurnLatency(buildTurnLatency(turnStartedAt, { classify: classifyMs, generate: draftMs, moderate: checkMs })),
       });
       this.logger.log(
         `handoff skipped: ${nonQuestion} (conf ${intent.confidence ?? 0}) conversation=${conversation.id}`,
@@ -1423,12 +1423,12 @@ export class ChatService {
       // The vector leg was down and this answer stands on the keyword leg alone (PLN-261012 SG-84).
       ...(vectorDegraded ? { vectorProvider: 'degraded', vectorDegraded } : {}),
       // A replayed answer carries no `timings`: its retrieve/generate stay null, not 0.
-      latencyMs: buildTurnLatency(turnStartedAt, {
+      latencyMs: observeTurnLatency(buildTurnLatency(turnStartedAt, {
         classify: classifyMs,
         retrieve: (answer as Partial<RagAnswer>).timings?.retrieveMs,
         generate: (answer as Partial<RagAnswer>).timings?.generateMs,
         moderate: moderateMs,
-      }),
+      })),
     });
     if (reused) {
       void this.answerReuse?.recordHit(reused.reuseId);
