@@ -41,6 +41,7 @@
   "alarmReasonLowConfidence": "AI không tìm được câu trả lời trong kho tri thức.",
   "alarmReasonModeration": "Câu trả lời của AI bị kiểm duyệt chặn.",
   "alarmReasonUserRequest": "Khách hàng yêu cầu gặp nhân viên.",
+  "alarmReasonEngine": "Công cụ AI tạm thời không hoạt động nên không trả lời được. Cần nhân viên tiếp nhận.",
   "alarmOpen": "Mở hội thoại",
   "alarmDismiss": "Bỏ qua",
   "listSearchPlaceholder": "Tìm theo tên hoặc email khách hàng",

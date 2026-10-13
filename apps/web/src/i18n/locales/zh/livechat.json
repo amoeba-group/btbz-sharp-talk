@@ -41,6 +41,7 @@
   "alarmReasonLowConfidence": "AI 未能在知识库中找到答案。",
   "alarmReasonModeration": "AI 回复被内容审核拦截。",
   "alarmReasonUserRequest": "客户要求转接人工客服。",
+  "alarmReasonEngine": "AI 引擎暂时不可用，无法回答。需要人工客服接手。",
   "alarmOpen": "打开会话",
   "alarmDismiss": "忽略",
   "listSearchPlaceholder": "按客户姓名或邮箱搜索",

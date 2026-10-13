@@ -41,6 +41,7 @@
   "alarmReasonLowConfidence": "The AI could not find an answer in the knowledge base.",
   "alarmReasonModeration": "The AI reply was blocked by moderation.",
   "alarmReasonUserRequest": "The customer asked to talk to an agent.",
+  "alarmReasonEngine": "The AI engine was unavailable, so it could not answer. A person needs to take over.",
   "alarmOpen": "Open chat",
   "alarmDismiss": "Dismiss",
   "listSearchPlaceholder": "Search by customer name or email",

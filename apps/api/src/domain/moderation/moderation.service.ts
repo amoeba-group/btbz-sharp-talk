@@ -14,6 +14,19 @@ import {
   protectedValuesOf,
   shieldProtected,
 } from '../ai-engine/answer-footer.util';
+import { m } from '../../infrastructure/observability/app-metrics';
+
+/**
+ * The moderation engine answered with the stub's stand-in (it failed, or its breaker is open).
+ * Thrown so `moderate` blocks (FR-069 fail-safe) and tells the caller WHY: an outage deserves the
+ * "temporarily unavailable" notice, not "we couldn't find a confident answer" (PLN-261012 SG-84).
+ */
+export class ModerationEngineDegradedError extends Error {
+  readonly name = 'ModerationEngineDegradedError';
+  constructor() {
+    super('moderation engine degraded to stub');
+  }
+}
 
 /** TTL for the per-tenant active-rules cache (PERF-11). */
 const MOD_RULES_CACHE_TTL_SEC = 60;
@@ -37,6 +50,12 @@ export interface ModerateResult {
   action: string;
   text: string; // possibly masked/rephrased; empty when blocked
   ruleId?: number;
+  /**
+   * Set when the message was blocked because the moderation PATH failed, not because a rule fired
+   * (PLN-261012 SG-84): `engine_degraded` = the classifier/rephrase engine fell back to the stub,
+   * `error` = anything else (DB, cache…). The block itself is unchanged — fail-safe.
+   */
+  failsafe?: 'engine_degraded' | 'error';
 }
 
 /**
@@ -146,7 +165,12 @@ export class ModerationService {
       return this.finalize(input, decision, action, working, warnedRuleId);
     } catch (e) {
       this.logger.error(`Moderation failed, blocking (fail-safe): ${(e as Error).message}`);
-      return this.finalize(input, MODERATION_DECISION.BLOCKED, 'block', '');
+      const failsafe = e instanceof ModerationEngineDegradedError ? 'engine_degraded' : 'error';
+      m.moderationFailsafe.inc({ cause: failsafe });
+      return {
+        ...(await this.finalize(input, MODERATION_DECISION.BLOCKED, 'block', '')),
+        failsafe,
+      };
     }
   }
 
@@ -189,7 +213,7 @@ export class ModerationService {
       messages: [{ role: 'user', content: text }],
     });
     // Fail-safe (FR-069): a rephrase the engine could not write is not one.
-    if (res.degraded) throw new Error('moderation engine degraded to stub');
+    if (res.degraded) throw new ModerationEngineDegradedError();
     return res.text || text;
   }
 
@@ -205,7 +229,7 @@ export class ModerationService {
     // The stub always says "not flagged". On 2026-10-06 that verdict stood in
     // for go2joy's real classifier through a credit outage (PLN-261007 D4).
     // Thrown, so `moderate` blocks — fail-safe, as FR-069 requires.
-    if (res.degraded) throw new Error('moderation engine degraded to stub');
+    if (res.degraded) throw new ModerationEngineDegradedError();
     try {
       return JSON.parse(res.text).flagged === true;
     } catch {
@@ -220,6 +244,7 @@ export class ModerationService {
     text: string,
     ruleId?: number,
   ): Promise<ModerateResult> {
+    m.moderation.inc({ scope: input.scope, decision });
     await this.logRepo
       .save(
         this.logRepo.create({

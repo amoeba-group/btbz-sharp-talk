@@ -41,6 +41,7 @@
   "alarmReasonLowConfidence": "AI가 지식 베이스에서 답변을 찾지 못했습니다.",
   "alarmReasonModeration": "AI 답변이 모더레이션에 의해 차단되었습니다.",
   "alarmReasonUserRequest": "고객이 상담원 연결을 요청했습니다.",
+  "alarmReasonEngine": "AI 엔진을 사용할 수 없어 답변하지 못했습니다. 상담원이 직접 응대해야 합니다.",
   "alarmOpen": "상담 열기",
   "alarmDismiss": "닫기",
   "listSearchPlaceholder": "고객명 또는 이메일 검색",

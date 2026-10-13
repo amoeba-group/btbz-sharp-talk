@@ -41,6 +41,7 @@
   "alarmReasonLowConfidence": "La IA no encontró una respuesta en la base de conocimiento.",
   "alarmReasonModeration": "La respuesta de la IA fue bloqueada por moderación.",
   "alarmReasonUserRequest": "El cliente pidió hablar con un agente.",
+  "alarmReasonEngine": "El motor de IA no estaba disponible y no pudo responder. Una persona debe hacerse cargo.",
   "alarmOpen": "Abrir chat",
   "alarmDismiss": "Descartar",
   "listSearchPlaceholder": "Buscar por nombre o email del cliente",

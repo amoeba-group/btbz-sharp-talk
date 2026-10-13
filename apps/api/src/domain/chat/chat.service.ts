@@ -50,6 +50,7 @@ import {
 } from './conversation-history.util';
 import { footerFor, footerVariants, stripFooters } from '../ai-engine/answer-footer.util';
 import { envNumber } from '../../global/util/env-number.util';
+import { ObserveChatTurn, markTurnOutcome } from '../../infrastructure/observability/app-metrics';
 
 const ESCALATION_CONFIDENCE = 0.45;
 /**
@@ -150,6 +151,16 @@ const SYSTEM_MESSAGES = {
     JA: 'ヘルプ情報の中に確かな回答が見つからなかったため、この会話をサポートチームに引き継ぎます。担当者がまもなくこちらで返信いたします。',
     ZH: '我在帮助内容中没有找到确定的答案，因此将这次对话转交给客服团队。客服人员稍后会在这里回复您。',
   },
+  // The AI engine (or the moderation path) is down — NOT "knowledge is missing" (PLN-261012 SG-84).
+  // Used by handoff() for reason 'engine_unavailable'; promises a person, never an answer.
+  engineUnavailable: {
+    EN: "Our assistant is temporarily unavailable, so I can't answer this right now. I'm passing your question to our support team — we'll get back to you shortly and a person will help you right here.",
+    ES: 'Nuestro asistente no está disponible temporalmente, por lo que ahora mismo no puedo responder. Paso tu consulta a nuestro equipo de soporte: te confirmaremos en breve y una persona te atenderá aquí mismo.',
+    KO: '현재 AI 어시스턴트를 일시적으로 이용할 수 없어 바로 답변드리기 어렵습니다. 문의 내용을 상담팀에 전달했으며, 곧 확인하여 상담원이 이 대화창에서 도와드리겠습니다.',
+    VI: 'Trợ lý tự động hiện đang tạm thời gián đoạn nên tôi chưa thể trả lời ngay. Tôi đã chuyển câu hỏi của bạn cho đội hỗ trợ — chúng tôi sẽ xác nhận lại với bạn trong giây lát và sẽ có nhân viên hỗ trợ bạn ngay tại đây.',
+    JA: '現在、アシスタントを一時的にご利用いただけないため、すぐにお答えできません。ご質問をサポートチームに引き継ぎました。確認のうえ、担当者がまもなくこちらでご案内します。',
+    ZH: '智能助手暂时无法使用，暂时无法立即回答您的问题。我已将您的问题转交给客服团队，我们会尽快确认，并由专人在此为您提供帮助。',
+  },
   offHoursNeedEmail: {
     EN: "We're outside our support hours right now. Leave the email address you'd like the answer sent to and our team will reply there as soon as they're back.",
     ES: 'Ahora mismo estamos fuera del horario de atención. Déjanos el correo al que quieres recibir la respuesta y nuestro equipo te escribirá en cuanto vuelva.',
@@ -242,7 +253,13 @@ export interface ChatDraft {
  */
 export type ChatTurnResult = ChatTurnResponse & { draft?: ChatDraft };
 
-export type EscalationReason = 'low_confidence' | 'moderation_blocked' | 'user_request' | 'policy';
+export type EscalationReason =
+  | 'low_confidence'
+  | 'moderation_blocked'
+  | 'user_request'
+  | 'policy'
+  /** The AI engine or the moderation path failed — an outage, not missing knowledge (PLN-261012 SG-84). */
+  | 'engine_unavailable';
 
 /** What a handoff tells the caller: the notice shown, and whether we still need an address. */
 export interface HandoffOutcome {
@@ -602,6 +619,7 @@ export class ChatService {
     return map;
   }
 
+  @ObserveChatTurn()
   async handleUserMessage(
     session: Session,
     text: string,
@@ -871,7 +889,8 @@ export class ChatService {
           return { conversationId: String(conversation.id), reply: null, escalate: false, needsAuth: false };
         }
         this.logger.warn(`no-knowledge reply unavailable (engine degraded) conversation=${conversation.id}`);
-        const handoff = await this.handoff(conversation.id, session, tenantId, 'low_confidence', text, denyStamp);
+        // An outage, not missing knowledge: the customer is told so (PLN-261012 SG-84).
+        const handoff = await this.handoff(conversation.id, session, tenantId, 'engine_unavailable', text, denyStamp);
         return {
           conversationId: String(conversation.id),
           reply: { senderType: 'system', body: handoff.body },
@@ -893,7 +912,8 @@ export class ChatService {
           conversation.id,
           session,
           tenantId,
-          'moderation_blocked',
+          // A block because the moderation path itself failed is an outage (PLN-261012 SG-84).
+          checked.failsafe ? 'engine_unavailable' : 'moderation_blocked',
           text,
           denyStamp,
         );
@@ -910,6 +930,8 @@ export class ChatService {
           ? ` ${AGENT_OFFER_COPY[session.language?.toUpperCase() ?? 'EN'] ?? AGENT_OFFER_COPY.EN}`
           : '';
       const body = `${replacePiiTokens(checked.text, session.language)}${offer}`;
+      // An out-of-scope reply is a polite refusal; the metric tells it apart from a real answer.
+      if (nonQuestion === 'out_of_scope') markTurnOutcome('refused');
       await this.persist(tenantId, conversation.id, SENDER_TYPE.AI, body, session.language, {
         // Recorded so a misclassification can be found later without guessing
         // which turns took this path (PLN-260813 P4).
@@ -1053,6 +1075,10 @@ export class ChatService {
           { guestOnly: guestGated, partnerContext: partnerContextOf(session) },
         );
 
+    // Outage signals from RAG (PLN-261012 SG-84); a replayed answer carries neither.
+    const engineDown = 'engineDegraded' in answer && answer.engineDegraded === true;
+    const vectorDegraded = 'vectorDegraded' in answer ? answer.vectorDegraded : undefined;
+
     // Mandatory moderation gate (FR-069).
     const moderated = await this.moderation.moderate({
       tenantId,
@@ -1082,7 +1108,9 @@ export class ChatService {
         conversation.id,
         session,
         tenantId,
-        'moderation_blocked',
+        // The moderation path failing, or the engine being down, is an outage and says so
+        // (PLN-261012 SG-84); a rule that fired is a real moderation block.
+        moderated.failsafe || engineDown ? 'engine_unavailable' : 'moderation_blocked',
         text,
         denyStamp,
       );
@@ -1105,7 +1133,9 @@ export class ChatService {
         conversation.id,
         session,
         tenantId,
-        'low_confidence',
+        // The engine failed and the stub's text was withheld: tell the customer it is an outage,
+        // not that the knowledge base has no answer (PLN-261012 SG-84).
+        engineDown ? 'engine_unavailable' : 'low_confidence',
         text,
         denyStamp,
       );
@@ -1148,6 +1178,8 @@ export class ChatService {
       // Console diagnostics: which answers came from the reuse store (D-C2:
       // the customer sees no marker; the trace always records it).
       ...(reused ? { answeredFrom: 'reuse', reuseId: reused.reuseId } : {}),
+      // The vector leg was down and this answer stands on the keyword leg alone (PLN-261012 SG-84).
+      ...(vectorDegraded ? { vectorProvider: 'degraded', vectorDegraded } : {}),
     });
     if (reused) {
       void this.answerReuse?.recordHit(reused.reuseId);
@@ -1387,7 +1419,14 @@ export class ChatService {
       ? sysMsg('offHoursNeedEmail', session.language)
       : route.mode === 'email' && route.notice
         ? route.notice
-        : sysMsg(reason === 'user_request' ? 'connectingAgent' : 'handoff', session.language);
+        : sysMsg(
+            reason === 'user_request'
+              ? 'connectingAgent'
+              : reason === 'engine_unavailable'
+                ? 'engineUnavailable'
+                : 'handoff',
+            session.language,
+          );
     await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, body, session.language, { reason });
     // Preview sandbox: show the real handoff notice but never page the agents —
     // no WAITING flip (the bot keeps answering for iterative testing), no alert

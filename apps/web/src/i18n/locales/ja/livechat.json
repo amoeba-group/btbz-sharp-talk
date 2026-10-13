@@ -41,6 +41,7 @@
   "alarmReasonLowConfidence": "AIがナレッジベースから回答を見つけられませんでした。",
   "alarmReasonModeration": "AIの回答がモデレーションによりブロックされました。",
   "alarmReasonUserRequest": "お客様が担当者との会話を希望されました。",
+  "alarmReasonEngine": "AIエンジンが利用できず、回答できませんでした。担当者の対応が必要です。",
   "alarmOpen": "チャットを開く",
   "alarmDismiss": "閉じる",
   "listSearchPlaceholder": "顧客名またはメールアドレスで検索",
