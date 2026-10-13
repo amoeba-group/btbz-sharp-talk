@@ -1,6 +1,8 @@
 import { LANGUAGES } from './language';
 import {
   isValidKbVersionLabel,
+  kbVersionBadge,
+  kbVersionPolicyProblem,
   KB_UI_VERSION_MAX_LEN,
   KB_VERSION_CAVEAT_DEFAULTS,
   KB_VERSION_STATE,
@@ -149,5 +151,52 @@ describe('caveat copy', () => {
     expect(variants).toEqual(expect.arrayContaining(Object.values(KB_VERSION_CAVEAT_DEFAULTS)));
     expect(variants).toContain('Theo giao diện cũ.');
     expect(kbVersionCaveatVariants(null)).toHaveLength(6);
+  });
+});
+
+describe('kbVersionBadge (console)', () => {
+  it('flags a mismatch as a warning and shows the label as typed', () => {
+    expect(kbVersionBadge(' v0.9.2 ', 'v0.12.0')).toEqual({ state: 'mismatch', label: 'v0.9.2', severity: 'warn' });
+  });
+
+  it('a match is ok, whatever the spelling', () => {
+    expect(kbVersionBadge('V0.12.0', 'v0.12.0')).toEqual({ state: 'match', label: 'V0.12.0', severity: 'ok' });
+  });
+
+  it('unversioned is a WARNING only while the tenant has a reference version', () => {
+    expect(kbVersionBadge(null, 'v0.12.0')).toEqual({ state: 'unversioned', label: null, severity: 'warn' });
+    expect(kbVersionBadge('', 'v0.12.0').severity).toBe('warn');
+    // A tenant that never set one: every document is unversioned — not worth a warning on each row.
+    expect(kbVersionBadge(null, null)).toEqual({ state: 'unversioned', label: null, severity: 'neutral' });
+  });
+
+  it('a version with no reference to compare against is neutral', () => {
+    expect(kbVersionBadge('v0.9.2', null)).toEqual({ state: 'unchecked', label: 'v0.9.2', severity: 'neutral' });
+    expect(kbVersionBadge('v0.9.2', '  ').severity).toBe('neutral');
+  });
+
+  it('treats a blank label as none', () => {
+    expect(kbVersionBadge('   ', 'v1').label).toBeNull();
+  });
+});
+
+describe('kbVersionPolicyProblem (console form)', () => {
+  it('accepts a valid reference with any mode', () => {
+    for (const onMismatch of ['caveat', 'hide', 'off']) {
+      expect(kbVersionPolicyProblem({ referenceVersion: 'v0.12.0', onMismatch })).toBeNull();
+    }
+  });
+
+  it('a blank reference is fine only while the mode is off', () => {
+    expect(kbVersionPolicyProblem({ referenceVersion: '', onMismatch: 'off' })).toBeNull();
+    expect(kbVersionPolicyProblem({ referenceVersion: '  ', onMismatch: 'caveat' })).toBe('reference_required');
+    expect(kbVersionPolicyProblem({ referenceVersion: '', onMismatch: 'hide' })).toBe('reference_required');
+    // An absent mode means caveat, as the API defaults it.
+    expect(kbVersionPolicyProblem({ referenceVersion: '' })).toBe('reference_required');
+  });
+
+  it('refuses an invalid label whatever the mode', () => {
+    expect(kbVersionPolicyProblem({ referenceVersion: 'v 1', onMismatch: 'off' })).toBe('reference_invalid');
+    expect(kbVersionPolicyProblem({ referenceVersion: 'x'.repeat(17), onMismatch: 'caveat' })).toBe('reference_invalid');
   });
 });

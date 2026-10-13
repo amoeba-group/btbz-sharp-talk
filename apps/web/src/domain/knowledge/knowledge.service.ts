@@ -78,6 +78,11 @@ export interface KnowledgeDocument {
   sourceUrl?: string | null;
   /** `https://…` or `notion:<block id>` (PLN-261006-KB-Video-Links). */
   videoRef?: string | null;
+  /**
+   * The product UI version the document describes (PLN-261012 SG-20), as typed;
+   * null = unversioned. An opaque label — compared for equality only.
+   */
+  uiVersion?: string | null;
   ownerUserId?: string | null;
   effectiveFrom?: string | null;
   reviewIntervalDays?: number | null;
@@ -108,6 +113,10 @@ export interface KnowledgeSource_ {
   stale?: boolean;
   /** Named in an open conflict with another document. */
   conflicted?: boolean;
+  /** The UI version the document describes; null = unversioned (PLN-261012 SG-20). */
+  uiVersion?: string | null;
+  /** Against the tenant's reference version; null while none is set. */
+  versionState?: 'match' | 'mismatch' | 'unversioned' | 'unchecked' | null;
 }
 
 export interface KnowledgeAnswer {
@@ -352,6 +361,8 @@ export interface DocumentListParams {
   active?: string;
   source?: string;
   status?: string;
+  /** UI-version filter (PLN-261012 SG-20): stamped with another version | no version at all. */
+  uiVersionState?: 'mismatch' | 'unversioned';
   sort?: 'title' | 'updated';
   order?: 'asc' | 'desc';
 }
@@ -403,10 +414,14 @@ export const knowledgeService = {
       ...(params.active ? { active: params.active } : {}),
       ...(params.source ? { source: params.source } : {}),
       ...(params.status ? { status: params.status } : {}),
+      ...(params.uiVersionState ? { ui_version_state: params.uiVersionState } : {}),
       ...(params.sort ? { sort: params.sort, order: params.order ?? 'asc' } : {}),
     }),
   documentFacets: (): Promise<DocumentFacets> =>
     apiGet<DocumentFacets>('/knowledge/documents/facets'),
+  /** Reference UI version the version badge/filter measure against (PLN-261012 SG-20); null = none set. */
+  versionPolicy: () =>
+    apiGet<{ referenceVersion: string; onMismatch: 'caveat' | 'hide' | 'off' } | null>('/knowledge/version-policy'),
   /** Sync-run history of one source, newest first (PLN-260828). */
   sourceRuns: (id: string, limit = 20): Promise<SourceRun[]> =>
     apiGet<SourceRun[]>(`/knowledge/sources/${id}/runs`, { limit }),
@@ -420,6 +435,8 @@ export const knowledgeService = {
     doc_group?: string;
     /** Where the answer came from (e.g. the conversation it was written from). */
     source_url?: string;
+    /** The UI version the document describes (PLN-261012 SG-20); omitted = unversioned. */
+    ui_version?: string;
   }) =>
     apiPost<KnowledgeDocumentDetail>('/knowledge/documents', body),
   updateDocument: (
@@ -432,6 +449,8 @@ export const knowledgeService = {
       // snake_case: request DTOs are snake_case by convention.
       source_url?: string | null;
       video_ref?: string | null;
+      /** Blank or null clears the version (PLN-261012 SG-20). */
+      ui_version?: string | null;
       effective_from?: string | null;
       review_interval_days?: number | null;
     },

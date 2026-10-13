@@ -91,6 +91,26 @@ export function isValidKbVersionLabel(raw: string | null | undefined): boolean {
   );
 }
 
+/** Why a policy form cannot be saved (the API refuses the same two cases with E5111). */
+export type KbVersionPolicyProblem = 'reference_invalid' | 'reference_required';
+
+/**
+ * The two rules the console checks before it posts a policy and the API enforces
+ * when it stores one: a typed reference must be a valid label, and a mode that
+ * acts (caveat / hide) needs a reference to compare against — "caveat with no
+ * reference" would silently do nothing, which is worse than refusing it.
+ */
+export function kbVersionPolicyProblem(p: {
+  referenceVersion?: string | null;
+  onMismatch?: string | null;
+}): KbVersionPolicyProblem | null {
+  const ref = (p.referenceVersion ?? '').trim();
+  if (ref && !isValidKbVersionLabel(ref)) return 'reference_invalid';
+  const mode = p.onMismatch || KB_VERSION_MISMATCH.CAVEAT;
+  if (!ref && mode !== KB_VERSION_MISMATCH.OFF) return 'reference_required';
+  return null;
+}
+
 /** Two labels are the same version when their comparison keys are equal. */
 export function sameKbVersion(a: string | null | undefined, b: string | null | undefined): boolean {
   const ka = normalizeKbVersion(a);
@@ -117,6 +137,35 @@ export function kbVersionState(
   const ref = normalizeKbVersion(referenceVersion);
   if (ref === null) return KB_VERSION_STATE.UNCHECKED;
   return doc === ref ? KB_VERSION_STATE.MATCH : KB_VERSION_STATE.MISMATCH;
+}
+
+/** How loudly the console flags a document's version. */
+export type KbVersionSeverity = 'ok' | 'warn' | 'neutral';
+
+/**
+ * What the console shows for a document's version: its state, the label to print
+ * (trimmed, as typed; null when there is none) and how loud to be about it.
+ *
+ * "Unversioned" is a warning only while the tenant uses the feature (it has a
+ * reference version): for a tenant that never configured it every document is
+ * unversioned, and flagging all of them would be noise, not information.
+ */
+export function kbVersionBadge(
+  docVersion: string | null | undefined,
+  referenceVersion: string | null | undefined,
+): { state: KbVersionState; label: string | null; severity: KbVersionSeverity } {
+  const state = kbVersionState(docVersion, referenceVersion);
+  const label = normalizeKbVersion(docVersion) === null ? null : String(docVersion).trim();
+  const inUse = normalizeKbVersion(referenceVersion) !== null;
+  const severity: KbVersionSeverity =
+    state === KB_VERSION_STATE.MISMATCH
+      ? 'warn'
+      : state === KB_VERSION_STATE.MATCH
+        ? 'ok'
+        : state === KB_VERSION_STATE.UNVERSIONED && inUse
+          ? 'warn'
+          : 'neutral';
+  return { state, label, severity };
 }
 
 /**

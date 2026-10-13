@@ -36,6 +36,7 @@ import { BoardCard } from './BoardCard';
 import { useKnowledgeSettings } from '@/domain/settings/settings.hooks';
 import { ConflictReview } from './ConflictReview';
 import { RevisionHistory } from './RevisionHistory';
+import { KbVersionBadge, UiVersionField, isUiVersionInputInvalid } from './KbVersionBadge';
 import {
   useMarkReviewed,
   useCategories,
@@ -53,6 +54,7 @@ import {
   useTestNotion,
   useDocuments,
   useDocumentFacets,
+  useKbVersionPolicy,
   useDocument,
   useCreateDocument,
   useImportProducts,
@@ -135,6 +137,11 @@ export function KnowledgePage() {
   const [docActive, setDocActive] = useState('');
   const [docSource, setDocSource] = useState('');
   const [docStatus, setDocStatus] = useState('');
+  // UI-version filter (PLN-261012 SG-20): '' | 'mismatch' | 'unversioned'. The
+  // reference it is measured against comes from the tenant's AI setting.
+  const [docVersion, setDocVersion] = useState('');
+  const versionPolicy = useKbVersionPolicy();
+  const referenceVersion = versionPolicy.data?.referenceVersion?.trim() || null;
   const [docSort, setDocSort] = useState<'title' | 'updated' | null>(null);
   const [docOrder, setDocOrder] = useState<'asc' | 'desc'>('asc');
   const facets = useDocumentFacets();
@@ -163,6 +170,7 @@ export function KnowledgePage() {
     active: docActive || undefined,
     source: docSource || undefined,
     status: docStatus || undefined,
+    uiVersionState: (docVersion || undefined) as 'mismatch' | 'unversioned' | undefined,
     sort: docSort ?? undefined,
     order: docSort ? docOrder : undefined,
   });
@@ -251,6 +259,8 @@ export function KnowledgePage() {
   const [editSourceUrl, setEditSourceUrl] = useState('');
   // The video this document explains (PLN-261006-KB-Video-Links).
   const [editVideoRef, setEditVideoRef] = useState('');
+  // The product UI version the document describes (PLN-261012 SG-20).
+  const [editUiVersion, setEditUiVersion] = useState('');
   const [editEffectiveFrom, setEditEffectiveFrom] = useState('');
   const [editReviewDays, setEditReviewDays] = useState('');
 
@@ -262,6 +272,7 @@ export function KnowledgePage() {
       setEditContent(detail.data.content ?? '');
       setEditSourceUrl(detail.data.sourceUrl ?? '');
       setEditVideoRef(detail.data.videoRef ?? '');
+      setEditUiVersion(detail.data.uiVersion ?? '');
       setEditEffectiveFrom(detail.data.effectiveFrom ?? '');
       setEditReviewDays(
         detail.data.reviewIntervalDays == null ? '' : String(detail.data.reviewIntervalDays),
@@ -300,6 +311,8 @@ export function KnowledgePage() {
           // null is a meaningful state for all three.
           source_url: editSourceUrl.trim() || null,
           video_ref: editVideoRef.trim() || null,
+          // Blank clears the version back to "unversioned" (the API validates the rest).
+          ui_version: editUiVersion.trim() || null,
           effective_from: editEffectiveFrom || null,
           review_interval_days: editReviewDays.trim() === '' ? null : Number(editReviewDays),
         },
@@ -433,6 +446,7 @@ export function KnowledgePage() {
   const [docTitle, setDocTitle] = useState('');
   const [docCategory, setDocCategory] = useState('');
   const [docContent, setDocContent] = useState('');
+  const [docUiVersion, setDocUiVersion] = useState('');
   const openDoc = () => {
     setDocGroup(group || 'counsel');
     setDocOpen(true);
@@ -468,11 +482,18 @@ export function KnowledgePage() {
     setDocTitle('');
     setDocCategory('');
     setDocContent('');
+    setDocUiVersion('');
   };
 
   const saveDoc = () => {
     createDocument.mutate(
-      { title: docTitle, category: docCategory, content: docContent, doc_group: docGroup },
+      {
+        title: docTitle,
+        category: docCategory,
+        content: docContent,
+        doc_group: docGroup,
+        ...(docUiVersion.trim() ? { ui_version: docUiVersion.trim() } : {}),
+      },
       { onSuccess: closeDoc },
     );
   };
@@ -676,6 +697,14 @@ export function KnowledgePage() {
           {r.title}
         </button>
       ),
+    },
+    {
+      // UI version vs the tenant's reference (PLN-261012 SG-20, W2): the badge
+      // answers "is this document about the UI my users run?".
+      key: 'uiVersion',
+      header: t('uiVersion'),
+      className: 'whitespace-nowrap',
+      render: (r) => <KbVersionBadge version={r.uiVersion} reference={referenceVersion} />,
     },
     {
       key: 'updatedAt',
@@ -1163,6 +1192,21 @@ export function KnowledgePage() {
                       {t(`docStatus.${v}`, { defaultValue: v })}
                     </option>
                   ))}
+                </select>
+                {/* UI-version filter (SG-20). "Other version" compares with the
+                    reference from the AI settings, so it needs one to exist. */}
+                <select
+                  value={docVersion}
+                  onChange={(e) => setDocFilter(setDocVersion)(e.target.value)}
+                  aria-label={t('filter.versionLabel')}
+                  title={!referenceVersion ? t('filter.versionNeedsReference') : undefined}
+                  className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-600 outline-none focus:border-primary-400"
+                >
+                  <option value="">{t('filter.versionAll')}</option>
+                  <option value="mismatch" disabled={!referenceVersion}>
+                    {t('filter.versionMismatch')}
+                  </option>
+                  <option value="unversioned">{t('filter.versionUnversioned')}</option>
                 </select>
               </div>
               <Table<KnowledgeDocument>
@@ -1785,7 +1829,13 @@ export function KnowledgePage() {
             </Button>
             <Button
               onClick={saveDoc}
-              disabled={createDocument.isPending || !docTitle || !docCategory || !docContent}
+              disabled={
+                createDocument.isPending ||
+                !docTitle ||
+                !docCategory ||
+                !docContent ||
+                isUiVersionInputInvalid(docUiVersion)
+              }
             >
               {tc('save')}
             </Button>
@@ -1818,6 +1868,7 @@ export function KnowledgePage() {
             </datalist>
           </>
         </FormRow>
+        <UiVersionField value={docUiVersion} onChange={setDocUiVersion} />
         <FormRow label={t('content')}>
           <textarea
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-primary-500"
@@ -1849,7 +1900,10 @@ export function KnowledgePage() {
               </>
             )}
             {detail.data && editing && (
-              <Button onClick={saveEdit} disabled={updateDocument.isPending || !editTitle.trim()}>
+              <Button
+                onClick={saveEdit}
+                disabled={updateDocument.isPending || !editTitle.trim() || isUiVersionInputInvalid(editUiVersion)}
+              >
                 {tc('save')}
               </Button>
             )}
@@ -1898,6 +1952,7 @@ export function KnowledgePage() {
                 {t(`source.${detail.data.source}`, { defaultValue: detail.data.source })}
               </Badge>
               {detail.data.stale && <Badge tone="warning">{t('staleBadge')}</Badge>}
+              <KbVersionBadge version={detail.data.uiVersion} reference={referenceVersion} />
               {detail.data.sourceUrl && (
                 <a
                   href={detail.data.sourceUrl}
@@ -2001,6 +2056,7 @@ export function KnowledgePage() {
                   />
                 </FormRow>
                 <p className="-mt-2 mb-2 text-xs text-gray-400">{t('videoRefHint')}</p>
+                <UiVersionField value={editUiVersion} onChange={setEditUiVersion} />
                 <div className="grid grid-cols-2 gap-2">
                   <FormRow label={t('effectiveFrom')}>
                     <Input

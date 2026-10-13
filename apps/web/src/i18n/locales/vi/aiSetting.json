@@ -435,6 +435,29 @@
   "audience_all": "Tất cả",
   "audience_guest": "Chưa đăng nhập",
   "audience_verified": "Đã đăng nhập",
+  "kbVersion": {
+    "title": "Phiên bản giao diện tham chiếu",
+    "hint": "Nhập phiên bản sản phẩm mà người dùng của bạn đang dùng hiện nay. Tài liệu kiến thức có thể được gán phiên bản mà nó mô tả (Kiến thức › tài liệu › Phiên bản giao diện). Câu trả lời trích dẫn tài liệu thuộc phiên bản khác sẽ kèm một câu cố định, hoặc tài liệu đó bị loại khỏi tìm kiếm. Phiên bản là nhãn chỉ so sánh bằng nhau: “v0.12.0”, “V0.12.0” và “0.12.0” là một, còn “0.12.0” và “0.12.1” thì khác — nên dùng cách đánh số nào cũng được, không có thứ tự lớn nhỏ. Tài liệu chưa gán phiên bản không bao giờ bị lưu ý trong câu trả lời.",
+    "reference": "Phiên bản hiện hành",
+    "referenceInvalid": "Dùng 1–16 ký tự: chữ cái, chữ số và . _ + - (không có khoảng trắng).",
+    "referenceRequired": "Hãy nhập phiên bản hiện hành, hoặc chọn “Tắt”.",
+    "onMismatch": "Khi tài liệu được gán phiên bản khác",
+    "mode": {
+      "caveat": "Thêm lưu ý vào câu trả lời",
+      "hide": "Ẩn tài liệu",
+      "off": "Tắt"
+    },
+    "modeHint": {
+      "caveat": "Câu trả lời vẫn gửi như thường, kèm một câu cố định ở cuối (thêm sau bước kiểm duyệt, trước khối liên hệ).",
+      "hide": "Tài liệu bị loại khỏi tìm kiếm nên trợ lý không thể trích dẫn. Tài liệu chưa gán phiên bản vẫn dùng bình thường.",
+      "off": "Phiên bản hiển thị trong danh sách kiến thức nhưng không thay đổi gì ở câu trả lời."
+    },
+    "notice": "Nội dung lưu ý",
+    "noticeHint": "Để trống sẽ dùng câu mặc định hiển thị màu xám. Chỉ nên một câu; chỉ được thêm khi tài liệu được trích dẫn thuộc phiên bản khác.",
+    "retireNote": "Đổi phiên bản hoặc chế độ cũng sẽ vô hiệu hoá các câu trả lời đã lưu, để không câu nào được dùng lại theo quy tắc cũ.",
+    "saved": "Đã lưu phiên bản tham chiếu",
+    "saveError": "Không lưu được phiên bản tham chiếu"
+  },
   "guest": {
     "title": "Hướng dẫn khách (chưa đăng nhập)",
     "hint": "Những gì trợ lý đưa ra khi một trợ lý đặt \"chỉ hướng dẫn đăng nhập\" gặp khách chưa đăng nhập. Trợ lý nào áp dụng được chọn ở từng trợ lý phía trên.",

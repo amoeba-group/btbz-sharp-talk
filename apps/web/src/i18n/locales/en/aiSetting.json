@@ -435,6 +435,29 @@
   "audience_all": "Everyone",
   "audience_guest": "Not signed in",
   "audience_verified": "Signed in",
+  "kbVersion": {
+    "title": "Reference UI version",
+    "hint": "Name the product version your users run today. Knowledge documents can be stamped with the version they describe (Knowledge › document › UI version). An answer that cites a document of another version gets one fixed sentence, or that document is left out. Versions are labels compared for equality — “v0.12.0”, “V0.12.0” and “0.12.0” are the same, “0.12.0” and “0.12.1” are not — so any numbering works; nothing is ordered. A document with no version is never flagged in answers.",
+    "reference": "Current version",
+    "referenceInvalid": "Use 1–16 characters: letters, digits and . _ + - (no spaces).",
+    "referenceRequired": "Enter the current version, or choose “Off”.",
+    "onMismatch": "When a document is stamped with another version",
+    "mode": {
+      "caveat": "Add a note to the answer",
+      "hide": "Hide the document",
+      "off": "Off"
+    },
+    "modeHint": {
+      "caveat": "The answer is delivered as usual, followed by one fixed sentence (added after moderation, before the contact block).",
+      "hide": "The document is left out of search, so the assistant cannot cite it. Documents with no version stay available.",
+      "off": "Versions are shown in the knowledge list but change nothing in answers."
+    },
+    "notice": "Note wording",
+    "noticeHint": "Blank uses the built-in sentence shown in grey. Keep it to one sentence; it is added only when a cited document is stamped with another version.",
+    "retireNote": "Changing the version or the mode also retires stored answers, so none is replayed under the old rule.",
+    "saved": "Reference version saved",
+    "saveError": "Could not save the reference version"
+  },
   "guest": {
     "title": "Guest guidance (not signed in)",
     "hint": "What the assistant offers when an agent set to \"only guide them to sign in\" meets a visitor who has not signed in. Which agents do that is set per agent above.",
