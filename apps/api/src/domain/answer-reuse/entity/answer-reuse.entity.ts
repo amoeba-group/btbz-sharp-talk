@@ -37,6 +37,16 @@ export class AnswerReuse {
   @Column({ name: 'ai_agent_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
   aiAgentId: number | null;
 
+  /**
+   * The audience rank (0 public / 1 partner / 2 manager, `AUDIENCE_RANK`) of the session
+   * the answer was generated for (PLN-261012 SG-06, REQ D-06). Replay requires the
+   * viewer's rank >= this one, so a manager's answer is never handed to a receptionist.
+   * NULL = a row from before the column: such rows stop replaying the moment the tenant
+   * configures a manager-only category (their audience is unknowable) — see the service.
+   */
+  @Column({ name: 'audience_rank', type: 'tinyint', nullable: true })
+  audienceRank: number | null;
+
   @Column({ name: 'question_text', type: 'varchar', length: 500 })
   questionText: string;
 

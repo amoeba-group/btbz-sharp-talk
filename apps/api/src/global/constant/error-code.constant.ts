@@ -334,6 +334,15 @@ export const ERROR_CODE = {
   HOTEL_PROVINCE_CSV_INVALID: { code: 'E5127', message: 'The hotel province file is invalid' },
   HANDOFF_CONFIG_INVALID: { code: 'E5128', message: 'The hand-off settings are invalid' },
   ROUTING_NOT_ENABLED: { code: 'E5129', message: 'Team routing is not enabled for this tenant' },
+  // E5135-E5139 — Role-tiered knowledge access (PLN-261012 SG-10 / SG-06).
+  /** setAccess() got a value that is not public | partner | manager. */
+  KB_ACCESS_INVALID: { code: 'E5135', message: 'The access tier must be public, partner or manager' },
+  /** A merge would move manager-only documents into a category that more people can read. */
+  KB_CATEGORY_MERGE_WIDENS: {
+    code: 'E5136',
+    message:
+      'Merging a manager-only category into a less restricted one would widen who can read its documents; set the destination to manager-only first',
+  },
 } as const;
 
 export type ErrorCodeEntry = { code: string; message: string };
