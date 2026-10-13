@@ -1986,7 +1986,13 @@ export class ChatService {
         needsContactEmail: handoff.needsContactEmail,
       };
     }
-    await this.persist(ctx.tenantId, ctx.conversationId, SENDER_TYPE.SYSTEM, notice.body, ctx.session.language, notice.trace);
+    // A refusal the customer can act on speaks the closed vocabulary like every other refusal
+    // (reason + the agent that was speaking, PLN-261012 SG-50/SG-52); the notice's own keys
+    // (error code, topic) ride on top.
+    await this.persist(ctx.tenantId, ctx.conversationId, SENDER_TYPE.SYSTEM, notice.body, ctx.session.language, {
+      ...buildRefusalTrace(notice.reason, await this.speakingAgentId(ctx.tenantId, ctx.session)),
+      ...notice.trace,
+    });
     return { conversationId, reply: { senderType: 'system', body: notice.body }, escalate: false, needsAuth: false };
   }
 

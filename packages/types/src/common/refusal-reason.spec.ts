@@ -21,11 +21,31 @@ describe('REFUSAL_REASON', () => {
         'identity_expired',
         'low_confidence',
         'moderation',
+        'partner_claims_stale',
+        'partner_param_rejected',
+        'partner_role_denied',
+        'partner_unavailable',
+        'partner_unverified',
         'pilot_denied',
         'policy_deny',
         'role_manager_only',
       ].sort(),
     );
+  });
+
+  it('folds in every reason the partner-data step stores (PLN-261012 SG-52)', () => {
+    // The partner step's own object is derived from this vocabulary, so the strings it writes
+    // onto message traces can never drift from what the pilot analytics group by. The
+    // companion pin lives in partner-data.constants.spec.ts (API side).
+    for (const reason of [
+      'partner_role_denied',
+      'partner_claims_stale',
+      'partner_param_rejected',
+      'partner_unavailable',
+      'partner_unverified',
+    ]) {
+      expect(isRefusalReason(reason)).toBe(true);
+    }
   });
 
   it('isRefusalReason accepts members only', () => {

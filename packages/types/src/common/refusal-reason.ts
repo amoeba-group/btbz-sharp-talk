@@ -19,6 +19,13 @@
  *  identity_expired  the signed identity lapsed (SG-03), so a gate that needed it refused
  *  engine_unavailable the AI engine (or its safety check) was down — an outage, not missing
  *                    knowledge; the customer is told a person will follow up (SG-84)
+ *  partner_*         the partner-data step (SG-31) refused or degraded the turn — folded in here
+ *                    from the free-form `partner_*` strings it stored first, so SG-52 groups them:
+ *    partner_role_denied    the signed role may not read that topic (notice only)
+ *    partner_claims_stale   the signed claims lapsed or were unusable (notice only)
+ *    partner_param_rejected the message named another hotel / parameters outside the schema (notice only)
+ *    partner_unavailable    the partner API did not answer usably — "we will confirm" + a hand-off
+ *    partner_unverified     a figure in the drafted answer was not in the data — withheld + a hand-off
  */
 export const REFUSAL_REASON = {
   GUEST_GATE: 'guest_gate',
@@ -32,6 +39,11 @@ export const REFUSAL_REASON = {
   POLICY_DENY: 'policy_deny',
   IDENTITY_EXPIRED: 'identity_expired',
   ENGINE_UNAVAILABLE: 'engine_unavailable',
+  PARTNER_ROLE_DENIED: 'partner_role_denied',
+  PARTNER_CLAIMS_STALE: 'partner_claims_stale',
+  PARTNER_PARAM_REJECTED: 'partner_param_rejected',
+  PARTNER_UNAVAILABLE: 'partner_unavailable',
+  PARTNER_UNVERIFIED: 'partner_unverified',
 } as const;
 export type RefusalReason = (typeof REFUSAL_REASON)[keyof typeof REFUSAL_REASON];
 
