@@ -63,6 +63,8 @@ export class AiConfigController {
         answerFooter: body.answer_footer,
         // Pruned/validated in the service (sanitizeGuestGuidance).
         guestGuidance: body.guest_guidance,
+        // Validated in the service (sanitizeKbVersionPolicy, E5111).
+        kbVersionPolicy: body.kb_version_policy,
       },
       { kind: CONFIG_REVISION_KIND.MANUAL, actorUserId: user.userId, note: body.note ?? null },
       body.ai_agent_id ?? null,

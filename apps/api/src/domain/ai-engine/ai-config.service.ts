@@ -3,10 +3,15 @@ import {
   moderationProtectedCacheKey,
   sanitizeAnswerFooter,
 } from './answer-footer.util';
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import type { GuestGuidance, LocalizedText, ScenarioConfigResponse } from '@sharptalk/types';
+import type {
+  GuestGuidance,
+  KbVersionPolicy,
+  LocalizedText,
+  ScenarioConfigResponse,
+} from '@sharptalk/types';
 import {
   GUEST_POLICY,
   SCENARIO_AUDIENCE,
@@ -38,6 +43,9 @@ import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { AiConfigRevisionService, RecordRevisionMeta } from './ai-config-revision.service';
+import { AnswerReuseService } from '../answer-reuse/answer-reuse.service';
+import { AuditService } from '../audit/audit.service';
+import { kbPolicyChangedBehaviour, sanitizeKbVersionPolicy } from '../knowledge/kb-version.util';
 
 /** TTL for the per-tenant persona/rules cache (PERF-11) — read on every RAG turn. */
 const PERSONA_CACHE_TTL_SEC = 60;
@@ -195,6 +203,8 @@ export interface AiConfigResponse {
   answerFooter: AnswerFooter | null;
   /** Sign-in guidance for gated guests (PLN-261001 v1.1); null = built-in wording, no links. */
   guestGuidance: GuestGuidance | null;
+  /** Reference UI version for KB documents (PLN-261012 SG-20); null = no stamping. */
+  kbVersionPolicy: KbVersionPolicy | null;
 }
 
 export interface AiConfigInput {
@@ -205,6 +215,8 @@ export interface AiConfigInput {
   handoffConfig?: HandoffConfig | null;
   answerFooter?: unknown;
   guestGuidance?: Record<string, unknown> | null;
+  /** Validated in sanitizeKbVersionPolicy; null resets to "no stamping". */
+  kbVersionPolicy?: unknown;
 }
 
 /** Persona payload cached per (tenant, agent) — read on every RAG turn. */
@@ -222,6 +234,8 @@ const GUIDANCE_NOTICE_MAX = 500;
 /** Tenant AI behavior config (FR-047 / FN-040): persona, response rules, scenario buttons. */
 @Injectable()
 export class AiConfigService {
+  private readonly logger = new Logger(AiConfigService.name);
+
   constructor(
     @InjectRepository(TenantAiConfig) private readonly configRepo: Repository<TenantAiConfig>,
     @InjectRepository(AiAgent) private readonly agentRepo: Repository<AiAgent>,
@@ -230,6 +244,11 @@ export class AiConfigService {
     private readonly redis: RedisService,
     private readonly revisions: AiConfigRevisionService,
     private readonly agents: AiAgentService,
+    // Appended last so positional test doubles that predate it stay valid; a
+    // changed KB reference version retires the reuse store through it (SG-20).
+    private readonly answerReuse?: AnswerReuseService,
+    // Changing the reference version changes what customers are told: audited.
+    private readonly audit?: AuditService,
   ) {}
 
   /**
@@ -248,7 +267,19 @@ export class AiConfigService {
       handoffConfig: row?.handoffConfig ?? null,
       answerFooter: row?.answerFooter ?? null,
       guestGuidance: row?.guestGuidance ?? null,
+      kbVersionPolicy: row?.kbVersionPolicy ?? null,
     };
+  }
+
+  /**
+   * The tenant's KB reference-version policy, or null when never configured
+   * (PLN-261012 SG-20) — null leaves answers and retrieval exactly as before.
+   * One indexed row read, like the footer's.
+   */
+  async getKbVersionPolicy(tenantId: number | null): Promise<KbVersionPolicy | null> {
+    if (tenantId == null) return null;
+    const row = await this.configRepo.findOne({ where: { tenantId } });
+    return row?.kbVersionPolicy ?? null;
   }
 
   /** The tenant's contact footer config, or null (PLN-261007 R4). One indexed row read. */
@@ -346,6 +377,10 @@ export class AiConfigService {
     aiAgentId?: number | null,
   ): Promise<AiConfigResponse> {
     const before = await this.getConfig(tenantId, aiAgentId);
+    // Validated up front: a malformed KB version policy is refused with E5111
+    // before the persona/rules writes below, so a bad request applies nothing (SG-20).
+    const kbPolicy =
+      input.kbVersionPolicy !== undefined ? sanitizeKbVersionPolicy(input.kbVersionPolicy) : undefined;
 
     // Persona/rules live on the agent row since PLN-260820 (null = default
     // agent, created on first write for tenants predating the feature).
@@ -376,9 +411,17 @@ export class AiConfigService {
     if (input.guestGuidance !== undefined) {
       row.guestGuidance = this.sanitizeGuestGuidance(input.guestGuidance);
     }
+    if (kbPolicy !== undefined) row.kbVersionPolicy = kbPolicy;
     await this.configRepo.save(row);
     // Moderation caches the protected values derived from the footer.
     if (input.answerFooter !== undefined) await this.redis.del(moderationProtectedCacheKey(tenantId));
+    // A new reference version or mode changes what answers may cite: stored
+    // replays were generated under the old rule, so the store is retired. The
+    // caveat wording alone does not (it is appended at delivery).
+    if (kbPolicy !== undefined && kbPolicyChangedBehaviour(before.kbVersionPolicy, kbPolicy)) {
+      await this.retireReuseStore(tenantId);
+      await this.auditKbPolicy(tenantId, before.kbVersionPolicy, kbPolicy, meta?.actorUserId ?? null);
+    }
 
     await this.redis.del(personaCacheKey(tenantId, aiAgentId ?? null));
     if (agent) {
@@ -399,6 +442,45 @@ export class AiConfigService {
       );
     }
     return after;
+  }
+
+  /**
+   * Deactivate every stored replay of the tenant (PLN-261012 SG-20). Best effort:
+   * the policy is already saved, and a reuse-store outage must not turn that
+   * into an error — the stale replays then age out by TTL, and the failure is
+   * logged so it is not silent.
+   */
+  private async retireReuseStore(tenantId: number): Promise<void> {
+    if (!this.answerReuse) return;
+    try {
+      const n = await this.answerReuse.deactivateAll(tenantId);
+      this.logger.log(`KB version policy changed: ${n} stored answer(s) retired (tenant ${tenantId})`);
+    } catch (e) {
+      this.logger.warn(`KB version policy changed but retiring stored answers failed: ${(e as Error).message}`);
+    }
+  }
+
+  /** Privileged: it decides whether customers are warned about, or never shown, a document. */
+  private async auditKbPolicy(
+    tenantId: number,
+    from: KbVersionPolicy | null,
+    to: KbVersionPolicy | null,
+    actorUserId: number | null,
+  ): Promise<void> {
+    const brief = (p: KbVersionPolicy | null) =>
+      p ? { referenceVersion: p.referenceVersion, onMismatch: p.onMismatch } : null;
+    try {
+      await this.audit?.write({
+        tenantId,
+        actorType: 'user',
+        actorId: actorUserId ?? 0,
+        action: 'ai_config.kb_version_policy',
+        target: `tenant:${tenantId}`,
+        metadata: { from: brief(from), to: brief(to) },
+      });
+    } catch (e) {
+      this.logger.warn(`audit write failed (ai_config.kb_version_policy): ${(e as Error).message}`);
+    }
   }
 
   /**

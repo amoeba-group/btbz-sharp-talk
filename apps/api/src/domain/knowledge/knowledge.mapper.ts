@@ -79,6 +79,8 @@ export class KnowledgeMapper {
       // so it cannot drift out of date between writes.
       sourceUrl: d.sourceUrl ?? null,
       videoRef: d.videoRef ?? null,
+      // The UI version the document describes (PLN-261012 SG-20); null = unversioned.
+      uiVersion: d.uiVersion ?? null,
       ownerUserId: d.ownerUserId ?? null,
       effectiveFrom: d.effectiveFrom ?? null,
       reviewIntervalDays: d.reviewIntervalDays ?? null,
@@ -114,6 +116,8 @@ export class KnowledgeMapper {
             sourceUrl: r.sourceUrl,
             effectiveFrom: r.effectiveFrom,
             reviewIntervalDays: r.reviewIntervalDays,
+            // null = this revision predates the column and recorded no version.
+            uiVersion: r.uiVersion ?? null,
             active: r.active,
           }
         : {}),

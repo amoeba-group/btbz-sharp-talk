@@ -16,6 +16,9 @@ const TRACKED = [
   'effectiveFrom',
   'reviewIntervalDays',
   'active',
+  // PLN-261012 SG-20: a re-stamped UI version changes what answers say about a
+  // document, so it belongs in the trail (and in a rollback).
+  'uiVersion',
 ] as const;
 type Tracked = (typeof TRACKED)[number];
 
@@ -130,7 +133,7 @@ export class KbRevisionService {
     documentId: number,
     revisionId: number,
     actorUserId: number,
-  ): Promise<{ doc: KbDocument; contentChanged: boolean }> {
+  ): Promise<{ doc: KbDocument; contentChanged: boolean; versionChanged: boolean }> {
     const rev = await this.get(tenantId, documentId, revisionId);
     const doc = await this.docRepo.findOne({ where: { id: documentId, tenantId } });
     if (!doc) throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
@@ -145,6 +148,13 @@ export class KbRevisionService {
     doc.effectiveFrom = rev.effectiveFrom;
     doc.reviewIntervalDays = rev.reviewIntervalDays;
     doc.active = rev.active;
+    // The UI version rides with the content it describes (PLN-261012 SG-20):
+    // rolling the text back to the v0.9 wording while the document still says
+    // v0.12 would silence the caveat on exactly the stale text. NULL on the
+    // revision means "not recorded" (it predates the column), NOT "unversioned"
+    // — applying it would wipe a version stamped since, so the document keeps its own.
+    if (rev.uiVersion !== null && rev.uiVersion !== undefined) doc.uiVersion = rev.uiVersion.trim() || null;
+    const versionChanged = (before.uiVersion ?? null) !== (doc.uiVersion ?? null);
     const saved = await this.docRepo.save(doc);
 
     await this.record(
@@ -155,7 +165,7 @@ export class KbRevisionService {
       actorUserId,
       rev.revisionNo,
     );
-    return { doc: saved, contentChanged };
+    return { doc: saved, contentChanged, versionChanged };
   }
 
   private async nextRevisionNo(tenantId: number, documentId: number): Promise<number> {
@@ -204,6 +214,8 @@ export class KbRevisionService {
       sourceUrl: doc.sourceUrl,
       effectiveFrom: doc.effectiveFrom,
       reviewIntervalDays: doc.reviewIntervalDays,
+      // '' = "recorded, unversioned"; NULL is reserved for pre-column revisions.
+      uiVersion: doc.uiVersion ?? '',
       active: doc.active,
       changedFields,
       changeKind,

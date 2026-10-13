@@ -11,16 +11,24 @@ import { parseXlsxRecords } from './xlsx.util';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { VIDEO_REF_PATTERN } from './video-ref.util';
+import { isValidKbVersionLabel, KB_UI_VERSION_MAX_LEN } from '@sharptalk/types';
 
 /** Lower-cased on both sides so `Title` / `TITLE` from a spreadsheet still match. */
 const REQUIRED_COLUMNS = ['category', 'title', 'content'] as const;
-const OPTIONAL_COLUMNS = ['external_key', 'source_url', 'video_ref'] as const;
+const OPTIONAL_COLUMNS = ['external_key', 'source_url', 'video_ref', 'ui_version'] as const;
 /** Same ceiling as the product importer — refuse absurd files before the row loop. */
 const MAX_ROWS = 5_000;
 
 /** Column limits mirrored from KbDocument — a too-long value is a row error the
  * operator can fix, not a MySQL 1406 that aborts the whole import. */
-const LIMITS = { category: 64, title: 255, external_key: 255, source_url: 512, video_ref: 255 } as const;
+const LIMITS = {
+  category: 64,
+  title: 255,
+  external_key: 255,
+  source_url: 512,
+  video_ref: 255,
+  ui_version: KB_UI_VERSION_MAX_LEN,
+} as const;
 
 export interface BulkImportResult {
   parsed: number;
@@ -28,6 +36,8 @@ export interface BulkImportResult {
   updated: number;
   skipped: number;
   invalid: number;
+  /** Rows whose stored UI version changed (PLN-261012 SG-20) — the caller retires stored replays under `hide`. */
+  versionChanged: number;
   errors: Array<{ row: number; reason: string }>;
 }
 
@@ -98,6 +108,7 @@ export class BulkImportService {
     }
 
     const hasVideoColumn = headerMap.has('video_ref');
+    const hasVersionColumn = headerMap.has('ui_version');
     const col = (rec: Record<string, string>, name: string): string => {
       const key = headerMap.get(name);
       return key ? (rec[key] ?? '').trim() : '';
@@ -109,6 +120,7 @@ export class BulkImportService {
       updated: 0,
       skipped: 0,
       invalid: 0,
+      versionChanged: 0,
       errors: [],
     };
 
@@ -140,8 +152,20 @@ export class BulkImportService {
       // Only a file that HAS the column speaks about videos: an older export
       // re-uploaded without it must not wipe links set since.
       const videoRef = hasVideoColumn ? col(rec, 'video_ref') || null : undefined;
+      // Same guard for the UI version (PLN-261012 SG-20): a file that lacks the
+      // column — every export before it existed — must not wipe stamped versions.
+      // A file that HAS it speaks for every row: a blank cell clears the version.
+      const uiVersion = hasVersionColumn ? col(rec, 'ui_version') || null : undefined;
 
-      const problem = this.rowProblem({ category, title, content, externalKey, sourceUrl, videoRef: videoRef ?? null });
+      const problem = this.rowProblem({
+        category,
+        title,
+        content,
+        externalKey,
+        sourceUrl,
+        videoRef: videoRef ?? null,
+        uiVersion: uiVersion ?? null,
+      });
       if (problem) {
         result.invalid += 1;
         result.errors.push({ row: rowNo, reason: problem });
@@ -185,6 +209,7 @@ export class BulkImportService {
             content,
             sourceUrl,
             videoRef: videoRef ?? null,
+            uiVersion: uiVersion ?? null,
             active: 1,
             status: 'pending',
             embeddingRef: null,
@@ -204,10 +229,20 @@ export class BulkImportService {
         (found.category ?? null) === category &&
         (found.sourceUrl ?? null) === sourceUrl;
       const videoChanged = videoRef !== undefined && (found.videoRef ?? null) !== videoRef;
-      if (textUnchanged && videoChanged) {
-        // A video link alone changes nothing the search reads — no re-embed.
-        found.videoRef = videoRef ?? null;
+      // A row that differs only in its UI version is a change, not "unchanged"
+      // (SG-20) — otherwise re-uploading a re-stamped file would skip every row.
+      const versionChanged = uiVersion !== undefined && (found.uiVersion ?? null) !== uiVersion;
+      if (textUnchanged && (videoChanged || versionChanged)) {
+        // A video link or a UI version alone changes nothing the search reads — no re-embed.
+        const before = { ...found } as KbDocument;
+        if (videoChanged) found.videoRef = videoRef ?? null;
+        if (versionChanged) found.uiVersion = uiVersion ?? null;
         await this.docRepo.save(found);
+        if (versionChanged) {
+          // The version is tracked in the history; a video link is not (as before).
+          await this.revisions.record(tenantId, found, before, REVISION_KIND.UPDATE, actorUserId);
+          result.versionChanged += 1;
+        }
         result.updated += 1;
         continue;
       }
@@ -225,6 +260,10 @@ export class BulkImportService {
       found.content = content;
       found.sourceUrl = sourceUrl;
       if (videoRef !== undefined) found.videoRef = videoRef;
+      if (versionChanged) {
+        found.uiVersion = uiVersion ?? null;
+        result.versionChanged += 1;
+      }
       // A row matched by title adopts the file's external_key so the NEXT
       // upload matches it by the stable key instead.
       if (externalKey) found.externalKey = externalKey;
@@ -257,6 +296,7 @@ export class BulkImportService {
     externalKey: string | null;
     sourceUrl: string | null;
     videoRef: string | null;
+    uiVersion: string | null;
   }): string | null {
     if (!v.title) return 'title is empty';
     if (!v.content) return 'content is empty';
@@ -269,6 +309,8 @@ export class BulkImportService {
       return `source_url exceeds ${LIMITS.source_url} characters`;
     if (v.videoRef && (v.videoRef.length > LIMITS.video_ref || !VIDEO_REF_PATTERN.test(v.videoRef)))
       return 'video_ref must be an https:// URL or notion:<block id>';
+    if (v.uiVersion && !isValidKbVersionLabel(v.uiVersion))
+      return `ui_version must be 1-${LIMITS.ui_version} characters: letters, digits and . _ + - (for example v0.12.0)`;
     return null;
   }
 }
