@@ -3,6 +3,7 @@
 - Ngày: 2026-10-13 · Nhánh: `test/go2joy-integration` (**local**; bản đã push lên origin `73ff8acf` là bản cũ, chưa có các thay đổi này) · Base: `main` 9fd31630 · PLN: `PLN-261012-Go2Joy-Stage1-Gap-Closure` (Phương án 2, mở rộng thành toàn bộ SG-xx theo yêu cầu "implement đủ ở local trước")
 - Phạm vi: 159 commit, 787 tệp (+89 nghìn dòng); 19 file SQL mới. Mọi luồng được làm ở worktree riêng rồi gộp có kiểm chứng.
 - Trạng thái: **chưa PR, chưa merge vào `main`, chưa deploy ở môi trường nào.**
+- Cập nhật 2026-10-14: toàn bộ nội dung này (cộng các commit docs/RPT/TCR và sổ tay) đã được đưa lên nhánh PR `feature/go2joy-stage1-complete` (`fb10b1d0`, trên origin; 167 commit / 792 tệp so với `main`). Số liệu kiểm chứng ở §2 áp dụng cho cả hai nhánh (cùng nội dung mã). Bản trả lời checklist gửi Go2Joy: `docs/report/RPT-261013-Go2Joy-Checklist-Response.{vi,en,ko}.md`.
 
 ## 1. Đối chiếu yêu cầu
 
