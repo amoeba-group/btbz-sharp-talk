@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPatch, apiPost, apiUpload } from '@/lib/api-client';
+import { apiDelete, apiGet, apiPatch, apiPost, apiPut, apiUpload } from '@/lib/api-client';
 
 /** Mirrors the API's toSessionResponse — no invented fields (they render as '—'). */
 export interface GroupRef {
@@ -91,6 +91,19 @@ export interface ChatMessage {
   body: string;
   createdAt?: string;
   attachments?: ChatAttachment[];
+  /** Latest accuracy verdict (PLN-261015 D7); null = unrated. */
+  rating?: AnswerRatingView | null;
+}
+
+export type AnswerRatingValue = 'accurate' | 'partial' | 'inaccurate';
+export const ANSWER_RATING_REASONS = ['wrong_source', 'outdated', 'out_of_scope', 'wording', 'other'] as const;
+export interface AnswerRatingView {
+  messageId: string;
+  rating: AnswerRatingValue;
+  reason: string | null;
+  note: string | null;
+  ratedBy: string;
+  updatedAt?: string;
 }
 
 export interface CustomerContext {
@@ -261,6 +274,11 @@ export const liveChatService = {
       `/agent/messages/${messageId}/translate`,
       { lang },
     ),
+  rateAnswer: (
+    conversationId: string,
+    messageId: string,
+    body: { rating: AnswerRatingValue; reason?: string; note?: string },
+  ) => apiPut<AnswerRatingView>(`/agent/conversations/${conversationId}/messages/${messageId}/rating`, body),
   setAlias: (id: string, alias: string | null) =>
     apiPatch<{ sessionId: string; alias: string | null }>(`/agent/conversations/${id}/alias`, {
       alias,

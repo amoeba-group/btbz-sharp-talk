@@ -407,5 +407,27 @@
       "reception": "フロント"
     },
     "signed": "ホストアプリが署名した情報"
+  },
+  "rating": {
+    "action": "回答を評価",
+    "value": {
+      "accurate": "正確",
+      "partial": "一部正確",
+      "inaccurate": "不正確"
+    },
+    "reasonLabel": "理由",
+    "reason": {
+      "wrong_source": "根拠の誤り",
+      "outdated": "情報が古い",
+      "out_of_scope": "範囲外",
+      "wording": "表現",
+      "other": "その他"
+    },
+    "notePh": "メモ(任意)",
+    "cancel": "キャンセル",
+    "save": "評価を保存",
+    "savedAccurate": "評価を保存しました。",
+    "savedGap": "評価を保存しました。正確でないAI回答はナレッジ › ギャップ提案に追加されます。",
+    "saveError": "評価を保存できませんでした。"
   }
 }

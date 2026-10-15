@@ -18,6 +18,7 @@ import {
   ResolutionSection,
 } from './BreakdownSections';
 import { CsatSection } from './CsatSection';
+import { AccuracySection } from './AccuracySection';
 import { JourneySection } from './JourneySection';
 import { DateRangePicker, useDateRange } from '@/components/DateRangePicker';
 import { AccessSection } from './AccessSection';
@@ -28,7 +29,7 @@ const LOW_CONFIDENCE = 0.45;
  * Tab order: what was asked first (questions), then where it came from, who
  * answered, how it ended, and when it happens.
  */
-const SECTIONS = ['journey', 'questions', 'access', 'channels', 'agents', 'resolution', 'csat', 'hours'] as const;
+const SECTIONS = ['journey', 'questions', 'access', 'channels', 'agents', 'resolution', 'csat', 'accuracy', 'hours'] as const;
 type Section = (typeof SECTIONS)[number];
 
 /** Tabs computed from conversations/messages, which the retention purge removes. */
@@ -157,6 +158,7 @@ export function StatisticsPage() {
       </Card>
 
       {section === 'csat' && <CsatSection from={from} to={to} />}
+      {section === 'accuracy' && <AccuracySection from={from} to={to} />}
       {/* These four read the conversation log itself, so they end where it
           does. Claimed in the plan and easy to leave unsaid — an empty range
           past the window would otherwise read as "nothing happened". */}

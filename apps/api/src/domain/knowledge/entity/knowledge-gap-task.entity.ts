@@ -5,6 +5,8 @@ export const GAP_SOURCE = {
   ESCALATION_CLUSTER: 'escalation_cluster',
   NO_SOURCE: 'no_source',
   AGENT_RESOLUTION: 'agent_resolution',
+  /** An agent rated an AI answer partial/inaccurate (PLN-261015 D7). */
+  ANSWER_RATING: 'answer_rating',
 } as const;
 export type GapSource = (typeof GAP_SOURCE)[keyof typeof GAP_SOURCE];
 

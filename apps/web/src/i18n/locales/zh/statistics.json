@@ -35,7 +35,8 @@
     "resolution": "处理结果",
     "hours": "时段",
     "access": "展示与访问",
-    "journey": "旅程"
+    "journey": "旅程",
+    "accuracy": "回答准确度"
   },
   "csat": {
     "avgTitle": "平均评分",
@@ -160,5 +161,28 @@
     "details": "详情",
     "notExclusive": "转人工的会话同样会被评价并结束 — 合计可能超过会话数。",
     "collectionNote": "展示与访问自 2026-09-20 起收集；更早的区间从会话开始。"
+  },
+  "accuracy": {
+    "loading": "加载中…",
+    "empty": "此期间没有被评价的回答。客服在实时会话中评价回答。",
+    "sender": {
+      "ai": "被评为准确的 AI 回答",
+      "agent": "被评为准确的客服回答"
+    },
+    "accurateOf": "共 {{n}} 条评价",
+    "verdict": {
+      "accurate": "准确",
+      "partial": "部分",
+      "inaccurate": "不准确"
+    },
+    "reasonsTitle": "不准确的原因",
+    "reason": {
+      "wrong_source": "依据错误",
+      "outdated": "已过时",
+      "out_of_scope": "超出范围",
+      "wording": "表述",
+      "other": "其他 / 未填写"
+    },
+    "reasonsHint": "不准确的 AI 回答也会进入 知识 › 知识缺口建议。"
   }
 }

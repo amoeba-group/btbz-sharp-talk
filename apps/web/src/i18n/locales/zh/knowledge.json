@@ -241,7 +241,8 @@
     "source": {
       "escalation_cluster": "转人工较多",
       "no_source": "无来源",
-      "agent_resolution": "客服处理结果"
+      "agent_resolution": "客服处理结果",
+      "answer_rating": "回答评价"
     },
     "accept": "批准为知识文档",
     "acceptConfirm": "创建文档",

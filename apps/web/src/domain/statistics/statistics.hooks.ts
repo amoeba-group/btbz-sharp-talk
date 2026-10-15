@@ -23,6 +23,15 @@ export const useQuestionStats = (params: QuestionStatsParams) => {
   });
 };
 
+export const useRatingSummary = (from: string, to: string) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['ratings', tenantKey, 'summary', from, to],
+    queryFn: () => statisticsService.ratingSummary(from, to),
+    placeholderData: keepPreviousData,
+  });
+};
+
 export const useCsatSummary = (from: string, to: string) => {
   const tenantKey = useTenantKey();
   return useQuery({

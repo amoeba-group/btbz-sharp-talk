@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MoreThan, Repository } from 'typeorm';
+import { LessThan, MoreThan, Repository } from 'typeorm';
 import { SENDER_TYPE } from '@sharptalk/types';
 import { GAP_SOURCE, GAP_STATUS, KnowledgeGapTask } from './entity/knowledge-gap-task.entity';
 import { QuestionStatDaily } from '../analytics/entity/question-stat-daily.entity';
@@ -27,6 +27,16 @@ interface IssueResolvedEvent {
   issueId?: number;
   issueNo?: number;
   conversationId?: number;
+}
+
+/** Shape of EVENTS.ANSWER_RATED (published by the agent module's AnswerRatingService). */
+interface AnswerRatedPayload {
+  tenantId: number;
+  conversationId: number;
+  messageId: number;
+  rating: string;
+  reason: string | null;
+  note: string | null;
 }
 
 /**
@@ -57,6 +67,13 @@ export class KnowledgeGapService implements OnModuleInit {
         await this.proposeFromResolution((payload ?? {}) as IssueResolvedEvent);
       } catch (e) {
         this.logger.warn(`gap capture proposal failed: ${(e as Error).message}`);
+      }
+    });
+    this.bus.subscribe(EVENTS.ANSWER_RATED, async (payload: unknown) => {
+      try {
+        await this.proposeFromRating((payload ?? {}) as AnswerRatedPayload);
+      } catch (e) {
+        this.logger.warn(`gap proposal from rating failed: ${(e as Error).message}`);
       }
     });
     const hours = envNumber('KNOWLEDGE_GAP_INTERVAL_HOURS', 24);
@@ -146,6 +163,30 @@ export class KnowledgeGapService implements OnModuleInit {
       title: scrubPii(question.body).text.trim().slice(0, 300),
       detail: answer.body,
       metric: { issueNo: event.issueNo ?? null },
+    });
+  }
+
+  /**
+   * An AI answer an agent rated partial/inaccurate (PLN-261015 D7) → a proposal
+   * whose title is the customer's question and whose detail carries the verdict
+   * and the wrong answer, so whoever fixes the knowledge sees what went wrong.
+   * One proposal per rated message; re-rating refreshes it while it is open.
+   */
+  async proposeFromRating(event: AnswerRatedPayload): Promise<void> {
+    const { tenantId, conversationId, messageId } = event;
+    if (!tenantId || !conversationId || !messageId) return;
+    const answer = await this.msgRepo.findOne({ where: { id: messageId, conversationId } });
+    if (!answer) return;
+    const question = await this.msgRepo.findOne({
+      where: { conversationId, senderType: SENDER_TYPE.USER, id: LessThan(messageId) },
+      order: { id: 'DESC' },
+    });
+    if (!question) return;
+    const verdict = [`Rated ${event.rating}`, event.reason, event.note].filter(Boolean).join(' — ');
+    await this.upsertProposal(tenantId, GAP_SOURCE.ANSWER_RATING, `msg:${messageId}`, {
+      title: scrubPii(question.body).text.trim().slice(0, 300),
+      detail: `${verdict}\n\n---\nAI answer:\n${answer.body}`,
+      metric: { rating: event.rating, reason: event.reason ?? null, conversationId },
     });
   }
 

@@ -241,7 +241,8 @@
     "source": {
       "escalation_cluster": "Hay bị chuyển tiếp",
       "no_source": "Không có nguồn",
-      "agent_resolution": "Nhân viên đã xử lý"
+      "agent_resolution": "Nhân viên đã xử lý",
+      "answer_rating": "Đánh giá câu trả lời"
     },
     "accept": "Duyệt thành tài liệu tri thức",
     "acceptConfirm": "Tạo tài liệu",

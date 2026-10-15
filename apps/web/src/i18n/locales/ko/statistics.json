@@ -35,7 +35,8 @@
     "resolution": "처리",
     "hours": "시간대",
     "access": "노출·접속",
-    "journey": "여정"
+    "journey": "여정",
+    "accuracy": "답변 정확도"
   },
   "csat": {
     "avgTitle": "평균 평점",
@@ -160,5 +161,28 @@
     "details": "상세",
     "notExclusive": "이관된 대화도 평가와 종료를 거칩니다 — 합이 대화 수를 넘을 수 있습니다.",
     "collectionNote": "노출·접속은 2026-09-20부터 수집합니다. 이전 구간은 대화부터 표시됩니다."
+  },
+  "accuracy": {
+    "loading": "불러오는 중…",
+    "empty": "이 기간에 평가된 답변이 없습니다. 상담원이 실시간 상담 대화에서 답변을 평가합니다.",
+    "sender": {
+      "ai": "정확으로 평가된 AI 답변",
+      "agent": "정확으로 평가된 상담원 답변"
+    },
+    "accurateOf": "평가 {{n}}건 중",
+    "verdict": {
+      "accurate": "정확",
+      "partial": "부분",
+      "inaccurate": "부정확"
+    },
+    "reasonsTitle": "정확하지 않았던 이유",
+    "reason": {
+      "wrong_source": "근거 틀림",
+      "outdated": "최신 아님",
+      "out_of_scope": "범위 밖",
+      "wording": "표현",
+      "other": "기타·미입력"
+    },
+    "reasonsHint": "정확하지 않은 AI 답변은 지식 › 지식 갭 제안에도 올라갑니다."
   }
 }

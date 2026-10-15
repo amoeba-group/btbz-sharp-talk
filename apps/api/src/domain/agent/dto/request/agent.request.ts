@@ -163,3 +163,16 @@ export class UpsertProfileRequest {
   @IsOptional() @IsInt() @Min(1) max_concurrent?: number;
   @IsOptional() @IsString() status?: string;
 }
+
+/** Accuracy verdict on one AI/agent answer (PLN-261015 D7). */
+export class RateAnswerRequest {
+  @IsIn(['accurate', 'partial', 'inaccurate']) rating: string;
+  @IsOptional() @IsIn(['wrong_source', 'outdated', 'out_of_scope', 'wording', 'other']) reason?: string;
+  @IsOptional() @IsString() @MaxLength(500) note?: string;
+}
+
+/** Same window as the CSAT stats: YYYY-MM-DD, default the last 30 days. */
+export class RatingSummaryQuery {
+  @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) from?: string;
+  @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) to?: string;
+}

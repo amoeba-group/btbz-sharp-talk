@@ -35,7 +35,8 @@
     "resolution": "Resultados",
     "hours": "Horas",
     "access": "Acceso",
-    "journey": "Recorrido"
+    "journey": "Recorrido",
+    "accuracy": "Precisión de respuestas"
   },
   "csat": {
     "avgTitle": "Puntuación media",
@@ -160,5 +161,28 @@
     "details": "Detalle",
     "notExclusive": "Una conversación derivada también se valora y finaliza — pueden sumar más que el total.",
     "collectionNote": "Impresiones y accesos se recogen desde 2026-09-20; antes se empieza en conversaciones."
+  },
+  "accuracy": {
+    "loading": "Cargando…",
+    "empty": "No hay respuestas valoradas en este periodo. Los agentes valoran desde la conversación en vivo.",
+    "sender": {
+      "ai": "Respuestas de IA valoradas correctas",
+      "agent": "Respuestas de agentes valoradas correctas"
+    },
+    "accurateOf": "de {{n}} valoradas",
+    "verdict": {
+      "accurate": "Correcta",
+      "partial": "Parcial",
+      "inaccurate": "Incorrecta"
+    },
+    "reasonsTitle": "Por qué no fueron correctas",
+    "reason": {
+      "wrong_source": "Fuente equivocada",
+      "outdated": "Desactualizada",
+      "out_of_scope": "Fuera de alcance",
+      "wording": "Redacción",
+      "other": "Otro / sin indicar"
+    },
+    "reasonsHint": "Las respuestas de IA no correctas también aparecen en Conocimiento › propuestas de vacíos."
   }
 }

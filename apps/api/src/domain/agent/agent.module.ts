@@ -24,6 +24,8 @@ import { Session } from '../session/entity/session.entity';
 import { AgentService } from './agent.service';
 import { AgentAlertService } from './agent-alert.service';
 import { AgentAlertReminderService } from './agent-alert-reminder.service';
+import { AnswerRatingService } from './answer-rating.service';
+import { AnswerRating } from './entity/answer-rating.entity';
 import { BriefingService } from './briefing.service';
 import { ChatCommentService } from './chat-comment.service';
 import { ChatGroupService } from './chat-group.service';
@@ -46,6 +48,7 @@ import { AttachmentModule } from '../attachment/attachment.module';
       Assignment,
       AgentDailyStat,
       AgentAlert,
+      AnswerRating,
       // Read-only: AI-agent names for queue rows/filter (REQ-260825 R6/R7).
       AiAgent,
       // Internal notes + stored briefings (REQ-260824 R3/R4).
@@ -90,6 +93,7 @@ import { AttachmentModule } from '../attachment/attachment.module';
     AgentService,
     AgentAlertService,
     AgentAlertReminderService,
+    AnswerRatingService,
     BriefingService,
     ChatCommentService,
     ChatGroupService,
