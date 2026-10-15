@@ -85,6 +85,17 @@ export class Tenant {
   @Column({ name: 'privacy_profile', type: 'varchar', length: 16, nullable: true })
   privacyProfile: string | null;
 
+  /**
+   * Where the widget's consent comes from (PLN-261015 D9).
+   * 'widget' (default) — the shopper accepts the banner in the widget.
+   * 'host_terms' — the host app's own terms already cover AI support (Go2Joy
+   * Hotel Admin): a user the host SIGNED (verified identify) is recorded as
+   * consented, with the time and notice version; anyone unsigned still gets
+   * the banner.
+   */
+  @Column({ name: 'consent_source', type: 'varchar', length: 16, default: 'widget' })
+  consentSource: string;
+
   /** Per-language rewrites of individual notice lines; NULL = profile copy only. */
   @Column({ name: 'privacy_notice_copy', type: 'json', nullable: true })
   privacyNoticeCopy: PrivacyNoticeCopy | null;

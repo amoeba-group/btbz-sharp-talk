@@ -67,6 +67,8 @@ export interface PrivacyNoticeResponse {
   consentNoticeVersion: string | null;
   /** Stored choice; null = inferred from commerceEnabled (PLN-261001). */
   privacyProfile: string | null;
+  /** widget | host_terms (PLN-261015 D9). */
+  consentSource: string;
   /** The profile actually in force right now — what the console previews. */
   effectiveProfile: string;
   /** Per-language line rewrites, exactly as stored. */

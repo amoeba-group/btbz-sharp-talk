@@ -5,7 +5,7 @@ import {
   identify as identifyRequest,
   setSessionLanguage,
 } from '../services/sessionService';
-import { getParentOrigin, getShopDomain } from './useSession';
+import { adoptSessionConsent, getParentOrigin, getShopDomain } from './useSession';
 import { hostPresent, onHostMessage, postToHost } from '../lib/host-bridge';
 import i18n, { LANG_STORAGE_KEY, SUPPORTED_LANGUAGES } from '../i18n/i18n';
 
@@ -47,6 +47,9 @@ export function useEmbedCommands(): void {
       try {
         const res = await identifyRequest(token, user);
         store.setAuthenticated(res.authenticated);
+        // A tenant whose host terms cover AI support records a signed user as
+        // consented on identify (PLN-261015 D9) — drop the banner right away.
+        if (res.consentState === 'granted') adoptSessionConsent(res);
         postToHost({ type: 'ivy:event', event: 'identified', ok: true });
       } catch {
         // A rejected signature leaves the visitor a guest: they can still ask

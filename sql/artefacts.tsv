@@ -78,6 +78,7 @@
 261015-agent-alerts-reminded-at.sql	column	agent_alerts	reminded_at
 261015-answer-ratings.sql	table	answer_ratings	-
 261015-session-identity-attributes.sql	column	sessions	identity_attributes
+261015-tenant-consent-source.sql	column	tenants	consent_source
 migration_agent_coaching.sql	table	agent_coaching_threads	-
 migration_agent_coaching.sql	table	agent_coaching_messages	-
 migration_agent_coaching.sql	table	agent_coaching_proposals	-

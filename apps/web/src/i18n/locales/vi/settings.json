@@ -49,7 +49,12 @@
     "copyResponsibility": "Nội dung bạn nhập ở đây thay thế thông báo chuẩn hiển thị cho khách — bạn chịu trách nhiệm về nội dung đó.",
     "bumpVersion": "Đây là thay đổi quan trọng — tăng phiên bản thông báo và hỏi lại những người đã đồng ý.",
     "unsetUrl": "Chưa đặt — nếu trống, thông báo đồng ý sẽ không có liên kết chính sách.",
-    "unsetVersion": "Chưa đặt — phiên bản mặc định của nền tảng đang được áp dụng."
+    "unsetVersion": "Chưa đặt — phiên bản mặc định của nền tảng đang được áp dụng.",
+    "consentSource": "Nguồn đồng ý",
+    "consentSource_widget": "Biểu ngữ widget — khách đồng ý trong widget",
+    "consentSource_host_terms": "Điều khoản ứng dụng chủ — người dùng đăng nhập đã đồng ý điều khoản",
+    "consentSourceWidgetHint": "Mọi khách đều thấy biểu ngữ đồng ý và phải đồng ý trước khi trò chuyện.",
+    "consentSourceHostHint": "Người dùng được ứng dụng của bạn ký xác thực (embed identify) được ghi nhận là đã đồng ý — thời điểm và phiên bản thông báo — mà không hiện biểu ngữ. Điều khoản phải bao gồm hỗ trợ AI và khu vực xử lý. Khách chưa ký xác thực vẫn thấy biểu ngữ."
   },
   "widgetBehavior": {
     "title": "Hành vi của widget",

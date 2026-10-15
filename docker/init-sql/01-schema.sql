@@ -1839,6 +1839,7 @@ CREATE TABLE `tenants` (
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `storefront_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'customer-facing shop origin, e.g. https://ivyusa.com',
   `commerce_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `consent_source` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'widget',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_tenant_shop` (`shop_domain`),
   UNIQUE KEY `uk_tenant_slug` (`slug`),
