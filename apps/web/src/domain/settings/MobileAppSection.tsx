@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Smartphone, Trash2 } from 'lucide-react';
-import { MOBILE_APP_DEFAULTS, MOBILE_SDK_VERSIONS, type MobileAppConfig } from '@sharptalk/types';
+// Deep import: a browser bundle cannot value-import the CJS entry of @sharptalk/types (see CLAUDE.md).
+import {
+  MOBILE_APP_DEFAULTS,
+  MOBILE_SDK_VERSIONS,
+  type MobileAppConfig,
+} from '../../../../../packages/types/src/common/mobile-app-config';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { FormRow, Input, Select } from '@/components/Field';
