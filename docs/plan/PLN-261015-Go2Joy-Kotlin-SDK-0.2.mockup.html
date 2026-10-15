@@ -152,7 +152,7 @@
 
 <div class="page">
   <h1>Mô phỏng: widget SharpTalk trong app Go2Joy Partner (Android, Kotlin 2.2.0) — SDK 0.2</h1>
-  <p class="sub">Dựng theo giao diện widget thật (ảnh chụp app mode trong PLN-261015: brand Go2Joy, dòng thông báo AI, lời chào agent Hotel Partner, 4 nút nhanh, trả lời có nguồn, chip "Gặp nhân viên hỗ trợ"). Màn 1 chỉ minh họa vị trí entry trong app của Go2Joy. Kèm PLN-261015-Go2Joy-Kotlin-SDK-0.2.</p>
+  <p class="sub">Dựng theo giao diện widget thật (ảnh chụp app mode trong PLN-261015: brand Go2Joy, dòng thông báo AI, lời chào agent Hotel Partner, 4 nút nhanh, trả lời có nguồn, chip "Gặp nhân viên hỗ trợ"). Màn 1 chỉ minh họa vị trí entry trong app của Go2Joy. Mã đặt phòng, số liệu KPI, tên khách và nhân viên là giả định để minh họa. Kèm PLN-261015-Go2Joy-Kotlin-SDK-0.2.</p>
   <div class="legend"><span class="tag">Có sẵn</span> cấu hình từ console hoặc SDK 0.1.0 đã có &nbsp;·&nbsp; <span class="tag new">Mới 0.2</span> phần SDK 0.2 / widget / API thêm &nbsp;·&nbsp; Tất cả nội dung chữ, màu, menu, agent đều chỉnh từ console, app không cần phát hành lại.</div>
 
   <div class="grid">
@@ -176,14 +176,14 @@
         <div class="nav"><span class="on">Trang chủ</span><span>Đặt phòng</span><span>Thông báo</span><span>Cài đặt</span></div>
         <span class="tag new" style="left:14px;top:578px">1 entry → ShopTalkChatFragment</span>
       </div></div>
-      <div class="cap"><b>1. Điểm vào trong app (minh họa).</b> Ô "Hỗ trợ Go2Joy" mở <code>ShopTalkChatFragment</code> với <code>agent=hotel-partner</code>. Go2Joy quyết định vị trí; mỗi điểm vào có thể ghim agent khác.</div>
+      <div class="cap"><b>1. Điểm vào trong app (minh họa).</b> Ô "Hỗ trợ Go2Joy" mở <code>ShopTalkChatFragment</code> với <code>agent=hotel-admin</code>. Go2Joy quyết định vị trí; mỗi điểm vào có thể ghim agent khác.</div>
     </div>
 
     <!-- 2. Chat home native header -->
     <div class="card">
       <div class="phone"><div class="screen">
         <div class="status light"><span>09:41</span><span>▲ 4G ▮▮▮</span></div>
-        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Joydesk · AI + nhân viên Go2Joy</div></div><svg class="ico"><use href="#more"/></svg></div>
+        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Go2Joy Support · AI + nhân viên Go2Joy</div></div><svg class="ico"><use href="#more"/></svg></div>
         <div class="notice"><svg class="ico sm" style="color:var(--brand)"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại Hoa Kỳ để tạo câu trả lời.</span></div>
         <div class="thread">
           <div class="b ai">Xin chào! Chào mừng bạn đến với Go2Joy Support. Chúng tôi có thể giúp gì cho bạn? Hãy chọn một chủ đề bên dưới hoặc nhập câu hỏi của bạn.</div>
@@ -207,7 +207,7 @@
     <div class="card">
       <div class="phone"><div class="screen">
         <div class="status light"><span>09:52</span><span>▲ 4G ▮▮▮</span></div>
-        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Joydesk · AI + nhân viên Go2Joy</div></div><svg class="ico"><use href="#more"/></svg></div>
+        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Go2Joy Support · AI + nhân viên Go2Joy</div></div><svg class="ico"><use href="#more"/></svg></div>
         <div class="notice"><svg class="ico sm" style="color:var(--brand)"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại Hoa Kỳ.</span><span class="end">Kết thúc</span></div>
         <div class="thread">
           <div class="sys">Mở từ Đặt phòng #G2J-8841</div>
@@ -226,7 +226,7 @@
     <div class="card">
       <div class="phone"><div class="screen">
         <div class="status light"><span>09:53</span><span>▲ 4G ▮▮▮</span></div>
-        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Joydesk · AI + nhân viên Go2Joy</div></div><svg class="ico"><use href="#more"/></svg></div>
+        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Go2Joy Support · AI + nhân viên Go2Joy</div></div><svg class="ico"><use href="#more"/></svg></div>
         <div class="notice"><svg class="ico sm" style="color:var(--brand)"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI…</span><span class="end">Kết thúc</span></div>
         <div class="thread">
           <div class="b me">Khách không đến, tôi cần báo no-show cho đặt phòng này</div>
@@ -291,7 +291,7 @@
     <div class="card">
       <div class="phone"><div class="screen">
         <div class="status light"><span>10:05</span><span>▲ 4G ▮▮▮</span></div>
-        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Joydesk · AI + nhân viên Go2Joy</div></div><svg class="ico"><use href="#more"/></svg></div>
+        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Go2Joy Support · AI + nhân viên Go2Joy</div></div><svg class="ico"><use href="#more"/></svg></div>
         <div class="notice"><svg class="ico sm" style="color:var(--brand)"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI…</span></div>
         <div class="warn"><svg class="ico sm" style="flex:none"><use href="#alert"/></svg><span>Không xác minh được tài khoản. Bạn đang trò chuyện ẩn danh; câu hỏi về đặt phòng cụ thể sẽ cần xác minh.</span><b>Thử lại</b></div>
         <div class="thread">

@@ -34,9 +34,9 @@ identify (việc của nhóm backend, REQ Q1).
 
 ```kotlin
 data class ShopTalkConfig(
-    val widgetUrl: String,                      // https://sharptalk.go2joy.vn/widget/
-    val shop: String? = null,                   // app.go2joy.vn (định danh tenant)
-    val agent: String? = null,                  // hotel-partner
+    val widgetUrl: String,                      // staging hiện tại: https://shoptalk.amoeba.site/widget/ · self-hosted đề xuất (PLN-261015 D1, chưa chốt): sharptalk.go2joy.vn
+    val shop: String? = null,                   // "https://www.go2joy.vn" — khớp tenants.shop_domain của tenant go2joy trên staging (PLN-261015 §8); không phải domain app
+    val agent: String? = null,                  // hotel-admin (agent giai đoạn 1 theo PLN-261015)
     val locale: String? = null,                 // vi
     val accessKey: String? = null,              // ?access= khi tenant bật widget_access
     val header: ShopTalkHeader = ShopTalkHeader.WIDGET,   // WIDGET | NATIVE  → ?chrome=native
@@ -144,7 +144,7 @@ Console: dòng SYSTEM đã hiển thị trong Live chat; không cần sửa.
 │ [Khuyến mãi] [Doanh thu]     │
 │ [Đánh giá]   [Thông báo]     │
 │ [Chat với khách]             │
-│ [Hỗ trợ Go2Joy  ● Mới]  ←── mở ShopTalkChatFragment, agent=hotel-partner
+│ [Hỗ trợ Go2Joy  ● Mới]  ←── mở ShopTalkChatFragment, agent=hotel-admin
 ├──────────────────────────────┤
 │ Trang chủ  Đặt phòng  Cài đặt│
 └──────────────────────────────┘

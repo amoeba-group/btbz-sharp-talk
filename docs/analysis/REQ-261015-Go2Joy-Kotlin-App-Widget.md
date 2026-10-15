@@ -15,7 +15,7 @@
 - Hotel Admin web của Go2Joy đã nhúng được widget qua `embed.js`; nội dung, agent, theme, menu kịch bản, danh tính
   đều cấu hình từ console. Go2Joy nay muốn kênh thứ hai: **ứng dụng Android Go2Joy Partner**, viết bằng Kotlin 2.2.0,
   cho lễ tân và quản lý khách sạn dùng tại quầy.
-- Tenant go2joy đang có **6 AI agent** (Hotel Partner "Joydesk" mặc định, Hotel Admin, Default, Landing Guest,
+- Tenant go2joy đang có **6 AI agent** (Hotel Partner "Joydesk" mặc định; Hotel Admin là agent giai đoạn 1 theo PLN-261015, mã `hotel-admin`; Default, Landing Guest,
   Admin Staff, Ads Partner). Giai đoạn 2 theo PLN-261015 §11.1 sẽ thêm **agent theo từng khách sạn** cho khách đặt
   phòng trên app người dùng. SDK Kotlin vì thế phải là **một SDK dùng cho nhiều điểm vào, nhiều agent**, không phải
   một bản ghép riêng cho một màn hình.
@@ -108,7 +108,7 @@ có thể đổi sau. Yêu cầu này quyết định thiết kế ở §3.1.
 ```
 App Go2Joy Partner (Kotlin 2.2.0)
   ├─ Màn "Hỗ trợ Go2Joy" ──► ShopTalkChatFragment / ShopTalkChat() (Compose)
-  │                             ├─ WebView: https://sharptalk.go2joy.vn/widget/?embed=1&mode=app&shop=…&agent=hotel-partner&chrome=native
+  │                             ├─ WebView: https://sharptalk.go2joy.vn/widget/?embed=1&mode=app&shop=https%3A%2F%2Fwww.go2joy.vn&agent=hotel-admin&chrome=native
   │                             ├─ bridge ShopTalkAndroid  ◄──►  window.__shoptalkHost
   │                             └─ identityProvider ──► Backend Go2Joy GET /sharptalk/identity (auth token app)
   │                                                        └─ trả { userId, hash, attributes|claims, name }
