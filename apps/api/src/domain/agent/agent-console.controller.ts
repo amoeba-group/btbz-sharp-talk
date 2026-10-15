@@ -68,9 +68,11 @@ import {
   toProfileResponse,
   toSessionResponse,
   toIdentityResponse,
+  toRatingResponse,
   toStatResponse,
 } from './agent.mapper';
-import { ListAlertsQuery } from './dto/request/agent.request';
+import { ListAlertsQuery, RateAnswerRequest, RatingSummaryQuery } from './dto/request/agent.request';
+import { AnswerRatingService } from './answer-rating.service';
 
 function tenantOf(user: Principal): number {
   return user.actorType === 'user' ? user.tenantId : 0;
@@ -90,7 +92,40 @@ export class AgentConsoleController {
     private readonly briefingService: BriefingService,
     private readonly commentService: ChatCommentService,
     private readonly groupService: ChatGroupService,
+    private readonly ratingService: AnswerRatingService,
   ) {}
+
+  // ---- answer accuracy ratings (PLN-261015 D7) ----
+
+  @Put('conversations/:id/messages/:messageId/rating')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Rate one AI/agent answer accurate | partial | inaccurate (PLN-261015 D7)' })
+  async rateAnswer(
+    @CurrentUser() user: Principal,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('messageId', ParseIntPipe) messageId: number,
+    @Body() body: RateAnswerRequest,
+  ) {
+    const row = await this.ratingService.rate(tenantOf(user), actorIdOf(user), id, messageId, {
+      rating: body.rating,
+      reason: body.reason ?? null,
+      note: body.note ?? null,
+    });
+    return toRatingResponse(row);
+  }
+
+  @Get('ratings/summary')
+  @RequireCapability(CAPABILITY.ANALYTICS_READ)
+  @ApiOperation({ summary: 'Answer accuracy counts by sender and reason (PLN-261015 D7)' })
+  async ratingSummary(@CurrentUser() user: Principal, @Query() query: RatingSummaryQuery) {
+    // Same window as the CSAT stats (UTC days, end inclusive).
+    const day = (d: Date) => d.toISOString().slice(0, 10);
+    const toDay = query.to ?? day(new Date());
+    const fromDay = query.from ?? day(new Date(Date.now() - 29 * 86_400_000));
+    const end = new Date(`${toDay}T00:00:00.000Z`);
+    end.setUTCDate(end.getUTCDate() + 1);
+    return this.ratingService.summary(tenantOf(user), new Date(`${fromDay}T00:00:00.000Z`), end);
+  }
 
   // ---- session groups: timeline / project (PLN-260824-Session-Grouping) ----
 
@@ -513,6 +548,11 @@ export class AgentConsoleController {
     // One query for the page — the console re-fetches a conversation on every
     // poll, so a per-message lookup would multiply with the transcript length.
     const attachments = await this.attachments.findByMessageIds(messages.map((m) => Number(m.id)));
+    // Accuracy verdicts shown on each answer (PLN-261015 D7) — one query per page.
+    const ratings = await this.ratingService.forMessages(
+      tenantId,
+      messages.filter((m) => m.senderType === 'ai' || m.senderType === 'agent').map((m) => Number(m.id)),
+    );
     const customer = await this.agentService.customerContext(id, tenantId);
     const conversation = await this.agentService.findConversation(id, tenantId);
     const { identityAttributes, ...sessionState } = await this.agentService.sessionStateFor(
@@ -550,6 +590,7 @@ export class AgentConsoleController {
           m,
           m.senderId != null ? names.get(String(m.senderId)) ?? null : null,
           attachments.get(String(m.id)),
+          ratings.get(String(m.id)),
         ),
       ),
       hasMore,

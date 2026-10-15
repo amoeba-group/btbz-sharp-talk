@@ -35,7 +35,8 @@
     "resolution": "結果",
     "hours": "時間帯",
     "access": "表示・接続",
-    "journey": "ジャーニー"
+    "journey": "ジャーニー",
+    "accuracy": "回答の正確さ"
   },
   "csat": {
     "avgTitle": "平均評価",
@@ -160,5 +161,28 @@
     "details": "詳細",
     "notExclusive": "引き継いだ会話も評価され終了します — 合計が会話数を超えることがあります。",
     "collectionNote": "表示・接続は 2026-09-20 から収集します。それ以前は会話から表示されます。"
+  },
+  "accuracy": {
+    "loading": "読み込み中…",
+    "empty": "この期間に評価された回答はありません。担当者がライブチャットの会話から評価します。",
+    "sender": {
+      "ai": "正確と評価されたAI回答",
+      "agent": "正確と評価された担当者回答"
+    },
+    "accurateOf": "評価{{n}}件中",
+    "verdict": {
+      "accurate": "正確",
+      "partial": "一部",
+      "inaccurate": "不正確"
+    },
+    "reasonsTitle": "正確でなかった理由",
+    "reason": {
+      "wrong_source": "根拠の誤り",
+      "outdated": "情報が古い",
+      "out_of_scope": "範囲外",
+      "wording": "表現",
+      "other": "その他・未入力"
+    },
+    "reasonsHint": "正確でないAI回答はナレッジ › ギャップ提案にも追加されます。"
   }
 }

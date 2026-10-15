@@ -35,7 +35,8 @@
     "resolution": "Outcomes",
     "hours": "Hours",
     "access": "Access",
-    "journey": "Journey"
+    "journey": "Journey",
+    "accuracy": "Answer accuracy"
   },
   "csat": {
     "avgTitle": "Average rating",
@@ -160,5 +161,28 @@
     "details": "Details",
     "notExclusive": "An escalated conversation is still rated and still ends — these can sum past the conversation count.",
     "collectionNote": "Impressions and access are collected from 2026-09-20; earlier ranges start at conversations."
+  },
+  "accuracy": {
+    "loading": "Loading…",
+    "empty": "No answers rated in this period. Agents rate answers from the live chat transcript.",
+    "sender": {
+      "ai": "AI answers rated accurate",
+      "agent": "Agent answers rated accurate"
+    },
+    "accurateOf": "of {{n}} rated",
+    "verdict": {
+      "accurate": "Accurate",
+      "partial": "Partly",
+      "inaccurate": "Inaccurate"
+    },
+    "reasonsTitle": "Why answers were not accurate",
+    "reason": {
+      "wrong_source": "Wrong source",
+      "outdated": "Outdated",
+      "out_of_scope": "Out of scope",
+      "wording": "Wording",
+      "other": "Other / none given"
+    },
+    "reasonsHint": "AI answers rated below accurate are also listed in Knowledge › gap proposals."
   }
 }

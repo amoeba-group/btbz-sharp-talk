@@ -407,5 +407,27 @@
       "reception": "Reception"
     },
     "signed": "Signed by the host app"
+  },
+  "rating": {
+    "action": "Rate answer",
+    "value": {
+      "accurate": "Accurate",
+      "partial": "Partly accurate",
+      "inaccurate": "Inaccurate"
+    },
+    "reasonLabel": "Why?",
+    "reason": {
+      "wrong_source": "Wrong source",
+      "outdated": "Outdated",
+      "out_of_scope": "Out of scope",
+      "wording": "Wording",
+      "other": "Other"
+    },
+    "notePh": "Note (optional)",
+    "cancel": "Cancel",
+    "save": "Save rating",
+    "savedAccurate": "Rating saved.",
+    "savedGap": "Rating saved. AI answers rated below accurate go to Knowledge › gap proposals.",
+    "saveError": "Could not save the rating."
   }
 }

@@ -35,7 +35,8 @@
     "resolution": "Kết quả",
     "hours": "Khung giờ",
     "access": "Truy cập",
-    "journey": "Hành trình"
+    "journey": "Hành trình",
+    "accuracy": "Độ chính xác câu trả lời"
   },
   "csat": {
     "avgTitle": "Điểm trung bình",
@@ -160,5 +161,28 @@
     "details": "Chi tiết",
     "notExclusive": "Hội thoại đã chuyển vẫn được đánh giá và kết thúc — tổng có thể vượt số hội thoại.",
     "collectionNote": "Hiển thị và truy cập được thu thập từ 2026-09-20; khoảng trước đó bắt đầu từ hội thoại."
+  },
+  "accuracy": {
+    "loading": "Đang tải…",
+    "empty": "Không có câu trả lời nào được đánh giá trong kỳ này. Nhân viên đánh giá từ hội thoại trực tiếp.",
+    "sender": {
+      "ai": "Câu trả lời AI được đánh giá chính xác",
+      "agent": "Câu trả lời nhân viên được đánh giá chính xác"
+    },
+    "accurateOf": "trên {{n}} lượt đánh giá",
+    "verdict": {
+      "accurate": "Chính xác",
+      "partial": "Một phần",
+      "inaccurate": "Không chính xác"
+    },
+    "reasonsTitle": "Lý do chưa chính xác",
+    "reason": {
+      "wrong_source": "Sai nguồn",
+      "outdated": "Đã cũ",
+      "out_of_scope": "Ngoài phạm vi",
+      "wording": "Cách diễn đạt",
+      "other": "Khác / không ghi"
+    },
+    "reasonsHint": "Câu trả lời AI chưa chính xác cũng được đưa vào Tri thức › Đề xuất bổ sung."
   }
 }

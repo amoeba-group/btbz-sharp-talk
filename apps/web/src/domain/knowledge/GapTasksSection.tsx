@@ -10,7 +10,7 @@ import { apiGet, apiPost } from '@/lib/api-client';
 
 interface GapTask {
   id: string;
-  source: string; // escalation_cluster | no_source | agent_resolution
+  source: string; // escalation_cluster | no_source | agent_resolution | answer_rating
   title: string;
   detail: string | null;
   metric: Record<string, unknown>;
@@ -28,6 +28,7 @@ const gapService = {
 function sourceTone(source: string) {
   if (source === 'agent_resolution') return 'success' as const;
   if (source === 'no_source') return 'warning' as const;
+  if (source === 'answer_rating') return 'info' as const;
   return 'error' as const; // escalation_cluster
 }
 

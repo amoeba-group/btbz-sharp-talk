@@ -241,7 +241,8 @@
     "source": {
       "escalation_cluster": "引き継ぎが多い",
       "no_source": "参照元なし",
-      "agent_resolution": "担当者による解決"
+      "agent_resolution": "担当者による解決",
+      "answer_rating": "回答評価"
     },
     "accept": "ナレッジ文書として承認",
     "acceptConfirm": "文書を作成",

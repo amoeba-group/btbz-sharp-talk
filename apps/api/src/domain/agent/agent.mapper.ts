@@ -1,3 +1,4 @@
+import type { AnswerRating } from './entity/answer-rating.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Message } from '../chat/entity/message.entity';
 import { AgentProfile } from './entity/agent-profile.entity';
@@ -81,6 +82,7 @@ export function toMessageResponse(
   m: Message,
   senderName: string | null = null,
   attachments?: MessageAttachment[],
+  rating?: AnswerRating,
 ) {
   return {
     id: m.id,
@@ -91,6 +93,19 @@ export function toMessageResponse(
     createdAt: m.createdAt,
     // Signed links, minted per response (PLN-260814).
     attachments: AttachmentMapper.toResponseList(attachments),
+    /** Latest accuracy verdict on this answer (PLN-261015 D7); null = unrated. */
+    rating: rating ? toRatingResponse(rating) : null,
+  };
+}
+
+export function toRatingResponse(r: AnswerRating) {
+  return {
+    messageId: String(r.messageId),
+    rating: r.rating,
+    reason: r.reason,
+    note: r.note,
+    ratedBy: String(r.ratedBy),
+    updatedAt: r.updatedAt,
   };
 }
 

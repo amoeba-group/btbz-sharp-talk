@@ -178,6 +178,8 @@ export const statisticsService = {
       to: params.to,
       limit: params.limit,
     }),
+  ratingSummary: (from: string, to: string) =>
+    apiGet<RatingSummary>('/agent/ratings/summary', { from, to }),
   csatSummary: (from: string, to: string) =>
     apiGet<CsatSummary>('/agent/csat/summary', { from, to }),
   csatAgents: (from: string, to: string) =>
@@ -192,3 +194,12 @@ export const statisticsService = {
       ...(params.agentId ? { agent_id: params.agentId } : {}),
     }),
 };
+
+/** Answer accuracy verdicts (PLN-261015 D7). */
+export interface RatingSummary {
+  from: string;
+  to: string;
+  bySender: Record<string, { accurate: number; partial: number; inaccurate: number }>;
+  byReason: Record<string, number>;
+  total: number;
+}

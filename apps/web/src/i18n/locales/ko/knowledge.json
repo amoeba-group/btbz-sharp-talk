@@ -240,7 +240,8 @@
     "source": {
       "escalation_cluster": "이관 다발",
       "no_source": "근거문서 없음",
-      "agent_resolution": "상담원 해결"
+      "agent_resolution": "상담원 해결",
+      "answer_rating": "답변 평가"
     },
     "accept": "KB 문서로 승인",
     "acceptConfirm": "문서 생성",

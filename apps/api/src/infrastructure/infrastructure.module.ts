@@ -26,4 +26,6 @@ export const EVENTS = {
   PUSH_DISPATCH: 'push.dispatch',
   /** Agent-tier issue resolution → knowledge-gap capture proposal (P5). */
   ISSUE_RESOLVED: 'issue.resolved',
+  /** AI answer rated partial/inaccurate → knowledge-gap proposal (PLN-261015 D7). */
+  ANSWER_RATED: 'answer.rated',
 } as const;

@@ -240,7 +240,8 @@
     "source": {
       "escalation_cluster": "Muchas escaladas",
       "no_source": "Sin fuente",
-      "agent_resolution": "Resolución de agente"
+      "agent_resolution": "Resolución de agente",
+      "answer_rating": "Respuesta valorada"
     },
     "accept": "Aprobar como doc KB",
     "acceptConfirm": "Crear documento",

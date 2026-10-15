@@ -407,5 +407,27 @@
       "reception": "前台"
     },
     "signed": "由宿主应用签名的信息"
+  },
+  "rating": {
+    "action": "评价回答",
+    "value": {
+      "accurate": "准确",
+      "partial": "部分准确",
+      "inaccurate": "不准确"
+    },
+    "reasonLabel": "原因",
+    "reason": {
+      "wrong_source": "依据错误",
+      "outdated": "已过时",
+      "out_of_scope": "超出范围",
+      "wording": "表述",
+      "other": "其他"
+    },
+    "notePh": "备注(可选)",
+    "cancel": "取消",
+    "save": "保存评价",
+    "savedAccurate": "评价已保存。",
+    "savedGap": "评价已保存。不准确的 AI 回答会进入 知识 › 知识缺口建议。",
+    "saveError": "无法保存评价。"
   }
 }

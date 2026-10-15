@@ -30,6 +30,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { ChannelBadge, CHANNEL_FILTERS, RECEIVE_ONLY_CHANNELS } from './ChannelBadge';
 import { SessionAlias } from './SessionAlias';
 import { IdentityBadges } from './IdentityBadges';
+import { AnswerRatingControl } from './AnswerRatingControl';
 import { AutoReplyControl } from './AutoReplyControl';
 import { DraftPanel } from './DraftPanel';
 import { Badge } from '@/components/Badge';
@@ -1024,6 +1025,16 @@ export function LiveChatPage() {
                           >
                             <BookPlus className="h-3 w-3" /> {t('knowledge.action')}
                           </button>
+                        )}
+                        {/* Accuracy verdict (PLN-261015 D7) on AI and agent answers. */}
+                        {(m.senderType === 'ai' || m.senderType === 'agent') && selected && (
+                          <AnswerRatingControl
+                            key={`${m.id}-${m.rating?.updatedAt ?? ''}`}
+                            conversationId={selected}
+                            messageId={m.id}
+                            current={m.rating}
+                            onDark={m.senderType === 'agent'}
+                          />
                         )}
                       </div>
                         {/* Hover actions on customer turns (PLN-260826 R2~R5),

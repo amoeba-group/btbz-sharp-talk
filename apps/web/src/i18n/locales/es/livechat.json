@@ -407,5 +407,27 @@
       "reception": "Recepción"
     },
     "signed": "Firmado por la aplicación anfitriona"
+  },
+  "rating": {
+    "action": "Valorar respuesta",
+    "value": {
+      "accurate": "Correcta",
+      "partial": "Parcialmente correcta",
+      "inaccurate": "Incorrecta"
+    },
+    "reasonLabel": "¿Por qué?",
+    "reason": {
+      "wrong_source": "Fuente equivocada",
+      "outdated": "Desactualizada",
+      "out_of_scope": "Fuera de alcance",
+      "wording": "Redacción",
+      "other": "Otro"
+    },
+    "notePh": "Nota (opcional)",
+    "cancel": "Cancelar",
+    "save": "Guardar valoración",
+    "savedAccurate": "Valoración guardada.",
+    "savedGap": "Valoración guardada. Las respuestas de la IA no correctas pasan a Conocimiento › propuestas de vacíos.",
+    "saveError": "No se pudo guardar la valoración."
   }
 }

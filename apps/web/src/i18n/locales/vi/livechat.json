@@ -407,5 +407,27 @@
       "reception": "Lễ tân"
     },
     "signed": "Thông tin do ứng dụng chủ ký"
+  },
+  "rating": {
+    "action": "Đánh giá câu trả lời",
+    "value": {
+      "accurate": "Chính xác",
+      "partial": "Chính xác một phần",
+      "inaccurate": "Không chính xác"
+    },
+    "reasonLabel": "Lý do",
+    "reason": {
+      "wrong_source": "Sai nguồn",
+      "outdated": "Đã cũ",
+      "out_of_scope": "Ngoài phạm vi",
+      "wording": "Cách diễn đạt",
+      "other": "Khác"
+    },
+    "notePh": "Ghi chú (tùy chọn)",
+    "cancel": "Hủy",
+    "save": "Lưu đánh giá",
+    "savedAccurate": "Đã lưu đánh giá.",
+    "savedGap": "Đã lưu đánh giá. Câu trả lời AI chưa chính xác sẽ được đưa vào Tri thức › Đề xuất bổ sung.",
+    "saveError": "Không lưu được đánh giá."
   }
 }

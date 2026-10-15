@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { liveChatService } from './live-chat.service';
-import type { CustomerLead } from './live-chat.service';
+import type { AnswerRatingValue, CustomerLead } from './live-chat.service';
 import { useTenantKey } from '@/lib/use-tenant-key';
 import { toast } from '@/store/toast-store';
 
@@ -520,4 +520,24 @@ export function useCustomerActions(id: string | null) {
   });
 
   return { link, create };
+}
+
+/** Rate one AI/agent answer (PLN-261015 D7); the transcript re-reads to show it. */
+export function useRateAnswer(conversationId: string | null) {
+  const { t } = useTranslation('livechat');
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: (v: { messageId: string; rating: AnswerRatingValue; reason?: string; note?: string }) =>
+      liveChatService.rateAnswer(conversationId ?? '', v.messageId, {
+        rating: v.rating,
+        reason: v.reason || undefined,
+        note: v.note || undefined,
+      }),
+    onSuccess: (_d, v) => {
+      qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'conversation', conversationId] });
+      toast.success(v.rating === 'accurate' ? t('rating.savedAccurate') : t('rating.savedGap'));
+    },
+    onError: (e: Error) => toast.error(e.message || t('rating.saveError'), { sticky: true }),
+  });
 }
