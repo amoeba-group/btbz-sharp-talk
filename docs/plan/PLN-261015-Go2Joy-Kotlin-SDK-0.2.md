@@ -382,7 +382,8 @@ với worktree riêng.
 ## 10. Artifact mô phỏng
 
 `PLN-261015-Go2Joy-Kotlin-SDK-0.2.mockup.html` và `.mockup.png`: 8 màn hình theo giao diện widget thật, đánh dấu
-phần Mới 0.2, kèm bảng so sánh concept web với app.
+phần Mới 0.2, kèm bảng so sánh concept web với app. `PLN-261015-Go2Joy-Kotlin-SDK-0.2.prototype.html` và `.prototype.png`:
+hai màn hình, admin web tab Ứng dụng di động (W8 + W9 theo giao diện console thật) và màn chat lễ tân trong app Kotlin, số tròn nối cấu hình admin với phần tử app.
 
 ## Lịch sử
 
