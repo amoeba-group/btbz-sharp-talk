@@ -9,9 +9,17 @@ import {
   MaxLength,
   Min,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 
 /** Request DTOs — snake_case (amoeba_code_convention). */
+/** Where in the host app the chat was opened from (PLN-261015); background only. */
+export class HostContextRequest {
+  @IsString() @MaxLength(120) screen: string;
+  @IsOptional() @IsString() @MaxLength(120) ref?: string;
+  @IsOptional() @IsString() @MaxLength(120) label?: string;
+}
+
 export class SendMessageRequest {
   @IsString() session_token: string;
   /**
@@ -22,6 +30,8 @@ export class SendMessageRequest {
   @IsString() message: string;
   /** Attachment uuids from POST /files/upload, in display order. */
   @IsOptional() @IsArray() @IsString({ each: true }) attachment_ids?: string[];
+  /** Native host only: the screen/booking the chat was opened from. Sent with the turn that follows setContext(). */
+  @IsOptional() @ValidateNested() @Type(() => HostContextRequest) context?: HostContextRequest;
 }
 
 /** POST /chat/end — customer ends the current conversation (PLN-260808 Track B). */

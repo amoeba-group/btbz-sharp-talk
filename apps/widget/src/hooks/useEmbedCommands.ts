@@ -5,8 +5,16 @@ import {
   identify as identifyRequest,
   setSessionLanguage,
 } from '../services/sessionService';
-import { adoptSessionConsent, getParentOrigin, getShopDomain } from './useSession';
+import {
+  adoptSessionConsent,
+  getAccessKey,
+  getAgentCode,
+  getLandingPath,
+  getParentOrigin,
+  getShopDomain,
+} from './useSession';
 import { hostPresent, onHostMessage, postToHost } from '../lib/host-bridge';
+import { parseHostContext } from '../lib/host-context';
 import i18n, { LANG_STORAGE_KEY, SUPPORTED_LANGUAGES } from '../i18n/i18n';
 
 const TABS: TabKey[] = ['chat', 'orders', 'notifications'];
@@ -79,6 +87,7 @@ export function useEmbedCommands(): void {
         tab?: string | null;
         locale?: string;
         user?: IdentifyUser;
+        context?: unknown;
       };
       const store = useWidgetStore.getState();
 
@@ -120,6 +129,32 @@ export function useEmbedCommands(): void {
             else pendingSessionLocale = code;
             return;
           }
+          case 'settings':
+            // The host's ⋮ menu → "Privacy": same panel as the header gear.
+            store.setSettingsOpen(!store.settingsOpen);
+            return;
+          case 'end':
+            // The host's ⋮ menu → "End conversation": same confirm as the in-thread link.
+            store.setActiveTab('chat');
+            store.setSettingsOpen(false);
+            store.requestEnd();
+            return;
+          case 'back': {
+            // Android back: close the preferences panel first, and say whether
+            // that was all — otherwise the host closes the screen.
+            const handled = store.settingsOpen;
+            if (handled) store.setSettingsOpen(false);
+            postToHost({ type: 'ivy:event', event: 'back', handled });
+            return;
+          }
+          case 'context': {
+            // `context: null` removes the chip. Text is bounded; the server
+            // treats it as background, never as a source of facts.
+            const ctx = parseHostContext(d.context);
+            store.setHostContext(ctx);
+            if (ctx) store.setActiveTab('chat');
+            return;
+          }
           case 'logout': {
             // Clearing the token is not enough: useEnsureSession runs once on
             // mount, so nothing would re-open a session and the widget would sit
@@ -127,11 +162,18 @@ export function useEmbedCommands(): void {
             store.setSessionToken(null);
             store.setAuthenticated(false);
             store.setCustomerName(null);
+            store.setHostContext(null);
             const fresh = await ensureSession(
               null,
               useWidgetStore.getState().language,
               getShopDomain(),
               getParentOrigin(),
+              // The same inputs the first ensure sends. Without the agent code
+              // the guest session opened after logout was pinned to the default
+              // agent instead of the one the app chose (PLN-261015).
+              getAgentCode(),
+              getLandingPath(),
+              getAccessKey(),
             ).catch(() => null);
             // Tenant config (theme, tabs, copy) does not change on logout, so it
             // is deliberately not re-applied — only the identity is reset.

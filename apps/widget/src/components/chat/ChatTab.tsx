@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, FileText, Paperclip, Send, Sparkles, Headphones, X } from 'lucide-react';
+import { Check, FileText, MapPin, Paperclip, Send, Sparkles, Headphones, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { WIDGET_COPY_DEFAULTS } from '../../../../../packages/types/src/common/widget-copy';
 import { useWidgetStore } from '../../store/widgetStore';
@@ -55,6 +55,9 @@ export function ChatTab() {
   const language = useWidgetStore((s) => s.language);
   const pendingChatMessage = useWidgetStore((s) => s.pendingChatMessage);
   const consumeChatMessage = useWidgetStore((s) => s.consumeChatMessage);
+  const hostContext = useWidgetStore((s) => s.hostContext);
+  const setHostContext = useWidgetStore((s) => s.setHostContext);
+  const endRequest = useWidgetStore((s) => s.endRequest);
   const analytics = useAnalytics();
 
   const { messages, send, scenario, sending, status, escalate, endChat, canRate, rate, conversationId } =
@@ -99,6 +102,27 @@ export function ChatTab() {
   const [showEscalate, setShowEscalate] = useState(false);
   // End-chat confirm row (요구 3, PLN-260808 Track B).
   const [endConfirm, setEndConfirm] = useState(false);
+
+  // The host app asked to end the conversation (its ⋮ menu): open the same
+  // confirm the in-thread "End" link opens, so one path ends a chat. The first
+  // render's value is the baseline — only a later bump counts.
+  const seenEndRequest = useRef(endRequest);
+  useEffect(() => {
+    if (endRequest !== seenEndRequest.current) {
+      seenEndRequest.current = endRequest;
+      setEndConfirm(true);
+    }
+  }, [endRequest]);
+
+  // A host-supplied draft fills an EMPTY composer once per context; it never
+  // replaces what the user is already typing.
+  const prefilled = useRef<string | null>(null);
+  useEffect(() => {
+    const key = hostContext ? `${hostContext.screen}|${hostContext.ref ?? ''}|${hostContext.prefill ?? ''}` : null;
+    if (!hostContext?.prefill || prefilled.current === key) return;
+    prefilled.current = key;
+    setInput((cur) => (cur.trim() ? cur : hostContext.prefill ?? ''));
+  }, [hostContext]);
   const chatLive = status === 'ai_active' || status === 'waiting' || status === 'agent';
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -610,6 +634,26 @@ export function ChatTab() {
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Where the host app opened this chat from (PLN-261015) — removable, sent with the next message. */}
+      {hostContext && (
+        <div className="mx-3 mb-1 flex items-center gap-1.5 rounded-st-md border border-primary-100 bg-primary-50 px-2.5 py-1.5 text-xs font-medium text-primary-700">
+          <MapPin className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+          <span className="min-w-0 flex-1 truncate">
+            {[hostContext.label ?? hostContext.screen, hostContext.ref ? `#${hostContext.ref.replace(/^#/, '')}` : null]
+              .filter(Boolean)
+              .join(' · ')}
+          </span>
+          <button
+            type="button"
+            onClick={() => setHostContext(null)}
+            aria-label={t('chat.hostContext.remove')}
+            className="flex-shrink-0 text-primary-400 hover:text-primary-700"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
 

@@ -16,11 +16,14 @@ export function sendMessage(
   sessionToken: string,
   message: string,
   attachmentIds?: string[],
+  context?: { screen: string; ref?: string; label?: string } | null,
 ): Promise<ChatReply> {
   return apiClient.post<ChatReply>('/chat/message', {
     session_token: sessionToken,
     message,
     attachment_ids: attachmentIds?.length ? attachmentIds : undefined,
+    // Only the three bounded fields leave the widget; `prefill` stays local.
+    context: context ? { screen: context.screen, ref: context.ref, label: context.label } : undefined,
   });
 }
 

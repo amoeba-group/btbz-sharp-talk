@@ -55,6 +55,7 @@ export const vi: Translation = {
     sendFailed: 'Rất tiếc, tin nhắn chưa gửi được. Vui lòng thử lại.',
     endChat: 'Kết thúc',
     endConfirm: 'Kết thúc cuộc trò chuyện này?',
+    hostContext: { remove: 'Bỏ ngữ cảnh đặt phòng' },
     endCancel: 'Hủy',
     endedNotice: 'Cuộc trò chuyện đã kết thúc. Gửi tin nhắn để bắt đầu cuộc trò chuyện mới.',
     csatQuestion: 'Bạn hài lòng với cuộc trò chuyện này ở mức nào?',

@@ -69,6 +69,7 @@ export const es: Translation = {
     },
     endChat: 'Finalizar chat',
     endConfirm: '¿Finalizar esta conversación?',
+    hostContext: { remove: 'Quitar el contexto de la reserva' },
     endCancel: 'Cancelar',
     endedNotice: 'La conversación ha finalizado. Envía un mensaje para iniciar una nueva.',
     csatQuestion: '¿Qué tan satisfecho quedaste con este chat?',

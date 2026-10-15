@@ -33,6 +33,15 @@ export interface ConsentInfo {
   noticeCopy?: Partial<Record<string, string>>;
 }
 
+/** Where the host app opened the chat from; text is bounded server-side and never trusted as fact. */
+export interface HostContext {
+  screen: string;
+  ref?: string;
+  label?: string;
+  /** Pre-fills an EMPTY composer once; never overwrites what the user already typed. */
+  prefill?: string;
+}
+
 interface WidgetState {
   sessionToken: string | null;
   activeTab: TabKey;
@@ -67,6 +76,14 @@ interface WidgetState {
   consent: ConsentInfo | null;
   /** A message queued from another tab to be auto-sent when Chat opens. */
   pendingChatMessage: string | null;
+  /**
+   * Where in the host app this chat was opened from (PLN-261015): set by the
+   * host's `context` command, shown as a chip above the composer and sent with
+   * the next message. Null once sent or removed.
+   */
+  hostContext: HostContext | null;
+  /** Bumped by the host's `end` command; ChatTab opens its end-chat confirm on change. */
+  endRequest: number;
   /**
    * Selected notification filter chip. Store-held rather than tab-local so other
    * surfaces can deep-link into one — a redirect sign-in returning with
@@ -132,6 +149,8 @@ interface WidgetState {
   setTabLayout: (tabs: TabKey[], position: WidgetTabPosition) => void;
   bumpChatUnread: (n: number) => void;
   queueChatMessage: (m: string) => void;
+  setHostContext: (c: HostContext | null) => void;
+  requestEnd: () => void;
   consumeChatMessage: () => string | null;
 }
 
@@ -160,6 +179,8 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   triggerUnavailable: false,
   consent: null,
   pendingChatMessage: null,
+  hostContext: null,
+  endRequest: 0,
   notificationFilter: 'all',
   visibleTabs: [...WIDGET_TABS_DEFAULT],
   tabPosition: 'top',
@@ -216,6 +237,8 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
       },
     })),
   queueChatMessage: (m) => set({ pendingChatMessage: m, activeTab: 'chat' }),
+  setHostContext: (c) => set({ hostContext: c }),
+  requestEnd: () => set((s) => ({ endRequest: s.endRequest + 1 })),
   consumeChatMessage: () => {
     const m = get().pendingChatMessage;
     if (m) set({ pendingChatMessage: null });

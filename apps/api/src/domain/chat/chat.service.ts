@@ -12,6 +12,13 @@ import {
   localized,
 } from '@sharptalk/types';
 import type { LocalizedText } from '@sharptalk/types';
+import {
+  hostContextKey,
+  hostContextLine,
+  hostContextPromptNote,
+  normalizeHostContext,
+  type HostContext,
+} from './host-context.util';
 import { Conversation } from './entity/conversation.entity';
 import { CSAT_WINDOW_MS } from './chat.mapper';
 import { Message } from './entity/message.entity';
@@ -495,7 +502,7 @@ export class ChatService {
   async handleUserMessage(
     session: Session,
     text: string,
-    opts: { draft?: boolean; attachmentIds?: string[] } = {},
+    opts: { draft?: boolean; attachmentIds?: string[]; hostContext?: unknown } = {},
   ): Promise<ChatTurnResult> {
     // Consent gate (PRV-M4, PLN-Privacy-Control-Gap D-1: fail-closed). Only an
     // effective GRANTED — fresh (uncached) read, current notice version — lets
@@ -519,6 +526,22 @@ export class ChatService {
 
     const tenantId = session.tenantId ?? (await this.resolveTenantId());
     const conversation = await this.getOrCreateConversation(session.id);
+
+    // Where the host app opened this chat from (PLN-261015). Written ONCE per
+    // place as a system line BEFORE the user turn, so the thread reads "opened
+    // from booking #…" then the question — for the customer and for a human
+    // agent in the console. System turns never reach the model's history.
+    const hostContext = normalizeHostContext(opts.hostContext);
+    if (hostContext && (await this.isNewHostContext(conversation.id, hostContext))) {
+      await this.persist(
+        tenantId,
+        conversation.id,
+        SENDER_TYPE.SYSTEM,
+        hostContextLine(hostContext, session.language),
+        session.language,
+        { hostContext },
+      );
+    }
 
     const userTurn = await this.persist(tenantId, conversation.id, SENDER_TYPE.USER, text, session.language);
     // Files were uploaded before this call and are claimed here, inside the
@@ -880,6 +903,7 @@ export class ChatService {
           effectiveAgentId,
           undefined,
           history,
+          hostContext ? hostContextPromptNote(hostContext) : undefined,
         );
 
     // Mandatory moderation gate (FR-069).
@@ -1385,6 +1409,24 @@ export class ChatService {
     return this.msgRepo.save(
       this.msgRepo.create({ tenantId, conversationId, senderType, body, lang, retrievalTrace: trace ?? null }),
     );
+  }
+
+  /**
+   * True when this place differs from the last context written into the thread.
+   * Compared on screen + ref only; the newest few system rows are enough because
+   * a context row is written whenever the place changes.
+   */
+  private async isNewHostContext(conversationId: number, ctx: HostContext): Promise<boolean> {
+    const rows = await this.msgRepo.find({
+      where: { conversationId, senderType: SENDER_TYPE.SYSTEM },
+      order: { id: 'DESC' },
+      take: 20,
+    });
+    for (const row of rows) {
+      const prev = (row.retrievalTrace as { hostContext?: HostContext } | null)?.hostContext;
+      if (prev) return hostContextKey(prev) !== hostContextKey(ctx);
+    }
+    return true;
   }
 
   private async markWaiting(conversationId: number): Promise<void> {

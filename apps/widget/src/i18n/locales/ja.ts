@@ -55,6 +55,7 @@ export const ja: Translation = {
     sendFailed: '申し訳ございません。送信できませんでした。もう一度お試しください。',
     endChat: 'チャットを終了',
     endConfirm: 'この会話を終了しますか。',
+    hostContext: { remove: '予約の文脈を削除' },
     endCancel: 'キャンセル',
     endedNotice: 'この会話は終了しました。メッセージを送信すると新しい会話が始まります。',
     csatQuestion: '今回のチャットにどの程度ご満足いただけましたか。',

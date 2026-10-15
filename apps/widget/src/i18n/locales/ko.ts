@@ -69,6 +69,7 @@ export const ko: Translation = {
     },
     endChat: '상담 종료',
     endConfirm: '상담을 종료할까요?',
+    hostContext: { remove: '예약 맥락 제거' },
     endCancel: '취소',
     endedNotice: '상담이 종료되었습니다. 새 메시지를 보내면 새 상담이 시작됩니다.',
     csatQuestion: '상담에 만족하셨나요?',

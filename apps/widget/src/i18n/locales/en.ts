@@ -67,6 +67,7 @@ export const en = {
     },
     endChat: 'End chat',
     endConfirm: 'End this conversation?',
+    hostContext: { remove: 'Remove booking context' },
     endCancel: 'Cancel',
     endedNotice: 'This conversation has ended. Send a message to start a new one.',
     csatQuestion: 'How satisfied were you with this chat?',

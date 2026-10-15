@@ -49,6 +49,7 @@ export class ChatController {
     const session = await this.sessionService.findByToken(body.session_token);
     return this.chatService.handleUserMessage(session, body.message, {
       attachmentIds: body.attachment_ids,
+      hostContext: body.context,
     });
   }
 

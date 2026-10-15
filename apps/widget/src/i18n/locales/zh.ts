@@ -55,6 +55,7 @@ export const zh: Translation = {
     sendFailed: '抱歉，消息发送失败。请重试。',
     endChat: '结束聊天',
     endConfirm: '要结束这次对话吗？',
+    hostContext: { remove: '移除预订上下文' },
     endedNotice: '本次对话已结束。发送消息即可开始新的对话。',
     endCancel: '取消',
     csatQuestion: '您对本次聊天的满意度如何？',

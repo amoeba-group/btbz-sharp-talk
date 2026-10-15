@@ -543,6 +543,8 @@ export class RagService {
     aiAgentId?: number | null,
     extraCandidates?: RagCandidateInput[],
     history?: AiMessage[],
+    // One background line from a native host (PLN-261015); never a fact source.
+    hostContextNote?: string,
   ): Promise<RagAnswer> {
     // The caller decides the group preference; RAG only applies it. Keeping the
     // judgement out of here means the chat path can use its intent label and
@@ -641,7 +643,8 @@ export class RagService {
         `none). That line is internal bookkeeping: never mention it, never number ` +
         `or refer to the context items in the visible reply.\n` +
         `CONTEXT_START\n${context || '(no relevant documents found)'}\nCONTEXT_END` +
-        orderBlock,
+        orderBlock +
+        (hostContextNote ?? ''),
       messages: withCurrentTurn(history, query),
     });
 

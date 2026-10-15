@@ -11,6 +11,7 @@ import {
   rateChat,
 } from '../services/chatService';
 import type { ChatAttachment, ChatMessage, ChatReply, ScenarioPostAction } from '../lib/types';
+import { useWidgetStore } from '../store/widgetStore';
 
 export interface SendResult {
   escalate: boolean;
@@ -96,11 +97,16 @@ export function useChat(sessionToken: string | null) {
       });
       setSending(true);
       inFlight.current = true;
+      // The host's "opened from booking #…" rides with the first turn after it
+      // was set, then the chip goes away (PLN-261015).
+      const hostContext = useWidgetStore.getState().hostContext;
+      if (hostContext) useWidgetStore.getState().setHostContext(null);
       try {
         const res: ChatReply = await sendMessage(
           sessionToken,
           text,
           attachments?.map((a) => a.id),
+          hostContext,
         );
         setConversationId(res.conversationId);
         // A message after an ended thread opened a fresh conversation — clear

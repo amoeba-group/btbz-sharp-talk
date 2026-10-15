@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { Settings, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore, type TabKey } from '../../store/widgetStore';
-import { isAppMode, postToHost } from '../../lib/host-bridge';
+import { isAppMode, isNativeChrome, postToHost } from '../../lib/host-bridge';
 import { logoUrl } from '../../lib/branding';
 import { resolveLauncher } from '../../lib/launcher';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -54,6 +54,8 @@ export function WidgetPanel() {
   const showClose = !triggerMode || compact;
   // A phone-sized page gets the bottom sheet; a host app gets the whole screen.
   const fullBleed = compact || isAppMode();
+  // The host app draws its own toolbar (back, title, ⋮): no second header (PLN-261015).
+  const nativeChrome = isNativeChrome();
   // A greeting names the customer, so it wins over the brand mark: the shopper
   // being addressed matters more than the logo at that moment.
   const logo = theme?.logo && !customerName ? logoUrl(theme.logo) : null;
@@ -121,6 +123,7 @@ export function WidgetPanel() {
           fixed brand string. The language switcher and close button are absent
           from the design but kept deliberately (PLN §7 D-2): without the X, a
           shopper on a touch device has no way to dismiss the panel but Esc. */}
+      {!nativeChrome && (
       <header className="st-header flex items-center justify-between bg-header-bg px-4 pb-2 pt-4">
         {/* Greet the shopper by name once they are known (frame 34, "Hi, Lisa");
             before that the tenant's own name identifies whose widget this is
@@ -165,6 +168,7 @@ export function WidgetPanel() {
           )}
         </div>
       </header>
+      )}
 
       {/* Tab bar position is a tenant setting (PLN-260817-Widget-Tab-Config). */}
       {!showSettings && tabPosition === 'top' && <TopTabs />}

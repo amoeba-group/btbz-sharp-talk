@@ -201,3 +201,16 @@ export function isAppMode(): boolean {
     return false;
   }
 }
+
+/**
+ * Native-chrome mode (PLN-261015): the host app draws its own toolbar (back,
+ * title, ⋮ menu), so the widget drops its header instead of showing two.
+ * Only meaningful inside a host app — a storefront iframe never asks for it.
+ */
+export function isNativeChrome(): boolean {
+  try {
+    return isAppMode() && new URLSearchParams(window.location.search).get('chrome') === 'native';
+  } catch {
+    return false;
+  }
+}
