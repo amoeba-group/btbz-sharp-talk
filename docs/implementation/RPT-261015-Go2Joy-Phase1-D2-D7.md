@@ -21,11 +21,11 @@
 | 환경 | SQL | 코드 | 검증 |
 |---|---|---|---|
 | 스테이징 | 4건 선적용(10/15) | a184402 배포, `successfully started` | TCR §2 IT-1~8 통과 |
-| 프로덕션(KR) | **미적용** | 미배포 | go2joy 테넌트 없음 — 배포 시 SQL 4건 선적용 필수 |
+| 프로덕션(KR) | 4건 선적용(10/15 16:35, 백업 `~/backups/sharptalk-production/20261015-1633` 후) | `production` ff `9b47040..7992e71` → `check-migrations` OK(98) → `deploy-self-hosted.sh` | API healthy, `successfully started`, ERROR 0, `/agent/ratings/summary` 401 |
 | Go2Joy 서버 | init-sql에 포함 | D1 설치 시 | 서버·DNS 미제공(10/15) |
 
 ## 4. 남은 일
-- 아메바: D8 지식 정비(충돌 78건, go2joy 기본 언어 `vi`·타임존 설정 — 미설정이 영어 답변 원인), D1 설치(서버 제공 후), Zalo 알림(OA 제공 후).
+- 아메바: D8 지식 정비 — 스테이징 go2joy `default_language=vi`, `timezone=Asia/Ho_Chi_Minh` 설정 완료(10/15, 언어 없는 세션이 VI로 시작 확인). 충돌 78건 분류는 `docs/report/RPT-261015-Go2Joy-KB-Conflict-Triage.md`(수정 필요 3건, Go2Joy 결정 대기). D1 설치(서버 제공 후), Zalo 알림(OA 제공 후).
 - 운영 이관 시: go2joy 테넌트 `consent_source=host_terms` 설정(약관 문구 확정 후).
 - Go2Joy(10/22): 서버·SSH·DNS, Hotel Admin 서버 서명(형식: 임베드 가이드 §3.4), 지역·업무·담당자 명단, Zalo OA, 약관 문구.
 - 알려진 제약: 그룹 알람 확인은 형제 행까지 일괄 확인(수락과 별개); 재알림 대상 리드는 테넌트 공통 1세트.
