@@ -23,6 +23,7 @@ import { User } from '../user/entity/user.entity';
 import { Session } from '../session/entity/session.entity';
 import { AgentService } from './agent.service';
 import { AgentAlertService } from './agent-alert.service';
+import { AgentAlertReminderService } from './agent-alert-reminder.service';
 import { BriefingService } from './briefing.service';
 import { ChatCommentService } from './chat-comment.service';
 import { ChatGroupService } from './chat-group.service';
@@ -85,7 +86,14 @@ import { AttachmentModule } from '../attachment/attachment.module';
     IssueModule,
   ],
   controllers: [AgentConsoleController],
-  providers: [AgentService, AgentAlertService, BriefingService, ChatCommentService, ChatGroupService],
+  providers: [
+    AgentService,
+    AgentAlertService,
+    AgentAlertReminderService,
+    BriefingService,
+    ChatCommentService,
+    ChatGroupService,
+  ],
   exports: [AgentService, AgentAlertService],
 })
 export class AgentModule {}

@@ -129,6 +129,8 @@ export interface HandoffConfig {
   sla?: { normalHours?: number; urgentHours?: number };
   /** Region × topic routing (PLN-261015 D3) — first match wins, else assigneeUserIds. */
   routingRules?: RoutingRule[];
+  /** Unanswered-alarm reminder (PLN-261015 D4); 0/absent = off. */
+  reAlert?: { afterMinutes?: number; escalateToUserIds?: number[] };
   /** Kept as-is: edited elsewhere, so the console must not drop it on save. */
   handbackNotice?: Partial<Record<ScenarioLang, string>>;
 }

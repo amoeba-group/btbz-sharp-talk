@@ -78,17 +78,19 @@ export function RoutingRulesEditor({
                   onChange={(e) => patch(i, { name: e.target.value })}
                 />
               </div>
-              <Select
-                aria-label={t('handoff.routing.mode')}
-                value={row.mode}
-                onChange={(e) => patch(i, { mode: e.target.value as RoutingMode })}
-              >
-                {Object.values(ROUTING_MODE).map((m) => (
-                  <option key={m} value={m}>
-                    {t(`handoff.routing.modes.${m}`)}
-                  </option>
-                ))}
-              </Select>
+              <div className="w-64 shrink-0">
+                <Select
+                  aria-label={t('handoff.routing.mode')}
+                  value={row.mode}
+                  onChange={(e) => patch(i, { mode: e.target.value as RoutingMode })}
+                >
+                  {Object.values(ROUTING_MODE).map((m) => (
+                    <option key={m} value={m}>
+                      {t(`handoff.routing.modes.${m}`)}
+                    </option>
+                  ))}
+                </Select>
+              </div>
               <button type="button" className="text-xs text-gray-500 hover:underline" onClick={() => move(i, -1)}>
                 ↑
               </button>
@@ -138,6 +140,16 @@ export function RoutingRulesEditor({
                   {u.email}
                 </button>
               ))}
+              {/* Stored assignees outside the agent list (no consult label, or
+                  deactivated) stay visible so they can be seen and removed —
+                  a hidden assignee would still be paged. */}
+              {row.assignees
+                .filter((id) => !agents.some((u) => u.id === id))
+                .map((id) => (
+                  <button key={id} type="button" className={chip(true)} title={t('handoff.routing.unlisted')} onClick={() => patch(i, { assignees: toggle(row.assignees, id) })}>
+                    #{id} ×
+                  </button>
+                ))}
               {row.assignees.length === 0 && <span className="text-[11px] text-warning">{t('handoff.routing.noAssignee')}</span>}
             </div>
           </div>

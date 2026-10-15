@@ -180,7 +180,15 @@
         "north": "Norte",
         "central": "Centro",
         "south": "Sur"
-      }
+      },
+      "unlisted": "No está en la lista de agentes (sin etiqueta de consulta o inactivo): haz clic para quitarlo"
+    },
+    "reAlert": {
+      "title": "Recordatorio si nadie atiende",
+      "hint": "Si la alerta sigue sin confirmar y la conversación en espera tras estos minutos, se vuelve a enviar el correo a los agentes avisados y también se avisa a los responsables de abajo. Vacío = desactivado.",
+      "off": "Desactivado",
+      "minutes": "minutos",
+      "leads": "Avisar también a"
     }
   },
   "coach": {
