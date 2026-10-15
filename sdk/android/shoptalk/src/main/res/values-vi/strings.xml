@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shoptalk_attach_title">Đính kèm</string>
+    <string name="shoptalk_attach_camera">Chụp ảnh</string>
+    <string name="shoptalk_attach_gallery">Chọn từ thư viện</string>
+    <string name="shoptalk_attach_files">Tệp (PDF, Excel, Word)</string>
+    <string name="shoptalk_attach_cancel">Hủy</string>
+    <string name="shoptalk_error_title">Không kết nối được với bộ phận hỗ trợ</string>
+    <string name="shoptalk_error_message">Kiểm tra mạng rồi thử lại.</string>
+    <string name="shoptalk_error_retry">Thử lại</string>
+    <string name="shoptalk_error_hotline">Gọi hotline %1$s</string>
+</resources>

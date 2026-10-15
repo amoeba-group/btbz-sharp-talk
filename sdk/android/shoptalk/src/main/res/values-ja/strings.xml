@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shoptalk_attach_title">添付</string>
+    <string name="shoptalk_attach_camera">写真を撮る</string>
+    <string name="shoptalk_attach_gallery">ギャラリーから選択</string>
+    <string name="shoptalk_attach_files">ファイル（PDF、Excel、Word）</string>
+    <string name="shoptalk_attach_cancel">キャンセル</string>
+    <string name="shoptalk_error_title">サポートに接続できません</string>
+    <string name="shoptalk_error_message">ネットワークを確認して、もう一度お試しください。</string>
+    <string name="shoptalk_error_retry">再試行</string>
+    <string name="shoptalk_error_hotline">ホットライン %1$s に電話</string>
+</resources>

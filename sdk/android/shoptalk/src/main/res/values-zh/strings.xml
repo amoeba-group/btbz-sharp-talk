@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shoptalk_attach_title">添加附件</string>
+    <string name="shoptalk_attach_camera">拍照</string>
+    <string name="shoptalk_attach_gallery">从相册选择</string>
+    <string name="shoptalk_attach_files">文件（PDF、Excel、Word）</string>
+    <string name="shoptalk_attach_cancel">取消</string>
+    <string name="shoptalk_error_title">无法连接到客服</string>
+    <string name="shoptalk_error_message">请检查网络后重试。</string>
+    <string name="shoptalk_error_retry">重试</string>
+    <string name="shoptalk_error_hotline">拨打热线 %1$s</string>
+</resources>

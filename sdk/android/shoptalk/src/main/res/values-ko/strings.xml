@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shoptalk_attach_title">첨부</string>
+    <string name="shoptalk_attach_camera">사진 촬영</string>
+    <string name="shoptalk_attach_gallery">갤러리에서 선택</string>
+    <string name="shoptalk_attach_files">파일 (PDF, Excel, Word)</string>
+    <string name="shoptalk_attach_cancel">취소</string>
+    <string name="shoptalk_error_title">상담에 연결할 수 없습니다</string>
+    <string name="shoptalk_error_message">네트워크를 확인한 후 다시 시도해 주세요.</string>
+    <string name="shoptalk_error_retry">다시 시도</string>
+    <string name="shoptalk_error_hotline">핫라인 %1$s 전화</string>
+</resources>

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
@@ -17,13 +19,15 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     testOptions {
         // android.util.Log in JVM tests returns defaults instead of throwing.
         unitTests.isReturnDefaultValues = true
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
@@ -34,6 +38,9 @@ dependencies {
     // `api`, not `implementation`: ShopTalkChatFragment extends Fragment, so the
     // type is part of this library's public surface and consumers compile against it.
     api("androidx.fragment:fragment-ktx:1.8.5")
+    // No explicit lifecycle-runtime-ktx / coroutines: fragment-ktx -> activity-ktx
+    // already exposes androidx.lifecycle.lifecycleScope (api scope), keeping the
+    // dependency list at core + fragment as the AAR requires.
 
     testImplementation("junit:junit:4.13.2")
     // Real org.json on the test classpath — the android.jar stub throws.

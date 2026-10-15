@@ -201,3 +201,55 @@ https://talk.example.com/widget/webview-test.html
 네이티브 호스트를 흉내 내어 `identify`·`open`·`close-request`를 주고받습니다.
 **실제 앱 검증을 대신하지는 않습니다** — WebView의 파일 선택·키보드·링크 동작은 기기에서만
 확인됩니다.
+
+## 9. Kotlin SDK 0.2.0 변경 (PLN-261015)
+
+0.2.0은 위 계약에 아래를 **추가**합니다. 모르는 메시지는 양쪽 모두 무시하므로(NFR-M05)
+AAR 0.2.0 + 구 위젯, AAR 0.1.0 + 신 위젯 모두 동작합니다. 전체 API·설계는
+`sdk/android/README.md`, 베트남어 통합 가이드는 `GUIDE-261016-Mobile-SDK-0.2.vi.md`.
+
+**⚠️ 0.1.0에서 올릴 때**: SDK가 identify JSON을 캐시해 reload마다 다시 보내던 동작을 **없앴습니다**
+(서명이 만료될 수 있는 계약에서 옛 서명이 거절되기 때문). `identify()`는 한 번만 보내므로
+`chat.identityProvider`를 설정하십시오.
+
+### URL 파라미터 추가
+
+| 파라미터 | 값 | 의미 |
+|---|---|---|
+| `access` | 접근 키 | 테넌트가 `widget_access`를 켠 경우(`ShopTalkConfig.accessKey`) |
+| `chrome` | `native` / `widget` | `native`: 위젯 헤더를 숨기고 앱 툴바 사용 · `widget`: 위젯 헤더 강제. **파라미터가 없으면 콘솔(앱 설정)이 결정**하며, 명시한 값이 항상 우선(`ShopTalkConfig.header`, null = 파라미터 없음) |
+
+`surface=app` 등 모르는 파라미터는 위젯이 무시합니다. `locale`은 여전히 URL에 넣지 않습니다.
+
+### 브리지: 앱 → 위젯 (추가)
+
+| 메시지 | 용도 |
+|---|---|
+| `{type:'ivy:command', action:'settings'}` | 환경설정(언어·개인정보) 패널 열기 (`openSettings()`) |
+| `{type:'ivy:command', action:'end'}` | 대화 종료 — 위젯의 "종료" 버튼과 같은 동작 (`endConversation()`) |
+| `{type:'ivy:command', action:'back'}` | 뒤로가기 요청 — 위젯이 `ivy:event back {handled}`로 답함 |
+| `{type:'ivy:command', action:'context', context:{screen, ref?, label?, prefill?}}` | "어디서 열었는지" 칩 + 입력창 미리 채우기, 다음 메시지에 함께 전송. `context:null`이면 칩 제거 (`setContext(ctx \| null)`) |
+| `{type:'ivy:identify', user:{userId, hash, ...}}` | `user`는 호스트 백엔드가 서명한 패키지를 **그대로**(SDK는 `userId`·`hash` 존재만 검사) |
+
+### 브리지: 위젯 → 앱 (추가·확정)
+
+| 메시지 | SDK 동작 |
+|---|---|
+| `{type:'ivy:event', event:'identity-expired'}` | provider를 다시 호출해 새로 서명된 identify 전송, `onIdentityExpired()` 통지 |
+| `{type:'ivy:event', event:'back', handled:true\|false}` | `handled:true`면 뒤로가기 소비, `false`(또는 500ms 무응답)면 `onCloseRequest()` |
+| `{type:'ivy:open-url', url, mode?}` | http/https만 허용 → `onOpenUrl(Uri)`가 true면 앱 처리, 아니면 `ACTION_VIEW` |
+| `{type:'ivy:unread', count}` | `onUnread(count)` |
+
+### Config / 리스너 추가
+
+- `ShopTalkConfig`: `accessKey`, `header`(null·WIDGET·NATIVE), `startTab`, `attachments(camera, multiple)`,
+  `errorHotline`, `allowInsecureUrl`(디버그 전용: http는 localhost·127.0.0.1·10.0.2.2만). `widgetUrl`은 https 필수.
+- `ShopTalkIdentity.fromJson(raw)` / `.of(...)`, `ShopTalkIdentityProvider`(ready·reload·identity-expired마다 호출,
+  null = 게스트, 예외 = `onError(IdentityProviderFailed)` 후 게스트로 계속).
+- 리스너: `onIdentityExpired`, `onOpenUrl(Uri): Boolean`, `onUnread(Int)`, `onError(ShopTalkError)`
+  (`LoadFailed`·`LoadTimeout`·`IdentityProviderFailed`·`BridgeMalformed`).
+- 메서드: `setContext`, `openSettings`, `endConversation`, `reload`.
+- 네이티브: 첨부 선택기(카메라·갤러리 다중·파일, FileProvider는 AAR 매니페스트에 포함),
+  오류 화면(주 프레임 오류·HTTP ≥400·15초 `ivy:ready` 미수신 → 재시도·핫라인), WebView 라이트 고정,
+  브리지는 주 프레임이 `widgetUrl`과 같은 origin일 때만 동작.
+- Compose 앱은 선택 모듈 `:shoptalk-compose`의 `ShopTalkChat(...)`. 툴체인은 Kotlin 2.2.0, JDK 17.

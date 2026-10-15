@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shoptalk_attach_title">Adjuntar</string>
+    <string name="shoptalk_attach_camera">Tomar foto</string>
+    <string name="shoptalk_attach_gallery">Elegir de la galería</string>
+    <string name="shoptalk_attach_files">Archivos (PDF, Excel, Word)</string>
+    <string name="shoptalk_attach_cancel">Cancelar</string>
+    <string name="shoptalk_error_title">No se pudo conectar con soporte</string>
+    <string name="shoptalk_error_message">Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="shoptalk_error_retry">Reintentar</string>
+    <string name="shoptalk_error_hotline">Llamar a la línea directa %1$s</string>
+</resources>

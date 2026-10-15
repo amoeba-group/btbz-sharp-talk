@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Camera captures only: written by the SDK into cacheDir/shoptalk_capture and
+     exposed to the camera app through ShopTalkFileProvider. -->
+<paths>
+    <cache-path name="shoptalk_capture" path="shoptalk_capture/" />
+</paths>

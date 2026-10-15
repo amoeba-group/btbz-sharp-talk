@@ -17,4 +17,5 @@ dependencyResolutionManagement {
 rootProject.name = "shoptalk-android"
 
 include(":shoptalk")
+include(":shoptalk-compose")
 include(":sample")

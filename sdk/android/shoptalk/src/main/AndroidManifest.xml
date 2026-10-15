@@ -2,4 +2,33 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Merged into the host app so the chat WebView can reach the widget. -->
     <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Package visibility (Android 11+): resolveActivity() for the camera entry,
+         ACTION_VIEW for links, ACTION_DIAL for the error-screen hotline. -->
+    <queries>
+        <intent>
+            <action android:name="android.media.action.IMAGE_CAPTURE" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+        </intent>
+    </queries>
+
+    <application>
+        <!-- Own subclass so this never collides with a FileProvider the host app declares.
+             Authority = ${applicationId}.shoptalk.fileprovider (what the fragment builds from packageName). -->
+        <provider
+            android:name="site.amoeba.shoptalk.ShopTalkFileProvider"
+            android:authorities="${applicationId}.shoptalk.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/shoptalk_file_paths" />
+        </provider>
+    </application>
 </manifest>

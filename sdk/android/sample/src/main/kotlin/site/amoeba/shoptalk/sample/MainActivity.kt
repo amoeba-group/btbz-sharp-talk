@@ -1,72 +1,188 @@
 package site.amoeba.shoptalk.sample
 
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
+import android.view.View
+import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.PopupMenu
+import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.commit
 import site.amoeba.shoptalk.ShopTalkChatFragment
 import site.amoeba.shoptalk.ShopTalkConfig
+import site.amoeba.shoptalk.ShopTalkContext
+import site.amoeba.shoptalk.ShopTalkError
+import site.amoeba.shoptalk.ShopTalkHeader
+import site.amoeba.shoptalk.ShopTalkIdentityProvider
 import site.amoeba.shoptalk.ShopTalkListener
-import site.amoeba.shoptalk.ShopTalkUser
 
 /**
- * Smallest possible host: one full-screen chat. This app is a test rig, not a
- * deliverable — it exists so the AAR can be verified on a device against
- * staging before go2joy integrates it.
+ * Test rig that mimics how the Go2Joy app embeds the chat: an identity provider backed by
+ * a (fake) backend, an optional NATIVE header drawn by the app, a "from a booking" context
+ * button, error reporting, and back handling. Not a deliverable; it exists so the AAR can
+ * be verified on a device against staging.
+ *
+ * Every value is overridable from adb, e.g.
+ *   adb shell am start -n site.amoeba.shoptalk.sample/.MainActivity \
+ *     -e widget_url https://shoptalk.amoeba.site/widget/ -e shop https://www.go2joy.vn \
+ *     -e agent hotel-admin -e locale vi -e header native -e hotline "1900 638 838"
+ * Local widget on the emulator: -e widget_url http://10.0.2.2:5174/ --ez insecure true
  */
 class MainActivity : FragmentActivity() {
 
+    private lateinit var backend: FakeBackend
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val container = FrameLayout(this).apply { id = CONTAINER_ID }
-        setContentView(container)
+        backend = FakeBackend(intent)
+
+        val header = when (intent.getStringExtra("header")?.lowercase()) {
+            "native" -> ShopTalkHeader.NATIVE
+            "widget" -> ShopTalkHeader.WIDGET
+            else -> null // not set: the tenant's admin console decides
+        }
+
+        val column = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(Color.WHITE)
+        }
+        if (header == ShopTalkHeader.NATIVE) column.addView(nativeToolbar())
+        column.addView(contextBar())
+        column.addView(
+            FrameLayout(this).apply { id = CONTAINER_ID },
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f),
+        )
+        setContentView(column)
 
         if (savedInstanceState == null) {
-            // Every value is overridable from adb so device verification can
-            // point at a local widget build or exercise identity:
-            //   adb shell am start -n site.amoeba.shoptalk.sample/.MainActivity \
-            //     -e widget_url http://localhost:5174/ -e locale vi
             val config = ShopTalkConfig(
                 widgetUrl = intent.getStringExtra("widget_url") ?: DEFAULT_WIDGET_URL,
-                shop = intent.getStringExtra("shop"),
+                shop = intent.getStringExtra("shop") ?: DEFAULT_SHOP,
                 locale = intent.getStringExtra("locale") ?: "vi",
-                agent = intent.getStringExtra("agent"),
+                agent = intent.getStringExtra("agent") ?: DEFAULT_AGENT,
+                accessKey = intent.getStringExtra("access"),
+                header = header,
+                errorHotline = intent.getStringExtra("hotline"),
+                allowInsecureUrl = intent.getBooleanExtra("insecure", false),
             )
-            val chat = ShopTalkChatFragment.newInstance(config)
-            supportFragmentManager.commit { replace(CONTAINER_ID, chat, CHAT_TAG) }
-            val userId = intent.getStringExtra("user_id")
-            val hash = intent.getStringExtra("user_hash")
-            if (userId != null && hash != null) {
-                // Sent BEFORE the widget loads on purpose: proves the pre-ready
-                // queue and the widget-side pre-session parking end to end.
-                chat.identify(ShopTalkUser(userId = userId, hash = hash))
+            supportFragmentManager.commit {
+                replace(CONTAINER_ID, ShopTalkChatFragment.newInstance(config), CHAT_TAG)
             }
         }
-        chat()?.listener = closeListener
+        attachHostCallbacks()
     }
 
     override fun onResumeFragments() {
         super.onResumeFragments()
-        // Listener is a plain field, so re-attach after a configuration change.
-        chat()?.listener = closeListener
+        // Listener and provider are plain fields, so re-attach after a configuration change.
+        attachHostCallbacks()
+    }
+
+    private fun attachHostCallbacks() {
+        chat()?.apply {
+            listener = hostListener
+            // Asked when the widget is ready, on every reload, and on identity-expired.
+            identityProvider = ShopTalkIdentityProvider { backend.sharpTalkIdentity() }
+        }
     }
 
     private fun chat(): ShopTalkChatFragment? =
         supportFragmentManager.findFragmentByTag(CHAT_TAG) as? ShopTalkChatFragment
 
-    private val closeListener = object : ShopTalkListener {
+    // ── host UI ──────────────────────────────────────────────────────────────
+
+    /** What the app draws itself when header = NATIVE: back, title, and a menu driving widget commands. */
+    private fun nativeToolbar(): View = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+        setBackgroundColor(Color.parseColor("#F3F4F6"))
+        addView(Button(context).apply {
+            text = "←"
+            setOnClickListener { onBackPressedDispatcher.onBackPressed() } // same path as the system back
+        })
+        addView(
+            TextView(context).apply { text = "Go2Joy Support"; textSize = 16f },
+            LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f),
+        )
+        addView(Button(context).apply {
+            text = "⋮"
+            setOnClickListener { showMenu(this) }
+        })
+    }
+
+    private fun showMenu(anchor: View) {
+        PopupMenu(this, anchor).apply {
+            menu.add("Tiếng Việt").setOnMenuItemClickListener { chat()?.setLocale("vi"); true }
+            menu.add("English").setOnMenuItemClickListener { chat()?.setLocale("en"); true }
+            menu.add("한국어").setOnMenuItemClickListener { chat()?.setLocale("ko"); true }
+            menu.add("Settings").setOnMenuItemClickListener { chat()?.openSettings(); true }
+            menu.add("End conversation").setOnMenuItemClickListener { chat()?.endConversation(); true }
+            menu.add("Reload").setOnMenuItemClickListener { chat()?.reload(); true }
+            show()
+        }
+    }
+
+    /** Pretend the user came from the booking screen. */
+    private fun contextBar(): View = LinearLayout(this).apply {
+        orientation = LinearLayout.HORIZONTAL
+        addView(Button(context).apply {
+            text = "Context: booking"
+            setOnClickListener {
+                chat()?.setContext(
+                    ShopTalkContext(
+                        screen = "bookings",
+                        ref = "#G2J-8841",
+                        label = "Booking #G2J-8841",
+                        prefill = "Guest did not show up, I need to report a no-show",
+                    ),
+                )
+            }
+        })
+        addView(Button(context).apply {
+            text = "Clear context"
+            setOnClickListener { chat()?.setContext(null) }
+        })
+        addView(Button(context).apply {
+            text = "Logout"
+            setOnClickListener { chat()?.logout() }
+        })
+    }
+
+    // ── SDK callbacks ────────────────────────────────────────────────────────
+
+    private val hostListener = object : ShopTalkListener {
         override fun onCloseRequest() {
-            Log.i(TAG, "close-request → finishing")
+            Log.i(TAG, "close-request, finishing")
             finish()
         }
 
         override fun onReady() {
-            Log.i(TAG, "widget ready")
+            Log.i(TAG, "widget ready (identity requests so far: ${backend.calls})")
         }
 
         override fun onIdentified(ok: Boolean) {
             Log.i(TAG, "identified ok=$ok")
+        }
+
+        override fun onIdentityExpired() {
+            Log.i(TAG, "identity expired; SDK is asking the provider again")
+        }
+
+        override fun onUnread(count: Int) {
+            Log.i(TAG, "unread=$count") // a real app would badge its menu entry here
+        }
+
+        override fun onError(error: ShopTalkError) {
+            // Never log identity or message content; the error type alone is enough here.
+            Log.w(TAG, "error: ${error::class.simpleName}")
+            if (error is ShopTalkError.IdentityProviderFailed) {
+                Toast.makeText(this@MainActivity, "Identity unavailable, continuing as guest", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
@@ -75,11 +191,11 @@ class MainActivity : FragmentActivity() {
         private const val CONTAINER_ID = 0x0F0F01
         private const val CHAT_TAG = "shoptalk-chat"
 
-        /**
-         * Staging by default. shop/agent stay unset until go2joy onboarding
-         * (PLN-260827 W5) fixes the real values; unset = guest chat against the
-         * default tenant resolution, which is enough for device verification.
-         */
+        /** Staging by default. */
         private const val DEFAULT_WIDGET_URL = "https://shoptalk.amoeba.site/widget/"
+
+        /** Tenant lookup key (tenants.shop_domain), not a domain of the app. */
+        private const val DEFAULT_SHOP = "https://www.go2joy.vn"
+        private const val DEFAULT_AGENT = "hotel-admin"
     }
 }
