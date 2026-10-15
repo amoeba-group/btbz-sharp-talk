@@ -2,7 +2,7 @@
 
 > **Kế hoạch.** SDK Android `sdk/android` 0.2.0 + widget + API + console để app Go2Joy (Kotlin 2.2.0) nhúng chat
 > theo chuẩn trong `REQ-261015-Go2Joy-Kotlin-App-Widget` v1.1, kèm lộ trình triển khai hai bên G0 đến G6.
-> **Phiên bản.** 1.1 (2026-10-15). **Trạng thái.** DỰ THẢO, chờ duyệt. Không triển khai trước khi duyệt.
+> **Phiên bản.** 1.1 (2026-10-15). **Trạng thái.** ĐÃ DUYỆT bằng lời ngày 2026-10-16, đã triển khai S1 đến S5, S8, S9 trên nhánh `feature/go2joy-kotlin-app-impl`: xem `docs/implementation/RPT-261016-Go2Joy-Kotlin-App-Widget.md` và `docs/test/TCR-261016-Go2Joy-Kotlin-App-Widget.md` (các điểm khác PLN nằm trong RPT).
 > **Nhánh.** `feature/go2joy-kotlin-app-widget`, rebase trên `main` `e0610355`.
 > **Artifact mô phỏng.** `PLN-261015-Go2Joy-Kotlin-SDK-0.2.mockup.html` và `.mockup.png` cùng thư mục: 8 màn hình
 > dựng theo widget thật (ảnh `img/PLN-261015-SharpTalk-for-Go2Joy/01-widget-home.jpg`, `02-widget-answer.jpg`);
