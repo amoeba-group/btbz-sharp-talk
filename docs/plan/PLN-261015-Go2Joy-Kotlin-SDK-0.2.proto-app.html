@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prototype app Kotlin Go2Joy — Hỗ trợ Go2Joy (SharpTalk SDK 0.2) · tương tác</title>
+<title>Prototype app Kotlin Go2Joy — Hỗ trợ Go2Joy (SharpTalk SDK 0.2) · tương tác · vi/en/ko</title>
 <style>
   :root{
     --brand:#F26A1B;--brand-700:#C9540F;--brand-100:#FFE4D1;--brand-50:#FFF5EE;
     --ink:#1A1A1A;--g700:#4B5563;--g500:#6B7280;--g400:#9CA3AF;--g300:#D1D5DB;--g200:#E5E7EB;--g100:#F1F3F6;--g50:#F8F9FB;
     --ok:#16A34A;--warn:#B45309;--warn-50:#FFFBEB;--warn-200:#FDE68A;--blue:#0EA5E9;
-    --font:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    --font:'Pretendard','Noto Sans KR',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',Roboto,'Helvetica Neue',Arial,sans-serif;
   }
   *{box-sizing:border-box}
   body{margin:0;background:#EEF0F4;font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased}
@@ -24,6 +24,7 @@
   .seg{display:flex;flex-wrap:wrap;gap:6px}
   .seg button{border:1px solid var(--g300);background:#fff;border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--g700)}
   .seg button.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+  .seg.lang button.on{background:#111827;border-color:#111827}
   .ctl .map{font-size:12px;line-height:1.55;color:var(--g700);border-top:1px solid var(--g100);padding-top:10px;margin-top:4px}
   .ctl .map b{color:var(--ink)}
   .ctl ul{margin:6px 0 0 16px;padding:0;font-size:12px;color:var(--g700);line-height:1.6}
@@ -39,7 +40,6 @@
   .ico.xs{width:13px;height:13px}
   .tap{cursor:pointer}
   .tap:active{opacity:.7}
-  /* HOME */
   .hero{background:var(--brand);color:#fff;padding:6px 20px 18px;border-radius:0 0 26px 26px;flex:none}
   .hero .top{display:flex;align-items:center;justify-content:space-between}
   .hero .hi{font-size:13px;opacity:.9}
@@ -76,7 +76,6 @@
   .nav div.on{color:var(--brand);font-weight:700}
   .nav div.on i{background:var(--brand-50)}
   .nav i{width:44px;height:26px;border-radius:999px;display:flex;align-items:center;justify-content:center}
-  /* CHAT */
   .bar{display:flex;align-items:center;gap:10px;padding:8px 14px 10px;background:#fff;border-bottom:1px solid var(--g100);flex:none}
   .bar .av{width:36px;height:36px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;position:relative}
   .bar .av.hu{background:var(--blue)}
@@ -111,7 +110,7 @@
   .b li{margin:2px 0}
   .b code{background:var(--g100);border-radius:4px;padding:0 4px;font-size:12px}
   .b .who{font-size:11px;color:var(--g500);font-weight:600;margin-bottom:3px}
-  .b img,.b .ph{display:block;width:180px;height:120px;border-radius:10px;background:linear-gradient(135deg,#FDBA74,#F97316)}
+  .b .ph{display:block;width:180px;height:120px;border-radius:10px;background:linear-gradient(135deg,#FDBA74,#F97316)}
   .time{font-size:10px;color:var(--g400);margin-top:-5px;padding-left:34px}
   .time.r{text-align:right;padding:0 2px 0 0}
   .src{margin:0 0 0 34px;background:#fff;border:1px solid var(--g200);border-radius:12px;padding:8px 10px;display:flex;gap:10px;align-items:center;max-width:88%}
@@ -153,7 +152,6 @@
   .ended{display:none;padding:10px 14px 22px;background:#fff;border-top:1px solid var(--g100);text-align:center;font-size:12.5px;color:var(--g500);flex:none}
   .ended b{display:block;margin-top:6px;color:var(--brand-700);cursor:pointer}
   .scr.over .comp{display:none}.scr.over .ended{display:block}
-  /* overlays */
   .dim{position:absolute;inset:0;background:rgba(15,23,42,.5);display:none;align-items:flex-end;z-index:8}
   .dim.on{display:flex}
   .sheet{width:100%;background:#fff;border-radius:22px 22px 0 0;padding:8px 12px 24px;animation:up .2s ease-out}
@@ -165,7 +163,7 @@
   .sheet .row i{width:40px;height:40px;border-radius:12px;background:var(--brand-50);color:var(--brand);display:flex;align-items:center;justify-content:center}
   .sheet .row small{display:block;font-size:11px;color:var(--g500);font-weight:400}
   .sheet .cancel{margin-top:6px;text-align:center;padding:12px;border-radius:12px;background:var(--g100);font-weight:600;font-size:14px;cursor:pointer}
-  .menu{position:absolute;right:12px;top:92px;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(15,23,42,.2);padding:6px;display:none;z-index:9;min-width:190px}
+  .menu{position:absolute;right:12px;top:92px;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(15,23,42,.2);padding:6px;display:none;z-index:9;min-width:200px}
   .menu.on{display:block}
   .menu div{padding:10px 12px;border-radius:9px;font-size:13.5px;cursor:pointer;display:flex;gap:10px;align-items:center}
   .menu div:active{background:var(--g100)}
@@ -228,12 +226,13 @@
   <symbol id="stop" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor"/></symbol>
 </svg>
 
-<div class="page">
+<div class="page" id="page">
   <h1>Prototype app Kotlin Go2Joy · màn "Hỗ trợ Go2Joy" do SharpTalk SDK 0.2 dựng · bấm trực tiếp trên điện thoại</h1>
   <p class="sub">Mọi thứ trên màn hình điện thoại đều bấm được: ô Hỗ trợ Go2Joy, dòng đặt phòng, nút nhanh, ô nhập và nút gửi, chip Gặp nhân viên, camera và đính kèm, menu ⋮ (ngôn ngữ, quyền riêng tư, kết thúc), nút Thử lại. Bảng bên trái chỉ để nhảy tới trạng thái do bên ngoài gây ra (mất mạng, chưa xác minh) và mô phỏng cấu hình admin. Mã đặt phòng, tên người, số liệu là giả định.</p>
 
   <div class="wrap">
     <div class="ctl">
+      <div class="grp"><label class="l">Ngôn ngữ trang và app</label><div class="seg lang" id="langseg"><button data-l="vi" class="on">Tiếng Việt</button><button data-l="en">English</button><button data-l="ko">한국어</button></div></div>
       <h2>Trạng thái do bên ngoài gây ra</h2>
       <div class="grp"><div class="seg" id="screens">
         <button data-v="home" class="on">Trang chủ</button>
@@ -258,11 +257,10 @@
     </div>
 
     <div class="phone"><div class="scr" id="scr">
-      <!-- HOME -->
       <div class="view on" data-view="home">
         <div class="hero">
           <div class="status light"><span>09:41</span><span>▲ 4G ▮▮▮</span></div>
-          <div class="top"><div><div class="hi">Xin chào,</div><div class="name">Lan · Lễ tân</div></div><div class="bell tap" onclick="toast('Thông báo: 2 đặt phòng sắp tới giờ nhận')"><svg class="ico" style="color:#fff"><use href="#bell"/></svg><i></i></div></div>
+          <div class="top"><div><div class="hi">Xin chào,</div><div class="name">Lan · Lễ tân</div></div><div class="bell tap" onclick="toast(L('t.notif'))"><svg class="ico" style="color:#fff"><use href="#bell"/></svg><i></i></div></div>
           <div class="hotel"><svg class="ico xs"><use href="#pin"/></svg>A In Hotel Del Luna · Quận 1</div>
         </div>
         <div class="hscroll">
@@ -273,31 +271,30 @@
           </div>
           <div class="sect">Thao tác nhanh</div>
           <div class="grid">
-            <div class="act tap" onclick="toast('Màn Đặt phòng của app Go2Joy')"><i><svg class="ico sm"><use href="#cal"/></svg></i>Đặt phòng</div>
-            <div class="act tap" onclick="toast('Màn Đối soát của app Go2Joy')"><i><svg class="ico sm"><use href="#rec"/></svg></i>Đối soát</div>
-            <div class="act tap" onclick="toast('Màn Khuyến mãi của app Go2Joy')"><i><svg class="ico sm"><use href="#tag"/></svg></i>Khuyến mãi</div>
-            <div class="act tap" onclick="toast('Màn Doanh thu của app Go2Joy')"><i><svg class="ico sm"><use href="#chart"/></svg></i>Doanh thu</div>
-            <div class="act tap" onclick="toast('Màn Đánh giá của app Go2Joy')"><i><svg class="ico sm"><use href="#star"/></svg></i>Đánh giá</div>
-            <div class="act tap" onclick="toast('Chat với khách: kênh Sendbird hiện có của Go2Joy')"><i><svg class="ico sm"><use href="#chat"/></svg></i>Chat với khách</div>
-            <div class="act tap" onclick="toast('Thông báo của app Go2Joy')"><i><svg class="ico sm"><use href="#bell"/></svg></i>Thông báo</div>
+            <div class="act tap" onclick="toast(L('t.scr',L('s.bookings')))"><i><svg class="ico sm"><use href="#cal"/></svg></i>Đặt phòng</div>
+            <div class="act tap" onclick="toast(L('t.scr',L('s.recon')))"><i><svg class="ico sm"><use href="#rec"/></svg></i>Đối soát</div>
+            <div class="act tap" onclick="toast(L('t.scr',L('s.promo')))"><i><svg class="ico sm"><use href="#tag"/></svg></i>Khuyến mãi</div>
+            <div class="act tap" onclick="toast(L('t.scr',L('s.rev')))"><i><svg class="ico sm"><use href="#chart"/></svg></i>Doanh thu</div>
+            <div class="act tap" onclick="toast(L('t.scr',L('s.review')))"><i><svg class="ico sm"><use href="#star"/></svg></i>Đánh giá</div>
+            <div class="act tap" onclick="toast(L('t.sendbird'))"><i><svg class="ico sm"><use href="#chat"/></svg></i>Chat với khách</div>
+            <div class="act tap" onclick="toast(L('t.scr',L('s.notif')))"><i><svg class="ico sm"><use href="#bell"/></svg></i>Thông báo</div>
             <div class="act new tap" onclick="openChat()"><span class="badge">MỚI</span><i><svg class="ico sm"><use href="#head"/></svg></i>Hỗ trợ Go2Joy</div>
           </div>
           <div class="promo tap" onclick="openChat()"><div class="av">G2</div><div><b>Cần hỗ trợ từ Go2Joy?</b><small>Hỏi về đối soát, khiếu nại, cách thao tác. AI trả lời ngay, nhân viên tiếp quản khi cần.</small></div><div class="go">Hỏi ngay</div></div>
           <div class="sect">Chờ nhận phòng hôm nay</div>
           <div class="list">
-            <div class="li tap" onclick="openChat({ref:'G2J-8841',label:'Chờ nhận phòng · 2 đêm',prefill:'Khách không đến, tôi cần báo no-show cho đặt phòng này'})"><svg class="ico sm" style="color:var(--brand)"><use href="#cal"/></svg><div>#G2J-8841 · Nguyễn A<br><small style="color:var(--g500)">2 đêm · 14:00 · </small><span class="ask">Hỏi về đặt phòng này</span></div><span class="st">Chờ nhận phòng</span></div>
-            <div class="li tap" onclick="openChat({ref:'G2J-8847',label:'Đã nhận phòng · 1 đêm',prefill:'Khách muốn gia hạn thêm 1 đêm, tôi thao tác thế nào?'})"><svg class="ico sm" style="color:var(--brand)"><use href="#cal"/></svg><div>#G2J-8847 · Trần B<br><small style="color:var(--g500)">1 đêm · 15:30 · </small><span class="ask">Hỏi về đặt phòng này</span></div><span class="st g">Đã nhận phòng</span></div>
+            <div class="li tap" onclick="openChat({ref:'G2J-8841',label:'ctx.8841',prefill:'pf.noshow'})"><svg class="ico sm" style="color:var(--brand)"><use href="#cal"/></svg><div>#G2J-8841 · Nguyễn A<br><small style="color:var(--g500)">2 đêm · 14:00 · </small><span class="ask">Hỏi về đặt phòng này</span></div><span class="st">Chờ nhận phòng</span></div>
+            <div class="li tap" onclick="openChat({ref:'G2J-8847',label:'ctx.8847',prefill:'pf.extend'})"><svg class="ico sm" style="color:var(--brand)"><use href="#cal"/></svg><div>#G2J-8847 · Trần B<br><small style="color:var(--g500)">1 đêm · 15:30 · </small><span class="ask">Hỏi về đặt phòng này</span></div><span class="st g">Đã nhận phòng</span></div>
           </div>
         </div>
         <div class="nav" id="nav">
           <div class="on tap"><i><svg class="ico sm"><use href="#home"/></svg></i>Trang chủ</div>
-          <div class="tap" onclick="toast('Tab Đặt phòng của app Go2Joy')"><i><svg class="ico sm"><use href="#cal"/></svg></i>Đặt phòng</div>
-          <div class="tap" onclick="toast('Tab Thông báo của app Go2Joy')"><i><svg class="ico sm"><use href="#bell"/></svg></i>Thông báo</div>
-          <div class="tap" onclick="toast('Tab Tài khoản: Đăng xuất gọi chat.logout()')"><i><svg class="ico sm"><use href="#user"/></svg></i>Tài khoản</div>
+          <div class="tap" onclick="toast(L('t.tab',L('s.bookings')))"><i><svg class="ico sm"><use href="#cal"/></svg></i>Đặt phòng</div>
+          <div class="tap" onclick="toast(L('t.tab',L('s.notif')))"><i><svg class="ico sm"><use href="#bell"/></svg></i>Thông báo</div>
+          <div class="tap" onclick="toast(L('t.logout'))"><i><svg class="ico sm"><use href="#user"/></svg></i>Tài khoản</div>
         </div>
       </div>
 
-      <!-- CHAT -->
       <div class="view" data-view="chat">
         <div class="status"><span id="clock">09:41</span><span>▲ 4G ▮▮▮</span></div>
         <div class="bar">
@@ -308,17 +305,17 @@
         </div>
         <div class="wh">
           <div class="logo"><i>G2</i>Go2Joy</div>
-          <div class="r"><span class="tap" onclick="switchLang()" id="whlang">🌐 VI</span><svg class="ico sm tap" onclick="openPanel()"><use href="#gear"/></svg><svg class="ico sm tap" onclick="go('home')"><use href="#x"/></svg></div>
+          <div class="r"><span class="tap" onclick="cycleLang()" id="whlang">🌐 VI</span><svg class="ico sm tap" onclick="openPanel()"><use href="#gear"/></svg><svg class="ico sm tap" onclick="go('home')"><use href="#x"/></svg></div>
         </div>
         <div class="menu" id="menu">
-          <div onclick="switchLang();toggleMenu()"><svg class="ico sm"><use href="#globe"/></svg><span id="mlang">Ngôn ngữ: Tiếng Việt</span></div>
+          <div onclick="cycleLang();toggleMenu()"><svg class="ico sm"><use href="#globe"/></svg><span id="mlang">Ngôn ngữ: Tiếng Việt</span></div>
           <div onclick="openPanel();toggleMenu()"><svg class="ico sm"><use href="#shield"/></svg>Quyền riêng tư</div>
           <div class="red" onclick="endConv();toggleMenu()"><svg class="ico sm"><use href="#stop"/></svg>Kết thúc hội thoại</div>
         </div>
         <div class="warn"><svg class="ico sm" style="flex:none"><use href="#alert"/></svg><span>Không xác minh được tài khoản. Bạn đang trò chuyện ẩn danh; câu hỏi về đặt phòng cụ thể sẽ cần xác minh.</span><b class="tap" onclick="retryIdentity()">Thử lại</b></div>
-        <div class="notice"><svg class="ico sm" style="color:var(--brand);flex:none"><use href="#spark"/></svg><span id="noticeTxt">Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại Hoa Kỳ để tạo câu trả lời.</span><span class="end tap" onclick="endConv()">Kết thúc</span></div>
+        <div class="notice"><svg class="ico sm" style="color:var(--brand);flex:none"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại Hoa Kỳ để tạo câu trả lời.</span><span class="end tap" onclick="endConv()">Kết thúc</span></div>
         <div class="thread" id="thread"></div>
-        <div class="pend" id="pend"><div class="th"></div><div style="flex:1"><span id="pendName">IMG_20261015_0955.jpg · 1,2 MB</span><div class="bar2"><i id="pendBar"></i></div></div><svg class="ico sm tap" style="color:var(--g400)" onclick="cancelUpload()"><use href="#x"/></svg></div>
+        <div class="pend" id="pend"><div class="th"></div><div style="flex:1"><span id="pendName"></span><div class="bar2"><i id="pendBar"></i></div></div><svg class="ico sm tap" style="color:var(--g400)" onclick="cancelUpload()"><use href="#x"/></svg></div>
         <div class="ctx" id="ctx"><svg class="ico sm"><use href="#pin"/></svg><span id="ctxTxt"></span><svg class="ico sm x" onclick="clearCtx()"><use href="#x"/></svg></div>
         <div class="comp">
           <div class="ib" onclick="openSheet()"><svg class="ico"><use href="#cam"/></svg></div>
@@ -336,16 +333,15 @@
           <div class="bar"><div class="ib tap" onclick="closePanel()"><svg class="ico"><use href="#back"/></svg></div><div class="grow"><div class="t">Quyền riêng tư &amp; dữ liệu</div><div class="s">Preferences của widget, mở từ menu app</div></div></div>
           <div class="pb">
             <div class="card"><h5>Đồng ý về trò chuyện &amp; AI</h5><p>Đã ghi nhận qua điều khoản Go2Joy ngày 15/10/2026, bản thông báo v3. Tin nhắn được xử lý bởi nhà cung cấp AI tại Hoa Kỳ sau khi che dữ liệu cá nhân.</p>
-              <div class="rowp" style="margin-top:8px">Cho phép xử lý bằng AI<span class="sw on" onclick="this.classList.toggle('on');toast(this.classList.contains('on')?'Đã bật lại xử lý AI':'Đã rút lại đồng ý: chỉ nhân viên trả lời')"></span></div>
+              <div class="rowp" style="margin-top:8px">Cho phép xử lý bằng AI<span class="sw on" onclick="this.classList.toggle('on');toast(this.classList.contains('on')?L('t.aiOn'):L('t.aiOff'))"></span></div>
               <div class="rowp">Nhận email tóm tắt hội thoại<span class="sw" onclick="this.classList.toggle('on')"></span></div>
             </div>
-            <div class="card"><h5>Tài khoản đang dùng</h5><p id="whoTxt">Lan · Lễ tân · A In Hotel Del Luna · Miền Nam. Xác minh bởi Go2Joy lúc 09:41, hiệu lực 8 giờ.</p></div>
+            <div class="card"><h5>Tài khoản đang dùng</h5><p>Lan · Lễ tân · A In Hotel Del Luna · Miền Nam. Xác minh bởi Go2Joy lúc 09:41, hiệu lực 8 giờ.</p></div>
             <div class="card"><h5>Chính sách</h5><p>Chính sách quyền riêng tư Go2Joy · Thông báo xử lý dữ liệu SharpTalk</p></div>
           </div>
         </div>
       </div>
 
-      <!-- ERROR -->
       <div class="view" data-view="err">
         <div class="status"><span>10:02</span><span style="color:var(--g400)">✕ Không có mạng</span></div>
         <div class="bar"><div class="ib tap" onclick="go('home')"><svg class="ico"><use href="#back"/></svg></div><div class="av" style="background:var(--g300)">G2</div><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s">Đang kết nối lại…</div></div></div>
@@ -354,7 +350,7 @@
           <h3>Không kết nối được</h3>
           <p>Kiểm tra mạng rồi thử lại. Hội thoại của bạn vẫn được giữ nguyên.</p>
           <div class="btn" onclick="retryLoad()">Thử lại</div>
-          <div class="link" onclick="toast('Mở trình quay số: 1900 638 838')">Gọi hotline 1900 638 838</div>
+          <div class="link" onclick="toast(L('t.dial'))">Gọi hotline 1900 638 838</div>
         </div>
       </div>
       <div class="toast" id="toast"></div>
@@ -363,99 +359,171 @@
   </div>
 </div>
 <script>
-  var S={ctx:null,verified:true,handoff:false,ended:false,lang:'vi',started:false};
+  /* ===== i18n: static text, keyed by the Vietnamese source string ===== */
+  var T={
+  '#G2J-8841 · Nguyễn A':{en:'#G2J-8841 · Nguyen A',ko:'#G2J-8841 · Nguyen A'},'#G2J-8847 · Trần B':{en:'#G2J-8847 · Tran B',ko:'#G2J-8847 · Tran B'},'#G2J-8850 · Lê C':{en:'#G2J-8850 · Le C',ko:'#G2J-8850 · Le C'},
+  'Prototype app Kotlin Go2Joy · màn "Hỗ trợ Go2Joy" do SharpTalk SDK 0.2 dựng · bấm trực tiếp trên điện thoại':{en:'Go2Joy Kotlin app prototype · the "Go2Joy Support" screen rendered by SharpTalk SDK 0.2 · tap directly on the phone',ko:'Go2Joy Kotlin 앱 프로토타입 · SharpTalk SDK 0.2가 그리는 "Go2Joy 지원" 화면 · 휴대폰에서 직접 터치'},
+  'Mọi thứ trên màn hình điện thoại đều bấm được: ô Hỗ trợ Go2Joy, dòng đặt phòng, nút nhanh, ô nhập và nút gửi, chip Gặp nhân viên, camera và đính kèm, menu ⋮ (ngôn ngữ, quyền riêng tư, kết thúc), nút Thử lại. Bảng bên trái chỉ để nhảy tới trạng thái do bên ngoài gây ra (mất mạng, chưa xác minh) và mô phỏng cấu hình admin. Mã đặt phòng, tên người, số liệu là giả định.':{en:'Everything on the phone is tappable: the Go2Joy Support tile, booking rows, quick questions, the composer and send button, the Talk to an agent chip, camera and attachments, the ⋮ menu (language, privacy, end), Retry buttons. The left panel only jumps to externally caused states (offline, unverified) and simulates admin settings. Booking codes, names and figures are fictional.',ko:'휴대폰 화면의 모든 요소를 터치할 수 있습니다: Go2Joy 지원 타일, 예약 행, 빠른 질문, 입력창과 전송 버튼, 상담원 연결 칩, 카메라와 첨부, ⋮ 메뉴(언어·개인정보·종료), 다시 시도 버튼. 왼쪽 패널은 외부 요인 상태(오프라인, 미인증)로 이동하고 관리자 설정을 흉내 내는 용도입니다. 예약번호·이름·수치는 가상입니다.'},
+  'Ngôn ngữ trang và app':{en:'Page and app language',ko:'페이지·앱 언어'},
+  'Trạng thái do bên ngoài gây ra':{en:'Externally caused states',ko:'외부 요인 상태'},
+  'Trang chủ':{en:'Home',ko:'홈'},'Chat đang mở':{en:'Chat open',ko:'채팅 열림'},'Mất mạng':{en:'Offline',ko:'네트워크 끊김'},'Chữ ký bị từ chối':{en:'Signature rejected',ko:'서명 거부됨'},
+  'Cấu hình admin áp xuống app':{en:'Admin settings applied to the app',ko:'앱에 적용되는 관리자 설정'},
+  'Header trong app':{en:'Header in app',ko:'앱 내 헤더'},'Native của app':{en:'Native app header',ko:'앱 네이티브'},'Header widget':{en:'Widget header',ko:'위젯 헤더'},
+  'Menu kịch bản':{en:'Scenario menu',ko:'시나리오 메뉴'},'Card có icon':{en:'Cards with icons',ko:'아이콘 카드'},'Chip':{en:'Chips',ko:'칩'},
+  'Thử các luồng:':{en:'Try these flows:',ko:'다음 흐름을 시험해 보세요:'},
+  'Trang chủ → ô "Hỗ trợ Go2Joy" hoặc "Hỏi ngay"':{en:'Home → "Go2Joy Support" tile or "Ask now"',ko:'홈 → "Go2Joy 지원" 타일 또는 "바로 질문"'},
+  'Trang chủ → dòng đặt phòng → chat mở kèm ngữ cảnh':{en:'Home → a booking row → chat opens with context',ko:'홈 → 예약 행 → 맥락과 함께 채팅 열림'},
+  'Bấm nút nhanh hoặc gõ "no-show" rồi gửi':{en:'Tap a quick question or type "no-show" and send',ko:'빠른 질문을 누르거나 "no-show"를 입력해 전송'},
+  'Chip "Gặp nhân viên hỗ trợ" → nhân viên Minh tham gia':{en:'"Talk to an agent" chip → agent Minh joins',ko:'"상담원 연결" 칩 → 상담원 Minh 참여'},
+  'Camera / kẹp giấy → chọn ảnh → gửi':{en:'Camera / clip → pick a photo → send',ko:'카메라 / 클립 → 사진 선택 → 전송'},
+  '⋮ → Kết thúc → đánh giá 5 mức':{en:'⋮ → End → 5-level rating',ko:'⋮ → 종료 → 5단계 평가'},
+  'Chữ ký bị từ chối → "Thử lại" trên dải vàng':{en:'Signature rejected → "Retry" on the yellow bar',ko:'서명 거부 → 노란 띠의 "다시 시도"'},
+  'Xin chào,':{en:'Hello,',ko:'안녕하세요,'},'Lan · Lễ tân':{en:'Lan · Receptionist',ko:'Lan · 리셉션'},'A In Hotel Del Luna · Quận 1':{en:'A In Hotel Del Luna · District 1',ko:'A In Hotel Del Luna · 1군'},
+  'Hôm nay':{en:'Today',ko:'오늘'},'+3 so với hôm qua':{en:'+3 vs yesterday',ko:'어제보다 +3'},'Chờ nhận phòng':{en:'Awaiting check-in',ko:'체크인 대기'},'2 sắp tới giờ':{en:'2 due soon',ko:'2건 임박'},'Doanh thu':{en:'Revenue',ko:'매출'},'8,4tr':{en:'8.4M',ko:'840만'},
+  'Thao tác nhanh':{en:'Quick actions',ko:'빠른 작업'},'Đặt phòng':{en:'Bookings',ko:'예약'},'Đối soát':{en:'Reconciliation',ko:'정산'},'Khuyến mãi':{en:'Promotions',ko:'프로모션'},'Đánh giá':{en:'Reviews',ko:'리뷰'},'Chat với khách':{en:'Chat with guests',ko:'고객 채팅'},'Thông báo':{en:'Notifications',ko:'알림'},'MỚI':{en:'NEW',ko:'신규'},'Hỗ trợ Go2Joy':{en:'Go2Joy Support',ko:'Go2Joy 지원'},
+  'Cần hỗ trợ từ Go2Joy?':{en:'Need help from Go2Joy?',ko:'Go2Joy의 도움이 필요하신가요?'},
+  'Hỏi về đối soát, khiếu nại, cách thao tác. AI trả lời ngay, nhân viên tiếp quản khi cần.':{en:'Ask about reconciliation, complaints, how-tos. AI answers instantly, an agent takes over when needed.',ko:'정산, 이의 제기, 사용법을 물어보세요. AI가 즉시 답하고 필요하면 상담원이 이어받습니다.'},
+  'Hỏi ngay':{en:'Ask now',ko:'바로 질문'},'Chờ nhận phòng hôm nay':{en:'Awaiting check-in today',ko:'오늘 체크인 대기'},
+  '2 đêm · 14:00 ·':{en:'2 nights · 14:00 ·',ko:'2박 · 14:00 ·'},'1 đêm · 15:30 ·':{en:'1 night · 15:30 ·',ko:'1박 · 15:30 ·'},'Hỏi về đặt phòng này':{en:'Ask about this booking',ko:'이 예약에 대해 질문'},'Đã nhận phòng':{en:'Checked in',ko:'체크인 완료'},'Tài khoản':{en:'Account',ko:'계정'},
+  'Trả lời ngay · AI + nhân viên Go2Joy':{en:'Replies now · AI + Go2Joy staff',ko:'바로 답변 · AI + Go2Joy 직원'},
+  'Ngôn ngữ: Tiếng Việt':{en:'Language: Vietnamese',ko:'언어: 베트남어'},'Quyền riêng tư':{en:'Privacy',ko:'개인정보'},'Kết thúc hội thoại':{en:'End conversation',ko:'대화 종료'},
+  'Không xác minh được tài khoản. Bạn đang trò chuyện ẩn danh; câu hỏi về đặt phòng cụ thể sẽ cần xác minh.':{en:'Your account could not be verified. You are chatting anonymously; questions about a specific booking will need verification.',ko:'계정을 확인할 수 없습니다. 익명으로 대화 중이며, 특정 예약에 대한 질문은 인증이 필요합니다.'},
+  'Thử lại':{en:'Retry',ko:'다시 시도'},
+  'Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại Hoa Kỳ để tạo câu trả lời.':{en:'This conversation uses AI. Your messages are processed by a third-party AI provider in the United States to generate answers.',ko:'이 대화는 AI를 사용합니다. 보내신 메시지는 답변 생성을 위해 미국의 제3자 AI 제공업체가 처리합니다.'},
+  'Kết thúc':{en:'End',ko:'종료'},'Nhập tin nhắn…':{en:'Type a message…',ko:'메시지를 입력하세요…'},
+  'Hội thoại đã kết thúc. Cảm ơn bạn đã đánh giá.':{en:'The conversation has ended. Thank you for rating.',ko:'대화가 종료되었습니다. 평가해 주셔서 감사합니다.'},'Bắt đầu hội thoại mới':{en:'Start a new conversation',ko:'새 대화 시작'},
+  'Gửi ảnh hoặc tệp':{en:'Send a photo or file',ko:'사진 또는 파일 보내기'},'Chụp ảnh':{en:'Take a photo',ko:'사진 촬영'},'Mở camera, không cần cấp quyền thêm':{en:'Opens the camera, no extra permission',ko:'카메라 열기, 추가 권한 불필요'},'Chọn từ thư viện':{en:'Choose from gallery',ko:'갤러리에서 선택'},'Chọn nhiều ảnh cùng lúc':{en:'Select several photos at once',ko:'여러 장 동시 선택'},'Tệp':{en:'File',ko:'파일'},'PDF, Excel, Word tối đa 10 MB':{en:'PDF, Excel, Word up to 10 MB',ko:'PDF, Excel, Word 최대 10 MB'},'Hủy':{en:'Cancel',ko:'취소'},
+  'Quyền riêng tư & dữ liệu':{en:'Privacy & data',ko:'개인정보 및 데이터'},'Preferences của widget, mở từ menu app':{en:'Widget preferences, opened from the app menu',ko:'앱 메뉴에서 여는 위젯 환경설정'},
+  'Đồng ý về trò chuyện & AI':{en:'Consent for chat & AI',ko:'채팅·AI 동의'},
+  'Đã ghi nhận qua điều khoản Go2Joy ngày 15/10/2026, bản thông báo v3. Tin nhắn được xử lý bởi nhà cung cấp AI tại Hoa Kỳ sau khi che dữ liệu cá nhân.':{en:'Recorded through the Go2Joy terms on 15 Oct 2026, notice v3. Messages are processed by an AI provider in the US after personal data is masked.',ko:'2026-10-15 Go2Joy 약관(고지 v3)으로 기록됨. 메시지는 개인정보 마스킹 후 미국 AI 제공업체가 처리합니다.'},
+  'Cho phép xử lý bằng AI':{en:'Allow AI processing',ko:'AI 처리 허용'},'Nhận email tóm tắt hội thoại':{en:'Email me conversation summaries',ko:'대화 요약 이메일 받기'},
+  'Tài khoản đang dùng':{en:'Current account',ko:'현재 계정'},
+  'Lan · Lễ tân · A In Hotel Del Luna · Miền Nam. Xác minh bởi Go2Joy lúc 09:41, hiệu lực 8 giờ.':{en:'Lan · Receptionist · A In Hotel Del Luna · South. Verified by Go2Joy at 09:41, valid for 8 hours.',ko:'Lan · 리셉션 · A In Hotel Del Luna · 남부. 09:41 Go2Joy 인증, 8시간 유효.'},
+  'Chính sách':{en:'Policies',ko:'정책'},'Chính sách quyền riêng tư Go2Joy · Thông báo xử lý dữ liệu SharpTalk':{en:'Go2Joy privacy policy · SharpTalk data processing notice',ko:'Go2Joy 개인정보처리방침 · SharpTalk 데이터 처리 고지'},
+  '✕ Không có mạng':{en:'✕ No network',ko:'✕ 네트워크 없음'},'Đang kết nối lại…':{en:'Reconnecting…',ko:'다시 연결 중…'},'Không kết nối được':{en:'Could not connect',ko:'연결할 수 없습니다'},
+  'Kiểm tra mạng rồi thử lại. Hội thoại của bạn vẫn được giữ nguyên.':{en:'Check your network and try again. Your conversation is kept.',ko:'네트워크를 확인하고 다시 시도하세요. 대화는 그대로 보관됩니다.'},
+  'Gọi hotline 1900 638 838':{en:'Call hotline 1900 638 838',ko:'핫라인 1900 638 838 전화'}
+  };
+  /* ===== i18n: dynamic strings ===== */
+  var S_={
+  vi:{'s.bookings':'Đặt phòng','s.recon':'Đối soát','s.promo':'Khuyến mãi','s.rev':'Doanh thu','s.review':'Đánh giá','s.notif':'Thông báo','t.notif':'Thông báo: 2 đặt phòng sắp tới giờ nhận','t.scr':'Màn {0} của app Go2Joy','t.tab':'Tab {0} của app Go2Joy','t.sendbird':'Chat với khách: kênh Sendbird hiện có của Go2Joy','t.logout':'Tab Tài khoản: Đăng xuất gọi chat.logout()','t.dial':'Mở trình quay số: 1900 638 838','t.aiOn':'Đã bật lại xử lý AI','t.aiOff':'Đã rút lại đồng ý: chỉ nhân viên trả lời','t.video':'Mở video trong trình duyệt hệ thống (onOpenUrl)','t.cancelUp':'Đã hủy tải lên','t.ctxOff':'Đã bỏ ngữ cảnh đặt phòng','t.locale':'Widget nhận lệnh locale={0}','t.retryId':'Gọi lại identityProvider → identified ok','t.reload':'reload() → tải lại widget',
+    'title':'Hỗ trợ Go2Joy','sub.ai':'Trả lời ngay · AI + nhân viên Go2Joy','sub.guest':'Chế độ khách · chưa xác minh tài khoản','sub.hu':'Nhân viên đang hỗ trợ · Miền Nam','hu.name':'Minh · Go2Joy CS','day':'Hôm nay','sys.open':'Mở từ Đặt phòng #{0}','sys.find':'Đang tìm nhân viên Go2Joy phù hợp · Miền Nam · Đối soát','sys.join':'Minh · Go2Joy CS đã tham gia','sys.verified':'Đã xác minh: Lễ tân · A In Hotel Del Luna · Miền Nam','sys.thanks':'Cảm ơn bạn đã đánh giá {0}/5','typing.ai':'Đang soạn câu trả lời','typing.hu':'Minh đang soạn','typing.conn':'Đang kết nối','src.label':'Nguồn tham khảo · {0}','csat':'Bạn hài lòng với cuộc hỗ trợ này không?','lang.name':'Ngôn ngữ: Tiếng Việt','whlang':'🌐 VI','ctx.8841':'Chờ nhận phòng · 2 đêm','ctx.8847':'Đã nhận phòng · 1 đêm','ctx.pre':'Đặt phòng #{0} · {1}',
+    'pf.noshow':'Khách không đến, tôi cần báo no-show cho đặt phòng này','pf.extend':'Khách muốn gia hạn thêm 1 đêm, tôi thao tác thế nào?',
+    'greet.v':'Xin chào Lan! Chào mừng bạn đến với Go2Joy Support. Chúng tôi có thể giúp gì cho bạn? Hãy chọn một chủ đề bên dưới hoặc nhập câu hỏi của bạn.','greet.g':'Xin chào! Chào mừng bạn đến với Go2Joy Support. Chúng tôi có thể giúp gì cho bạn? Hãy chọn một chủ đề bên dưới hoặc nhập câu hỏi của bạn.',
+    'q.bookings':'Xem đặt phòng hôm nay','q.checkin':'Cách nhận phòng cho khách','q.complaint':'Khiếu nại đặt phòng','q.recon':'Hỏi về đối soát','q.handoff':'Gặp nhân viên hỗ trợ','q.noshow':'Khách không đến thì sao?',
+    'a.bookings':'Hôm nay khách sạn có <b>12 đặt phòng</b>, trong đó 5 đang <b>Chờ nhận phòng</b>:<ul><li>#G2J-8841 · Nguyễn A · 14:00 · 2 đêm</li><li>#G2J-8847 · Trần B · 15:30 · 1 đêm</li><li>#G2J-8850 · Lê C · 18:00 · 3 đêm</li></ul>Bạn muốn xem chi tiết đặt phòng nào?',
+    'a.checkin':'Nhận phòng cho khách trong Hotel Admin:<ol><li>Mở tab <code>Chờ nhận phòng</code>, chọn đặt phòng của khách.</li><li>Đối chiếu giấy tờ, nhấn <code>Nhận phòng</code>.</li><li>Nếu khách đến sớm hơn giờ đặt, chọn <code>Nhận phòng sớm</code> và xác nhận phụ phí nếu có.</li></ol>','src.checkin':'Hướng dẫn nhận phòng',
+    'a.complaint':'Để khiếu nại một đặt phòng, bạn cần: mã đặt phòng, lý do (khách không đến, sai thông tin, thanh toán) và ảnh minh chứng nếu có. Tôi có thể chuyển cho nhân viên Go2Joy xử lý ngay.',
+    'a.recon':'Đối soát được chốt <b>vào ngày 1 và 16 hằng tháng</b>. Bạn xem bảng kê ở <code>Đối soát › Kỳ hiện tại</code>; số tiền hiển thị là số do hệ thống Go2Joy tính, tôi không tự tính lại.<br>Nếu lệch số, gửi ảnh bảng kê để nhân viên kiểm tra.',
+    'a.noshow':'Để báo <b>Khách không đến</b>{REF}:<ol><li>Mở tab <code>Chờ nhận phòng</code>, chọn đặt phòng.</li><li>Nhập lý do vào ô <code>Ghi chú</code> (tối đa 500 ký tự).</li><li>Nhấn <code>Khách không đến</code>. Đặt phòng chuyển sang tab <code>Chờ khách xác nhận</code>.</li></ol>','src.noshow':'Báo khách không đến','ref.for':' cho #{0}',
+    'a.extend':'Gia hạn thêm đêm: mở đặt phòng đã nhận, chọn <code>Gia hạn</code>, chọn số đêm và xác nhận giá hiển thị. Hệ thống tạo đặt phòng nối tiếp và gửi xác nhận cho khách.',
+    'a.generic':'Tôi đã ghi nhận câu hỏi của bạn. Dựa trên hướng dẫn Hotel Admin hiện có, tôi chưa tìm được câu trả lời đủ căn cứ. Bạn có thể mô tả thêm, hoặc để tôi chuyển cho nhân viên Go2Joy.',
+    'a.file':'Tôi đã nhận tệp. Bạn muốn tôi dùng ảnh này để làm gì: báo khiếu nại, hay chuyển cho nhân viên kiểm tra?',
+    'hu.hello':'Chào chị Lan, em là Minh bên Go2Joy. Chị gửi giúp em ảnh màn hình tab <code>Chờ khách xác nhận</code> để em kiểm tra ngay nhé.','hu.ack':'Em đã nhận, chị chờ em 1 phút kiểm tra trên hệ thống nhé.','hu.file':'Em nhận được rồi. Đặt phòng này đang kẹt ở bước xác nhận của khách, em đẩy lại thông báo cho khách và cập nhật chị sau 5 phút.'},
+  en:{'s.bookings':'Bookings','s.recon':'Reconciliation','s.promo':'Promotions','s.rev':'Revenue','s.review':'Reviews','s.notif':'Notifications','t.notif':'Notifications: 2 bookings due for check-in soon','t.scr':'{0} screen of the Go2Joy app','t.tab':'{0} tab of the Go2Joy app','t.sendbird':'Chat with guests: Go2Joy\'s existing Sendbird channel','t.logout':'Account tab: Log out calls chat.logout()','t.dial':'Open dialer: 1900 638 838','t.aiOn':'AI processing enabled again','t.aiOff':'Consent withdrawn: only staff will reply','t.video':'Open video in the system browser (onOpenUrl)','t.cancelUp':'Upload cancelled','t.ctxOff':'Booking context removed','t.locale':'Widget received locale={0}','t.retryId':'Calling identityProvider again → identified ok','t.reload':'reload() → reloading the widget',
+    'title':'Go2Joy Support','sub.ai':'Replies now · AI + Go2Joy staff','sub.guest':'Guest mode · account not verified','sub.hu':'Agent assisting · South','hu.name':'Minh · Go2Joy CS','day':'Today','sys.open':'Opened from Booking #{0}','sys.find':'Finding a Go2Joy agent · South · Reconciliation','sys.join':'Minh · Go2Joy CS joined','sys.verified':'Verified: Receptionist · A In Hotel Del Luna · South','sys.thanks':'Thanks for rating {0}/5','typing.ai':'Writing a reply','typing.hu':'Minh is typing','typing.conn':'Connecting','src.label':'Source · {0}','csat':'Were you satisfied with this support?','lang.name':'Language: English','whlang':'🌐 EN','ctx.8841':'Awaiting check-in · 2 nights','ctx.8847':'Checked in · 1 night','ctx.pre':'Booking #{0} · {1}',
+    'pf.noshow':'The guest did not show up, I need to report a no-show for this booking','pf.extend':'The guest wants to extend by 1 night, how do I do that?',
+    'greet.v':'Hi Lan! Welcome to Go2Joy Support. How can we help? Pick a topic below or type your question.','greet.g':'Hello! Welcome to Go2Joy Support. How can we help? Pick a topic below or type your question.',
+    'q.bookings':'Today\'s bookings','q.checkin':'How to check a guest in','q.complaint':'Booking complaint','q.recon':'Ask about reconciliation','q.handoff':'Talk to an agent','q.noshow':'What if the guest does not show?',
+    'a.bookings':'The hotel has <b>12 bookings</b> today, 5 of them <b>awaiting check-in</b>:<ul><li>#G2J-8841 · Nguyen A · 14:00 · 2 nights</li><li>#G2J-8847 · Tran B · 15:30 · 1 night</li><li>#G2J-8850 · Le C · 18:00 · 3 nights</li></ul>Which booking would you like to see?',
+    'a.checkin':'Checking a guest in from Hotel Admin:<ol><li>Open the <code>Awaiting check-in</code> tab and select the booking.</li><li>Check the ID, then tap <code>Check in</code>.</li><li>If the guest arrives early, choose <code>Early check-in</code> and confirm any surcharge.</li></ol>','src.checkin':'Check-in guide',
+    'a.complaint':'To file a booking complaint you need: the booking code, a reason (no-show, wrong details, payment) and evidence photos if any. I can hand this to a Go2Joy agent right away.',
+    'a.recon':'Reconciliation closes <b>on the 1st and 16th of each month</b>. See the statement under <code>Reconciliation › Current period</code>; the amounts shown are calculated by the Go2Joy system, I do not recalculate them.<br>If something does not match, send a photo of the statement for an agent to check.',
+    'a.noshow':'To report a <b>No-show</b>{REF}:<ol><li>Open the <code>Awaiting check-in</code> tab and select the booking.</li><li>Enter the reason in <code>Notes</code> (max 500 characters).</li><li>Tap <code>No-show</code>. The booking moves to <code>Awaiting guest confirmation</code>.</li></ol>','src.noshow':'Reporting a no-show','ref.for':' for #{0}',
+    'a.extend':'To extend a stay: open the checked-in booking, choose <code>Extend</code>, pick the number of nights and confirm the displayed price. The system creates a follow-on booking and sends the guest a confirmation.',
+    'a.generic':'I have noted your question. Based on the current Hotel Admin guides I could not find a well-grounded answer. You can add details, or I can hand you to a Go2Joy agent.',
+    'a.file':'I received the file. What would you like to do with it: file a complaint, or have an agent check it?',
+    'hu.hello':'Hi Lan, this is Minh from Go2Joy. Please send me a screenshot of the <code>Awaiting guest confirmation</code> tab so I can check right away.','hu.ack':'Got it, give me a minute to check the system.','hu.file':'Received. This booking is stuck at guest confirmation; I am resending the notification to the guest and will update you in 5 minutes.'},
+  ko:{'s.bookings':'예약','s.recon':'정산','s.promo':'프로모션','s.rev':'매출','s.review':'리뷰','s.notif':'알림','t.notif':'알림: 곧 체크인할 예약 2건','t.scr':'Go2Joy 앱의 {0} 화면','t.tab':'Go2Joy 앱의 {0} 탭','t.sendbird':'고객 채팅: Go2Joy의 기존 Sendbird 채널','t.logout':'계정 탭: 로그아웃 시 chat.logout() 호출','t.dial':'전화 걸기: 1900 638 838','t.aiOn':'AI 처리를 다시 켰습니다','t.aiOff':'동의 철회: 상담원만 답변합니다','t.video':'시스템 브라우저에서 동영상 열기(onOpenUrl)','t.cancelUp':'업로드 취소됨','t.ctxOff':'예약 맥락 제거됨','t.locale':'위젯이 locale={0} 명령 수신','t.retryId':'identityProvider 재호출 → identified ok','t.reload':'reload() → 위젯 다시 불러오기',
+    'title':'Go2Joy 지원','sub.ai':'바로 답변 · AI + Go2Joy 직원','sub.guest':'게스트 모드 · 계정 미인증','sub.hu':'상담원 응대 중 · 남부','hu.name':'Minh · Go2Joy CS','day':'오늘','sys.open':'예약 #{0}에서 열림','sys.find':'적합한 Go2Joy 상담원 찾는 중 · 남부 · 정산','sys.join':'Minh · Go2Joy CS 참여','sys.verified':'인증 완료: 리셉션 · A In Hotel Del Luna · 남부','sys.thanks':'{0}/5 평가 감사합니다','typing.ai':'답변 작성 중','typing.hu':'Minh 입력 중','typing.conn':'연결 중','src.label':'참고 자료 · {0}','csat':'이번 지원에 만족하셨나요?','lang.name':'언어: 한국어','whlang':'🌐 KO','ctx.8841':'체크인 대기 · 2박','ctx.8847':'체크인 완료 · 1박','ctx.pre':'예약 #{0} · {1}',
+    'pf.noshow':'고객이 오지 않았습니다. 이 예약을 노쇼로 신고해야 합니다','pf.extend':'고객이 1박 연장을 원합니다. 어떻게 처리하나요?',
+    'greet.v':'안녕하세요 Lan님! Go2Joy 지원에 오신 것을 환영합니다. 무엇을 도와드릴까요? 아래 주제를 고르거나 질문을 입력하세요.','greet.g':'안녕하세요! Go2Joy 지원에 오신 것을 환영합니다. 무엇을 도와드릴까요? 아래 주제를 고르거나 질문을 입력하세요.',
+    'q.bookings':'오늘 예약 보기','q.checkin':'고객 체크인 방법','q.complaint':'예약 이의 제기','q.recon':'정산 문의','q.handoff':'상담원 연결','q.noshow':'고객이 오지 않으면?',
+    'a.bookings':'오늘 호텔 예약은 <b>12건</b>이며 그중 5건이 <b>체크인 대기</b>입니다:<ul><li>#G2J-8841 · Nguyen A · 14:00 · 2박</li><li>#G2J-8847 · Tran B · 15:30 · 1박</li><li>#G2J-8850 · Le C · 18:00 · 3박</li></ul>어느 예약을 자세히 볼까요?',
+    'a.checkin':'Hotel Admin에서 고객 체크인:<ol><li><code>체크인 대기</code> 탭에서 해당 예약을 선택합니다.</li><li>신분증 확인 후 <code>체크인</code>을 누릅니다.</li><li>예약 시간보다 일찍 도착하면 <code>얼리 체크인</code>을 선택하고 추가 요금이 있으면 확인합니다.</li></ol>','src.checkin':'체크인 안내',
+    'a.complaint':'예약 이의 제기에는 예약번호, 사유(노쇼, 정보 오류, 결제), 증빙 사진(있는 경우)이 필요합니다. 바로 Go2Joy 상담원에게 넘겨 드릴 수 있습니다.',
+    'a.recon':'정산은 <b>매월 1일과 16일</b>에 마감됩니다. 명세서는 <code>정산 › 현재 기간</code>에서 확인하세요. 표시 금액은 Go2Joy 시스템이 계산한 값이며 제가 다시 계산하지 않습니다.<br>금액이 맞지 않으면 명세서 사진을 보내 주시면 상담원이 확인합니다.',
+    'a.noshow':'<b>노쇼</b> 신고{REF}:<ol><li><code>체크인 대기</code> 탭에서 예약을 선택합니다.</li><li><code>메모</code>란에 사유를 입력합니다(최대 500자).</li><li><code>노쇼</code>를 누릅니다. 예약이 <code>고객 확인 대기</code> 탭으로 이동합니다.</li></ol>','src.noshow':'노쇼 신고 방법','ref.for':' (#{0})',
+    'a.extend':'숙박 연장: 체크인된 예약을 열고 <code>연장</code>을 선택해 박수를 고른 뒤 표시된 요금을 확인합니다. 시스템이 이어지는 예약을 만들고 고객에게 확인을 보냅니다.',
+    'a.generic':'질문을 접수했습니다. 현재 Hotel Admin 안내 자료로는 충분한 근거의 답을 찾지 못했습니다. 더 설명해 주시거나 Go2Joy 상담원에게 연결해 드리겠습니다.',
+    'a.file':'파일을 받았습니다. 이 사진으로 무엇을 할까요: 이의 제기 접수, 아니면 상담원 확인 요청?',
+    'hu.hello':'안녕하세요 Lan님, Go2Joy의 Minh입니다. <code>고객 확인 대기</code> 탭 화면을 캡처해 보내 주시면 바로 확인하겠습니다.','hu.ack':'확인했습니다. 시스템에서 확인할 동안 1분만 기다려 주세요.','hu.file':'받았습니다. 이 예약은 고객 확인 단계에서 멈춰 있어 고객에게 알림을 다시 보냈고 5분 뒤 업데이트 드리겠습니다.'}
+  };
+  var LANG='vi';
+  function L(k){var s=(S_[LANG]&&S_[LANG][k])||S_.vi[k]||k;for(var i=1;i<arguments.length;i++)s=s.replace('{'+(i-1)+'}',arguments[i]);return s}
+  var origText=new Map();
+  function translateStatic(){var walker=document.createTreeWalker(document.getElementById('page'),NodeFilter.SHOW_TEXT,null);var n;
+    while(n=walker.nextNode()){if(n.parentNode&&(n.parentNode.tagName==='SCRIPT'||n.parentNode.tagName==='STYLE'))continue;var v=n.nodeValue;if(!v.trim())continue;
+      if(!origText.has(n))origText.set(n,v);var o=origText.get(n),k=o.trim();var tr=T[k];
+      n.nodeValue=(LANG==='vi'||!tr)?o:o.replace(k,tr[LANG])}
+    document.querySelectorAll('#page [placeholder]').forEach(function(e){if(!e.dataset.ph)e.dataset.ph=e.placeholder;var tr=T[e.dataset.ph];e.placeholder=(LANG==='vi'||!tr)?e.dataset.ph:tr[LANG]});
+    document.documentElement.lang=LANG;document.title=LANG==='vi'?'Prototype app Kotlin Go2Joy — Hỗ trợ Go2Joy (SharpTalk SDK 0.2)':LANG==='en'?'Go2Joy Kotlin app prototype — Go2Joy Support (SharpTalk SDK 0.2)':'Go2Joy Kotlin 앱 프로토타입 — Go2Joy 지원 (SharpTalk SDK 0.2)'}
+  function setLang(l){LANG=l;document.querySelectorAll('#langseg button').forEach(function(b){b.classList.toggle('on',b.dataset.l===l)});translateStatic();
+    $('mlang').textContent=L('lang.name');$('whlang').textContent=L('whlang');setBar();if(S.ctx)$('ctxTxt').textContent=L('ctx.pre',S.ctx.ref,L(S.ctx.label));else $('ctxTxt').textContent='';renderThread()}
+  function cycleLang(){var o=['vi','en','ko'];setLang(o[(o.indexOf(LANG)+1)%3]);toast(L('t.locale',LANG))}
+
+  /* ===== app state ===== */
+  var S={ctx:null,verified:true,handoff:false,ended:false,started:false};
+  var H=[];
   var $=function(id){return document.getElementById(id)};
   var thread=$('thread');
-  var QUICK=[
-    {k:'bookings',t:'Xem đặt phòng hôm nay',i:'cal'},
-    {k:'checkin',t:'Cách nhận phòng cho khách',i:'key'},
-    {k:'complaint',t:'Khiếu nại đặt phòng',i:'alert'},
-    {k:'recon',t:'Hỏi về đối soát',i:'rec'}
-  ];
-  var ANSWERS={
-    bookings:{html:'Hôm nay khách sạn có <b>12 đặt phòng</b>, trong đó 5 đang <b>Chờ nhận phòng</b>:<ul><li>#G2J-8841 · Nguyễn A · 14:00 · 2 đêm</li><li>#G2J-8847 · Trần B · 15:30 · 1 đêm</li><li>#G2J-8850 · Lê C · 18:00 · 3 đêm</li></ul>Bạn muốn xem chi tiết đặt phòng nào?',chips:['Khiếu nại đặt phòng','Hỏi về đối soát']},
-    checkin:{html:'Nhận phòng cho khách trong Hotel Admin:<ol><li>Mở tab <code>Chờ nhận phòng</code>, chọn đặt phòng của khách.</li><li>Đối chiếu giấy tờ, nhấn <code>Nhận phòng</code>.</li><li>Nếu khách đến sớm hơn giờ đặt, chọn <code>Nhận phòng sớm</code> và xác nhận phụ phí nếu có.</li></ol>',src:{t:'Hướng dẫn nhận phòng',v:'Video 07'},chips:['Xem đặt phòng hôm nay','Khách không đến thì sao?']},
-    complaint:{html:'Để khiếu nại một đặt phòng, bạn cần: mã đặt phòng, lý do (khách không đến, sai thông tin, thanh toán) và ảnh minh chứng nếu có. Tôi có thể chuyển cho nhân viên Go2Joy xử lý ngay.',chips:['Gặp nhân viên hỗ trợ','Khách không đến thì sao?']},
-    recon:{html:'Đối soát được chốt <b>vào ngày 1 và 16 hằng tháng</b>. Bạn xem bảng kê ở <code>Đối soát › Kỳ hiện tại</code>; số tiền hiển thị là số do hệ thống Go2Joy tính, tôi không tự tính lại.<br>Nếu lệch số, gửi ảnh bảng kê để nhân viên kiểm tra.',chips:['Gặp nhân viên hỗ trợ','Xem đặt phòng hôm nay']},
-    noshow:{html:'Để báo <b>Khách không đến</b>{REF}:<ol><li>Mở tab <code>Chờ nhận phòng</code>, chọn đặt phòng.</li><li>Nhập lý do vào ô <code>Ghi chú</code> (tối đa 500 ký tự).</li><li>Nhấn <code>Khách không đến</code>. Đặt phòng chuyển sang tab <code>Chờ khách xác nhận</code>.</li></ol>',src:{t:'Báo khách không đến',v:'Video 22'},chips:['Xem đặt phòng hôm nay','Gặp nhân viên hỗ trợ']},
-    extend:{html:'Gia hạn thêm đêm: mở đặt phòng đã nhận, chọn <code>Gia hạn</code>, chọn số đêm và xác nhận giá hiển thị. Hệ thống tạo đặt phòng nối tiếp và gửi xác nhận cho khách.',chips:['Xem đặt phòng hôm nay','Gặp nhân viên hỗ trợ']},
-    generic:{html:'Tôi đã ghi nhận câu hỏi của bạn. Dựa trên hướng dẫn Hotel Admin hiện có, tôi chưa tìm được câu trả lời đủ căn cứ. Bạn có thể mô tả thêm, hoặc để tôi chuyển cho nhân viên Go2Joy.',chips:['Gặp nhân viên hỗ trợ','Xem đặt phòng hôm nay']}
-  };
+  var QUICK=[{k:'bookings',i:'cal'},{k:'checkin',i:'key'},{k:'complaint',i:'alert'},{k:'recon',i:'rec'}];
+  var ANS={bookings:{chips:['q.complaint','q.recon']},checkin:{src:'src.checkin',sv:'Video 07',chips:['q.bookings','q.noshow']},complaint:{chips:['q.handoff','q.noshow']},recon:{chips:['q.handoff','q.bookings']},noshow:{src:'src.noshow',sv:'Video 22',chips:['q.bookings','q.handoff']},extend:{chips:['q.bookings','q.handoff']},generic:{chips:['q.handoff','q.bookings']},file:{chips:['q.handoff','q.complaint']}};
   function now(){var d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
   function el(h){var d=document.createElement('div');d.innerHTML=h;return d.firstElementChild}
   function scroll(){thread.scrollTop=thread.scrollHeight}
-  function sys(t){thread.appendChild(el('<div class="sys">'+t+'</div>'));scroll()}
-  function addMe(h,isImg){thread.appendChild(el('<div class="msg me"><div class="b">'+(isImg?'<div class="ph"></div>':'')+h+'</div></div>'));thread.appendChild(el('<div class="time r">'+now()+'</div>'));scroll()}
-  function addBot(h,o){o=o||{};var hu=S.handoff&&!o.ai;
-    thread.appendChild(el('<div class="msg"><div class="mav'+(hu?' hu':'')+'">'+(hu?'M':'G2')+'</div><div class="b">'+(hu?'<div class="who">Minh · Go2Joy CS</div>':'')+h+'</div></div>'));
-    if(o.src)thread.appendChild(el('<div class="src tap" onclick="toast(\'Mở video trong trình duyệt hệ thống (onOpenUrl)\')"><div class="th"></div><div><small>Nguồn tham khảo · '+o.src.v+'</small><b>'+o.src.t+'</b></div></div>'));
-    thread.appendChild(el('<div class="time">'+now()+'</div>'));
-    if(o.chips)thread.appendChild(el('<div class="chips">'+o.chips.map(function(c){var hl=c.indexOf('nhân viên')>=0;return '<span class="chip'+(hl?' hl':'')+'" onclick="chip(this)">'+(hl?'<svg class="ico xs"><use href="#head"/></svg>':'')+c+'</span>'}).join('')+'</div>'));
-    scroll()}
-  function typing(ms,label,cb){var t=el('<div class="typing"><i></i><i></i><i></i>'+(label?'<small>'+label+'</small>':'')+'</div>');thread.appendChild(t);scroll();setTimeout(function(){t.remove();cb()},ms)}
-  function quickMenu(){thread.appendChild(el('<div class="qq">'+QUICK.map(function(q){return '<span onclick="ask(\''+q.k+'\')"><i><svg class="ico sm"><use href="#'+q.i+'"/></svg></i>'+q.t+'</span>'}).join('')+'</div>'));scroll()}
-  function greet(){thread.innerHTML='';thread.appendChild(el('<div class="day">Hôm nay</div>'));
-    if(S.ctx)sys('Mở từ Đặt phòng #'+S.ctx.ref);
-    addBot((S.verified?'Xin chào Lan! ':'Xin chào! ')+'Chào mừng bạn đến với Go2Joy Support. Chúng tôi có thể giúp gì cho bạn? Hãy chọn một chủ đề bên dưới hoặc nhập câu hỏi của bạn.',{ai:true});
-    quickMenu()}
+  function push(e){e.time=e.time||now();H.push(e);thread.appendChild(render(e));scroll()}
+  function render(e){var d=document.createElement('div');d.style.display='contents';
+    if(e.t==='day')d.innerHTML='<div class="day">'+L('day')+'</div>';
+    else if(e.t==='sys')d.innerHTML='<div class="sys">'+L.apply(null,[e.k].concat(e.a||[]))+'</div>';
+    else if(e.t==='me')d.innerHTML='<div class="msg me"><div class="b">'+(e.img?'<div class="ph"></div>':'')+(e.k?L(e.k):e.text)+'</div></div><div class="time r">'+e.time+'</div>';
+    else if(e.t==='bot'){var hu=e.hu;var body=e.k?L(e.k).replace('{REF}',e.ref?L('ref.for',e.ref):''):e.text;
+      d.innerHTML='<div class="msg"><div class="mav'+(hu?' hu':'')+'">'+(hu?'M':'G2')+'</div><div class="b">'+(hu?'<div class="who">'+L('hu.name')+'</div>':'')+body+'</div></div>'+(e.src?'<div class="src tap" onclick="toast(L(\'t.video\'))"><div class="th"></div><div><small>'+L('src.label',e.sv)+'</small><b>'+L(e.src)+'</b></div></div>':'')+'<div class="time">'+e.time+'</div>'+(e.chips?'<div class="chips">'+e.chips.map(function(c){var hl=c==='q.handoff';return '<span class="chip'+(hl?' hl':'')+'" data-k="'+c+'" onclick="chip(this)">'+(hl?'<svg class="ico xs"><use href="#head"/></svg>':'')+L(c)+'</span>'}).join('')+'</div>':'')}
+    else if(e.t==='qq')d.innerHTML='<div class="qq">'+QUICK.map(function(q){return '<span onclick="ask(\''+q.k+'\')"><i><svg class="ico sm"><use href="#'+q.i+'"/></svg></i>'+L('q.'+q.k)+'</span>'}).join('')+'</div>';
+    else if(e.t==='csat')d.innerHTML='<div class="csat"><b>'+L('csat')+'</b><div class="faces">'+[1,2,3,4,5].map(function(n){return '<span class="'+(e.rated===n?'on':'')+'" onclick="rate(this,'+n+')">'+['😞','😕','😐','🙂','😄'][n-1]+'</span>'}).join('')+'</div></div>';
+    return d}
+  function renderThread(){thread.innerHTML='';H.forEach(function(e){thread.appendChild(render(e))});scroll()}
+  function typing(ms,label,cb){var t=el('<div class="typing"><i></i><i></i><i></i><small>'+L(label)+'</small></div>');thread.appendChild(t);scroll();setTimeout(function(){t.remove();cb()},ms)}
+  function greet(){H=[];thread.innerHTML='';push({t:'day'});if(S.ctx)push({t:'sys',k:'sys.open',a:[S.ctx.ref]});push({t:'bot',k:S.verified?'greet.v':'greet.g'});push({t:'qq'})}
   function openChat(ctx){S.started=true;S.ctx=ctx||null;S.handoff=false;S.ended=false;$('scr').classList.remove('over');setBar();
-    $('ctx').classList.toggle('on',!!S.ctx);if(S.ctx)$('ctxTxt').textContent='Đặt phòng #'+S.ctx.ref+' · '+S.ctx.label;
-    greet();$('inp').value=S.ctx&&S.ctx.prefill?S.ctx.prefill:'';onInput();go('chat');if(S.ctx)setTimeout(function(){$('inp').focus()},100)}
-  function setBar(){$('bav').textContent=S.handoff?'M':'G2';$('bav').classList.toggle('hu',S.handoff);$('btitle').textContent=S.handoff?'Minh · Go2Joy CS':'Hỗ trợ Go2Joy';
-    $('bsub').textContent=S.handoff?'Nhân viên đang hỗ trợ · Miền Nam':(S.verified?'Trả lời ngay · AI + nhân viên Go2Joy':'Chế độ khách · chưa xác minh tài khoản')}
-  function ask(k){var q=QUICK.filter(function(x){return x.k===k})[0];addMe(q.t);reply(k)}
-  function reply(k,ref){var a=ANSWERS[k]||ANSWERS.generic;
-    if(S.handoff){typing(1400,'Minh đang soạn',function(){addBot('Em đã nhận, chị chờ em 1 phút kiểm tra trên hệ thống nhé.')});return}
-    typing(1200,'Đang soạn câu trả lời',function(){addBot(a.html.replace('{REF}',ref?' cho #'+ref:''),{ai:true,src:a.src,chips:a.chips})})}
-  function classify(t){t=t.toLowerCase();if(/no-?show|không đến|khong den/.test(t))return 'noshow';if(/gia hạn|thêm.*đêm|them.*dem/.test(t))return 'extend';if(/đối soát|doi soat|thanh toán|tiền/.test(t))return 'recon';if(/nhận phòng|check-?in/.test(t))return 'checkin';if(/khiếu nại|sai/.test(t))return 'complaint';if(/đặt phòng hôm nay|hôm nay/.test(t))return 'bookings';return 'generic'}
+    $('ctx').classList.toggle('on',!!S.ctx);if(S.ctx)$('ctxTxt').textContent=L('ctx.pre',S.ctx.ref,L(S.ctx.label));
+    greet();$('inp').value=S.ctx&&S.ctx.prefill?L(S.ctx.prefill):'';onInput();go('chat');if(S.ctx)setTimeout(function(){$('inp').focus()},100)}
+  function setBar(){$('bav').textContent=S.handoff?'M':'G2';$('bav').classList.toggle('hu',S.handoff);$('btitle').textContent=S.handoff?L('hu.name'):L('title');$('bsub').textContent=S.handoff?L('sub.hu'):(S.verified?L('sub.ai'):L('sub.guest'))}
+  function ask(k){push({t:'me',k:'q.'+k});reply(k)}
+  function reply(k,ref){if(S.handoff){typing(1400,'typing.hu',function(){push({t:'bot',k:'hu.ack',hu:true})});return}
+    var a=ANS[k]||ANS.generic;typing(1200,'typing.ai',function(){push({t:'bot',k:'a.'+(ANS[k]?k:'generic'),ref:ref,src:a.src,sv:a.sv,chips:a.chips})})}
+  function classify(t){t=t.toLowerCase();if(/no-?show|không đến|khong den|노쇼|not show/.test(t))return 'noshow';if(/gia hạn|them.*dem|thêm.*đêm|extend|연장/.test(t))return 'extend';if(/đối soát|doi soat|thanh toán|tiền|reconcil|정산|payment/.test(t))return 'recon';if(/nhận phòng|check-?in|체크인/.test(t))return 'checkin';if(/khiếu nại|sai|complain|이의/.test(t))return 'complaint';if(/hôm nay|today|오늘/.test(t))return 'bookings';return 'generic'}
   function onInput(){$('sendBtn').classList.toggle('on',$('inp').value.trim().length>0)}
-  function sendInput(){var t=$('inp').value.trim();if(!t)return;addMe(t);$('inp').value='';onInput();
-    var ref=S.ctx?S.ctx.ref:null;if(S.ctx){S.ctx=null;$('ctx').classList.remove('on')}
-    reply(classify(t),ref)}
-  function chip(e){var t=e.textContent.trim();if(t.indexOf('nhân viên')>=0){handoff();return}
-    addMe(t);var k=t==='Khách không đến thì sao?'?'noshow':classify(t);reply(k)}
-  function handoff(){if(S.handoff)return;sys('Đang tìm nhân viên Go2Joy phù hợp · Miền Nam · Đối soát');
-    typing(1500,'Đang kết nối',function(){S.handoff=true;setBar();sys('Minh · Go2Joy CS đã tham gia');
-      setTimeout(function(){typing(1200,'Minh đang soạn',function(){addBot('Chào chị Lan, em là Minh bên Go2Joy. Chị gửi giúp em ảnh màn hình tab <code>Chờ khách xác nhận</code> để em kiểm tra ngay nhé.')})},300)})}
+  function sendInput(){var t=$('inp').value.trim();if(!t)return;push({t:'me',text:t.replace(/</g,'&lt;')});$('inp').value='';onInput();var ref=S.ctx?S.ctx.ref:null;if(S.ctx){S.ctx=null;$('ctx').classList.remove('on')}reply(classify(t),ref)}
+  function chip(e){var k=e.dataset.k;if(k==='q.handoff'){handoff();return}push({t:'me',k:k});reply(k==='q.noshow'?'noshow':k.replace('q.',''))}
+  function handoff(){if(S.handoff)return;push({t:'sys',k:'sys.find'});typing(1500,'typing.conn',function(){S.handoff=true;setBar();push({t:'sys',k:'sys.join'});setTimeout(function(){typing(1200,'typing.hu',function(){push({t:'bot',k:'hu.hello',hu:true})})},300)})}
   function openSheet(){if(S.ended)return;$('sheet').classList.add('on')}
   function closeSheet(){$('sheet').classList.remove('on')}
-  function pick(name,kind){closeSheet();$('pendName').textContent=name;$('pend').classList.add('on');$('pendBar').style.width='0';
-    setTimeout(function(){$('pendBar').style.width='100%'},30);
-    setTimeout(function(){$('pend').classList.remove('on');addMe(kind==='file'?'📎 '+name:'',kind!=='file');
-      if(S.handoff){typing(1300,'Minh đang soạn',function(){addBot('Em nhận được rồi. Đặt phòng này đang kẹt ở bước xác nhận của khách, em đẩy lại thông báo cho khách và cập nhật chị sau 5 phút.')})}
-      else{typing(1200,'Đang soạn câu trả lời',function(){addBot('Tôi đã nhận tệp. Bạn muốn tôi dùng ảnh này để làm gì: báo khiếu nại, hay chuyển cho nhân viên kiểm tra?',{ai:true,chips:['Gặp nhân viên hỗ trợ','Khiếu nại đặt phòng']})})}
-    },1400)}
-  function cancelUpload(){$('pend').classList.remove('on');toast('Đã hủy tải lên')}
-  function clearCtx(){S.ctx=null;$('ctx').classList.remove('on');toast('Đã bỏ ngữ cảnh đặt phòng')}
+  function pick(name,kind){closeSheet();$('pendName').textContent=name;$('pend').classList.add('on');$('pendBar').style.width='0';setTimeout(function(){$('pendBar').style.width='100%'},30);
+    setTimeout(function(){$('pend').classList.remove('on');push({t:'me',text:kind==='file'?'📎 '+name:'',img:kind!=='file'});
+      if(S.handoff)typing(1300,'typing.hu',function(){push({t:'bot',k:'hu.file',hu:true})});else typing(1200,'typing.ai',function(){push({t:'bot',k:'a.file',chips:ANS.file.chips})})},1400)}
+  function cancelUpload(){$('pend').classList.remove('on');toast(L('t.cancelUp'))}
+  function clearCtx(){S.ctx=null;$('ctx').classList.remove('on');toast(L('t.ctxOff'))}
   function toggleMenu(){$('menu').classList.toggle('on')}
-  function switchLang(){S.lang=S.lang==='vi'?'en':'vi';var vi=S.lang==='vi';
-    $('mlang').textContent=vi?'Ngôn ngữ: Tiếng Việt':'Language: English';$('whlang').textContent=vi?'🌐 VI':'🌐 EN';
-    $('inp').placeholder=vi?'Nhập tin nhắn…':'Type a message…';$('btitle').textContent=vi?'Hỗ trợ Go2Joy':'Go2Joy Support';
-    $('noticeTxt').textContent=vi?'Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại Hoa Kỳ để tạo câu trả lời.':'This conversation uses AI. Your messages are processed by a third-party AI provider in the US to generate answers.';
-    toast(vi?'Widget nhận lệnh locale=vi':'Widget received locale=en')}
   function openPanel(){$('panel').classList.add('on')}
   function closePanel(){$('panel').classList.remove('on')}
-  function endConv(){if(S.ended)return;S.ended=true;$('inp').blur();
-    thread.appendChild(el('<div class="csat"><b>Bạn hài lòng với cuộc hỗ trợ này không?</b><div class="faces"><span onclick="rate(this,1)">😞</span><span onclick="rate(this,2)">😕</span><span onclick="rate(this,3)">😐</span><span onclick="rate(this,4)">🙂</span><span onclick="rate(this,5)">😄</span></div></div>'));scroll()}
-  function rate(e,n){Array.prototype.forEach.call(e.parentNode.children,function(c){c.classList.remove('on')});e.classList.add('on');
-    setTimeout(function(){sys('Cảm ơn bạn đã đánh giá '+n+'/5');$('scr').classList.add('over');scroll()},400)}
+  function endConv(){if(S.ended)return;S.ended=true;$('inp').blur();push({t:'csat'})}
+  function rate(e,n){var c=H[H.length-1];if(c.t==='csat')c.rated=n;Array.prototype.forEach.call(e.parentNode.children,function(x){x.classList.remove('on')});e.classList.add('on');setTimeout(function(){push({t:'sys',k:'sys.thanks',a:[n]});$('scr').classList.add('over')},400)}
   function newConv(){S.ended=false;S.handoff=false;$('scr').classList.remove('over');setBar();S.ctx=null;$('ctx').classList.remove('on');greet()}
-  function retryIdentity(){toast('Gọi lại identityProvider → identified ok');setTimeout(function(){S.verified=true;$('scr').classList.remove('guest');setBar();sys('Đã xác minh: Lễ tân · A In Hotel Del Luna · Miền Nam');
-    document.querySelectorAll('#screens button').forEach(function(b){b.classList.toggle('on',b.dataset.v==='chat')})},700)}
-  function retryLoad(){toast('reload() → tải lại widget');setTimeout(function(){go('chat');if(!S.started)openChat()},600)}
-  function go(v){if(v==='chat'&&!S.started){S.started=true;openChat();return}
-    document.querySelectorAll('#screens button').forEach(function(b){b.classList.toggle('on',b.dataset.v===(v==='chat'&&!S.verified?'guest':v))});
-    document.querySelectorAll('.view').forEach(function(x){x.classList.toggle('on',x.dataset.view===v)});$('menu').classList.remove('on')}
+  function retryIdentity(){toast(L('t.retryId'));setTimeout(function(){S.verified=true;$('scr').classList.remove('guest');setBar();push({t:'sys',k:'sys.verified'});document.querySelectorAll('#screens button').forEach(function(b){b.classList.toggle('on',b.dataset.v==='chat')})},700)}
+  function retryLoad(){toast(L('t.reload'));setTimeout(function(){if(!S.started)openChat();else go('chat')},600)}
+  function go(v){if(v==='chat'&&!S.started){openChat();return}document.querySelectorAll('#screens button').forEach(function(b){b.classList.toggle('on',b.dataset.v===(v==='chat'&&!S.verified?'guest':v))});document.querySelectorAll('.view').forEach(function(x){x.classList.toggle('on',x.dataset.view===v)});$('menu').classList.remove('on')}
   var tt;function toast(m){var t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('on')},2200)}
+  document.querySelectorAll('#langseg button').forEach(function(b){b.addEventListener('click',function(){setLang(b.dataset.l)})});
   document.querySelectorAll('#screens button').forEach(function(b){b.addEventListener('click',function(){var v=b.dataset.v;
-    if(v==='guest'){S.verified=false;$('scr').classList.add('guest');if(!S.started){S.started=true;openChat()}else{setBar();go('chat')}document.querySelectorAll('#screens button').forEach(function(x){x.classList.toggle('on',x===b)});return}
-    if(v==='chat'){S.verified=true;$('scr').classList.remove('guest');setBar();if(!S.started){S.started=true;openChat()}else go('chat');return}
-    go(v)})});
+    if(v==='guest'){S.verified=false;$('scr').classList.add('guest');if(!S.started)openChat();else{setBar();go('chat')}document.querySelectorAll('#screens button').forEach(function(x){x.classList.toggle('on',x===b)});return}
+    if(v==='chat'){S.verified=true;$('scr').classList.remove('guest');setBar();if(!S.started)openChat();else go('chat');return}go(v)})});
   document.querySelectorAll('#hdr button').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('#hdr button').forEach(function(x){x.classList.toggle('on',x===b)});$('scr').classList.toggle('hw',b.dataset.h==='widget')})});
   document.querySelectorAll('#menuseg button').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('#menuseg button').forEach(function(x){x.classList.toggle('on',x===b)});$('scr').classList.toggle('chip',b.dataset.m==='chip')})});
   document.addEventListener('click',function(e){if(!e.target.closest('.menu')&&!e.target.closest('[onclick="toggleMenu()"]'))$('menu').classList.remove('on')});
   setInterval(function(){$('clock').textContent=now()},15000);$('clock').textContent=now();
-  var q=new URLSearchParams(location.search).get('v');if(q==='chat'||q==='ctx'){S.started=true;openChat(q==='ctx'?{ref:'G2J-8841',label:'Chờ nhận phòng · 2 đêm',prefill:'Khách không đến, tôi cần báo no-show cho đặt phòng này'}:null)}else if(q)go(q);
+  translateStatic();
+  var qs=new URLSearchParams(location.search);if(qs.get('lang'))setLang(qs.get('lang'));var q=qs.get('v');if(q==='chat'||q==='ctx')openChat(q==='ctx'?{ref:'G2J-8841',label:'ctx.8841',prefill:'pf.noshow'}:null);else if(q)go(q);
 </script>
 </body>
 </html>
