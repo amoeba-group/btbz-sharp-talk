@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype admin SharpTalk — Cài đặt widget và Ứng dụng di động cho Go2Joy</title>
+<style>
+  :root{
+    --p50:#EEF2FF;--p100:#E0E7FF;--p200:#C7D2FE;--p500:#6366F1;--p600:#4F46E5;--p700:#4338CA;
+    --g50:#F9FAFB;--g100:#F3F4F6;--g200:#E5E7EB;--g300:#D1D5DB;--g400:#9CA3AF;--g500:#6B7280;--g700:#374151;--ink:#111827;
+    --succ:#10B981;--warn:#F59E0B;
+    --brand:#F26A1B;--brand-700:#C9540F;--brand-100:#FFE4D1;--brand-50:#FFF5EE;
+    --font:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#E9ECF1;font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .page{width:1480px;margin:0 auto;padding:24px 20px 36px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--g500);font-size:13px;margin:0 0 14px;line-height:1.5}
+  .desk{background:#1F2937;border-radius:14px;padding:10px;box-shadow:0 10px 30px rgba(17,24,39,.18)}
+  .deskbar{height:22px;display:flex;align-items:center;gap:6px;padding:0 4px 6px}
+  .deskbar i{width:10px;height:10px;border-radius:50%;background:#4B5563;display:inline-block}
+  .deskbar span{color:#9CA3AF;font-size:11px;margin-left:10px}
+  .win{background:var(--g50);border-radius:8px;height:980px;display:flex;overflow:hidden;position:relative;font-size:13px}
+  .side{width:214px;background:#fff;border-right:1px solid var(--g200);display:flex;flex-direction:column;padding:14px 10px}
+  .tenant{display:flex;gap:10px;align-items:center;padding:4px 8px 16px}
+  .tenant i{width:34px;height:34px;border-radius:9px;background:var(--p600);display:block}
+  .tenant b{display:block;font-size:14px}
+  .tenant span{font-size:11px;color:var(--g500)}
+  .menu{display:flex;flex-direction:column;gap:2px}
+  .menu div{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--g700);font-size:13px}
+  .menu div i{width:16px;height:16px;border-radius:4px;background:var(--g200);display:inline-block;flex:none}
+  .menu div.on{background:var(--p50);color:var(--p700);font-weight:600}
+  .menu div.on i{background:var(--p200)}
+  .me{margin-top:auto;padding:12px 8px 0;border-top:1px solid var(--g100);font-size:11.5px;color:var(--g700)}
+  .me small{display:inline-block;background:var(--p50);color:var(--p700);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:4px}
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .top{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#fff;border-bottom:1px solid var(--g200)}
+  .pill{border:1px solid var(--g200);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--g700);background:#fff}
+  .body{padding:18px 22px 70px;overflow:auto;flex:1}
+  .body h2{font-size:20px;margin:0 0 2px}
+  .body .hint{color:var(--g500);font-size:12.5px;margin:0 0 14px}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--g200);margin-bottom:14px}
+  .tabs span{padding:8px 12px;font-size:13px;color:var(--g500);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
+  .tabs span.on{color:var(--p700);border-color:var(--p600);font-weight:600}
+  .tabs span .new{background:var(--succ);color:#fff;font-size:9.5px;border-radius:999px;padding:1px 6px;margin-left:5px;font-weight:700;vertical-align:1px}
+  .pane{display:none}
+  .pane.on{display:block}
+  .cols{display:grid;grid-template-columns:1fr 1fr 332px;gap:14px;align-items:start}
+  .col{display:flex;flex-direction:column;gap:14px}
+  .card{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:14px 16px}
+  .card h3{font-size:14px;margin:0 0 2px}
+  .card .d{font-size:11.5px;color:var(--g500);margin:0 0 10px;line-height:1.45}
+  .f{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--g100);font-size:12.5px}
+  .f:first-of-type{border-top:0}
+  .f label{color:var(--g700)}
+  .sel{border:1px solid var(--g300);border-radius:6px;padding:4px 26px 4px 8px;font-size:12px;background:#fff;position:relative;min-width:120px;color:var(--ink);cursor:pointer}
+  .sel:after{content:"▾";position:absolute;right:8px;top:3px;color:var(--g400)}
+  .seg{display:inline-flex;border:1px solid var(--g300);border-radius:6px;overflow:hidden}
+  .seg span{padding:4px 10px;font-size:12px;color:var(--g500);background:#fff;cursor:pointer}
+  .seg span.on{background:var(--p600);color:#fff;font-weight:600}
+  .sw{width:34px;height:18px;border-radius:999px;background:var(--g300);position:relative;flex:none;cursor:pointer}
+  .sw.on{background:var(--p600)}
+  .sw:after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff}
+  .sw.on:after{left:18px}
+  .swatch{display:inline-flex;gap:6px;align-items:center}
+  .swatch i{width:18px;height:18px;border-radius:5px;display:inline-block;border:1px solid var(--g200)}
+  table.t{width:100%;border-collapse:collapse;font-size:12px}
+  table.t th{text-align:left;color:var(--g500);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--g200)}
+  table.t td{padding:6px 6px;border-bottom:1px solid var(--g100)}
+  table.t code{background:var(--g100);border-radius:4px;padding:1px 5px;font-size:11px}
+  .add{color:var(--p700);font-size:12px;font-weight:600;margin-top:8px;display:inline-block}
+  .btn{display:inline-block;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;border:1px solid var(--g300);background:#fff;color:var(--g700);cursor:pointer}
+  .btn.p{background:var(--p600);border-color:var(--p600);color:#fff}
+  .ok{color:var(--succ);font-weight:600}
+  .wn{color:var(--warn);font-weight:600}
+  .code{background:var(--g900,#111827);color:#E5E7EB;border-radius:8px;padding:10px 12px;font:11px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;overflow:hidden}
+  .save{position:absolute;left:214px;right:0;bottom:0;background:#fff;border-top:1px solid var(--g200);padding:10px 22px;display:flex;justify-content:flex-end;gap:8px}
+  /* preview card */
+  .prev{padding:12px}
+  .prev .bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+  .prev .bar2{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .note{font-size:11px;color:var(--g500);margin-top:8px;line-height:1.4}
+  .pf{width:300px;height:520px;background:#111827;border-radius:28px;padding:9px;margin:0 auto;display:none}
+  .pf.on{display:block}
+  .ps{width:282px;height:502px;background:#F8F9FB;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;font-size:10.5px}
+  .webp{display:none;width:300px;height:520px;margin:0 auto;border:1px solid var(--g200);border-radius:10px;background:#fff;position:relative;overflow:hidden}
+  .webp.on{display:block}
+  .webp .ha{display:flex;height:100%}
+  .webp .hs{width:76px;background:#FFF7F0;border-right:1px solid var(--g100);padding:10px 8px;display:flex;flex-direction:column;gap:9px;color:var(--g700);font-size:9px}
+  .webp .hs b{color:var(--brand);font-size:10px}
+  .webp .hm{flex:1;padding:10px;font-size:9px;color:var(--g500)}
+  .webp .hm b{color:var(--ink);font-size:10px;display:block;margin-bottom:6px}
+  .webp .tbl div{padding:4px 6px;border-bottom:1px solid var(--g100);display:flex;justify-content:space-between}
+  .webp .fw{position:absolute;right:10px;bottom:10px;width:150px;height:270px;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.22);border:1px solid var(--g200);display:flex;flex-direction:column;overflow:hidden}
+  .fw .h{display:flex;justify-content:space-between;padding:8px 9px 4px;font-weight:800;color:var(--brand);font-size:11px}
+  .fw .n{background:var(--g50);color:var(--g500);font-size:7px;padding:5px 8px;line-height:1.3}
+  .fw .t{flex:1;padding:8px;display:flex;flex-direction:column;gap:6px}
+  .fw .bb{background:var(--g100);border-radius:9px;padding:6px 7px;font-size:7.5px;line-height:1.35}
+  .fw .q{display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:7px;color:var(--brand);text-align:center}
+  .fw .c{display:flex;gap:4px;padding:6px 7px;border-top:1px solid var(--g100);align-items:center}
+  .fw .c i{flex:1;height:14px;border:1px solid var(--g200);border-radius:999px}
+  .fw .c b{width:14px;height:14px;border-radius:50%;background:var(--brand-100);display:inline-block}
+  /* app preview visuals */
+  .appbar{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border-bottom:1px solid var(--g100)}
+  .appbar .av{width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;font-weight:800;font-size:9px;display:flex;align-items:center;justify-content:center}
+  .appbar .t{font-weight:700;line-height:1.1}
+  .appbar .s{color:var(--g500)}
+  .appbar .grow{flex:1;min-width:0}
+  .ico{width:16px;height:16px;flex:none}
+  .ico.sm{width:13px;height:13px}
+  .notice{display:flex;gap:6px;align-items:flex-start;margin:8px 10px 0;padding:7px 9px;background:#fff;border:1px solid var(--g200);border-radius:9px;color:var(--g500);line-height:1.4}
+  .thread{flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:7px;overflow:hidden}
+  .msg{display:flex;gap:6px;align-items:flex-end;max-width:90%}
+  .msg .mav{width:18px;height:18px;border-radius:50%;background:var(--brand);color:#fff;font-size:7px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+  .b{padding:8px 10px;border-radius:13px;border-bottom-left-radius:4px;line-height:1.45;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+  .qq{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-left:24px}
+  .qq span{display:flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--g200);border-radius:10px;padding:7px 8px;color:var(--ink)}
+  .qq span i{width:16px;height:16px;border-radius:5px;background:var(--brand-50);display:inline-block;flex:none}
+  .ps.chip .qq{display:flex;flex-wrap:wrap}
+  .ps.chip .qq span{border-radius:999px;background:var(--brand-50);border-color:var(--brand-100);color:var(--brand-700);padding:5px 9px}
+  .ps.chip .qq span i{display:none}
+  .comp{display:flex;align-items:center;gap:5px;padding:7px 9px 10px;background:#fff;border-top:1px solid var(--g100)}
+  .comp .in{flex:1;background:var(--g100);border-radius:999px;padding:7px 10px;color:var(--g400)}
+  .comp .send{width:26px;height:26px;border-radius:50%;background:var(--brand-100);flex:none}
+  .comp .ic{color:var(--g400)}
+  .wh{display:none;align-items:center;justify-content:space-between;padding:10px 12px 6px;background:#fff}
+  .wh .logo{font-weight:800;font-size:13px;color:var(--brand)}
+  .wh .r{color:var(--g500);font-size:9px}
+  .ps.hw .appbar{display:none}
+  .ps.hw .wh{display:flex}
+  .toast{position:absolute;left:22px;bottom:64px;background:#111827;color:#fff;font-size:12px;border-radius:8px;padding:8px 12px;display:none}
+  .toast.on{display:block}
+  .legend{font-size:12.5px;color:var(--g700);line-height:1.5;margin-top:10px}
+  .legend b{color:var(--ink)}
+</style>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.9" fill="currentColor"/><circle cx="12" cy="12" r="1.9" fill="currentColor"/><circle cx="12" cy="19" r="1.9" fill="currentColor"/></symbol>
+  <symbol id="spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z" fill="currentColor"/></symbol>
+  <symbol id="clip" viewBox="0 0 24 24"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="cam" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+</svg>
+
+<div class="page">
+  <h1>Prototype admin SharpTalk · Cài đặt widget (hôm nay) và tab Ứng dụng di động (đề xuất) cho tenant go2joy</h1>
+  <p class="sub">Bấm tab để chuyển giữa <b>Cài đặt widget</b> (các card đang có trên console) và <b>Ứng dụng di động</b> (đề xuất S8 + S9). Trong card Xem trước, nút <b>Web | App</b>, chọn agent, header và menu đổi ngay bản xem trước. Giao diện, màu, sidebar theo console thật; nội dung agent theo tenant go2joy trên staging.</p>
+
+  <div class="desk">
+    <div class="deskbar"><i></i><i></i><i></i><span>shoptalk.amoeba.site/settings · go2joy · Cài đặt gian hàng</span></div>
+    <div class="win">
+      <div class="side">
+        <div class="tenant"><i></i><div><b>go2joy</b><span>SharpTalk</span></div></div>
+        <div class="menu">
+          <div><i></i>Tổng quan</div><div><i></i>Trò chuyện trực tiếp</div><div><i></i>Bảng yêu cầu</div><div><i></i>Lịch sử hội thoại</div><div><i></i>Hành trình khách hàng</div><div><i></i>Thống kê</div><div><i></i>Cài đặt AI</div><div><i></i>Kho tri thức</div><div><i></i>Khách hàng</div><div><i></i>Đánh giá</div><div><i></i>Người dùng &amp; nhãn</div><div class="on"><i></i>Cài đặt gian hàng</div>
+        </div>
+        <div class="me">admin@go2joy.vn<br><small>master</small></div>
+      </div>
+      <div class="main">
+        <div class="top"><span style="color:var(--g400)">◧</span><span class="pill">🌐 Tiếng Việt</span></div>
+        <div class="body">
+          <h2>Cài đặt gian hàng</h2>
+          <p class="hint">Cấu hình widget, danh tính, nhân viên và ứng dụng di động của tenant go2joy</p>
+          <div class="tabs" id="tabs">
+            <span data-t="general">Chung</span>
+            <span data-t="widget" class="on">Cài đặt widget</span>
+            <span data-t="mobile">Ứng dụng di động<em class="new">MỚI</em></span>
+            <span>Kết nối nhân viên</span><span>Quyền riêng tư</span><span>Tích hợp</span><span>Khác</span>
+          </div>
+
+          <!-- TAB: Cài đặt widget (hôm nay) -->
+          <div class="pane on" data-pane="widget">
+            <div class="cols">
+              <div class="col">
+                <div class="card"><h3>Theme widget</h3><p class="d">Một màu thương hiệu, phần còn lại suy ra. Dùng chung cho web và app.</p>
+                  <div class="f"><label>Màu thương hiệu</label><span class="swatch"><i style="background:#F26A1B"></i>#F26A1B</span></div>
+                  <div class="f"><label>Header</label><span class="seg"><span class="on">Trắng</span><span>Màu thương hiệu</span></span></div>
+                  <div class="f"><label>Logo</label><span class="ok">go2joy-logo.png · 240×64</span></div>
+                  <div class="f"><label>Launcher (web)</label><span>Phải · Vừa · Chat</span></div>
+                </div>
+                <div class="card"><h3>Cấu hình tab</h3><p class="d">Phải bật ít nhất một tab. Một tab thì thanh tab tự ẩn.</p>
+                  <div class="f"><label>Trò chuyện</label><span class="sw on"></span></div>
+                  <div class="f"><label>Thông báo</label><span class="sw"></span></div>
+                  <div class="f"><label>Đơn hàng</label><span class="sw"></span></div>
+                  <div class="f"><label>Vị trí thanh tab</label><span class="seg"><span class="on">Trên (chữ)</span><span>Dưới (biểu tượng)</span></span></div>
+                </div>
+                <div class="card"><h3>Hành vi widget</h3>
+                  <div class="f"><label>Tên hiển thị</label><span>Go2Joy</span></div>
+                  <div class="f"><label>Múi giờ</label><span>Asia/Ho_Chi_Minh</span></div>
+                  <div class="f"><label>Ngôn ngữ mặc định</label><span>Tiếng Việt</span></div>
+                  <div class="f"><label>Kiểu menu kịch bản</label><span class="seg" id="menuSegW"><span class="on" data-m="card">Card</span><span data-m="chip">Chip</span></span></div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card"><h3>Nhúng &amp; SDK</h3><p class="d">Cài widget lên trang của bạn và để máy chủ của bạn cho widget biết ai đang đăng nhập.</p>
+                  <div class="f"><label>Mã cài đặt (web)</label><span class="btn">Sao chép</span></div>
+                  <div class="code">&lt;script&gt;window.SHARPTALK_WIDGET_CONFIG = {
+  shop: "https://www.go2joy.vn", locale: "vi",
+  agent: "hotel-admin" };&lt;/script&gt;
+&lt;script src="https://shoptalk.amoeba.site/widget/embed.js" defer&gt;&lt;/script&gt;</div>
+                  <div class="f" style="margin-top:8px"><label>Tên miền được phép</label><span>ha.go2joy.vn · go2joy-ha-uat.go2joy.io</span></div>
+                  <div class="f"><label>Liên kết đăng nhập (khóa ký)</label><span class="ok">đã phát hành 12/10 · <u>Xoay khóa</u></span></div>
+                  <div class="f"><label>Thuộc tính ký</label><span>hotel_id · hotel_name · region · province · role</span></div>
+                  <div class="f"><label>SDK Android</label><span class="btn" onclick="toast('Tải shoptalk-android-0.2.0.aar + hướng dẫn')">Tải AAR 0.2.0</span></div>
+                </div>
+                <div class="card"><h3>Nguồn đồng ý</h3><p class="d">Người dùng được ứng dụng của bạn ký xác thực được ghi nhận là đã đồng ý, không hiện biểu ngữ.</p>
+                  <div class="f"><label>Nguồn</label><span class="seg"><span>Biểu ngữ widget</span><span class="on">Điều khoản ứng dụng chủ</span></span></div>
+                </div>
+              </div>
+              <div class="card prev" id="prevW"></div>
+            </div>
+          </div>
+
+          <!-- TAB: Ứng dụng di động (đề xuất) -->
+          <div class="pane" data-pane="mobile">
+            <div class="cols">
+              <div class="col">
+                <div class="card"><h3>Giao diện app</h3><p class="d">Ghi đè theme web khi widget mở trong app (surface=app). Để trống thì dùng theme web.</p>
+                  <div class="f"><label>Font</label><span class="seg"><span class="on">Hệ thống</span><span>Theo web</span></span></div>
+                  <div class="f"><label>Cỡ chữ</label><span class="sel">14 px</span></div>
+                  <div class="f"><label>Menu kịch bản</label><span class="seg" id="menuSegM"><span class="on" data-m="card">Card</span><span data-m="chip">Chip</span></span></div>
+                  <div class="f"><label>Header widget trong app</label><span class="seg" id="hdrSeg"><span data-h="widget">Widget</span><span class="on" data-h="native">Native</span></span></div>
+                  <div class="f"><label>Màu riêng cho app</label><span class="sw"></span></div>
+                </div>
+                <div class="card"><h3>Phiên bản SDK</h3>
+                  <div class="f"><label>SDK tối thiểu</label><span>0.2.0</span></div>
+                  <div class="f"><label>Widget đang chạy</label><span>1.14.0</span></div>
+                  <div class="f"><label>App gần nhất báo về</label><span class="ok">0.2.0 · tương thích</span></div>
+                </div>
+                <div class="card"><h3>Kiểm thử</h3>
+                  <div class="f"><label>Trình mô phỏng app</label><span class="btn" onclick="toast('Mở webview-test.html với shop và agent của tenant')">Mở với shop, agent của tenant</span></div>
+                  <div class="f"><label>Gói ký thử từ backend Go2Joy</label><span class="wn">chưa kiểm · <u>gọi thử</u></span></div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card"><h3>Điểm vào trong app</h3><p class="d">Màn hình nào trong app mở agent nào. App đọc bảng này lúc mở, không hard-code mã agent.</p>
+                  <table class="t"><tr><th>Màn hình</th><th>Agent</th><th>Ngữ cảnh</th></tr>
+                    <tr><td><code>home</code></td><td>Hotel Admin</td><td>—</td></tr>
+                    <tr><td><code>bookings</code></td><td>Hotel Admin</td><td>Mã đặt phòng</td></tr>
+                    <tr><td><code>reconciliation</code></td><td>Hotel Admin</td><td>Kỳ đối soát</td></tr>
+                    <tr><td><code>guest-chat</code></td><td>Hotel Partner</td><td>—</td></tr>
+                  </table><span class="add">+ Thêm màn hình</span>
+                </div>
+                <div class="card"><h3>Danh tính &amp; đồng ý</h3><p class="d">Dùng chung với web. Chỉ hiển thị để admin thấy app đang chịu thiết lập nào.</p>
+                  <div class="f"><label>Khóa ký (Nhúng &amp; SDK)</label><span class="ok">đã phát hành · 12/10</span></div>
+                  <div class="f"><label>Nguồn đồng ý</label><span>Điều khoản ứng dụng chủ</span></div>
+                  <div class="f"><label>Thuộc tính ký</label><span>hotel_id · region · role</span></div>
+                </div>
+              </div>
+              <div class="card prev" id="prevM"></div>
+            </div>
+          </div>
+        </div>
+        <div class="save"><span class="btn">Hủy</span><span class="btn p" onclick="toast('Đã lưu thay đổi')">Lưu thay đổi</span></div>
+        <div class="toast" id="toast"></div>
+      </div>
+    </div>
+  </div>
+  <div class="legend"><b>Hôm nay</b>: tab Cài đặt widget đã có đủ card, chỉ thiếu nút Web | App và chọn agent trong Xem trước (S8, 0,5 ngày). <b>Đề xuất</b>: tab Ứng dụng di động với Giao diện app, Điểm vào, Phiên bản SDK, Kiểm thử (S9, 3 đến 4 ngày, sau pilot). Mọi thay đổi ở cả hai tab áp xuống app ở lần mở kế tiếp, không cần phát hành lại app.</div>
+</div>
+
+<template id="prevTpl">
+  <div class="bar"><h3 style="margin:0">Xem trước</h3><span class="seg surf"><span data-s="web">Web</span><span data-s="app" class="on">App</span></span></div>
+  <div class="bar2"><span class="sel agentSel" data-a="hotel-admin">Hotel Admin</span><span class="btn" onclick="toast('identify thử → identified ok · Lễ tân · A In Hotel Del Luna · Miền Nam')">Gửi identify thử</span><span class="btn">vi</span></div>
+  <div class="webp"><div class="ha"><div class="hs"><b>Go2Joy HA</b><span>Trang chủ</span><span>Đặt phòng</span><span>Đối soát</span><span>Khuyến mãi</span><span>Doanh thu</span><span>Đánh giá</span><span>Chat với khách</span><span>Tin nhắn từ G2J</span></div><div class="hm"><b>Đặt phòng · Chờ nhận phòng (5)</b><div class="tbl"><div><span>#G2J-8841 · Nguyễn A</span><span>2 đêm</span></div><div><span>#G2J-8847 · Trần B</span><span>1 đêm</span></div><div><span>#G2J-8850 · Lê C</span><span>3 đêm</span></div></div></div></div>
+    <div class="fw"><div class="h"><span>G2 Go2Joy</span><span style="color:#9CA3AF">VI ⚙ ✕</span></div><div class="n">Cuộc trò chuyện này có sử dụng AI…</div><div class="t"><div class="bb greet">Xin chào! Chào mừng bạn đến với Go2Joy Support…</div><div class="q quick"></div></div><div class="c"><i></i><b></b></div></div></div>
+  <div class="pf on"><div class="ps">
+    <div class="appbar"><svg class="ico sm"><use href="#back"/></svg><div class="av">G2</div><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s">Trả lời ngay · AI + nhân viên</div></div><svg class="ico sm"><use href="#more"/></svg></div>
+    <div class="wh"><span class="logo">G2 Go2Joy</span><span class="r">🌐 VI &nbsp;⚙ &nbsp;✕</span></div>
+    <div class="notice"><svg class="ico sm" style="color:var(--brand)"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp AI bên thứ ba tại Hoa Kỳ.</span></div>
+    <div class="thread"><div class="msg"><div class="mav">G2</div><div class="b greet">Xin chào! Chào mừng bạn đến với Go2Joy Support. Hãy chọn một chủ đề bên dưới hoặc nhập câu hỏi.</div></div><div class="qq quick"></div></div>
+    <div class="comp"><svg class="ico sm ic"><use href="#cam"/></svg><svg class="ico sm ic"><use href="#clip"/></svg><div class="in">Nhập tin nhắn…</div><div class="send"></div></div>
+  </div></div>
+  <div class="note">Đang áp thiết kế chưa lưu (token preview). App: khung 390×780, chrome theo cài đặt header. Kiểm bàn phím, camera, link ngoài vẫn cần máy thật.</div>
+</template>
+
+<script>
+  var AGENTS={
+    'hotel-admin':{name:'Hotel Admin',greet:'Xin chào! Chào mừng bạn đến với Go2Joy Support. Hãy chọn một chủ đề bên dưới hoặc nhập câu hỏi.',quick:['Xem đặt phòng hôm nay','Cách nhận phòng cho khách','Khiếu nại đặt phòng','Hỏi về đối soát']},
+    'hotel-partner':{name:'Hotel Partner (Joydesk)',greet:'Kính chào Quý đối tác, tôi là Joydesk, trợ lý hỗ trợ đối tác khách sạn của Go2Joy.',quick:['Xem đặt phòng hôm nay','Cách nhận phòng','Khiếu nại đặt phòng','Hỏi về đối soát']},
+    'landing-guest':{name:'Landing Guest',greet:'Xin chào! Tôi có thể giúp bạn tìm phòng theo giờ, qua đêm hoặc giải đáp về đặt phòng.',quick:['Tìm phòng gần tôi','Chính sách hủy','Ưu đãi hôm nay','Liên hệ khách sạn']}
+  };
+  var state={menu:'card',hdr:'native'};
+  function build(id){
+    var host=document.getElementById(id); host.innerHTML=document.getElementById('prevTpl').innerHTML;
+    host.querySelectorAll('.surf span').forEach(s=>s.addEventListener('click',()=>{
+      host.querySelectorAll('.surf span').forEach(x=>x.classList.toggle('on',x===s));
+      host.querySelector('.webp').classList.toggle('on',s.dataset.s==='web');
+      host.querySelector('.pf').classList.toggle('on',s.dataset.s==='app');
+    }));
+    var sel=host.querySelector('.agentSel'); sel.addEventListener('click',()=>{
+      var keys=Object.keys(AGENTS), i=(keys.indexOf(sel.dataset.a)+1)%keys.length; sel.dataset.a=keys[i]; render(host);
+    });
+    render(host);
+  }
+  function render(host){
+    var a=AGENTS[host.querySelector('.agentSel').dataset.a];
+    host.querySelector('.agentSel').textContent=a.name;
+    host.querySelectorAll('.greet').forEach(g=>g.textContent=a.greet);
+    host.querySelectorAll('.quick').forEach(q=>{q.innerHTML=a.quick.map(x=>'<span><i></i>'+x+'</span>').join('');});
+    var ps=host.querySelector('.ps'); ps.classList.toggle('chip',state.menu==='chip'); ps.classList.toggle('hw',state.hdr==='widget');
+  }
+  build('prevW'); build('prevM');
+  function rerender(){ document.querySelectorAll('.prev').forEach(render); }
+  document.querySelectorAll('#tabs span[data-t]').forEach(t=>t.addEventListener('click',()=>{
+    document.querySelectorAll('#tabs span').forEach(x=>x.classList.toggle('on',x===t));
+    document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.dataset.pane===t.dataset.t));
+    if(t.dataset.t==='general') toast('Tab Chung: thông tin tenant, gói, ngôn ngữ (không nằm trong prototype này)');
+  }));
+  ['menuSegW','menuSegM'].forEach(id=>document.querySelectorAll('#'+id+' span').forEach(s=>s.addEventListener('click',()=>{
+    state.menu=s.dataset.m; document.querySelectorAll('#menuSegW span,#menuSegM span').forEach(x=>x.classList.toggle('on',x.dataset.m===state.menu)); rerender();
+  })));
+  document.querySelectorAll('#hdrSeg span').forEach(s=>s.addEventListener('click',()=>{
+    state.hdr=s.dataset.h; document.querySelectorAll('#hdrSeg span').forEach(x=>x.classList.toggle('on',x===s)); rerender();
+  }));
+  var tt; function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2200);}
+  var q=new URLSearchParams(location.search).get('tab'); if(q){var el=document.querySelector('#tabs span[data-t="'+q+'"]'); if(el) el.click();}
+</script>
+</body>
+</html>

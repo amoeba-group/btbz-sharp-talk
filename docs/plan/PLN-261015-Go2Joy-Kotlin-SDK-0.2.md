@@ -385,6 +385,14 @@ với worktree riêng.
 phần Mới 0.2, kèm bảng so sánh concept web với app. `PLN-261015-Go2Joy-Kotlin-SDK-0.2.prototype.html` và `.prototype.png`:
 hai màn hình, admin web tab Ứng dụng di động (W8 + W9 theo giao diện console thật) và màn chat lễ tân trong app Kotlin, số tròn nối cấu hình admin với phần tử app.
 
+Hai prototype tương tác (mở bằng trình duyệt, có nút chuyển):
+- `PLN-261015-Go2Joy-Kotlin-SDK-0.2.proto-admin.html` (+ `.proto-admin.png`, `.proto-admin-mobile.png`): console
+  SharpTalk với tab Cài đặt widget hôm nay và tab Ứng dụng di động đề xuất; card Xem trước có nút Web | App, chọn
+  agent, header và menu đổi ngay bản xem trước.
+- `PLN-261015-Go2Joy-Kotlin-SDK-0.2.proto-app.html` (+ `.proto-app.png`, `.proto-app-ctx.png`): app Kotlin theo tone
+  cam Go2Joy, 6 trạng thái (trang chủ, hỗ trợ, từ màn đặt phòng, đính kèm, mất mạng, chưa xác minh) và hai công tắc
+  header native hay widget, menu card hay chip.
+
 ## Lịch sử
 
 | Phiên bản | Ngày | Nội dung |

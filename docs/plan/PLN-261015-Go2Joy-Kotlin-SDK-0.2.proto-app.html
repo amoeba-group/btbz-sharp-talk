@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype app Kotlin Go2Joy — Hỗ trợ Go2Joy (SharpTalk SDK 0.2)</title>
+<style>
+  :root{
+    --brand:#F26A1B;--brand-700:#C9540F;--brand-100:#FFE4D1;--brand-50:#FFF5EE;
+    --ink:#1A1A1A;--g900:#1F2328;--g700:#4B5563;--g500:#6B7280;--g400:#9CA3AF;--g300:#D1D5DB;--g200:#E5E7EB;--g100:#F1F3F6;--g50:#F8F9FB;
+    --ok:#16A34A;--warn:#B45309;--warn-50:#FFFBEB;--warn-200:#FDE68A;
+    --font:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#EEF0F4;font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .page{width:1180px;margin:0 auto;padding:24px 20px 36px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--g500);font-size:13px;margin:0 0 14px;line-height:1.5}
+  .wrap{display:flex;gap:28px;align-items:flex-start}
+  /* controls */
+  .ctl{width:330px;background:#fff;border:1px solid var(--g200);border-radius:14px;padding:16px}
+  .ctl h2{font-size:14px;margin:0 0 10px}
+  .ctl .grp{margin-bottom:14px}
+  .ctl label.l{display:block;font-size:11.5px;color:var(--g500);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+  .seg{display:flex;flex-wrap:wrap;gap:6px}
+  .seg button{border:1px solid var(--g300);background:#fff;border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--g700)}
+  .seg button.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+  .ctl p{font-size:12px;color:var(--g700);line-height:1.5;margin:8px 0 0}
+  .ctl .map{font-size:12px;line-height:1.55;color:var(--g700);border-top:1px solid var(--g100);padding-top:10px;margin-top:4px}
+  .ctl .map b{color:var(--ink)}
+  /* phone */
+  .phone{width:400px;height:820px;background:#0F172A;border-radius:44px;padding:12px;box-shadow:0 18px 40px rgba(15,23,42,.28);position:relative;flex:none}
+  .phone:before{content:"";position:absolute;left:50%;top:22px;width:110px;height:26px;background:#0F172A;border-radius:14px;transform:translateX(-50%);z-index:5}
+  .scr{width:376px;height:796px;border-radius:34px;overflow:hidden;background:var(--g50);position:relative;display:flex;flex-direction:column;font-size:14px}
+  .status{height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;font-size:12px;font-weight:600;color:var(--ink)}
+  .status.light{color:#fff}
+  .view{display:none;flex:1;min-height:0;flex-direction:column}
+  .view.on{display:flex}
+  .ico{width:22px;height:22px;flex:none}
+  .ico.sm{width:16px;height:16px}
+  .ico.xs{width:13px;height:13px}
+  /* HOME */
+  .hero{background:var(--brand);color:#fff;padding:6px 20px 18px;border-radius:0 0 26px 26px}
+  .hero .top{display:flex;align-items:center;justify-content:space-between}
+  .hero .hi{font-size:13px;opacity:.9}
+  .hero .name{font-size:20px;font-weight:700;margin-top:2px}
+  .hero .hotel{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(255,255,255,.18);border-radius:999px;padding:5px 10px;font-size:12px}
+  .hero .bell{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;position:relative}
+  .hero .bell i{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#fff;border:2px solid var(--brand)}
+  .kpis{display:flex;gap:10px;margin:-14px 16px 0;position:relative}
+  .kpi{flex:1;background:#fff;border-radius:14px;padding:12px;box-shadow:0 4px 14px rgba(15,23,42,.08)}
+  .kpi small{display:block;font-size:11px;color:var(--g500)}
+  .kpi b{display:block;font-size:20px;margin-top:2px}
+  .kpi em{font-style:normal;font-size:10.5px;color:var(--ok);font-weight:600}
+  .sect{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px;font-size:14px;font-weight:700}
+  .sect span{font-size:12px;color:var(--brand);font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 16px}
+  .act{display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;background:#fff;border-radius:14px;font-size:11px;color:var(--g700);text-align:center;position:relative;line-height:1.2}
+  .act i{width:40px;height:40px;border-radius:12px;background:var(--brand-50);display:flex;align-items:center;justify-content:center;color:var(--brand)}
+  .act.new{border:1.5px solid var(--brand);color:var(--brand-700);font-weight:600}
+  .act.new i{background:var(--brand);color:#fff}
+  .act .badge{position:absolute;top:-6px;right:-4px;background:#16A34A;color:#fff;font-size:9px;font-weight:700;border-radius:999px;padding:2px 6px}
+  .promo{margin:14px 16px 0;background:#fff;border-radius:16px;padding:14px;display:flex;gap:12px;align-items:center;box-shadow:0 2px 10px rgba(15,23,42,.05)}
+  .promo .av{width:44px;height:44px;border-radius:14px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex:none}
+  .promo b{font-size:13.5px;display:block}
+  .promo small{font-size:11.5px;color:var(--g500);display:block;margin-top:2px;line-height:1.4}
+  .promo .go{margin-left:auto;background:var(--brand-50);color:var(--brand-700);font-size:12px;font-weight:700;border-radius:999px;padding:7px 11px;white-space:nowrap}
+  .list{margin:14px 16px 0;background:#fff;border-radius:16px;overflow:hidden}
+  .li{display:flex;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--g100);font-size:12.5px}
+  .li:first-child{border-top:0}
+  .li .st{margin-left:auto;font-size:11px;font-weight:600;color:var(--brand-700);background:var(--brand-50);border-radius:999px;padding:3px 8px}
+  .li .st.g{color:var(--ok);background:#ECFDF5}
+  .nav{margin-top:auto;display:flex;justify-content:space-around;padding:10px 8px 22px;background:#fff;border-top:1px solid var(--g100)}
+  .nav div{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--g400);width:64px}
+  .nav div.on{color:var(--brand);font-weight:700}
+  .nav div.on i{background:var(--brand-50)}
+  .nav i{width:44px;height:26px;border-radius:999px;display:flex;align-items:center;justify-content:center}
+  /* CHAT */
+  .bar{display:flex;align-items:center;gap:10px;padding:8px 14px 10px;background:#fff;border-bottom:1px solid var(--g100)}
+  .bar .av{width:36px;height:36px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;position:relative}
+  .bar .av:after{content:"";position:absolute;right:-1px;bottom:-1px;width:10px;height:10px;border-radius:50%;background:var(--ok);border:2px solid #fff}
+  .bar .t{font-weight:700;font-size:15px;line-height:1.15}
+  .bar .s{font-size:11.5px;color:var(--g500)}
+  .bar .grow{flex:1;min-width:0}
+  .bar .ib{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--g700)}
+  .wh{display:none;align-items:center;justify-content:space-between;padding:14px 16px 8px;background:#fff}
+  .wh .logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:19px;color:var(--brand)}
+  .wh .logo i{width:30px;height:30px;border-radius:9px;background:var(--brand);color:#fff;font-style:normal;font-size:13px;line-height:30px;text-align:center}
+  .wh .r{display:flex;gap:12px;align-items:center;color:var(--g700);font-size:13px}
+  .scr.hw .bar{display:none}
+  .scr.hw .wh{display:flex}
+  .notice{display:flex;gap:8px;align-items:flex-start;margin:10px 14px 0;padding:9px 11px;background:#fff;border:1px solid var(--g200);border-radius:12px;color:var(--g500);font-size:11.5px;line-height:1.45}
+  .notice .end{margin-left:auto;color:var(--brand-700);font-weight:600;white-space:nowrap}
+  .thread{flex:1;overflow:hidden;padding:10px 14px 6px;display:flex;flex-direction:column;gap:10px}
+  .day{align-self:center;font-size:10.5px;color:var(--g400);background:var(--g100);border-radius:999px;padding:3px 10px}
+  .sys{align-self:center;font-size:11px;color:var(--brand-700);background:var(--brand-50);border:1px solid var(--brand-100);border-radius:999px;padding:3px 10px}
+  .msg{display:flex;gap:8px;align-items:flex-end;max-width:88%}
+  .msg.me{align-self:flex-end;flex-direction:row-reverse}
+  .msg .mav{width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+  .msg .mav.hu{background:#0EA5E9}
+  .b{padding:10px 13px;border-radius:18px;line-height:1.5;font-size:13.5px;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+  .msg:not(.me) .b{border-bottom-left-radius:6px}
+  .msg.me .b{background:var(--brand);color:#fff;border-bottom-right-radius:6px;box-shadow:none}
+  .b ol{margin:6px 0 0 18px;padding:0}
+  .b li{margin:2px 0}
+  .b code{background:var(--g100);border-radius:4px;padding:0 4px;font-size:12px}
+  .b .who{font-size:11px;color:var(--g500);font-weight:600;margin-bottom:3px}
+  .time{font-size:10px;color:var(--g400);margin-top:-5px;padding-left:34px}
+  .time.r{text-align:right;padding:0 2px 0 0}
+  .src{margin:0 0 0 34px;background:#fff;border:1px solid var(--g200);border-radius:12px;padding:8px 10px;display:flex;gap:10px;align-items:center;max-width:88%}
+  .src .th{width:44px;height:32px;border-radius:8px;background:linear-gradient(135deg,#FDBA74,#F97316);position:relative;flex:none}
+  .src .th:after{content:"";position:absolute;left:17px;top:10px;border-left:10px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent}
+  .src small{display:block;font-size:10.5px;color:var(--g500)}
+  .src b{font-size:12px}
+  .qq{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-left:34px}
+  .qq span{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--g200);border-radius:14px;padding:10px 11px;font-size:12.5px;font-weight:500;color:var(--ink)}
+  .qq span i{width:28px;height:28px;border-radius:9px;background:var(--brand-50);color:var(--brand);display:flex;align-items:center;justify-content:center;flex:none}
+  .scr.chip .qq{display:flex;flex-wrap:wrap}
+  .scr.chip .qq span{border-radius:999px;padding:7px 12px;background:var(--brand-50);border-color:var(--brand-100);color:var(--brand-700)}
+  .scr.chip .qq span i{display:none}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-left:34px}
+  .chip{border:1px solid var(--g200);background:#fff;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:500}
+  .chip.hl{border-color:var(--brand);color:var(--brand-700);display:inline-flex;align-items:center;gap:5px}
+  .typing{display:flex;gap:4px;align-items:center;margin-left:34px;background:#fff;border-radius:18px;border-bottom-left-radius:6px;padding:10px 14px;width:fit-content}
+  .typing i{width:6px;height:6px;border-radius:50%;background:var(--g400)}
+  .ctx{display:flex;align-items:center;gap:7px;margin:0 14px;padding:7px 10px;background:var(--brand-50);border:1px solid var(--brand-100);border-radius:12px;font-size:12px;color:var(--brand-700);font-weight:500}
+  .ctx .x{margin-left:auto;color:var(--g400)}
+  .warn{display:flex;gap:8px;align-items:flex-start;margin:10px 14px 0;padding:9px 11px;background:var(--warn-50);border:1px solid var(--warn-200);border-radius:12px;font-size:12px;color:var(--warn);line-height:1.45}
+  .warn b{margin-left:auto;white-space:nowrap;font-weight:700}
+  .comp{display:flex;align-items:center;gap:6px;padding:10px 12px 20px;background:#fff;border-top:1px solid var(--g100)}
+  .comp .ib{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--g500)}
+  .comp .in{flex:1;background:var(--g100);border-radius:999px;padding:11px 14px;font-size:13.5px;color:var(--g400);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .comp .in.on{color:var(--ink);background:#fff;border:1.5px solid var(--brand)}
+  .comp .send{width:42px;height:42px;border-radius:50%;background:var(--g200);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+  .comp .send.on{background:var(--brand);box-shadow:0 4px 10px rgba(242,106,27,.35)}
+  /* sheet / error */
+  .dim{position:absolute;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:flex-end}
+  .sheet{width:100%;background:#fff;border-radius:22px 22px 0 0;padding:8px 12px 24px}
+  .sheet .hd{width:40px;height:4px;border-radius:999px;background:var(--g300);margin:4px auto 12px}
+  .sheet h4{margin:0 4px 8px;font-size:14px}
+  .sheet .row{display:flex;align-items:center;gap:12px;padding:12px 10px;border-radius:12px;font-size:14px;font-weight:500}
+  .sheet .row i{width:40px;height:40px;border-radius:12px;background:var(--brand-50);color:var(--brand);display:flex;align-items:center;justify-content:center}
+  .sheet .row small{display:block;font-size:11px;color:var(--g500);font-weight:400}
+  .sheet .cancel{margin-top:6px;text-align:center;padding:12px;border-radius:12px;background:var(--g100);font-weight:600;font-size:14px}
+  .pend{display:flex;align-items:center;gap:10px;margin:0 14px;padding:8px;background:#fff;border:1px solid var(--g200);border-radius:12px;font-size:12px}
+  .pend .th{width:40px;height:40px;border-radius:9px;background:linear-gradient(135deg,#FDBA74,#F97316)}
+  .pend .bar2{height:4px;background:var(--g100);border-radius:999px;margin-top:5px;overflow:hidden}
+  .pend .bar2 i{display:block;height:100%;width:62%;background:var(--brand)}
+  .err{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 40px;gap:8px}
+  .err .big{width:84px;height:84px;border-radius:28px;background:var(--brand-50);color:var(--brand);display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+  .err h3{margin:0;font-size:17px}
+  .err p{margin:0;font-size:13px;color:var(--g500);line-height:1.55}
+  .err .btn{margin-top:14px;background:var(--brand);color:#fff;border-radius:14px;padding:13px 36px;font-weight:700;font-size:14px;box-shadow:0 6px 14px rgba(242,106,27,.3)}
+  .err .link{color:var(--brand-700);font-size:13px;font-weight:600;margin-top:8px}
+  .home-ind{position:absolute;left:50%;bottom:8px;width:120px;height:4px;border-radius:999px;background:#0F172A;transform:translateX(-50%);opacity:.5}
+</style>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.9" fill="currentColor"/><circle cx="12" cy="12" r="1.9" fill="currentColor"/><circle cx="12" cy="19" r="1.9" fill="currentColor"/></symbol>
+  <symbol id="bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="rec" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="tag" viewBox="0 0 24 24"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></symbol>
+  <symbol id="chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="star" viewBox="0 0 24 24"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H6l-3 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="head" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="home" viewBox="0 0 24 24"><path d="m3 11 9-8 9 8v10a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+  <symbol id="user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z" fill="currentColor"/></symbol>
+  <symbol id="clip" viewBox="0 0 24 24"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="cam" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4zM22 2 11 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="img" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="m21 15-5-5L5 21" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6M16 13H8M16 17H8" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="wifi" viewBox="0 0 24 24"><path d="M1 9a16 16 0 0 1 22 0M5 12.5a11 11 0 0 1 14 0M8.5 16a6 6 0 0 1 7 0M12 20h.01M2 2l20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="key" viewBox="0 0 24 24"><path d="m21 2-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L19 3.6M15.5 8.5 18 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<div class="page">
+  <h1>Prototype app Kotlin Go2Joy · màn "Hỗ trợ Go2Joy" do SharpTalk SDK 0.2 dựng</h1>
+  <p class="sub">Tone cam Go2Joy, bố cục Material cho Android. Bấm bộ chuyển bên trái để xem từng trạng thái; hai công tắc dưới mô phỏng cấu hình admin đổi trên console mà không phát hành lại app. Mã đặt phòng, tên người, số liệu là giả định.</p>
+
+  <div class="wrap">
+    <div class="ctl">
+      <h2>Màn hình</h2>
+      <div class="grp"><div class="seg" id="screens">
+        <button data-v="home" class="on">1 Trang chủ app</button>
+        <button data-v="chat">2 Hỗ trợ Go2Joy</button>
+        <button data-v="ctx">3 Từ màn Đặt phòng</button>
+        <button data-v="attach">4 Đính kèm ảnh</button>
+        <button data-v="err">5 Mất mạng</button>
+        <button data-v="guest">6 Chưa xác minh</button>
+      </div></div>
+      <h2>Cấu hình admin áp xuống app</h2>
+      <div class="grp"><label class="l">Header trong app</label><div class="seg" id="hdr"><button data-h="native" class="on">Native của app</button><button data-h="widget">Header widget</button></div></div>
+      <div class="grp"><label class="l">Menu kịch bản</label><div class="seg" id="menu"><button data-m="card" class="on">Card có icon</button><button data-m="chip">Chip</button></div></div>
+      <div class="map">
+        <b>Phần app giữ (dev Go2Joy):</b> trang chủ, header native, back, điều hướng, nút "Hỗ trợ Go2Joy", gọi backend lấy gói ký.<br>
+        <b>Phần SDK:</b> WebView, cầu nối, chooser camera, màn lỗi, ký lại khi hết hạn.<br>
+        <b>Phần console:</b> agent, lời chào, 4 nút nhanh, menu card hay chip, màu, thông báo AI, đồng ý theo điều khoản.
+      </div>
+    </div>
+
+    <div class="phone"><div class="scr" id="scr">
+      <!-- 1 HOME -->
+      <div class="view on" data-view="home">
+        <div class="hero">
+          <div class="status light"><span>09:41</span><span>▲ 4G ▮▮▮</span></div>
+          <div class="top"><div><div class="hi">Xin chào,</div><div class="name">Lan · Lễ tân</div></div><div class="bell"><svg class="ico" style="color:#fff"><use href="#bell"/></svg><i></i></div></div>
+          <div class="hotel"><svg class="ico xs"><use href="#pin"/></svg>A In Hotel Del Luna · Quận 1</div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><small>Hôm nay</small><b>12</b><em>+3 so với hôm qua</em></div>
+          <div class="kpi"><small>Chờ nhận phòng</small><b>5</b><em style="color:var(--brand-700)">2 sắp tới giờ</em></div>
+          <div class="kpi"><small>Doanh thu</small><b>8,4tr</b><em>+12%</em></div>
+        </div>
+        <div class="sect">Thao tác nhanh</div>
+        <div class="grid">
+          <div class="act"><i><svg class="ico sm"><use href="#cal"/></svg></i>Đặt phòng</div>
+          <div class="act"><i><svg class="ico sm"><use href="#rec"/></svg></i>Đối soát</div>
+          <div class="act"><i><svg class="ico sm"><use href="#tag"/></svg></i>Khuyến mãi</div>
+          <div class="act"><i><svg class="ico sm"><use href="#chart"/></svg></i>Doanh thu</div>
+          <div class="act"><i><svg class="ico sm"><use href="#star"/></svg></i>Đánh giá</div>
+          <div class="act"><i><svg class="ico sm"><use href="#chat"/></svg></i>Chat với khách</div>
+          <div class="act"><i><svg class="ico sm"><use href="#bell"/></svg></i>Thông báo</div>
+          <div class="act new" onclick="go('chat')"><span class="badge">MỚI</span><i><svg class="ico sm"><use href="#head"/></svg></i>Hỗ trợ Go2Joy</div>
+        </div>
+        <div class="promo" onclick="go('chat')"><div class="av">G2</div><div><b>Cần hỗ trợ từ Go2Joy?</b><small>Hỏi về đối soát, khiếu nại, cách thao tác. AI trả lời ngay, nhân viên tiếp quản khi cần.</small></div><div class="go">Hỏi ngay</div></div>
+        <div class="list">
+          <div class="li"><svg class="ico sm" style="color:var(--brand)"><use href="#cal"/></svg><div>#G2J-8841 · Nguyễn A<br><small style="color:var(--g500)">2 đêm · 14:00</small></div><span class="st">Chờ nhận phòng</span></div>
+          <div class="li"><svg class="ico sm" style="color:var(--brand)"><use href="#cal"/></svg><div>#G2J-8847 · Trần B<br><small style="color:var(--g500)">1 đêm · 15:30</small></div><span class="st g">Đã nhận phòng</span></div>
+        </div>
+        <div class="nav"><div class="on"><i><svg class="ico sm"><use href="#home"/></svg></i>Trang chủ</div><div><i><svg class="ico sm"><use href="#cal"/></svg></i>Đặt phòng</div><div><i><svg class="ico sm"><use href="#bell"/></svg></i>Thông báo</div><div><i><svg class="ico sm"><use href="#user"/></svg></i>Tài khoản</div></div>
+      </div>
+
+      <!-- 2 CHAT -->
+      <div class="view" data-view="chat">
+        <div class="status"><span>09:41</span><span>▲ 4G ▮▮▮</span></div>
+        <div class="bar"><div class="ib" onclick="go('home')"><svg class="ico"><use href="#back"/></svg></div><div class="av">G2</div><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s">Trả lời ngay · AI + nhân viên Go2Joy</div></div><div class="ib"><svg class="ico"><use href="#more"/></svg></div></div>
+        <div class="wh"><div class="logo"><i>G2</i>Go2Joy</div><div class="r"><span>🌐 VI</span><svg class="ico sm"><use href="#gear"/></svg><svg class="ico sm"><use href="#x"/></svg></div></div>
+        <div class="notice"><svg class="ico sm" style="color:var(--brand);flex:none"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại Hoa Kỳ để tạo câu trả lời.</span></div>
+        <div class="thread">
+          <div class="day">Hôm nay</div>
+          <div class="msg"><div class="mav">G2</div><div class="b">Xin chào Lan! Chào mừng bạn đến với Go2Joy Support. Chúng tôi có thể giúp gì cho bạn? Hãy chọn một chủ đề bên dưới hoặc nhập câu hỏi của bạn.</div></div>
+          <div class="time">09:41</div>
+          <div class="qq">
+            <span><i><svg class="ico sm"><use href="#cal"/></svg></i>Xem đặt phòng hôm nay</span>
+            <span><i><svg class="ico sm"><use href="#key"/></svg></i>Cách nhận phòng cho khách</span>
+            <span><i><svg class="ico sm"><use href="#alert"/></svg></i>Khiếu nại đặt phòng</span>
+            <span><i><svg class="ico sm"><use href="#rec"/></svg></i>Hỏi về đối soát</span>
+          </div>
+        </div>
+        <div class="comp"><div class="ib"><svg class="ico"><use href="#cam"/></svg></div><div class="ib"><svg class="ico"><use href="#clip"/></svg></div><div class="in">Nhập tin nhắn…</div><div class="send"><svg class="ico sm"><use href="#send"/></svg></div></div>
+      </div>
+
+      <!-- 3 CONTEXT -->
+      <div class="view" data-view="ctx">
+        <div class="status"><span>09:52</span><span>▲ 4G ▮▮▮</span></div>
+        <div class="bar"><div class="ib"><svg class="ico"><use href="#back"/></svg></div><div class="av">G2</div><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s">Trả lời ngay · AI + nhân viên Go2Joy</div></div><div class="ib"><svg class="ico"><use href="#more"/></svg></div></div>
+        <div class="wh"><div class="logo"><i>G2</i>Go2Joy</div><div class="r"><span>🌐 VI</span><svg class="ico sm"><use href="#gear"/></svg><svg class="ico sm"><use href="#x"/></svg></div></div>
+        <div class="notice"><svg class="ico sm" style="color:var(--brand);flex:none"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI…</span><span class="end">Kết thúc</span></div>
+        <div class="thread">
+          <div class="sys">Mở từ Đặt phòng #G2J-8841</div>
+          <div class="msg me"><div class="b">Khách không đến, tôi cần báo no-show cho đặt phòng này</div></div>
+          <div class="time r">09:52</div>
+          <div class="msg"><div class="mav">G2</div><div class="b">Để báo <b>Khách không đến</b> cho #G2J-8841:
+            <ol><li>Mở tab <code>Chờ nhận phòng</code>, chọn đặt phòng.</li><li>Nhập lý do vào ô <code>Ghi chú</code> (tối đa 500 ký tự).</li><li>Nhấn <code>Khách không đến</code>. Đặt phòng chuyển sang tab <code>Chờ khách xác nhận</code>.</li></ol></div></div>
+          <div class="src"><div class="th"></div><div><small>Nguồn tham khảo · Video 22</small><b>Báo khách không đến</b></div></div>
+          <div class="time">09:53</div>
+          <div class="chips"><span class="chip">Xem đặt phòng hôm nay</span><span class="chip hl"><svg class="ico xs"><use href="#head"/></svg>Gặp nhân viên hỗ trợ</span></div>
+        </div>
+        <div class="ctx"><svg class="ico sm"><use href="#pin"/></svg>Đặt phòng #G2J-8841 · Chờ nhận phòng · 2 đêm<svg class="ico sm x"><use href="#x"/></svg></div>
+        <div class="comp"><div class="ib"><svg class="ico"><use href="#cam"/></svg></div><div class="ib"><svg class="ico"><use href="#clip"/></svg></div><div class="in">Nhập tin nhắn…</div><div class="send"><svg class="ico sm"><use href="#send"/></svg></div></div>
+      </div>
+
+      <!-- 4 ATTACH -->
+      <div class="view" data-view="attach">
+        <div class="status"><span>09:55</span><span>▲ 4G ▮▮▮</span></div>
+        <div class="bar"><div class="ib"><svg class="ico"><use href="#back"/></svg></div><div class="av" style="background:#0EA5E9">M</div><div class="grow"><div class="t">Minh · Go2Joy CS</div><div class="s">Nhân viên đang hỗ trợ · Miền Nam</div></div><div class="ib"><svg class="ico"><use href="#more"/></svg></div></div>
+        <div class="wh"><div class="logo"><i>G2</i>Go2Joy</div><div class="r"><span>🌐 VI</span><svg class="ico sm"><use href="#gear"/></svg><svg class="ico sm"><use href="#x"/></svg></div></div>
+        <div class="thread">
+          <div class="sys">Đã chuyển cho nhân viên Go2Joy</div>
+          <div class="msg"><div class="mav hu">M</div><div class="b"><div class="who">Minh · Go2Joy CS</div>Chị gửi giúp em ảnh màn hình lỗi ở tab Chờ khách xác nhận nhé, em kiểm tra ngay.</div></div>
+          <div class="time">09:54</div>
+          <div class="typing"><i></i><i></i><i></i></div>
+        </div>
+        <div class="pend"><div class="th"></div><div style="flex:1">IMG_20261015_0955.jpg · 1,2 MB<div class="bar2"><i></i></div></div><svg class="ico sm" style="color:var(--g400)"><use href="#x"/></svg></div>
+        <div class="comp"><div class="ib"><svg class="ico"><use href="#cam"/></svg></div><div class="ib"><svg class="ico"><use href="#clip"/></svg></div><div class="in">Nhập tin nhắn…</div><div class="send on"><svg class="ico sm"><use href="#send"/></svg></div></div>
+        <div class="dim"><div class="sheet"><div class="hd"></div><h4>Gửi ảnh hoặc tệp</h4>
+          <div class="row"><i><svg class="ico sm"><use href="#cam"/></svg></i><div>Chụp ảnh<small>Mở camera, không cần cấp quyền thêm</small></div></div>
+          <div class="row"><i><svg class="ico sm"><use href="#img"/></svg></i><div>Chọn từ thư viện<small>Chọn nhiều ảnh cùng lúc</small></div></div>
+          <div class="row"><i><svg class="ico sm"><use href="#file"/></svg></i><div>Tệp<small>PDF, Excel, Word tối đa 10 MB</small></div></div>
+          <div class="cancel">Hủy</div></div></div>
+      </div>
+
+      <!-- 5 ERROR -->
+      <div class="view" data-view="err">
+        <div class="status"><span>10:02</span><span style="color:var(--g400)">✕ Không có mạng</span></div>
+        <div class="bar"><div class="ib"><svg class="ico"><use href="#back"/></svg></div><div class="av" style="background:var(--g300)">G2</div><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s">Đang kết nối lại…</div></div></div>
+        <div class="err">
+          <div class="big"><svg class="ico" style="width:36px;height:36px"><use href="#wifi"/></svg></div>
+          <h3>Không kết nối được</h3>
+          <p>Kiểm tra mạng rồi thử lại. Hội thoại của bạn vẫn được giữ nguyên.</p>
+          <div class="btn">Thử lại</div>
+          <div class="link">Gọi hotline 1900 638 838</div>
+        </div>
+      </div>
+
+      <!-- 6 GUEST -->
+      <div class="view" data-view="guest">
+        <div class="status"><span>10:05</span><span>▲ 4G ▮▮▮</span></div>
+        <div class="bar"><div class="ib"><svg class="ico"><use href="#back"/></svg></div><div class="av">G2</div><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s">Chế độ khách · chưa xác minh tài khoản</div></div><div class="ib"><svg class="ico"><use href="#more"/></svg></div></div>
+        <div class="wh"><div class="logo"><i>G2</i>Go2Joy</div><div class="r"><span>🌐 VI</span><svg class="ico sm"><use href="#gear"/></svg><svg class="ico sm"><use href="#x"/></svg></div></div>
+        <div class="warn"><svg class="ico sm" style="flex:none"><use href="#alert"/></svg><span>Không xác minh được tài khoản. Bạn đang trò chuyện ẩn danh; câu hỏi về đặt phòng cụ thể sẽ cần xác minh.</span><b>Thử lại</b></div>
+        <div class="notice"><svg class="ico sm" style="color:var(--brand);flex:none"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI…</span></div>
+        <div class="thread">
+          <div class="msg"><div class="mav">G2</div><div class="b">Xin chào! Chào mừng bạn đến với Go2Joy Support. Chúng tôi có thể giúp gì cho bạn?</div></div>
+          <div class="qq">
+            <span><i><svg class="ico sm"><use href="#key"/></svg></i>Cách nhận phòng cho khách</span>
+            <span><i><svg class="ico sm"><use href="#rec"/></svg></i>Hỏi về đối soát</span>
+          </div>
+        </div>
+        <div class="comp"><div class="ib"><svg class="ico"><use href="#cam"/></svg></div><div class="ib"><svg class="ico"><use href="#clip"/></svg></div><div class="in">Nhập tin nhắn…</div><div class="send"><svg class="ico sm"><use href="#send"/></svg></div></div>
+      </div>
+      <div class="home-ind"></div>
+    </div></div>
+  </div>
+</div>
+<script>
+  function go(v){
+    document.querySelectorAll('#screens button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+    document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.dataset.view===v));
+  }
+  document.querySelectorAll('#screens button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.v)));
+  document.querySelectorAll('#hdr button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#hdr button').forEach(x=>x.classList.toggle('on',x===b));
+    document.getElementById('scr').classList.toggle('hw',b.dataset.h==='widget');
+  }));
+  document.querySelectorAll('#menu button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#menu button').forEach(x=>x.classList.toggle('on',x===b));
+    document.getElementById('scr').classList.toggle('chip',b.dataset.m==='chip');
+  }));
+  var q=new URLSearchParams(location.search).get('v'); if(q) go(q);
+</script>
+</body>
+</html>
