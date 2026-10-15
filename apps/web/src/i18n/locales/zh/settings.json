@@ -49,7 +49,12 @@
     "copyResponsibility": "此处填写的文案将替换向顾客展示的标准告知，内容由租户负责。",
     "bumpVersion": "这是重大变更——提升告知版本，并请已同意的顾客重新确认。",
     "unsetUrl": "未设置——留空时同意告知中不会显示政策链接。",
-    "unsetVersion": "未设置——当前适用平台默认版本。"
+    "unsetVersion": "未设置——当前适用平台默认版本。",
+    "consentSource": "同意来源",
+    "consentSource_widget": "小部件横幅 — 访客在小部件中同意",
+    "consentSource_host_terms": "宿主应用条款 — 登录用户已同意条款",
+    "consentSourceWidgetHint": "所有访客都会看到同意横幅,同意后才能聊天。",
+    "consentSourceHostHint": "由您的应用签名的登录用户(embed identify)会被记录为已同意(时间和告知版本),不显示横幅。您的条款须涵盖 AI 支持及其处理地区。未签名的访客仍会看到横幅。"
   },
   "widgetBehavior": {
     "title": "小组件行为",

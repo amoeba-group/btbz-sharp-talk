@@ -141,6 +141,9 @@ export class UpdatePrivacyNoticeRequest {
   @Matches(/^[A-Za-z0-9][A-Za-z0-9._-]*$/)
   consent_notice_version?: string | null;
 
+  /** widget (banner) | host_terms (signed host users consented via host terms) — PLN-261015 D9. */
+  @IsOptional() @IsIn(['widget', 'host_terms']) consent_source?: string;
+
   /** Industry wording: commerce | lodging | generic. Null/absent = infer. */
   @IsOptional() @IsString() @MaxLength(16) privacy_profile?: string | null;
 

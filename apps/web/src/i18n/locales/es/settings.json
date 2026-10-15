@@ -49,7 +49,12 @@
     "copyResponsibility": "El texto que escribas aquí reemplaza el aviso estándar para tus clientes; su contenido es tu responsabilidad.",
     "bumpVersion": "Es un cambio sustancial: sube la versión del aviso y vuelve a pedir el consentimiento a quienes ya lo dieron.",
     "unsetUrl": "Sin configurar: sin él, el aviso no muestra enlace a la política.",
-    "unsetVersion": "Sin configurar: rige la versión predeterminada de la plataforma."
+    "unsetVersion": "Sin configurar: rige la versión predeterminada de la plataforma.",
+    "consentSource": "Origen del consentimiento",
+    "consentSource_widget": "Banner del widget — el visitante acepta en el widget",
+    "consentSource_host_terms": "Términos de la app anfitriona — los usuarios con sesión aceptaron los términos",
+    "consentSourceWidgetHint": "Todos los visitantes ven el banner y deben aceptarlo antes de chatear.",
+    "consentSourceHostHint": "Los usuarios que tu app firma (embed identify) quedan registrados como consentidos —hora y versión del aviso— sin banner. Tus términos deben cubrir el soporte con IA y su región de procesamiento. Los visitantes sin firma siguen viendo el banner."
   },
   "widgetBehavior": {
     "title": "Comportamiento del widget",

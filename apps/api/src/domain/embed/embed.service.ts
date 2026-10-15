@@ -2,11 +2,11 @@ import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { Repository } from 'typeorm';
-import { SESSION_IDENTITY } from '@sharptalk/types';
+import { CONSENT_STATE, SESSION_IDENTITY } from '@sharptalk/types';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { Session } from '../session/entity/session.entity';
-import { sessionCacheKey } from '../session/session.service';
+import { CONSENT_NOTICE_VERSION, sessionCacheKey } from '../session/session.service';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
@@ -107,12 +107,26 @@ export class EmbedService {
     // Replaced, never merged: a re-identify for a different hotel must not keep
     // the previous hotel's region.
     session.identityAttributes = attributes;
+    // Consent via the host's own terms (PLN-261015 D9). Only a SIGNED user
+    // reaches this line, so only users the host vouches for are covered; an
+    // explicit decline in the widget is never overridden.
+    let consentFromHost = false;
+    if (tenant?.consentSource === 'host_terms' && session.consentState !== CONSENT_STATE.DECLINED) {
+      const version = tenant.consentNoticeVersion ?? CONSENT_NOTICE_VERSION;
+      if (session.consentState !== CONSENT_STATE.GRANTED || session.consentVersion !== version) {
+        session.consentState = CONSENT_STATE.GRANTED;
+        session.consentAt = new Date();
+        session.consentVersion = version;
+        consentFromHost = true;
+      }
+    }
     const saved = await this.sessionRepo.save(session);
     // The token→session cache would keep serving the guest view otherwise.
     await this.redis.del(sessionCacheKey(input.sessionToken));
     this.logger.log(
       `identify ok (tenant ${session.tenantId}, customer ${customer.id}, user ${maskId(input.userId)}` +
-        `${attributes ? `, attrs ${Object.keys(attributes).sort().join(',')}` : ''})`,
+        `${attributes ? `, attrs ${Object.keys(attributes).sort().join(',')}` : ''}` +
+        `${consentFromHost ? `, consent via host terms v${saved.consentVersion}` : ''})`,
     );
     return saved;
   }

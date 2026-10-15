@@ -373,6 +373,7 @@ export class TenantService {
       }
       tenant.privacyProfile = profile;
     }
+    if (dto.consent_source !== undefined) tenant.consentSource = dto.consent_source;
     if (dto.privacy_notice_copy !== undefined) {
       tenant.privacyNoticeCopy = normalizePrivacyNoticeCopy(dto.privacy_notice_copy);
     }

@@ -10,8 +10,10 @@ const SECRET = 'shtk_testsecret';
 const USER = 'go2joy-user-77';
 const HASH = EmbedService.sign(SECRET, USER);
 
-function build(opts: { secret?: string | null; session?: Record<string, unknown> | null } = {}) {
-  const tenant = { id: 1, embedSecret: opts.secret === undefined ? SECRET : opts.secret };
+function build(
+  opts: { secret?: string | null; session?: Record<string, unknown> | null; tenant?: Record<string, unknown> } = {},
+) {
+  const tenant = { id: 1, embedSecret: opts.secret === undefined ? SECRET : opts.secret, ...opts.tenant };
   const session =
     opts.session === undefined
       ? { id: 5, sessionToken: 'tok', tenantId: 1, customerId: null, identityLevel: 'guest' }
@@ -171,6 +173,37 @@ describe('EmbedService.identify — signed attributes (PLN-261015 D2)', () => {
     const session = await h.service.identify({ sessionToken: 'tok', userId: USER, hash: HASH });
     expect(session.identityLevel).toBe('verified');
     expect(session.identityAttributes).toBeNull();
+  });
+});
+
+describe('EmbedService.identify — consent via host terms (PLN-261015 D9)', () => {
+  const pending = { id: 5, sessionToken: 'tok', tenantId: 1, customerId: null, identityLevel: 'guest', consentState: 'pending', consentVersion: null };
+
+  it('records a signed user as consented, with time and the tenant notice version', async () => {
+    const h = build({ tenant: { consentSource: 'host_terms', consentNoticeVersion: '2026-10-vn' }, session: { ...pending } });
+    const s = await h.service.identify({ sessionToken: 'tok', userId: USER, hash: HASH });
+    expect(s.consentState).toBe('granted');
+    expect(s.consentVersion).toBe('2026-10-vn');
+    expect(s.consentAt).toBeInstanceOf(Date);
+  });
+
+  it('leaves consent alone for a widget-consent tenant', async () => {
+    const h = build({ session: { ...pending } });
+    const s = await h.service.identify({ sessionToken: 'tok', userId: USER, hash: HASH });
+    expect(s.consentState).toBe('pending');
+  });
+
+  it('never overrides an explicit decline', async () => {
+    const h = build({ tenant: { consentSource: 'host_terms' }, session: { ...pending, consentState: 'declined' } });
+    const s = await h.service.identify({ sessionToken: 'tok', userId: USER, hash: HASH });
+    expect(s.consentState).toBe('declined');
+  });
+
+  it('grants nothing when the signature fails', async () => {
+    const session = { ...pending };
+    const h = build({ tenant: { consentSource: 'host_terms' }, session });
+    await expect(h.service.identify({ sessionToken: 'tok', userId: USER, hash: 'bad' })).rejects.toBeTruthy();
+    expect(session.consentState).toBe('pending');
   });
 });
 

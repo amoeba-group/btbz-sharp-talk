@@ -44,6 +44,7 @@ export function PrivacyNoticePage() {
   const [policyUrl, setPolicyUrl] = useState('');
   const [version, setVersion] = useState('');
   const [profile, setProfile] = useState<string>('');
+  const [consentSource, setConsentSource] = useState<'widget' | 'host_terms'>('widget');
   const [copy, setCopy] = useState<Record<string, NoticeLines>>({});
   const [copyLang, setCopyLang] = useState<string>('KO');
   const [bumpVersion, setBumpVersion] = useState(false);
@@ -56,6 +57,7 @@ export function PrivacyNoticePage() {
       setPolicyUrl(data.privacyPolicyUrl ?? '');
       setVersion(data.consentNoticeVersion ?? '');
       setProfile(data.privacyProfile ?? '');
+      setConsentSource(data.consentSource === 'host_terms' ? 'host_terms' : 'widget');
       setCopy(data.privacyNoticeCopy ?? {});
       setBumpVersion(false);
     }
@@ -85,6 +87,7 @@ export function PrivacyNoticePage() {
       // '' = "decide from whether this tenant sells", which is the state every
       // tenant starts in — never store it as a profile name.
       privacy_profile: profile || null,
+      consent_source: consentSource,
       privacy_notice_copy: Object.keys(copy).length ? copy : null,
       ...(bumpVersion ? { bump_version: true } : {}),
     });
@@ -153,6 +156,21 @@ export function PrivacyNoticePage() {
 
             {/* --- notice copy (PLN-261001) --- */}
             <div className="mb-4 border-t border-gray-100 pt-4">
+              {/* Consent source (PLN-261015 D9): the host app's terms can stand
+                  in for the banner — for users the host signs, never for anyone else. */}
+              <FormRow label={t('privacyNotice.consentSource')}>
+                <Select
+                  value={consentSource}
+                  onChange={(e) => setConsentSource(e.target.value === 'host_terms' ? 'host_terms' : 'widget')}
+                >
+                  <option value="widget">{t('privacyNotice.consentSource_widget')}</option>
+                  <option value="host_terms">{t('privacyNotice.consentSource_host_terms')}</option>
+                </Select>
+                <p className="mt-1 text-xs text-gray-400">
+                  {t(consentSource === 'host_terms' ? 'privacyNotice.consentSourceHostHint' : 'privacyNotice.consentSourceWidgetHint')}
+                </p>
+              </FormRow>
+
               <FormRow label={t('privacyNotice.profile')}>
                 <Select value={profile} onChange={(e) => setProfile(e.target.value)}>
                   {/* '' is not a profile — it means "work it out from the

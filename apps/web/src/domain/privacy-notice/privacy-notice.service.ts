@@ -10,6 +10,8 @@ export interface PrivacyNoticeSettings {
   consentNoticeVersion: string | null;
   /** Stored choice; null = inferred from whether this tenant sells (PLN-261001). */
   privacyProfile: string | null;
+  /** widget | host_terms — where consent comes from (PLN-261015 D9). */
+  consentSource: 'widget' | 'host_terms';
   /** What is in force right now — what the placeholders below belong to. */
   effectiveProfile: string;
   /** Per-language rewrites of single lines, exactly as stored. */
@@ -23,6 +25,7 @@ export interface UpdatePrivacyNoticeBody {
   privacy_policy_url?: string | null;
   consent_notice_version?: string;
   privacy_profile?: string | null;
+  consent_source?: 'widget' | 'host_terms';
   privacy_notice_copy?: Record<string, NoticeLines> | null;
   /**
    * Only for a material change: it raises the notice version, which asks every
