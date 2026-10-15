@@ -7,6 +7,8 @@ import { ContentFilterRule } from '../moderation/entity/content-filter-rule.enti
 import { JobLabel } from '../user/entity/job-label.entity';
 import { UsageType } from '../knowledge/entity/usage-type.entity';
 import { TenantService } from './tenant.service';
+import { MobileAppConfigService } from './mobile-app-config.service';
+import { AiAgent } from '../ai-engine/entity/ai-agent.entity';
 import { EcommerceIntegrationService } from './ecommerce-integration.service';
 import { WebhookSecretService } from './webhook-secret.service';
 import { WidgetLogoService } from './widget-logo.service';
@@ -35,6 +37,7 @@ import { TenantAssetModule } from '../tenant-asset/tenant-asset.module';
       UsageType,
       WidgetDesignRow,
       WidgetDesignRevision,
+      AiAgent,
     ]),
     IntegrationModule,
     AuditModule,
@@ -46,6 +49,7 @@ import { TenantAssetModule } from '../tenant-asset/tenant-asset.module';
   controllers: [TenantController, WidgetBrandingController, WidgetDesignController, SettingsSnapshotController],
   providers: [
     TenantService,
+    MobileAppConfigService,
     EcommerceIntegrationService,
     WebhookSecretService,
     WidgetLogoService,

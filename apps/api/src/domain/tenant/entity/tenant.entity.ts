@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { bigintTransformer } from '../../../global/util/transformers';
 import { decryptSecret, encryptSecret } from '../../../global/util/crypto.util';
-import type { PrivacyNoticeCopy, WidgetAccess, WidgetTheme } from '@sharptalk/types';
+import type { MobileAppConfig, PrivacyNoticeCopy, WidgetAccess, WidgetTheme } from '@sharptalk/types';
 
 /**
  * The embed secret is a credential, so it never sits in the database as text.
@@ -172,6 +172,15 @@ export class Tenant {
    */
   @Column({ name: 'widget_access', type: 'json', nullable: true })
   widgetAccess: WidgetAccess | null;
+
+  /**
+   * Host MOBILE APP surface (PLN-261015 S9): app-only font/size/menu/header/brand
+   * over the web theme, plus which agent each app screen opens. NULL = never
+   * configured = the web theme applies unchanged, so the column ships without a
+   * backfill.
+   */
+  @Column({ name: 'mobile_app_config', type: 'json', nullable: true })
+  mobileAppConfig: MobileAppConfig | null;
 
   /**
    * Invite key for testers who are not on a fixed IP. Encrypted at rest and

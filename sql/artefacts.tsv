@@ -190,3 +190,4 @@ migration_widget_login_mode.sql	column	tenants	widget_login_mode
 migration_widget_tab_config.sql	column	tenants	widget_tabs
 migration_widget_tab_config.sql	column	tenants	widget_tab_position
 migration_widget_theme.sql	column	tenants	widget_theme
+261016-tenant-mobile-app-config.sql	column	tenants	mobile_app_config

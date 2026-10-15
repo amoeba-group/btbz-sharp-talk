@@ -7,6 +7,7 @@ import { getRequestContext } from '../../global/middleware/request-context.middl
 import { TenantService } from './tenant.service';
 import { WidgetLogoService } from './widget-logo.service';
 import { WidgetDesignService } from './widget-design.service';
+import { MobileAppConfigService } from './mobile-app-config.service';
 import { Public } from '../../global/decorator/public.decorator';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
@@ -27,6 +28,7 @@ export class WidgetBrandingController {
     private readonly tenantService: TenantService,
     private readonly widgetLogo: WidgetLogoService,
     private readonly designs: WidgetDesignService,
+    private readonly mobileApp: MobileAppConfigService,
   ) {}
 
   /**
@@ -99,6 +101,21 @@ export class WidgetBrandingController {
     const theme = await this.designs.previewTheme(token ?? '');
     if (!theme) throw new BusinessException(ERROR_CODE.FORBIDDEN, HttpStatus.FORBIDDEN);
     return { theme };
+  }
+
+  /**
+   * The host-app (mobile) surface: app-only look + which agent each app screen
+   * opens (PLN-261015 S9). Read by the widget in app mode and by the SDK. Public
+   * like the logo — nothing private, no secrets — and uncached so an admin's
+   * change reaches the next screen the app opens. `config: null` = never set.
+   */
+  @Get('app-config')
+  @Public()
+  @SkipThrottle()
+  @ApiOperation({ summary: 'Host-app surface settings for a shop (public)' })
+  async appConfig(@Query('shop') shop: string | undefined, @Res({ passthrough: true }) res: Response) {
+    res.setHeader('Cache-Control', 'no-store');
+    return { config: await this.mobileApp.publicFor(shop ?? '') };
   }
 
   @Get('logo')

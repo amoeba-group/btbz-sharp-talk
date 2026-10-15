@@ -18,6 +18,8 @@ import { HttpStatus } from '@nestjs/common';
 import { CAPABILITY, Principal, USER_RANK } from '@sharptalk/types';
 import { buildPagination, normalizePage } from '@sharptalk/common';
 import { TenantService } from './tenant.service';
+import { MobileAppConfigService } from './mobile-app-config.service';
+import { UpdateMobileAppRequest } from './dto/request/mobile-app.request';
 import { EcommerceIntegrationService } from './ecommerce-integration.service';
 import { TenantMapper } from './tenant.mapper';
 import { EmbedService } from '../embed/embed.service';
@@ -62,6 +64,7 @@ export class TenantController {
     private readonly ecommerceIntegrationService: EcommerceIntegrationService,
     private readonly embedService: EmbedService,
     private readonly assets: TenantAssetService,
+    private readonly mobileApp: MobileAppConfigService,
   ) {}
 
   @Get()
@@ -202,6 +205,24 @@ export class TenantController {
       body.channels,
     );
     return TenantMapper.toNotificationChannels(tenant);
+  }
+
+  // Host mobile app surface (PLN-261015 S9). Declared before ':uuid'.
+  @Get('mobile-app')
+  @RequireRank(USER_RANK.MASTER, USER_RANK.DIRECTOR)
+  @ApiOperation({ summary: "This tenant's host-app (mobile) surface: look, screen→agent table, min SDK" })
+  async getMobileApp(@CurrentUser() user: Principal) {
+    return this.mobileApp.get(this.tenantId(user));
+  }
+
+  @Patch('mobile-app')
+  @RequireRank(USER_RANK.MASTER, USER_RANK.DIRECTOR)
+  @ApiOperation({ summary: 'Replace the host-app (mobile) surface settings (sent whole)' })
+  async updateMobileApp(@CurrentUser() user: Principal, @Body() body: UpdateMobileAppRequest) {
+    if (user.actorType !== 'user') {
+      throw new BusinessException(ERROR_CODE.FORBIDDEN, HttpStatus.FORBIDDEN);
+    }
+    return this.mobileApp.update(user.tenantId, user.userId, body);
   }
 
   // Declared before ':uuid' so 'widget-theme' is not read as a UUID.
