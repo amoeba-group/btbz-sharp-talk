@@ -1,0 +1,453 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype admin SharpTalk — Cài đặt widget và Ứng dụng di động cho Go2Joy · tương tác · vi/en/ko</title>
+<style>
+  :root{
+    --p50:#EEF2FF;--p100:#E0E7FF;--p200:#C7D2FE;--p500:#6366F1;--p600:#4F46E5;--p700:#4338CA;
+    --g50:#F9FAFB;--g100:#F3F4F6;--g200:#E5E7EB;--g300:#D1D5DB;--g400:#9CA3AF;--g500:#6B7280;--g700:#374151;--ink:#111827;
+    --succ:#10B981;--warn:#F59E0B;--err:#EF4444;
+    --brand:#F26A1B;--brand-700:#C9540F;--brand-100:#FFE4D1;--brand-50:#FFF5EE;
+    --font:'Pretendard','Noto Sans KR',-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',Roboto,'Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#E9ECF1;font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .page{width:1480px;margin:0 auto;padding:24px 20px 36px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--g500);font-size:13px;margin:0 0 14px;line-height:1.5}
+  .langbar{display:flex;gap:6px;align-items:center;margin-bottom:12px;font-size:12.5px;color:var(--g700)}
+  .langbar button{border:1px solid var(--g300);background:#fff;border-radius:999px;padding:5px 11px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--g700)}
+  .langbar button.on{background:#111827;border-color:#111827;color:#fff;font-weight:600}
+  .desk{background:#1F2937;border-radius:14px;padding:10px;box-shadow:0 10px 30px rgba(17,24,39,.18)}
+  .deskbar{height:22px;display:flex;align-items:center;gap:6px;padding:0 4px 6px}
+  .deskbar i{width:10px;height:10px;border-radius:50%;background:#4B5563;display:inline-block}
+  .deskbar span{color:#9CA3AF;font-size:11px;margin-left:10px}
+  .win{background:var(--g50);border-radius:8px;height:980px;display:flex;overflow:hidden;position:relative;font-size:13px;user-select:none}
+  .side{width:214px;background:#fff;border-right:1px solid var(--g200);display:flex;flex-direction:column;padding:14px 10px}
+  .tenant{display:flex;gap:10px;align-items:center;padding:4px 8px 16px}
+  .tenant i{width:34px;height:34px;border-radius:9px;background:var(--p600);display:block}
+  .tenant b{display:block;font-size:14px}
+  .tenant span{font-size:11px;color:var(--g500)}
+  .menu{display:flex;flex-direction:column;gap:2px}
+  .menu div{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--g700);font-size:13px;cursor:pointer}
+  .menu div:hover{background:var(--g50)}
+  .menu div i{width:16px;height:16px;border-radius:4px;background:var(--g200);display:inline-block;flex:none}
+  .menu div.on{background:var(--p50);color:var(--p700);font-weight:600}
+  .menu div.on i{background:var(--p200)}
+  .me{margin-top:auto;padding:12px 8px 0;border-top:1px solid var(--g100);font-size:11.5px;color:var(--g700)}
+  .me small{display:inline-block;background:var(--p50);color:var(--p700);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:600;margin-top:4px}
+  .main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .top{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;background:#fff;border-bottom:1px solid var(--g200)}
+  .pill{border:1px solid var(--g200);border-radius:999px;padding:4px 10px;font-size:12px;color:var(--g700);background:#fff;cursor:pointer}
+  .body{padding:18px 22px 70px;overflow:auto;flex:1}
+  .body h2{font-size:20px;margin:0 0 2px}
+  .body .hint{color:var(--g500);font-size:12.5px;margin:0 0 14px}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--g200);margin-bottom:14px}
+  .tabs span{padding:8px 12px;font-size:13px;color:var(--g500);border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer}
+  .tabs span:hover{color:var(--g700)}
+  .tabs span.on{color:var(--p700);border-color:var(--p600);font-weight:600}
+  .tabs span .new{background:var(--succ);color:#fff;font-size:9.5px;border-radius:999px;padding:1px 6px;margin-left:5px;font-weight:700;vertical-align:1px}
+  .pane{display:none}
+  .pane.on{display:block}
+  .cols{display:grid;grid-template-columns:1fr 1fr 332px;gap:14px;align-items:start}
+  .col{display:flex;flex-direction:column;gap:14px}
+  .card{background:#fff;border:1px solid var(--g200);border-radius:12px;padding:14px 16px}
+  .card h3{font-size:14px;margin:0 0 2px}
+  .card .d{font-size:11.5px;color:var(--g500);margin:0 0 10px;line-height:1.45}
+  .f{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid var(--g100);font-size:12.5px}
+  .f:first-of-type{border-top:0}
+  .f label{color:var(--g700)}
+  .sel{border:1px solid var(--g300);border-radius:6px;padding:4px 26px 4px 8px;font-size:12px;background:#fff;position:relative;min-width:120px;color:var(--ink);cursor:pointer}
+  .sel:hover{border-color:var(--g400)}
+  .sel:after{content:"▾";position:absolute;right:8px;top:3px;color:var(--g400)}
+  .seg{display:inline-flex;border:1px solid var(--g300);border-radius:6px;overflow:hidden}
+  .seg span{padding:4px 10px;font-size:12px;color:var(--g500);background:#fff;cursor:pointer}
+  .seg span:hover{background:var(--g50)}
+  .seg span.on{background:var(--p600);color:#fff;font-weight:600}
+  .sw{width:34px;height:18px;border-radius:999px;background:var(--g300);position:relative;flex:none;cursor:pointer;transition:background .15s}
+  .sw.on{background:var(--p600)}
+  .sw:after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .15s}
+  .sw.on:after{left:18px}
+  .swatch{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+  .swatch i{width:18px;height:18px;border-radius:5px;display:inline-block;border:1px solid var(--g200)}
+  .pal{display:none;gap:6px;margin-top:6px}
+  .pal.on{display:flex}
+  .pal i{width:22px;height:22px;border-radius:6px;cursor:pointer;border:2px solid transparent}
+  .pal i.on{border-color:var(--ink)}
+  table.t{width:100%;border-collapse:collapse;font-size:12px}
+  table.t th{text-align:left;color:var(--g500);font-weight:600;padding:4px 6px;border-bottom:1px solid var(--g200)}
+  table.t td{padding:6px 6px;border-bottom:1px solid var(--g100)}
+  table.t code{background:var(--g100);border-radius:4px;padding:1px 5px;font-size:11px}
+  table.t td.ag{cursor:pointer;color:var(--p700);font-weight:600}
+  table.t td.del{color:var(--g400);cursor:pointer;text-align:right}
+  table.t td.del:hover{color:var(--err)}
+  .add{color:var(--p700);font-size:12px;font-weight:600;margin-top:8px;display:inline-block;cursor:pointer}
+  .btn{display:inline-block;border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:600;border:1px solid var(--g300);background:#fff;color:var(--g700);cursor:pointer}
+  .btn:hover{background:var(--g50)}
+  .btn.p{background:var(--p600);border-color:var(--p600);color:#fff;opacity:.55}
+  .btn.p.dirty{opacity:1}
+  .btn.p:hover{background:var(--p700)}
+  .ok{color:var(--succ);font-weight:600}
+  .wn{color:var(--warn);font-weight:600}
+  .lnk{text-decoration:underline;cursor:pointer}
+  .code{background:#111827;color:#E5E7EB;border-radius:8px;padding:10px 12px;font:11px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-all;overflow:hidden}
+  .save{position:absolute;left:214px;right:0;bottom:0;background:#fff;border-top:1px solid var(--g200);padding:10px 22px;display:flex;justify-content:flex-end;gap:8px;align-items:center}
+  .save .st{margin-right:auto;font-size:12px;color:var(--g500)}
+  .prev{padding:12px}
+  .prev .bar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+  .prev .bar2{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .note{font-size:11px;color:var(--g500);margin-top:8px;line-height:1.4}
+  .pf{width:300px;height:520px;background:#111827;border-radius:28px;padding:9px;margin:0 auto;display:none}
+  .pf.on{display:block}
+  .ps{width:282px;height:502px;background:#F8F9FB;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;font-size:10.5px;--pb:var(--brand);--pb50:var(--brand-50);--pb100:var(--brand-100)}
+  .webp{display:none;width:300px;height:520px;margin:0 auto;border:1px solid var(--g200);border-radius:10px;background:#fff;position:relative;overflow:hidden;--pb:var(--brand);--pb50:var(--brand-50);--pb100:var(--brand-100)}
+  .webp.on{display:block}
+  .webp .ha{display:flex;height:100%}
+  .webp .hs{width:76px;background:#FFF7F0;border-right:1px solid var(--g100);padding:10px 8px;display:flex;flex-direction:column;gap:9px;color:var(--g700);font-size:9px}
+  .webp .hs b{color:var(--brand);font-size:10px}
+  .webp .hm{flex:1;padding:10px;font-size:9px;color:var(--g500)}
+  .webp .hm b{color:var(--ink);font-size:10px;display:block;margin-bottom:6px}
+  .webp .tbl div{padding:4px 6px;border-bottom:1px solid var(--g100);display:flex;justify-content:space-between}
+  .webp .launch{position:absolute;right:12px;bottom:12px;width:40px;height:40px;border-radius:50%;background:var(--pb);box-shadow:0 6px 16px rgba(0,0,0,.25);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff}
+  .webp.open .launch{display:none}
+  .webp .fw{position:absolute;right:10px;bottom:10px;width:160px;height:290px;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.22);border:1px solid var(--g200);display:none;flex-direction:column;overflow:hidden}
+  .webp.open .fw{display:flex}
+  .fw .h{display:flex;justify-content:space-between;align-items:center;padding:8px 9px 6px;font-weight:800;color:var(--pb);font-size:11px;background:#fff}
+  .fw .h.brand{background:var(--pb);color:#fff}
+  .fw .h .cl{cursor:pointer;color:var(--g400);font-weight:400}
+  .fw .h.brand .cl{color:#fff}
+  .fw .tabsrow{display:none;gap:8px;padding:0 9px 4px;font-size:8px;color:var(--g500);border-bottom:1px solid var(--g100)}
+  .fw .tabsrow.on{display:flex}
+  .fw .tabsrow b{color:var(--pb);border-bottom:2px solid var(--pb);padding-bottom:2px}
+  .fw .n{background:var(--g50);color:var(--g500);font-size:7px;padding:5px 8px;line-height:1.3}
+  .fw .t{flex:1;padding:8px;display:flex;flex-direction:column;gap:6px}
+  .fw .bb{background:var(--g100);border-radius:9px;padding:6px 7px;font-size:7.5px;line-height:1.35}
+  .fw .q{display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:7px;color:var(--pb);text-align:center}
+  .fw .q span{background:var(--pb50);border-radius:6px;padding:4px 3px}
+  .fw .c{display:flex;gap:4px;padding:6px 7px;border-top:1px solid var(--g100);align-items:center}
+  .fw .c i{flex:1;height:14px;border:1px solid var(--g200);border-radius:999px}
+  .fw .c b{width:14px;height:14px;border-radius:50%;background:var(--pb100);display:inline-block}
+  .appbar{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border-bottom:1px solid var(--g100)}
+  .appbar .av{width:26px;height:26px;border-radius:50%;background:var(--pb);color:#fff;font-weight:800;font-size:9px;display:flex;align-items:center;justify-content:center}
+  .appbar .t{font-weight:700;line-height:1.1}
+  .appbar .s{color:var(--g500)}
+  .appbar .grow{flex:1;min-width:0}
+  .ico{width:16px;height:16px;flex:none}
+  .ico.sm{width:13px;height:13px}
+  .notice{display:flex;gap:6px;align-items:flex-start;margin:8px 10px 0;padding:7px 9px;background:#fff;border:1px solid var(--g200);border-radius:9px;color:var(--g500);line-height:1.4}
+  .ps .tabsrow{display:none;gap:10px;padding:6px 12px 0;background:#fff;font-size:9px;color:var(--g500)}
+  .ps .tabsrow.on{display:flex}
+  .ps .tabsrow b{color:var(--pb);border-bottom:2px solid var(--pb);padding-bottom:3px}
+  .thread{flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:7px;overflow:hidden}
+  .msg{display:flex;gap:6px;align-items:flex-end;max-width:90%}
+  .msg .mav{width:18px;height:18px;border-radius:50%;background:var(--pb);color:#fff;font-size:7px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+  .b{padding:8px 10px;border-radius:13px;border-bottom-left-radius:4px;line-height:1.45;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.06)}
+  .ident{display:none;align-self:center;font-size:8px;color:var(--pb);background:var(--pb50);border-radius:999px;padding:2px 8px}
+  .ident.on{display:block}
+  .qq{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-left:24px}
+  .qq span{display:flex;align-items:center;gap:5px;background:#fff;border:1px solid var(--g200);border-radius:10px;padding:7px 8px;color:var(--ink)}
+  .qq span i{width:16px;height:16px;border-radius:5px;background:var(--pb50);display:inline-block;flex:none}
+  .ps.chip .qq{display:flex;flex-wrap:wrap}
+  .ps.chip .qq span{border-radius:999px;background:var(--pb50);border-color:var(--pb100);color:var(--pb);padding:5px 9px}
+  .ps.chip .qq span i{display:none}
+  .comp{display:flex;align-items:center;gap:5px;padding:7px 9px 10px;background:#fff;border-top:1px solid var(--g100)}
+  .comp .in{flex:1;background:var(--g100);border-radius:999px;padding:7px 10px;color:var(--g400)}
+  .comp .send{width:26px;height:26px;border-radius:50%;background:var(--pb100);flex:none}
+  .comp .ic{color:var(--g400)}
+  .wh{display:none;align-items:center;justify-content:space-between;padding:10px 12px 6px;background:#fff}
+  .wh .logo{font-weight:800;font-size:13px;color:var(--pb)}
+  .wh .r{color:var(--g500);font-size:9px}
+  .ps.hw .appbar{display:none}
+  .ps.hw .wh{display:flex}
+  .toast{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);background:#111827;color:#fff;font-size:12px;border-radius:8px;padding:8px 12px;display:none;z-index:20;max-width:600px}
+  .toast.on{display:block}
+  .legend{font-size:12.5px;color:var(--g700);line-height:1.5;margin-top:10px}
+  .legend b{color:var(--ink)}
+  .kv{display:grid;grid-template-columns:160px 1fr;gap:6px 12px;font-size:12.5px}
+  .kv span:nth-child(odd){color:var(--g500)}
+  .modal{position:absolute;inset:0;background:rgba(17,24,39,.4);display:none;align-items:center;justify-content:center;z-index:30}
+  .modal.on{display:flex}
+  .modal .box{background:#fff;border-radius:12px;padding:18px 20px;width:440px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+  .modal h4{margin:0 0 6px;font-size:15px}
+  .modal p{margin:0 0 14px;font-size:12.5px;color:var(--g500);line-height:1.5}
+  .modal .acts{display:flex;justify-content:flex-end;gap:8px}
+</style>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.9" fill="currentColor"/><circle cx="12" cy="12" r="1.9" fill="currentColor"/><circle cx="12" cy="19" r="1.9" fill="currentColor"/></symbol>
+  <symbol id="spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z" fill="currentColor"/></symbol>
+  <symbol id="clip" viewBox="0 0 24 24"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="cam" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H6l-3 3V12a8 8 0 0 1 8-8h2a8 8 0 0 1 8 8z" fill="#fff" stroke="#fff" stroke-width="1"/></symbol>
+</svg>
+
+<div class="page" id="page">
+  <h1>Prototype admin SharpTalk · Cài đặt widget (hôm nay) và tab Ứng dụng di động (đề xuất) cho tenant go2joy · bấm trực tiếp trên console</h1>
+  <p class="sub">Mọi công tắc, nút, select, bảng trên console đều bấm được và bản Xem trước đổi theo ngay: màu thương hiệu, header, tab, menu card hay chip, header widget trong app, agent, Web | App. Nút Lưu thay đổi sáng lên khi có thay đổi. Trong preview Web, bấm nút tròn để mở panel như trên Hotel Admin. Giao diện, màu, sidebar theo console thật; nội dung agent theo tenant go2joy trên staging.</p>
+  <div class="langbar"><span>Ngôn ngữ console:</span><button data-l="vi" class="on">Tiếng Việt</button><button data-l="en">English</button><button data-l="ko">한국어</button></div>
+
+  <div class="desk">
+    <div class="deskbar"><i></i><i></i><i></i><span>shoptalk.amoeba.site/settings · go2joy · Cài đặt gian hàng</span></div>
+    <div class="win" id="win">
+      <div class="side">
+        <div class="tenant"><i></i><div><b>go2joy</b><span>SharpTalk</span></div></div>
+        <div class="menu" id="sidemenu">
+          <div><i></i>Tổng quan</div><div><i></i>Trò chuyện trực tiếp</div><div><i></i>Bảng yêu cầu</div><div><i></i>Lịch sử hội thoại</div><div><i></i>Hành trình khách hàng</div><div><i></i>Thống kê</div><div><i></i>Cài đặt AI</div><div><i></i>Kho tri thức</div><div><i></i>Khách hàng</div><div><i></i>Đánh giá</div><div><i></i>Người dùng &amp; nhãn</div><div class="on"><i></i>Cài đặt gian hàng</div>
+        </div>
+        <div class="me">admin@go2joy.vn<br><small>master</small></div>
+      </div>
+      <div class="main">
+        <div class="top"><span style="color:var(--g400)">◧</span><span class="pill" id="langpill" onclick="cycleLang()">🌐 Tiếng Việt</span></div>
+        <div class="body">
+          <h2>Cài đặt gian hàng</h2>
+          <p class="hint">Cấu hình widget, danh tính, nhân viên và ứng dụng di động của tenant go2joy</p>
+          <div class="tabs" id="tabs">
+            <span data-t="general">Chung</span>
+            <span data-t="widget" class="on">Cài đặt widget</span>
+            <span data-t="mobile">Ứng dụng di động<em class="new">MỚI</em></span>
+            <span data-t="x">Kết nối nhân viên</span><span data-t="x">Quyền riêng tư</span><span data-t="x">Tích hợp</span><span data-t="x">Khác</span>
+          </div>
+
+          <div class="pane" data-pane="general">
+            <div class="card" style="max-width:640px"><h3>Thông tin tenant</h3><p class="d">Dùng chung cho web và app.</p>
+              <div class="kv"><span>Tên</span><span>Go2Joy</span><span>Slug</span><span>go2joy · đăng nhập /user/go2joy</span><span>Khóa tra tenant (shop)</span><span><code>https://www.go2joy.vn</code></span><span>Gói</span><span>custom</span><span>Ngôn ngữ mặc định</span><span>Tiếng Việt</span><span>Múi giờ</span><span>Asia/Ho_Chi_Minh</span><span>Vùng xử lý AI</span><span>Hoa Kỳ (Anthropic Claude), che dữ liệu cá nhân trước khi gửi</span></div>
+            </div>
+          </div>
+
+          <div class="pane on" data-pane="widget">
+            <div class="cols">
+              <div class="col">
+                <div class="card"><h3>Theme widget</h3><p class="d">Một màu thương hiệu, phần còn lại suy ra. Dùng chung cho web và app.</p>
+                  <div class="f"><label>Màu thương hiệu</label><span class="swatch" onclick="togglePal()"><i id="swI" style="background:#F26A1B"></i><span id="swT">#F26A1B</span></span></div>
+                  <div class="pal" id="pal"><i class="on" style="background:#F26A1B" data-c="#F26A1B"></i><i style="background:#E11D48" data-c="#E11D48"></i><i style="background:#0EA5E9" data-c="#0EA5E9"></i><i style="background:#16A34A" data-c="#16A34A"></i><i style="background:#4F46E5" data-c="#4F46E5"></i><i style="background:#111827" data-c="#111827"></i></div>
+                  <div class="f"><label>Header</label><span class="seg" data-key="headerStyle"><span class="on" data-v="white">Trắng</span><span data-v="brand">Màu thương hiệu</span></span></div>
+                  <div class="f"><label>Logo</label><span class="ok lnk" onclick="toast(L('t.logo'))">go2joy-logo.png · 240×64</span></div>
+                  <div class="f"><label>Launcher (web)</label><span class="sel" data-key="launcher" data-opts="o.launch1|o.launch2|o.launch3">Phải · Vừa · Chat</span></div>
+                </div>
+                <div class="card"><h3>Cấu hình tab</h3><p class="d">Phải bật ít nhất một tab. Một tab thì thanh tab tự ẩn.</p>
+                  <div class="f"><label>Trò chuyện</label><span class="sw on" data-key="tabChat"></span></div>
+                  <div class="f"><label>Thông báo</label><span class="sw" data-key="tabNotif"></span></div>
+                  <div class="f"><label>Đơn hàng</label><span class="sw" data-key="tabOrders"></span></div>
+                  <div class="f"><label>Vị trí thanh tab</label><span class="seg" data-key="tabPos"><span class="on" data-v="top">Trên (chữ)</span><span data-v="bottom">Dưới (biểu tượng)</span></span></div>
+                </div>
+                <div class="card"><h3>Hành vi widget</h3>
+                  <div class="f"><label>Tên hiển thị</label><span class="sel" data-key="name" data-opts="Go2Joy|Go2Joy Support|o.nameVi">Go2Joy</span></div>
+                  <div class="f"><label>Múi giờ</label><span>Asia/Ho_Chi_Minh</span></div>
+                  <div class="f"><label>Ngôn ngữ mặc định</label><span class="sel" data-key="lang" data-opts="o.vi|o.en|o.ko">Tiếng Việt</span></div>
+                  <div class="f"><label>Kiểu menu kịch bản</label><span class="seg" data-key="menu"><span class="on" data-v="card">Card</span><span data-v="chip">Chip</span></span></div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card"><h3>Nhúng &amp; SDK</h3><p class="d">Cài widget lên trang của bạn và để máy chủ của bạn cho widget biết ai đang đăng nhập.</p>
+                  <div class="f"><label>Mã cài đặt (web)</label><span class="btn" onclick="toast(L('t.copied'))">Sao chép</span></div>
+                  <div class="code">&lt;script&gt;window.SHARPTALK_WIDGET_CONFIG = {
+  shop: "https://www.go2joy.vn", locale: "vi",
+  agent: "hotel-admin" };&lt;/script&gt;
+&lt;script src="https://shoptalk.amoeba.site/widget/embed.js" defer&gt;&lt;/script&gt;</div>
+                  <div class="f" style="margin-top:8px"><label>Tên miền được phép</label><span>ha.go2joy.vn · go2joy-ha-uat.go2joy.io <span class="lnk" style="color:var(--p700)" onclick="toast(L('t.addOrigin'))">+ thêm</span></span></div>
+                  <div class="f"><label>Liên kết đăng nhập (khóa ký)</label><span class="ok"><span id="keyDate">đã phát hành 12/10</span> · <span class="lnk" onclick="openModal()">Xoay khóa</span></span></div>
+                  <div class="f"><label>Thuộc tính ký</label><span>hotel_id · hotel_name · region · province · role</span></div>
+                  <div class="f"><label>SDK Android</label><span class="btn" onclick="toast(L('t.aar'))">Tải AAR 0.2.0</span></div>
+                </div>
+                <div class="card"><h3>Nguồn đồng ý</h3><p class="d">Người dùng được ứng dụng của bạn ký xác thực được ghi nhận là đã đồng ý, không hiện biểu ngữ.</p>
+                  <div class="f"><label>Nguồn</label><span class="seg" data-key="consent"><span data-v="widget">Biểu ngữ widget</span><span class="on" data-v="host">Điều khoản ứng dụng chủ</span></span></div>
+                </div>
+              </div>
+              <div class="card prev" id="prevW"></div>
+            </div>
+          </div>
+
+          <div class="pane" data-pane="mobile">
+            <div class="cols">
+              <div class="col">
+                <div class="card"><h3>Giao diện app</h3><p class="d">Ghi đè theme web khi widget mở trong app (surface=app). Để trống thì dùng theme web.</p>
+                  <div class="f"><label>Font</label><span class="seg" data-key="font"><span class="on" data-v="system">Hệ thống</span><span data-v="web">Theo web</span></span></div>
+                  <div class="f"><label>Cỡ chữ</label><span class="sel" data-key="size" data-opts="13 px|14 px|15 px|16 px">14 px</span></div>
+                  <div class="f"><label>Menu kịch bản</label><span class="seg" data-key="menuApp"><span class="on" data-v="card">Card</span><span data-v="chip">Chip</span></span></div>
+                  <div class="f"><label>Header widget trong app</label><span class="seg" data-key="hdr"><span data-v="widget">Widget</span><span class="on" data-v="native">Native</span></span></div>
+                  <div class="f"><label>Màu riêng cho app</label><span class="sw" data-key="appColor"></span></div>
+                  <div class="pal" id="palApp"><i class="on" style="background:#F26A1B" data-c="#F26A1B"></i><i style="background:#E11D48" data-c="#E11D48"></i><i style="background:#0EA5E9" data-c="#0EA5E9"></i><i style="background:#16A34A" data-c="#16A34A"></i><i style="background:#4F46E5" data-c="#4F46E5"></i><i style="background:#111827" data-c="#111827"></i></div>
+                </div>
+                <div class="card"><h3>Phiên bản SDK</h3>
+                  <div class="f"><label>SDK tối thiểu</label><span class="sel" data-key="minsdk" data-opts="0.1.0|0.2.0">0.2.0</span></div>
+                  <div class="f"><label>Widget đang chạy</label><span>1.14.0</span></div>
+                  <div class="f"><label>App gần nhất báo về</label><span class="ok">0.2.0 · <span>tương thích</span></span></div>
+                </div>
+                <div class="card"><h3>Kiểm thử</h3>
+                  <div class="f"><label>Trình mô phỏng app</label><span class="btn" onclick="toast(L('t.sim',state.agent))">Mở với shop, agent của tenant</span></div>
+                  <div class="f"><label>Gói ký thử từ backend Go2Joy</label><span id="signTest" class="wn"></span></div>
+                </div>
+              </div>
+              <div class="col">
+                <div class="card"><h3>Điểm vào trong app</h3><p class="d">Màn hình nào trong app mở agent nào. App đọc bảng này lúc mở, không hard-code mã agent. Bấm tên agent để đổi.</p>
+                  <table class="t" id="entries"><tr><th>Màn hình</th><th>Agent</th><th>Ngữ cảnh</th><th></th></tr></table>
+                  <span class="add" onclick="addEntry()">+ Thêm màn hình</span>
+                </div>
+                <div class="card"><h3>Danh tính &amp; đồng ý</h3><p class="d">Dùng chung với web. Chỉ hiển thị để admin thấy app đang chịu thiết lập nào.</p>
+                  <div class="f"><label>Khóa ký (Nhúng &amp; SDK)</label><span class="ok" id="keyInfo">đã phát hành · 12/10</span></div>
+                  <div class="f"><label>Nguồn đồng ý</label><span id="consentInfo"></span></div>
+                  <div class="f"><label>Thuộc tính ký</label><span>hotel_id · region · role</span></div>
+                </div>
+              </div>
+              <div class="card prev" id="prevM"></div>
+            </div>
+          </div>
+        </div>
+        <div class="save"><span class="st" id="saveSt"></span><span class="btn" onclick="discard()">Hủy</span><span class="btn p" id="saveBtn" onclick="save()">Lưu thay đổi</span></div>
+        <div class="toast" id="toast"></div>
+        <div class="modal" id="modal"><div class="box"><h4>Xoay khóa ký?</h4><p>Khóa cũ ngừng hoạt động ngay. Backend Go2Joy phải cập nhật biến môi trường trước khi lễ tân mở lại widget, nếu không mọi identify bị từ chối và người dùng thành khách.</p><div class="acts"><span class="btn" onclick="closeModal()">Hủy</span><span class="btn p dirty" onclick="rotate()">Xoay khóa</span></div></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="legend"><b>Hôm nay:</b> tab Cài đặt widget đã có đủ card, chỉ thiếu nút Web | App và chọn agent trong Xem trước (S8, 0,5 ngày). <b>Đề xuất:</b> tab Ứng dụng di động với Giao diện app, Điểm vào, Phiên bản SDK, Kiểm thử (S9, 3 đến 4 ngày, sau pilot). Mọi thay đổi ở cả hai tab áp xuống app ở lần mở kế tiếp, không cần phát hành lại app.</div>
+</div>
+
+<template id="prevTpl">
+  <div class="bar"><h3 style="margin:0">Xem trước</h3><span class="seg surf"><span data-s="web">Web</span><span data-s="app" class="on">App</span></span></div>
+  <div class="bar2"><span class="sel agentSel">Hotel Admin</span><span class="btn" onclick="identifyTest(this)">Gửi identify thử</span><span class="btn" onclick="toast(L('t.widgetLocale'))">vi</span></div>
+  <div class="webp"><div class="ha"><div class="hs"><b>Go2Joy HA</b><span>Trang chủ</span><span>Đặt phòng</span><span>Đối soát</span><span>Khuyến mãi</span><span>Doanh thu</span><span>Đánh giá</span><span>Chat với khách</span><span>Tin nhắn từ G2J</span></div><div class="hm"><b>Đặt phòng · Chờ nhận phòng (5)</b><div class="tbl"><div><span>#G2J-8841 · Nguyễn A</span><span>2 đêm</span></div><div><span>#G2J-8847 · Trần B</span><span>1 đêm</span></div><div><span>#G2J-8850 · Lê C</span><span>3 đêm</span></div></div></div></div>
+    <div class="launch" onclick="this.parentNode.classList.add('open')"><svg class="ico"><use href="#chat"/></svg></div>
+    <div class="fw"><div class="h"><span class="pname">Go2Joy</span><span class="cl" onclick="this.closest('.webp').classList.remove('open')">VI ⚙ ✕</span></div><div class="tabsrow"><b>Trò chuyện</b><span>Thông báo</span><span>Đơn hàng</span></div><div class="n ntxt2"></div><div class="t"><div class="bb greet"></div><div class="q quick"></div></div><div class="c"><i></i><b></b></div></div></div>
+  <div class="pf on"><div class="ps">
+    <div class="appbar"><svg class="ico sm"><use href="#back"/></svg><div class="av">G2</div><div class="grow"><div class="t pname">Hỗ trợ Go2Joy</div><div class="s">Trả lời ngay · AI + nhân viên</div></div><svg class="ico sm"><use href="#more"/></svg></div>
+    <div class="wh"><span class="logo">G2 Go2Joy</span><span class="r">🌐 VI &nbsp;⚙ &nbsp;✕</span></div>
+    <div class="tabsrow"><b>Trò chuyện</b><span>Thông báo</span><span>Đơn hàng</span></div>
+    <div class="notice"><svg class="ico sm" style="color:var(--pb)"><use href="#spark"/></svg><span class="ntxt"></span></div>
+    <div class="thread"><div class="ident"></div><div class="msg"><div class="mav">G2</div><div class="b greet"></div></div><div class="qq quick"></div></div>
+    <div class="comp"><svg class="ico sm ic"><use href="#cam"/></svg><svg class="ico sm ic"><use href="#clip"/></svg><div class="in">Nhập tin nhắn…</div><div class="send"></div></div>
+  </div></div>
+  <div class="note">Đang áp thiết kế chưa lưu (token preview). App: khung 390×780, chrome theo cài đặt header. Kiểm bàn phím, camera, link ngoài vẫn cần máy thật.</div>
+</template>
+
+<script>
+  /* ===== i18n static (vi source → en/ko) ===== */
+  var T={
+  '#G2J-8841 · Nguyễn A':{en:'#G2J-8841 · Nguyen A',ko:'#G2J-8841 · Nguyen A'},'#G2J-8847 · Trần B':{en:'#G2J-8847 · Tran B',ko:'#G2J-8847 · Tran B'},'#G2J-8850 · Lê C':{en:'#G2J-8850 · Le C',ko:'#G2J-8850 · Le C'},
+  'Prototype admin SharpTalk · Cài đặt widget (hôm nay) và tab Ứng dụng di động (đề xuất) cho tenant go2joy · bấm trực tiếp trên console':{en:'SharpTalk admin prototype · Widget settings (today) and the proposed Mobile app tab for tenant go2joy · click directly on the console',ko:'SharpTalk 관리자 프로토타입 · 위젯 설정(현재)과 제안된 모바일 앱 탭, go2joy 테넌트 · 콘솔에서 직접 클릭'},
+  'Mọi công tắc, nút, select, bảng trên console đều bấm được và bản Xem trước đổi theo ngay: màu thương hiệu, header, tab, menu card hay chip, header widget trong app, agent, Web | App. Nút Lưu thay đổi sáng lên khi có thay đổi. Trong preview Web, bấm nút tròn để mở panel như trên Hotel Admin. Giao diện, màu, sidebar theo console thật; nội dung agent theo tenant go2joy trên staging.':{en:'Every switch, button, select and table on the console is clickable and the Preview updates instantly: brand colour, header, tabs, card or chip menu, widget header in app, agent, Web | App. The Save button lights up when there are changes. In the Web preview, click the round launcher to open the panel as on Hotel Admin. Layout, colours and sidebar follow the real console; agent content follows the go2joy tenant on staging.',ko:'콘솔의 모든 스위치·버튼·선택·표를 클릭할 수 있고 미리보기가 즉시 바뀝니다: 브랜드 색, 헤더, 탭, 카드/칩 메뉴, 앱 내 위젯 헤더, 에이전트, Web | App. 변경이 있으면 저장 버튼이 켜집니다. Web 미리보기에서 둥근 버튼을 누르면 Hotel Admin처럼 패널이 열립니다. 레이아웃·색·사이드바는 실제 콘솔, 에이전트 내용은 스테이징의 go2joy 테넌트를 따릅니다.'},
+  'Ngôn ngữ console:':{en:'Console language:',ko:'콘솔 언어:'},
+  'shoptalk.amoeba.site/settings · go2joy · Cài đặt gian hàng':{en:'shoptalk.amoeba.site/settings · go2joy · Store settings',ko:'shoptalk.amoeba.site/settings · go2joy · 테넌트 설정'},
+  'Tổng quan':{en:'Dashboard',ko:'대시보드'},'Trò chuyện trực tiếp':{en:'Live chat',ko:'실시간 상담'},'Bảng yêu cầu':{en:'Issue board',ko:'이슈 보드'},'Lịch sử hội thoại':{en:'Conversation history',ko:'대화 이력'},'Hành trình khách hàng':{en:'Customer journey',ko:'고객여정'},'Thống kê':{en:'Statistics',ko:'통계'},'Cài đặt AI':{en:'AI settings',ko:'AI 설정'},'Kho tri thức':{en:'Knowledge',ko:'지식'},'Khách hàng':{en:'Customers',ko:'고객'},'Đánh giá':{en:'Reviews',ko:'리뷰'},'Người dùng & nhãn':{en:'Users & labels',ko:'사용자 및 라벨'},'Cài đặt gian hàng':{en:'Store settings',ko:'테넌트 설정'},
+  'Cấu hình widget, danh tính, nhân viên và ứng dụng di động của tenant go2joy':{en:'Widget, identity, staff and mobile app configuration for tenant go2joy',ko:'go2joy 테넌트의 위젯·신원·상담원·모바일 앱 설정'},
+  'Chung':{en:'General',ko:'일반'},'Cài đặt widget':{en:'Widget settings',ko:'위젯 설정'},'Ứng dụng di động':{en:'Mobile app',ko:'모바일 앱'},'MỚI':{en:'NEW',ko:'신규'},'Kết nối nhân viên':{en:'Agent handoff',ko:'상담원 연결'},'Quyền riêng tư':{en:'Privacy',ko:'개인정보'},'Tích hợp':{en:'Integrations',ko:'연동'},'Khác':{en:'Other',ko:'기타'},
+  'Thông tin tenant':{en:'Tenant information',ko:'테넌트 정보'},'Dùng chung cho web và app.':{en:'Shared by web and app.',ko:'웹과 앱이 공유합니다.'},'Tên':{en:'Name',ko:'이름'},'go2joy · đăng nhập /user/go2joy':{en:'go2joy · login /user/go2joy',ko:'go2joy · 로그인 /user/go2joy'},'Khóa tra tenant (shop)':{en:'Tenant lookup key (shop)',ko:'테넌트 조회 키(shop)'},'Gói':{en:'Plan',ko:'요금제'},'Ngôn ngữ mặc định':{en:'Default language',ko:'기본 언어'},'Tiếng Việt':{en:'Vietnamese',ko:'베트남어'},'Múi giờ':{en:'Time zone',ko:'시간대'},'Vùng xử lý AI':{en:'AI processing region',ko:'AI 처리 지역'},'Hoa Kỳ (Anthropic Claude), che dữ liệu cá nhân trước khi gửi':{en:'United States (Anthropic Claude), personal data masked before sending',ko:'미국(Anthropic Claude), 전송 전 개인정보 마스킹'},
+  'Theme widget':{en:'Widget theme',ko:'위젯 테마'},'Một màu thương hiệu, phần còn lại suy ra. Dùng chung cho web và app.':{en:'One brand colour, everything else is derived. Shared by web and app.',ko:'브랜드 색 하나, 나머지는 파생됩니다. 웹과 앱이 공유합니다.'},'Màu thương hiệu':{en:'Brand colour',ko:'브랜드 색'},'Header':{en:'Header',ko:'헤더'},'Trắng':{en:'White',ko:'흰색'},'Logo':{en:'Logo',ko:'로고'},'Launcher (web)':{en:'Launcher (web)',ko:'런처(웹)'},
+  'Cấu hình tab':{en:'Tab configuration',ko:'탭 구성'},'Phải bật ít nhất một tab. Một tab thì thanh tab tự ẩn.':{en:'At least one tab must be on. With one tab the tab bar hides itself.',ko:'탭은 최소 하나 켜야 합니다. 탭이 하나면 탭 바가 숨겨집니다.'},'Trò chuyện':{en:'Chat',ko:'채팅'},'Thông báo':{en:'Notifications',ko:'알림'},'Đơn hàng':{en:'Orders',ko:'주문'},'Vị trí thanh tab':{en:'Tab bar position',ko:'탭 바 위치'},'Trên (chữ)':{en:'Top (text)',ko:'위(텍스트)'},'Dưới (biểu tượng)':{en:'Bottom (icons)',ko:'아래(아이콘)'},
+  'Hành vi widget':{en:'Widget behaviour',ko:'위젯 동작'},'Tên hiển thị':{en:'Display name',ko:'표시 이름'},'Kiểu menu kịch bản':{en:'Scenario menu style',ko:'시나리오 메뉴 스타일'},'Card':{en:'Cards',ko:'카드'},'Chip':{en:'Chips',ko:'칩'},
+  'Nhúng & SDK':{en:'Embed & SDK',ko:'임베드 · SDK'},'Cài widget lên trang của bạn và để máy chủ của bạn cho widget biết ai đang đăng nhập.':{en:'Install the widget on your site and let your server tell the widget who is signed in.',ko:'사이트에 위젯을 설치하고 서버가 위젯에 로그인 사용자를 알려 줍니다.'},'Mã cài đặt (web)':{en:'Install snippet (web)',ko:'설치 스니펫(웹)'},'Sao chép':{en:'Copy',ko:'복사'},'Tên miền được phép':{en:'Allowed domains',ko:'허용 도메인'},'+ thêm':{en:'+ add',ko:'+ 추가'},'Liên kết đăng nhập (khóa ký)':{en:'Login link (signing key)',ko:'로그인 연동(서명 키)'},'đã phát hành 12/10':{en:'issued 12 Oct',ko:'10/12 발급'},'Xoay khóa':{en:'Rotate key',ko:'키 교체'},'Thuộc tính ký':{en:'Signed attributes',ko:'서명 속성'},'SDK Android':{en:'Android SDK',ko:'Android SDK'},'Tải AAR 0.2.0':{en:'Download AAR 0.2.0',ko:'AAR 0.2.0 다운로드'},
+  'Nguồn đồng ý':{en:'Consent source',ko:'동의 방식'},'Người dùng được ứng dụng của bạn ký xác thực được ghi nhận là đã đồng ý, không hiện biểu ngữ.':{en:'Users your app signs are recorded as consented without showing the banner.',ko:'앱이 서명한 사용자는 배너 없이 동의한 것으로 기록됩니다.'},'Nguồn':{en:'Source',ko:'방식'},'Biểu ngữ widget':{en:'Widget banner',ko:'위젯 배너'},'Điều khoản ứng dụng chủ':{en:'Host app terms',ko:'호스트 앱 약관'},
+  'Giao diện app':{en:'App appearance',ko:'앱 외관'},'Ghi đè theme web khi widget mở trong app (surface=app). Để trống thì dùng theme web.':{en:'Overrides the web theme when the widget opens in the app (surface=app). Empty means the web theme.',ko:'앱에서 위젯이 열릴 때(surface=app) 웹 테마를 덮어씁니다. 비우면 웹 테마를 씁니다.'},'Font':{en:'Font',ko:'글꼴'},'Hệ thống':{en:'System',ko:'시스템'},'Theo web':{en:'Same as web',ko:'웹과 동일'},'Cỡ chữ':{en:'Font size',ko:'글자 크기'},'Menu kịch bản':{en:'Scenario menu',ko:'시나리오 메뉴'},'Header widget trong app':{en:'Widget header in app',ko:'앱 내 위젯 헤더'},'Widget':{en:'Widget',ko:'위젯'},'Native':{en:'Native',ko:'네이티브'},'Màu riêng cho app':{en:'Separate colour for app',ko:'앱 전용 색'},
+  'Phiên bản SDK':{en:'SDK version',ko:'SDK 버전'},'SDK tối thiểu':{en:'Minimum SDK',ko:'최소 SDK'},'Widget đang chạy':{en:'Widget running',ko:'실행 중인 위젯'},'App gần nhất báo về':{en:'Last app report',ko:'마지막 앱 보고'},'tương thích':{en:'compatible',ko:'호환'},
+  'Kiểm thử':{en:'Testing',ko:'테스트'},'Trình mô phỏng app':{en:'App simulator',ko:'앱 시뮬레이터'},'Mở với shop, agent của tenant':{en:'Open with the tenant\'s shop and agent',ko:'테넌트의 shop·agent로 열기'},'Gói ký thử từ backend Go2Joy':{en:'Test signed payload from Go2Joy backend',ko:'Go2Joy 백엔드 서명 패키지 테스트'},
+  'Điểm vào trong app':{en:'Entry points in app',ko:'앱 진입점'},'Màn hình nào trong app mở agent nào. App đọc bảng này lúc mở, không hard-code mã agent. Bấm tên agent để đổi.':{en:'Which app screen opens which agent. The app reads this table on open instead of hard-coding agent codes. Click an agent name to change it.',ko:'앱의 어느 화면이 어느 에이전트를 여는지. 앱은 열 때 이 표를 읽어 에이전트 코드를 하드코딩하지 않습니다. 에이전트 이름을 눌러 변경하세요.'},'Màn hình':{en:'Screen',ko:'화면'},'Agent':{en:'Agent',ko:'에이전트'},'Ngữ cảnh':{en:'Context',ko:'맥락'},'+ Thêm màn hình':{en:'+ Add screen',ko:'+ 화면 추가'},
+  'Danh tính & đồng ý':{en:'Identity & consent',ko:'신원 및 동의'},'Dùng chung với web. Chỉ hiển thị để admin thấy app đang chịu thiết lập nào.':{en:'Shared with web. Shown so the admin can see which settings apply to the app.',ko:'웹과 공유. 앱에 적용되는 설정을 관리자가 볼 수 있도록 표시만 합니다.'},'Khóa ký (Nhúng & SDK)':{en:'Signing key (Embed & SDK)',ko:'서명 키(임베드 · SDK)'},'đã phát hành · 12/10':{en:'issued · 12 Oct',ko:'발급 · 10/12'},
+  'Hủy':{en:'Cancel',ko:'취소'},'Lưu thay đổi':{en:'Save changes',ko:'변경 저장'},
+  'Xoay khóa ký?':{en:'Rotate the signing key?',ko:'서명 키를 교체할까요?'},'Khóa cũ ngừng hoạt động ngay. Backend Go2Joy phải cập nhật biến môi trường trước khi lễ tân mở lại widget, nếu không mọi identify bị từ chối và người dùng thành khách.':{en:'The old key stops working immediately. The Go2Joy backend must update its environment variable before receptionists reopen the widget, otherwise every identify is rejected and users become guests.',ko:'기존 키는 즉시 중지됩니다. 리셉션이 위젯을 다시 열기 전에 Go2Joy 백엔드가 환경 변수를 갱신해야 하며, 아니면 모든 identify가 거부되어 게스트가 됩니다.'},
+  'Hôm nay:':{en:'Today:',ko:'현재:'},'tab Cài đặt widget đã có đủ card, chỉ thiếu nút Web | App và chọn agent trong Xem trước (S8, 0,5 ngày).':{en:'the Widget settings tab already has all cards; only the Web | App switch and agent picker in Preview are missing (S8, 0.5 day).',ko:'위젯 설정 탭은 카드가 모두 있고, 미리보기의 Web | App 전환과 에이전트 선택만 없습니다(S8, 0.5일).'},'Đề xuất:':{en:'Proposed:',ko:'제안:'},'tab Ứng dụng di động với Giao diện app, Điểm vào, Phiên bản SDK, Kiểm thử (S9, 3 đến 4 ngày, sau pilot). Mọi thay đổi ở cả hai tab áp xuống app ở lần mở kế tiếp, không cần phát hành lại app.':{en:'a Mobile app tab with App appearance, Entry points, SDK version, Testing (S9, 3 to 4 days, after the pilot). Changes on both tabs reach the app on its next open, no app release needed.',ko:'앱 외관·진입점·SDK 버전·테스트가 있는 모바일 앱 탭(S9, 3~4일, 파일럿 이후). 두 탭의 변경은 다음 앱 실행 시 적용되며 앱 재배포가 필요 없습니다.'},
+  'Xem trước':{en:'Preview',ko:'미리보기'},'Gửi identify thử':{en:'Send test identify',ko:'identify 테스트'},'Go2Joy HA':{en:'Go2Joy HA',ko:'Go2Joy HA'},'Trang chủ':{en:'Home',ko:'홈'},'Đặt phòng':{en:'Bookings',ko:'예약'},'Đối soát':{en:'Reconciliation',ko:'정산'},'Khuyến mãi':{en:'Promotions',ko:'프로모션'},'Doanh thu':{en:'Revenue',ko:'매출'},'Chat với khách':{en:'Chat with guests',ko:'고객 채팅'},'Tin nhắn từ G2J':{en:'Messages from G2J',ko:'G2J 메시지'},'Đặt phòng · Chờ nhận phòng (5)':{en:'Bookings · Awaiting check-in (5)',ko:'예약 · 체크인 대기(5)'},'2 đêm':{en:'2 nights',ko:'2박'},'1 đêm':{en:'1 night',ko:'1박'},'3 đêm':{en:'3 nights',ko:'3박'},
+  'Trả lời ngay · AI + nhân viên':{en:'Replies now · AI + staff',ko:'바로 답변 · AI + 직원'},'Nhập tin nhắn…':{en:'Type a message…',ko:'메시지를 입력하세요…'},'Hỗ trợ Go2Joy':{en:'Go2Joy Support',ko:'Go2Joy 지원'},
+  'Đang áp thiết kế chưa lưu (token preview). App: khung 390×780, chrome theo cài đặt header. Kiểm bàn phím, camera, link ngoài vẫn cần máy thật.':{en:'Showing the unsaved design (preview token). App: 390×780 frame, chrome per the header setting. Keyboard, camera and external links still need a real device.',ko:'저장하지 않은 디자인 적용 중(미리보기 토큰). 앱: 390×780 프레임, 헤더 설정에 따른 크롬. 키보드·카메라·외부 링크는 실기기 확인이 필요합니다.'}
+  };
+  var S_={
+  vi:{'o.launch1':'Phải · Vừa · Chat','o.launch2':'Trái · Vừa · Chat','o.launch3':'Phải · Lớn · Tai nghe','o.nameVi':'Hỗ trợ Go2Joy','o.vi':'Tiếng Việt','o.en':'English','o.ko':'한국어','ctx.none':'—','ctx.booking':'Mã đặt phòng','ctx.recon':'Kỳ đối soát','a.admin':'Hotel Admin','a.partner':'Hotel Partner (Joydesk)','a.guest':'Landing Guest',
+    'g.admin':'Xin chào! Chào mừng bạn đến với Go2Joy Support. Hãy chọn một chủ đề bên dưới hoặc nhập câu hỏi.','g.partner':'Kính chào Quý đối tác, tôi là Joydesk, trợ lý hỗ trợ đối tác khách sạn của Go2Joy.','g.guest':'Xin chào! Tôi có thể giúp bạn tìm phòng theo giờ, qua đêm hoặc giải đáp về đặt phòng.',
+    'q.admin':'Xem đặt phòng hôm nay|Cách nhận phòng cho khách|Khiếu nại đặt phòng|Hỏi về đối soát','q.partner':'Xem đặt phòng hôm nay|Cách nhận phòng|Khiếu nại đặt phòng|Hỏi về đối soát','q.guest':'Tìm phòng gần tôi|Chính sách hủy|Ưu đãi hôm nay|Liên hệ khách sạn',
+    'n.host':'Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp AI bên thứ ba tại Hoa Kỳ.','n.widget':'Để trò chuyện, bạn cần đồng ý với thông báo quyền riêng tư. [Đồng ý] [Từ chối]','n.short':'Cuộc trò chuyện này có sử dụng AI…','ident':'Đã xác minh: Lễ tân · A In Hotel Del Luna · Miền Nam',
+    'st.clean':'Không có thay đổi','st.dirty':'Có thay đổi chưa lưu · áp dụng cho web và app ở lần mở kế tiếp','sign.wait':'chưa kiểm · ','sign.call':'gọi thử','sign.calling':'đang gọi…','sign.ok':'OK · {0} · chữ ký hợp lệ','consent.host':'Điều khoản ứng dụng chủ','consent.widget':'Biểu ngữ widget','screen.new':'screen-{0}',
+    't.logo':'Tải logo: PNG/SVG, tối đa 512 KB','t.copied':'Đã sao chép mã cài đặt vào clipboard','t.addOrigin':'Thêm tên miền: nhập origin https://… rồi Lưu','t.aar':'Tải shoptalk-android-0.2.0.aar + hướng dẫn mobile + release notes','t.sim':'Mở /widget/webview-test.html?embed=1&mode=app&shop=https://www.go2joy.vn&agent={0}','t.widgetLocale':'Widget nhận lệnh locale: vi → en → ko','t.lang':'Ngôn ngữ console: Tiếng Việt · English · 한국어','t.tabx':'Tab "{0}" dùng chung web và app, không nằm trong prototype này','t.menu':'Menu "{0}" của console thật, ngoài prototype này','t.minTab':'Phải bật ít nhất một tab','t.addEntry':'Thêm màn hình {0}. Đổi tên và ngữ cảnh ở bản thật.','t.nosave':'Không có gì để lưu','t.saved':'Đã lưu. Web và app nhận cấu hình mới ở lần mở kế tiếp, không cần phát hành app.','t.discard':'Đã bỏ thay đổi chưa lưu','t.identOk':'identified ok · attributes hotel_id=H-1024, region=south, role=reception · badge hiện trên console','t.sending':'Đang gửi…','t.signOk':'GET /api/sharptalk/identity trả gói hợp lệ, hash khớp secret hiện tại','t.rotated':'Đã xoay khóa. Gửi khóa mới cho dev backend Go2Joy trước khi lễ tân mở lại widget.','key.issued':'đã phát hành {0}','key.issued2':'đã phát hành · {0}','pill':'🌐 Tiếng Việt'},
+  en:{'o.launch1':'Right · Medium · Chat','o.launch2':'Left · Medium · Chat','o.launch3':'Right · Large · Headset','o.nameVi':'Go2Joy Support (vi)','o.vi':'Vietnamese','o.en':'English','o.ko':'Korean','ctx.none':'—','ctx.booking':'Booking code','ctx.recon':'Reconciliation period','a.admin':'Hotel Admin','a.partner':'Hotel Partner (Joydesk)','a.guest':'Landing Guest',
+    'g.admin':'Hello! Welcome to Go2Joy Support. Pick a topic below or type your question.','g.partner':'Dear Valued Partner, I\'m Joydesk, Go2Joy\'s hotel partner support assistant.','g.guest':'Hello! I can help you find hourly or overnight rooms or answer booking questions.',
+    'q.admin':'Today\'s bookings|How to check a guest in|Booking complaint|Ask about reconciliation','q.partner':'Today\'s bookings|How to check in|Booking complaint|Ask about reconciliation','q.guest':'Rooms near me|Cancellation policy|Today\'s deals|Contact the hotel',
+    'n.host':'This conversation uses AI. Your messages are processed by a third-party AI provider in the US.','n.widget':'To chat, please accept the privacy notice. [Accept] [Decline]','n.short':'This conversation uses AI…','ident':'Verified: Receptionist · A In Hotel Del Luna · South',
+    'st.clean':'No changes','st.dirty':'Unsaved changes · applied to web and app on next open','sign.wait':'not tested · ','sign.call':'call now','sign.calling':'calling…','sign.ok':'OK · {0} · signature valid','consent.host':'Host app terms','consent.widget':'Widget banner','screen.new':'screen-{0}',
+    't.logo':'Upload logo: PNG/SVG, up to 512 KB','t.copied':'Install snippet copied to clipboard','t.addOrigin':'Add domain: enter an https://… origin, then Save','t.aar':'Download shoptalk-android-0.2.0.aar + mobile guide + release notes','t.sim':'Open /widget/webview-test.html?embed=1&mode=app&shop=https://www.go2joy.vn&agent={0}','t.widgetLocale':'Widget receives locale command: vi → en → ko','t.lang':'Console language: Tiếng Việt · English · 한국어','t.tabx':'Tab "{0}" is shared by web and app and is outside this prototype','t.menu':'"{0}" menu of the real console, outside this prototype','t.minTab':'At least one tab must stay on','t.addEntry':'Added screen {0}. Rename and set context in the real console.','t.nosave':'Nothing to save','t.saved':'Saved. Web and app pick up the new settings on next open, no app release.','t.discard':'Unsaved changes discarded','t.identOk':'identified ok · attributes hotel_id=H-1024, region=south, role=reception · badge shown on console','t.sending':'Sending…','t.signOk':'GET /api/sharptalk/identity returned a valid payload, hash matches the current secret','t.rotated':'Key rotated. Send the new key to the Go2Joy backend developer before receptionists reopen the widget.','key.issued':'issued {0}','key.issued2':'issued · {0}','pill':'🌐 English'},
+  ko:{'o.launch1':'오른쪽 · 중간 · 채팅','o.launch2':'왼쪽 · 중간 · 채팅','o.launch3':'오른쪽 · 크게 · 헤드셋','o.nameVi':'Go2Joy 지원(vi)','o.vi':'베트남어','o.en':'영어','o.ko':'한국어','ctx.none':'—','ctx.booking':'예약번호','ctx.recon':'정산 기간','a.admin':'Hotel Admin','a.partner':'Hotel Partner (Joydesk)','a.guest':'Landing Guest',
+    'g.admin':'안녕하세요! Go2Joy 지원입니다. 아래 주제를 고르거나 질문을 입력하세요.','g.partner':'파트너님 안녕하세요, 저는 Go2Joy 호텔 파트너 지원 도우미 Joydesk입니다.','g.guest':'안녕하세요! 시간제·숙박 객실 찾기와 예약 문의를 도와드립니다.',
+    'q.admin':'오늘 예약 보기|고객 체크인 방법|예약 이의 제기|정산 문의','q.partner':'오늘 예약 보기|체크인 방법|예약 이의 제기|정산 문의','q.guest':'내 주변 객실|취소 정책|오늘의 혜택|호텔 연락',
+    'n.host':'이 대화는 AI를 사용합니다. 메시지는 미국의 제3자 AI 제공업체가 처리합니다.','n.widget':'대화하려면 개인정보 고지에 동의해 주세요. [동의] [거부]','n.short':'이 대화는 AI를 사용합니다…','ident':'인증 완료: 리셉션 · A In Hotel Del Luna · 남부',
+    'st.clean':'변경 없음','st.dirty':'저장하지 않은 변경 · 다음 실행 시 웹과 앱에 적용','sign.wait':'미검사 · ','sign.call':'호출 테스트','sign.calling':'호출 중…','sign.ok':'OK · {0} · 서명 유효','consent.host':'호스트 앱 약관','consent.widget':'위젯 배너','screen.new':'screen-{0}',
+    't.logo':'로고 업로드: PNG/SVG, 최대 512 KB','t.copied':'설치 스니펫을 클립보드에 복사했습니다','t.addOrigin':'도메인 추가: https://… 오리진 입력 후 저장','t.aar':'shoptalk-android-0.2.0.aar + 모바일 가이드 + 릴리스 노트 다운로드','t.sim':'/widget/webview-test.html?embed=1&mode=app&shop=https://www.go2joy.vn&agent={0} 열기','t.widgetLocale':'위젯이 locale 명령 수신: vi → en → ko','t.lang':'콘솔 언어: Tiếng Việt · English · 한국어','t.tabx':'"{0}" 탭은 웹과 앱이 공유하며 이 프로토타입 범위 밖입니다','t.menu':'실제 콘솔의 "{0}" 메뉴, 이 프로토타입 범위 밖','t.minTab':'탭은 최소 하나 켜야 합니다','t.addEntry':'화면 {0} 추가. 실제 콘솔에서 이름과 맥락을 바꾸세요.','t.nosave':'저장할 내용이 없습니다','t.saved':'저장했습니다. 다음 실행 시 웹과 앱에 새 설정이 적용되며 앱 재배포는 필요 없습니다.','t.discard':'저장하지 않은 변경을 취소했습니다','t.identOk':'identified ok · attributes hotel_id=H-1024, region=south, role=reception · 콘솔에 배지 표시','t.sending':'전송 중…','t.signOk':'GET /api/sharptalk/identity가 유효한 패키지를 반환, 해시가 현재 secret과 일치','t.rotated':'키를 교체했습니다. 리셉션이 위젯을 다시 열기 전에 새 키를 Go2Joy 백엔드 개발자에게 전달하세요.','key.issued':'{0} 발급','key.issued2':'발급 · {0}','pill':'🌐 한국어'}
+  };
+  var LANG='vi';
+  function L(k){var s=(S_[LANG]&&S_[LANG][k])||S_.vi[k]||k;for(var i=1;i<arguments.length;i++)s=s.replace('{'+(i-1)+'}',arguments[i]);return s}
+  var origText=new Map();
+  function translateStatic(){var walker=document.createTreeWalker(document.getElementById('page'),NodeFilter.SHOW_TEXT,null);var n;
+    while(n=walker.nextNode()){var p=n.parentNode;if(!p||p.tagName==='SCRIPT'||p.tagName==='STYLE'||p.tagName==='TEMPLATE')continue;var v=n.nodeValue;if(!v.trim())continue;
+      if(!origText.has(n))origText.set(n,v);var o=origText.get(n),k=o.trim();var tr=T[k];n.nodeValue=(LANG==='vi'||!tr)?o:o.replace(k,tr[LANG])}
+    document.documentElement.lang=LANG}
+
+  /* ===== state ===== */
+  var AGENTS=[{k:'hotel-admin',n:'a.admin',g:'g.admin',q:'q.admin'},{k:'hotel-partner',n:'a.partner',g:'g.partner',q:'q.partner'},{k:'landing-guest',n:'a.guest',g:'g.guest',q:'q.guest'}];
+  var DEF={brand:'#F26A1B',headerStyle:'white',launcher:'o.launch1',tabChat:true,tabNotif:false,tabOrders:false,tabPos:'top',name:'Go2Joy',lang:'o.vi',menu:'card',consent:'host',font:'system',size:'14 px',menuApp:'card',hdr:'native',appColor:false,appBrand:'#F26A1B',minsdk:'0.2.0',agent:'hotel-admin',keyDate:'12/10',
+    entries:[{s:'home',a:0,c:'ctx.none'},{s:'bookings',a:0,c:'ctx.booking'},{s:'reconciliation',a:0,c:'ctx.recon'},{s:'guest-chat',a:1,c:'ctx.none'}]};
+  var state=JSON.parse(JSON.stringify(DEF)),saved=JSON.parse(JSON.stringify(DEF)),signState='wait',signTime='';
+  var $=function(id){return document.getElementById(id)};
+  function hexToRgb(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)]}
+  function tint(h,a){var c=hexToRgb(h);return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'}
+  function build(id){var host=$(id);host.innerHTML=$('prevTpl').innerHTML;
+    host.querySelectorAll('.surf span').forEach(function(s){s.addEventListener('click',function(){host.querySelectorAll('.surf span').forEach(function(x){x.classList.toggle('on',x===s)});host.querySelector('.webp').classList.toggle('on',s.dataset.s==='web');host.querySelector('.pf').classList.toggle('on',s.dataset.s==='app')})});
+    host.querySelector('.agentSel').addEventListener('click',function(){var i=AGENTS.findIndex(function(a){return a.k===state.agent});state.agent=AGENTS[(i+1)%AGENTS.length].k;renderAll()})}
+  function renderPrev(host){var a=AGENTS.find(function(x){return x.k===state.agent});
+    host.querySelector('.agentSel').textContent=L(a.n);
+    host.querySelectorAll('.greet').forEach(function(g){g.textContent=L(a.g)});
+    host.querySelectorAll('.quick').forEach(function(q){q.innerHTML=L(a.q).split('|').map(function(x){return '<span><i></i>'+x+'</span>'}).join('')});
+    var nm=state.name==='o.nameVi'?L('o.nameVi'):state.name;
+    host.querySelectorAll('.pname').forEach(function(p){p.textContent=(state.name==='Go2Joy'&&p.closest('.ps'))?T['Hỗ trợ Go2Joy']&&LANG!=='vi'?T['Hỗ trợ Go2Joy'][LANG]:'Hỗ trợ Go2Joy':nm});
+    var tabsOn=[state.tabChat,state.tabNotif,state.tabOrders].filter(Boolean).length>1;
+    host.querySelectorAll('.tabsrow').forEach(function(t){t.classList.toggle('on',tabsOn)});
+    var ps=host.querySelector('.ps'),wp=host.querySelector('.webp'),fh=host.querySelector('.fw .h');
+    ps.classList.toggle('chip',state.menuApp==='chip');ps.classList.toggle('hw',state.hdr==='widget');
+    var appBrand=state.appColor?state.appBrand:state.brand;
+    [[wp,state.brand],[ps,appBrand]].forEach(function(p){p[0].style.setProperty('--pb',p[1]);p[0].style.setProperty('--pb50',tint(p[1],.1));p[0].style.setProperty('--pb100',tint(p[1],.22))});
+    fh.classList.toggle('brand',state.headerStyle==='brand');
+    ps.style.fontSize=({'13 px':'10px','14 px':'10.5px','15 px':'11.2px','16 px':'12px'})[state.size];
+    ps.style.fontFamily=state.font==='web'?"'Pretendard','Segoe UI',sans-serif":"Roboto,'Segoe UI',system-ui,sans-serif";
+    host.querySelector('.ntxt').textContent=L(state.consent==='host'?'n.host':'n.widget');host.querySelector('.ntxt2').textContent=L('n.short');
+    host.querySelector('.ident').textContent=L('ident')}
+  function renderEntries(){var t=$('entries');t.querySelectorAll('tr:not(:first-child)').forEach(function(r){r.remove()});
+    state.entries.forEach(function(e,i){var tr=document.createElement('tr');tr.innerHTML='<td><code>'+e.s+'</code></td><td class="ag">'+L(AGENTS[e.a].n)+'</td><td>'+L(e.c)+'</td><td class="del">✕</td>';
+      tr.querySelector('.ag').onclick=function(){e.a=(e.a+1)%AGENTS.length;dirty();renderEntries()};tr.querySelector('.del').onclick=function(){state.entries.splice(i,1);dirty();renderEntries()};t.appendChild(tr)})}
+  function addEntry(){var n=state.entries.length+1;state.entries.push({s:L('screen.new',n),a:0,c:'ctx.none'});dirty();renderEntries();toast(L('t.addEntry',L('screen.new',n)))}
+  function renderControls(){
+    document.querySelectorAll('.seg[data-key] span').forEach(function(s){s.classList.toggle('on',String(state[s.parentNode.dataset.key])===s.dataset.v)});
+    document.querySelectorAll('.sw[data-key]').forEach(function(s){s.classList.toggle('on',!!state[s.dataset.key])});
+    document.querySelectorAll('.sel[data-key]').forEach(function(s){var v=state[s.dataset.key];s.textContent=S_.vi[v]?L(v):v});
+    $('swI').style.background=state.brand;$('swT').textContent=state.brand;
+    document.querySelectorAll('#pal i').forEach(function(i){i.classList.toggle('on',i.dataset.c===state.brand)});
+    document.querySelectorAll('#palApp i').forEach(function(i){i.classList.toggle('on',i.dataset.c===state.appBrand)});
+    $('palApp').classList.toggle('on',state.appColor);
+    $('consentInfo').textContent=L(state.consent==='host'?'consent.host':'consent.widget');
+    $('keyDate').textContent=L('key.issued',state.keyDate);$('keyInfo').textContent=L('key.issued2',state.keyDate);
+    $('signTest').className=signState==='ok'?'ok':'wn';$('signTest').innerHTML=signState==='ok'?L('sign.ok',signTime):signState==='calling'?L('sign.calling'):L('sign.wait')+'<span class="lnk" onclick="testSign()">'+L('sign.call')+'</span>';
+    $('langpill').textContent=L('pill')}
+  function renderAll(){renderControls();renderEntries();document.querySelectorAll('.prev').forEach(renderPrev);dirty()}
+  function dirty(){var d=JSON.stringify(state)!==JSON.stringify(saved);$('saveBtn').classList.toggle('dirty',d);$('saveSt').textContent=L(d?'st.dirty':'st.clean')}
+  function set(k,v){state[k]=v;renderAll()}
+  function save(){if(JSON.stringify(state)===JSON.stringify(saved)){toast(L('t.nosave'));return}saved=JSON.parse(JSON.stringify(state));dirty();toast(L('t.saved'))}
+  function discard(){state=JSON.parse(JSON.stringify(saved));renderAll();toast(L('t.discard'))}
+  function togglePal(){$('pal').classList.toggle('on')}
+  function identifyTest(b){b.textContent=L('t.sending');setTimeout(function(){b.textContent=T['Gửi identify thử']&&LANG!=='vi'?T['Gửi identify thử'][LANG]:'Gửi identify thử';b.closest('.prev').querySelector('.ident').classList.add('on');toast(L('t.identOk'))},700)}
+  function testSign(){signState='calling';renderControls();setTimeout(function(){signState='ok';signTime=new Date().toLocaleTimeString(LANG==='vi'?'vi-VN':LANG==='en'?'en-GB':'ko-KR',{hour:'2-digit',minute:'2-digit'});renderControls();toast(L('t.signOk'))},900)}
+  function openModal(){$('modal').classList.add('on')}function closeModal(){$('modal').classList.remove('on')}
+  function rotate(){closeModal();var d=new Date();state.keyDate=('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2);saved.keyDate=state.keyDate;signState='wait';renderAll();toast(L('t.rotated'))}
+  function setLang(l){LANG=l;document.querySelectorAll('.langbar button').forEach(function(b){b.classList.toggle('on',b.dataset.l===l)});translateStatic();renderAll()}
+  function cycleLang(){var o=['vi','en','ko'];setLang(o[(o.indexOf(LANG)+1)%3])}
+  var tt;function toast(m){var t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('on')},2600)}
+  build('prevW');build('prevM');translateStatic();renderAll();
+  document.querySelectorAll('.seg[data-key] span').forEach(function(s){s.addEventListener('click',function(){set(s.parentNode.dataset.key,s.dataset.v)})});
+  document.querySelectorAll('.sw[data-key]').forEach(function(s){s.addEventListener('click',function(){var k=s.dataset.key;if(k.indexOf('tab')===0&&state[k]&&[state.tabChat,state.tabNotif,state.tabOrders].filter(Boolean).length===1){toast(L('t.minTab'));return}set(k,!state[k])})});
+  document.querySelectorAll('.sel[data-key]').forEach(function(s){s.addEventListener('click',function(){var o=s.dataset.opts.split('|');set(s.dataset.key,o[(o.indexOf(state[s.dataset.key])+1)%o.length])})});
+  document.querySelectorAll('#pal i').forEach(function(i){i.addEventListener('click',function(){set('brand',i.dataset.c);$('pal').classList.remove('on')})});
+  document.querySelectorAll('#palApp i').forEach(function(i){i.addEventListener('click',function(){set('appBrand',i.dataset.c)})});
+  document.querySelectorAll('#tabs span').forEach(function(t){t.addEventListener('click',function(){if(t.dataset.t==='x'){toast(L('t.tabx',t.textContent));return}
+    document.querySelectorAll('#tabs span').forEach(function(x){x.classList.toggle('on',x===t)});document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.dataset.pane===t.dataset.t)})})});
+  document.querySelectorAll('#sidemenu div').forEach(function(m){m.addEventListener('click',function(){if(!m.classList.contains('on'))toast(L('t.menu',m.textContent))})});
+  document.querySelectorAll('.langbar button').forEach(function(b){b.addEventListener('click',function(){setLang(b.dataset.l)})});
+  var qs=new URLSearchParams(location.search);if(qs.get('lang'))setLang(qs.get('lang'));var q=qs.get('tab');if(q){var el=document.querySelector('#tabs span[data-t="'+q+'"]');if(el)el.click()}
+</script>
+</body>
+</html>

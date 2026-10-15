@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mô phỏng — Widget SharpTalk trong app Go2Joy Partner (SDK Kotlin 0.2)</title>
+<style>
+  :root{
+    --brand:#F26A1B; --brand-600:#D95B12; --brand-100:#FDE7D8; --brand-50:#FFF4EC;
+    --ink:#111827; --g50:#F9FAFB; --g100:#F3F4F6; --g200:#E5E7EB; --g300:#D1D5DB; --g400:#9CA3AF; --g500:#6B7280; --g700:#374151;
+    --amber:#B45309; --amber-50:#FFFBEB; --amber-200:#FDE68A;
+    --font:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#ECEFF3;font-family:var(--font);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .page{width:1680px;margin:0 auto;padding:28px 24px 40px}
+  h1{font-size:22px;margin:0 0 4px}
+  .sub{color:var(--g500);font-size:13px;margin:0 0 18px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px 18px}
+  .card{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .cap{font-size:12.5px;line-height:1.45;color:var(--g700);width:384px}
+  .cap b{color:var(--ink)}
+  .phone{width:384px;height:792px;background:#111827;border-radius:36px;padding:12px;position:relative;box-shadow:0 10px 30px rgba(17,24,39,.18)}
+  .screen{width:360px;height:768px;background:#fff;border-radius:26px;overflow:hidden;position:relative;display:flex;flex-direction:column;font-size:14px}
+  .status{height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:11px;color:#fff;background:var(--brand)}
+  .status.light{background:#fff;color:var(--ink)}
+  .appbar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--brand);color:#fff}
+  .appbar.white{background:#fff;color:var(--ink);border-bottom:1px solid var(--g100)}
+  .appbar .t{font-weight:700;font-size:16px;line-height:1.1}
+  .appbar .s{font-size:11px;opacity:.85}
+  .appbar .grow{flex:1;min-width:0}
+  .ico{width:22px;height:22px;flex:none}
+  .ico.sm{width:16px;height:16px}
+  /* widget parts */
+  .wh{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px}
+  .logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:19px;color:var(--brand)}
+  .logo i{display:inline-block;width:30px;height:30px;border-radius:9px;background:var(--brand);color:#fff;font-style:normal;font-size:13px;line-height:30px;text-align:center}
+  .wh .r{display:flex;gap:10px;align-items:center;color:var(--g700);font-size:13px}
+  .notice{display:flex;gap:8px;align-items:flex-start;padding:9px 14px;background:var(--g50);color:var(--g500);font-size:11.5px;line-height:1.45;border-bottom:1px solid var(--g100)}
+  .notice .end{margin-left:auto;color:var(--g400);white-space:nowrap}
+  .thread{flex:1;overflow:hidden;padding:12px 12px 6px;display:flex;flex-direction:column;gap:10px}
+  .b{max-width:85%;padding:10px 12px;border-radius:16px;line-height:1.45;font-size:13.5px}
+  .b.ai{background:var(--g100);color:var(--ink);border-bottom-left-radius:6px;align-self:flex-start}
+  .b.me{background:var(--brand);color:#fff;border-bottom-right-radius:6px;align-self:flex-end}
+  .time{font-size:10px;color:var(--g400);margin-top:-6px}
+  .time.r{align-self:flex-end}
+  .quick{display:grid;grid-template-columns:1fr 1fr;gap:14px 10px;padding:14px 10px}
+  .quick span{color:var(--brand);text-align:center;font-weight:500;font-size:13.5px;line-height:1.3}
+  .quick.cards{gap:8px;padding:6px 0}
+  .quick.cards span{display:flex;align-items:center;gap:8px;border:1px solid var(--g200);border-radius:12px;padding:10px 12px;color:var(--ink);text-align:left;font-size:13px}
+  .quick.cards span i{width:16px;height:16px;border-radius:4px;background:var(--brand-100);display:inline-block;flex:none}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:2px 2px}
+  .chip{border:1px solid var(--g200);border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:500;background:#fff}
+  .chip.hl{border-color:var(--brand);color:var(--brand-600)}
+  .src{font-size:11.5px;color:var(--g500);padding:0 2px}
+  .src a{color:var(--brand);font-weight:600;text-decoration:none}
+  .b ol{margin:4px 0 0 18px;padding:0}
+  .b code{background:#E5E7EB;border-radius:4px;padding:0 4px;font-size:12px}
+  .composer{display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1px solid var(--g100);background:#fff}
+  .composer .in{flex:1;border:1px solid var(--g200);border-radius:999px;padding:10px 14px;color:var(--g400);font-size:13.5px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .composer .in.on{color:var(--ink);border-color:var(--brand)}
+  .composer .send{width:40px;height:40px;border-radius:50%;background:var(--brand-100);display:flex;align-items:center;justify-content:center;color:#fff;flex:none}
+  .composer .send.on{background:var(--brand)}
+  .composer .ic{color:var(--g400)}
+  .ctx{display:flex;align-items:center;gap:6px;margin:0 12px;padding:6px 10px;border:1px solid var(--brand-100);background:var(--brand-50);border-radius:10px;font-size:12px;color:var(--brand-600)}
+  .ctx .x{margin-left:auto;color:var(--g400)}
+  .sys{align-self:center;font-size:11px;color:var(--g500);background:var(--g50);border:1px solid var(--g100);border-radius:999px;padding:3px 10px}
+  .warn{display:flex;gap:8px;align-items:flex-start;margin:10px 12px 0;padding:9px 10px;background:var(--amber-50);border:1px solid var(--amber-200);border-radius:10px;font-size:12px;color:var(--amber);line-height:1.4}
+  .warn b{white-space:nowrap;margin-left:auto;font-weight:600}
+  /* app home */
+  .home{padding:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-content:start}
+  .tile{height:78px;border:1px solid var(--g200);border-radius:14px;display:flex;flex-direction:column;justify-content:flex-end;padding:10px 12px;font-size:13px;font-weight:600;color:var(--g700);position:relative;background:#fff}
+  .tile i{position:absolute;top:10px;left:12px;width:22px;height:22px;border-radius:7px;background:var(--brand-100)}
+  .tile.new{border:2px solid var(--brand);color:var(--brand-600)}
+  .tile .badge{position:absolute;top:8px;right:8px;background:var(--brand);color:#fff;font-size:9.5px;border-radius:999px;padding:2px 7px;font-weight:700}
+  .nav{margin-top:auto;display:flex;justify-content:space-around;padding:10px 6px 14px;border-top:1px solid var(--g100);font-size:11px;color:var(--g500)}
+  .nav span.on{color:var(--brand);font-weight:700}
+  .kpi{display:flex;gap:10px;padding:12px 12px 2px}
+  .kpi div{flex:1;background:var(--g50);border-radius:12px;padding:10px;font-size:11px;color:var(--g500)}
+  .kpi div b{display:block;font-size:18px;color:var(--ink)}
+  /* sheet */
+  .dim{position:absolute;inset:0;background:rgba(17,24,39,.45)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;padding:10px 8px 14px}
+  .sheet .row{display:flex;align-items:center;gap:12px;padding:13px 12px;font-size:14px;font-weight:500;border-radius:10px}
+  .sheet .row.c{justify-content:center;color:var(--g500);font-weight:400;border-top:1px solid var(--g100);margin-top:4px;border-radius:0}
+  .sheet .row i{width:34px;height:34px;border-radius:10px;background:var(--brand-50);display:flex;align-items:center;justify-content:center;color:var(--brand)}
+  .pend{display:flex;align-items:center;gap:8px;margin:0 12px;padding:8px;border:1px solid var(--g200);border-radius:10px;font-size:12px}
+  .pend .th{width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#FDBA74,#F97316)}
+  .bar{height:4px;background:var(--g100);border-radius:999px;margin-top:4px;overflow:hidden}
+  .bar i{display:block;height:100%;width:62%;background:var(--brand)}
+  /* error */
+  .err{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 36px;gap:8px}
+  .err .big{width:56px;height:56px;border-radius:50%;background:var(--brand-50);display:flex;align-items:center;justify-content:center;color:var(--brand);margin-bottom:6px}
+  .err h3{margin:0;font-size:16px}
+  .err p{margin:0;font-size:13px;color:var(--g500);line-height:1.5}
+  .btn{margin-top:10px;background:var(--brand);color:#fff;border-radius:999px;padding:11px 28px;font-weight:600;font-size:14px}
+  .link{color:var(--brand);font-size:13px;font-weight:600;margin-top:6px}
+  /* callouts */
+  .tag{position:absolute;z-index:3;background:#1D4ED8;color:#fff;font-size:10.5px;font-weight:700;border-radius:999px;padding:3px 8px;box-shadow:0 2px 6px rgba(0,0,0,.25);white-space:nowrap}
+  .tag.new{background:#15803D}
+  .legend{display:flex;gap:18px;margin:14px 0 26px;font-size:12.5px;color:var(--g700);align-items:center}
+  .legend .tag{position:static;box-shadow:none}
+  /* desktop mini */
+  .desk{width:384px;height:792px;border-radius:14px;background:#1F2937;padding:10px;display:flex;flex-direction:column;gap:8px}
+  .deskbar{height:18px;display:flex;gap:5px;align-items:center;padding-left:4px}
+  .deskbar i{width:9px;height:9px;border-radius:50%;background:#4B5563;display:inline-block}
+  .win{flex:1;background:#fff;border-radius:8px;position:relative;overflow:hidden;font-size:9.5px}
+  .ha{display:flex;height:100%}
+  .ha .side{width:92px;background:#FFF7F0;border-right:1px solid var(--g100);padding:10px 8px;display:flex;flex-direction:column;gap:9px;color:var(--g700)}
+  .ha .side b{color:var(--brand);font-size:11px}
+  .ha .main{flex:1;padding:10px}
+  .ha .tbl{margin-top:8px;border:1px solid var(--g200);border-radius:6px;overflow:hidden}
+  .ha .tbl div{padding:5px 7px;border-bottom:1px solid var(--g100);display:flex;justify-content:space-between;color:var(--g500)}
+  .fw{position:absolute;right:10px;bottom:10px;width:150px;height:270px;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.22);border:1px solid var(--g200);display:flex;flex-direction:column;overflow:hidden}
+  .fw .h{display:flex;justify-content:space-between;padding:8px 9px 4px;font-weight:800;color:var(--brand);font-size:11px}
+  .fw .n{background:var(--g50);color:var(--g500);font-size:7px;padding:5px 8px;line-height:1.3}
+  .fw .t{flex:1;padding:8px;display:flex;flex-direction:column;gap:6px}
+  .fw .bb{background:var(--g100);border-radius:9px;padding:6px 7px;font-size:7.5px;line-height:1.35}
+  .fw .q{display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:7px;color:var(--brand);text-align:center}
+  .fw .c{display:flex;gap:4px;padding:6px 7px;border-top:1px solid var(--g100);align-items:center}
+  .fw .c i{flex:1;height:14px;border:1px solid var(--g200);border-radius:999px}
+  .fw .c b{width:14px;height:14px;border-radius:50%;background:var(--brand-100);display:inline-block}
+  .launch{position:absolute;right:14px;bottom:14px;width:34px;height:34px;border-radius:50%;background:var(--brand);box-shadow:0 4px 12px rgba(242,106,27,.4)}
+  /* compare */
+  table.cmp{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;font-size:13px;margin-top:8px}
+  table.cmp th,table.cmp td{padding:9px 12px;border-bottom:1px solid var(--g100);text-align:left;vertical-align:top}
+  table.cmp th{background:var(--g50);font-weight:700;color:var(--g700)}
+  table.cmp td:first-child{font-weight:600;color:var(--g700);width:150px}
+  .new-pill{display:inline-block;background:#DCFCE7;color:#15803D;font-size:10.5px;font-weight:700;border-radius:999px;padding:1px 7px;margin-left:4px;vertical-align:middle}
+  h2{font-size:16px;margin:30px 0 6px}
+</style>
+</head>
+<body>
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="19" r="1.8" fill="currentColor"/></symbol>
+  <symbol id="bell" viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+  <symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+  <symbol id="spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z" fill="currentColor" opacity=".55"/></symbol>
+  <symbol id="clip" viewBox="0 0 24 24"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="cam" viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="send" viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4zM22 2 11 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="pin" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="img" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="m21 15-5-5L5 21" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M14 2v6h6M16 13H8M16 17H8" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="alert" viewBox="0 0 24 24"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="wifi" viewBox="0 0 24 24"><path d="M1 9a16 16 0 0 1 22 0M5 12.5a11 11 0 0 1 14 0M8.5 16a6 6 0 0 1 7 0M12 20h.01M2 2l20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  <symbol id="head" viewBox="0 0 24 24"><path d="M3 18v-6a9 9 0 0 1 18 0v6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+</svg>
+
+<div class="page">
+  <h1>Mô phỏng: widget SharpTalk trong app Go2Joy Partner (Android, Kotlin 2.2.0) — SDK 0.2</h1>
+  <p class="sub">Dựng theo giao diện widget thật (ảnh chụp app mode trong PLN-261015: brand Go2Joy, dòng thông báo AI, lời chào agent Hotel Partner, 4 nút nhanh, trả lời có nguồn, chip "Gặp nhân viên hỗ trợ"). Màn 1 chỉ minh họa vị trí entry trong app của Go2Joy. Mã đặt phòng, số liệu KPI, tên khách và nhân viên là giả định để minh họa. Kèm PLN-261015-Go2Joy-Kotlin-SDK-0.2.</p>
+  <div class="legend"><span class="tag">Có sẵn</span> cấu hình từ console hoặc SDK 0.1.0 đã có &nbsp;·&nbsp; <span class="tag new">Mới 0.2</span> phần SDK 0.2 / widget / API thêm &nbsp;·&nbsp; Tất cả nội dung chữ, màu, menu, agent đều chỉnh từ console, app không cần phát hành lại.</div>
+
+  <div class="grid">
+
+    <!-- 1. App home -->
+    <div class="card">
+      <div class="phone"><div class="screen">
+        <div class="status"><span>09:41</span><span>▲ 4G ▮▮▮</span></div>
+        <div class="appbar"><div class="grow"><div class="t">Go2Joy Partner</div><div class="s">A In Hotel Del Luna · Quận 1, TP.HCM</div></div><svg class="ico"><use href="#bell"/></svg><svg class="ico"><use href="#gear"/></svg></div>
+        <div class="kpi"><div>Hôm nay<b>12</b>đặt phòng</div><div>Chờ nhận phòng<b>5</b></div><div>Doanh thu<b>8,4tr</b></div></div>
+        <div class="home">
+          <div class="tile"><i></i>Đặt phòng</div>
+          <div class="tile"><i></i>Đối soát</div>
+          <div class="tile"><i></i>Khuyến mãi</div>
+          <div class="tile"><i></i>Doanh thu</div>
+          <div class="tile"><i></i>Đánh giá</div>
+          <div class="tile"><i></i>Thông báo</div>
+          <div class="tile"><i></i>Chat với khách</div>
+          <div class="tile new"><i style="background:var(--brand)"></i><span class="badge">MỚI</span>Hỗ trợ Go2Joy</div>
+        </div>
+        <div class="nav"><span class="on">Trang chủ</span><span>Đặt phòng</span><span>Thông báo</span><span>Cài đặt</span></div>
+        <span class="tag new" style="left:14px;top:578px">1 entry → ShopTalkChatFragment</span>
+      </div></div>
+      <div class="cap"><b>1. Điểm vào trong app (minh họa).</b> Ô "Hỗ trợ Go2Joy" mở <code>ShopTalkChatFragment</code> với <code>agent=hotel-admin</code>. Go2Joy quyết định vị trí; mỗi điểm vào có thể ghim agent khác.</div>
+    </div>
+
+    <!-- 2. Chat home native header -->
+    <div class="card">
+      <div class="phone"><div class="screen">
+        <div class="status light"><span>09:41</span><span>▲ 4G ▮▮▮</span></div>
+        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Go2Joy Support · AI + nhân viên Go2Joy</div></div><svg class="ico"><use href="#more"/></svg></div>
+        <div class="notice"><svg class="ico sm" style="color:var(--brand)"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại Hoa Kỳ để tạo câu trả lời.</span></div>
+        <div class="thread">
+          <div class="b ai">Xin chào! Chào mừng bạn đến với Go2Joy Support. Chúng tôi có thể giúp gì cho bạn? Hãy chọn một chủ đề bên dưới hoặc nhập câu hỏi của bạn.</div>
+          <div class="quick cards">
+            <span><i></i>Xem đặt phòng hôm nay</span>
+            <span><i></i>Cách nhận phòng cho khách</span>
+            <span><i></i>Khiếu nại đặt phòng</span>
+            <span><i></i>Hỏi về đối soát</span>
+          </div>
+        </div>
+        <div class="composer"><svg class="ico ic"><use href="#cam"/></svg><svg class="ico ic"><use href="#clip"/></svg><div class="in">Nhập tin nhắn…</div><div class="send"><svg class="ico sm"><use href="#send"/></svg></div></div>
+        <span class="tag new" style="left:150px;top:4px">2 header native (chrome=native)</span>
+        <span class="tag" style="left:14px;top:150px">3 thông báo AI · host_terms: không popup</span>
+        <span class="tag" style="left:150px;top:452px">4 agent + menu từ console</span>
+        <span class="tag new" style="left:14px;top:682px">5 camera</span>
+      </div></div>
+      <div class="cap"><b>2. Màn chat, header native.</b> App giữ back, tiêu đề, menu ⋮ (Ngôn ngữ · Quyền riêng tư · Kết thúc) gọi lệnh <code>locale</code>, <code>settings</code>, <code>end</code>. Lời chào, 4 nút nhanh kiểu card, màu Go2Joy đều từ console; <code>consent_source=host_terms</code> nên không có popup đồng ý.</div>
+    </div>
+
+    <!-- 3. Context -->
+    <div class="card">
+      <div class="phone"><div class="screen">
+        <div class="status light"><span>09:52</span><span>▲ 4G ▮▮▮</span></div>
+        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Go2Joy Support · AI + nhân viên Go2Joy</div></div><svg class="ico"><use href="#more"/></svg></div>
+        <div class="notice"><svg class="ico sm" style="color:var(--brand)"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại Hoa Kỳ.</span><span class="end">Kết thúc</span></div>
+        <div class="thread">
+          <div class="sys">Mở từ Đặt phòng #G2J-8841</div>
+          <div class="b ai">Xin chào! Chào mừng bạn đến với Go2Joy Support. Hãy chọn một chủ đề bên dưới hoặc nhập câu hỏi của bạn.</div>
+          <div class="chips"><span class="chip">Xem đặt phòng hôm nay</span><span class="chip">Khiếu nại đặt phòng</span><span class="chip">Hỏi về đối soát</span><span class="chip hl">Gặp nhân viên hỗ trợ</span></div>
+        </div>
+        <div class="ctx"><svg class="ico sm"><use href="#pin"/></svg>Đặt phòng #G2J-8841 · Chờ nhận phòng · 2 đêm<svg class="ico sm x"><use href="#x"/></svg></div>
+        <div class="composer"><svg class="ico ic"><use href="#cam"/></svg><svg class="ico ic"><use href="#clip"/></svg><div class="in on">Khách không đến, tôi cần báo no-show cho đặt phòng này</div><div class="send on"><svg class="ico sm"><use href="#send"/></svg></div></div>
+        <span class="tag new" style="left:14px;top:150px">6 dòng SYSTEM (console cũng thấy)</span>
+        <span class="tag new" style="left:14px;top:632px">7 chip ngữ cảnh + prefill</span>
+      </div></div>
+      <div class="cap"><b>3. Vào từ màn Đặt phòng.</b> App gọi <code>chat.setContext(screen="bookings", ref="G2J-8841", label="Chờ nhận phòng · 2 đêm", prefill=…)</code>. Widget hiện chip, điền sẵn, gửi <code>context</code> cùng tin kế tiếp; server ghi dòng SYSTEM và đưa ngữ cảnh vào prompt. Khác web: vào từ nơi có việc, không từ launcher chung.</div>
+    </div>
+
+    <!-- 4. Answer + handoff -->
+    <div class="card">
+      <div class="phone"><div class="screen">
+        <div class="status light"><span>09:53</span><span>▲ 4G ▮▮▮</span></div>
+        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Go2Joy Support · AI + nhân viên Go2Joy</div></div><svg class="ico"><use href="#more"/></svg></div>
+        <div class="notice"><svg class="ico sm" style="color:var(--brand)"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI…</span><span class="end">Kết thúc</span></div>
+        <div class="thread">
+          <div class="b me">Khách không đến, tôi cần báo no-show cho đặt phòng này</div>
+          <div class="time r">09:52</div>
+          <div class="b ai">Để báo <b>Khách không đến</b> cho #G2J-8841:
+            <ol><li>Mở tab <code>Chờ nhận phòng</code>, chọn đặt phòng.</li><li>Nhập lý do vào ô <code>Ghi chú</code> (tối đa 500 ký tự).</li><li>Nhấn <code>Khách không đến</code>; đặt phòng chuyển sang tab <code>Chờ khách xác nhận</code>.</li></ol>
+            <div style="margin-top:6px;font-size:12.5px">Hỗ trợ Go2Joy: Hotline 1900 638 838 · T2–T6 8h30–17h30</div>
+          </div>
+          <div class="src">Nguồn tham khảo<br>· Video 22 — Báo khách không đến &nbsp;<a>▶ Xem video</a></div>
+          <div class="time">09:53</div>
+          <div class="chips"><span class="chip">Xem đặt phòng hôm nay</span><span class="chip">Khiếu nại đặt phòng</span><span class="chip hl"><svg class="ico sm" style="vertical-align:-3px"><use href="#head"/></svg> Gặp nhân viên hỗ trợ</span></div>
+        </div>
+        <div class="composer"><svg class="ico ic"><use href="#cam"/></svg><svg class="ico ic"><use href="#clip"/></svg><div class="in">Nhập tin nhắn…</div><div class="send"><svg class="ico sm"><use href="#send"/></svg></div></div>
+        <span class="tag" style="left:200px;top:498px">8 trả lời có nguồn, như web</span>
+        <span class="tag" style="left:150px;top:612px">9 chuyển nhân viên CS / Sales Admin</span>
+      </div></div>
+      <div class="cap"><b>4. Trả lời và chuyển nhân viên.</b> Cùng widget với web nên nội dung, nguồn, chip đội, "nhân viên đang soạn" giống hệt. Nhân viên trả lời khi màn còn mở (polling); push nền ngoài phạm vi 0.2.</div>
+    </div>
+
+    <!-- 5. Attachment sheet -->
+    <div class="card">
+      <div class="phone"><div class="screen">
+        <div class="status light"><span>09:55</span><span>▲ 4G ▮▮▮</span></div>
+        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Nhân viên Go2Joy · Miền Nam</div></div><svg class="ico"><use href="#more"/></svg></div>
+        <div class="notice"><svg class="ico sm" style="color:var(--brand)"><use href="#spark"/></svg><span>Đã chuyển cho nhân viên Go2Joy. Bạn có thể gửi ảnh sự cố để xử lý nhanh hơn.</span></div>
+        <div class="thread">
+          <div class="b ai"><div style="font-size:11px;color:var(--g500);margin-bottom:2px">Minh · Go2Joy CS</div>Chị gửi giúp em ảnh màn hình lỗi ở tab Chờ khách xác nhận nhé.</div>
+          <div class="time">09:54</div>
+        </div>
+        <div class="pend"><div class="th"></div><div style="flex:1">IMG_20261015_0955.jpg · 1,2 MB<div class="bar"><i></i></div></div><svg class="ico sm" style="color:var(--g400)"><use href="#x"/></svg></div>
+        <div class="composer"><svg class="ico ic"><use href="#cam"/></svg><svg class="ico ic"><use href="#clip"/></svg><div class="in">Nhập tin nhắn…</div><div class="send on"><svg class="ico sm"><use href="#send"/></svg></div></div>
+        <div class="dim"></div>
+        <div class="sheet">
+          <div class="row"><i><svg class="ico sm"><use href="#cam"/></svg></i>Chụp ảnh</div>
+          <div class="row"><i><svg class="ico sm"><use href="#img"/></svg></i>Chọn từ thư viện</div>
+          <div class="row"><i><svg class="ico sm"><use href="#file"/></svg></i>Tệp (PDF, Excel, Word)</div>
+          <div class="row c">Hủy</div>
+        </div>
+        <span class="tag new" style="left:14px;top:505px">10 chooser native: chụp · thư viện · tệp</span>
+      </div></div>
+      <div class="cap"><b>5. Đính kèm.</b> SDK thay <code>onShowFileChooser</code> bằng chooser có <b>Chụp ảnh</b> (intent camera + FileProvider, không cần quyền CAMERA), thư viện đa chọn, tệp. Tiến trình tải và xử lý HEIC đã có trong widget.</div>
+    </div>
+
+    <!-- 6. Error -->
+    <div class="card">
+      <div class="phone"><div class="screen">
+        <div class="status light"><span>10:02</span><span style="color:var(--g400)">✕ Không có mạng</span></div>
+        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div></div></div>
+        <div class="err">
+          <div class="big"><svg class="ico"><use href="#wifi"/></svg></div>
+          <h3>Không kết nối được với Hỗ trợ Go2Joy</h3>
+          <p>Kiểm tra mạng rồi thử lại. Hội thoại của bạn vẫn được giữ.</p>
+          <div class="btn">Thử lại</div>
+          <div class="link">Gọi hotline 1900 638 838</div>
+        </div>
+        <span class="tag new" style="left:14px;top:225px">11 màn lỗi native, timeout 15 s</span>
+      </div></div>
+      <div class="cap"><b>6. Mất mạng hoặc widget không tải được.</b> Thay cho màn trắng của WebView: SDK bắt lỗi main frame và timeout, hiện màn lỗi với <b>Thử lại</b> (<code>reload()</code>) và hotline từ <code>config.errorHotline</code>; app nhận <code>onError(LoadFailed)</code> để log.</div>
+    </div>
+
+    <!-- 7. Signature rejected -->
+    <div class="card">
+      <div class="phone"><div class="screen">
+        <div class="status light"><span>10:05</span><span>▲ 4G ▮▮▮</span></div>
+        <div class="appbar white"><svg class="ico"><use href="#back"/></svg><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s" style="color:var(--g500)">Go2Joy Support · AI + nhân viên Go2Joy</div></div><svg class="ico"><use href="#more"/></svg></div>
+        <div class="notice"><svg class="ico sm" style="color:var(--brand)"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI…</span></div>
+        <div class="warn"><svg class="ico sm" style="flex:none"><use href="#alert"/></svg><span>Không xác minh được tài khoản. Bạn đang trò chuyện ẩn danh; câu hỏi về đặt phòng cụ thể sẽ cần xác minh.</span><b>Thử lại</b></div>
+        <div class="thread">
+          <div class="b ai">Xin chào! Chào mừng bạn đến với Go2Joy Support. Chúng tôi có thể giúp gì cho bạn?</div>
+          <div class="quick cards">
+            <span><i></i>Cách nhận phòng cho khách</span>
+            <span><i></i>Hỏi về đối soát</span>
+          </div>
+        </div>
+        <div class="composer"><svg class="ico ic"><use href="#cam"/></svg><svg class="ico ic"><use href="#clip"/></svg><div class="in">Nhập tin nhắn…</div><div class="send"><svg class="ico sm"><use href="#send"/></svg></div></div>
+        <span class="tag new" style="left:14px;top:205px">12 chữ ký bị từ chối → vẫn chat</span>
+        <span class="tag new" style="left:150px;top:318px">13 ký lại qua identityProvider</span>
+      </div></div>
+      <div class="cap"><b>7. Chữ ký không hợp lệ hoặc hết hạn.</b> Nguyên tắc "không chặn hỏi": vẫn chat như khách, menu lọc theo audience khách. SDK gọi lại <code>identityProvider</code> khi ready, reload, <code>identity-expired</code>; không cache gói ký cũ (lỗi G2 của 0.1.0).</div>
+    </div>
+
+    <!-- 8. Web today -->
+    <div class="card">
+      <div class="desk">
+        <div class="deskbar"><i></i><i></i><i></i><span style="color:#9CA3AF;font-size:10px;margin-left:8px">ha.go2joy.vn — Hotel Admin</span></div>
+        <div class="win"><div class="ha">
+          <div class="side"><b>Go2Joy HA</b><span>Trang chủ</span><span>Đặt phòng</span><span>Đối soát</span><span>Khuyến mãi</span><span>Doanh thu</span><span>Đánh giá</span><span>Chat với khách</span><span>Tin nhắn từ G2J</span><span>Cài đặt</span></div>
+          <div class="main"><b style="font-size:11px">Đặt phòng · Chờ nhận phòng (5)</b>
+            <div class="tbl"><div><span>#G2J-8841 · Nguyễn A</span><span>2 đêm</span></div><div><span>#G2J-8847 · Trần B</span><span>1 đêm</span></div><div><span>#G2J-8850 · Lê C</span><span>3 đêm</span></div><div><span>#G2J-8852 · Phạm D</span><span>1 đêm</span></div></div>
+          </div>
+        </div>
+        <div class="fw"><div class="h"><span>G2 Go2Joy</span><span style="color:#9CA3AF">VI ⚙ ✕</span></div><div class="n">Cuộc trò chuyện này có sử dụng AI…</div><div class="t"><div class="bb">Xin chào! Chào mừng bạn đến với Go2Joy Support…</div><div class="q"><span>Xem đặt phòng hôm nay</span><span>Cách nhận phòng</span><span>Khiếu nại đặt phòng</span><span>Hỏi về đối soát</span></div></div><div class="c"><i></i><b></b></div></div>
+        </div>
+        <div style="color:#9CA3AF;font-size:10px;text-align:center">Web hôm nay: launcher nổi góc phải → panel 404×600 trong iframe</div>
+      </div>
+      <div class="cap"><b>8. Đối chiếu: Hotel Admin web hiện tại.</b> Cùng tenant, cùng agent, cùng console. Khác biệt chỉ ở lớp vỏ: web là panel nổi trong iframe do <code>embed.js</code> dựng, app là màn hình toàn phần do SDK dựng; nội dung và cấu hình chung một nguồn.</div>
+    </div>
+
+  </div>
+
+  <h2>Concept UX: web so với app</h2>
+  <table class="cmp">
+    <tr><th>Khía cạnh</th><th>Hotel Admin web (hôm nay)</th><th>App Go2Joy Partner (SDK 0.2)</th></tr>
+    <tr><td>Vào chat</td><td>Launcher nổi góc phải, panel mở trên trang bất kỳ</td><td>Ô "Hỗ trợ Go2Joy" hoặc nút trong màn nghiệp vụ, mở màn toàn phần <span class="new-pill">ngữ cảnh</span></td></tr>
+    <tr><td>Khung</td><td>Header của widget: logo, VI, ⚙, ✕</td><td>Header native của app: back, tiêu đề, ⋮ menu; widget ẩn header <span class="new-pill">chrome=native</span></td></tr>
+    <tr><td>Kích thước</td><td>404×600 (tenant chỉnh 360–480 × 480–760)</td><td>Toàn màn, bỏ qua panel size; safe-area; bàn phím đẩy ô nhập</td></tr>
+    <tr><td>Menu kịch bản</td><td>Chip hoặc card (tenant chọn)</td><td>Card có icon hợp ngón tay (cùng cấu hình tenant)</td></tr>
+    <tr><td>Danh tính</td><td>HA server ký, <code>embed.js</code> identify</td><td>Backend Go2Joy ký, app lấy gói qua <code>identityProvider</code>, SDK chuyển tiếp nguyên văn; ký lại khi hết hạn <span class="new-pill">provider</span></td></tr>
+    <tr><td>Đồng ý</td><td><code>consent_source=host_terms</code>: không popup cho người đã ký</td><td>Như web; menu ⋮ → Quyền riêng tư mở Preferences của widget</td></tr>
+    <tr><td>Đính kèm</td><td>Chọn tệp trình duyệt</td><td>Chụp ảnh · Thư viện đa chọn · Tệp <span class="new-pill">camera</span></td></tr>
+    <tr><td>Lỗi</td><td>Trình duyệt tự báo</td><td>Màn lỗi native + Thử lại + hotline <span class="new-pill">error view</span></td></tr>
+    <tr><td>Link ngoài</td><td>Tab mới</td><td>Trình duyệt hệ thống, app có thể chặn qua <code>onOpenUrl</code></td></tr>
+    <tr><td>Ngôn ngữ</td><td>Nút VI trong header</td><td>Theo ngôn ngữ app qua lệnh <code>locale</code>; menu ⋮ đổi</td></tr>
+    <tr><td>Giao diện tối</td><td>Không có</td><td>Ép sáng WebView trong 0.2; dark mode widget là REQ riêng</td></tr>
+    <tr><td>Thông báo khi đóng màn</td><td>Tab mở thì poll</td><td>Không có push nền trong 0.2 (quyết định Q5 cũ)</td></tr>
+    <tr><td>Cấu hình</td><td colspan="2">Chung một console: agent, lời chào, menu, tri thức, theme, tabs, pilot, consent. App chỉ giữ <code>widgetUrl</code>, <code>shop</code>, <code>agent</code> và tùy chọn vỏ native.</td></tr>
+  </table>
+</div>
+</body>
+</html>
