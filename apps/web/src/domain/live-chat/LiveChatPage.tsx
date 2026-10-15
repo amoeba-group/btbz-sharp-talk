@@ -29,6 +29,7 @@ import { Button } from '@/components/Button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ChannelBadge, CHANNEL_FILTERS, RECEIVE_ONLY_CHANNELS } from './ChannelBadge';
 import { SessionAlias } from './SessionAlias';
+import { IdentityBadges } from './IdentityBadges';
 import { AutoReplyControl } from './AutoReplyControl';
 import { DraftPanel } from './DraftPanel';
 import { Badge } from '@/components/Badge';
@@ -710,8 +711,11 @@ export function LiveChatPage() {
                     )}
                   </div>
                   <div className="mt-0.5 flex items-center justify-between gap-2">
-                    <span className="shrink-0 text-[11px] text-gray-400">
-                      {t('sessionLabel', { id: s.id.slice(0, 6) })}
+                    <span className="flex min-w-0 items-center gap-1.5">
+                      <span className="shrink-0 text-[11px] text-gray-400">
+                        {t('sessionLabel', { id: s.id.slice(0, 6) })}
+                      </span>
+                      <IdentityBadges identity={s.identity} compact />
                     </span>
                     <div className="flex shrink-0 items-center gap-1">
                       {/* Team pin (PLN-260826 R1): filled and always visible
@@ -833,6 +837,7 @@ export function LiveChatPage() {
                   {convo?.aiAgentName && (
                     <Badge tone="info">AI: {convo.aiAgentName}</Badge>
                   )}
+                  <IdentityBadges identity={convo?.identity} />
                   {convo?.assignedTo && (
                     <Badge tone="primary">
                       {t('agentControls.assignedTo')}: {convo.assignedTo}

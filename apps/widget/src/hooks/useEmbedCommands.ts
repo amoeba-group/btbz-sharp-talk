@@ -11,7 +11,14 @@ import i18n, { LANG_STORAGE_KEY, SUPPORTED_LANGUAGES } from '../i18n/i18n';
 
 const TABS: TabKey[] = ['chat', 'orders', 'notifications'];
 
-type IdentifyUser = { userId: string; hash: string; name?: string; email?: string; phone?: string };
+type IdentifyUser = {
+  userId: string;
+  hash: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  attributes?: Record<string, string>;
+};
 
 /**
  * Host-application commands (PLN-260819 S3).

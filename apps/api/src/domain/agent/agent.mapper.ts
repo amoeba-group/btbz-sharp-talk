@@ -32,9 +32,16 @@ export function toSessionResponse(
   alias: string | null = null,
   autoReply: { mode: string; effective: boolean } = { mode: 'inherit', effective: true },
   aiAgent: { id: number | null; name: string | null } = { id: null, name: null },
+  identityAttributes: Record<string, string> | null = null,
 ) {
   return {
     id: c.id,
+    /**
+     * What the host app signed about this user — hotel, region, role
+     * (PLN-261015 D5). Not PII: a hotel id and a region name, shown as badges so
+     * an agent sees which hotel is asking. camelCase keys, like every response.
+     */
+    identity: toIdentityResponse(identityAttributes),
     status: c.status,
     /** Effective AI agent of the session (REQ-260825 R6) — NULL pin = default. */
     aiAgentId: aiAgent.id != null ? String(aiAgent.id) : null,
@@ -206,5 +213,17 @@ export function toStatResponse(s: AgentDailyStat) {
     csatAvg: s.csatAvg,
     onlineSec: s.onlineSec,
     blockedMsgs: s.blockedMsgs,
+  };
+}
+
+/** Signed identity attributes → console shape (PLN-261015 D5); null when unsigned. */
+export function toIdentityResponse(a: Record<string, string> | null | undefined) {
+  if (!a) return null;
+  return {
+    hotelId: a.hotel_id ?? null,
+    hotelName: a.hotel_name ?? null,
+    region: a.region ?? null,
+    province: a.province ?? null,
+    role: a.role ?? null,
   };
 }

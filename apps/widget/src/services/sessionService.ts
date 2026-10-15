@@ -46,7 +46,15 @@ export function reportPanelOpened(sessionToken: string): void {
  */
 export function identify(
   sessionToken: string,
-  user: { userId: string; hash: string; name?: string; email?: string; phone?: string },
+  user: {
+    userId: string;
+    hash: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    /** Signed with userId by the host server (PLN-261015 D2) — passed through untouched. */
+    attributes?: Record<string, string>;
+  },
 ): Promise<SessionResponse> {
   return apiClient.post<SessionResponse>('/public/embed/identify', {
     session_token: sessionToken,
@@ -55,6 +63,7 @@ export function identify(
     name: user.name,
     email: user.email,
     phone: user.phone,
+    attributes: user.attributes,
   });
 }
 

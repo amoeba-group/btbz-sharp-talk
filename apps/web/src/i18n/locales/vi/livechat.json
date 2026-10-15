@@ -394,5 +394,18 @@
     "addTo": "Thêm vào “{{title}}”",
     "group": "Gộp thành dòng thời gian",
     "dismiss": "Ẩn trong cuộc trò chuyện này"
+  },
+  "identity": {
+    "hotel": "Khách sạn",
+    "region": {
+      "north": "Miền Bắc",
+      "central": "Miền Trung",
+      "south": "Miền Nam"
+    },
+    "role": {
+      "manager": "Quản lý",
+      "reception": "Lễ tân"
+    },
+    "signed": "Thông tin do ứng dụng chủ ký"
   }
 }

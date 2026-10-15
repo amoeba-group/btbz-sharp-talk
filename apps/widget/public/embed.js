@@ -1140,7 +1140,8 @@
   };
 
   /**
-   * Tell the widget who is signed in. `hash` is an HMAC of `userId` produced by
+   * Tell the widget who is signed in. `hash` is an HMAC of `userId` (plus any
+   * `attributes` — hotel_id, region, role… — PLN-261015 D2) produced by
    * the host's OWN server — this loader never sees the secret, and a hash built
    * in the browser would prove nothing.
    */

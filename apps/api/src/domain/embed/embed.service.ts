@@ -10,6 +10,7 @@ import { sessionCacheKey } from '../session/session.service';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
+import { IdentityAttributes, identitySigningString, normalizeIdentityAttributes } from './identity-attributes';
 
 /** What the customer's own server signs, and what the SDK forwards. */
 export interface IdentifyInput {
@@ -19,6 +20,8 @@ export interface IdentifyInput {
   name?: string | null;
   email?: string | null;
   phone?: string | null;
+  /** Signed together with userId when present (PLN-261015 D2). */
+  attributes?: Record<string, unknown> | null;
 }
 
 /** `shtk_` prefix so a leaked value is recognisable in a log or a paste. */
@@ -31,9 +34,11 @@ const SECRET_PREFIX = 'shtk_';
  * bespoke storefront or a mobile app hand us nothing, so the customer's own
  * server signs the user id with a shared secret and we verify the signature.
  *
- * Only the user id is signed. The profile fields ride along unsigned on purpose:
+ * The user id is signed. The profile fields ride along unsigned on purpose:
  * signing them would force the customer's server to re-sign on every profile
- * edit, and they are decoration — the id is the claim that matters.
+ * edit, and they are decoration. Identity ATTRIBUTES (hotel, region, role —
+ * PLN-261015 D2) are different: they route handoffs, so when present they are
+ * part of the signed string (see identity-attributes.ts).
  */
 @Injectable()
 export class EmbedService {
@@ -60,8 +65,8 @@ export class EmbedService {
   }
 
   /** The signature a correctly configured customer server produces. */
-  static sign(secret: string, userId: string): string {
-    return createHmac('sha256', secret).update(userId).digest('hex');
+  static sign(secret: string, userId: string, attributes: IdentityAttributes | null = null): string {
+    return createHmac('sha256', secret).update(identitySigningString(userId, attributes)).digest('hex');
   }
 
   /**
@@ -87,7 +92,8 @@ export class EmbedService {
       throw new BusinessException(ERROR_CODE.EMBED_IDENTITY_INVALID, HttpStatus.UNAUTHORIZED);
     }
 
-    const expected = EmbedService.sign(secret, input.userId);
+    const attributes = normalizeIdentityAttributes(input.attributes);
+    const expected = EmbedService.sign(secret, input.userId, attributes);
     if (!safeEquals(expected, input.hash)) {
       this.logger.warn(
         `identify rejected — signature mismatch (tenant ${session.tenantId}, user ${maskId(input.userId)})`,
@@ -98,11 +104,15 @@ export class EmbedService {
     const customer = await this.upsertCustomer(Number(session.tenantId), input);
     session.customerId = Number(customer.id);
     session.identityLevel = SESSION_IDENTITY.VERIFIED;
+    // Replaced, never merged: a re-identify for a different hotel must not keep
+    // the previous hotel's region.
+    session.identityAttributes = attributes;
     const saved = await this.sessionRepo.save(session);
     // The token→session cache would keep serving the guest view otherwise.
     await this.redis.del(sessionCacheKey(input.sessionToken));
     this.logger.log(
-      `identify ok (tenant ${session.tenantId}, customer ${customer.id}, user ${maskId(input.userId)})`,
+      `identify ok (tenant ${session.tenantId}, customer ${customer.id}, user ${maskId(input.userId)}` +
+        `${attributes ? `, attrs ${Object.keys(attributes).sort().join(',')}` : ''})`,
     );
     return saved;
   }

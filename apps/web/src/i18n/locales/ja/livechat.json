@@ -394,5 +394,18 @@
     "addTo": "「{{title}}」に追加",
     "group": "タイムラインにまとめる",
     "dismiss": "この会話では非表示"
+  },
+  "identity": {
+    "hotel": "ホテル",
+    "region": {
+      "north": "北部",
+      "central": "中部",
+      "south": "南部"
+    },
+    "role": {
+      "manager": "管理者",
+      "reception": "フロント"
+    },
+    "signed": "ホストアプリが署名した情報"
   }
 }

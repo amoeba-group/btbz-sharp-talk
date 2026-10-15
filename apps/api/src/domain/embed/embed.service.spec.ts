@@ -116,6 +116,64 @@ describe('EmbedService.identify', () => {
   });
 });
 
+describe('EmbedService.identify — signed attributes (PLN-261015 D2)', () => {
+  const ATTRS = { hotel_id: 'H-1024', region: 'north', role: 'reception' };
+  // What a host server computes — spelled out so the format is pinned by a test,
+  // not only by the helper it is checking.
+  const ATTR_HASH = require('crypto')
+    .createHmac('sha256', SECRET)
+    .update(`${USER}\nhotel_id=H-1024\nregion=north\nrole=reception`)
+    .digest('hex');
+
+  it('stores attributes signed together with the user id', async () => {
+    const h = build();
+    const session = await h.service.identify({ sessionToken: 'tok', userId: USER, hash: ATTR_HASH, attributes: ATTRS });
+    expect(session.identityAttributes).toEqual(ATTRS);
+    expect(EmbedService.sign(SECRET, USER, ATTRS)).toBe(ATTR_HASH);
+  });
+
+  it('rejects attributes the signature does not cover', async () => {
+    // A hash over the id alone must not let the browser add a region: the
+    // region decides which agent gets the conversation.
+    const h = build();
+    await expect(
+      h.service.identify({ sessionToken: 'tok', userId: USER, hash: HASH, attributes: ATTRS }),
+    ).rejects.toMatchObject({ errorCode: ERROR_CODE.EMBED_IDENTITY_INVALID.code });
+  });
+
+  it('rejects a changed attribute value', async () => {
+    const h = build();
+    await expect(
+      h.service.identify({
+        sessionToken: 'tok',
+        userId: USER,
+        hash: ATTR_HASH,
+        attributes: { ...ATTRS, region: 'south' },
+      }),
+    ).rejects.toMatchObject({ errorCode: ERROR_CODE.EMBED_IDENTITY_INVALID.code });
+  });
+
+  it('ignores unknown keys — they are neither signed nor stored', async () => {
+    const h = build();
+    const session = await h.service.identify({
+      sessionToken: 'tok',
+      userId: USER,
+      hash: ATTR_HASH,
+      attributes: { ...ATTRS, is_admin: 'true' },
+    });
+    expect(session.identityAttributes).toEqual(ATTRS);
+  });
+
+  it('keeps the id-only signature working and clears earlier attributes', async () => {
+    const h = build({
+      session: { id: 5, sessionToken: 'tok', tenantId: 1, customerId: null, identityLevel: 'guest', identityAttributes: ATTRS },
+    });
+    const session = await h.service.identify({ sessionToken: 'tok', userId: USER, hash: HASH });
+    expect(session.identityLevel).toBe('verified');
+    expect(session.identityAttributes).toBeNull();
+  });
+});
+
 describe('EmbedService.rotateSecret', () => {
   it('issues a prefixed secret and stores it', async () => {
     const h = build();

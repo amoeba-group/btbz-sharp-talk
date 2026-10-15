@@ -35,6 +35,7 @@ export class EmbedController {
       name: body.name ?? null,
       email: body.email ?? null,
       phone: body.phone ?? null,
+      attributes: body.attributes ?? null,
     });
     const notice = await this.sessionService.privacyNotice(session.tenantId, session.aiAgentId, session.language);
     return SessionMapper.toResponse(

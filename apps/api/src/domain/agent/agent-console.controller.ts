@@ -67,6 +67,7 @@ import {
   toMessageResponse,
   toProfileResponse,
   toSessionResponse,
+  toIdentityResponse,
   toStatResponse,
 } from './agent.mapper';
 import { ListAlertsQuery } from './dto/request/agent.request';
@@ -323,6 +324,7 @@ export class AgentConsoleController {
           autoReplyEffective,
           aiAgentId,
           aiAgentName,
+          identityAttributes,
         }) =>
           toSessionResponse(
             conversation,
@@ -331,6 +333,7 @@ export class AgentConsoleController {
             alias,
             { mode: autoReplyMode, effective: autoReplyEffective },
             { id: aiAgentId, name: aiAgentName },
+            identityAttributes,
           ),
       ),
       buildPagination(page, size, total),
@@ -512,7 +515,11 @@ export class AgentConsoleController {
     const attachments = await this.attachments.findByMessageIds(messages.map((m) => Number(m.id)));
     const customer = await this.agentService.customerContext(id, tenantId);
     const conversation = await this.agentService.findConversation(id, tenantId);
-    const sessionState = await this.agentService.sessionStateFor(id, conversation.sessionId, tenantId);
+    const { identityAttributes, ...sessionState } = await this.agentService.sessionStateFor(
+      id,
+      conversation.sessionId,
+      tenantId,
+    );
     const draft = await this.agentService.pendingDraft(id, tenantId);
     return {
       conversationId: id,
@@ -527,6 +534,7 @@ export class AgentConsoleController {
         : null,
       sessionId: String(conversation.sessionId),
       ...sessionState,
+      identity: toIdentityResponse(identityAttributes),
       // Carried on the detail as well as the list row: a deep link from the
       // escalation alarm opens a conversation the filtered list may not hold,
       // and the composer needs the channel to know whether a reply is possible.
