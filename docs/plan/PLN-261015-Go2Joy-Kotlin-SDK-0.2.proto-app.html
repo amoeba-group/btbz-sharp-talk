@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Prototype app Kotlin Go2Joy — Hỗ trợ Go2Joy (SharpTalk SDK 0.2)</title>
+<title>Prototype app Kotlin Go2Joy — Hỗ trợ Go2Joy (SharpTalk SDK 0.2) · tương tác</title>
 <style>
   :root{
     --brand:#F26A1B;--brand-700:#C9540F;--brand-100:#FFE4D1;--brand-50:#FFF5EE;
-    --ink:#1A1A1A;--g900:#1F2328;--g700:#4B5563;--g500:#6B7280;--g400:#9CA3AF;--g300:#D1D5DB;--g200:#E5E7EB;--g100:#F1F3F6;--g50:#F8F9FB;
-    --ok:#16A34A;--warn:#B45309;--warn-50:#FFFBEB;--warn-200:#FDE68A;
+    --ink:#1A1A1A;--g700:#4B5563;--g500:#6B7280;--g400:#9CA3AF;--g300:#D1D5DB;--g200:#E5E7EB;--g100:#F1F3F6;--g50:#F8F9FB;
+    --ok:#16A34A;--warn:#B45309;--warn-50:#FFFBEB;--warn-200:#FDE68A;--blue:#0EA5E9;
     --font:'Pretendard',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
   }
   *{box-sizing:border-box}
@@ -17,7 +17,6 @@
   h1{font-size:20px;margin:0 0 4px}
   .sub{color:var(--g500);font-size:13px;margin:0 0 14px;line-height:1.5}
   .wrap{display:flex;gap:28px;align-items:flex-start}
-  /* controls */
   .ctl{width:330px;background:#fff;border:1px solid var(--g200);border-radius:14px;padding:16px}
   .ctl h2{font-size:14px;margin:0 0 10px}
   .ctl .grp{margin-bottom:14px}
@@ -25,35 +24,36 @@
   .seg{display:flex;flex-wrap:wrap;gap:6px}
   .seg button{border:1px solid var(--g300);background:#fff;border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--g700)}
   .seg button.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
-  .ctl p{font-size:12px;color:var(--g700);line-height:1.5;margin:8px 0 0}
   .ctl .map{font-size:12px;line-height:1.55;color:var(--g700);border-top:1px solid var(--g100);padding-top:10px;margin-top:4px}
   .ctl .map b{color:var(--ink)}
-  /* phone */
-  .phone{width:400px;height:820px;background:#0F172A;border-radius:44px;padding:12px;box-shadow:0 18px 40px rgba(15,23,42,.28);position:relative;flex:none}
+  .ctl ul{margin:6px 0 0 16px;padding:0;font-size:12px;color:var(--g700);line-height:1.6}
+  .phone{width:400px;height:820px;background:#0F172A;border-radius:44px;padding:12px;box-shadow:0 18px 40px rgba(15,23,42,.28);position:relative;flex:none;user-select:none}
   .phone:before{content:"";position:absolute;left:50%;top:22px;width:110px;height:26px;background:#0F172A;border-radius:14px;transform:translateX(-50%);z-index:5}
   .scr{width:376px;height:796px;border-radius:34px;overflow:hidden;background:var(--g50);position:relative;display:flex;flex-direction:column;font-size:14px}
-  .status{height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;font-size:12px;font-weight:600;color:var(--ink)}
+  .status{height:44px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 24px 6px;font-size:12px;font-weight:600;color:var(--ink);flex:none}
   .status.light{color:#fff}
-  .view{display:none;flex:1;min-height:0;flex-direction:column}
+  .view{display:none;flex:1;min-height:0;flex-direction:column;position:relative}
   .view.on{display:flex}
   .ico{width:22px;height:22px;flex:none}
   .ico.sm{width:16px;height:16px}
   .ico.xs{width:13px;height:13px}
+  .tap{cursor:pointer}
+  .tap:active{opacity:.7}
   /* HOME */
-  .hero{background:var(--brand);color:#fff;padding:6px 20px 18px;border-radius:0 0 26px 26px}
+  .hero{background:var(--brand);color:#fff;padding:6px 20px 18px;border-radius:0 0 26px 26px;flex:none}
   .hero .top{display:flex;align-items:center;justify-content:space-between}
   .hero .hi{font-size:13px;opacity:.9}
   .hero .name{font-size:20px;font-weight:700;margin-top:2px}
   .hero .hotel{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:rgba(255,255,255,.18);border-radius:999px;padding:5px 10px;font-size:12px}
   .hero .bell{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;position:relative}
   .hero .bell i{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:#fff;border:2px solid var(--brand)}
+  .hscroll{flex:1;overflow:auto;padding-bottom:8px}
   .kpis{display:flex;gap:10px;margin:-14px 16px 0;position:relative}
   .kpi{flex:1;background:#fff;border-radius:14px;padding:12px;box-shadow:0 4px 14px rgba(15,23,42,.08)}
   .kpi small{display:block;font-size:11px;color:var(--g500)}
   .kpi b{display:block;font-size:20px;margin-top:2px}
   .kpi em{font-style:normal;font-size:10.5px;color:var(--ok);font-weight:600}
   .sect{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 8px;font-size:14px;font-weight:700}
-  .sect span{font-size:12px;color:var(--brand);font-weight:600}
   .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:0 16px}
   .act{display:flex;flex-direction:column;align-items:center;gap:7px;padding:10px 4px;background:#fff;border-radius:14px;font-size:11px;color:var(--g700);text-align:center;position:relative;line-height:1.2}
   .act i{width:40px;height:40px;border-radius:12px;background:var(--brand-50);display:flex;align-items:center;justify-content:center;color:var(--brand)}
@@ -68,43 +68,50 @@
   .list{margin:14px 16px 0;background:#fff;border-radius:16px;overflow:hidden}
   .li{display:flex;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--g100);font-size:12.5px}
   .li:first-child{border-top:0}
-  .li .st{margin-left:auto;font-size:11px;font-weight:600;color:var(--brand-700);background:var(--brand-50);border-radius:999px;padding:3px 8px}
+  .li .st{margin-left:auto;font-size:11px;font-weight:600;color:var(--brand-700);background:var(--brand-50);border-radius:999px;padding:3px 8px;white-space:nowrap}
   .li .st.g{color:var(--ok);background:#ECFDF5}
-  .nav{margin-top:auto;display:flex;justify-content:space-around;padding:10px 8px 22px;background:#fff;border-top:1px solid var(--g100)}
+  .li .ask{font-size:10.5px;color:var(--brand-700);font-weight:600}
+  .nav{display:flex;justify-content:space-around;padding:10px 8px 22px;background:#fff;border-top:1px solid var(--g100);flex:none}
   .nav div{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--g400);width:64px}
   .nav div.on{color:var(--brand);font-weight:700}
   .nav div.on i{background:var(--brand-50)}
   .nav i{width:44px;height:26px;border-radius:999px;display:flex;align-items:center;justify-content:center}
   /* CHAT */
-  .bar{display:flex;align-items:center;gap:10px;padding:8px 14px 10px;background:#fff;border-bottom:1px solid var(--g100)}
+  .bar{display:flex;align-items:center;gap:10px;padding:8px 14px 10px;background:#fff;border-bottom:1px solid var(--g100);flex:none}
   .bar .av{width:36px;height:36px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;position:relative}
+  .bar .av.hu{background:var(--blue)}
   .bar .av:after{content:"";position:absolute;right:-1px;bottom:-1px;width:10px;height:10px;border-radius:50%;background:var(--ok);border:2px solid #fff}
   .bar .t{font-weight:700;font-size:15px;line-height:1.15}
   .bar .s{font-size:11.5px;color:var(--g500)}
   .bar .grow{flex:1;min-width:0}
   .bar .ib{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--g700)}
-  .wh{display:none;align-items:center;justify-content:space-between;padding:14px 16px 8px;background:#fff}
+  .wh{display:none;align-items:center;justify-content:space-between;padding:14px 16px 8px;background:#fff;flex:none}
   .wh .logo{display:flex;align-items:center;gap:6px;font-weight:800;font-size:19px;color:var(--brand)}
   .wh .logo i{width:30px;height:30px;border-radius:9px;background:var(--brand);color:#fff;font-style:normal;font-size:13px;line-height:30px;text-align:center}
   .wh .r{display:flex;gap:12px;align-items:center;color:var(--g700);font-size:13px}
   .scr.hw .bar{display:none}
   .scr.hw .wh{display:flex}
-  .notice{display:flex;gap:8px;align-items:flex-start;margin:10px 14px 0;padding:9px 11px;background:#fff;border:1px solid var(--g200);border-radius:12px;color:var(--g500);font-size:11.5px;line-height:1.45}
+  .notice{display:flex;gap:8px;align-items:flex-start;margin:10px 14px 0;padding:9px 11px;background:#fff;border:1px solid var(--g200);border-radius:12px;color:var(--g500);font-size:11.5px;line-height:1.45;flex:none}
   .notice .end{margin-left:auto;color:var(--brand-700);font-weight:600;white-space:nowrap}
-  .thread{flex:1;overflow:hidden;padding:10px 14px 6px;display:flex;flex-direction:column;gap:10px}
+  .warn{display:none;gap:8px;align-items:flex-start;margin:10px 14px 0;padding:9px 11px;background:var(--warn-50);border:1px solid var(--warn-200);border-radius:12px;font-size:12px;color:var(--warn);line-height:1.45;flex:none}
+  .warn b{margin-left:auto;white-space:nowrap;font-weight:700}
+  .scr.guest .warn{display:flex}
+  .thread{flex:1;overflow:auto;padding:10px 14px 6px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
   .day{align-self:center;font-size:10.5px;color:var(--g400);background:var(--g100);border-radius:999px;padding:3px 10px}
-  .sys{align-self:center;font-size:11px;color:var(--brand-700);background:var(--brand-50);border:1px solid var(--brand-100);border-radius:999px;padding:3px 10px}
-  .msg{display:flex;gap:8px;align-items:flex-end;max-width:88%}
+  .sys{align-self:center;font-size:11px;color:var(--brand-700);background:var(--brand-50);border:1px solid var(--brand-100);border-radius:999px;padding:3px 10px;text-align:center}
+  .msg{display:flex;gap:8px;align-items:flex-end;max-width:88%;animation:pop .18s ease-out}
+  @keyframes pop{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
   .msg.me{align-self:flex-end;flex-direction:row-reverse}
   .msg .mav{width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;font-size:9.5px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
-  .msg .mav.hu{background:#0EA5E9}
+  .msg .mav.hu{background:var(--blue)}
   .b{padding:10px 13px;border-radius:18px;line-height:1.5;font-size:13.5px;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.06)}
   .msg:not(.me) .b{border-bottom-left-radius:6px}
   .msg.me .b{background:var(--brand);color:#fff;border-bottom-right-radius:6px;box-shadow:none}
-  .b ol{margin:6px 0 0 18px;padding:0}
+  .b ol,.b ul{margin:6px 0 0 18px;padding:0}
   .b li{margin:2px 0}
   .b code{background:var(--g100);border-radius:4px;padding:0 4px;font-size:12px}
   .b .who{font-size:11px;color:var(--g500);font-weight:600;margin-bottom:3px}
+  .b img,.b .ph{display:block;width:180px;height:120px;border-radius:10px;background:linear-gradient(135deg,#FDBA74,#F97316)}
   .time{font-size:10px;color:var(--g400);margin-top:-5px;padding-left:34px}
   .time.r{text-align:right;padding:0 2px 0 0}
   .src{margin:0 0 0 34px;background:#fff;border:1px solid var(--g200);border-radius:12px;padding:8px 10px;display:flex;gap:10px;align-items:center;max-width:88%}
@@ -113,46 +120,81 @@
   .src small{display:block;font-size:10.5px;color:var(--g500)}
   .src b{font-size:12px}
   .qq{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-left:34px}
-  .qq span{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--g200);border-radius:14px;padding:10px 11px;font-size:12.5px;font-weight:500;color:var(--ink)}
+  .qq span{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--g200);border-radius:14px;padding:10px 11px;font-size:12.5px;font-weight:500;color:var(--ink);cursor:pointer}
+  .qq span:active{background:var(--brand-50)}
   .qq span i{width:28px;height:28px;border-radius:9px;background:var(--brand-50);color:var(--brand);display:flex;align-items:center;justify-content:center;flex:none}
   .scr.chip .qq{display:flex;flex-wrap:wrap}
   .scr.chip .qq span{border-radius:999px;padding:7px 12px;background:var(--brand-50);border-color:var(--brand-100);color:var(--brand-700)}
   .scr.chip .qq span i{display:none}
   .chips{display:flex;flex-wrap:wrap;gap:8px;margin-left:34px}
-  .chip{border:1px solid var(--g200);background:#fff;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:500}
+  .chip{border:1px solid var(--g200);background:#fff;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:500;cursor:pointer}
+  .chip:active{background:var(--g100)}
   .chip.hl{border-color:var(--brand);color:var(--brand-700);display:inline-flex;align-items:center;gap:5px}
-  .typing{display:flex;gap:4px;align-items:center;margin-left:34px;background:#fff;border-radius:18px;border-bottom-left-radius:6px;padding:10px 14px;width:fit-content}
-  .typing i{width:6px;height:6px;border-radius:50%;background:var(--g400)}
-  .ctx{display:flex;align-items:center;gap:7px;margin:0 14px;padding:7px 10px;background:var(--brand-50);border:1px solid var(--brand-100);border-radius:12px;font-size:12px;color:var(--brand-700);font-weight:500}
-  .ctx .x{margin-left:auto;color:var(--g400)}
-  .warn{display:flex;gap:8px;align-items:flex-start;margin:10px 14px 0;padding:9px 11px;background:var(--warn-50);border:1px solid var(--warn-200);border-radius:12px;font-size:12px;color:var(--warn);line-height:1.45}
-  .warn b{margin-left:auto;white-space:nowrap;font-weight:700}
-  .comp{display:flex;align-items:center;gap:6px;padding:10px 12px 20px;background:#fff;border-top:1px solid var(--g100)}
-  .comp .ib{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--g500)}
-  .comp .in{flex:1;background:var(--g100);border-radius:999px;padding:11px 14px;font-size:13.5px;color:var(--g400);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .comp .in.on{color:var(--ink);background:#fff;border:1.5px solid var(--brand)}
-  .comp .send{width:42px;height:42px;border-radius:50%;background:var(--g200);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+  .typing{display:flex;gap:4px;align-items:center;margin-left:34px;background:#fff;border-radius:18px;border-bottom-left-radius:6px;padding:12px 14px;width:fit-content}
+  .typing i{width:6px;height:6px;border-radius:50%;background:var(--g400);animation:bl 1s infinite}
+  .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+  @keyframes bl{0%,80%,100%{opacity:.3}40%{opacity:1}}
+  .typing small{font-size:10.5px;color:var(--g500);margin-left:4px}
+  .csat{margin-left:34px;background:#fff;border:1px solid var(--g200);border-radius:16px;padding:12px;max-width:88%}
+  .csat b{font-size:13px;display:block;margin-bottom:8px}
+  .csat .faces{display:flex;gap:6px;justify-content:space-between}
+  .csat .faces span{width:40px;height:40px;border-radius:12px;background:var(--g50);display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer}
+  .csat .faces span.on{background:var(--brand-50);outline:2px solid var(--brand)}
+  .ctx{display:none;align-items:center;gap:7px;margin:0 14px;padding:7px 10px;background:var(--brand-50);border:1px solid var(--brand-100);border-radius:12px;font-size:12px;color:var(--brand-700);font-weight:500;flex:none}
+  .ctx.on{display:flex}
+  .ctx .x{margin-left:auto;color:var(--g400);cursor:pointer}
+  .comp{display:flex;align-items:center;gap:6px;padding:10px 12px 20px;background:#fff;border-top:1px solid var(--g100);flex:none}
+  .comp .ib{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:var(--g500);cursor:pointer}
+  .comp input{flex:1;background:var(--g100);border:1.5px solid transparent;border-radius:999px;padding:11px 14px;font:inherit;font-size:13.5px;color:var(--ink);min-width:0;outline:none}
+  .comp input:focus{background:#fff;border-color:var(--brand)}
+  .comp input::placeholder{color:var(--g400)}
+  .comp .send{width:42px;height:42px;border-radius:50%;background:var(--g200);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;transition:background .15s}
   .comp .send.on{background:var(--brand);box-shadow:0 4px 10px rgba(242,106,27,.35)}
-  /* sheet / error */
-  .dim{position:absolute;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:flex-end}
-  .sheet{width:100%;background:#fff;border-radius:22px 22px 0 0;padding:8px 12px 24px}
+  .ended{display:none;padding:10px 14px 22px;background:#fff;border-top:1px solid var(--g100);text-align:center;font-size:12.5px;color:var(--g500);flex:none}
+  .ended b{display:block;margin-top:6px;color:var(--brand-700);cursor:pointer}
+  .scr.over .comp{display:none}.scr.over .ended{display:block}
+  /* overlays */
+  .dim{position:absolute;inset:0;background:rgba(15,23,42,.5);display:none;align-items:flex-end;z-index:8}
+  .dim.on{display:flex}
+  .sheet{width:100%;background:#fff;border-radius:22px 22px 0 0;padding:8px 12px 24px;animation:up .2s ease-out}
+  @keyframes up{from{transform:translateY(40px)}to{transform:none}}
   .sheet .hd{width:40px;height:4px;border-radius:999px;background:var(--g300);margin:4px auto 12px}
   .sheet h4{margin:0 4px 8px;font-size:14px}
-  .sheet .row{display:flex;align-items:center;gap:12px;padding:12px 10px;border-radius:12px;font-size:14px;font-weight:500}
+  .sheet .row{display:flex;align-items:center;gap:12px;padding:12px 10px;border-radius:12px;font-size:14px;font-weight:500;cursor:pointer}
+  .sheet .row:active{background:var(--g50)}
   .sheet .row i{width:40px;height:40px;border-radius:12px;background:var(--brand-50);color:var(--brand);display:flex;align-items:center;justify-content:center}
   .sheet .row small{display:block;font-size:11px;color:var(--g500);font-weight:400}
-  .sheet .cancel{margin-top:6px;text-align:center;padding:12px;border-radius:12px;background:var(--g100);font-weight:600;font-size:14px}
-  .pend{display:flex;align-items:center;gap:10px;margin:0 14px;padding:8px;background:#fff;border:1px solid var(--g200);border-radius:12px;font-size:12px}
+  .sheet .cancel{margin-top:6px;text-align:center;padding:12px;border-radius:12px;background:var(--g100);font-weight:600;font-size:14px;cursor:pointer}
+  .menu{position:absolute;right:12px;top:92px;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(15,23,42,.2);padding:6px;display:none;z-index:9;min-width:190px}
+  .menu.on{display:block}
+  .menu div{padding:10px 12px;border-radius:9px;font-size:13.5px;cursor:pointer;display:flex;gap:10px;align-items:center}
+  .menu div:active{background:var(--g100)}
+  .menu div.red{color:#B91C1C}
+  .panel{position:absolute;inset:0;background:var(--g50);display:none;flex-direction:column;z-index:7}
+  .panel.on{display:flex}
+  .panel .pb{padding:14px 16px;flex:1;overflow:auto}
+  .panel .card{background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:10px;font-size:13px}
+  .panel .card h5{margin:0 0 6px;font-size:13.5px}
+  .panel .card p{margin:0;color:var(--g500);font-size:12px;line-height:1.5}
+  .panel .rowp{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid var(--g100);font-size:13px}
+  .sw{width:38px;height:22px;border-radius:999px;background:var(--g300);position:relative;cursor:pointer;flex:none}
+  .sw.on{background:var(--brand)}
+  .sw:after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+  .sw.on:after{left:19px}
+  .pend{display:none;align-items:center;gap:10px;margin:0 14px;padding:8px;background:#fff;border:1px solid var(--g200);border-radius:12px;font-size:12px;flex:none}
+  .pend.on{display:flex}
   .pend .th{width:40px;height:40px;border-radius:9px;background:linear-gradient(135deg,#FDBA74,#F97316)}
   .pend .bar2{height:4px;background:var(--g100);border-radius:999px;margin-top:5px;overflow:hidden}
-  .pend .bar2 i{display:block;height:100%;width:62%;background:var(--brand)}
+  .pend .bar2 i{display:block;height:100%;width:0;background:var(--brand);transition:width 1.2s linear}
   .err{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 40px;gap:8px}
   .err .big{width:84px;height:84px;border-radius:28px;background:var(--brand-50);color:var(--brand);display:flex;align-items:center;justify-content:center;margin-bottom:8px}
   .err h3{margin:0;font-size:17px}
   .err p{margin:0;font-size:13px;color:var(--g500);line-height:1.55}
-  .err .btn{margin-top:14px;background:var(--brand);color:#fff;border-radius:14px;padding:13px 36px;font-weight:700;font-size:14px;box-shadow:0 6px 14px rgba(242,106,27,.3)}
-  .err .link{color:var(--brand-700);font-size:13px;font-weight:600;margin-top:8px}
-  .home-ind{position:absolute;left:50%;bottom:8px;width:120px;height:4px;border-radius:999px;background:#0F172A;transform:translateX(-50%);opacity:.5}
+  .err .btn{margin-top:14px;background:var(--brand);color:#fff;border-radius:14px;padding:13px 36px;font-weight:700;font-size:14px;box-shadow:0 6px 14px rgba(242,106,27,.3);cursor:pointer}
+  .err .link{color:var(--brand-700);font-size:13px;font-weight:600;margin-top:8px;cursor:pointer}
+  .toast{position:absolute;left:50%;bottom:110px;transform:translateX(-50%);background:#0F172A;color:#fff;font-size:12px;border-radius:999px;padding:8px 14px;display:none;z-index:20;white-space:nowrap;max-width:330px;overflow:hidden;text-overflow:ellipsis}
+  .toast.on{display:block}
+  .home-ind{position:absolute;left:50%;bottom:8px;width:120px;height:4px;border-radius:999px;background:#0F172A;transform:translateX(-50%);opacity:.5;z-index:10}
 </style>
 </head>
 <body>
@@ -181,175 +223,239 @@
   <symbol id="wifi" viewBox="0 0 24 24"><path d="M1 9a16 16 0 0 1 22 0M5 12.5a11 11 0 0 1 14 0M8.5 16a6 6 0 0 1 7 0M12 20h.01M2 2l20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
   <symbol id="globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
   <symbol id="gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
-  <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="key" viewBox="0 0 24 24"><path d="m21 2-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L19 3.6M15.5 8.5 18 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="stop" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><rect x="9" y="9" width="6" height="6" rx="1" fill="currentColor"/></symbol>
 </svg>
 
 <div class="page">
-  <h1>Prototype app Kotlin Go2Joy · màn "Hỗ trợ Go2Joy" do SharpTalk SDK 0.2 dựng</h1>
-  <p class="sub">Tone cam Go2Joy, bố cục Material cho Android. Bấm bộ chuyển bên trái để xem từng trạng thái; hai công tắc dưới mô phỏng cấu hình admin đổi trên console mà không phát hành lại app. Mã đặt phòng, tên người, số liệu là giả định.</p>
+  <h1>Prototype app Kotlin Go2Joy · màn "Hỗ trợ Go2Joy" do SharpTalk SDK 0.2 dựng · bấm trực tiếp trên điện thoại</h1>
+  <p class="sub">Mọi thứ trên màn hình điện thoại đều bấm được: ô Hỗ trợ Go2Joy, dòng đặt phòng, nút nhanh, ô nhập và nút gửi, chip Gặp nhân viên, camera và đính kèm, menu ⋮ (ngôn ngữ, quyền riêng tư, kết thúc), nút Thử lại. Bảng bên trái chỉ để nhảy tới trạng thái do bên ngoài gây ra (mất mạng, chưa xác minh) và mô phỏng cấu hình admin. Mã đặt phòng, tên người, số liệu là giả định.</p>
 
   <div class="wrap">
     <div class="ctl">
-      <h2>Màn hình</h2>
+      <h2>Trạng thái do bên ngoài gây ra</h2>
       <div class="grp"><div class="seg" id="screens">
-        <button data-v="home" class="on">1 Trang chủ app</button>
-        <button data-v="chat">2 Hỗ trợ Go2Joy</button>
-        <button data-v="ctx">3 Từ màn Đặt phòng</button>
-        <button data-v="attach">4 Đính kèm ảnh</button>
-        <button data-v="err">5 Mất mạng</button>
-        <button data-v="guest">6 Chưa xác minh</button>
+        <button data-v="home" class="on">Trang chủ</button>
+        <button data-v="chat">Chat đang mở</button>
+        <button data-v="err">Mất mạng</button>
+        <button data-v="guest">Chữ ký bị từ chối</button>
       </div></div>
       <h2>Cấu hình admin áp xuống app</h2>
       <div class="grp"><label class="l">Header trong app</label><div class="seg" id="hdr"><button data-h="native" class="on">Native của app</button><button data-h="widget">Header widget</button></div></div>
-      <div class="grp"><label class="l">Menu kịch bản</label><div class="seg" id="menu"><button data-m="card" class="on">Card có icon</button><button data-m="chip">Chip</button></div></div>
-      <div class="map">
-        <b>Phần app giữ (dev Go2Joy):</b> trang chủ, header native, back, điều hướng, nút "Hỗ trợ Go2Joy", gọi backend lấy gói ký.<br>
-        <b>Phần SDK:</b> WebView, cầu nối, chooser camera, màn lỗi, ký lại khi hết hạn.<br>
-        <b>Phần console:</b> agent, lời chào, 4 nút nhanh, menu card hay chip, màu, thông báo AI, đồng ý theo điều khoản.
+      <div class="grp"><label class="l">Menu kịch bản</label><div class="seg" id="menuseg"><button data-m="card" class="on">Card có icon</button><button data-m="chip">Chip</button></div></div>
+      <div class="map"><b>Thử các luồng:</b>
+        <ul>
+          <li>Trang chủ → ô "Hỗ trợ Go2Joy" hoặc "Hỏi ngay"</li>
+          <li>Trang chủ → dòng đặt phòng → chat mở kèm ngữ cảnh</li>
+          <li>Bấm nút nhanh hoặc gõ "no-show" rồi gửi</li>
+          <li>Chip "Gặp nhân viên hỗ trợ" → nhân viên Minh tham gia</li>
+          <li>Camera / kẹp giấy → chọn ảnh → gửi</li>
+          <li>⋮ → Kết thúc → đánh giá 5 mức</li>
+          <li>Chữ ký bị từ chối → "Thử lại" trên dải vàng</li>
+        </ul>
       </div>
     </div>
 
     <div class="phone"><div class="scr" id="scr">
-      <!-- 1 HOME -->
+      <!-- HOME -->
       <div class="view on" data-view="home">
         <div class="hero">
           <div class="status light"><span>09:41</span><span>▲ 4G ▮▮▮</span></div>
-          <div class="top"><div><div class="hi">Xin chào,</div><div class="name">Lan · Lễ tân</div></div><div class="bell"><svg class="ico" style="color:#fff"><use href="#bell"/></svg><i></i></div></div>
+          <div class="top"><div><div class="hi">Xin chào,</div><div class="name">Lan · Lễ tân</div></div><div class="bell tap" onclick="toast('Thông báo: 2 đặt phòng sắp tới giờ nhận')"><svg class="ico" style="color:#fff"><use href="#bell"/></svg><i></i></div></div>
           <div class="hotel"><svg class="ico xs"><use href="#pin"/></svg>A In Hotel Del Luna · Quận 1</div>
         </div>
-        <div class="kpis">
-          <div class="kpi"><small>Hôm nay</small><b>12</b><em>+3 so với hôm qua</em></div>
-          <div class="kpi"><small>Chờ nhận phòng</small><b>5</b><em style="color:var(--brand-700)">2 sắp tới giờ</em></div>
-          <div class="kpi"><small>Doanh thu</small><b>8,4tr</b><em>+12%</em></div>
-        </div>
-        <div class="sect">Thao tác nhanh</div>
-        <div class="grid">
-          <div class="act"><i><svg class="ico sm"><use href="#cal"/></svg></i>Đặt phòng</div>
-          <div class="act"><i><svg class="ico sm"><use href="#rec"/></svg></i>Đối soát</div>
-          <div class="act"><i><svg class="ico sm"><use href="#tag"/></svg></i>Khuyến mãi</div>
-          <div class="act"><i><svg class="ico sm"><use href="#chart"/></svg></i>Doanh thu</div>
-          <div class="act"><i><svg class="ico sm"><use href="#star"/></svg></i>Đánh giá</div>
-          <div class="act"><i><svg class="ico sm"><use href="#chat"/></svg></i>Chat với khách</div>
-          <div class="act"><i><svg class="ico sm"><use href="#bell"/></svg></i>Thông báo</div>
-          <div class="act new" onclick="go('chat')"><span class="badge">MỚI</span><i><svg class="ico sm"><use href="#head"/></svg></i>Hỗ trợ Go2Joy</div>
-        </div>
-        <div class="promo" onclick="go('chat')"><div class="av">G2</div><div><b>Cần hỗ trợ từ Go2Joy?</b><small>Hỏi về đối soát, khiếu nại, cách thao tác. AI trả lời ngay, nhân viên tiếp quản khi cần.</small></div><div class="go">Hỏi ngay</div></div>
-        <div class="list">
-          <div class="li"><svg class="ico sm" style="color:var(--brand)"><use href="#cal"/></svg><div>#G2J-8841 · Nguyễn A<br><small style="color:var(--g500)">2 đêm · 14:00</small></div><span class="st">Chờ nhận phòng</span></div>
-          <div class="li"><svg class="ico sm" style="color:var(--brand)"><use href="#cal"/></svg><div>#G2J-8847 · Trần B<br><small style="color:var(--g500)">1 đêm · 15:30</small></div><span class="st g">Đã nhận phòng</span></div>
-        </div>
-        <div class="nav"><div class="on"><i><svg class="ico sm"><use href="#home"/></svg></i>Trang chủ</div><div><i><svg class="ico sm"><use href="#cal"/></svg></i>Đặt phòng</div><div><i><svg class="ico sm"><use href="#bell"/></svg></i>Thông báo</div><div><i><svg class="ico sm"><use href="#user"/></svg></i>Tài khoản</div></div>
-      </div>
-
-      <!-- 2 CHAT -->
-      <div class="view" data-view="chat">
-        <div class="status"><span>09:41</span><span>▲ 4G ▮▮▮</span></div>
-        <div class="bar"><div class="ib" onclick="go('home')"><svg class="ico"><use href="#back"/></svg></div><div class="av">G2</div><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s">Trả lời ngay · AI + nhân viên Go2Joy</div></div><div class="ib"><svg class="ico"><use href="#more"/></svg></div></div>
-        <div class="wh"><div class="logo"><i>G2</i>Go2Joy</div><div class="r"><span>🌐 VI</span><svg class="ico sm"><use href="#gear"/></svg><svg class="ico sm"><use href="#x"/></svg></div></div>
-        <div class="notice"><svg class="ico sm" style="color:var(--brand);flex:none"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại Hoa Kỳ để tạo câu trả lời.</span></div>
-        <div class="thread">
-          <div class="day">Hôm nay</div>
-          <div class="msg"><div class="mav">G2</div><div class="b">Xin chào Lan! Chào mừng bạn đến với Go2Joy Support. Chúng tôi có thể giúp gì cho bạn? Hãy chọn một chủ đề bên dưới hoặc nhập câu hỏi của bạn.</div></div>
-          <div class="time">09:41</div>
-          <div class="qq">
-            <span><i><svg class="ico sm"><use href="#cal"/></svg></i>Xem đặt phòng hôm nay</span>
-            <span><i><svg class="ico sm"><use href="#key"/></svg></i>Cách nhận phòng cho khách</span>
-            <span><i><svg class="ico sm"><use href="#alert"/></svg></i>Khiếu nại đặt phòng</span>
-            <span><i><svg class="ico sm"><use href="#rec"/></svg></i>Hỏi về đối soát</span>
+        <div class="hscroll">
+          <div class="kpis">
+            <div class="kpi"><small>Hôm nay</small><b>12</b><em>+3 so với hôm qua</em></div>
+            <div class="kpi"><small>Chờ nhận phòng</small><b>5</b><em style="color:var(--brand-700)">2 sắp tới giờ</em></div>
+            <div class="kpi"><small>Doanh thu</small><b>8,4tr</b><em>+12%</em></div>
+          </div>
+          <div class="sect">Thao tác nhanh</div>
+          <div class="grid">
+            <div class="act tap" onclick="toast('Màn Đặt phòng của app Go2Joy')"><i><svg class="ico sm"><use href="#cal"/></svg></i>Đặt phòng</div>
+            <div class="act tap" onclick="toast('Màn Đối soát của app Go2Joy')"><i><svg class="ico sm"><use href="#rec"/></svg></i>Đối soát</div>
+            <div class="act tap" onclick="toast('Màn Khuyến mãi của app Go2Joy')"><i><svg class="ico sm"><use href="#tag"/></svg></i>Khuyến mãi</div>
+            <div class="act tap" onclick="toast('Màn Doanh thu của app Go2Joy')"><i><svg class="ico sm"><use href="#chart"/></svg></i>Doanh thu</div>
+            <div class="act tap" onclick="toast('Màn Đánh giá của app Go2Joy')"><i><svg class="ico sm"><use href="#star"/></svg></i>Đánh giá</div>
+            <div class="act tap" onclick="toast('Chat với khách: kênh Sendbird hiện có của Go2Joy')"><i><svg class="ico sm"><use href="#chat"/></svg></i>Chat với khách</div>
+            <div class="act tap" onclick="toast('Thông báo của app Go2Joy')"><i><svg class="ico sm"><use href="#bell"/></svg></i>Thông báo</div>
+            <div class="act new tap" onclick="openChat()"><span class="badge">MỚI</span><i><svg class="ico sm"><use href="#head"/></svg></i>Hỗ trợ Go2Joy</div>
+          </div>
+          <div class="promo tap" onclick="openChat()"><div class="av">G2</div><div><b>Cần hỗ trợ từ Go2Joy?</b><small>Hỏi về đối soát, khiếu nại, cách thao tác. AI trả lời ngay, nhân viên tiếp quản khi cần.</small></div><div class="go">Hỏi ngay</div></div>
+          <div class="sect">Chờ nhận phòng hôm nay</div>
+          <div class="list">
+            <div class="li tap" onclick="openChat({ref:'G2J-8841',label:'Chờ nhận phòng · 2 đêm',prefill:'Khách không đến, tôi cần báo no-show cho đặt phòng này'})"><svg class="ico sm" style="color:var(--brand)"><use href="#cal"/></svg><div>#G2J-8841 · Nguyễn A<br><small style="color:var(--g500)">2 đêm · 14:00 · </small><span class="ask">Hỏi về đặt phòng này</span></div><span class="st">Chờ nhận phòng</span></div>
+            <div class="li tap" onclick="openChat({ref:'G2J-8847',label:'Đã nhận phòng · 1 đêm',prefill:'Khách muốn gia hạn thêm 1 đêm, tôi thao tác thế nào?'})"><svg class="ico sm" style="color:var(--brand)"><use href="#cal"/></svg><div>#G2J-8847 · Trần B<br><small style="color:var(--g500)">1 đêm · 15:30 · </small><span class="ask">Hỏi về đặt phòng này</span></div><span class="st g">Đã nhận phòng</span></div>
           </div>
         </div>
-        <div class="comp"><div class="ib"><svg class="ico"><use href="#cam"/></svg></div><div class="ib"><svg class="ico"><use href="#clip"/></svg></div><div class="in">Nhập tin nhắn…</div><div class="send"><svg class="ico sm"><use href="#send"/></svg></div></div>
-      </div>
-
-      <!-- 3 CONTEXT -->
-      <div class="view" data-view="ctx">
-        <div class="status"><span>09:52</span><span>▲ 4G ▮▮▮</span></div>
-        <div class="bar"><div class="ib"><svg class="ico"><use href="#back"/></svg></div><div class="av">G2</div><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s">Trả lời ngay · AI + nhân viên Go2Joy</div></div><div class="ib"><svg class="ico"><use href="#more"/></svg></div></div>
-        <div class="wh"><div class="logo"><i>G2</i>Go2Joy</div><div class="r"><span>🌐 VI</span><svg class="ico sm"><use href="#gear"/></svg><svg class="ico sm"><use href="#x"/></svg></div></div>
-        <div class="notice"><svg class="ico sm" style="color:var(--brand);flex:none"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI…</span><span class="end">Kết thúc</span></div>
-        <div class="thread">
-          <div class="sys">Mở từ Đặt phòng #G2J-8841</div>
-          <div class="msg me"><div class="b">Khách không đến, tôi cần báo no-show cho đặt phòng này</div></div>
-          <div class="time r">09:52</div>
-          <div class="msg"><div class="mav">G2</div><div class="b">Để báo <b>Khách không đến</b> cho #G2J-8841:
-            <ol><li>Mở tab <code>Chờ nhận phòng</code>, chọn đặt phòng.</li><li>Nhập lý do vào ô <code>Ghi chú</code> (tối đa 500 ký tự).</li><li>Nhấn <code>Khách không đến</code>. Đặt phòng chuyển sang tab <code>Chờ khách xác nhận</code>.</li></ol></div></div>
-          <div class="src"><div class="th"></div><div><small>Nguồn tham khảo · Video 22</small><b>Báo khách không đến</b></div></div>
-          <div class="time">09:53</div>
-          <div class="chips"><span class="chip">Xem đặt phòng hôm nay</span><span class="chip hl"><svg class="ico xs"><use href="#head"/></svg>Gặp nhân viên hỗ trợ</span></div>
+        <div class="nav" id="nav">
+          <div class="on tap"><i><svg class="ico sm"><use href="#home"/></svg></i>Trang chủ</div>
+          <div class="tap" onclick="toast('Tab Đặt phòng của app Go2Joy')"><i><svg class="ico sm"><use href="#cal"/></svg></i>Đặt phòng</div>
+          <div class="tap" onclick="toast('Tab Thông báo của app Go2Joy')"><i><svg class="ico sm"><use href="#bell"/></svg></i>Thông báo</div>
+          <div class="tap" onclick="toast('Tab Tài khoản: Đăng xuất gọi chat.logout()')"><i><svg class="ico sm"><use href="#user"/></svg></i>Tài khoản</div>
         </div>
-        <div class="ctx"><svg class="ico sm"><use href="#pin"/></svg>Đặt phòng #G2J-8841 · Chờ nhận phòng · 2 đêm<svg class="ico sm x"><use href="#x"/></svg></div>
-        <div class="comp"><div class="ib"><svg class="ico"><use href="#cam"/></svg></div><div class="ib"><svg class="ico"><use href="#clip"/></svg></div><div class="in">Nhập tin nhắn…</div><div class="send"><svg class="ico sm"><use href="#send"/></svg></div></div>
       </div>
 
-      <!-- 4 ATTACH -->
-      <div class="view" data-view="attach">
-        <div class="status"><span>09:55</span><span>▲ 4G ▮▮▮</span></div>
-        <div class="bar"><div class="ib"><svg class="ico"><use href="#back"/></svg></div><div class="av" style="background:#0EA5E9">M</div><div class="grow"><div class="t">Minh · Go2Joy CS</div><div class="s">Nhân viên đang hỗ trợ · Miền Nam</div></div><div class="ib"><svg class="ico"><use href="#more"/></svg></div></div>
-        <div class="wh"><div class="logo"><i>G2</i>Go2Joy</div><div class="r"><span>🌐 VI</span><svg class="ico sm"><use href="#gear"/></svg><svg class="ico sm"><use href="#x"/></svg></div></div>
-        <div class="thread">
-          <div class="sys">Đã chuyển cho nhân viên Go2Joy</div>
-          <div class="msg"><div class="mav hu">M</div><div class="b"><div class="who">Minh · Go2Joy CS</div>Chị gửi giúp em ảnh màn hình lỗi ở tab Chờ khách xác nhận nhé, em kiểm tra ngay.</div></div>
-          <div class="time">09:54</div>
-          <div class="typing"><i></i><i></i><i></i></div>
+      <!-- CHAT -->
+      <div class="view" data-view="chat">
+        <div class="status"><span id="clock">09:41</span><span>▲ 4G ▮▮▮</span></div>
+        <div class="bar">
+          <div class="ib tap" onclick="go('home')"><svg class="ico"><use href="#back"/></svg></div>
+          <div class="av" id="bav">G2</div>
+          <div class="grow"><div class="t" id="btitle">Hỗ trợ Go2Joy</div><div class="s" id="bsub">Trả lời ngay · AI + nhân viên Go2Joy</div></div>
+          <div class="ib tap" onclick="toggleMenu()"><svg class="ico"><use href="#more"/></svg></div>
         </div>
-        <div class="pend"><div class="th"></div><div style="flex:1">IMG_20261015_0955.jpg · 1,2 MB<div class="bar2"><i></i></div></div><svg class="ico sm" style="color:var(--g400)"><use href="#x"/></svg></div>
-        <div class="comp"><div class="ib"><svg class="ico"><use href="#cam"/></svg></div><div class="ib"><svg class="ico"><use href="#clip"/></svg></div><div class="in">Nhập tin nhắn…</div><div class="send on"><svg class="ico sm"><use href="#send"/></svg></div></div>
-        <div class="dim"><div class="sheet"><div class="hd"></div><h4>Gửi ảnh hoặc tệp</h4>
-          <div class="row"><i><svg class="ico sm"><use href="#cam"/></svg></i><div>Chụp ảnh<small>Mở camera, không cần cấp quyền thêm</small></div></div>
-          <div class="row"><i><svg class="ico sm"><use href="#img"/></svg></i><div>Chọn từ thư viện<small>Chọn nhiều ảnh cùng lúc</small></div></div>
-          <div class="row"><i><svg class="ico sm"><use href="#file"/></svg></i><div>Tệp<small>PDF, Excel, Word tối đa 10 MB</small></div></div>
-          <div class="cancel">Hủy</div></div></div>
+        <div class="wh">
+          <div class="logo"><i>G2</i>Go2Joy</div>
+          <div class="r"><span class="tap" onclick="switchLang()" id="whlang">🌐 VI</span><svg class="ico sm tap" onclick="openPanel()"><use href="#gear"/></svg><svg class="ico sm tap" onclick="go('home')"><use href="#x"/></svg></div>
+        </div>
+        <div class="menu" id="menu">
+          <div onclick="switchLang();toggleMenu()"><svg class="ico sm"><use href="#globe"/></svg><span id="mlang">Ngôn ngữ: Tiếng Việt</span></div>
+          <div onclick="openPanel();toggleMenu()"><svg class="ico sm"><use href="#shield"/></svg>Quyền riêng tư</div>
+          <div class="red" onclick="endConv();toggleMenu()"><svg class="ico sm"><use href="#stop"/></svg>Kết thúc hội thoại</div>
+        </div>
+        <div class="warn"><svg class="ico sm" style="flex:none"><use href="#alert"/></svg><span>Không xác minh được tài khoản. Bạn đang trò chuyện ẩn danh; câu hỏi về đặt phòng cụ thể sẽ cần xác minh.</span><b class="tap" onclick="retryIdentity()">Thử lại</b></div>
+        <div class="notice"><svg class="ico sm" style="color:var(--brand);flex:none"><use href="#spark"/></svg><span id="noticeTxt">Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại Hoa Kỳ để tạo câu trả lời.</span><span class="end tap" onclick="endConv()">Kết thúc</span></div>
+        <div class="thread" id="thread"></div>
+        <div class="pend" id="pend"><div class="th"></div><div style="flex:1"><span id="pendName">IMG_20261015_0955.jpg · 1,2 MB</span><div class="bar2"><i id="pendBar"></i></div></div><svg class="ico sm tap" style="color:var(--g400)" onclick="cancelUpload()"><use href="#x"/></svg></div>
+        <div class="ctx" id="ctx"><svg class="ico sm"><use href="#pin"/></svg><span id="ctxTxt"></span><svg class="ico sm x" onclick="clearCtx()"><use href="#x"/></svg></div>
+        <div class="comp">
+          <div class="ib" onclick="openSheet()"><svg class="ico"><use href="#cam"/></svg></div>
+          <div class="ib" onclick="openSheet()"><svg class="ico"><use href="#clip"/></svg></div>
+          <input id="inp" placeholder="Nhập tin nhắn…" oninput="onInput()" onkeydown="if(event.key==='Enter')sendInput()">
+          <div class="send" id="sendBtn" onclick="sendInput()"><svg class="ico sm"><use href="#send"/></svg></div>
+        </div>
+        <div class="ended">Hội thoại đã kết thúc. Cảm ơn bạn đã đánh giá.<b onclick="newConv()">Bắt đầu hội thoại mới</b></div>
+        <div class="dim" id="sheet"><div class="sheet"><div class="hd"></div><h4>Gửi ảnh hoặc tệp</h4>
+          <div class="row" onclick="pick('IMG_20261015_0955.jpg · 1,2 MB')"><i><svg class="ico sm"><use href="#cam"/></svg></i><div>Chụp ảnh<small>Mở camera, không cần cấp quyền thêm</small></div></div>
+          <div class="row" onclick="pick('Screenshot_cho-khach-xac-nhan.png · 640 KB')"><i><svg class="ico sm"><use href="#img"/></svg></i><div>Chọn từ thư viện<small>Chọn nhiều ảnh cùng lúc</small></div></div>
+          <div class="row" onclick="pick('doi-soat-thang-10.xlsx · 88 KB','file')"><i><svg class="ico sm"><use href="#file"/></svg></i><div>Tệp<small>PDF, Excel, Word tối đa 10 MB</small></div></div>
+          <div class="cancel" onclick="closeSheet()">Hủy</div></div></div>
+        <div class="panel" id="panel">
+          <div class="bar"><div class="ib tap" onclick="closePanel()"><svg class="ico"><use href="#back"/></svg></div><div class="grow"><div class="t">Quyền riêng tư &amp; dữ liệu</div><div class="s">Preferences của widget, mở từ menu app</div></div></div>
+          <div class="pb">
+            <div class="card"><h5>Đồng ý về trò chuyện &amp; AI</h5><p>Đã ghi nhận qua điều khoản Go2Joy ngày 15/10/2026, bản thông báo v3. Tin nhắn được xử lý bởi nhà cung cấp AI tại Hoa Kỳ sau khi che dữ liệu cá nhân.</p>
+              <div class="rowp" style="margin-top:8px">Cho phép xử lý bằng AI<span class="sw on" onclick="this.classList.toggle('on');toast(this.classList.contains('on')?'Đã bật lại xử lý AI':'Đã rút lại đồng ý: chỉ nhân viên trả lời')"></span></div>
+              <div class="rowp">Nhận email tóm tắt hội thoại<span class="sw" onclick="this.classList.toggle('on')"></span></div>
+            </div>
+            <div class="card"><h5>Tài khoản đang dùng</h5><p id="whoTxt">Lan · Lễ tân · A In Hotel Del Luna · Miền Nam. Xác minh bởi Go2Joy lúc 09:41, hiệu lực 8 giờ.</p></div>
+            <div class="card"><h5>Chính sách</h5><p>Chính sách quyền riêng tư Go2Joy · Thông báo xử lý dữ liệu SharpTalk</p></div>
+          </div>
+        </div>
       </div>
 
-      <!-- 5 ERROR -->
+      <!-- ERROR -->
       <div class="view" data-view="err">
         <div class="status"><span>10:02</span><span style="color:var(--g400)">✕ Không có mạng</span></div>
-        <div class="bar"><div class="ib"><svg class="ico"><use href="#back"/></svg></div><div class="av" style="background:var(--g300)">G2</div><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s">Đang kết nối lại…</div></div></div>
+        <div class="bar"><div class="ib tap" onclick="go('home')"><svg class="ico"><use href="#back"/></svg></div><div class="av" style="background:var(--g300)">G2</div><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s">Đang kết nối lại…</div></div></div>
         <div class="err">
           <div class="big"><svg class="ico" style="width:36px;height:36px"><use href="#wifi"/></svg></div>
           <h3>Không kết nối được</h3>
           <p>Kiểm tra mạng rồi thử lại. Hội thoại của bạn vẫn được giữ nguyên.</p>
-          <div class="btn">Thử lại</div>
-          <div class="link">Gọi hotline 1900 638 838</div>
+          <div class="btn" onclick="retryLoad()">Thử lại</div>
+          <div class="link" onclick="toast('Mở trình quay số: 1900 638 838')">Gọi hotline 1900 638 838</div>
         </div>
       </div>
-
-      <!-- 6 GUEST -->
-      <div class="view" data-view="guest">
-        <div class="status"><span>10:05</span><span>▲ 4G ▮▮▮</span></div>
-        <div class="bar"><div class="ib"><svg class="ico"><use href="#back"/></svg></div><div class="av">G2</div><div class="grow"><div class="t">Hỗ trợ Go2Joy</div><div class="s">Chế độ khách · chưa xác minh tài khoản</div></div><div class="ib"><svg class="ico"><use href="#more"/></svg></div></div>
-        <div class="wh"><div class="logo"><i>G2</i>Go2Joy</div><div class="r"><span>🌐 VI</span><svg class="ico sm"><use href="#gear"/></svg><svg class="ico sm"><use href="#x"/></svg></div></div>
-        <div class="warn"><svg class="ico sm" style="flex:none"><use href="#alert"/></svg><span>Không xác minh được tài khoản. Bạn đang trò chuyện ẩn danh; câu hỏi về đặt phòng cụ thể sẽ cần xác minh.</span><b>Thử lại</b></div>
-        <div class="notice"><svg class="ico sm" style="color:var(--brand);flex:none"><use href="#spark"/></svg><span>Cuộc trò chuyện này có sử dụng AI…</span></div>
-        <div class="thread">
-          <div class="msg"><div class="mav">G2</div><div class="b">Xin chào! Chào mừng bạn đến với Go2Joy Support. Chúng tôi có thể giúp gì cho bạn?</div></div>
-          <div class="qq">
-            <span><i><svg class="ico sm"><use href="#key"/></svg></i>Cách nhận phòng cho khách</span>
-            <span><i><svg class="ico sm"><use href="#rec"/></svg></i>Hỏi về đối soát</span>
-          </div>
-        </div>
-        <div class="comp"><div class="ib"><svg class="ico"><use href="#cam"/></svg></div><div class="ib"><svg class="ico"><use href="#clip"/></svg></div><div class="in">Nhập tin nhắn…</div><div class="send"><svg class="ico sm"><use href="#send"/></svg></div></div>
-      </div>
+      <div class="toast" id="toast"></div>
       <div class="home-ind"></div>
     </div></div>
   </div>
 </div>
 <script>
-  function go(v){
-    document.querySelectorAll('#screens button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
-    document.querySelectorAll('.view').forEach(x=>x.classList.toggle('on',x.dataset.view===v));
-  }
-  document.querySelectorAll('#screens button').forEach(b=>b.addEventListener('click',()=>go(b.dataset.v)));
-  document.querySelectorAll('#hdr button').forEach(b=>b.addEventListener('click',()=>{
-    document.querySelectorAll('#hdr button').forEach(x=>x.classList.toggle('on',x===b));
-    document.getElementById('scr').classList.toggle('hw',b.dataset.h==='widget');
-  }));
-  document.querySelectorAll('#menu button').forEach(b=>b.addEventListener('click',()=>{
-    document.querySelectorAll('#menu button').forEach(x=>x.classList.toggle('on',x===b));
-    document.getElementById('scr').classList.toggle('chip',b.dataset.m==='chip');
-  }));
-  var q=new URLSearchParams(location.search).get('v'); if(q) go(q);
+  var S={ctx:null,verified:true,handoff:false,ended:false,lang:'vi',started:false};
+  var $=function(id){return document.getElementById(id)};
+  var thread=$('thread');
+  var QUICK=[
+    {k:'bookings',t:'Xem đặt phòng hôm nay',i:'cal'},
+    {k:'checkin',t:'Cách nhận phòng cho khách',i:'key'},
+    {k:'complaint',t:'Khiếu nại đặt phòng',i:'alert'},
+    {k:'recon',t:'Hỏi về đối soát',i:'rec'}
+  ];
+  var ANSWERS={
+    bookings:{html:'Hôm nay khách sạn có <b>12 đặt phòng</b>, trong đó 5 đang <b>Chờ nhận phòng</b>:<ul><li>#G2J-8841 · Nguyễn A · 14:00 · 2 đêm</li><li>#G2J-8847 · Trần B · 15:30 · 1 đêm</li><li>#G2J-8850 · Lê C · 18:00 · 3 đêm</li></ul>Bạn muốn xem chi tiết đặt phòng nào?',chips:['Khiếu nại đặt phòng','Hỏi về đối soát']},
+    checkin:{html:'Nhận phòng cho khách trong Hotel Admin:<ol><li>Mở tab <code>Chờ nhận phòng</code>, chọn đặt phòng của khách.</li><li>Đối chiếu giấy tờ, nhấn <code>Nhận phòng</code>.</li><li>Nếu khách đến sớm hơn giờ đặt, chọn <code>Nhận phòng sớm</code> và xác nhận phụ phí nếu có.</li></ol>',src:{t:'Hướng dẫn nhận phòng',v:'Video 07'},chips:['Xem đặt phòng hôm nay','Khách không đến thì sao?']},
+    complaint:{html:'Để khiếu nại một đặt phòng, bạn cần: mã đặt phòng, lý do (khách không đến, sai thông tin, thanh toán) và ảnh minh chứng nếu có. Tôi có thể chuyển cho nhân viên Go2Joy xử lý ngay.',chips:['Gặp nhân viên hỗ trợ','Khách không đến thì sao?']},
+    recon:{html:'Đối soát được chốt <b>vào ngày 1 và 16 hằng tháng</b>. Bạn xem bảng kê ở <code>Đối soát › Kỳ hiện tại</code>; số tiền hiển thị là số do hệ thống Go2Joy tính, tôi không tự tính lại.<br>Nếu lệch số, gửi ảnh bảng kê để nhân viên kiểm tra.',chips:['Gặp nhân viên hỗ trợ','Xem đặt phòng hôm nay']},
+    noshow:{html:'Để báo <b>Khách không đến</b>{REF}:<ol><li>Mở tab <code>Chờ nhận phòng</code>, chọn đặt phòng.</li><li>Nhập lý do vào ô <code>Ghi chú</code> (tối đa 500 ký tự).</li><li>Nhấn <code>Khách không đến</code>. Đặt phòng chuyển sang tab <code>Chờ khách xác nhận</code>.</li></ol>',src:{t:'Báo khách không đến',v:'Video 22'},chips:['Xem đặt phòng hôm nay','Gặp nhân viên hỗ trợ']},
+    extend:{html:'Gia hạn thêm đêm: mở đặt phòng đã nhận, chọn <code>Gia hạn</code>, chọn số đêm và xác nhận giá hiển thị. Hệ thống tạo đặt phòng nối tiếp và gửi xác nhận cho khách.',chips:['Xem đặt phòng hôm nay','Gặp nhân viên hỗ trợ']},
+    generic:{html:'Tôi đã ghi nhận câu hỏi của bạn. Dựa trên hướng dẫn Hotel Admin hiện có, tôi chưa tìm được câu trả lời đủ căn cứ. Bạn có thể mô tả thêm, hoặc để tôi chuyển cho nhân viên Go2Joy.',chips:['Gặp nhân viên hỗ trợ','Xem đặt phòng hôm nay']}
+  };
+  function now(){var d=new Date();return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+  function el(h){var d=document.createElement('div');d.innerHTML=h;return d.firstElementChild}
+  function scroll(){thread.scrollTop=thread.scrollHeight}
+  function sys(t){thread.appendChild(el('<div class="sys">'+t+'</div>'));scroll()}
+  function addMe(h,isImg){thread.appendChild(el('<div class="msg me"><div class="b">'+(isImg?'<div class="ph"></div>':'')+h+'</div></div>'));thread.appendChild(el('<div class="time r">'+now()+'</div>'));scroll()}
+  function addBot(h,o){o=o||{};var hu=S.handoff&&!o.ai;
+    thread.appendChild(el('<div class="msg"><div class="mav'+(hu?' hu':'')+'">'+(hu?'M':'G2')+'</div><div class="b">'+(hu?'<div class="who">Minh · Go2Joy CS</div>':'')+h+'</div></div>'));
+    if(o.src)thread.appendChild(el('<div class="src tap" onclick="toast(\'Mở video trong trình duyệt hệ thống (onOpenUrl)\')"><div class="th"></div><div><small>Nguồn tham khảo · '+o.src.v+'</small><b>'+o.src.t+'</b></div></div>'));
+    thread.appendChild(el('<div class="time">'+now()+'</div>'));
+    if(o.chips)thread.appendChild(el('<div class="chips">'+o.chips.map(function(c){var hl=c.indexOf('nhân viên')>=0;return '<span class="chip'+(hl?' hl':'')+'" onclick="chip(this)">'+(hl?'<svg class="ico xs"><use href="#head"/></svg>':'')+c+'</span>'}).join('')+'</div>'));
+    scroll()}
+  function typing(ms,label,cb){var t=el('<div class="typing"><i></i><i></i><i></i>'+(label?'<small>'+label+'</small>':'')+'</div>');thread.appendChild(t);scroll();setTimeout(function(){t.remove();cb()},ms)}
+  function quickMenu(){thread.appendChild(el('<div class="qq">'+QUICK.map(function(q){return '<span onclick="ask(\''+q.k+'\')"><i><svg class="ico sm"><use href="#'+q.i+'"/></svg></i>'+q.t+'</span>'}).join('')+'</div>'));scroll()}
+  function greet(){thread.innerHTML='';thread.appendChild(el('<div class="day">Hôm nay</div>'));
+    if(S.ctx)sys('Mở từ Đặt phòng #'+S.ctx.ref);
+    addBot((S.verified?'Xin chào Lan! ':'Xin chào! ')+'Chào mừng bạn đến với Go2Joy Support. Chúng tôi có thể giúp gì cho bạn? Hãy chọn một chủ đề bên dưới hoặc nhập câu hỏi của bạn.',{ai:true});
+    quickMenu()}
+  function openChat(ctx){S.started=true;S.ctx=ctx||null;S.handoff=false;S.ended=false;$('scr').classList.remove('over');setBar();
+    $('ctx').classList.toggle('on',!!S.ctx);if(S.ctx)$('ctxTxt').textContent='Đặt phòng #'+S.ctx.ref+' · '+S.ctx.label;
+    greet();$('inp').value=S.ctx&&S.ctx.prefill?S.ctx.prefill:'';onInput();go('chat');if(S.ctx)setTimeout(function(){$('inp').focus()},100)}
+  function setBar(){$('bav').textContent=S.handoff?'M':'G2';$('bav').classList.toggle('hu',S.handoff);$('btitle').textContent=S.handoff?'Minh · Go2Joy CS':'Hỗ trợ Go2Joy';
+    $('bsub').textContent=S.handoff?'Nhân viên đang hỗ trợ · Miền Nam':(S.verified?'Trả lời ngay · AI + nhân viên Go2Joy':'Chế độ khách · chưa xác minh tài khoản')}
+  function ask(k){var q=QUICK.filter(function(x){return x.k===k})[0];addMe(q.t);reply(k)}
+  function reply(k,ref){var a=ANSWERS[k]||ANSWERS.generic;
+    if(S.handoff){typing(1400,'Minh đang soạn',function(){addBot('Em đã nhận, chị chờ em 1 phút kiểm tra trên hệ thống nhé.')});return}
+    typing(1200,'Đang soạn câu trả lời',function(){addBot(a.html.replace('{REF}',ref?' cho #'+ref:''),{ai:true,src:a.src,chips:a.chips})})}
+  function classify(t){t=t.toLowerCase();if(/no-?show|không đến|khong den/.test(t))return 'noshow';if(/gia hạn|thêm.*đêm|them.*dem/.test(t))return 'extend';if(/đối soát|doi soat|thanh toán|tiền/.test(t))return 'recon';if(/nhận phòng|check-?in/.test(t))return 'checkin';if(/khiếu nại|sai/.test(t))return 'complaint';if(/đặt phòng hôm nay|hôm nay/.test(t))return 'bookings';return 'generic'}
+  function onInput(){$('sendBtn').classList.toggle('on',$('inp').value.trim().length>0)}
+  function sendInput(){var t=$('inp').value.trim();if(!t)return;addMe(t);$('inp').value='';onInput();
+    var ref=S.ctx?S.ctx.ref:null;if(S.ctx){S.ctx=null;$('ctx').classList.remove('on')}
+    reply(classify(t),ref)}
+  function chip(e){var t=e.textContent.trim();if(t.indexOf('nhân viên')>=0){handoff();return}
+    addMe(t);var k=t==='Khách không đến thì sao?'?'noshow':classify(t);reply(k)}
+  function handoff(){if(S.handoff)return;sys('Đang tìm nhân viên Go2Joy phù hợp · Miền Nam · Đối soát');
+    typing(1500,'Đang kết nối',function(){S.handoff=true;setBar();sys('Minh · Go2Joy CS đã tham gia');
+      setTimeout(function(){typing(1200,'Minh đang soạn',function(){addBot('Chào chị Lan, em là Minh bên Go2Joy. Chị gửi giúp em ảnh màn hình tab <code>Chờ khách xác nhận</code> để em kiểm tra ngay nhé.')})},300)})}
+  function openSheet(){if(S.ended)return;$('sheet').classList.add('on')}
+  function closeSheet(){$('sheet').classList.remove('on')}
+  function pick(name,kind){closeSheet();$('pendName').textContent=name;$('pend').classList.add('on');$('pendBar').style.width='0';
+    setTimeout(function(){$('pendBar').style.width='100%'},30);
+    setTimeout(function(){$('pend').classList.remove('on');addMe(kind==='file'?'📎 '+name:'',kind!=='file');
+      if(S.handoff){typing(1300,'Minh đang soạn',function(){addBot('Em nhận được rồi. Đặt phòng này đang kẹt ở bước xác nhận của khách, em đẩy lại thông báo cho khách và cập nhật chị sau 5 phút.')})}
+      else{typing(1200,'Đang soạn câu trả lời',function(){addBot('Tôi đã nhận tệp. Bạn muốn tôi dùng ảnh này để làm gì: báo khiếu nại, hay chuyển cho nhân viên kiểm tra?',{ai:true,chips:['Gặp nhân viên hỗ trợ','Khiếu nại đặt phòng']})})}
+    },1400)}
+  function cancelUpload(){$('pend').classList.remove('on');toast('Đã hủy tải lên')}
+  function clearCtx(){S.ctx=null;$('ctx').classList.remove('on');toast('Đã bỏ ngữ cảnh đặt phòng')}
+  function toggleMenu(){$('menu').classList.toggle('on')}
+  function switchLang(){S.lang=S.lang==='vi'?'en':'vi';var vi=S.lang==='vi';
+    $('mlang').textContent=vi?'Ngôn ngữ: Tiếng Việt':'Language: English';$('whlang').textContent=vi?'🌐 VI':'🌐 EN';
+    $('inp').placeholder=vi?'Nhập tin nhắn…':'Type a message…';$('btitle').textContent=vi?'Hỗ trợ Go2Joy':'Go2Joy Support';
+    $('noticeTxt').textContent=vi?'Cuộc trò chuyện này có sử dụng AI. Tin nhắn bạn gửi được xử lý bởi nhà cung cấp dịch vụ AI bên thứ ba tại Hoa Kỳ để tạo câu trả lời.':'This conversation uses AI. Your messages are processed by a third-party AI provider in the US to generate answers.';
+    toast(vi?'Widget nhận lệnh locale=vi':'Widget received locale=en')}
+  function openPanel(){$('panel').classList.add('on')}
+  function closePanel(){$('panel').classList.remove('on')}
+  function endConv(){if(S.ended)return;S.ended=true;$('inp').blur();
+    thread.appendChild(el('<div class="csat"><b>Bạn hài lòng với cuộc hỗ trợ này không?</b><div class="faces"><span onclick="rate(this,1)">😞</span><span onclick="rate(this,2)">😕</span><span onclick="rate(this,3)">😐</span><span onclick="rate(this,4)">🙂</span><span onclick="rate(this,5)">😄</span></div></div>'));scroll()}
+  function rate(e,n){Array.prototype.forEach.call(e.parentNode.children,function(c){c.classList.remove('on')});e.classList.add('on');
+    setTimeout(function(){sys('Cảm ơn bạn đã đánh giá '+n+'/5');$('scr').classList.add('over');scroll()},400)}
+  function newConv(){S.ended=false;S.handoff=false;$('scr').classList.remove('over');setBar();S.ctx=null;$('ctx').classList.remove('on');greet()}
+  function retryIdentity(){toast('Gọi lại identityProvider → identified ok');setTimeout(function(){S.verified=true;$('scr').classList.remove('guest');setBar();sys('Đã xác minh: Lễ tân · A In Hotel Del Luna · Miền Nam');
+    document.querySelectorAll('#screens button').forEach(function(b){b.classList.toggle('on',b.dataset.v==='chat')})},700)}
+  function retryLoad(){toast('reload() → tải lại widget');setTimeout(function(){go('chat');if(!S.started)openChat()},600)}
+  function go(v){if(v==='chat'&&!S.started){S.started=true;openChat();return}
+    document.querySelectorAll('#screens button').forEach(function(b){b.classList.toggle('on',b.dataset.v===(v==='chat'&&!S.verified?'guest':v))});
+    document.querySelectorAll('.view').forEach(function(x){x.classList.toggle('on',x.dataset.view===v)});$('menu').classList.remove('on')}
+  var tt;function toast(m){var t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('on')},2200)}
+  document.querySelectorAll('#screens button').forEach(function(b){b.addEventListener('click',function(){var v=b.dataset.v;
+    if(v==='guest'){S.verified=false;$('scr').classList.add('guest');if(!S.started){S.started=true;openChat()}else{setBar();go('chat')}document.querySelectorAll('#screens button').forEach(function(x){x.classList.toggle('on',x===b)});return}
+    if(v==='chat'){S.verified=true;$('scr').classList.remove('guest');setBar();if(!S.started){S.started=true;openChat()}else go('chat');return}
+    go(v)})});
+  document.querySelectorAll('#hdr button').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('#hdr button').forEach(function(x){x.classList.toggle('on',x===b)});$('scr').classList.toggle('hw',b.dataset.h==='widget')})});
+  document.querySelectorAll('#menuseg button').forEach(function(b){b.addEventListener('click',function(){document.querySelectorAll('#menuseg button').forEach(function(x){x.classList.toggle('on',x===b)});$('scr').classList.toggle('chip',b.dataset.m==='chip')})});
+  document.addEventListener('click',function(e){if(!e.target.closest('.menu')&&!e.target.closest('[onclick="toggleMenu()"]'))$('menu').classList.remove('on')});
+  setInterval(function(){$('clock').textContent=now()},15000);$('clock').textContent=now();
+  var q=new URLSearchParams(location.search).get('v');if(q==='chat'||q==='ctx'){S.started=true;openChat(q==='ctx'?{ref:'G2J-8841',label:'Chờ nhận phòng · 2 đêm',prefill:'Khách không đến, tôi cần báo no-show cho đặt phòng này'}:null)}else if(q)go(q);
 </script>
 </body>
 </html>
