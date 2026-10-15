@@ -7,6 +7,8 @@ import { AgentProfile } from './entity/agent-profile.entity';
 import { Assignment } from './entity/assignment.entity';
 import { JobLabel } from '../user/entity/job-label.entity';
 import { UserJobLabel } from '../user/entity/user-job-label.entity';
+import { User } from '../user/entity/user.entity';
+import { Session } from '../session/entity/session.entity';
 import { EventBusService, EVENTS, MailerService } from '../../infrastructure/infrastructure.module';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
@@ -59,6 +61,11 @@ export class AgentAlertService implements OnModuleInit {
     private readonly bus: EventBusService,
     private readonly config: ConfigService,
     private readonly mailer: MailerService,
+    // Personal alert mail (PLN-261015 D4): the paged agent's own address and the
+    // hotel/region the host signed. Optional so older unit fixtures still build;
+    // without them every mail goes to the ops mailbox, as before.
+    @InjectRepository(User) private readonly userRepo?: Repository<User>,
+    @InjectRepository(Session) private readonly sessionRepo?: Repository<Session>,
   ) {}
 
   onModuleInit(): void {
@@ -104,7 +111,58 @@ export class AgentAlertService implements OnModuleInit {
       await this.notifyEmail(alert, payload.offHoursEmail);
       return;
     }
-    await Promise.allSettled([this.notifySlack(alert), this.notifyEmail(alert)]);
+    await Promise.allSettled([this.notifySlack(alert), this.notifyRows(rows)]);
+  }
+
+  /**
+   * Mail for a set of alert rows (PLN-261015 D4): each addressed agent gets
+   * their own mail at their own address; a broadcast row (NULL target) keeps
+   * the historical ops-mailbox mail. An agent whose address cannot be read
+   * falls back to the ops mailbox, so a page is never silently lost.
+   */
+  async notifyRows(rows: AgentAlert[], opts: { reminder?: boolean } = {}): Promise<void> {
+    const context = rows[0] ? await this.alertContext(rows[0]) : null;
+    let opsMailed = false;
+    for (const row of rows) {
+      const to = row.targetUserId != null ? await this.agentEmail(row.tenantId, row.targetUserId) : null;
+      if (to) {
+        await this.notifyEmail(row, to, { context, reminder: opts.reminder });
+      } else if (!opsMailed) {
+        opsMailed = true;
+        await this.notifyEmail(row, undefined, { context, reminder: opts.reminder });
+      }
+    }
+  }
+
+  /** The paged agent's login address, fenced to the alert's tenant. */
+  private async agentEmail(tenantId: number | null, userId: number): Promise<string | null> {
+    if (!this.userRepo || tenantId == null) return null;
+    try {
+      const user = await this.userRepo.findOne({ where: { id: userId, tenantId }, select: { id: true, email: true } });
+      return user?.email?.trim() || null;
+    } catch (e) {
+      this.logger.warn(`agent email lookup failed (user ${userId}): ${(e as Error).message}`);
+      return null;
+    }
+  }
+
+  /** Hotel · region the host signed for this session (D2) — shown in the mail. */
+  private async alertContext(alert: AgentAlert): Promise<string | null> {
+    if (!this.sessionRepo || alert.sessionId == null) return null;
+    try {
+      const session = await this.sessionRepo.findOne({
+        where: { id: alert.sessionId },
+        select: { id: true, identityAttributes: true },
+      });
+      const a = session?.identityAttributes;
+      if (!a) return null;
+      const hotel = a.hotel_name || a.hotel_id;
+      return [hotel && `Hotel: ${hotel}`, a.region && `Region: ${a.region}`, a.role && `Role: ${a.role}`]
+        .filter(Boolean)
+        .join(' · ') || null;
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -217,10 +275,13 @@ export class AgentAlertService implements OnModuleInit {
 
   // ---- channels ----
 
-  private summary(alert: AgentAlert): string {
+  private summary(alert: AgentAlert, context: string | null = null): string {
     const reason = REASON_LABEL[alert.reason] ?? alert.reason;
     const preview = alert.preview ? `\n> ${alert.preview}` : '';
-    return `Chat escalation — conversation #${alert.conversationId}\nReason: ${reason}${preview}`;
+    const who = context ? `\n${context}` : '';
+    const base = this.config.get<string>('APP_PUBLIC_URL')?.replace(/\/+$/, '');
+    const link = base ? `\nOpen: ${base}/live-chat?c=${alert.conversationId}` : '';
+    return `Chat escalation — conversation #${alert.conversationId}\nReason: ${reason}${who}${preview}${link}`;
   }
 
   /** Slack incoming webhook (SLACK_WEBHOOK_URL; empty = disabled). */
@@ -239,14 +300,19 @@ export class AgentAlertService implements OnModuleInit {
     }
   }
 
-  /** Escalation summary to the ops mailbox (or the off-hours override). */
-  private async notifyEmail(alert: AgentAlert, overrideTo?: string): Promise<void> {
+  /** Escalation summary to `to` (an agent, the off-hours box) or the ops mailbox. */
+  private async notifyEmail(
+    alert: AgentAlert,
+    overrideTo?: string,
+    opts: { context?: string | null; reminder?: boolean } = {},
+  ): Promise<void> {
     const to = overrideTo ?? this.config.get<string>('ALERT_EMAIL_TO');
     if (!to) return;
+    const prefix = opts.reminder ? '[SharpTalk] Reminder — still waiting' : '[SharpTalk] Escalation';
     await this.mailer.send({
       to,
-      subject: `[IVY Chat] Escalation — conversation #${alert.conversationId}`,
-      text: this.summary(alert),
+      subject: `${prefix} — conversation #${alert.conversationId}`,
+      text: this.summary(alert, opts.context ?? null),
     });
   }
 }

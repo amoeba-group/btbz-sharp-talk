@@ -180,7 +180,15 @@
         "north": "Miền Bắc",
         "central": "Miền Trung",
         "south": "Miền Nam"
-      }
+      },
+      "unlisted": "Không có trong danh sách nhân viên (thiếu nhãn tư vấn hoặc ngừng hoạt động) — bấm để gỡ"
+    },
+    "reAlert": {
+      "title": "Nhắc lại khi chưa ai nhận",
+      "hint": "Nếu cảnh báo vẫn chưa được xác nhận và hội thoại vẫn đang chờ sau số phút này, nhân viên được phân công sẽ nhận lại email và trưởng nhóm bên dưới cũng được báo. Để trống = tắt.",
+      "off": "Tắt",
+      "minutes": "phút",
+      "leads": "Báo thêm"
     }
   },
   "coach": {

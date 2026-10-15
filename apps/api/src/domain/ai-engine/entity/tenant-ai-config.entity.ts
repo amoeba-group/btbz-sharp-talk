@@ -107,6 +107,13 @@ export interface HandoffConfig {
    * opens this keeps exactly today's routing.
    */
   routingRules?: RoutingRule[];
+  /**
+   * Unanswered-alarm reminder (PLN-261015 D4). After `afterMinutes` with the
+   * alarm still unacknowledged and the conversation still waiting, the paged
+   * agents are mailed again and `escalateToUserIds` (a lead) is paged too.
+   * Absent or 0 = off.
+   */
+  reAlert?: { afterMinutes?: number; escalateToUserIds?: number[] };
 }
 
 export const ROUTING_MODE = {

@@ -180,7 +180,15 @@
         "north": "North",
         "central": "Central",
         "south": "South"
-      }
+      },
+      "unlisted": "Not in the agent list (no consult label or inactive) — click to remove"
+    },
+    "reAlert": {
+      "title": "Reminder when nobody picks up",
+      "hint": "If an alarm is still unacknowledged and the conversation still waiting after this many minutes, the paged agents are emailed again and the leads below are paged too. Empty = off.",
+      "off": "Off",
+      "minutes": "minutes",
+      "leads": "Also page"
     }
   },
   "coach": {

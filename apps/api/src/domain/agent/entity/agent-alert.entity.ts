@@ -45,6 +45,13 @@ export class AgentAlert {
   @Column({ name: 'acked_at', type: 'datetime', nullable: true })
   ackedAt: Date | null;
 
+  /**
+   * When the "still nobody has it" reminder went out (PLN-261015 D4). Set on
+   * every row of the conversation at once so the sweep reminds exactly once.
+   */
+  @Column({ name: 'reminded_at', type: 'datetime', nullable: true })
+  remindedAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

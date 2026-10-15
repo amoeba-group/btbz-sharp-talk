@@ -62,6 +62,9 @@ export function HandoffSection() {
   const [slaUrgent, setSlaUrgent] = useState('4');
   // Region × topic routing rules (PLN-261015 D3).
   const [routingRows, setRoutingRows] = useState<RoutingRuleRow[]>([]);
+  // Unanswered-alarm reminder (PLN-261015 D4): '' or 0 = off.
+  const [reAlertMin, setReAlertMin] = useState('');
+  const [reAlertLeads, setReAlertLeads] = useState<string[]>([]);
 
   useEffect(() => {
     const h = config?.handoffConfig;
@@ -94,6 +97,8 @@ export function HandoffSection() {
     );
     if (h.sla?.normalHours != null) setSlaNormal(String(h.sla.normalHours));
     if (h.sla?.urgentHours != null) setSlaUrgent(String(h.sla.urgentHours));
+    setReAlertMin(h.reAlert?.afterMinutes ? String(h.reAlert.afterMinutes) : '');
+    setReAlertLeads((h.reAlert?.escalateToUserIds ?? []).map(String));
     setRoutingRows(
       (h.routingRules ?? []).map((r) => ({
         name: r.name ?? '',
@@ -138,6 +143,7 @@ export function HandoffSection() {
           : undefined,
       denyRules: undefined,
       routingRules: undefined,
+      reAlert: undefined,
     };
     const denyRules = denyRows
       .map((r) => ({
@@ -166,6 +172,13 @@ export function HandoffSection() {
       // A rule that pages nobody is skipped by the server anyway; don't store it.
       .filter((r) => r.assigneeUserIds.length > 0);
     if (routingRules.length) handoff.routingRules = routingRules;
+    const reMin = Math.round(Number(reAlertMin));
+    if (Number.isFinite(reMin) && reMin >= 1 && reMin <= 240) {
+      handoff.reAlert = {
+        afterMinutes: reMin,
+        escalateToUserIds: reAlertLeads.map(Number).filter(Number.isFinite),
+      };
+    }
     const clamp = (v: string, fallback: number) => {
       const n = Number(v);
       return Number.isFinite(n) && n >= 1 && n <= 168 ? n : fallback;
@@ -210,6 +223,43 @@ export function HandoffSection() {
           </div>
 
           <RoutingRulesEditor rows={routingRows} onChange={setRoutingRows} agents={agents} />
+
+          {/* Unanswered-alarm reminder (PLN-261015 D4). */}
+          <div className="border-t border-gray-100 pt-4">
+            <Label>{t('handoff.reAlert.title')}</Label>
+            <p className="mb-2 mt-0.5 text-[11px] text-gray-400">{t('handoff.reAlert.hint')}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="w-28">
+                <Input
+                  type="number"
+                  min={1}
+                  max={240}
+                  value={reAlertMin}
+                  placeholder={t('handoff.reAlert.off')}
+                  onChange={(e) => setReAlertMin(e.target.value)}
+                />
+              </div>
+              <span className="text-xs text-gray-500">{t('handoff.reAlert.minutes')}</span>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <span className="text-xs text-gray-500">{t('handoff.reAlert.leads')}</span>
+              {agents.map((u) => (
+                <button
+                  key={u.id}
+                  type="button"
+                  onClick={() => setReAlertLeads((prev) => toggle(prev, u.id))}
+                  className={cn(
+                    'rounded-full border px-2.5 py-1 text-xs',
+                    reAlertLeads.includes(u.id)
+                      ? 'border-primary-500 bg-primary-500 text-white'
+                      : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50',
+                  )}
+                >
+                  {u.email}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div className="space-y-2 border-t border-gray-100 pt-3">
             <label className="flex items-center gap-2 text-sm text-gray-700">
