@@ -159,7 +159,29 @@
       "answer_then_handoff": "Trả lời rồi chuyển"
     },
     "denyModeHint": "\"Không trả lời\" chuyển cho nhân viên mà không phản hồi. \"Trả lời rồi chuyển\" trả lời từ cơ sở tri thức trước rồi vẫn chuyển — nhân viên đều được gọi trong cả hai trường hợp.",
-    "denyModeLabel": "Khách hàng nhận được gì"
+    "denyModeLabel": "Khách hàng nhận được gì",
+    "routing": {
+      "title": "Quy tắc phân công — khu vực × nghiệp vụ",
+      "hint": "Kiểm tra từ trên xuống; quy tắc đầu tiên khớp mọi điều kiện sẽ quyết định ai được báo. Điều kiện để trống nghĩa là tất cả. Không khớp → các nhân viên ở trên.",
+      "namePh": "Tên quy tắc (vd: Miền Bắc · Đặt phòng)",
+      "mode": "Cách phân công",
+      "modes": {
+        "least_loaded": "Nhân viên trực tuyến đang rảnh nhất",
+        "broadcast": "Báo cả nhóm"
+      },
+      "regions": "Khu vực",
+      "topic": "Nghiệp vụ",
+      "keywordsPh": "Từ khóa trong câu hỏi, cách nhau bằng dấu phẩy (trống = tất cả)",
+      "agents": "Nhân viên",
+      "any": "Mọi khu vực",
+      "noAssignee": "Chọn ít nhất một nhân viên — quy tắc không có nhân viên sẽ không được lưu",
+      "add": "Thêm quy tắc",
+      "region": {
+        "north": "Miền Bắc",
+        "central": "Miền Trung",
+        "south": "Miền Nam"
+      }
+    }
   },
   "coach": {
     "title": "Huấn luyện trợ lý",

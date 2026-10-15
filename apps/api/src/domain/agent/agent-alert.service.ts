@@ -23,6 +23,12 @@ interface EscalationPayload {
   offHoursEmail?: string;
   /** Label routing (P2, 결정 4): narrow the alarm to this label's available agents. */
   issueLabel?: string;
+  /**
+   * Set when a region × topic rule chose the group (PLN-261015 D3):
+   * least_loaded = one available agent, else the whole group; broadcast = the group.
+   */
+  assignMode?: string;
+  ruleName?: string;
 }
 
 const REASON_LABEL: Record<string, string> = {
@@ -73,30 +79,23 @@ export class AgentAlertService implements OnModuleInit {
         status: 'new',
       },
     });
-    // Label routing (P2): with no explicit assignee configured, address the
-    // alarm to the least-loaded available agent holding the issue's label.
-    // No eligible agent → NULL, i.e. the pre-P2 broadcast (alarms never drop).
-    let targetUserId = payload.targetUserIds?.[0] ?? null;
-    if (targetUserId == null && payload.issueLabel && payload.tenantId) {
-      targetUserId = await this.pickLabelAgent(payload.tenantId, payload.issueLabel);
-    }
-    const alert =
-      existing ??
-      (await this.alertRepo.save(
-        this.alertRepo.create({
-          tenantId: payload.tenantId ?? null,
-          conversationId: payload.conversationId,
-          sessionId: payload.sessionId ?? null,
-          reason: payload.reason ?? 'user_request',
-          preview: payload.preview?.slice(0, 300) ?? null,
-          // One row per addressed agent would duplicate the alarm, so a single
-          // row carries the first assignee; the console filters on it and NULL
-          // keeps the historical broadcast behaviour.
-          targetUserId,
-          status: 'new',
-        }),
-      ));
     if (existing) return; // channels already notified for this escalation
+
+    const targets = await this.resolveTargets(payload);
+    const base = {
+      tenantId: payload.tenantId ?? null,
+      conversationId: payload.conversationId,
+      sessionId: payload.sessionId ?? null,
+      reason: payload.reason ?? 'user_request',
+      preview: payload.preview?.slice(0, 300) ?? null,
+      status: 'new',
+    };
+    // One row per addressed agent: each sees the alarm in their own feed, and
+    // acking one acks its siblings (see ack). NULL = tenant-wide broadcast.
+    const rows = await this.alertRepo.save(
+      targets.map((targetUserId) => this.alertRepo.create({ ...base, targetUserId })),
+    );
+    const alert = rows[0];
 
     // Off hours: the shopper has already been told to expect an email, so the
     // summary goes to the configured mailbox instead of paging the on-call
@@ -109,9 +108,31 @@ export class AgentAlertService implements OnModuleInit {
   }
 
   /**
-   * Least-loaded available agent holding the label (P2, 결정 4): online profile,
-   * active assignments under maxConcurrent. Null → broadcast fallback.
+   * Who the alarm is addressed to — one entry per alert row; `null` = broadcast.
+   *
+   * - Routing rule (PLN-261015 D3): least_loaded → the available agent, or the
+   *   whole group when nobody in it is online/free; broadcast → the whole group.
+   * - Legacy assignee list: the first assignee (one row, as before).
+   * - Deny-rule label (P2): least-loaded agent holding it, else broadcast.
+   * Alarms never drop: every path ends in at least one row.
    */
+  private async resolveTargets(payload: EscalationPayload): Promise<Array<number | null>> {
+    const group = [...new Set((payload.targetUserIds ?? []).map(Number).filter(Number.isFinite))];
+    if (payload.assignMode && group.length && payload.tenantId) {
+      if (payload.assignMode === 'least_loaded') {
+        const pick = await this.pickLeastLoaded(payload.tenantId, group);
+        if (pick != null) return [pick];
+      }
+      return group;
+    }
+    if (group.length) return [group[0]];
+    if (payload.issueLabel && payload.tenantId) {
+      return [await this.pickLabelAgent(payload.tenantId, payload.issueLabel)];
+    }
+    return [null];
+  }
+
+  /** Least-loaded available agent holding the label (P2, 결정 4). Null → broadcast fallback. */
   private async pickLabelAgent(tenantId: number, labelCode: string): Promise<number | null> {
     try {
       const labelRows = await this.labelRepo.find({ where: { tenantId, code: labelCode } });
@@ -119,8 +140,21 @@ export class AgentAlertService implements OnModuleInit {
       const links = await this.userLabelRepo.find({
         where: { jobLabelId: In(labelRows.map((l) => Number(l.id))) },
       });
-      const userIds = [...new Set(links.map((l) => Number(l.userId)))];
-      if (!userIds.length) return null;
+      return this.pickLeastLoaded(tenantId, [...new Set(links.map((l) => Number(l.userId)))]);
+    } catch (e) {
+      this.logger.warn(`label routing failed (${labelCode}): ${(e as Error).message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Online agent among `userIds` with the fewest active assignments, under
+   * their maxConcurrent. Null when nobody qualifies (or on a lookup error —
+   * the caller then widens the alarm instead of dropping it).
+   */
+  private async pickLeastLoaded(tenantId: number, userIds: number[]): Promise<number | null> {
+    if (!userIds.length) return null;
+    try {
       const profiles = await this.profileRepo.find({
         where: { tenantId, userId: In(userIds), status: 'online' },
       });
@@ -134,7 +168,7 @@ export class AgentAlertService implements OnModuleInit {
       }
       return best?.userId ?? null;
     } catch (e) {
-      this.logger.warn(`label routing failed (${labelCode}): ${(e as Error).message}`);
+      this.logger.warn(`least-loaded pick failed: ${(e as Error).message}`);
       return null;
     }
   }
@@ -171,6 +205,12 @@ export class AgentAlertService implements OnModuleInit {
       alert.ackedBy = userId;
       alert.ackedAt = new Date();
       await this.alertRepo.save(alert);
+      // A group alarm is one row per agent (PLN-261015 D3). Once somebody has
+      // it, the rest of the group should stop being paged for it.
+      await this.alertRepo.update(
+        { tenantId, conversationId: alert.conversationId, reason: alert.reason, status: 'new' },
+        { status: 'acked', ackedBy: userId, ackedAt: alert.ackedAt },
+      );
     }
     return alert;
   }

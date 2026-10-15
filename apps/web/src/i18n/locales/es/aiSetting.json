@@ -159,7 +159,29 @@
       "answer_then_handoff": "Responder y derivar"
     },
     "denyModeHint": "\"Sin respuesta\" deriva a una persona sin contestar. \"Responder y derivar\" contesta desde la base de conocimiento y deriva igualmente: el agente recibe el aviso en ambos casos.",
-    "denyModeLabel": "Qué escucha el cliente"
+    "denyModeLabel": "Qué escucha el cliente",
+    "routing": {
+      "title": "Reglas de asignación — región × tema",
+      "hint": "Se revisan de arriba abajo; la primera regla que cumple todos los filtros decide a quién se avisa. Un filtro vacío significa cualquiera. Sin coincidencia → los agentes de arriba.",
+      "namePh": "Nombre de la regla (p. ej. Norte · reservas)",
+      "mode": "Asignación",
+      "modes": {
+        "least_loaded": "Agente conectado menos ocupado",
+        "broadcast": "Avisar a todo el grupo"
+      },
+      "regions": "Región",
+      "topic": "Tema",
+      "keywordsPh": "Palabras clave del mensaje, separadas por comas (vacío = cualquiera)",
+      "agents": "Agentes",
+      "any": "Cualquier región",
+      "noAssignee": "Elige al menos un agente: las reglas sin agentes no se guardan",
+      "add": "Añadir regla",
+      "region": {
+        "north": "Norte",
+        "central": "Centro",
+        "south": "Sur"
+      }
+    }
   },
   "coach": {
     "title": "Entrenamiento del agente",

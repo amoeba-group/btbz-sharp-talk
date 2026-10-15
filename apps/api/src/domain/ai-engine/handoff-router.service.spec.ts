@@ -1,4 +1,4 @@
-import { HandoffRouterService } from './handoff-router.service';
+import { HandoffRouterService, matchRoutingRule } from './handoff-router.service';
 import type { AiConfigService } from './ai-config.service';
 import type { HandoffConfig } from './entity/tenant-ai-config.entity';
 
@@ -209,5 +209,78 @@ describe('HandoffRouterService.denyMatch — per-rule mode (REQ-260826)', () => 
     await expect(svc.denyMatch(1, '환불계좌 바꾸고 싶어')).resolves.toMatchObject({
       mode: 'answer_then_handoff',
     });
+  });
+});
+
+/** Region × topic rules (PLN-261015 D3). */
+describe('matchRoutingRule', () => {
+  const rules = [
+    { name: 'north-booking', regions: ['north'], keywords: ['check-in', 'nhận phòng'], assigneeUserIds: [1, 2] },
+    { name: 'settlement', keywords: ['đối soát', 'settlement'], assigneeUserIds: [5] },
+    { name: 'north-any', regions: ['North'], assigneeUserIds: [3] },
+    { name: 'empty', regions: ['south'], assigneeUserIds: [] },
+    { name: 'catch-all', assigneeUserIds: [9] },
+  ];
+
+  it('needs every filter to match — region AND topic', () => {
+    expect(matchRoutingRule(rules, { region: 'north', text: 'Cách nhận phòng cho khách?' })?.rule.name).toBe('north-booking');
+    expect(matchRoutingRule(rules, { region: 'south', text: 'Cách nhận phòng cho khách?' })?.rule.name).toBe('catch-all');
+  });
+
+  it('a topic rule with no region serves every region, in rule order', () => {
+    expect(matchRoutingRule(rules, { region: 'south', text: 'Hỏi về đối soát tháng 9' })?.rule.name).toBe('settlement');
+    // Earlier region+topic rule does not match, so the settlement rule wins for the north too.
+    expect(matchRoutingRule(rules, { region: 'north', text: 'settlement' })?.rule.name).toBe('settlement');
+  });
+
+  it('compares regions case-insensitively', () => {
+    expect(matchRoutingRule(rules, { region: 'NORTH', text: 'xin chào' })?.rule.name).toBe('north-any');
+  });
+
+  it('skips a rule that would page nobody', () => {
+    expect(matchRoutingRule(rules, { region: 'south', text: 'x' })?.rule.name).toBe('catch-all');
+  });
+
+  it('an unsigned session (no region) only reaches region-free rules', () => {
+    expect(matchRoutingRule(rules, { region: null, text: 'x' })?.rule.name).toBe('catch-all');
+  });
+
+  it('matches deny-rule labels when a rule asks for one', () => {
+    const r = [{ labels: ['accounting'], assigneeUserIds: [7] }];
+    expect(matchRoutingRule(r, { label: 'accounting' })?.assigneeUserIds).toEqual([7]);
+    expect(matchRoutingRule(r, { label: 'consult' })).toBeNull();
+  });
+
+  it('no rules → null (the legacy assignee list applies)', () => {
+    expect(matchRoutingRule(undefined, { region: 'north' })).toBeNull();
+  });
+});
+
+describe('HandoffRouterService.route — routing rules', () => {
+  it('returns the matched group with its mode, defaulting to least_loaded', async () => {
+    const route = await routerFor({
+      assigneeUserIds: [99],
+      routingRules: [{ name: 'north', regions: ['north'], assigneeUserIds: [1, 2] }],
+    }).route(4, 'VI', { region: 'north', text: 'hi' });
+    expect(route).toEqual({ mode: 'agents', targetUserIds: [1, 2], assignMode: 'least_loaded', ruleName: 'north' });
+  });
+
+  it('falls back to the assignee list when nothing matches', async () => {
+    const route = await routerFor({
+      assigneeUserIds: [99],
+      routingRules: [{ regions: ['north'], assigneeUserIds: [1] }],
+    }).route(4, 'VI', { region: 'south' });
+    expect(route).toEqual({ mode: 'agents', targetUserIds: [99] });
+  });
+
+  it('off hours still goes to the mailbox even when a rule matches', async () => {
+    const route = await at('2026-10-17T03:00:00Z', () =>
+      routerFor({
+        businessHours: { timezone: 'Asia/Ho_Chi_Minh', days: [1, 2, 3, 4, 5], start: '08:30', end: '17:30' },
+        offHours: { email: 'cs@go2joy.vn' },
+        routingRules: [{ regions: ['north'], assigneeUserIds: [1] }],
+      }).route(4, 'VI', { region: 'north' }),
+    );
+    expect(route.mode).toBe('email');
   });
 });

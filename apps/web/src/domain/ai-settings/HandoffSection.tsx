@@ -7,7 +7,9 @@ import { cn } from '@/lib/cn';
 import { useUsers } from '../users/users.hooks';
 import { useAiConfig, useUpdateAiConfig } from './ai-settings.hooks';
 import { LanguageTabs } from './LanguageTabs';
-import { DENY_MODE } from './ai-settings.service';
+import { RoutingRulesEditor, ROUTING_REGIONS } from './RoutingRulesEditor';
+import type { RoutingRuleRow } from './RoutingRulesEditor';
+import { DENY_MODE, ROUTING_MODE } from './ai-settings.service';
 import type { DenyMode, HandoffConfig, ScenarioLang } from './ai-settings.service';
 // Source-path import: a value import of the package entry point breaks the browser build (CJS).
 import { LANGUAGE_TIMEZONES } from '../../../../../packages/types/src/common/language';
@@ -58,6 +60,8 @@ export function HandoffSection() {
   // Issue-board SLA targets (B2) — string state, validated on save (1..168h).
   const [slaNormal, setSlaNormal] = useState('24');
   const [slaUrgent, setSlaUrgent] = useState('4');
+  // Region × topic routing rules (PLN-261015 D3).
+  const [routingRows, setRoutingRows] = useState<RoutingRuleRow[]>([]);
 
   useEffect(() => {
     const h = config?.handoffConfig;
@@ -90,6 +94,16 @@ export function HandoffSection() {
     );
     if (h.sla?.normalHours != null) setSlaNormal(String(h.sla.normalHours));
     if (h.sla?.urgentHours != null) setSlaUrgent(String(h.sla.urgentHours));
+    setRoutingRows(
+      (h.routingRules ?? []).map((r) => ({
+        name: r.name ?? '',
+        regions: (r.regions ?? []).filter((x) => (ROUTING_REGIONS as readonly string[]).includes(x)),
+        keywords: (r.keywords ?? []).join(', '),
+        labels: r.labels ?? [],
+        assignees: (r.assigneeUserIds ?? []).map(String),
+        mode: r.mode === ROUTING_MODE.BROADCAST ? ROUTING_MODE.BROADCAST : ROUTING_MODE.LEAST_LOADED,
+      })),
+    );
   }, [config]);
 
   // Only consult-label agents handle conversations, so only they can be assigned.
@@ -101,24 +115,29 @@ export function HandoffSection() {
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
 
   const save = () => {
+    // Start from what is stored: fields this form does not edit (the handback
+    // notice) must survive a save. Every field the form owns is set below —
+    // `undefined` drops it from the JSON, which is how "turned off" is saved.
     const handoff: HandoffConfig = {
+      ...(config?.handoffConfig ?? {}),
       assigneeUserIds: assignees.map(Number).filter(Number.isFinite),
-      ...(hoursOn
+      businessHours: hoursOn
         ? {
-            businessHours: {
-              timezone,
-              days,
-              start,
-              end,
-              // Written even when empty: the console owns the whole config
-              // object, so omitting the key would silently drop a stored break.
-              breaks: breakOn ? [{ start: breakStart, end: breakEnd }] : [],
-            },
+            timezone,
+            days,
+            start,
+            end,
+            // Written even when empty: the console owns the whole config
+            // object, so omitting the key would silently drop a stored break.
+            breaks: breakOn ? [{ start: breakStart, end: breakEnd }] : [],
           }
-        : {}),
-      ...(email.trim() || Object.keys(notice).length
-        ? { offHours: { email: email.trim() || undefined, notice } }
-        : {}),
+        : undefined,
+      offHours:
+        email.trim() || Object.keys(notice).length
+          ? { email: email.trim() || undefined, notice }
+          : undefined,
+      denyRules: undefined,
+      routingRules: undefined,
     };
     const denyRules = denyRows
       .map((r) => ({
@@ -132,6 +151,21 @@ export function HandoffSection() {
       }))
       .filter((r) => r.keywords.length > 0);
     if (denyRules.length) handoff.denyRules = denyRules;
+    const routingRules = routingRows
+      .map((r) => ({
+        name: r.name.trim() || undefined,
+        regions: r.regions,
+        keywords: r.keywords
+          .split(',')
+          .map((k) => k.trim())
+          .filter(Boolean),
+        labels: r.labels,
+        assigneeUserIds: r.assignees.map(Number).filter(Number.isFinite),
+        mode: r.mode,
+      }))
+      // A rule that pages nobody is skipped by the server anyway; don't store it.
+      .filter((r) => r.assigneeUserIds.length > 0);
+    if (routingRules.length) handoff.routingRules = routingRules;
     const clamp = (v: string, fallback: number) => {
       const n = Number(v);
       return Number.isFinite(n) && n >= 1 && n <= 168 ? n : fallback;
@@ -174,6 +208,8 @@ export function HandoffSection() {
             </div>
             <p className="mt-1 text-[11px] text-gray-400">{t('handoff.assigneesHint')}</p>
           </div>
+
+          <RoutingRulesEditor rows={routingRows} onChange={setRoutingRows} agents={agents} />
 
           <div className="space-y-2 border-t border-gray-100 pt-3">
             <label className="flex items-center gap-2 text-sm text-gray-700">

@@ -159,7 +159,29 @@
       "answer_then_handoff": "先回答再转接"
     },
     "denyModeHint": "\"不回答\"直接转给人工，不作回复。\"先回答再转接\"先用知识库回答，然后照常转接——两种方式都会呼叫客服。",
-    "denyModeLabel": "客户看到的内容"
+    "denyModeLabel": "客户看到的内容",
+    "routing": {
+      "title": "分配规则 — 地区 × 业务",
+      "hint": "自上而下检查；第一条所有条件都满足的规则决定通知谁。空条件表示全部。无匹配 → 上方的客服。",
+      "namePh": "规则名称(如:北部 · 预订)",
+      "mode": "分配方式",
+      "modes": {
+        "least_loaded": "在线且最空闲的客服",
+        "broadcast": "通知整个小组"
+      },
+      "regions": "地区",
+      "topic": "业务",
+      "keywordsPh": "消息中的关键词,用逗号分隔(空 = 全部)",
+      "agents": "客服",
+      "any": "所有地区",
+      "noAssignee": "请至少选择一名客服 — 没有客服的规则不会保存",
+      "add": "添加规则",
+      "region": {
+        "north": "北部",
+        "central": "中部",
+        "south": "南部"
+      }
+    }
   },
   "coach": {
     "title": "客服助手教练",

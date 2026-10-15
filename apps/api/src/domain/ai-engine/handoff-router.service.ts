@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { localized } from '@sharptalk/types';
 import type { LocalizedText } from '@sharptalk/types';
 import { AiConfigService } from './ai-config.service';
-import { DENY_MODE } from './entity/tenant-ai-config.entity';
-import type { DenyMode, HandoffConfig } from './entity/tenant-ai-config.entity';
+import { DENY_MODE, ROUTING_MODE } from './entity/tenant-ai-config.entity';
+import type { DenyMode, HandoffConfig, RoutingMode, RoutingRule } from './entity/tenant-ai-config.entity';
 
 /** What the chat pipeline should do with one escalation (PLN-AiSetting W3). */
 export interface HandoffRoute {
@@ -15,6 +15,51 @@ export interface HandoffRoute {
   email?: string;
   /** Customer-facing notice override for this route, if the tenant set one. */
   notice?: string;
+  /**
+   * Set when a routing rule picked the group (PLN-261015 D3): how the alert
+   * fan-out chooses inside it. Absent = the legacy assignee list.
+   */
+  assignMode?: RoutingMode;
+  /** The matched rule's name (or `#n`), for logs and the alert. */
+  ruleName?: string;
+}
+
+/** What routing may look at (PLN-261015 D3). All optional. */
+export interface RoutingContext {
+  /** Signed session region — `sessions.identity_attributes.region`. */
+  region?: string | null;
+  /** The customer's message that triggered the handoff. */
+  text?: string | null;
+  /** Deny-rule label stamp, when a deny rule forced the handoff. */
+  label?: string | null;
+}
+
+const norm = (v: unknown) => (typeof v === 'string' ? v.trim().toLowerCase() : '');
+
+/**
+ * First rule whose filters all match (PLN-261015 D3). An empty filter list
+ * matches anything; a rule with no usable assignee is skipped, because a match
+ * that pages nobody would be worse than the fallback. Pure — tested directly.
+ */
+export function matchRoutingRule(
+  rules: RoutingRule[] | undefined,
+  ctx: RoutingContext,
+): { rule: RoutingRule; index: number; assigneeUserIds: number[] } | null {
+  const region = norm(ctx.region);
+  const text = norm(ctx.text);
+  const label = norm(ctx.label);
+  for (const [index, rule] of (rules ?? []).entries()) {
+    const assigneeUserIds = (rule?.assigneeUserIds ?? []).map(Number).filter((id) => Number.isFinite(id) && id > 0);
+    if (!assigneeUserIds.length) continue;
+    const regions = (rule.regions ?? []).map(norm).filter(Boolean);
+    if (regions.length && !regions.includes(region)) continue;
+    const keywords = (rule.keywords ?? []).map(norm).filter(Boolean);
+    if (keywords.length && !keywords.some((k) => text.includes(k))) continue;
+    const labels = (rule.labels ?? []).map(norm).filter(Boolean);
+    if (labels.length && !labels.includes(label)) continue;
+    return { rule, index, assigneeUserIds };
+  }
+  return null;
 }
 
 /** Built-in off-hours wording (used when the tenant left the notice blank). */
@@ -34,6 +79,8 @@ const DEFAULT_OFF_HOURS_NOTICE: LocalizedText = {
  */
 @Injectable()
 export class HandoffRouterService {
+  private readonly logger = new Logger(HandoffRouterService.name);
+
   constructor(private readonly aiConfig: AiConfigService) {}
 
   /**
@@ -62,7 +109,7 @@ export class HandoffRouterService {
     return null;
   }
 
-  async route(tenantId: number | null, language: string): Promise<HandoffRoute> {
+  async route(tenantId: number | null, language: string, ctx: RoutingContext = {}): Promise<HandoffRoute> {
     const config = await this.aiConfig.getHandoffConfig(tenantId);
     const targetUserIds = config?.assigneeUserIds?.filter((id) => Number.isFinite(id)) ?? [];
 
@@ -78,6 +125,21 @@ export class HandoffRouterService {
           notice: this.notice(config, language),
         };
       }
+    }
+    // Region × topic rules (PLN-261015 D3). Off hours wins above: nobody in
+    // any group is on shift, so the mailbox route stands.
+    const hit = matchRoutingRule(config?.routingRules, ctx);
+    if (hit) {
+      const ruleName = hit.rule.name?.trim() || `#${hit.index + 1}`;
+      this.logger.log(
+        `handoff routed by rule ${ruleName} (tenant ${tenantId}, region ${ctx.region ?? '-'}, ${hit.assigneeUserIds.length} agent(s))`,
+      );
+      return {
+        mode: 'agents',
+        targetUserIds: hit.assigneeUserIds,
+        assignMode: hit.rule.mode === ROUTING_MODE.BROADCAST ? ROUTING_MODE.BROADCAST : ROUTING_MODE.LEAST_LOADED,
+        ruleName,
+      };
     }
     return { mode: 'agents', targetUserIds };
   }

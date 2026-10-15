@@ -99,6 +99,35 @@ export interface HandoffConfig {
   }>;
   /** SLA targets for the issue board (백로그 B2, 결정 5); defaults 24h/4h. */
   sla?: { normalHours?: number; urgentHours?: number };
+  /**
+   * Region × topic routing (PLN-261015 D3). Checked in order; the first rule
+   * whose filters all match decides who is paged. An empty filter matches
+   * anything, so a rule with no filters is the catch-all. No rule matching —
+   * or no rules — falls back to `assigneeUserIds`, so a tenant that never
+   * opens this keeps exactly today's routing.
+   */
+  routingRules?: RoutingRule[];
+}
+
+export const ROUTING_MODE = {
+  /** One agent: the online, least-busy one in the group; nobody online → whole group. */
+  LEAST_LOADED: 'least_loaded',
+  /** Everyone in the group is alarmed; first to accept takes it. */
+  BROADCAST: 'broadcast',
+} as const;
+export type RoutingMode = (typeof ROUTING_MODE)[keyof typeof ROUTING_MODE];
+
+export interface RoutingRule {
+  /** Operator's own name for the rule, shown in the console and the logs. */
+  name?: string;
+  /** Signed session region (identity_attributes.region); empty = any region. */
+  regions?: string[];
+  /** Substring match on the customer's message; empty = any topic. */
+  keywords?: string[];
+  /** Deny-rule label stamp (consult|accounting|operations); empty = any. */
+  labels?: string[];
+  assigneeUserIds: number[];
+  mode?: RoutingMode;
 }
 
 /**
