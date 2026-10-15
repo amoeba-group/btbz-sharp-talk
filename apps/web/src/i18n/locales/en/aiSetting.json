@@ -159,7 +159,29 @@
       "answer_then_handoff": "Answer, then hand off"
     },
     "denyModeHint": "\"No answer\" hands the thread to a person without replying. \"Answer, then hand off\" replies from the knowledge base first and still hands it over — the agent is paged either way.",
-    "denyModeLabel": "What the customer hears"
+    "denyModeLabel": "What the customer hears",
+    "routing": {
+      "title": "Routing rules — region × topic",
+      "hint": "Checked top to bottom; the first rule whose filters all match decides who is paged. An empty filter means any. No match → the agents above.",
+      "namePh": "Rule name (e.g. North · bookings)",
+      "mode": "Assignment",
+      "modes": {
+        "least_loaded": "Least busy online agent",
+        "broadcast": "Alert the whole group"
+      },
+      "regions": "Region",
+      "topic": "Topic",
+      "keywordsPh": "Keywords in the message, comma-separated (empty = any)",
+      "agents": "Agents",
+      "any": "Any region",
+      "noAssignee": "Pick at least one agent — rules without agents are not saved",
+      "add": "Add rule",
+      "region": {
+        "north": "North",
+        "central": "Central",
+        "south": "South"
+      }
+    }
   },
   "coach": {
     "title": "Agent coaching",

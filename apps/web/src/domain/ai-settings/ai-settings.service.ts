@@ -127,6 +127,21 @@ export interface HandoffConfig {
   }>;
   /** Issue-board SLA targets (백로그 B2); defaults 24h/4h. */
   sla?: { normalHours?: number; urgentHours?: number };
+  /** Region × topic routing (PLN-261015 D3) — first match wins, else assigneeUserIds. */
+  routingRules?: RoutingRule[];
+  /** Kept as-is: edited elsewhere, so the console must not drop it on save. */
+  handbackNotice?: Partial<Record<ScenarioLang, string>>;
+}
+
+export const ROUTING_MODE = { LEAST_LOADED: 'least_loaded', BROADCAST: 'broadcast' } as const;
+export type RoutingMode = (typeof ROUTING_MODE)[keyof typeof ROUTING_MODE];
+export interface RoutingRule {
+  name?: string;
+  regions?: string[];
+  keywords?: string[];
+  labels?: string[];
+  assigneeUserIds: number[];
+  mode?: RoutingMode;
 }
 
 /**

@@ -206,6 +206,9 @@ export interface EscalationEvent {
   /** Issue type/label stamp from a deny rule (P2) — consumed by IssueService/alerts. */
   issueType?: string;
   issueLabel?: string;
+  /** Set when a routing rule chose the group (PLN-261015 D3). */
+  assignMode?: string;
+  ruleName?: string;
 }
 
 /**
@@ -1198,7 +1201,11 @@ export class ChatService {
     // Routing decides both who gets paged and what the customer is told:
     // outside business hours the message goes to a mailbox and the shopper is
     // told to expect an email reply instead of a live agent (PLN-AiSetting W3).
-    const route = await this.handoffRouter.route(tenantId, session.language);
+    const route = await this.handoffRouter.route(tenantId, session.language, {
+      region: session.identityAttributes?.region ?? null,
+      text: preview,
+      label: stamp?.issueLabel ?? null,
+    });
     // Off hours the answer travels by email, so we need somewhere to send it.
     // Without an address on file the widget asks for one (PLN-260806) and the
     // notice says so, instead of promising a reply we cannot deliver.
@@ -1233,6 +1240,8 @@ export class ChatService {
       offHoursEmail: route.mode === 'email' ? route.email : undefined,
       issueType: stamp?.issueType,
       issueLabel: stamp?.issueLabel,
+      assignMode: route.assignMode,
+      ruleName: route.ruleName,
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
     return { body, needsContactEmail };
@@ -1293,7 +1302,10 @@ export class ChatService {
     // Same routing as the automatic handoff (PLN-AiSetting W3). Off hours the
     // widget's local "connecting you" line would be a lie, so persist the
     // off-hours notice — the conversation poll shows it to the customer.
-    const route = await this.handoffRouter.route(tenantId, session.language);
+    const route = await this.handoffRouter.route(tenantId, session.language, {
+      region: session.identityAttributes?.region ?? null,
+      text: lastUser?.body ?? null,
+    });
     if (route.mode === 'email' && route.notice) {
       await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, route.notice, session.language, {
         reason: 'user_request',
@@ -1308,6 +1320,8 @@ export class ChatService {
       preview: (lastUser?.body ?? '').slice(0, 300),
       targetUserIds: route.targetUserIds,
       offHoursEmail: route.mode === 'email' ? route.email : undefined,
+      assignMode: route.assignMode,
+      ruleName: route.ruleName,
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
   }
