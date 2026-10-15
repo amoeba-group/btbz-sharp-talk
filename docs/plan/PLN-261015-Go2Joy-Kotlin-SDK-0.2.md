@@ -154,7 +154,7 @@ Console: dòng SYSTEM đã hiển thị trong Live chat; không cần sửa.
 ```
 ┌──────────────────────────────┐
 │ ←  Hỗ trợ Go2Joy          ⋮  │  ← app: back, tiêu đề, menu (Ngôn ngữ · Quyền riêng tư · Kết thúc)
-│    Joydesk · AI + nhân viên  │
+│    Go2Joy Support · AI + NV  │
 ├──────────────────────────────┤
 │ ✦ Cuộc trò chuyện này có sử  │  ← widget: dòng thông báo AI (giữ)
 │   dụng AI … tại Hoa Kỳ.      │

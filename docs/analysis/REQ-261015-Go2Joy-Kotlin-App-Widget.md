@@ -108,7 +108,7 @@ có thể đổi sau. Yêu cầu này quyết định thiết kế ở §3.1.
 ```
 App Go2Joy Partner (Kotlin 2.2.0)
   ├─ Màn "Hỗ trợ Go2Joy" ──► ShopTalkChatFragment / ShopTalkChat() (Compose)
-  │                             ├─ WebView: https://sharptalk.go2joy.vn/widget/?embed=1&mode=app&shop=https%3A%2F%2Fwww.go2joy.vn&agent=hotel-admin&chrome=native
+  │                             ├─ WebView: https://<origin SharpTalk: staging shoptalk.amoeba.site, self-hosted đề xuất sharptalk.go2joy.vn>/widget/?embed=1&mode=app&shop=https%3A%2F%2Fwww.go2joy.vn&agent=hotel-admin&chrome=native
   │                             ├─ bridge ShopTalkAndroid  ◄──►  window.__shoptalkHost
   │                             └─ identityProvider ──► Backend Go2Joy GET /sharptalk/identity (auth token app)
   │                                                        └─ trả { userId, hash, attributes|claims, name }
