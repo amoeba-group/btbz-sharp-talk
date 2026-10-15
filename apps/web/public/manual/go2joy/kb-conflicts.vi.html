@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Phân loại 78 xung đột tri thức Go2Joy</title>
+<meta name="description" content="Phân loại 78 xung đột tri thức trên staging, hành động đề xuất và các quyết định của Go2Joy">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>/* Layout: single reading column (~72ch) under a slim masthead; tables/diagrams/figures break wider inside their own scrollers. */
+:root {
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --fg: #1d1f24;
+  --muted: #5d6270;
+  --line: #e4e1dc;
+  --tint: #fff1e6;
+  --accent: #e8650a;
+  --accent-ink: #b44c04;
+  --ink2: #2b3a67;
+  --f-display: "Be Vietnam Pro", "Noto Sans KR", system-ui, sans-serif;
+  --f-body: "Noto Sans KR", "Be Vietnam Pro", system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+    --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+  --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15.5px; line-height: 1.72; word-break: keep-all; overflow-wrap: anywhere; }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.masthead { border-bottom: 1px solid var(--line); background: var(--surface); }
+.masthead .wrap { padding-block: 40px 28px; display: grid; gap: 6px; }
+.eyebrow { margin: 0; font-size: 12px; letter-spacing: .06em; color: var(--muted); }
+.brand { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; }
+.brand .g2j { color: var(--accent); }
+.domain { margin: 0; font-family: var(--f-mono); font-size: 13px; color: var(--accent-ink); }
+.doc { padding-block: 24px 64px; }
+.doc > * { max-width: 72ch; }
+.doc > .scroll, .doc > .diagram, .doc > figure, .doc > blockquote.lead { max-width: 100%; }
+h1 { display: none; }
+h2 { font-family: var(--f-display); font-size: 25px; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--fg); text-wrap: balance; }
+h3 { font-size: 18.5px; margin: 34px 0 8px; text-wrap: balance; }
+h4 { font-size: 16px; margin: 24px 0 6px; color: var(--ink2); }
+p, ul, ol { margin: 0 0 14px; }
+li { margin-bottom: 4px; }
+a { color: var(--accent-ink); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+strong { font-weight: 700; }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--tint); color: var(--accent-ink); padding: 1px 5px; border-radius: 4px; }
+.docref { color: var(--ink2); font-weight: 500; }
+hr { border: 0; height: 0; margin: 8px 0; }
+blockquote { margin: 0 0 16px; padding: 10px 16px; border-left: 3px solid var(--line); color: var(--muted); }
+blockquote p:last-child { margin-bottom: 0; }
+blockquote.lead { background: var(--tint); border-left: 0; border-radius: 10px; color: var(--fg); padding: 18px 22px; font-size: 16.5px; }
+.scroll { overflow-x: auto; margin: 0 0 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.55; background: var(--surface); font-variant-numeric: tabular-nums; }
+th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; min-width: 5.5em; }
+th { font-weight: 700; font-size: 12.5px; letter-spacing: .03em; color: var(--muted); border-bottom: 1.5px solid var(--fg); white-space: nowrap; }
+pre.code { margin: 0; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.5; }
+pre.code code { background: none; color: var(--fg); padding: 0; font-size: inherit; }
+.diagram { overflow-x: auto; margin: 6px 0 22px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.diagram pre.mermaid { margin: 0; display: flex; justify-content: center; background: none; }
+figure { margin: 8px 0 26px; display: grid; gap: 8px; justify-items: start; }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; max-height: 720px; width: auto; }
+figcaption { font-size: 13px; color: var(--muted); max-width: 72ch; }
+.foot { padding-block: 20px 40px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+@media (max-width: 520px) { body { font-size: 15px; } h2 { font-size: 21px; } .masthead .wrap { padding-block: 28px 20px; } }
+
+/* Diagrams are pre-rendered in mermaid's light theme: keep their card light in both themes. */
+.diagram { background: #fbfaf8; border-color: #e3ddd4; }
+.diagram svg { max-width: 100%; height: auto; }
+@media (max-width: 700px) { .diagram svg { min-width: 620px; } }
+/* Labels were measured with browser defaults; inherit nothing that changes their size. */
+.diagram { font-size: 16px; line-height: normal; word-break: normal; overflow-wrap: normal; letter-spacing: normal; }
+.topnav { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 13px; }
+.topnav a { color: var(--accent-ink); text-decoration: none; }
+.topnav a:hover { text-decoration: underline; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-block; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--fg) !important; }
+.chip[aria-current="page"] { border-color: var(--accent); color: var(--accent-ink) !important; font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 18px 0 30px; }
+.card { display: grid; gap: 6px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); text-decoration: none; color: var(--fg); }
+.card:hover { border-color: var(--accent); }
+.card b { font-size: 16px; }
+.card span { font-size: 13px; color: var(--muted); }
+.langblock h2 { margin-top: 28px; }
+</style>
+</head>
+<body>
+<header class="masthead"><div class="wrap">
+  <nav class="topnav"><a href="./">← Tài liệu Go2Joy</a><span class="chips" aria-label="Tài liệu"><a class="chip" href="plan.vi.html">Kế hoạch dự án</a><a class="chip" href="kb-conflicts.vi.html" aria-current="page">Phân loại xung đột tri thức</a></span><span class="chips" aria-label="Ngôn ngữ"><a class="chip" href="kb-conflicts.ko.html" hreflang="ko">한국어</a><a class="chip" href="kb-conflicts.en.html" hreflang="en">English</a><a class="chip" href="kb-conflicts.vi.html" aria-current="page" hreflang="vi">Tiếng Việt</a></span></nav>
+  <p class="eyebrow">Tài liệu dành cho Go2Joy · 2026-10-15</p>
+  <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
+  <p class="domain">Phân loại 78 xung đột tri thức Go2Joy</p>
+</div></header>
+<main class="wrap doc"><h1 id="rpt-261015-phân-loại-78-xung-đột-tri-thức-của-go2joy-pln-261015-d8">RPT-261015 Phân loại 78 xung đột tri thức của Go2Joy (PLN-261015 D8)</h1>
+<ul>
+<li>Phạm vi: 78 <code>kb_conflicts</code> có <code>status=pending</code> của go2joy (tenant 4) trên staging (tính đến 2026-10-15 16:40 KST)</li>
+<li>Căn cứ: Với từng cặp, chúng tôi đã đối chiếu trực tiếp văn bản gốc, khóa ngoài (<code>external_key</code>), danh mục và ngày đăng ký. Kết luận của mô hình (<code>verdict</code>) chỉ dùng để tham khảo.</li>
+<li>Tài liệu này chỉ gồm kết quả phân loại và hành động đề xuất. Không có dữ liệu staging nào bị thay đổi.</li>
+</ul>
+<h2 id="1-tóm-tắt">1. Tóm tắt</h2>
+<div class="scroll"><table><thead><tr>
+<th>Nhóm</th>
+<th align="right">Số lượng</th>
+<th>Kết luận của mô hình</th>
+<th>Bản chất thực tế</th>
+<th>Hành động đề xuất</th>
+<th>Bên quyết định</th>
+</tr>
+</thead><tbody><tr>
+<td><strong>F. Cần sửa (sai lệch thông tin)</strong></td>
+<td align="right">3</td>
+<td>mâu thuẫn 2 · bổ sung 1</td>
+<td>Sổ tay tóm tắt khác với hướng dẫn video (màn hình thực tế)</td>
+<td>Sửa sổ tay tóm tắt ở cả 3 ngôn ngữ</td>
+<td>Go2Joy xác nhận → Amoeba sửa</td>
+</tr>
+<tr>
+<td><strong>P. Tài liệu chính sách 2 bản</strong></td>
+<td align="right">3</td>
+<td>trùng lặp 3</td>
+<td>Cùng một văn bản điều khoản được đăng ký hai lần, ngày 8/20 và 8/29</td>
+<td>Giữ một bản, ngừng kích hoạt bản còn lại</td>
+<td>Go2Joy (giữ bản nào)</td>
+</tr>
+<tr>
+<td><strong>Q. FAQ cùng câu trả lời, khác câu hỏi</strong></td>
+<td align="right">32</td>
+<td>trùng lặp 32</td>
+<td>2 câu trả lời được sao chép cho 13 câu hỏi</td>
+<td>Gộp thành 1 tài liệu cho mỗi câu trả lời, giữ các câu hỏi làm biến thể</td>
+<td>Go2Joy (câu hỏi nào cần câu trả lời riêng)</td>
+</tr>
+<tr>
+<td><strong>T. Bản dịch theo ngôn ngữ</strong></td>
+<td align="right">20</td>
+<td>trùng lặp 20</td>
+<td>Các bản ko / EN / VI của cùng một mục (cấu trúc có chủ đích)</td>
+<td>Giữ cả hai, xử lý xung đột là 'giữ cả hai'</td>
+<td>Amoeba tự làm được</td>
+</tr>
+<tr>
+<td><strong>V. Sổ tay tóm tắt ↔ hướng dẫn video</strong></td>
+<td align="right">11</td>
+<td>bổ sung 11</td>
+<td>Bản tóm tắt và bản chi tiết, nội dung khớp nhau</td>
+<td>Giữ cả hai, xử lý xung đột là 'giữ cả hai'</td>
+<td>Amoeba tự làm được</td>
+</tr>
+<tr>
+<td><strong>D. Quy trình khác nhau</strong></td>
+<td align="right">9</td>
+<td>bổ sung 9</td>
+<td>Các quy trình riêng biệt: theo giờ / theo ngày / qua đêm, v.v.</td>
+<td>Giữ cả hai, xử lý xung đột là 'giữ cả hai'. Riêng bản nháp BRD-1 cần quyết định riêng</td>
+<td>Amoeba tự làm được (BRD-1 do Go2Joy quyết định)</td>
+</tr>
+<tr>
+<td>Tổng</td>
+<td align="right"><strong>78</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table></div>
+<p><strong>Kết luận</strong>: Chỉ có <strong>3 trường hợp nhóm F</strong> thực sự có thể dẫn đến câu trả lời sai. 35 trường hợp nhóm P và Q là đối tượng dọn dẹp vì cùng một nội dung có nhiều bản (câu trả lời không sai, nhưng chiếm chỗ trong kết quả tìm kiếm). 40 trường hợp còn lại (T·V·D) là các cặp mà cả hai tài liệu đều đúng, nên chỉ cần xử lý là 'giữ cả hai'.</p>
+<h2 id="2-f-cần-sửa--3-trường-hợp-ưu-tiên-1">2. F. Cần sửa — 3 trường hợp (ưu tiên 1)</h2>
+<h3 id="c248-flash-sale-theo-giờ-nhập-giá-có-phải-là-không-bắt-buộc">C248 Flash sale theo giờ: nhập giá có phải là "không bắt buộc"?</h3>
+<div class="scroll"><table><thead><tr>
+<th>Tài liệu</th>
+<th>Nội dung</th>
+</tr>
+</thead><tbody><tr>
+<td>#2528 <code>GTJ-FLS-01-EN</code> Set Up Hourly Flash Sale (sổ tay tóm tắt)</td>
+<td>"For hourly flash sales, <strong>price setup is optional</strong>."</td>
+</tr>
+<tr>
+<td>#2628 <code>GTJ-VID-08-EN</code> Video 8 (hướng dẫn video)</td>
+<td>Ô <code>Giá FS cho 2 giờ đầu</code>* (giá FS cho 2 giờ đầu) là <strong>bắt buộc</strong>, <code>Giá FS cho 1 giờ thêm (Không bắt buộc)</code> (giá cho mỗi giờ thêm) là <strong>không bắt buộc</strong></td>
+</tr>
+</tbody></table></div>
+<ul>
+<li>Đánh giá: Trên màn hình thực tế (video), giá cho 2 giờ đầu là bắt buộc. Chỉ giá cho giờ thêm là không bắt buộc. Câu "giá là không bắt buộc" trong sổ tay tóm tắt có vẻ không phân biệt hai ô này.</li>
+<li>Ảnh hưởng: Nếu nhân viên lễ tân hỏi "Không nhập giá có được không?", AI có thể trả lời "Không bắt buộc".</li>
+<li>Đề xuất sửa: Đổi phần lưu ý trong <code>GTJ-FLS-01</code> / <code>-EN</code> / <code>-VI</code> (#2508, #2528, #2548) thành "Giá cho 2 giờ đầu là bắt buộc, giá cho giờ thêm là không bắt buộc".</li>
+</ul>
+<h3 id="c218--c219-dừng-flash-sale-thiếu-bước-xác-nhận">C218 · C219 Dừng flash sale: thiếu bước xác nhận</h3>
+<div class="scroll"><table><thead><tr>
+<th>Tài liệu</th>
+<th>Nội dung</th>
+</tr>
+</thead><tbody><tr>
+<td>#2510 <code>GTJ-FLS-03</code> Dừng flash sale (sổ tay tóm tắt)</td>
+<td>Chọn phòng và loại đặt phòng trên dòng thời gian → chi tiết → [Dừng chương trình] → thông báo thành công</td>
+</tr>
+<tr>
+<td>#2630 <code>GTJ-VID-10-EN</code> / #2578 <code>GTJ-VID-10-VI</code> (hướng dẫn video)</td>
+<td>Quản lý loại phòng › danh sách loại phòng, bấm vào nhãn FS trên dòng thời gian → hộp thoại chi tiết → [Dừng chương trình] → <strong>hộp thoại xác nhận [Xác nhận dừng]</strong> → thông báo thành công</td>
+</tr>
+</tbody></table></div>
+<ul>
+<li>Đánh giá: Mô hình kết luận C218 là mâu thuẫn ("đường dẫn khác nhau") và C219 là bổ sung, nhưng hai cặp này là cùng một vấn đề. Đường dẫn thực ra là cùng một chỗ ("dòng thời gian" trong bản tóm tắt = dòng thời gian trong danh sách loại phòng). Khác biệt thực sự duy nhất là <strong>bản tóm tắt thiếu bước hộp thoại xác nhận</strong>.</li>
+<li>Ảnh hưởng: Thông tin không sai, nhưng nhân viên có thể thấy cửa sổ xác nhận và hỏi lại "Có cửa sổ hiện ra mà sổ tay không nhắc đến".</li>
+<li>Đề xuất sửa: Thêm bước "bấm [Xác nhận/Xác nhận dừng] trong hộp thoại xác nhận" vào quy trình của <code>GTJ-FLS-03</code> / <code>-EN</code> / <code>-VI</code> (#2510, #2530, #2550), và ghi đường dẫn là "Quản lý loại phòng › Danh sách loại phòng › Dòng thời gian".</li>
+</ul>
+<h2 id="3-p-tài-liệu-chính-sách-2-bản--3-trường-hợp">3. P. Tài liệu chính sách 2 bản — 3 trường hợp</h2>
+<div class="scroll"><table><thead><tr>
+<th>Xung đột</th>
+<th>Bản đăng ký 8/20</th>
+<th>Bản đăng ký 8/29</th>
+<th>Khác biệt</th>
+</tr>
+</thead><tbody><tr>
+<td>C210</td>
+<td>#2360 <code>BRD-18</code> Thỏa thuận dịch vụ (danh mục <code>policy</code>)</td>
+<td>#2565 <code>BRD-13</code> A. ĐIỀU KHOẢN SỬ DỤNG… (danh mục <code>service agreement</code>)</td>
+<td>Nội dung giống nhau, khác 1 dòng tiêu đề</td>
+</tr>
+<tr>
+<td>C211</td>
+<td>#2361 <code>BRD-17</code> Chính sách bảo mật (<code>policy</code>)</td>
+<td>#2566 <code>BRD-12</code> PHỤ LỤC I CHÍNH SÁCH BẢO MẬT… (<code>police_privacy</code>)</td>
+<td>Nội dung giống nhau</td>
+</tr>
+<tr>
+<td>C212</td>
+<td>#2362 <code>BRD-16</code> Chính sách thanh toán (<code>policy_payment</code>)</td>
+<td>#2567 <code>BRD-11</code> A. Phương thức thanh toán (<code>policy_price</code>)</td>
+<td>Nội dung giống nhau, chỉ khác tiêu đề</td>
+</tr>
+</tbody></table></div>
+<ul>
+<li>Đề xuất: Chỉ giữ một bản. Phương án của Amoeba là <strong>giữ bản đăng ký 8/20 (#2360<del>#2362) và ngừng kích hoạt bản đăng ký 8/29 (#2565</del>#2567)</strong>. Lý do: tên danh mục của bản 8/29 có lỗi chính tả (<code>police_privacy</code>), và <code>policy_price</code> khiến chính sách thanh toán trông giống chính sách giá.</li>
+<li>Go2Joy xác nhận: Vui lòng xác nhận văn bản nào là điều khoản mới nhất. Hiện nội dung giống nhau, nhưng từ nay chỉ nên sửa một bản, nên cần chọn bản chuẩn.</li>
+</ul>
+<h2 id="4-q-faq-cùng-câu-trả-lời-khác-câu-hỏi--32-trường-hợp">4. Q. FAQ cùng câu trả lời, khác câu hỏi — 32 trường hợp</h2>
+<p>13 tài liệu FAQ chỉ khác nhau ở câu hỏi đang dùng chung 2 câu trả lời được sao chép. 32 xung đột là kết quả ghép cặp giữa 13 tài liệu này.</p>
+<div class="scroll"><table><thead><tr>
+<th>Câu trả lời</th>
+<th>Tài liệu (câu hỏi)</th>
+</tr>
+</thead><tbody><tr>
+<td>Hướng dẫn đặt phòng 3 bước (ứng dụng và web)</td>
+<td>#2347 <code>BRD-31</code> Tôi muốn đặt phòng · #2348 <code>BRD-30</code> Tôi muốn đặt KS ở 1 đêm · #2349 <code>BRD-29</code> Cách đặt phòng · #2350 <code>BRD-28</code> Tôi muốn tìm KS ở quận 7 · #2351 <code>BRD-27</code> Bên KS mình còn phòng ko? · #2352 <code>BRD-26</code> Cho xin giá thuê KS này theo giờ ạ · #2353 <code>BRD-25</code> Có khách sạn tình yêu không? · #2354 <code>BRD-24</code> Muốn check-in lúc 12h đêm · #2355 <code>BRD-23</code> Xin giá phòng có bồn tắm · #2356 <code>BRD-22</code> Thuê phòng couple</td>
+</tr>
+<tr>
+<td>Không thể đặt nhiều phòng cùng lúc (đặt lặp lại từng phòng một)</td>
+<td>#2357 <code>BRD-21</code> Đặt 2 phòng được không? · #2358 <code>BRD-20</code> Tôi muốn đặt nhiều phòng thì làm thế nào? · #2359 <code>BRD-19</code> Muốn đặt 2 phòng thì làm thế nào?</td>
+</tr>
+</tbody></table></div>
+<p>Mã xung đột: C124~C155 (32 trường hợp)</p>
+<ul>
+<li>Vấn đề 1 (dọn dẹp): Khi cùng một câu trả lời có 10 bản, các tài liệu này chiếm các vị trí đầu trong kết quả tìm kiếm và đẩy các tài liệu căn cứ khác ra ngoài.</li>
+<li>Vấn đề 2 (nội dung): Các câu hỏi như "muốn check-in lúc nửa đêm" (BRD-24), "giá phòng có bồn tắm" (BRD-23), "tìm khách sạn ở quận 7" (BRD-28) cũng chỉ nhận được hướng dẫn đặt phòng chung. Cần Go2Joy xác nhận câu trả lời có phù hợp với câu hỏi không.</li>
+<li>Vấn đề 3 (phạm vi): FAQ này là câu trả lời cho <strong>khách đặt phòng</strong>, nhưng phạm vi AI agent của danh mục <code>faq</code>·<code>policy</code> đang để trống (= tất cả), nên <strong>AI agent Hotel Admin cũng dùng các tài liệu này làm căn cứ</strong>. Nếu nhân viên lễ tân hỏi "Đặt phòng như thế nào?", AI có thể trả lời bằng hướng dẫn đặt phòng trên ứng dụng dành cho khách.</li>
+<li>Đề xuất:<ol>
+<li>Mỗi câu trả lời chỉ giữ 1 tài liệu (ví dụ <code>BRD-29</code> Cách đặt phòng, <code>BRD-19</code>), chuyển các câu hỏi khác vào nội dung tài liệu đó dưới dạng danh sách "Câu hỏi tương tự", sau đó ngừng kích hoạt 11 tài liệu còn lại.</li>
+<li>Với các câu hỏi cần câu trả lời riêng (check-in nửa đêm, phòng có bồn tắm, tìm theo khu vực, v.v.), khi Go2Joy cung cấp câu trả lời thì tạo tài liệu riêng.</li>
+<li>Thống nhất với Go2Joy có thu hẹp phạm vi AI agent của danh mục <code>faq</code>·<code>policy</code> về các AI agent dành cho khách (<code>default</code>, <code>landing-guest</code>) hay không. Các tài liệu này sẽ được dùng lại ở giai đoạn 2 (AI agent hỗ trợ khách theo từng khách sạn), nên không xóa.</li>
+</ol>
+</li>
+</ul>
+<h2 id="5-t-bản-dịch-theo-ngôn-ngữ--20-trường-hợp">5. T. Bản dịch theo ngôn ngữ — 20 trường hợp</h2>
+<p>Đây là bản tiếng Hàn (không có hậu tố), bản tiếng Anh (<code>-EN</code>) và bản tiếng Việt (<code>-VI</code>) của cùng một mã mục. Nội dung giống nhau là bình thường, nên xử lý là 'giữ cả hai'.</p>
+<div class="scroll"><table><thead><tr>
+<th>Xung đột</th>
+<th>Tài liệu A</th>
+<th>Tài liệu B</th>
+</tr>
+</thead><tbody><tr>
+<td>C222</td>
+<td>#2517 GTJ-LCK-03 Khóa phòng – Qua đêm (Room Lock – Overnight)</td>
+<td>#2537 GTJ-LCK-03-EN Room Lock – Overnight</td>
+</tr>
+<tr>
+<td>C237</td>
+<td>#2524 GTJ-DIS-01-EN Create / Edit a Direct Discount Program</td>
+<td>#2544 GTJ-DIS-01-VI Tạo / Sửa chương trình giảm giá trực tiếp (Create / Edit a Direct Disc</td>
+</tr>
+<tr>
+<td>C207</td>
+<td>#2516 GTJ-LCK-02 Khóa phòng – Theo ngày (Room Lock – By Day)</td>
+<td>#2536 GTJ-LCK-02-EN Room Lock – By Day</td>
+</tr>
+<tr>
+<td>C246</td>
+<td>#2528 GTJ-FLS-01-EN Set Up Hourly Flash Sale</td>
+<td>#2548 GTJ-FLS-01-VI Thiết lập Flash Sale theo giờ (Set Up Hourly Flash Sale)</td>
+</tr>
+<tr>
+<td>C244</td>
+<td>#2527 GTJ-DIS-04-EN Stop a Direct Discount Program</td>
+<td>#2547 GTJ-DIS-04-VI Dừng chương trình giảm giá trực tiếp (Stop a Direct Discount Program)</td>
+</tr>
+<tr>
+<td>C249</td>
+<td>#2529 GTJ-FLS-02-EN Set Up Overnight Flash Sale</td>
+<td>#2549 GTJ-FLS-02-VI Thiết lập Flash Sale qua đêm (Set Up Overnight Flash Sale)</td>
+</tr>
+<tr>
+<td>C243</td>
+<td>#2526 GTJ-DIS-03-EN View Discount Program List</td>
+<td>#2546 GTJ-DIS-03-VI Xem danh sách chương trình giảm giá (View Discount Program List)</td>
+</tr>
+<tr>
+<td>C240</td>
+<td>#2525 GTJ-DIS-02-EN Search Direct Discount Programs</td>
+<td>#2545 GTJ-DIS-02-VI Tìm kiếm chương trình giảm giá trực tiếp (Search Direct Discount Progr</td>
+</tr>
+<tr>
+<td>C234</td>
+<td>#2522 GTJ-DSH-01-EN View Dashboard</td>
+<td>#2542 GTJ-DSH-01-VI Xem Bảng điều khiển (View Dashboard)</td>
+</tr>
+<tr>
+<td>C236</td>
+<td>#2523 GTJ-REV-01-EN Reply to a Review</td>
+<td>#2543 GTJ-REV-01-VI Trả lời đánh giá (Reply to a Review)</td>
+</tr>
+<tr>
+<td>C225</td>
+<td>#2518 GTJ-LCK-04 Mở khóa phòng (Delete Room Lock Settings)</td>
+<td>#2538 GTJ-LCK-04-EN Delete Room Lock Settings</td>
+</tr>
+<tr>
+<td>C228</td>
+<td>#2519 GTJ-RPT-01 Tải báo cáo phòng giá đặc biệt (Download "Shock-Discount Room" Report) — *Cần bổ sung (Updat</td>
+<td>#2539 GTJ-RPT-01-EN Download "Shock-Discount Room" Report — <em>Pending update (Updating)</em></td>
+</tr>
+<tr>
+<td>C232</td>
+<td>#2521 GTJ-STA-01 Định nghĩa giá trị trạng thái (Status Values)</td>
+<td>#2541 GTJ-STA-01-EN Status Values</td>
+</tr>
+<tr>
+<td>C204</td>
+<td>#2515 GTJ-LCK-01 Khóa phòng – Theo giờ (Room Lock – Hourly)</td>
+<td>#2555 GTJ-LCK-01-VI Khóa phòng – Theo giờ (Room Lock – Hourly)</td>
+</tr>
+<tr>
+<td>C226</td>
+<td>#2518 GTJ-LCK-04 Mở khóa phòng (Delete Room Lock Settings)</td>
+<td>#2558 GTJ-LCK-04-VI Hủy cài đặt khóa phòng (Delete Room Lock Settings)</td>
+</tr>
+<tr>
+<td>C229</td>
+<td>#2519 GTJ-RPT-01 Tải báo cáo phòng giá đặc biệt (Download "Shock-Discount Room" Report) — *Cần bổ sung (Updat</td>
+<td>#2559 GTJ-RPT-01-VI Tải báo cáo "Phòng giá sốc" (Download "Shock-Discount Room" Report) —</td>
+</tr>
+<tr>
+<td>C230</td>
+<td>#2520 GTJ-GLS-01 Bảng thuật ngữ (Glossary)</td>
+<td>#2540 GTJ-GLS-01-EN Glossary</td>
+</tr>
+<tr>
+<td>C233</td>
+<td>#2521 GTJ-STA-01 Định nghĩa giá trị trạng thái (Status Values)</td>
+<td>#2561 GTJ-STA-01-VI Định nghĩa trạng thái (Status Values)</td>
+</tr>
+<tr>
+<td>C224</td>
+<td>#2517 GTJ-LCK-03 Khóa phòng – Qua đêm (Room Lock – Overnight)</td>
+<td>#2557 GTJ-LCK-03-VI Khóa phòng – Qua đêm (Room Lock – Overnight)</td>
+</tr>
+<tr>
+<td>C231</td>
+<td>#2520 GTJ-GLS-01 Bảng thuật ngữ (Glossary)</td>
+<td>#2560 GTJ-GLS-01-VI Bảng thuật ngữ (Glossary)</td>
+</tr>
+</tbody></table></div>
+<p>Lưu ý: Bản tiếng Hàn (<code>GTJ-*</code> không có hậu tố) là bản gốc do Amoeba soạn. Nhân viên lễ tân Việt Nam không dùng bản này, nên khi ngôn ngữ mặc định đã chuyển sang <code>vi</code>, chúng có thể chỉ chiếm chỗ trong kết quả tìm kiếm. Việc có loại bản tiếng Hàn khỏi phạm vi Hotel Admin hay không có thể quyết định khi bàn giao vận hành (tách biệt với đợt phân loại này).</p>
+<h2 id="6-v-sổ-tay-tóm-tắt--hướng-dẫn-video--11-trường-hợp">6. V. Sổ tay tóm tắt ↔ hướng dẫn video — 11 trường hợp</h2>
+<p>Đây là sổ tay tóm tắt (<code>GTJ-DIS/FLS/SUR/DSH-*</code>) và hướng dẫn video (<code>GTJ-VID-*</code>) của cùng một tính năng. Hướng dẫn video ghi chi tiết hơn về tên màn hình, ô nhập liệu và giá trị ví dụ, và không có thông tin nào khác nhau (các cặp có thông tin khác nhau đã chuyển sang nhóm F). Xử lý là 'giữ cả hai'.</p>
+<div class="scroll"><table><thead><tr>
+<th>Xung đột</th>
+<th>Tài liệu A</th>
+<th>Tài liệu B</th>
+</tr>
+</thead><tbody><tr>
+<td>C217</td>
+<td>#2509 GTJ-FLS-02 Thiết lập flash sale qua đêm (Set Up Overnight Flash Sale)</td>
+<td>#2629 GTJ-VID-09-EN Video 9 — Creating a Flash Sale for the Qua đêm (overnight) type</td>
+</tr>
+<tr>
+<td>C238</td>
+<td>#2524 GTJ-DIS-01-EN Create / Edit a Direct Discount Program</td>
+<td>#2622 GTJ-VID-02-EN Video 2 — Setting a per-room discount rate at step 2 of creating a dir</td>
+</tr>
+<tr>
+<td>C241</td>
+<td>#2525 GTJ-DIS-02-EN Search Direct Discount Programs</td>
+<td>#2626 GTJ-VID-06-EN Video 6 — Searching by name in the direct-discount program list</td>
+</tr>
+<tr>
+<td>C239</td>
+<td>#2524 GTJ-DIS-01-EN Create / Edit a Direct Discount Program</td>
+<td>#2623 GTJ-VID-03-EN Video 3 — Using the direct discount's Thiết lập hàng loạt (Bulk setup)</td>
+</tr>
+<tr>
+<td>C215</td>
+<td>#2505 GTJ-DIS-02 Tìm kiếm chương trình giảm giá trực tiếp (Search Direct Discount Programs)</td>
+<td>#2626 GTJ-VID-06-EN Video 6 — Searching by name in the direct-discount program list</td>
+</tr>
+<tr>
+<td>C213</td>
+<td>#2504 GTJ-DIS-01 Tạo·sửa chương trình giảm giá trực tiếp (Create / Edit a Direct Discount Program)</td>
+<td>#2622 GTJ-VID-02-EN Video 2 — Setting a per-room discount rate at step 2 of creating a dir</td>
+</tr>
+<tr>
+<td>C242</td>
+<td>#2525 GTJ-DIS-02-EN Search Direct Discount Programs</td>
+<td>#2574 GTJ-VID-06-VI Video 6 — Tìm theo tên trong danh sách chương trình giảm giá trực tiếp</td>
+</tr>
+<tr>
+<td>C216</td>
+<td>#2505 GTJ-DIS-02 Tìm kiếm chương trình giảm giá trực tiếp (Search Direct Discount Programs)</td>
+<td>#2574 GTJ-VID-06-VI Video 6 — Tìm theo tên trong danh sách chương trình giảm giá trực tiếp</td>
+</tr>
+<tr>
+<td>C220</td>
+<td>#2511 GTJ-SUR-01 Thiết lập phụ thu (Set Up Surcharges)</td>
+<td>#2631 GTJ-VID-11-EN Video 11 — Creating and saving a surcharge (Phụ thu) schedule</td>
+</tr>
+<tr>
+<td>C214</td>
+<td>#2504 GTJ-DIS-01 Tạo·sửa chương trình giảm giá trực tiếp (Create / Edit a Direct Discount Program)</td>
+<td>#2623 GTJ-VID-03-EN Video 3 — Using the direct discount's Thiết lập hàng loạt (Bulk setup)</td>
+</tr>
+<tr>
+<td>C235</td>
+<td>#2522 GTJ-DSH-01-EN View Dashboard</td>
+<td>#2620 GTJ-VID-00-EN Video 0 — A walkthrough of the Trang chủ (Home) dashboard</td>
+</tr>
+</tbody></table></div>
+<h2 id="7-d-quy-trình-khác-nhau--9-trường-hợp">7. D. Quy trình khác nhau — 9 trường hợp</h2>
+<p>Giống như quy trình khóa phòng và flash sale theo từng loại đặt phòng (theo giờ / theo ngày / qua đêm), các màn hình này chỉ trông giống nhau, còn quy trình thì khác. Xử lý là 'giữ cả hai'.</p>
+<div class="scroll"><table><thead><tr>
+<th>Xung đột</th>
+<th>Tài liệu A</th>
+<th>Tài liệu B</th>
+</tr>
+</thead><tbody><tr>
+<td>C208</td>
+<td>#2516 GTJ-LCK-02 Khóa phòng – Theo ngày (Room Lock – By Day)</td>
+<td>#2517 GTJ-LCK-03 Khóa phòng – Qua đêm (Room Lock – Overnight)</td>
+</tr>
+<tr>
+<td>C209</td>
+<td>#2516 GTJ-LCK-02 Khóa phòng – Theo ngày (Room Lock – By Day)</td>
+<td>#2537 GTJ-LCK-03-EN Room Lock – Overnight</td>
+</tr>
+<tr>
+<td>C247</td>
+<td>#2528 GTJ-FLS-01-EN Set Up Hourly Flash Sale</td>
+<td>#2529 GTJ-FLS-02-EN Set Up Overnight Flash Sale</td>
+</tr>
+<tr>
+<td>C205</td>
+<td>#2515 GTJ-LCK-01 Khóa phòng – Theo giờ (Room Lock – Hourly)</td>
+<td>#2516 GTJ-LCK-02 Khóa phòng – Theo ngày (Room Lock – By Day)</td>
+</tr>
+<tr>
+<td>C223</td>
+<td>#2517 GTJ-LCK-03 Khóa phòng – Qua đêm (Room Lock – Overnight)</td>
+<td>#2536 GTJ-LCK-02-EN Room Lock – By Day</td>
+</tr>
+<tr>
+<td>C227</td>
+<td>#2518 GTJ-LCK-04 Mở khóa phòng (Delete Room Lock Settings)</td>
+<td>#2534 GTJ-QLK-02-EN Delete Quick Room Lock</td>
+</tr>
+<tr>
+<td>C221</td>
+<td>#2513 GTJ-QLK-01 Thiết lập khóa phòng nhanh (Set Up Quick Room Lock)</td>
+<td>#2563 BRD-1 Quy trình chặn phòng khẩn cấp (bản nháp)</td>
+</tr>
+<tr>
+<td>C206</td>
+<td>#2515 GTJ-LCK-01 Khóa phòng – Theo giờ (Room Lock – Hourly)</td>
+<td>#2517 GTJ-LCK-03 Khóa phòng – Qua đêm (Room Lock – Overnight)</td>
+</tr>
+<tr>
+<td>C245</td>
+<td>#2527 GTJ-DIS-04-EN Stop a Direct Discount Program</td>
+<td>#2541 GTJ-STA-01-EN Status Values</td>
+</tr>
+</tbody></table></div>
+<ul>
+<li>Ngoại lệ <strong>C221</strong>: #2563 <code>BRD-1</code> "Quy trình chặn phòng khẩn cấp <strong>(bản nháp)</strong>" là bản nháp dài 85 ký tự được chấp nhận từ bảng tri thức (đăng ký 8/29). Bản này đang được kích hoạt và nằm trong phạm vi Hotel Admin. Nội dung là bản rút gọn của #2513 <code>GTJ-QLK-01</code> khóa phòng nhanh. Đề xuất ngừng kích hoạt (Go2Joy xác nhận).</li>
+</ul>
+<h2 id="8-kế-hoạch-xử-lý">8. Kế hoạch xử lý</h2>
+<div class="scroll"><table><thead><tr>
+<th>Bước</th>
+<th>Việc cần làm</th>
+<th>Đối tượng</th>
+<th>Phụ trách</th>
+</tr>
+</thead><tbody><tr>
+<td>1</td>
+<td>Sửa 6 sổ tay tóm tắt (giá có bắt buộc không, bước xác nhận) rồi lập chỉ mục lại</td>
+<td>F: #2508 #2528 #2548 #2510 #2530 #2550</td>
+<td>Go2Joy xác nhận → Amoeba</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Chọn bản chuẩn của tài liệu chính sách, ngừng kích hoạt 3 tài liệu còn lại</td>
+<td>P: #2360<del>#2362 / #2565</del>#2567</td>
+<td>Go2Joy quyết định → Amoeba</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Gộp 13 FAQ thành 2, gửi lại danh sách câu hỏi cần câu trả lời riêng</td>
+<td>Q: #2347~#2359</td>
+<td>Go2Joy quyết định → Amoeba</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Quyết định phạm vi AI agent của danh mục <code>faq</code>·<code>policy</code></td>
+<td>Có loại Hotel Admin hay không</td>
+<td>Go2Joy quyết định</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Ngừng kích hoạt bản nháp BRD-1</td>
+<td>#2563</td>
+<td>Go2Joy xác nhận</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Xử lý 40 xung đột T·V·D là 'giữ cả hai'</td>
+<td>40 trường hợp liên quan trong C204~C249</td>
+<td>Amoeba (làm được ngay)</td>
+</tr>
+</tbody></table></div>
+<p>Khi xong các bước 1~5, các xung đột liên quan sẽ được dọn cùng lúc vì tài liệu đã được ngừng kích hoạt hoặc sửa. Sau khi dọn dẹp, chúng tôi chạy lại kiểm tra xung đột một lần nữa để xác nhận các cặp cũ không bị phát hiện lại.</p>
+</main>
+<footer class="wrap foot">Amoeba(BitBiz) · SharpTalk for Go2Joy</footer>
+</body>
+</html>
