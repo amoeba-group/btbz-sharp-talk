@@ -888,5 +888,61 @@
     "saveError": "Không lưu được giới hạn hiển thị",
     "keyIssued": "Đã phát hành liên kết mời",
     "keyError": "Không phát hành được liên kết mời"
+  },
+  "mobileApp": {
+    "title": "Ứng dụng di động",
+    "subtitle": "Giao diện và hành vi của chat bên trong app di động của bạn. Lưu một lần; app nhận ở lần mở chat kế tiếp, không cần phát hành lại app.",
+    "appearance": {
+      "title": "Giao diện trong app",
+      "desc": "Chỉ áp dụng khi widget chạy trong app của bạn. Giữ nguyên một mục để dùng giao diện web.",
+      "font": "Phông chữ",
+      "fontSystem": "Hệ thống (phông của máy)",
+      "fontWeb": "Giống web",
+      "fontSize": "Cỡ chữ",
+      "menuStyle": "Menu mở đầu",
+      "menuCard": "Thẻ có biểu tượng",
+      "menuChip": "Chip",
+      "header": "Thanh tiêu đề",
+      "headerNative": "App tự vẽ",
+      "headerWidget": "Widget tự vẽ",
+      "headerHint": "Nếu app tự đặt (tùy chọn header của SDK) thì app được ưu tiên hơn mục này.",
+      "brand": "Màu thương hiệu",
+      "brandOwn": "Dùng màu khác trong app",
+      "brandHint": "Tắt = dùng màu thương hiệu của web."
+    },
+    "entries": {
+      "title": "Màn hình trong app → agent",
+      "desc": "Mỗi màn hình của app mở agent nào. App đọc bảng này khi mở chat nên không phải ghi cứng mã agent trong app.",
+      "screen": "Mã màn hình",
+      "agent": "Agent",
+      "context": "Ngữ cảnh hiện cho nhân viên",
+      "contextPlaceholder": "ví dụ: Mã đặt phòng",
+      "add": "Thêm màn hình",
+      "remove": "Xóa màn hình",
+      "empty": "Chưa có màn hình nào. App mở agent đặt trong cấu hình của chính nó."
+    },
+    "sdk": {
+      "title": "SDK và kiểm thử",
+      "minSdk": "Phiên bản SDK tối thiểu",
+      "hint": "Chỉ để tham khảo cho dev của bạn. Máy chủ không chặn app cũ."
+    },
+    "test": {
+      "desc": "Mở trình mô phỏng app với shop và agent của tenant này.",
+      "open": "Mở trình mô phỏng"
+    },
+    "preview": {
+      "title": "Xem trước",
+      "web": "Web",
+      "app": "App",
+      "agent": "Agent",
+      "language": "Ngôn ngữ",
+      "noShop": "Hãy đặt tên miền gian hàng trước (Cài đặt cơ bản) để xem trước.",
+      "hint": "Hiện cả thay đổi chưa lưu. Bàn phím, camera và link ngoài vẫn cần kiểm trên máy thật."
+    },
+    "save": "Lưu thay đổi",
+    "reset": "Hủy thay đổi",
+    "unsaved": "Có thay đổi chưa lưu",
+    "saved": "Đã lưu cài đặt ứng dụng di động",
+    "saveError": "Không lưu được cài đặt ứng dụng di động"
   }
 }

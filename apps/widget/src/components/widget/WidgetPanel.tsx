@@ -55,7 +55,8 @@ export function WidgetPanel() {
   // A phone-sized page gets the bottom sheet; a host app gets the whole screen.
   const fullBleed = compact || isAppMode();
   // The host app draws its own toolbar (back, title, ⋮): no second header (PLN-261015).
-  const nativeChrome = isNativeChrome();
+  const adminHeader = useWidgetStore((s) => s.appConfig?.app.header ?? null);
+  const nativeChrome = isNativeChrome(adminHeader);
   // A greeting names the customer, so it wins over the brand mark: the shopper
   // being addressed matters more than the logo at that moment.
   const logo = theme?.logo && !customerName ? logoUrl(theme.logo) : null;

@@ -1,3 +1,4 @@
+import type { MobileAppConfig } from '@sharptalk/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type {
@@ -486,6 +487,28 @@ export function useSaveEmbedOrigins() {
  * never cached in the query client, which would put a credential in memory for
  * the rest of the session.
  */
+export function useMobileApp() {
+  const tenantKey = useTenantKey();
+  return useQuery({ queryKey: ['mobile-app', tenantKey], queryFn: settingsService.mobileApp });
+}
+
+export function useSaveMobileApp() {
+  const { t } = useTranslation('settings');
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: (c: MobileAppConfig) => settingsService.saveMobileApp(c),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mobile-app', tenantKey] });
+      toast.success(t('mobileApp.saved'));
+    },
+    onError: (e: Error) => {
+      // An entry naming an agent this tenant does not have is refused server-side.
+      toast.error(e.message || t('mobileApp.saveError'), { sticky: true });
+    },
+  });
+}
+
 export function useWidgetAccess() {
   const tenantKey = useTenantKey();
   return useQuery({

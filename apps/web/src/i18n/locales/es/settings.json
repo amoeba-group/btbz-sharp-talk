@@ -888,5 +888,61 @@
     "saveError": "No se pudo guardar la restricción",
     "keyIssued": "Enlace emitido",
     "keyError": "No se pudo emitir el enlace"
+  },
+  "mobileApp": {
+    "title": "App móvil",
+    "subtitle": "Cómo se ve y se comporta el chat dentro de tu app móvil. Se guarda una vez; la app lo recoge la próxima vez que abra el chat, sin publicar la app de nuevo.",
+    "appearance": {
+      "title": "Aspecto en la app",
+      "desc": "Solo se aplica cuando el widget se ejecuta dentro de tu app. Deja un ajuste como está para mantener el aspecto web.",
+      "font": "Fuente",
+      "fontSystem": "Sistema (fuente del dispositivo)",
+      "fontWeb": "Igual que la web",
+      "fontSize": "Tamaño de texto",
+      "menuStyle": "Menú inicial",
+      "menuCard": "Tarjetas con icono",
+      "menuChip": "Chips",
+      "header": "Cabecera",
+      "headerNative": "La app la dibuja",
+      "headerWidget": "El widget la dibuja",
+      "headerHint": "Si tu app lo fija por sí misma (opción header del SDK), la app prevalece sobre este ajuste.",
+      "brand": "Color de marca",
+      "brandOwn": "Usar otro color en la app",
+      "brandHint": "Desactivado = el color de marca de la web."
+    },
+    "entries": {
+      "title": "Pantallas de la app → agente",
+      "desc": "Qué agente abre cada pantalla de tu app. La app lee esta tabla al abrir el chat, así que los códigos de agente no están fijados en la app.",
+      "screen": "ID de pantalla",
+      "agent": "Agente",
+      "context": "Contexto para el personal",
+      "contextPlaceholder": "p. ej. Código de reserva",
+      "add": "Añadir pantalla",
+      "remove": "Quitar pantalla",
+      "empty": "Aún no hay pantallas. La app abre el agente de su propia configuración."
+    },
+    "sdk": {
+      "title": "SDK y pruebas",
+      "minSdk": "Versión mínima del SDK",
+      "hint": "Solo informativo para tus desarrolladores. El servidor no bloquea apps antiguas."
+    },
+    "test": {
+      "desc": "Abre el simulador de la app con la tienda y el agente de este tenant.",
+      "open": "Abrir simulador"
+    },
+    "preview": {
+      "title": "Vista previa",
+      "web": "Web",
+      "app": "App",
+      "agent": "Agente",
+      "language": "Idioma",
+      "noShop": "Primero define el dominio de la tienda (Ajustes básicos) para ver la vista previa.",
+      "hint": "Muestra los cambios sin guardar. Teclado, cámara y enlaces externos aún requieren un dispositivo real."
+    },
+    "save": "Guardar cambios",
+    "reset": "Descartar",
+    "unsaved": "Cambios sin guardar",
+    "saved": "Ajustes de la app móvil guardados",
+    "saveError": "No se pudieron guardar los ajustes de la app móvil"
   }
 }

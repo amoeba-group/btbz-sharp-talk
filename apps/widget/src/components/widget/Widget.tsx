@@ -6,6 +6,7 @@ import { useEnsureSession } from '../../hooks/useSession';
 import { reportPanelOpened } from '../../services/sessionService';
 import { useEmbedIdentity } from '../../hooks/useEmbedIdentity';
 import { useEmbedCommands } from '../../hooks/useEmbedCommands';
+import { useAppSurface } from '../../hooks/useAppSurface';
 import { useLauncherReport } from '../../hooks/useLauncherReport';
 import { useSessionProfile } from '../../hooks/useSessionProfile';
 import { useUnreadCount } from '../../hooks/useNotifications';
@@ -23,6 +24,7 @@ export function Widget() {
   useEmbedIdentity();
   // Host-application commands: ShopTalk.open()/identify()/… (PLN-260819 S3).
   useEmbedCommands();
+  useAppSurface();
   // Report launcher geometry to the loader, which owns the iframe box (S4).
   useLauncherReport();
   useSessionProfile();

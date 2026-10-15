@@ -3,6 +3,7 @@ import { setStoredSessionToken } from '../lib/api-client';
 import { initialLanguage } from '../i18n/i18n';
 import { WIDGET_TABS_DEFAULT } from '../lib/widget-tabs';
 import { isAppMode } from '../lib/host-bridge';
+import { mergeAppSurface, type MobileAppConfig } from '../../../../packages/types/src/common/mobile-app-config';
 import type {
   ConsentState,
   WidgetCopy,
@@ -132,8 +133,14 @@ interface WidgetState {
   setCommerceEnabled: (v: boolean) => void;
   setCustomerName: (n: string | null) => void;
   /** Tenant theme, for the parts that are markup rather than CSS (logo, launcher). */
+  /** The theme every component reads: the web theme, with the host-app overrides on top inside an app. */
   widgetTheme: WidgetTheme | null;
+  /** The theme exactly as the tenant saved it for the web (before any app override). */
+  rawWidgetTheme: WidgetTheme | null;
+  /** The tenant's host-app surface settings (PLN-261015 S9); null = none, or not in an app. */
+  appConfig: MobileAppConfig | null;
   setWidgetTheme: (t: WidgetTheme | null) => void;
+  setAppConfig: (c: MobileAppConfig | null) => void;
   setEmbedIdentity: (v: 'pending' | 'verified' | 'anonymous') => void;
   setLanguage: (l: string) => void;
   setAiProcessingRegion: (r: string) => void;
@@ -204,7 +211,12 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setCommerceEnabled: (v) => set({ commerceEnabled: v }),
   setCustomerName: (n) => set({ customerName: n }),
   widgetTheme: null,
-  setWidgetTheme: (t) => set({ widgetTheme: t }),
+  rawWidgetTheme: null,
+  appConfig: null,
+  // In a host app the theme every component reads is the web theme with the app
+  // overrides on top; anywhere else (no app config) it is the web theme as-is.
+  setWidgetTheme: (t) => set({ rawWidgetTheme: t, widgetTheme: mergeAppSurface(t, get().appConfig) }),
+  setAppConfig: (c) => set({ appConfig: c, widgetTheme: mergeAppSurface(get().rawWidgetTheme, c) }),
   setEmbedIdentity: (v) => set({ embedIdentity: v }),
   setLanguage: (l) => set({ language: l }),
   setAiProcessingRegion: (r) => set({ aiProcessingRegion: r }),

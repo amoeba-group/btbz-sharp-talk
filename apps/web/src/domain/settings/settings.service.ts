@@ -1,3 +1,4 @@
+import type { MobileAppConfig } from '@sharptalk/types';
 import { apiDelete, apiGet, apiGetBlob, apiPatch, apiPost, apiPut, apiUpload } from '@/lib/api-client';
 import type {
   WidgetHeaderStyle,
@@ -212,6 +213,13 @@ export interface WidgetThemeSettings {
 }
 
 /** Embed allowlist + whether a signing secret exists (PLN-260819). */
+/** Host mobile-app surface as the console edits it (PLN-261015 S9). */
+export interface MobileAppSettings {
+  /** False until an admin saves once; `config` is then the defaults. */
+  configured: boolean;
+  config: MobileAppConfig;
+}
+
 /** Widget exposure restriction as the console edits it (PLN-260929). */
 export interface WidgetAccessSettings {
   enabled: boolean;
@@ -251,6 +259,19 @@ export const settingsService = {
   rotateEmbedSecret: () => apiPost<{ secret: string }>('/tenants/embed-secret/rotate', {}),
   // Widget exposure restriction (PLN-260929). Sent whole — a partial update of
   // a rule set is how "I removed it but it is still there" happens.
+  mobileApp: () => apiGet<MobileAppSettings>('/tenants/mobile-app'),
+  saveMobileApp: (c: MobileAppConfig) =>
+    apiPatch<MobileAppSettings>('/tenants/mobile-app', {
+      app: {
+        font: c.app.font,
+        font_size: c.app.fontSize,
+        menu_style: c.app.menuStyle,
+        header: c.app.header,
+        brand: c.app.brand,
+      },
+      entries: c.entries.map((e) => ({ screen: e.screen, agent_code: e.agentCode, context_label: e.contextLabel })),
+      min_sdk: c.minSdk,
+    }),
   widgetAccess: () => apiGet<WidgetAccessSettings>('/tenants/widget-access'),
   saveWidgetAccess: (body: WidgetAccessDraft) =>
     apiPatch<WidgetAccessSettings>('/tenants/widget-access', {

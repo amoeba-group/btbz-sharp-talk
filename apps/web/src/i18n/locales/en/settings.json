@@ -888,5 +888,61 @@
     "saveError": "Could not save the exposure restriction",
     "keyIssued": "Invite link issued",
     "keyError": "Could not issue the invite link"
+  },
+  "mobileApp": {
+    "title": "Mobile app",
+    "subtitle": "How the chat looks and behaves inside your own mobile app. Saved once; the app picks it up the next time it opens the chat, no app release needed.",
+    "appearance": {
+      "title": "App appearance",
+      "desc": "Applies only when the widget runs inside your app. Leave a setting as is to keep the web look.",
+      "font": "Font",
+      "fontSystem": "System (device font)",
+      "fontWeb": "Same as web",
+      "fontSize": "Text size",
+      "menuStyle": "Opening menu",
+      "menuCard": "Cards with icon",
+      "menuChip": "Chips",
+      "header": "Header",
+      "headerNative": "The app draws it",
+      "headerWidget": "The widget draws it",
+      "headerHint": "If your app sets this itself (SDK header option), the app wins over this setting.",
+      "brand": "Brand colour",
+      "brandOwn": "Use a different colour in the app",
+      "brandHint": "Off = the web brand colour."
+    },
+    "entries": {
+      "title": "App screens → agent",
+      "desc": "Which agent each screen of your app opens. The app reads this table when it opens the chat, so agent codes are not hard-coded in the app.",
+      "screen": "Screen id",
+      "agent": "Agent",
+      "context": "Context shown to staff",
+      "contextPlaceholder": "e.g. Booking code",
+      "add": "Add screen",
+      "remove": "Remove screen",
+      "empty": "No screens yet. The app opens the agent set in its own configuration."
+    },
+    "sdk": {
+      "title": "SDK and testing",
+      "minSdk": "Minimum SDK version",
+      "hint": "Informational: shown to your developers. The server does not block older apps."
+    },
+    "test": {
+      "desc": "Open the app simulator with this tenant's shop and agent.",
+      "open": "Open simulator"
+    },
+    "preview": {
+      "title": "Preview",
+      "web": "Web",
+      "app": "App",
+      "agent": "Agent",
+      "language": "Language",
+      "noShop": "Set the storefront domain first (Basic settings) to see the preview.",
+      "hint": "Shows unsaved changes. Keyboard, camera and external links still need a real device."
+    },
+    "save": "Save changes",
+    "reset": "Discard",
+    "unsaved": "Unsaved changes",
+    "saved": "Mobile app settings saved",
+    "saveError": "Could not save the mobile app settings"
   }
 }

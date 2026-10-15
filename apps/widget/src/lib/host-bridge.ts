@@ -205,11 +205,18 @@ export function isAppMode(): boolean {
 /**
  * Native-chrome mode (PLN-261015): the host app draws its own toolbar (back,
  * title, ⋮ menu), so the widget drops its header instead of showing two.
- * Only meaningful inside a host app — a storefront iframe never asks for it.
+ *
+ * Who decides: an explicit `?chrome=native|widget` from the host app always
+ * wins; with none, the tenant's console setting (`adminHeader`) decides. Only
+ * meaningful inside a host app — a storefront iframe never gets this.
  */
-export function isNativeChrome(): boolean {
+export function isNativeChrome(adminHeader?: 'native' | 'widget' | null): boolean {
   try {
-    return isAppMode() && new URLSearchParams(window.location.search).get('chrome') === 'native';
+    if (!isAppMode()) return false;
+    const url = new URLSearchParams(window.location.search).get('chrome');
+    if (url === 'native') return true;
+    if (url === 'widget') return false;
+    return adminHeader === 'native';
   } catch {
     return false;
   }

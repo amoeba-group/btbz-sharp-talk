@@ -4,6 +4,7 @@ import { EmbedCard } from './EmbedCard';
 import { WidgetAccessCard } from './WidgetAccessCard';
 import { DesignAssetsCard } from './DesignAssetsCard';
 import { WidgetDesignsCard } from './WidgetDesignsCard';
+import { MobileAppSection } from './MobileAppSection';
 
 /** Tenant settings — widget (PLN-260824 B). Composition only; every card moved here unchanged. */
 export function SettingsWidgetPage() {
@@ -28,6 +29,8 @@ export function SettingsWidgetPage() {
           that one for installs, this one for a limited rollout. */}
       <WidgetAccessCard />
       <InstallGuideCard />
+      {/* The host MOBILE APP's own look, screen→agent table and live phone preview (PLN-261015). */}
+      <MobileAppSection />
     </div>
   );
 }

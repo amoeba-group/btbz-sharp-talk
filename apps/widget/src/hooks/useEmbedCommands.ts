@@ -15,6 +15,7 @@ import {
 } from './useSession';
 import { hostPresent, onHostMessage, postToHost } from '../lib/host-bridge';
 import { parseHostContext } from '../lib/host-context';
+import { normalizeMobileAppConfig } from '../../../../packages/types/src/common/mobile-app-config';
 import i18n, { LANG_STORAGE_KEY, SUPPORTED_LANGUAGES } from '../i18n/i18n';
 
 const TABS: TabKey[] = ['chat', 'orders', 'notifications'];
@@ -145,6 +146,15 @@ export function useEmbedCommands(): void {
             const handled = store.settingsOpen;
             if (handled) store.setSettingsOpen(false);
             postToHost({ type: 'ivy:event', event: 'back', handled });
+            return;
+          }
+          case 'app-config': {
+            // The console's phone preview pushes the UNSAVED app settings so the
+            // admin sees them live. Honoured only when the page was opened as a
+            // preview (?appPreview=1) — a real app never takes its look from a
+            // message, only from what the tenant saved.
+            if (new URLSearchParams(window.location.search).get('appPreview') !== '1') return;
+            store.setAppConfig(normalizeMobileAppConfig((d as { config?: unknown }).config ?? null));
             return;
           }
           case 'context': {

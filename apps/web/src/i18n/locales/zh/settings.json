@@ -888,5 +888,61 @@
     "saveError": "未能保存展示限制",
     "keyIssued": "已生成邀请链接",
     "keyError": "未能生成邀请链接"
+  },
+  "mobileApp": {
+    "title": "移动应用",
+    "subtitle": "聊天在您自己的移动应用内的外观与行为。保存一次即可,应用下次打开聊天时自动生效,无需重新发布应用。",
+    "appearance": {
+      "title": "应用内外观",
+      "desc": "仅在小组件于您的应用内运行时生效。保持某项不变即沿用网页外观。",
+      "font": "字体",
+      "fontSystem": "系统(设备字体)",
+      "fontWeb": "与网页相同",
+      "fontSize": "文字大小",
+      "menuStyle": "开场菜单",
+      "menuCard": "带图标的卡片",
+      "menuChip": "标签",
+      "header": "顶部栏",
+      "headerNative": "由应用绘制",
+      "headerWidget": "由小组件绘制",
+      "headerHint": "如果应用自己指定(SDK 的 header 选项),则以应用为准,优先于此设置。",
+      "brand": "品牌色",
+      "brandOwn": "在应用中使用不同的颜色",
+      "brandHint": "关闭 = 使用网页的品牌色。"
+    },
+    "entries": {
+      "title": "应用页面 → 客服助手",
+      "desc": "应用的每个页面打开哪个助手。应用在打开聊天时读取此表,因此无需在应用中写死助手代码。",
+      "screen": "页面 ID",
+      "agent": "助手",
+      "context": "向客服显示的上下文",
+      "contextPlaceholder": "例如:预订编号",
+      "add": "添加页面",
+      "remove": "删除页面",
+      "empty": "还没有页面。应用将打开其自身配置中的助手。"
+    },
+    "sdk": {
+      "title": "SDK 与测试",
+      "minSdk": "最低 SDK 版本",
+      "hint": "仅供开发人员参考。服务器不会拦截旧版应用。"
+    },
+    "test": {
+      "desc": "使用此租户的 shop 和助手打开应用模拟器。",
+      "open": "打开模拟器"
+    },
+    "preview": {
+      "title": "预览",
+      "web": "网页",
+      "app": "应用",
+      "agent": "助手",
+      "language": "语言",
+      "noShop": "请先设置店铺域名(基本设置)以查看预览。",
+      "hint": "显示未保存的更改。键盘、相机和外部链接仍需在真机上验证。"
+    },
+    "save": "保存更改",
+    "reset": "放弃更改",
+    "unsaved": "有未保存的更改",
+    "saved": "已保存移动应用设置",
+    "saveError": "无法保存移动应用设置"
   }
 }

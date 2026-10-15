@@ -87,6 +87,19 @@
         }
       });
 
+      // The console links here with ?shop=&agent= so the admin tests exactly what the app will open.
+      (function () {
+        const q = new URLSearchParams(location.search);
+        const shop = q.get('shop');
+        const agent = q.get('agent');
+        if (shop || agent) {
+          const u = new URLSearchParams({ embed: '1', mode: 'app' });
+          if (shop) u.set('shop', shop);
+          if (agent) u.set('agent', agent);
+          if (q.get('chrome')) u.set('chrome', q.get('chrome'));
+          document.getElementById('url').value = '/widget/?' + u.toString();
+        }
+      })();
       reload();
     </script>
   </body>

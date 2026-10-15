@@ -68,3 +68,13 @@ test('native chrome only applies inside app mode', async () => {
   assert.equal((await bridge('?embed=1&chrome=native')).isNativeChrome(), false, 'a storefront frame cannot hide the widget header');
   assert.equal((await bridge('?mode=app&chrome=widget')).isNativeChrome(), false);
 });
+
+test('with no chrome param the tenant console setting decides; an explicit param always wins', async () => {
+  const bare = await bridge('?embed=1&mode=app');
+  assert.equal(bare.isNativeChrome('native'), true, 'admin says native, host said nothing');
+  assert.equal(bare.isNativeChrome('widget'), false);
+  assert.equal(bare.isNativeChrome(null), false, 'no settings at all = the widget header, as before');
+  assert.equal((await bridge('?mode=app&chrome=widget')).isNativeChrome('native'), false, 'host forces the widget header');
+  assert.equal((await bridge('?mode=app&chrome=native')).isNativeChrome('widget'), true, 'host forces native');
+  assert.equal((await bridge('?embed=1')).isNativeChrome('native'), false, 'never outside a host app');
+});
