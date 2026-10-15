@@ -97,6 +97,33 @@ $hash = hash_hmac('sha256', (string)$user->id, getenv('SHOPTALK_EMBED_SECRET'));
 - 서명이 맞지 않으면 방문자는 **게스트로 계속 대화할 수 있습니다.** 로그인 실패가 문의 자체를
   막지 않습니다.
 
+### 3.4 사용자 속성 함께 서명 (선택 — PLN-261015 D2)
+호텔·지역·권한처럼 **상담원 배정에 쓰는 값**은 `attributes`로 보내고 `userId`와 **함께 서명**합니다.
+허용 키는 `hotel_id`, `hotel_name`, `region`, `province`, `role` 다섯 개이며, 다른 키는 무시됩니다.
+값에는 줄바꿈을 넣을 수 없고 120자 이하입니다.
+
+서명 문자열 = `userId` + 줄바꿈 + `키=값`을 **키 알파벳순**으로 한 줄씩:
+```text
+12345
+hotel_id=H-1024
+region=north
+role=reception
+```
+```js
+// Node.js — Hotel Admin 서버
+const attrs = { hotel_id: 'H-1024', region: 'north', role: 'reception' };
+const signing = [String(user.id), ...Object.keys(attrs).sort().map((k) => `${k}=${attrs[k]}`)].join('\n');
+const hash = crypto.createHmac('sha256', process.env.SHOPTALK_EMBED_SECRET).update(signing).digest('hex');
+```
+```html
+<script>
+  ShopTalk.identify({ userId: "12345", hash: "<위 해시>", attributes: { hotel_id: "H-1024", region: "north", role: "reception" } });
+</script>
+```
+- `attributes`를 보내면서 `userId`만 서명한 해시를 쓰면 **거절**됩니다(브라우저에서 지역을 바꿔 다른 상담원에게 가는 것을 막기 위해).
+- 빈 값은 보내지 마십시오 — 빈 값은 저장 전에 빠지므로 서명 문자열에서도 빼야 합니다.
+- `region` 권장 값: `north` / `central` / `south` (콘솔에 북부·중부·남부로 표시).
+
 ## 4. 자바스크립트 API
 
 | 호출 | 동작 |

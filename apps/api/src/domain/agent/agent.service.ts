@@ -308,6 +308,8 @@ export class AgentService {
       /** Effective AI agent of the session (NULL pin = tenant default). */
       aiAgentId: number | null;
       aiAgentName: string | null;
+      /** Signed host facts — hotel, region, role (PLN-261015 D5). */
+      identityAttributes: Record<string, string> | null;
     }>;
     total: number;
   }> {
@@ -411,6 +413,7 @@ export class AgentService {
           effectiveAgentId != null
             ? agentDisplay.byId.get(effectiveAgentId) ?? agentDisplay.defaultLabel
             : agentDisplay.defaultLabel,
+        identityAttributes: state?.identityAttributes ?? null,
       };
     });
     return { items, total };
@@ -528,6 +531,7 @@ export class AgentService {
     autoReplyEffective: boolean;
     aiAgentId: number | null;
     aiAgentName: string | null;
+    identityAttributes: Record<string, string> | null;
   }> {
     const state = (await this.sessionStates([sessionId])).get(String(sessionId));
     const mode = state?.autoReplyMode ?? AUTO_REPLY_MODE.INHERIT;
@@ -549,17 +553,26 @@ export class AgentService {
         effectiveAgentId != null
           ? display.byId.get(effectiveAgentId) ?? display.defaultLabel
           : display.defaultLabel,
+      identityAttributes: state?.identityAttributes ?? null,
     };
   }
 
-  /** session id → alias + auto-reply mode (+ AI agent pin), one query per page. */
-  private async sessionStates(
-    sessionIds: number[],
-  ): Promise<Map<string, { alias: string | null; autoReplyMode: string; aiAgentId: number | null }>> {
+  /** session id → alias + auto-reply mode (+ AI agent pin, signed attributes), one query per page. */
+  private async sessionStates(sessionIds: number[]): Promise<
+    Map<
+      string,
+      {
+        alias: string | null;
+        autoReplyMode: string;
+        aiAgentId: number | null;
+        identityAttributes: Record<string, string> | null;
+      }
+    >
+  > {
     if (sessionIds.length === 0) return new Map();
     const rows = await this.sessionRepo.find({
       where: { id: In(sessionIds) },
-      select: { id: true, alias: true, autoReplyMode: true, aiAgentId: true },
+      select: { id: true, alias: true, autoReplyMode: true, aiAgentId: true, identityAttributes: true },
     });
     return new Map(
       rows.map((s) => [
@@ -568,6 +581,7 @@ export class AgentService {
           alias: s.alias ?? null,
           autoReplyMode: s.autoReplyMode || AUTO_REPLY_MODE.INHERIT,
           aiAgentId: s.aiAgentId != null ? Number(s.aiAgentId) : null,
+          identityAttributes: s.identityAttributes ?? null,
         },
       ]),
     );

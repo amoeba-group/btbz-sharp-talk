@@ -82,6 +82,14 @@ export class Session {
   alias: string | null;
 
   /**
+   * Facts the host app SIGNED about this user (PLN-261015 D2): hotel_id,
+   * hotel_name, region, province, role. Written only by a verified identify;
+   * drives handoff routing by region. NULL = guest or unsigned.
+   */
+  @Column({ name: 'identity_attributes', type: 'json', nullable: true })
+  identityAttributes: Record<string, string> | null;
+
+  /**
    * Whether the AI answers this session: 'inherit' follows the channel default
    * from Settings, 'on'/'off' are the operator overriding it here (PLN-260812).
    * An agent holding the thread outranks all three.

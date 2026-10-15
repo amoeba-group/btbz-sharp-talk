@@ -394,5 +394,18 @@
     "addTo": "‘{{title}}’에 추가",
     "group": "타임라인으로 묶기",
     "dismiss": "이 대화에서 숨기기"
+  },
+  "identity": {
+    "hotel": "호텔",
+    "region": {
+      "north": "북부",
+      "central": "중부",
+      "south": "남부"
+    },
+    "role": {
+      "manager": "관리자",
+      "reception": "리셉션"
+    },
+    "signed": "호스트 앱이 서명한 정보"
   }
 }

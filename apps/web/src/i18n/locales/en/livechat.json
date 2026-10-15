@@ -394,5 +394,18 @@
     "addTo": "Add to “{{title}}”",
     "group": "Group as timeline",
     "dismiss": "Hide for this conversation"
+  },
+  "identity": {
+    "hotel": "Hotel",
+    "region": {
+      "north": "North",
+      "central": "Central",
+      "south": "South"
+    },
+    "role": {
+      "manager": "Manager",
+      "reception": "Reception"
+    },
+    "signed": "Signed by the host app"
   }
 }

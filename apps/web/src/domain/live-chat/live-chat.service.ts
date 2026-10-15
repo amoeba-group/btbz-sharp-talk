@@ -41,6 +41,8 @@ export interface AgentSession {
   aiAgentName?: string | null;
   /** Origin surface: widget | telegram | viber | zalo | line | kakao | sms | email … */
   channel?: string | null;
+  /** Hotel · region · role signed by the host app (PLN-261015 D5); null when unsigned. */
+  identity?: SessionIdentity | null;
   /** Team pin (PLN-260826) — pinned rows arrive first from the server. */
   pinned?: boolean;
   pinnedAt?: string | null;
@@ -124,10 +126,20 @@ export interface ConversationDetail {
   assignedTo?: string | null;
   aiAgentId?: string | null;
   aiAgentName?: string | null;
+  identity?: SessionIdentity | null;
   messages: ChatMessage[];
   /** Older messages exist before the first one returned (PLN-260807). */
   hasMore?: boolean;
   customer?: CustomerContext | null;
+}
+
+/** Signed host facts about the user (PLN-261015 D2/D5). */
+export interface SessionIdentity {
+  hotelId: string | null;
+  hotelName: string | null;
+  region: string | null;
+  province: string | null;
+  role: string | null;
 }
 
 export interface CustomerLead {

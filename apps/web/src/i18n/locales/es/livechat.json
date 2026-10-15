@@ -394,5 +394,18 @@
     "addTo": "Añadir a «{{title}}»",
     "group": "Agrupar como línea de tiempo",
     "dismiss": "Ocultar en esta conversación"
+  },
+  "identity": {
+    "hotel": "Hotel",
+    "region": {
+      "north": "Norte",
+      "central": "Centro",
+      "south": "Sur"
+    },
+    "role": {
+      "manager": "Gerente",
+      "reception": "Recepción"
+    },
+    "signed": "Firmado por la aplicación anfitriona"
   }
 }
