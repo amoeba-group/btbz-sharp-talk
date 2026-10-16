@@ -689,7 +689,7 @@ export function ChatTab() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={t('chat.inputPlaceholder')}
-          className="st-input flex-1 rounded-full border border-gray-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50"
+          className="st-input min-w-0 flex-1 rounded-full border border-gray-200 px-4 py-2.5 text-sm focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 disabled:bg-gray-50"
         />
         <button
           type="submit"

@@ -44,9 +44,10 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 ./gradlew :sample:installDebug                   # 실기기/에뮬레이터 검증용
 ```
 
-> 0.2.0 코드는 Android SDK가 없는 환경에서 작성되어 **Gradle 빌드는 아직 한 번도 돌리지 않았다.**
-> 순수 Kotlin 파일(프로토콜·설정·신원)의 단위 테스트만 JVM으로 따로 실행해 확인했다.
-> 첫 빌드에서 `assembleRelease`와 `testReleaseUnitTest`를 반드시 확인할 것.
+> 2026-10-16: Gradle 8.14.3 + AGP 8.5.2로 `testReleaseUnitTest`(50/50), `assembleRelease`, `lintRelease`(오류 0)를 실제로 돌렸고,
+> Android 15 에뮬레이터(API 35)에서 샘플 앱으로 식별·컨텍스트·첨부 업로드·오류 화면을 확인했다
+> (결과: `docs/test/TCR-261016-Go2Joy-Kotlin-App-Widget.md` §5–§6). 실기기와 API 24는 아직 확인하지 않았다.
+> 로컬 개발 서버를 에뮬레이터에 연결할 때는 `adb reverse`가 IPv4만 닿으므로 `vite --host 127.0.0.1`로 띄운다.
 
 ## 전달 (AAR 직접 전달)
 

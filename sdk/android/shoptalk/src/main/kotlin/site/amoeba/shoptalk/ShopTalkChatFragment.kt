@@ -130,9 +130,7 @@ class ShopTalkChatFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             // A cancelled pick MUST still deliver null: a callback left hanging
             // makes every later file chooser silently refuse to open.
-            resolveFileCallback(
-                WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data),
-            )
+            resolveFileCallback(parsePickerResult(result.resultCode, result.data))
         }
 
     private val cameraCapture =
@@ -556,6 +554,23 @@ class ShopTalkChatFragment : Fragment() {
     }
 
     // ── attachments ──────────────────────────────────────────────────────────
+
+    /**
+     * `FileChooserParams.parseResult` only reads `Intent.data`. The Android 13+ photo picker
+     * (ACTION_GET_CONTENT for images) answers RESULT_OK with `data == null` and the picked
+     * file in `clipData` (seen on an API 35 emulator: parseResult returned null, so the photo
+     * silently never reached the widget). Read both places, keep parseResult as the fallback.
+     */
+    private fun parsePickerResult(resultCode: Int, data: Intent?): Array<Uri>? {
+        if (resultCode != android.app.Activity.RESULT_OK || data == null) return null
+        val uris = LinkedHashSet<Uri>()
+        data.data?.let(uris::add)
+        data.clipData?.let { clip ->
+            for (i in 0 until clip.itemCount) clip.getItemAt(i).uri?.let(uris::add)
+        }
+        if (uris.isEmpty()) return WebChromeClient.FileChooserParams.parseResult(resultCode, data)
+        return uris.toTypedArray()
+    }
 
     private fun resolveFileCallback(uris: Array<Uri>?) {
         val callback = filePathCallback ?: return

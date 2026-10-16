@@ -103,6 +103,9 @@ API local 3010 trên DB nháp `db_kimpl`, widget dev 5174. Identity do script k�
 | E4 | Nút "Context: booking" | đạt: chip + ô nhập điền sẵn "Guest did not show up…" |
 | E5 | Gửi tin | đạt: thread có dòng SYSTEM "Mở từ Booking #G2J-8841…" (`screen=bookings`, `ref`, `label` trong `retrieval_trace.hostContext`), tin người dùng, tin AI (engine stub, có nguồn tham khảo) |
 | E6 | Bố cục: thanh debug của app mẫu + fragment | đạt sau khi sửa (xem dưới) |
+| E7 | Đổi cấu hình lúc đang chạy: cỡ chữ hệ thống 130 %, dark mode, xoay ngang | widget tải lại trong khoảng 2 giây (lần nào host cũng phải ký lại), bản dark mode giữ nền sáng như thiết kế, 130 % hiển thị đủ sau khi sửa ô nhập, ngang màn dùng được nhưng vùng tin nhắn rất thấp. Chip context mất sau khi Activity bị tạo lại |
+| E8 | Đính kèm: hộp chọn "Chụp ảnh / Chọn từ thư viện / Tệp" (tiếng Việt), trình chọn ảnh hệ thống (không cần quyền) | đạt; **ảnh chọn xong không tới widget** (lỗi dưới), sau sửa: thanh đính kèm có ảnh thu nhỏ, gửi đi, `message_attachments` có bản ghi `image/png` 213 554 byte, AI trả lời |
+| E9 | Mất đường tới widget rồi mở app | đạt: màn "Không kết nối được với bộ phận hỗ trợ" + nút Thử lại ngay khi tải lỗi; bấm Thử lại sau khi nối lại thì vào được chat |
 
 Lỗi tìm thấy khi chạy trên emulator và đã sửa:
 
@@ -112,9 +115,11 @@ Lỗi tìm thấy khi chạy trên emulator và đã sửa:
 | Host phải ký hai lần mỗi lần tải | widget báo `ivy:ready` từ hai chỗ | `onWidgetReady()` bỏ qua lần lặp trong cùng một lần tải |
 | Dải trống dưới thanh công cụ của host | fragment đệm toàn bộ inset status bar dù host đã chừa | chỉ đệm phần inset thực sự chồng lên view, tính lại khi view đổi vị trí |
 | Thanh debug của sample chồng lên status bar | target 35 edge-to-edge | sample tự đệm status bar |
+| Chọn ảnh từ thư viện không có tác dụng, không báo lỗi (Android 15) | trình chọn ảnh trả `RESULT_OK` với `data = null` và ảnh nằm trong `clipData`; `FileChooserParams.parseResult` chỉ đọc `data` nên trả null | SDK tự đọc cả `data` lẫn `clipData`, `parseResult` chỉ còn là phương án dự phòng |
+| Nút gửi bị cắt ở cỡ chữ 130 % | ô nhập trong khung flex thiếu `min-w-0` | thêm `min-w-0` vào ô nhập của widget |
 | Dòng SYSTEM và chip lặp mã tham chiếu ("Booking #G2J-8841 #G2J-8841") | host đã ghi mã trong label | API và chip chỉ thêm `#ref` khi label chưa chứa; có test |
 
 Còn lặp: `ShopTalkListener.onReady` vẫn gọi hai lần (chỉ callback thông báo, không ảnh hưởng ký).
 
-Chưa kiểm: camera và chooser tệp, màn lỗi do hết thời gian chờ, xoay màn, cỡ chữ hệ thống 130 %, API 24, dark mode,
-mở link ngoài, `back` của hệ thống, đổi tài khoản (logout rồi identify khác), thiết bị thật.
+Chưa kiểm: chụp ảnh bằng camera, chọn tệp PDF/Word qua trình chọn tệp, màn lỗi do hết 15 giây (mới thử lỗi tải ngay), API 24,
+mở link ngoài, `back` của hệ thống, đổi tài khoản (logout rồi identify khác), TalkBack, thiết bị thật.
