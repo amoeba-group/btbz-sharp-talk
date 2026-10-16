@@ -642,9 +642,11 @@ export function ChatTab() {
         <div className="mx-3 mb-1 flex items-center gap-1.5 rounded-st-md border border-primary-100 bg-primary-50 px-2.5 py-1.5 text-xs font-medium text-primary-700">
           <MapPin className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">
-            {[hostContext.label ?? hostContext.screen, hostContext.ref ? `#${hostContext.ref.replace(/^#/, '')}` : null]
-              .filter(Boolean)
-              .join(' · ')}
+            {(() => {
+              const what = hostContext.label ?? hostContext.screen;
+              const ref = hostContext.ref?.replace(/^#/, '');
+              return ref && !what.includes(ref) ? `${what} · #${ref}` : what;
+            })()}
           </span>
           <button
             type="button"

@@ -59,7 +59,9 @@ const OPENED_FROM: LocalizedText = {
 /** The system line written into the thread, e.g. "Mở từ Đặt phòng #G2J-8841". */
 export function hostContextLine(c: HostContext, lang: string): string {
   const what = c.label ?? c.screen;
-  const where = c.ref ? `${what} #${c.ref.replace(/^#/, '')}` : what;
+  const ref = c.ref?.replace(/^#/, '');
+  // A host often puts the reference in the label already ("Booking #123"): do not repeat it.
+  const where = ref && !what.includes(ref) ? `${what} #${ref}` : what;
   return localized(OPENED_FROM, lang).replace('{where}', where);
 }
 

@@ -50,6 +50,7 @@ describe('host context', () => {
     expect(hostContextLine(c, 'VI')).toBe('Mở từ Đặt phòng #G2J-8841');
     expect(hostContextLine(c, 'KO')).toBe('Đặt phòng #G2J-8841에서 열림');
     expect(hostContextLine({ screen: 'home' }, 'EN')).toBe('Opened from home');
+    expect(hostContextLine({ screen: 'bookings', ref: 'G2J-8841', label: 'Booking #G2J-8841' }, 'EN')).toBe('Opened from Booking #G2J-8841');
   });
 
   it('hands the model a hint that says it is not a fact source', () => {

@@ -11,6 +11,9 @@ import android.widget.LinearLayout
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.commit
 import site.amoeba.shoptalk.ShopTalkChatFragment
@@ -52,7 +55,14 @@ class MainActivity : FragmentActivity() {
             setBackgroundColor(Color.WHITE)
         }
         if (header == ShopTalkHeader.NATIVE) column.addView(nativeToolbar())
-        column.addView(contextBar())
+        val bar = contextBar()
+        column.addView(bar)
+        // Edge-to-edge on target 35: this bar sits at the top, so it clears the status bar itself.
+        // The SDK fragment below only pads for what still overlaps IT.
+        ViewCompat.setOnApplyWindowInsetsListener(bar) { v, insets ->
+            v.updatePadding(top = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top)
+            insets
+        }
         column.addView(
             FrameLayout(this).apply { id = CONTAINER_ID },
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f),

@@ -274,8 +274,21 @@ class ShopTalkChatFragment : Fragment() {
             val bars = insets.getInsets(
                 WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime(),
             )
-            v.updatePadding(top = bars.top, bottom = bars.bottom)
+            // Only the part of the system bars that actually overlaps THIS view. A host that puts
+            // its own toolbar above the chat has already cleared the status bar; padding the full
+            // inset again left a blank band under the toolbar (seen on a device). Full-screen
+            // hosts overlap completely, so for them nothing changes.
+            val at = IntArray(2)
+            v.getLocationInWindow(at)
+            val windowHeight = v.rootView.height
+            val top = (bars.top - at[1]).coerceAtLeast(0)
+            val bottom = (bars.bottom - (windowHeight - (at[1] + v.height))).coerceAtLeast(0)
+            v.updatePadding(top = top, bottom = bottom)
             insets
+        }
+        // Where the view sits depends on what the host stacks above it, so recompute when it moves.
+        view.addOnLayoutChangeListener { v, _, top, _, bottom, _, oldTop, _, oldBottom ->
+            if (top != oldTop || bottom != oldBottom) v.requestApplyInsets()
         }
         // Removed automatically when the view lifecycle ends.
         requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, backCallback)
@@ -353,6 +366,10 @@ class ShopTalkChatFragment : Fragment() {
     }
 
     private fun onWidgetReady() {
+        // The widget announces ready from more than one of its hooks on every page load
+        // (seen on a device: two per load), so the host's backend was asked to sign twice.
+        // A reload resets `widgetReady` in onPageStarted, so only repeats within one load stop here.
+        if (widgetReady) return
         mainHandler.removeCallbacks(loadTimeout)
         hideError()
         widgetReady = true

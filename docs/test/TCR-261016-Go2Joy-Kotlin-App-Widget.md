@@ -2,7 +2,7 @@
 
 > Kết quả kiểm thử cho `PLN-261015-Go2Joy-Kotlin-SDK-0.2` v1.1 (REQ-261015). Nhánh `feature/go2joy-kotlin-app-impl`
 > (từ `main` `c676353b`). Ngày chạy: 2026-10-16, máy Windows 11, Node 22, Java 17, MySQL 8 trong Docker.
-> Build Gradle/AAR đã chạy thật (§5). **Chưa kiểm được:** chạy trên thiết bị hoặc emulator (§6).
+> Build Gradle/AAR đã chạy thật (§5). Emulator Android 15 (API 35) đã chạy một phần (§6); chưa có thiết bị thật.
 
 ## 1. Kiểm thử đơn vị
 
@@ -89,14 +89,32 @@ incompatible version of Kotlin … expected version is 2.0.0` cho cả `kotlin-s
 
 Chưa chạy bằng wrapper 8.7 như `gradle-wrapper.properties` ghi; kết quả ở trên là với Gradle 8.14.3.
 
-## 6. Chưa kiểm: thiết bị và emulator
+## 6. Emulator Android 15 (API 35), chạy ngày 2026-10-16
 
-Không có thiết bị nào kết nối (`adb devices` rỗng) và không cài emulator: system image API 35 nặng khoảng 1,5 đến
-2 GB, vượt quá chỗ trống và RAM của máy này. Việc còn lại là TCR 14 hạng mục (camera, chooser, màn lỗi, xoay màn,
-cỡ chữ 130 %, back, link ngoài, đổi tài khoản, dark mode) trên thiết bị thật hoặc emulator. Cách nhẹ nhất: cắm điện
-thoại Android bật USB debugging rồi
+AVD `kimpl35` (RAM thấp, image x86_64, `adb reverse` 5174 và 3010), app mẫu `site.amoeba.shoptalk.sample` bản debug,
+API local 3010 trên DB nháp `db_kimpl`, widget dev 5174. Identity do script ký phía host: chuỗi `userId` + từng dòng
+`key=value` theo thứ tự chữ cái, HMAC-SHA256 bằng secret của tenant (secret chỉ có trong DB nháp).
 
-```bash
-adb reverse tcp:5174 tcp:5174 && adb reverse tcp:3010 tcp:3010
-./gradlew :sample:installDebug   # sample dùng http://localhost:5174/ qua allowInsecureUrl
-```
+| # | Kiểm | Kết quả |
+|---|---|---|
+| E1 | App tải widget trong WebView thật, shop `https://www.go2joy.vn`, agent `hotel-admin` | đạt: giao diện theo cấu hình đã lưu trong console (màu sky, chip menu, cỡ chữ, header của widget) |
+| E2 | Identify có chữ ký + `attributes` | đạt: log `identified ok=true`; session mới `identity_level=verified`, `customer_id` có, `identity_attributes` đủ 5 khóa (hotel_id, hotel_name, region, province, role) |
+| E3 | Đồng ý quyền riêng tư | đạt: `consent_state=granted` |
+| E4 | Nút "Context: booking" | đạt: chip + ô nhập điền sẵn "Guest did not show up…" |
+| E5 | Gửi tin | đạt: thread có dòng SYSTEM "Mở từ Booking #G2J-8841…" (`screen=bookings`, `ref`, `label` trong `retrieval_trace.hostContext`), tin người dùng, tin AI (engine stub, có nguồn tham khảo) |
+| E6 | Bố cục: thanh debug của app mẫu + fragment | đạt sau khi sửa (xem dưới) |
+
+Lỗi tìm thấy khi chạy trên emulator và đã sửa:
+
+| Lỗi | Nguyên nhân | Sửa |
+|---|---|---|
+| Màn lỗi "Không kết nối được" | Vite mặc định nghe `[::1]`, `adb reverse` chỉ tới IPv4 | chạy `vite --host 127.0.0.1` (chỉ ảnh hưởng cách chạy dev, ghi vào README) |
+| Host phải ký hai lần mỗi lần tải | widget báo `ivy:ready` từ hai chỗ | `onWidgetReady()` bỏ qua lần lặp trong cùng một lần tải |
+| Dải trống dưới thanh công cụ của host | fragment đệm toàn bộ inset status bar dù host đã chừa | chỉ đệm phần inset thực sự chồng lên view, tính lại khi view đổi vị trí |
+| Thanh debug của sample chồng lên status bar | target 35 edge-to-edge | sample tự đệm status bar |
+| Dòng SYSTEM và chip lặp mã tham chiếu ("Booking #G2J-8841 #G2J-8841") | host đã ghi mã trong label | API và chip chỉ thêm `#ref` khi label chưa chứa; có test |
+
+Còn lặp: `ShopTalkListener.onReady` vẫn gọi hai lần (chỉ callback thông báo, không ảnh hưởng ký).
+
+Chưa kiểm: camera và chooser tệp, màn lỗi do hết thời gian chờ, xoay màn, cỡ chữ hệ thống 130 %, API 24, dark mode,
+mở link ngoài, `back` của hệ thống, đổi tài khoản (logout rồi identify khác), thiết bị thật.
