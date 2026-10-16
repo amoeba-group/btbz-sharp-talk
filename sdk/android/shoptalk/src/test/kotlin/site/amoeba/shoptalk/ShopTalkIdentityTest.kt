@@ -17,28 +17,41 @@ class ShopTalkIdentityTest {
         return msg.getJSONObject("user")
     }
 
+    /**
+     * Structural JSON equality. `JSONObject.similar` is not in android.jar's org.json,
+     * which wins on the compile classpath of an Android unit test, so it cannot be used here.
+     */
+    private fun sameJson(a: Any?, b: Any?): Boolean = when {
+        a is JSONObject && b is JSONObject ->
+            a.length() == b.length() && a.keys().asSequence().all { b.has(it) && sameJson(a.get(it), b.get(it)) }
+        a is org.json.JSONArray && b is org.json.JSONArray ->
+            a.length() == b.length() && (0 until a.length()).all { sameJson(a.get(it), b.get(it)) }
+        a is Number && b is Number -> a.toString() == b.toString()
+        else -> a == b
+    }
+
     @Test
     fun `attributes form is forwarded verbatim`() {
         val raw = """{"userId":"u-1","hash":"h-1","name":"Ngân","attributes":{"hotel_id":"H1","hotel_name":"A In Hotel","region":"south","province":"HCM","role":"manager"}}"""
         val user = userOf(ShopTalkIdentity.fromJson(raw))
-        assertTrue(JSONObject(raw).similar(user))
+        assertTrue(sameJson(JSONObject(raw), user))
     }
 
     @Test
     fun `claims form is forwarded verbatim including numbers`() {
         val raw = """{"userId":"u-2","hash":"h-2","claims":{"hotel_sn":9004,"role":"owner","iat":1760000000,"province":"HN"}}"""
         val user = userOf(ShopTalkIdentity.fromJson(raw))
-        assertTrue(JSONObject(raw).similar(user))
+        assertTrue(sameJson(JSONObject(raw), user))
         assertEquals(1760000000L, user.getJSONObject("claims").getLong("iat"))
     }
 
     @Test
     fun `minimal form and unknown future fields pass through`() {
         val minimal = """{"userId":"u-3","hash":"h-3"}"""
-        assertTrue(JSONObject(minimal).similar(userOf(ShopTalkIdentity.fromJson(minimal))))
+        assertTrue(sameJson(JSONObject(minimal), userOf(ShopTalkIdentity.fromJson(minimal))))
 
         val future = """{"userId":"u-4","hash":"h-4","signed_at":"2026-10-16T00:00:00Z","scopes":["a","b"],"nested":{"x":{"y":1}}}"""
-        assertTrue(JSONObject(future).similar(userOf(ShopTalkIdentity.fromJson(future))))
+        assertTrue(sameJson(JSONObject(future), userOf(ShopTalkIdentity.fromJson(future))))
     }
 
     @Test

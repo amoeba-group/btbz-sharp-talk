@@ -12,7 +12,7 @@
 | SQL `261016-tenant-mobile-app-config.sql` | **chưa áp** trên staging, production Hàn Quốc, Go2Joy. Áp **trước** khi deploy code (`DB_SYNCHRONIZE=false` trên staging) |
 | Deploy | chưa deploy môi trường nào |
 | Chạy thử | local, DB nháp `db_kimpl` |
-| AAR 0.2.0 | **chưa build**, chưa kiểm trên thiết bị |
+| AAR 0.2.0 | **đã build** (`dist/shoptalk-android-0.2.0.aar` 89 KB, `shoptalk-compose-0.2.0.aar`), test 50/50, lint 0 error, kiểm bằng app Kotlin 2.2.0 có R8; **chưa kiểm trên thiết bị** |
 
 ## Đã làm, theo PLN
 
@@ -37,7 +37,7 @@
 
 ## Việc còn lại trước khi giao Go2Joy
 
-1. Build và kiểm AAR trên máy có Android SDK; TCR 14 hạng mục trên thiết bị (TCR-261016 §5).
+1. TCR 14 hạng mục trên thiết bị thật hoặc emulator (TCR-261016 §6). Build AAR đã xong (TCR §5).
 2. Áp SQL lên staging, deploy, chạy golden set sau khi prompt có `HOST_CONTEXT`.
 3. Chốt hợp đồng identify (Q1 trong REQ) và nhờ Go2Joy viết endpoint ký.
 4. Chọn nguồn của `shop` (`https://www.go2joy.vn`) và `widgetUrl` cho app (staging hoặc self-hosted sau M3).

@@ -2,7 +2,7 @@
 
 > Kết quả kiểm thử cho `PLN-261015-Go2Joy-Kotlin-SDK-0.2` v1.1 (REQ-261015). Nhánh `feature/go2joy-kotlin-app-impl`
 > (từ `main` `c676353b`). Ngày chạy: 2026-10-16, máy Windows 11, Node 22, Java 17, MySQL 8 trong Docker.
-> **Chưa kiểm được:** build Gradle/AAR và chạy trên thiết bị Android (máy không có Android SDK). Xem §5.
+> Build Gradle/AAR đã chạy thật (§5). **Chưa kiểm được:** chạy trên thiết bị hoặc emulator (§6).
 
 ## 1. Kiểm thử đơn vị
 
@@ -16,7 +16,8 @@
 | `tsc --noEmit` api, widget, web | | sạch |
 | `npm run i18n:check` | | 6 ngôn ngữ đủ khóa |
 | Build production widget, console | `vite build` | thành công |
-| SDK Kotlin, phần không phụ thuộc Android | `scratchpad/verify/run.sh` (compiler Kotlin 2.0.21 của Gradle, JUnit, shim org.json, stub Uri) | 50/50 |
+| SDK Kotlin, phần không phụ thuộc Android (trước khi có Android SDK) | `scratchpad/verify/run.sh` (compiler Kotlin 2.0.21, shim org.json, stub Uri) | 50/50 |
+| SDK Kotlin, build thật với `android.jar` | `gradle :shoptalk:testReleaseUnitTest` | 50/50 (Config 14, Identity 11, Policies 5, Protocol 20) |
 
 ## 2. Migration
 
@@ -63,10 +64,39 @@ như các tệp khác trong console (commit `8f27c23c`).
 - Câu trả lời AI có `HOST_CONTEXT` trong prompt: chạy với engine `stub`, chưa so với model thật; cần chạy golden set trên staging.
 - Camera, bàn phím, xoay màn, link ngoài, dark mode: cần thiết bị.
 
-## 5. SDK Kotlin: những gì chưa kiểm
+## 5. Build Gradle và AAR (chạy ngày 2026-10-16)
 
-`ShopTalkChatFragment`, màn lỗi, chooser, FileProvider, tài nguyên, manifest, sample, module Compose và cả build
-Gradle/AGP chưa được biên dịch với `android.jar`. Việc cần làm trước khi giao AAR: cài Android SDK (platform 35,
-build-tools), chạy `./gradlew :shoptalk:testReleaseUnitTest :shoptalk:assembleRelease :sample:installDebug`, rồi
-chạy TCR 14 hạng mục trên Galaxy S21 (API 35) và emulator API 24. Nếu build `lifecycleScope` không giải được,
-thêm `androidx.lifecycle:lifecycle-runtime-ktx:2.8.7`.
+Máy: Windows 11, JDK 17, RAM trống khoảng 2,6 GB, ổ C còn 2,2 GB. Vì vậy cài tối thiểu và chạy tiết kiệm:
+Android SDK chỉ có `cmdline-tools`, `platforms;android-35`, `build-tools;35.0.0`, `platform-tools` (578 MB, ở
+`C:\Users\nhutp\android-sdk`, ngoài repo); không cài emulator và system image; dùng Gradle 8.14.3 có sẵn ở
+`C:\Gradle` thay vì tải wrapper 8.7; `--no-daemon --max-workers=2 -Xmx1536m` và Kotlin compiler chạy trong tiến trình
+Gradle (`-Pkotlin.compiler.execution.strategy=in-process`) để không có thêm JVM nền; đã tắt dev server và xóa cache
+jest trước khi build.
+
+| Bước | Lệnh | Kết quả |
+|---|---|---|
+| Biên dịch lần đầu | `:shoptalk:assembleDebug` | thành công, 2 phút 5 giây; lần đầu code Android biên dịch với `android.jar` (Kotlin 2.2.0, AGP 8.5.2) |
+| Test, AAR, sample | `:shoptalk:testReleaseUnitTest :shoptalk:assembleRelease :shoptalk-compose:assembleRelease :sample:assembleDebug` | thành công. Lần đầu lỗi biên dịch test: `JSONObject.similar` không có trong `org.json` của `android.jar`; đã thay bằng so sánh cấu trúc tự viết trong `ShopTalkIdentityTest` |
+| Lint | `:shoptalk:lintRelease :shoptalk-compose:lintRelease` | 0 error, 2 cảnh báo mỗi module (phụ thuộc có bản mới hơn; đổi locale lúc chạy cần cấu hình App Bundle) |
+| Đóng gói | | `dist/shoptalk-android-0.2.0.aar` 89 KB, `dist/shoptalk-compose-0.2.0.aar` 4,6 KB, `sample-debug.apk` 2,7 MB. `dist/` không commit |
+| Nội dung AAR | `unzip -l` | `classes.jar`, manifest có FileProvider và `<queries>`, `proguard.txt`, `shoptalk_file_paths.xml`, strings 6 ngôn ngữ |
+| App tiêu thụ chỉ có AAR, Kotlin 2.2.0, R8 bật | app mẫu tách rời, `implementation(files("libs/shoptalk-android-0.2.0.aar"))` | `assembleRelease` thành công, APK 267 KB sau minify; `mapping.txt` cho thấy `ShopTalkBridge.postMessage` giữ nguyên tên (`@JavascriptInterface`), dù tên lớp bị đổi |
+
+Lưu ý khi app dùng AGP 8.5.2 với Kotlin 2.2.0: tác vụ lint của AGP in dòng `e: … Module was compiled with an
+incompatible version of Kotlin … expected version is 2.0.0` cho cả `kotlin-stdlib 2.2.0`. Đó là bộ phân tích Kotlin
+2.0.0 nằm trong lint của AGP 8.5, không phải lỗi của AAR, và build vẫn thành công. Muốn hết dòng này thì nâng AGP
+(KGP 2.2.0 hỗ trợ tới 8.10.0).
+
+Chưa chạy bằng wrapper 8.7 như `gradle-wrapper.properties` ghi; kết quả ở trên là với Gradle 8.14.3.
+
+## 6. Chưa kiểm: thiết bị và emulator
+
+Không có thiết bị nào kết nối (`adb devices` rỗng) và không cài emulator: system image API 35 nặng khoảng 1,5 đến
+2 GB, vượt quá chỗ trống và RAM của máy này. Việc còn lại là TCR 14 hạng mục (camera, chooser, màn lỗi, xoay màn,
+cỡ chữ 130 %, back, link ngoài, đổi tài khoản, dark mode) trên thiết bị thật hoặc emulator. Cách nhẹ nhất: cắm điện
+thoại Android bật USB debugging rồi
+
+```bash
+adb reverse tcp:5174 tcp:5174 && adb reverse tcp:3010 tcp:3010
+./gradlew :sample:installDebug   # sample dùng http://localhost:5174/ qua allowInsecureUrl
+```
