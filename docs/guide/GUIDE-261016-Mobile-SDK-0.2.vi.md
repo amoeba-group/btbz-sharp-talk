@@ -104,12 +104,16 @@ chat.identityProvider = ShopTalkIdentityProvider {
 }
 ```
 
-- Trả `null` = chưa đăng nhập, người dùng chat với tư cách khách. SDK **không tự logout** khi gặp `null` (giữ hội thoại khách liền mạch).
-- Provider ném lỗi: SDK gọi `onError(ShopTalkError.IdentityProviderFailed(cause))` và chat tiếp như khách.
-- **Đổi tài khoản hoặc đăng xuất khỏi app: bắt buộc gọi `chat.logout()`** rồi `chat.reload()` (provider được hỏi lại). WebView giữ phiên chat
-  giữa các lần mở app. Nếu app gọi nhận diện cho người khác mà không `logout()`, máy chủ gắn phiên cũ sang người mới và người mới thấy
-  hội thoại của người trước (đã tái hiện hai lần trên emulator, TCR-261016 §8). Gọi `logout()` ở chính chỗ app xóa phiên đăng nhập của mình,
-  không chờ tới lần nhận diện kế tiếp.
+- Trả `null` = chưa ai đăng nhập: người dùng chat với tư cách khách. Nếu trước đó **đã có người được nhận diện trên máy này**, SDK tự
+  đăng xuất widget (về khách mới) trước khi tiếp tục. Nếu chưa từng có ai, SDK không động tới hội thoại khách.
+- Provider ném lỗi: SDK gọi `onError(ShopTalkError.IdentityProviderFailed(cause))` và **không đổi gì** (lỗi backend của app không nói được ai đang đăng nhập).
+- **Tự đăng xuất khi đổi người dùng.** SDK nhớ dấu vết SHA-256 của `userId` lần nhận diện trước, theo từng widget và cửa hàng, trong
+  `SharedPreferences` riêng của app (không lưu `userId` thô). Khi `userId` mới khác, hoặc provider trả `null` sau một người dùng,
+  SDK gửi `logout` rồi mới `identify`. Nhờ vậy người sau không vào nhầm hội thoại của người trước dù app quên gọi `logout()`
+  (lỗi đã tái hiện trên emulator, TCR-261016 §8 và §9). Cùng một người mở lại app thì giữ nguyên hội thoại.
+- App vẫn nên gọi `chat.logout()` ở chính chỗ nó xóa phiên đăng nhập của mình: SDK chỉ ra tay ở lần nhận diện kế tiếp, còn `logout()` xóa ngay.
+- Xóa dữ liệu app hoặc cài lại thì dấu vết mất theo WebView; khôi phục sao lưu sang máy khác có thể mang dấu vết nhưng không mang WebView, hậu quả
+  chỉ là một lần đăng xuất thừa.
 - `chat.identify(identity)` thủ công vẫn còn nhưng **chỉ gửi một lần**, không gửi lại khi reload. Dùng provider cho app thật.
 - `ShopTalkUser` (0.1.0) còn biên dịch được nhưng đã deprecated.
 
@@ -257,7 +261,7 @@ adb shell am start -n site.amoeba.shoptalk.sample/.MainActivity \
 | ☐ | Chuỗi ký `attributes`: `userId\nkhóa=giá trị`, khóa theo thứ tự chữ cái, bỏ giá trị rỗng | Sai là bị từ chối, chat như khách |
 | ☐ | Không khai báo `CAMERA` nếu không dùng | Tránh `SecurityException` khi chụp ảnh |
 | ☐ | `errorHotline` đã điền | Màn lỗi có lối thoát |
-| ☐ | Đổi tài khoản: `logout()` rồi `reload()` | Tránh dính phiên của người trước |
+| ☐ | Đổi tài khoản: mở app với `userId` khác (không gọi `logout()`) | Người mới thấy hội thoại trống, người cũ còn nguyên hội thoại của mình |
 | ☐ | `allowInsecureUrl` chỉ trong build debug | Release phải https |
 | ☐ | Giữ `consumer-rules.pro` (đã nằm trong AAR) khi bật minify | `@JavascriptInterface` phải còn |
 | ☐ | Không log `userId`, `hash`, nội dung chat | NFR-M01 |

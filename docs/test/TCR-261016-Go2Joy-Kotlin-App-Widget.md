@@ -186,8 +186,23 @@ Bộ test tự động chạy cùng lúc:
 | # | Mức | Phát hiện | Trạng thái |
 |---|---|---|---|
 | F1 | Cao | Sau `logout` giao diện vẫn hiện tin của người trước | **Đã sửa** trong `useChat` (đặt lại tin, con trỏ và trạng thái khi token đổi; bỏ qua phản hồi của phiên cũ) |
-| F2 | Cao, quyền riêng tư | Nhận diện người khác mà **không** `logout()`: máy chủ gắn phiên cũ sang khách mới, khách mới thấy hội thoại cũ. Tái hiện hai lần (A sang người mới, B sang C). Hợp đồng `attributes` trên main không tách phiên | **Mở.** Giảm nhẹ bằng hướng dẫn (bắt buộc `logout()`). Nên làm thêm: SDK ghi nhớ băm của userId lần trước và tự `logout` khi khác; máy chủ từ chối hoặc tách phiên (nhánh stage1-complete có tách phiên) |
+| F2 | Cao, quyền riêng tư. **Đã giảm nhẹ ở SDK, xem §9** | Nhận diện người khác mà **không** `logout()`: máy chủ gắn phiên cũ sang khách mới, khách mới thấy hội thoại cũ. Tái hiện hai lần (A sang người mới, B sang C). Hợp đồng `attributes` trên main không tách phiên | **Mở.** Giảm nhẹ bằng hướng dẫn (bắt buộc `logout()`). Nên làm thêm: SDK ghi nhớ băm của userId lần trước và tự `logout` khi khác; máy chủ từ chối hoặc tách phiên (nhánh stage1-complete có tách phiên) |
 | F3 | Thấp | Menu dạng thẻ hiện nhãn tiếng Anh trong ngôn ngữ `vi`; thẻ đồng ý có hai dòng tiếng Anh ("What we collect", "Why") | Mở, ở widget web |
 | F4 | Thấp | Sau khi kết thúc, danh sách không cuộn xuống hết nên thẻ đánh giá bị ô nhập che nửa dưới tới khi cuộn | Mở |
 | F5 | Nội dung | Kịch bản mở đầu và kho tri thức trong DB nháp là của cửa hàng Mỹ (Delivery Status, chính sách Mỹ), AI trả lời dài tiếng Anh. Chưa phải nội dung khách sạn Go2Joy | Mở, không thuộc SDK |
 | F6 | Môi trường | Sau khi Docker khởi động lại, container đã chạy nhưng cổng chưa mở ra máy chủ; `docker restart` mới mở | Ghi nhận |
+
+## 9. SDK tự đăng xuất khi đổi người dùng (2026-10-19)
+
+Sửa F2: SDK nhớ dấu vết SHA-256 của `userId` đã nhận diện lần trước (theo widget và cửa hàng) và gửi `logout` trước `identify` khi người dùng đổi
+hoặc khi provider trả `null` sau một người dùng. Lỗi của provider không đổi gì. Quy tắc nằm trong lớp thuần `SessionOwner`.
+
+| # | Kiểm | Kết quả |
+|---|---|---|
+| O1 | Test đơn vị `SessionOwnerTest` (10 ca): lần đầu, cùng người, khác người, đăng xuất rồi `null` lần nữa, khách chưa từng nhận diện, khách rồi đăng nhập, tự `logout()` rồi người khác, theo từng widget và cửa hàng, không lưu `userId` thô, dấu vết ổn định | 10/10; tổng SDK 63/63, lint 0 lỗi, build release và app mẫu thành công |
+| O2 | Emulator: A có hội thoại 3 tin, mở lại app với B, **không gọi `logout()`** | B có khách hàng mới và **phiên mới**, hội thoại trống; phiên của A còn nguyên khách hàng và 3 tin |
+| O3 | Emulator: B rồi mở app không có danh tính (đã đăng xuất khỏi app) | phiên khách mới, phiên của B không bị đụng |
+| O4 | Emulator: C gửi tin, mở lại app với đúng C | cùng phiên, không tạo phiên mới, hội thoại còn |
+
+Chưa kiểm: nhánh provider ném lỗi (không đổi gì) chỉ có trong mã, và đường `identify(identity)` thủ công gọi trước khi widget sẵn sàng. Hợp đồng `attributes` trên
+main vẫn gắn lại phiên khi một app khác (không dùng SDK, như web) nhận diện người khác mà không `logout`; chỗ đó cần máy chủ tách phiên (nhánh stage1-complete).

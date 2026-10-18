@@ -14,7 +14,7 @@
 
 | 영역 | 변경 |
 |---|---|
-| 신원 | `ShopTalkIdentity`(백엔드가 서명한 패키지를 **그대로** 전달) + `ShopTalkIdentityProvider`(ready·reload·`identity-expired`마다 새로 요청). **identify JSON 캐시·재전송 제거** — 0.1.0에서 올리는 앱은 provider를 설정할 것. `ShopTalkUser`는 deprecated(컴파일은 됨) |
+| 신원 | `ShopTalkIdentity`(백엔드가 서명한 패키지를 **그대로** 전달) + `ShopTalkIdentityProvider`(ready·reload·`identity-expired`마다 새로 요청). **identify JSON 캐시·재전송 제거** — 0.1.0에서 올리는 앱은 provider를 설정할 것. `ShopTalkUser`는 deprecated(컴파일은 됨). **사용자가 바뀌면 SDK가 먼저 위젯을 로그아웃한다**(이전 `userId`의 SHA-256만 앱 전용 SharedPreferences에 보관). provider가 `null`을 줄 때 이전 사용자가 있었다면 마찬가지 |
 | 설정 | `ShopTalkConfig`에 `accessKey`, `header`(null/WIDGET/NATIVE), `startTab`, `attachments`, `errorHotline`, `allowInsecureUrl`. `widgetUrl`은 https 필수 |
 | 명령 | `setContext`, `openSettings`, `endConversation`, `reload` |
 | 이벤트 | `onIdentityExpired`, `onOpenUrl(Uri): Boolean`, `onUnread`, `onError(ShopTalkError)` |

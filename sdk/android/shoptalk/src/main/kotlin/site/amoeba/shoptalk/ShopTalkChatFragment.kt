@@ -48,6 +48,8 @@ import java.util.Locale
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import site.amoeba.shoptalk.internal.PrefsSessionStore
+import site.amoeba.shoptalk.internal.SessionOwner
 import site.amoeba.shoptalk.internal.AttachmentRules
 import site.amoeba.shoptalk.internal.ConfigBundle
 import site.amoeba.shoptalk.internal.ShopTalkBridge
@@ -83,6 +85,10 @@ class ShopTalkChatFragment : Fragment() {
      * Asked for a fresh signed identity when the widget is ready, after every reload,
      * and on `identity-expired`. Setting it after the widget is already ready (and
      * none was set before) triggers one request right away.
+     *
+     * Returning null means nobody is signed in. If someone WAS identified on this device before, the
+     * SDK logs the widget out first, and it does the same when a different user comes back, so the
+     * next person never lands in the previous person's conversation. A provider that throws changes nothing.
      */
     var identityProvider: ShopTalkIdentityProvider? = null
         set(value) {
@@ -113,6 +119,11 @@ class ShopTalkChatFragment : Fragment() {
 
     private var uiLocale: String? = null
     private var identityJob: Job? = null
+
+    /** An identity the host passed to [identify] before the widget was ready; delivered once it is. */
+    private var manualIdentity: ShopTalkIdentity? = null
+
+    private var sessionOwner: SessionOwner? = null
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private val loadTimeout = Runnable { if (!widgetReady) showError(ShopTalkError.LoadTimeout) }
@@ -152,7 +163,13 @@ class ShopTalkChatFragment : Fragment() {
      * Announce a signed identity ONCE. It is not re-sent when the widget reloads
      * (a cached signature may have expired): set [identityProvider] for that.
      */
-    fun identify(identity: ShopTalkIdentity) = send(ShopTalkProtocol.identifyJson(identity))
+    fun identify(identity: ShopTalkIdentity) {
+        if (widgetReady && webView != null) {
+            deliverIdentity(identity)
+        } else {
+            manualIdentity = identity
+        }
+    }
 
     @Deprecated("Use identify(ShopTalkIdentity) or identityProvider", ReplaceWith("identify(user.toIdentity())"))
     @Suppress("DEPRECATION")
@@ -179,7 +196,9 @@ class ShopTalkChatFragment : Fragment() {
      */
     fun logout() {
         identityJob?.cancel()
+        manualIdentity = null
         pending.removeAll { it.contains("ivy:identify") }
+        owner()?.onLogout(ownerScope())
         send(ShopTalkProtocol.logoutJson())
     }
 
@@ -378,6 +397,10 @@ class ShopTalkChatFragment : Fragment() {
         config.startTab?.let { evaluate(ShopTalkProtocol.openJson(it.wire)) }
         lastContextJson?.let(::evaluate)
         while (pending.isNotEmpty()) evaluate(pending.removeFirst())
+        manualIdentity?.let {
+            manualIdentity = null
+            deliverIdentity(it)
+        }
         requestIdentity()
     }
 
@@ -386,19 +409,42 @@ class ShopTalkChatFragment : Fragment() {
         if (view == null) return
         identityJob?.cancel()
         identityJob = viewLifecycleOwner.lifecycleScope.launch {
-            val identity = try {
-                provider.identity()
+            val answer = try {
+                Result.success(provider.identity())
             } catch (e: CancellationException) {
                 throw e
             } catch (t: Throwable) {
-                // The visitor continues as a guest; the host decides what to do about it.
+                // The host's backend failed, which says nothing about who is signed in: leave the
+                // widget as it is and let the host decide what to do about it.
                 emitError(ShopTalkError.IdentityProviderFailed(t))
-                null
+                Result.failure(t)
             }
             // A reload while the provider was busy: that page will ask again.
-            if (identity != null && widgetReady) evaluate(ShopTalkProtocol.identifyJson(identity))
+            if (answer.isSuccess && widgetReady) deliverIdentity(answer.getOrNull())
         }
     }
+
+    /**
+     * The one way an identity (or "nobody") reaches the widget. If the WebView still holds another
+     * user's session, drop it first: the widget parks the identify that follows until its fresh
+     * guest session exists, so the order here is the order that takes effect.
+     */
+    private fun deliverIdentity(identity: ShopTalkIdentity?) {
+        val step = owner()?.onIdentity(ownerScope(), identity?.userId) ?: SessionOwner.Step.KEEP
+        if (step == SessionOwner.Step.LOGOUT_FIRST) evaluate(ShopTalkProtocol.logoutJson())
+        if (identity != null) evaluate(ShopTalkProtocol.identifyJson(identity))
+    }
+
+    private fun owner(): SessionOwner? {
+        sessionOwner?.let { return it }
+        val ctx = context ?: return null
+        return SessionOwner(PrefsSessionStore(ctx)).also { sessionOwner = it }
+    }
+
+    /** One owner per widget and shop: the same app may talk to more than one tenant. */
+    private fun ownerScope(): String =
+        if (::config.isInitialized) config.widgetUrl.trimEnd('/') + "|" + (config.shop ?: "") else ""
+
 
     private fun send(json: String) {
         if (widgetReady && webView != null) {
