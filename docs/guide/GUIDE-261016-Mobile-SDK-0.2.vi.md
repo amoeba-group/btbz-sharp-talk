@@ -247,6 +247,12 @@ adb shell am start -n site.amoeba.shoptalk.sample/.MainActivity \
 
 ## 11. Giới hạn đã biết ở 0.2.0
 
+- **Đổi cấu hình lúc đang chạy** (xoay màn, dark mode, cỡ chữ hệ thống) làm Activity bị tạo lại: widget tải lại trong khoảng 2 giây,
+  `identityProvider` được gọi lại để ký (backend của app phải chịu được việc này) và chip ngữ cảnh biến mất. Hãy gọi lại
+  `chat.setContext(...)` khi `onReady` bắn, hoặc khai báo `android:configChanges="orientation|screenSize|uiMode|fontScale|keyboardHidden"` cho Activity chứa chat.
+- `ShopTalkListener.onReady` có thể bắn hai lần trong một lần tải; `identityProvider` thì chỉ bị gọi một lần.
+- Màn ngang dùng được nhưng vùng tin nhắn thấp; nên khóa dọc cho Activity chat nếu thiết kế cho phép.
+- Hộp chọn tệp và màn lỗi của SDK dùng giao diện Material mặc định, chưa theo màu thương hiệu của app.
 - Chưa có push nền, badge ngoài màn chat (chỉ `onUnread` khi màn đang mở), dark mode của widget, iOS.
 - Hội thoại gắn với session trên thiết bị; web và app không nối tiếp nhau.
 - SDK 0.2.0 chưa tự gọi `GET /public/widget/app-config`; widget gọi để áp cấu hình admin (kể cả `header` khi app để `null`).

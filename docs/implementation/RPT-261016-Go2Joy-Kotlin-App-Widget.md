@@ -8,7 +8,7 @@
 | Hạng mục | Trạng thái |
 |---|---|
 | PR | **chưa mở**, nhánh chưa push |
-| Commit | `aab60de0` (S2+S3), `8415bfa9` (S9 backend), `62dc18f7` (S8+S9 console, widget), `8f27c23c` (sửa import), `5c041715` (SDK) |
+| Commit | `aab60de0` (S2+S3), `8415bfa9` (S9 backend), `62dc18f7` (S8+S9 console, widget), `8f27c23c` (sửa import), `5c041715` (SDK), `96894a79` (RPT/TCR), `8b997970` (build Gradle/AAR), `872be732` (lỗi từ emulator: ready lặp, inset, mã lặp), `a0eea30b` (ảnh thư viện không tới widget, nút gửi bị cắt). Nhánh `feature/go2joy-kotlin-app-impl`, 17 commit trên `origin/main`, **chưa push** |
 | SQL `261016-tenant-mobile-app-config.sql` | **chưa áp** trên staging, production Hàn Quốc, Go2Joy. Áp **trước** khi deploy code (`DB_SYNCHRONIZE=false` trên staging) |
 | Deploy | chưa deploy môi trường nào |
 | Chạy thử | local, DB nháp `db_kimpl` |
