@@ -169,6 +169,10 @@ export function useEmbedCommands(): void {
             // Clearing the token is not enough: useEnsureSession runs once on
             // mount, so nothing would re-open a session and the widget would sit
             // there unable to send anything. Open the guest session here.
+            // Any session request still in flight (the page's own first ensure, answering late)
+            // belongs to the previous visitor: mark it stale before it can put its token back
+            // or take the parked identify for itself.
+            store.bumpSessionEpoch();
             store.setSessionToken(null);
             store.setAuthenticated(false);
             store.setCustomerName(null);

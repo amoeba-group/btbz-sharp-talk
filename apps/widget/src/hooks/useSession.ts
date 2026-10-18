@@ -260,6 +260,7 @@ export function useEnsureSession() {
     // token the backend returns reaches the store/queries.
     const resumeToken =
       useWidgetStore.getState().sessionToken ?? (embedded ? null : getStoredSessionToken());
+    const epoch = useWidgetStore.getState().sessionEpoch;
     ensureSession(
       resumeToken,
       language,
@@ -295,6 +296,10 @@ export function useEnsureSession() {
               /* an expired token simply shows the live widget */
             });
         }
+        // The host logged the visitor out while this request was in flight: its session is the
+        // previous visitor's. Taking it would put their conversation back on screen, and the
+        // identify the host sent for the next visitor would bind to it instead of the fresh one.
+        if (useWidgetStore.getState().sessionEpoch !== epoch) return;
         // The app-proxy handshake (useEmbedIdentity) may have adopted a
         // customer-bound token while this anonymous ensure was in flight. Don't
         // clobber it: re-read the live store and bail if already authenticated.

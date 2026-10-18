@@ -14,6 +14,11 @@ import java.security.MessageDigest
  *
  * So the SDK keeps a fingerprint (SHA-256, never the raw user id) of the last identified user, per
  * widget and shop, and asks for a logout whenever the next identity is different.
+ *
+ * The stored value must never say "this session is NOT X's" while it still is. So it only ever moves
+ * to a user's fingerprint AFTER the widget confirmed that identify, and in between it holds [RESET],
+ * which means "owner unknown, drop the session before the next identify". A crash, a lost command or
+ * a failed identify therefore costs at most one unnecessary logout, never a leak.
  */
 internal class SessionOwner(private val store: Store) {
 
@@ -26,28 +31,46 @@ internal class SessionOwner(private val store: Store) {
         /** The WebView session belongs to this user, or to nobody: nothing to reset. */
         KEEP,
 
-        /** The WebView session belongs to someone else: reset it to a guest before going on. */
+        /** The WebView session may belong to someone else: reset it to a guest before going on. */
         LOGOUT_FIRST,
     }
 
     /**
-     * [userId] is the identity about to be delivered, or null when the host says nobody is signed in.
-     * Records the new owner and says whether the old one's session must be dropped first.
+     * Call before delivering an identity ([userId]), or before acting on "nobody is signed in" (null).
+     * Says whether the previous session must be dropped first and, when anything is about to change,
+     * parks the stored owner on [RESET] until [committed] says it settled.
      */
-    fun onIdentity(scope: String, userId: String?): Step {
+    fun beforeIdentify(scope: String, userId: String?): Step {
         val key = key(scope)
         val previous = store.read(key)
-        val next = userId?.let(::fingerprint)
-        store.write(key, next)
-        return if (previous != null && previous != next) Step.LOGOUT_FIRST else Step.KEEP
+        if (userId == null) {
+            if (previous == null) return Step.KEEP
+            store.write(key, RESET)
+            return Step.LOGOUT_FIRST
+        }
+        if (previous == fingerprint(userId)) return Step.KEEP
+        store.write(key, RESET)
+        return if (previous == null) Step.KEEP else Step.LOGOUT_FIRST
     }
 
-    /** The host logged the widget out itself: the session is a guest's now. */
-    fun onLogout(scope: String) = store.write(key(scope), null)
+    /**
+     * The new state is real: the widget confirmed the identify of [userId], or (null) the logout was
+     * dispatched so the session is a guest's now.
+     */
+    fun committed(scope: String, userId: String?) = store.write(key(scope), userId?.let(::fingerprint))
+
+    /** The host asked for the logout itself and it went out: the session is a guest's now. */
+    fun loggedOut(scope: String) = committed(scope, null)
+
+    /** The host asked for a logout that could not be sent yet: remember that the owner is unknown. */
+    fun logoutPending(scope: String) = store.write(key(scope), RESET)
 
     private fun key(scope: String) = "owner|$scope"
 
     companion object {
+        /** Cannot collide with a fingerprint (those are 64 hex characters). */
+        const val RESET = "reset"
+
         /** Stable, one-way, 64 hex characters. */
         fun fingerprint(userId: String): String =
             MessageDigest.getInstance("SHA-256")
@@ -63,7 +86,9 @@ internal class PrefsSessionStore(context: Context) : SessionOwner.Store {
 
     override fun read(key: String): String? = prefs.getString(key, null)
 
+    // commit(), not apply(): a write that is still in memory when the process dies is the exact
+    // failure this class exists to survive. One tiny file, written rarely.
     override fun write(key: String, value: String?) {
-        prefs.edit().apply { if (value == null) remove(key) else putString(key, value) }.apply()
+        prefs.edit().apply { if (value == null) remove(key) else putString(key, value) }.commit()
     }
 }

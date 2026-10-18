@@ -20,85 +20,128 @@ class SessionOwnerTest {
     }
 
     private val scope = "https://talk.example.com/widget|https://www.go2joy.vn"
+    private val store = MemoryStore()
+    private val owner = SessionOwner(store)
 
-    private fun owner(store: MemoryStore = MemoryStore()) = SessionOwner(store) to store
+    private fun stored() = store.data.values.singleOrNull()
 
-    @Test
-    fun `the first identity on a device needs no reset`() {
-        val (o, _) = owner()
-        assertEquals(Step.KEEP, o.onIdentity(scope, "alice"))
+    /** A full, uneventful sign-in: before, then the widget's confirmation. */
+    private fun signIn(userId: String): Step {
+        val step = owner.beforeIdentify(scope, userId)
+        owner.committed(scope, userId)
+        return step
     }
 
     @Test
-    fun `the same user coming back keeps the session`() {
-        val (o, _) = owner()
-        o.onIdentity(scope, "alice")
-        assertEquals(Step.KEEP, o.onIdentity(scope, "alice"))
-        assertEquals(Step.KEEP, o.onIdentity(scope, "alice"))
+    fun `the first identity on a device needs no reset`() {
+        assertEquals(Step.KEEP, owner.beforeIdentify(scope, "alice"))
+    }
+
+    @Test
+    fun `the same user coming back keeps the session and writes nothing`() {
+        signIn("alice")
+        val before = store.data.toMap()
+        assertEquals(Step.KEEP, owner.beforeIdentify(scope, "alice"))
+        assertEquals(before, store.data)
     }
 
     @Test
     fun `a different user must drop the previous session first`() {
-        val (o, _) = owner()
-        o.onIdentity(scope, "alice")
-        assertEquals(Step.LOGOUT_FIRST, o.onIdentity(scope, "bob"))
-        // and Bob is the owner now
-        assertEquals(Step.KEEP, o.onIdentity(scope, "bob"))
+        signIn("alice")
+        assertEquals(Step.LOGOUT_FIRST, owner.beforeIdentify(scope, "bob"))
+        owner.committed(scope, "bob")
+        assertEquals(Step.KEEP, owner.beforeIdentify(scope, "bob"))
     }
 
     @Test
-    fun `signed out after a user must drop the session, signed out again must not`() {
-        val (o, store) = owner()
-        o.onIdentity(scope, "alice")
-        assertEquals(Step.LOGOUT_FIRST, o.onIdentity(scope, null))
-        assertTrue(store.data.isEmpty())
-        assertEquals(Step.KEEP, o.onIdentity(scope, null))
+    fun `until the identify is confirmed the owner is parked on reset, never on the new user`() {
+        signIn("alice")
+        owner.beforeIdentify(scope, "bob")
+        assertEquals(SessionOwner.RESET, stored())
+        assertNotEquals(SessionOwner.fingerprint("bob"), stored())
     }
 
     @Test
-    fun `a guest who never identified is left alone`() {
-        val (o, _) = owner()
-        assertEquals(Step.KEEP, o.onIdentity(scope, null))
+    fun `a crash before the confirmation forces a logout for whoever comes next, even the same user`() {
+        signIn("alice")
+        owner.beforeIdentify(scope, "bob") // process dies here: no committed()
+        assertEquals(Step.LOGOUT_FIRST, owner.beforeIdentify(scope, "bob"))
+        assertEquals(Step.LOGOUT_FIRST, owner.beforeIdentify(scope, "carol"))
+        assertEquals(Step.LOGOUT_FIRST, owner.beforeIdentify(scope, null))
+    }
+
+    @Test
+    fun `a failed identify leaves reset in place so the next launch starts clean`() {
+        owner.beforeIdentify(scope, "alice") // identify rejected: committed() is never called
+        assertEquals(SessionOwner.RESET, stored())
+        assertEquals(Step.LOGOUT_FIRST, owner.beforeIdentify(scope, "alice"))
     }
 
     @Test
     fun `a guest who then signs in keeps the conversation`() {
-        val (o, _) = owner()
-        o.onIdentity(scope, null)
-        assertEquals(Step.KEEP, o.onIdentity(scope, "alice"))
+        assertEquals(Step.KEEP, owner.beforeIdentify(scope, null))
+        assertEquals(Step.KEEP, owner.beforeIdentify(scope, "alice"))
+    }
+
+    @Test
+    fun `signed out after a user drops the session, then signed out again does not`() {
+        signIn("alice")
+        assertEquals(Step.LOGOUT_FIRST, owner.beforeIdentify(scope, null))
+        assertEquals(SessionOwner.RESET, stored())
+        owner.committed(scope, null) // the logout went out
+        assertTrue(store.data.isEmpty())
+        assertEquals(Step.KEEP, owner.beforeIdentify(scope, null))
+    }
+
+    @Test
+    fun `a logout that was never dispatched keeps reset so the next identify still resets`() {
+        signIn("alice")
+        owner.beforeIdentify(scope, null) // evaluate() refused: no committed(null)
+        assertEquals(Step.LOGOUT_FIRST, owner.beforeIdentify(scope, "alice"))
+    }
+
+    @Test
+    fun `a guest who never identified is left alone and nothing is stored`() {
+        assertEquals(Step.KEEP, owner.beforeIdentify(scope, null))
+        assertTrue(store.data.isEmpty())
     }
 
     @Test
     fun `after the host logged out itself the next user needs no second reset`() {
-        val (o, _) = owner()
-        o.onIdentity(scope, "alice")
-        o.onLogout(scope)
-        assertEquals(Step.KEEP, o.onIdentity(scope, "bob"))
+        signIn("alice")
+        owner.loggedOut(scope)
+        assertEquals(Step.KEEP, owner.beforeIdentify(scope, "bob"))
+    }
+
+    @Test
+    fun `a manual logout that could not be sent yet marks the owner unknown`() {
+        signIn("alice")
+        owner.logoutPending(scope)
+        assertEquals(Step.LOGOUT_FIRST, owner.beforeIdentify(scope, "alice"))
     }
 
     @Test
     fun `owners are tracked per widget and shop`() {
-        val (o, _) = owner()
         val other = "https://other.example.com/widget|https://shop.example.com"
-        o.onIdentity(scope, "alice")
-        assertEquals(Step.KEEP, o.onIdentity(other, "bob"))
-        assertEquals(Step.LOGOUT_FIRST, o.onIdentity(scope, "bob"))
+        signIn("alice")
+        assertEquals(Step.KEEP, owner.beforeIdentify(other, "bob"))
+        assertEquals(Step.LOGOUT_FIRST, owner.beforeIdentify(scope, "bob"))
     }
 
     @Test
     fun `the store never holds the raw user id`() {
-        val (o, store) = owner()
-        o.onIdentity(scope, "alice@example.com")
-        val stored = store.data.values.single()
-        assertFalse(stored.contains("alice"))
-        assertEquals(64, stored.length)
-        assertTrue(stored.all { it in '0'..'9' || it in 'a'..'f' })
+        signIn("alice@example.com")
+        val value = stored()!!
+        assertFalse(value.contains("alice"))
+        assertEquals(64, value.length)
+        assertTrue(value.all { it in '0'..'9' || it in 'a'..'f' })
     }
 
     @Test
-    fun `fingerprints are stable and differ per user`() {
+    fun `fingerprints are stable, differ per user, and never equal the reset marker`() {
         assertEquals(SessionOwner.fingerprint("42"), SessionOwner.fingerprint("42"))
         assertNotEquals(SessionOwner.fingerprint("42"), SessionOwner.fingerprint("43"))
+        assertNotEquals(SessionOwner.RESET, SessionOwner.fingerprint("reset"))
         assertNull(MemoryStore().read("owner|x"))
     }
 }

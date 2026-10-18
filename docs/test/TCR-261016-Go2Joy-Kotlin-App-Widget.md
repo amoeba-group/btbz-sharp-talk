@@ -197,12 +197,28 @@ Bộ test tự động chạy cùng lúc:
 Sửa F2: SDK nhớ dấu vết SHA-256 của `userId` đã nhận diện lần trước (theo widget và cửa hàng) và gửi `logout` trước `identify` khi người dùng đổi
 hoặc khi provider trả `null` sau một người dùng. Lỗi của provider không đổi gì. Quy tắc nằm trong lớp thuần `SessionOwner`.
 
+**Thiết kế sau khi rà soát lại.** Bản đầu ghi người mới vào bộ nhớ trước khi đăng xuất thật sự xảy ra: app bị tắt hoặc lệnh bị bỏ sót đúng lúc đó thì
+bộ nhớ nói "B" trong khi phiên vẫn của A, và lần mở sau B vào thẳng phiên của A. Bản cuối ghi `reset` ("chủ phiên chưa rõ, đăng xuất trước khi nhận diện")
+rồi chỉ chuyển sang dấu vết người mới khi widget báo `identified ok`; lưu bằng `commit()` để không mất khi tiến trình chết. Hệ quả xấu nhất còn lại
+là một lần đăng xuất thừa.
+
+**Lỗi đua trong widget tìm thấy khi chạy thiết bị.** Khi mở lại app với người dùng khác (hoặc ca bị gián đoạn), lệnh `logout` và `identify` của SDK đến lúc
+widget còn đang chờ lần tạo phiên đầu tiên của chính trang. Phản hồi muộn đó (a) đặt lại token phiên cũ, hoặc (b) nhận luôn lệnh `identify` đang chờ, nên
+nhận diện rơi vào phiên cũ trong khi widget chuyển sang phiên khách mới: người dùng thành khách dù SDK đã ghi là đã nhận diện. Ca "người cũ trở lại sau gián đoạn"
+hỏng 2 trên 2 lần. Sửa trong widget: `sessionEpoch` tăng khi `logout`; phản hồi tạo phiên bắt đầu trước đó bị bỏ qua.
+
 | # | Kiểm | Kết quả |
 |---|---|---|
-| O1 | Test đơn vị `SessionOwnerTest` (10 ca): lần đầu, cùng người, khác người, đăng xuất rồi `null` lần nữa, khách chưa từng nhận diện, khách rồi đăng nhập, tự `logout()` rồi người khác, theo từng widget và cửa hàng, không lưu `userId` thô, dấu vết ổn định | 10/10; tổng SDK 63/63, lint 0 lỗi, build release và app mẫu thành công |
-| O2 | Emulator: A có hội thoại 3 tin, mở lại app với B, **không gọi `logout()`** | B có khách hàng mới và **phiên mới**, hội thoại trống; phiên của A còn nguyên khách hàng và 3 tin |
-| O3 | Emulator: B rồi mở app không có danh tính (đã đăng xuất khỏi app) | phiên khách mới, phiên của B không bị đụng |
-| O4 | Emulator: C gửi tin, mở lại app với đúng C | cùng phiên, không tạo phiên mới, hội thoại còn |
+| O1 | Test đơn vị `SessionOwnerTest` (15 ca): lần đầu, cùng người không ghi gì, khác người, dấu vết `reset` giữa chừng, tắt app trước xác nhận, nhận diện bị từ chối, khách rồi đăng nhập, đăng xuất rồi `null` lần nữa, đăng xuất chưa gửi được, theo từng widget và cửa hàng, không lưu `userId` thô, dấu vết ổn định | 15/15; tổng SDK 68/68, lint 0 lỗi, build release, app mẫu và app khách R8 minSdk 21 JVM 11 thành công |
+| O2 | Thiết bị M0: P1 đăng nhập, gửi một tin | phiên của P1, 2 tin, dấu vết = SHA-256 của P1 |
+| O3 | M1: mở lại với P2, app **không** gọi `logout()` | khách hàng mới, phiên mới; phiên của P1 còn nguyên; dấu vết = P2 |
+| O4 | M2: provider ném lỗi | không đổi gì: cùng phiên, dấu vết không đổi |
+| O5 | M3: P3 qua `identify()` thủ công gọi trước khi widget sẵn sàng | phiên mới cho P3, dấu vết = P3 |
+| O6 | M4: P3 lại qua `identify()` | không tạo phiên mới |
+| O7 | M5: dấu vết bị ép về `reset` (mô phỏng gián đoạn), P3 trở lại | **sau sửa widget**: phiên mới được gắn đúng P3, dấu vết về P3. Trước sửa: phiên khách mới không có danh tính |
+| O8 | M6: xoay màn hình hai lần cùng người | không tạo phiên mới |
+| O9 | M7: app không còn người đăng nhập (provider trả `null`) | phiên khách mới, dấu vết xóa |
+| O10 | Lặp 6 lần đổi qua lại A, B và 3 lần "gián đoạn rồi trở lại" | 9/9 đạt: mỗi lần phiên mới đúng khách hàng, không phiên nào đổi chủ, dấu vết khớp |
 
-Chưa kiểm: nhánh provider ném lỗi (không đổi gì) chỉ có trong mã, và đường `identify(identity)` thủ công gọi trước khi widget sẵn sàng. Hợp đồng `attributes` trên
-main vẫn gắn lại phiên khi một app khác (không dùng SDK, như web) nhận diện người khác mà không `logout`; chỗ đó cần máy chủ tách phiên (nhánh stage1-complete).
+Còn lại: hợp đồng `attributes` trên main vẫn gắn lại phiên khi một app khác (không dùng SDK, như web) nhận diện người khác mà không `logout`; chỗ đó cần máy chủ tách phiên
+(nhánh stage1-complete). Khi người cũ trở lại sau một lần gián đoạn, họ nhận phiên mới thay vì phiên cũ của mình.

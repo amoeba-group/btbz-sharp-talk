@@ -83,6 +83,11 @@ interface WidgetState {
    * the next message. Null once sent or removed.
    */
   hostContext: HostContext | null;
+  /**
+   * Bumped by the host's `logout`. A session request that started before the bump belongs to the
+   * previous visitor: when it answers late it must not put its token back (see useEnsureSession).
+   */
+  sessionEpoch: number;
   /** Bumped by the host's `end` command; ChatTab opens its end-chat confirm on change. */
   endRequest: number;
   /**
@@ -121,6 +126,7 @@ interface WidgetState {
    */
   chatUnread: number;
   setSessionToken: (t: string | null) => void;
+  bumpSessionEpoch: () => void;
   setActiveTab: (t: TabKey) => void;
   setPanelOpen: (open: boolean) => void;
   togglePanel: () => void;
@@ -187,6 +193,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   consent: null,
   pendingChatMessage: null,
   hostContext: null,
+  sessionEpoch: 0,
   endRequest: 0,
   notificationFilter: 'all',
   visibleTabs: [...WIDGET_TABS_DEFAULT],
@@ -199,6 +206,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
     setStoredSessionToken(t);
     set({ sessionToken: t });
   },
+  bumpSessionEpoch: () => set((s) => ({ sessionEpoch: s.sessionEpoch + 1 })),
   setActiveTab: (t) => set({ activeTab: t, chatUnread: t === 'chat' ? 0 : get().chatUnread }),
   setPanelOpen: (open) => set({ panelOpen: open }),
   togglePanel: () => set((s) => ({ panelOpen: !s.panelOpen })),

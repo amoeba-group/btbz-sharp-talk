@@ -16,6 +16,8 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.commit
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import site.amoeba.shoptalk.ShopTalkChatFragment
 import site.amoeba.shoptalk.ShopTalkConfig
 import site.amoeba.shoptalk.ShopTalkContext
@@ -39,6 +41,7 @@ import site.amoeba.shoptalk.ShopTalkListener
 class MainActivity : FragmentActivity() {
 
     private lateinit var backend: FakeBackend
+    private var manualIdentifyDone = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,8 +99,16 @@ class MainActivity : FragmentActivity() {
     private fun attachHostCallbacks() {
         chat()?.apply {
             listener = hostListener
-            // Asked when the widget is ready, on every reload, and on identity-expired.
-            identityProvider = ShopTalkIdentityProvider { backend.sharpTalkIdentity() }
+            if (intent.getBooleanExtra("manual_identify", false)) {
+                // Verification switch: the one-shot identify() path, issued before the widget is ready.
+                if (!manualIdentifyDone) {
+                    manualIdentifyDone = true
+                    lifecycleScope.launch { backend.sharpTalkIdentity()?.let { identify(it) } }
+                }
+            } else {
+                // Asked when the widget is ready, on every reload, and on identity-expired.
+                identityProvider = ShopTalkIdentityProvider { backend.sharpTalkIdentity() }
+            }
         }
     }
 

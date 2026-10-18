@@ -26,6 +26,8 @@ class FakeBackend(private val intent: Intent) {
     suspend fun sharpTalkIdentity(): ShopTalkIdentity? {
         calls++
         delay(300)
+        // Verification switch: the host's own backend is down (the SDK must change nothing).
+        if (intent.getBooleanExtra("identity_fail", false)) error("simulated backend failure")
         intent.getStringExtra("identity_json")?.let { return ShopTalkIdentity.fromJson(it) }
         val userId = intent.getStringExtra("user_id") ?: return null // signed out: guest
         val hash = intent.getStringExtra("user_hash") ?: return null

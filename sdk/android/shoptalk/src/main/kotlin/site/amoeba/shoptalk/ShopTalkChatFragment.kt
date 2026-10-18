@@ -125,6 +125,9 @@ class ShopTalkChatFragment : Fragment() {
 
     private var sessionOwner: SessionOwner? = null
 
+    /** The user whose identify was sent and not yet confirmed by the widget; becomes the stored owner on `identified ok`. */
+    private var awaitingOwner: String? = null
+
     private val mainHandler = Handler(Looper.getMainLooper())
     private val loadTimeout = Runnable { if (!widgetReady) showError(ShopTalkError.LoadTimeout) }
     private var backAnswerTimeout: Runnable? = null
@@ -198,8 +201,8 @@ class ShopTalkChatFragment : Fragment() {
         identityJob?.cancel()
         manualIdentity = null
         pending.removeAll { it.contains("ivy:identify") }
-        owner()?.onLogout(ownerScope())
-        send(ShopTalkProtocol.logoutJson())
+        val dispatched = send(ShopTalkProtocol.logoutJson())
+        owner()?.let { if (dispatched) it.loggedOut(ownerScope()) else it.logoutPending(ownerScope()) }
     }
 
     /** Show or clear the "where in the app" chip. Re-applied after a reload. */
@@ -373,6 +376,7 @@ class ShopTalkChatFragment : Fragment() {
             when (inbound) {
                 ShopTalkProtocol.Inbound.Ready -> onWidgetReady()
                 ShopTalkProtocol.Inbound.IdentityExpired -> requestIdentity()
+                is ShopTalkProtocol.Inbound.Identified -> onIdentified(inbound.ok)
                 is ShopTalkProtocol.Inbound.Back -> onBackAnswer(inbound.handled)
                 is ShopTalkProtocol.Inbound.OpenUrl -> openExternal(inbound.url, fromWidget = true)
                 else -> Unit
@@ -430,9 +434,23 @@ class ShopTalkChatFragment : Fragment() {
      * guest session exists, so the order here is the order that takes effect.
      */
     private fun deliverIdentity(identity: ShopTalkIdentity?) {
-        val step = owner()?.onIdentity(ownerScope(), identity?.userId) ?: SessionOwner.Step.KEEP
-        if (step == SessionOwner.Step.LOGOUT_FIRST) evaluate(ShopTalkProtocol.logoutJson())
+        val owner = owner()
+        val scope = ownerScope()
+        val step = owner?.beforeIdentify(scope, identity?.userId) ?: SessionOwner.Step.KEEP
+        if (step == SessionOwner.Step.LOGOUT_FIRST) {
+            val dispatched = evaluate(ShopTalkProtocol.logoutJson())
+            // "Nobody" is settled once the logout is out; a user is settled when the widget confirms the identify.
+            if (identity == null && dispatched) owner?.loggedOut(scope)
+        }
+        awaitingOwner = identity?.userId
         if (identity != null) evaluate(ShopTalkProtocol.identifyJson(identity))
+    }
+
+    private fun onIdentified(ok: Boolean) {
+        val userId = awaitingOwner ?: return
+        awaitingOwner = null
+        // A failed identify leaves the stored owner on "reset": at worst one needless logout next time.
+        if (ok) owner()?.committed(ownerScope(), userId)
     }
 
     private fun owner(): SessionOwner? {
@@ -446,20 +464,20 @@ class ShopTalkChatFragment : Fragment() {
         if (::config.isInitialized) config.widgetUrl.trimEnd('/') + "|" + (config.shop ?: "") else ""
 
 
-    private fun send(json: String) {
-        if (widgetReady && webView != null) {
-            evaluate(json)
-        } else {
-            if (pending.size >= MAX_PENDING) pending.removeFirst()
-            pending.addLast(json)
-        }
+    /** True when the command went to the page now; false when it was queued for the next ready. */
+    private fun send(json: String): Boolean {
+        if (widgetReady && webView != null) return evaluate(json)
+        if (pending.size >= MAX_PENDING) pending.removeFirst()
+        pending.addLast(json)
+        return false
     }
 
-    private fun evaluate(json: String) {
-        val web = webView ?: return
+    private fun evaluate(json: String): Boolean {
+        val web = webView ?: return false
         // Never hand identity or commands to a page that is not the widget.
-        if (!config.isWidgetOrigin(web.url)) return
+        if (!config.isWidgetOrigin(web.url)) return false
         web.evaluateJavascript(ShopTalkProtocol.injection(json), null)
+        return true
     }
 
     private fun emitError(error: ShopTalkError) {
@@ -470,6 +488,7 @@ class ShopTalkChatFragment : Fragment() {
 
     private fun resetForNewPage() {
         widgetReady = false
+        awaitingOwner = null
         identityJob?.cancel()
         cancelBackWait()
     }

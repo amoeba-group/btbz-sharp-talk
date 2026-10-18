@@ -111,6 +111,8 @@ chat.identityProvider = ShopTalkIdentityProvider {
   `SharedPreferences` riêng của app (không lưu `userId` thô). Khi `userId` mới khác, hoặc provider trả `null` sau một người dùng,
   SDK gửi `logout` rồi mới `identify`. Nhờ vậy người sau không vào nhầm hội thoại của người trước dù app quên gọi `logout()`
   (lỗi đã tái hiện trên emulator, TCR-261016 §8 và §9). Cùng một người mở lại app thì giữ nguyên hội thoại.
+- Dấu vết chỉ chuyển sang người mới **sau khi widget xác nhận nhận diện**. Trong lúc chờ, nó ở trạng thái "cần reset": nếu app bị tắt, lệnh bị mất
+  hoặc chữ ký bị từ chối, lần mở sau chỉ tốn một lần đăng xuất thừa (người đó nhận một phiên mới), không bao giờ lộ hội thoại.
 - App vẫn nên gọi `chat.logout()` ở chính chỗ nó xóa phiên đăng nhập của mình: SDK chỉ ra tay ở lần nhận diện kế tiếp, còn `logout()` xóa ngay.
 - Xóa dữ liệu app hoặc cài lại thì dấu vết mất theo WebView; khôi phục sao lưu sang máy khác có thể mang dấu vết nhưng không mang WebView, hậu quả
   chỉ là một lần đăng xuất thừa.
