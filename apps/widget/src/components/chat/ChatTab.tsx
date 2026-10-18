@@ -164,7 +164,7 @@ export function ChatTab() {
       top: scrollRef.current.scrollHeight,
       behavior: 'smooth',
     });
-  }, [messages, inline, showEscalate, waitMode, endConfirm, status]);
+  }, [messages, inline, showEscalate, waitMode, endConfirm, status, canRate]);
 
   /**
    * Chat tab badge (PLN-260817 W-1). The thread keeps polling while the shopper

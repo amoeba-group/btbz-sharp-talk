@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useWidgetStore, type TabKey } from '../store/widgetStore';
 import {
   ensureSession,
@@ -41,6 +42,7 @@ type IdentifyUser = {
  * the tenant secret, so a hostile page can send one but cannot make it verify.
  */
 export function useEmbedCommands(): void {
+  const queryClient = useQueryClient();
   useEffect(() => {
     if (!hostPresent()) return; // standalone — no host to take commands from
 
@@ -50,6 +52,18 @@ export function useEmbedCommands(): void {
     // last of each is parked here and replayed as soon as the token lands.
     let pendingIdentify: IdentifyUser | null = null;
     let pendingSessionLocale: string | null = null;
+
+    /**
+     * Tell the server which language this session speaks, then refetch what it words per session
+     * language. The opening menu is fetched the moment the session exists, usually before the host's
+     * `locale` command lands, so it came back in the server default (English) and stayed that way
+     * for its 60 s freshness window: a Vietnamese app opened on an English menu.
+     */
+    function syncSessionLanguage(token: string, code: string) {
+      setSessionLanguage(token, code.toUpperCase())
+        .then(() => queryClient.invalidateQueries({ queryKey: ['scenario', token] }))
+        .catch(() => {});
+    }
 
     async function runIdentify(token: string, user: IdentifyUser) {
       const store = useWidgetStore.getState();
@@ -71,7 +85,7 @@ export function useEmbedCommands(): void {
       const token = state.sessionToken;
       if (!token || token === prev.sessionToken) return;
       if (pendingSessionLocale) {
-        setSessionLanguage(token, pendingSessionLocale.toUpperCase()).catch(() => {});
+        syncSessionLanguage(token, pendingSessionLocale);
         pendingSessionLocale = null;
       }
       if (pendingIdentify) {
@@ -126,7 +140,7 @@ export function useEmbedCommands(): void {
               /* ignore storage failures */
             }
             const token = useWidgetStore.getState().sessionToken;
-            if (token) setSessionLanguage(token, code.toUpperCase()).catch(() => {});
+            if (token) syncSessionLanguage(token, code);
             else pendingSessionLocale = code;
             return;
           }
