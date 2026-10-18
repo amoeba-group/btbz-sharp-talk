@@ -7,6 +7,7 @@
     <string name="shoptalk_attach_cancel">Cancelar</string>
     <string name="shoptalk_error_title">No se pudo conectar con soporte</string>
     <string name="shoptalk_error_message">Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="shoptalk_error_webview_outdated">El motor web del dispositivo es demasiado antiguo para el chat. Actualiza Android System WebView en Google Play e inténtalo de nuevo.</string>
     <string name="shoptalk_error_retry">Reintentar</string>
     <string name="shoptalk_error_hotline">Llamar a la línea directa %1$s</string>
 </resources>

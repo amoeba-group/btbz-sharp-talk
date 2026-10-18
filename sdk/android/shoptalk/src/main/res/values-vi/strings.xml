@@ -7,6 +7,7 @@
     <string name="shoptalk_attach_cancel">Hủy</string>
     <string name="shoptalk_error_title">Không kết nối được với bộ phận hỗ trợ</string>
     <string name="shoptalk_error_message">Kiểm tra mạng rồi thử lại.</string>
+    <string name="shoptalk_error_webview_outdated">Công cụ web trên máy quá cũ để dùng trò chuyện. Hãy cập nhật Android System WebView trong Google Play rồi thử lại.</string>
     <string name="shoptalk_error_retry">Thử lại</string>
     <string name="shoptalk_error_hotline">Gọi hotline %1$s</string>
 </resources>

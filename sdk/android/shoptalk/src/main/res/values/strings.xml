@@ -7,6 +7,7 @@
     <string name="shoptalk_attach_cancel">Cancel</string>
     <string name="shoptalk_error_title">Unable to connect to support</string>
     <string name="shoptalk_error_message">Check your connection and try again.</string>
+    <string name="shoptalk_error_webview_outdated">Your device\'s web engine is too old for chat. Update Android System WebView in Google Play, then try again.</string>
     <string name="shoptalk_error_retry">Try again</string>
     <string name="shoptalk_error_hotline">Call hotline %1$s</string>
 </resources>

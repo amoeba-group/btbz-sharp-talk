@@ -1,7 +1,9 @@
 package site.amoeba.shoptalk.sample
 
+import android.content.pm.ApplicationInfo
 import android.graphics.Color
 import android.os.Bundle
+import android.os.StrictMode
 import android.util.Log
 import android.view.Gravity
 import android.view.View
@@ -44,6 +46,12 @@ class MainActivity : FragmentActivity() {
     private var manualIdentifyDone = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Many host apps run StrictMode in debug builds, some with penaltyDeath. The SDK must not touch the disk
+        // or the network on the main thread, so the sample turns it on: a violation names the SDK frame in logcat
+        // (tag StrictMode) instead of showing up later as a freeze on a slow phone.
+        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            StrictMode.setThreadPolicy(StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build())
+        }
         super.onCreate(savedInstanceState)
         backend = FakeBackend(intent)
 

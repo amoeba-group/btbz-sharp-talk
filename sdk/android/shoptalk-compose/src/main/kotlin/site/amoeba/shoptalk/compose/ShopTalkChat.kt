@@ -1,7 +1,13 @@
 package site.amoeba.shoptalk.compose
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.fragment.app.FragmentActivity
 import androidx.fragment.compose.AndroidFragment
 import site.amoeba.shoptalk.ShopTalkChatFragment
 import site.amoeba.shoptalk.ShopTalkConfig
@@ -35,6 +41,18 @@ fun ShopTalkChat(
     modifier: Modifier = Modifier,
     onFragment: (ShopTalkChatFragment) -> Unit = {},
 ) {
+    // Android Studio's @Preview has no Activity and cannot host a Fragment: draw nothing there
+    // instead of failing the preview.
+    if (LocalInspectionMode.current) return
+    // The stock Android Studio Compose template is a plain ComponentActivity. AndroidFragment then
+    // fails with a message about a View, which does not say what to change. Say it here, first.
+    val host = LocalContext.current.findActivity()
+    check(host is FragmentActivity) {
+        "ShopTalkChat needs a FragmentActivity host (AppCompatActivity is one), but this screen runs in " +
+            "${host?.javaClass?.name ?: "a context that is not an Activity"}. " +
+            "Change the activity's superclass to AppCompatActivity or FragmentActivity (setContent { } works as before) " +
+            "and give it an AppCompat theme. See the SDK guide, Compose section."
+    }
     AndroidFragment<ShopTalkChatFragment>(
         modifier = modifier,
         arguments = ShopTalkChatFragment.createArguments(config),
@@ -44,4 +62,10 @@ fun ShopTalkChat(
             onFragment(fragment)
         },
     )
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

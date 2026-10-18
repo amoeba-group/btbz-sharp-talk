@@ -7,6 +7,7 @@
     <string name="shoptalk_attach_cancel">キャンセル</string>
     <string name="shoptalk_error_title">サポートに接続できません</string>
     <string name="shoptalk_error_message">ネットワークを確認して、もう一度お試しください。</string>
+    <string name="shoptalk_error_webview_outdated">お使いの端末のウェブエンジンが古いため、チャットを利用できません。Google Play で Android System WebView を更新してから、もう一度お試しください。</string>
     <string name="shoptalk_error_retry">再試行</string>
     <string name="shoptalk_error_hotline">ホットライン %1$s に電話</string>
 </resources>

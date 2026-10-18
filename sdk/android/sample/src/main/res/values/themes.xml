@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Platform Material theme plus a brand accent, as a host app would set. The SDK's native error
+         screen (retry button) picks it up; the chat itself is the widget and follows the admin console. -->
+    <style name="SampleTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:colorAccent">#0EA5E9</item>
+    </style>
+</resources>

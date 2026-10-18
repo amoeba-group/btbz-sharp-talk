@@ -79,10 +79,15 @@ internal class SessionOwner(private val store: Store) {
     }
 }
 
-/** App-private storage for [SessionOwner]. */
+/**
+ * App-private storage for [SessionOwner]. Every call touches the disk, so callers use it from a worker thread
+ * only: a StrictMode-enabled host (some run penaltyDeath in debug builds) must see no main-thread I/O from the SDK.
+ */
 internal class PrefsSessionStore(context: Context) : SessionOwner.Store {
-    private val prefs =
-        context.applicationContext.getSharedPreferences("shoptalk_sdk_session", Context.MODE_PRIVATE)
+    private val appContext = context.applicationContext
+
+    // Opened on first use, so constructing the store on the main thread costs nothing.
+    private val prefs by lazy { appContext.getSharedPreferences("shoptalk_sdk_session", Context.MODE_PRIVATE) }
 
     override fun read(key: String): String? = prefs.getString(key, null)
 

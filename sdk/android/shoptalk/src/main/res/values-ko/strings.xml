@@ -7,6 +7,7 @@
     <string name="shoptalk_attach_cancel">취소</string>
     <string name="shoptalk_error_title">상담에 연결할 수 없습니다</string>
     <string name="shoptalk_error_message">네트워크를 확인한 후 다시 시도해 주세요.</string>
+    <string name="shoptalk_error_webview_outdated">기기의 웹 엔진이 오래되어 채팅을 사용할 수 없습니다. Google Play에서 Android System WebView를 업데이트한 후 다시 시도해 주세요.</string>
     <string name="shoptalk_error_retry">다시 시도</string>
     <string name="shoptalk_error_hotline">핫라인 %1$s 전화</string>
 </resources>

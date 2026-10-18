@@ -44,12 +44,17 @@ import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import java.io.File
+import java.util.concurrent.Executors
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import java.util.Locale
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.launch
 import site.amoeba.shoptalk.internal.PrefsSessionStore
 import site.amoeba.shoptalk.internal.SessionOwner
+import site.amoeba.shoptalk.internal.WebViewVersion
 import site.amoeba.shoptalk.internal.AttachmentRules
 import site.amoeba.shoptalk.internal.ConfigBundle
 import site.amoeba.shoptalk.internal.ShopTalkBridge
@@ -113,6 +118,7 @@ class ShopTalkChatFragment : Fragment() {
     /** State re-applied on every ready (the widget forgets it on reload). Identity is NOT here by design. */
     private var lastLocaleJson: String? = null
     private var lastContextJson: String? = null
+    private var lastContext: ShopTalkContext? = null
 
     /** Commands (and one-shot identify) issued before the widget was ready. */
     private val pending = ArrayDeque<String>()
@@ -167,8 +173,8 @@ class ShopTalkChatFragment : Fragment() {
      * (a cached signature may have expired): set [identityProvider] for that.
      */
     fun identify(identity: ShopTalkIdentity) {
-        if (widgetReady && webView != null) {
-            deliverIdentity(identity)
+        if (widgetReady && webView != null && view != null) {
+            viewLifecycleOwner.lifecycleScope.launch { deliverIdentity(identity) }
         } else {
             manualIdentity = identity
         }
@@ -202,11 +208,16 @@ class ShopTalkChatFragment : Fragment() {
         manualIdentity = null
         pending.removeAll { it.contains("ivy:identify") }
         val dispatched = send(ShopTalkProtocol.logoutJson())
-        owner()?.let { if (dispatched) it.loggedOut(ownerScope()) else it.logoutPending(ownerScope()) }
+        val owner = owner()
+        val scope = ownerScope()
+        if (owner != null) {
+            ownerIo.execute { if (dispatched) owner.loggedOut(scope) else owner.logoutPending(scope) }
+        }
     }
 
     /** Show or clear the "where in the app" chip. Re-applied after a reload. */
     fun setContext(context: ShopTalkContext?) {
+        lastContext = context
         val json = ShopTalkProtocol.contextJson(context)
         lastContextJson = if (context == null) null else json
         if (widgetReady) evaluate(json)
@@ -236,6 +247,18 @@ class ShopTalkChatFragment : Fragment() {
             val code = ShopTalkProtocol.normalizeLocale(it)
             uiLocale = code
             lastLocaleJson = ShopTalkProtocol.localeJson(code)
+        }
+        // A recreated Activity (rotation, dark mode, font scale) builds a new fragment: bring the chip back.
+        // The prefill is left out on purpose: it filled the input once, and a user who typed or sent
+        // since must not find the draft text back in the box.
+        savedInstanceState?.getString(STATE_CONTEXT_SCREEN)?.let { screen ->
+            val restored = ShopTalkContext(
+                screen = screen,
+                ref = savedInstanceState.getString(STATE_CONTEXT_REF),
+                label = savedInstanceState.getString(STATE_CONTEXT_LABEL),
+            )
+            lastContext = restored
+            lastContextJson = ShopTalkProtocol.contextJson(restored)
         }
     }
 
@@ -328,6 +351,11 @@ class ShopTalkChatFragment : Fragment() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         webView?.saveState(outState)
+        lastContext?.let {
+            outState.putString(STATE_CONTEXT_SCREEN, it.screen)
+            outState.putString(STATE_CONTEXT_REF, it.ref)
+            outState.putString(STATE_CONTEXT_LABEL, it.label)
+        }
     }
 
     override fun onDestroyView() {
@@ -373,14 +401,21 @@ class ShopTalkChatFragment : Fragment() {
                 emitError(ShopTalkError.BridgeMalformed)
                 return@post
             }
+            // The widget announces ready from more than one of its hooks on every load; the host's
+            // listener should hear it once, the same as the SDK acts on it once.
+            var repeatedReady = false
             when (inbound) {
-                ShopTalkProtocol.Inbound.Ready -> onWidgetReady()
+                ShopTalkProtocol.Inbound.Ready -> {
+                    repeatedReady = widgetReady
+                    onWidgetReady()
+                }
                 ShopTalkProtocol.Inbound.IdentityExpired -> requestIdentity()
                 is ShopTalkProtocol.Inbound.Identified -> onIdentified(inbound.ok)
                 is ShopTalkProtocol.Inbound.Back -> onBackAnswer(inbound.handled)
                 is ShopTalkProtocol.Inbound.OpenUrl -> openExternal(inbound.url, fromWidget = true)
                 else -> Unit
             }
+            if (repeatedReady) return@post
             ShopTalkProtocol.dispatchSafely(listener, inbound) { t ->
                 Log.w(TAG, "ShopTalkListener threw; ignored to protect the chat", t)
             }
@@ -403,7 +438,7 @@ class ShopTalkChatFragment : Fragment() {
         while (pending.isNotEmpty()) evaluate(pending.removeFirst())
         manualIdentity?.let {
             manualIdentity = null
-            deliverIdentity(it)
+            if (view != null) viewLifecycleOwner.lifecycleScope.launch { deliverIdentity(it) }
         }
         requestIdentity()
     }
@@ -433,14 +468,30 @@ class ShopTalkChatFragment : Fragment() {
      * user's session, drop it first: the widget parks the identify that follows until its fresh
      * guest session exists, so the order here is the order that takes effect.
      */
-    private fun deliverIdentity(identity: ShopTalkIdentity?) {
+    private suspend fun deliverIdentity(identity: ShopTalkIdentity?) {
         val owner = owner()
         val scope = ownerScope()
-        val step = owner?.beforeIdentify(scope, identity?.userId) ?: SessionOwner.Step.KEEP
+        // The owner store is disk I/O: it runs on its own thread, and the "reset" mark is on disk BEFORE
+        // anything is sent to the page, which is what makes an interruption harmless.
+        val step = if (owner == null) {
+            SessionOwner.Step.KEEP
+        } else {
+            try {
+                onOwnerThread { owner.beforeIdentify(scope, identity?.userId) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (t: Throwable) {
+                // Cannot tell whose session this is: assume somebody else's. Costs one fresh session, never a leak.
+                Log.w(TAG, "owner store unavailable; resetting the session to be safe", t)
+                SessionOwner.Step.LOGOUT_FIRST
+            }
+        }
+        // The page may have reloaded while the store worked: the new page asks again.
+        if (!widgetReady || view == null) return
         if (step == SessionOwner.Step.LOGOUT_FIRST) {
             val dispatched = evaluate(ShopTalkProtocol.logoutJson())
             // "Nobody" is settled once the logout is out; a user is settled when the widget confirms the identify.
-            if (identity == null && dispatched) owner?.loggedOut(scope)
+            if (identity == null && dispatched && owner != null) ownerIo.execute { owner.loggedOut(scope) }
         }
         awaitingOwner = identity?.userId
         if (identity != null) evaluate(ShopTalkProtocol.identifyJson(identity))
@@ -450,7 +501,20 @@ class ShopTalkChatFragment : Fragment() {
         val userId = awaitingOwner ?: return
         awaitingOwner = null
         // A failed identify leaves the stored owner on "reset": at worst one needless logout next time.
-        if (ok) owner()?.committed(ownerScope(), userId)
+        val owner = owner() ?: return
+        val scope = ownerScope()
+        if (ok) ownerIo.execute { owner.committed(scope, userId) }
+    }
+
+    /** Runs [block] on the owner-store thread and resumes the caller with its result. */
+    private suspend fun <T> onOwnerThread(block: () -> T): T = suspendCancellableCoroutine { cont ->
+        ownerIo.execute {
+            try {
+                cont.resume(block())
+            } catch (t: Throwable) {
+                cont.resumeWithException(t)
+            }
+        }
     }
 
     private fun owner(): SessionOwner? {
@@ -555,7 +619,15 @@ class ShopTalkChatFragment : Fragment() {
         val view = ShopTalkErrorView(
             context = frame.context,
             title = res.getString(R.string.shoptalk_error_title),
-            message = res.getString(R.string.shoptalk_error_message),
+            message = res.getString(
+                if (error is ShopTalkError.LoadTimeout &&
+                    WebViewVersion.isTooOldForWidget(webView?.settings?.userAgentString)
+                ) {
+                    R.string.shoptalk_error_webview_outdated
+                } else {
+                    R.string.shoptalk_error_message
+                },
+            ),
             retryLabel = res.getString(R.string.shoptalk_error_retry),
             hotlineLabel = hotline?.let { res.getString(R.string.shoptalk_error_hotline, it) },
             onRetry = { reload() },
@@ -834,6 +906,18 @@ class ShopTalkChatFragment : Fragment() {
 
     companion object {
         private const val TAG = "ShopTalk"
+
+        /**
+         * The one thread that touches the owner store, shared by every fragment in the process: SharedPreferences
+         * I/O stays off the main thread, and writes land in the order they were asked for.
+         */
+        private val ownerIo = Executors.newSingleThreadExecutor { r ->
+            Thread(r, "shoptalk-session-owner").apply { isDaemon = true }
+        }
+
+        private const val STATE_CONTEXT_SCREEN = "shoptalk.context.screen"
+        private const val STATE_CONTEXT_REF = "shoptalk.context.ref"
+        private const val STATE_CONTEXT_LABEL = "shoptalk.context.label"
 
         /** Fixed by the widget's host detection; renaming silently downgrades to "no host". */
         private const val JS_INTERFACE = "ShopTalkAndroid"
