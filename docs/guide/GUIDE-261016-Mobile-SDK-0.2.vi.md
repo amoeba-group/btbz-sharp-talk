@@ -15,7 +15,8 @@ Yêu cầu của app chủ (đã kiểm bằng app thử, xem TCR-261016 §7):
 | Hạng mục | Yêu cầu | Ghi chú |
 |---|---|---|
 | Kotlin | **2.1.0 trở lên** | AAR build bằng 2.2.0. Kotlin 2.0.x trở xuống không đọc được (trình biên dịch dừng với lỗi nội bộ) |
-| `minSdk` | **21 trở lên** | thấp hơn thì lỗi gộp manifest. Trên Android 5.0 và 5.1 chưa chạy thử máy thật; ở đó lỗi HTTP 4xx/5xx của trang không được báo, chỉ có lỗi mạng và hết 15 giây chờ |
+| `minSdk` | **21 trở lên** | thấp hơn thì lỗi gộp manifest. Đã chạy thật trên Android 5.0 (API 21), 6.0 (API 23) và 15 (API 35), xem TCR-261016 §10. Trên Android 5.x lỗi HTTP 4xx/5xx của trang không được báo riêng, chỉ có lỗi mạng và hết 15 giây chờ |
+| Android System WebView của máy | **Chrome 80 trở lên** | widget là ứng dụng web hiện đại. WebView cũ hơn tải được trang nhưng không chạy được, nên sau 15 giây SDK hiện màn lỗi "cập nhật Android System WebView". Máy có Google Play tự cập nhật WebView; máy không có (hoặc đã tắt cập nhật) thì không dùng được chat |
 | JVM của app | 11 hoặc 17 | cả hai đều đã kiểm |
 | AGP | 8.5.2 và 8.10.1 đã kiểm | AAR không đòi AGP hay compileSdk tối thiểu |
 | Activity chủ | `FragmentActivity` (`AppCompatActivity` cũng là một) | `ComponentActivity` thuần sẽ sập, xem mục 8 |
@@ -205,7 +206,12 @@ Bấm nút đính kèm trong widget mở hộp chọn của SDK: **Chụp ảnh*
 
 - **Màn lỗi native** thay cho màn trắng khi trang chính không tải được (mất mạng, DNS, TLS, HTTP ≥ 400) hoặc **15 giây** không có
   `ivy:ready`. Có thông điệp, nút **Thử lại** (gọi `reload()`) và số hotline nếu có `errorHotline` (chạm để gọi, `ACTION_DIAL`).
-  Đồng thời phát `onError(LoadFailed | LoadTimeout)`.
+  Đồng thời phát `onError(LoadFailed | LoadTimeout)`. Khi hết 15 giây mà WebView của máy cũ hơn Chrome 80, thông điệp đổi thành
+  "cập nhật Android System WebView trong Google Play" (6 ngôn ngữ); chỉ đổi lời nhắn, không chặn gì nếu SDK đoán nhầm.
+- Nút **Thử lại** lấy màu thương hiệu của app: `colorPrimary` của theme app (AppCompat, MaterialComponents, Material 3), nếu không có thì
+  `android:colorAccent`, nếu cũng không thì nút mặc định của hệ thống.
+- **StrictMode:** SDK không đọc ghi đĩa hay mạng trên luồng giao diện (bộ nhớ chủ phiên chạy trên luồng riêng). Riêng việc hệ thống tạo WebView
+  lần đầu trên Android 5 đến 6 là một vi phạm đọc đĩa của chính Android; app chạy `penaltyDeath` cần bỏ qua đoạn đó.
 - **Ép sáng**: widget chưa có dark mode, SDK tắt tối hóa thuật toán của WebView (API 33+ `isAlgorithmicDarkeningAllowed = false`; API
   29-32 `FORCE_DARK_OFF`). Nền màn chat luôn trắng dù app đang theme tối.
 - **Bridge chỉ hoạt động khi URL chính cùng origin (scheme, host, port) với `widgetUrl`.** Link ngoài mở bằng trình duyệt hệ thống,
@@ -267,17 +273,17 @@ adb shell am start -n site.amoeba.shoptalk.sample/.MainActivity \
 | ☐ | `allowInsecureUrl` chỉ trong build debug | Release phải https |
 | ☐ | Giữ `consumer-rules.pro` (đã nằm trong AAR) khi bật minify | `@JavascriptInterface` phải còn |
 | ☐ | Không log `userId`, `hash`, nội dung chat | NFR-M01 |
-| ☐ | Kiểm trên máy thật: ảnh chụp, thư viện, tệp, tắt mạng, xoay ngang, cỡ chữ 130 % | WebView khác nhau theo máy; API 24 cần WebView đủ mới |
+| ☐ | Kiểm trên máy thật: ảnh chụp, thư viện, tệp, tắt mạng, xoay ngang, cỡ chữ 130 % | WebView khác nhau theo máy; máy phải có Android System WebView từ Chrome 80 |
 
 ## 11. Giới hạn đã biết ở 0.2.0
 
-- **Đổi cấu hình lúc đang chạy** (xoay màn, dark mode, cỡ chữ hệ thống) làm Activity bị tạo lại: widget tải lại trong khoảng 2 giây,
-  `identityProvider` được gọi lại để ký (backend của app phải chịu được việc này) và chip ngữ cảnh biến mất. Hãy gọi lại
-  `chat.setContext(...)` khi `onReady` bắn, hoặc khai báo `android:configChanges="orientation|screenSize|uiMode|fontScale|keyboardHidden"` cho Activity chứa chat.
-- `ShopTalkListener.onReady` có thể bắn hai lần trong một lần tải; `identityProvider` thì chỉ bị gọi một lần.
+- **Đổi cấu hình lúc đang chạy** (dark mode, cỡ chữ hệ thống; xoay màn nếu Activity không khai báo `configChanges`) làm Activity bị tạo lại: widget tải
+  lại trong khoảng 2 giây và `identityProvider` được gọi lại để ký (backend của app phải chịu được việc này). Chip ngữ cảnh được SDK khôi phục
+  (không kèm chữ điền sẵn). Muốn tránh tải lại, khai báo `android:configChanges="orientation|screenSize|uiMode|fontScale|keyboardHidden"` cho Activity chứa chat.
 - Màn ngang dùng được nhưng vùng tin nhắn thấp; nên khóa dọc cho Activity chat nếu thiết kế cho phép.
-- Hộp chọn tệp và màn lỗi của SDK dùng giao diện Material mặc định, chưa theo màu thương hiệu của app.
-- Android 5.0 và 5.1 (API 21 và 22) chỉ được kiểm bằng biên dịch và lint, chưa chạy máy thật. Lỗi tải trang ở đó đi qua callback cũ của WebView.
+- Hộp chọn tệp dùng giao diện của theme app chủ (AlertDialog); màn lỗi chỉ đổi màu nút, không đổi biểu tượng và kiểu chữ.
+- Trên máy rất cũ (Android 5 đến 6) không có Play Services để cập nhật WebView, chat không chạy được; SDK báo bằng màn lỗi sau 15 giây.
+- Android 5.0 đến 5.1: bộ chọn ảnh hệ thống của emulator không kiểm được (thẻ nhớ ảo chỉ đọc); hộp chọn đính kèm, hủy rồi mở lại, màn lỗi và hết giờ chờ đã kiểm.
 - Chưa có push nền, badge ngoài màn chat (chỉ `onUnread` khi màn đang mở), dark mode của widget, iOS.
 - Hội thoại gắn với session trên thiết bị; web và app không nối tiếp nhau.
 - SDK 0.2.0 chưa tự gọi `GET /public/widget/app-config`; widget gọi để áp cấu hình admin (kể cả `header` khi app để `null`).

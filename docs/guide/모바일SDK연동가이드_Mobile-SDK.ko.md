@@ -245,7 +245,8 @@ AAR 0.2.0 + 구 위젯, AAR 0.1.0 + 신 위젯 모두 동작합니다. 전체 AP
 - `ShopTalkConfig`: `accessKey`, `header`(null·WIDGET·NATIVE), `startTab`, `attachments(camera, multiple)`,
   `errorHotline`, `allowInsecureUrl`(디버그 전용: http는 localhost·127.0.0.1·10.0.2.2만). `widgetUrl`은 https 필수.
 - `ShopTalkIdentity.fromJson(raw)` / `.of(...)`, `ShopTalkIdentityProvider`(ready·reload·identity-expired마다 호출,
-  null = 게스트, 예외 = `onError(IdentityProviderFailed)` 후 게스트로 계속).
+  null = 로그인한 사람 없음(이 기기에서 이전에 식별된 사용자가 있었다면 SDK가 위젯을 먼저 로그아웃, 아래 참조),
+  예외 = `onError(IdentityProviderFailed)` 후 **아무것도 바꾸지 않음**).
 - 리스너: `onIdentityExpired`, `onOpenUrl(Uri): Boolean`, `onUnread(Int)`, `onError(ShopTalkError)`
   (`LoadFailed`·`LoadTimeout`·`IdentityProviderFailed`·`BridgeMalformed`).
 - 메서드: `setContext`, `openSettings`, `endConversation`, `reload`.
@@ -253,3 +254,33 @@ AAR 0.2.0 + 구 위젯, AAR 0.1.0 + 신 위젯 모두 동작합니다. 전체 AP
   오류 화면(주 프레임 오류·HTTP ≥400·15초 `ivy:ready` 미수신 → 재시도·핫라인), WebView 라이트 고정,
   브리지는 주 프레임이 `widgetUrl`과 같은 origin일 때만 동작.
 - Compose 앱은 선택 모듈 `:shoptalk-compose`의 `ShopTalkChat(...)`. 툴체인은 Kotlin 2.2.0, JDK 17.
+
+### 호스트 앱 요구 조건 (소비 앱 시험으로 확인, TCR-261016 §7)
+
+| 항목 | 요구 | 비고 |
+|---|---|---|
+| Kotlin | **2.1.0 이상** | AAR은 2.2.0으로 빌드. 2.0.x 이하는 메타데이터를 못 읽어 컴파일러가 내부 오류로 멈춤 |
+| `minSdk` | **21 이상** | 낮으면 매니페스트 병합 오류. 에뮬레이터에서 Android 5.0(API 21), 6.0(API 23), 15(API 35) 실행 확인(TCR-261016 §10) |
+| 기기의 Android System WebView | **Chrome 80 이상** | 위젯은 최신 웹앱입니다. 더 낮은 WebView는 페이지는 불러와도 실행하지 못하므로 15초 뒤 SDK가 "WebView 업데이트" 안내 화면을 표시합니다(6개 언어) |
+| 앱의 JVM 타깃 | 11 또는 17 | 둘 다 확인 |
+| AGP | 8.5.2, 8.10.1 확인 | AAR은 AGP·compileSdk 최소값을 요구하지 않음 |
+| 호스트 Activity | `FragmentActivity`(`AppCompatActivity` 포함) | Android Studio의 기본 Compose 템플릿(`ComponentActivity`)은 불가: `ShopTalkChat`이 원인과 해결(상위 클래스 변경, AppCompat 테마)을 담은 예외를 즉시 던짐 |
+| Java 코드 | 사용 가능 | `ShopTalkConfig`·`ShopTalkContext`·`ShopTalkAttachments`에 `@JvmOverloads` |
+
+### 사용자 전환 시 자동 로그아웃
+
+WebView는 앱을 다시 열어도 채팅 세션을 유지하고, 서버는 그 세션을 나중에 식별한 사람에게 묶습니다. 앱이 `logout()` 없이 다른 사람을
+식별하면 새 사용자가 이전 사용자의 대화를 보게 됩니다(에뮬레이터에서 재현, TCR-261016 §8·§9). 그래서 SDK는 마지막으로 식별된
+`userId`의 SHA-256 지문을 위젯·상점별로 앱 전용 `SharedPreferences`에 저장하고(원본 `userId`는 저장하지 않음),
+다음 신원이 다르거나 사용자가 있었던 뒤 provider가 `null`을 주면 `logout`을 **먼저** 보낸 뒤 `identify`합니다.
+
+- 지문은 위젯이 `identified ok`로 확인한 **뒤에만** 새 사용자로 바뀝니다. 그 사이에는 `reset`("주인 불명, 다음 identify 전에 세션을 버린다")이며,
+  앱 종료·명령 유실·서명 거절이 있어도 불필요한 로그아웃이 한 번 늘 뿐 대화가 노출되지 않습니다.
+- 같은 사람이 다시 열면 대화를 유지합니다. 아무도 식별된 적 없으면 게스트 대화를 건드리지 않습니다.
+- 앱이 자체 로그인 세션을 지우는 곳에서 `chat.logout()`을 호출하는 것은 여전히 권장됩니다(SDK는 다음 식별 때 작동, `logout()`은 즉시).
+
+### 기타 변경
+
+- 화면 회전·다크 모드·글꼴 크기로 Activity가 다시 만들어져도 컨텍스트 칩이 복원됩니다(미리 채우기 문구는 제외).
+- `ShopTalkListener.onReady`는 한 번 로드에 한 번만 호출됩니다(위젯은 훅 여러 곳에서 알리지만 SDK가 중복을 거릅니다).
+- 오류 화면의 재시도 버튼은 호스트 앱 테마의 `colorAccent`를 따릅니다(없으면 플랫폼 기본 버튼).

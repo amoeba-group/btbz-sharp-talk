@@ -45,6 +45,8 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 ./gradlew :sample:installDebug                   # 실기기/에뮬레이터 검증용
 ```
 
+> 2026-10-19: Android 5.0(API 21)·6.0(API 23)·15(API 35) 에뮬레이터에서 프로토콜 시나리오 13개를 모두 통과(TCR-261016 §10).
+> 위젯은 Android System WebView Chrome 80 이상이 필요하며, 더 낮으면 15초 뒤 "WebView 업데이트" 안내 화면이 뜬다.
 > 2026-10-16: Gradle 8.14.3 + AGP 8.5.2로 `testReleaseUnitTest`(50/50), `assembleRelease`, `lintRelease`(오류 0)를 실제로 돌렸고,
 > Android 15 에뮬레이터(API 35)에서 샘플 앱으로 식별·컨텍스트·첨부 업로드·오류 화면을 확인했다
 > (결과: `docs/test/TCR-261016-Go2Joy-Kotlin-App-Widget.md` §5–§6). 실기기와 API 24는 아직 확인하지 않았다.

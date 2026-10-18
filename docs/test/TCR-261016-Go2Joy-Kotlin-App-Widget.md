@@ -40,7 +40,7 @@ Boot thật: `Nest application successfully started`.
 | # | Kiểm | Kết quả |
 |---|---|---|
 | 1 | `GET /tenants/mobile-app` khi chưa lưu | `configured=false`, mặc định |
-| 2 | `PATCH` entry trỏ agent không tồn tại | 400 `E5095` |
+| 2 | `PATCH` entry trỏ agent không tồn tại | 400 `E5150` (lúc chạy ban đầu là `E5095`, đổi vì trùng mã với nhánh stage1-complete, xem §10) |
 | 3 | `PATCH` hợp lệ | lưu, chuẩn hóa (screen viết thường, brand `#0EA5E9`) |
 | 4 | `PATCH` `font_size=99` | 400 (validation) |
 | 5 | `PATCH` không đăng nhập | 401 |
@@ -62,7 +62,7 @@ như các tệp khác trong console (commit `8f27c23c`).
 
 - `identify` ký thật từ app và `identity-expired`: cần backend Go2Joy hoặc secret của tenant; chỉ kiểm bằng test đơn vị.
 - Câu trả lời AI có `HOST_CONTEXT` trong prompt: chạy với engine `stub`, chưa so với model thật; cần chạy golden set trên staging.
-- Camera, bàn phím, xoay màn, link ngoài, dark mode: cần thiết bị.
+- Camera, bàn phím, xoay màn, link ngoài, dark mode: đã chạy trên emulator (§6, §8, §10); còn lại cần điện thoại thật (§10.7).
 
 ## 5. Build Gradle và AAR (chạy ngày 2026-10-16)
 
@@ -222,3 +222,86 @@ hỏng 2 trên 2 lần. Sửa trong widget: `sessionEpoch` tăng khi `logout`; p
 
 Còn lại: hợp đồng `attributes` trên main vẫn gắn lại phiên khi một app khác (không dùng SDK, như web) nhận diện người khác mà không `logout`; chỗ đó cần máy chủ tách phiên
 (nhánh stage1-complete). Khi người cũ trở lại sau một lần gián đoạn, họ nhận phiên mới thay vì phiên cũ của mình.
+
+## 10. Rà soát lần hai và chạy đủ trên ba mức Android (2026-10-19)
+
+### 10.1 Cách kiểm
+
+Widget thật chỉ chạy trên WebView hiện đại, còn mục tiêu là kiểm **mã native của SDK** trên Android cũ. Vì vậy dùng một trang giả lập widget viết bằng
+JavaScript cũ (ES5), nói đúng giao thức cầu nối (`ivy:ready`, `identified`, `back`, nhận lệnh `locale`, `identify`, `logout`, `context`) và gửi mọi lệnh nhận
+được về máy chủ kiểm, nên kết quả đọc được bằng văn bản chứ không phải ảnh chụp. Trang có thêm ô chọn tệp và một địa chỉ `/silent` không bao giờ báo sẵn sàng.
+App mẫu bật StrictMode ở bản debug. Identity vẫn được ký phía host như bản chạy thật.
+
+### 10.2 Ma trận thiết bị
+
+| Mức | Emulator | WebView | 13 kiểm tra giao thức | Sập của app | Vi phạm StrictMode do mã SDK |
+|---|---|---|---|---|---|
+| API 21, Android 5.0.2 | x86_64 Google APIs | Chrome 37 | **13/13** | 0 | 0 |
+| API 23, Android 6.0 | x86_64 Google APIs | Chrome 44 | **13/13** | 0 | 0 (còn các vi phạm đọc đĩa do hệ thống tạo WebView) |
+| API 35, Android 15 | x86_64 Google APIs | Chrome 124 | **13/13** | 0 | 0 |
+
+13 kiểm tra: (1) người đầu tiên: ngôn ngữ rồi nhận diện; (2) người khác mà app không gọi `logout()`: đăng xuất **trước** nhận diện; (3) cùng người mở lại: chỉ nhận diện,
+không đăng xuất; (4) app không còn người đăng nhập: đăng xuất, không nhận diện; (5) người mới sau khi đã đăng xuất: nhận diện, không đăng xuất thừa; (6) nút ngữ cảnh tới trang;
+(7) hộp chọn đính kèm của SDK mở từ ô chọn tệp; (8) hủy rồi mở lại (callback đã được trả); (9) mất kết nối: màn lỗi `LoadFailed` (API 21 đi qua callback cũ `onReceivedError`);
+(10) Thử lại sau khi có mạng: trang tải và danh tính tới; (11) trang không bao giờ sẵn sàng: chưa lỗi ở giây 9, `LoadTimeout` sau 15 giây; (12) nút Back hệ thống tới trang dưới dạng `back`;
+(13) trang trả "không xử lý" thì app mẫu tự đóng.
+
+Làm tay thêm: API 23, chọn ảnh từ Gallery của Android 6 tới trang đúng tên, kích thước 316 688 byte, loại `image/png` (nhánh kết quả trả `data`; Android 15 trả `clipData`, đã kiểm ở §8);
+hộp chọn tệp và bộ chọn của hệ thống hiện đúng. API 21: `/sdcard` của ảnh giả lập chỉ đọc nên không đẩy được ảnh, chỉ kiểm hộp thoại, hủy, mở lại.
+
+### 10.3 Phát hiện và xử lý
+
+| # | Mức | Phát hiện | Cách thấy | Xử lý |
+|---|---|---|---|---|
+| G1 | Cao | Bộ nhớ chủ phiên của SDK đọc ghi `SharedPreferences` **trên luồng giao diện**: ổ đĩa bận làm đơ chat, app bật StrictMode `penaltyDeath` bị phạt | StrictMode báo `DiskReadViolation` và `DiskWriteViolation` từ `PrefsSessionStore`; lần chạy đầu mất nhận diện không đều khi máy đang ghi nặng | một luồng riêng dùng chung cho mọi fragment (ghi theo thứ tự); dấu "reset" vẫn nằm trên đĩa **trước** khi gửi lệnh vào trang; lỗi bộ nhớ thì coi như phiên của người khác. Sau sửa: 0 vi phạm từ mã SDK trên cả ba mức |
+| G2 | Trung bình | Lần kiểm khôi phục chip bằng xoay màn trước đó **không chứng minh gì**: app mẫu khai báo `configChanges` nên xoay không tạo lại Activity | đọc lại `AndroidManifest` của app mẫu | kiểm lại bằng dark mode (tạo lại thật): `ready` một lần, chip "Booking #G2J-8841" trở lại, ô nhập vẫn trống (không lặp chữ điền sẵn) |
+| G3 | Cao khi hợp nhất | Mã lỗi `E5095` của nhánh này trùng với `REGION_ROUTING_INVALID` của nhánh stage1-complete; client dịch theo mã nên sẽ hiện nhầm thông báo | so danh sách mã của 51 nhánh | đổi sang **E5150** (khối trống sau E5145 đến E5149, không nhánh nào dùng); HTTP thật: `PATCH /tenants/mobile-app` agent lạ trả 400 `E5150`; console dịch theo mã (6 ngôn ngữ) |
+| G4 | Trung bình | Menu mở đầu hiện tiếng Anh ở lần mở đầu tiên dù app đặt tiếng Việt | đọc nhãn nút bằng DevTools của WebView | lệnh `locale` của app đến sau lần lấy menu, nên menu về theo ngôn ngữ mặc định của máy chủ và được lưu 60 giây. Nay làm mới menu sau khi đồng bộ ngôn ngữ phiên; 3/3 lần cài mới ra tiếng Việt |
+| G5 | Thấp | Thẻ đánh giá bị ô nhập che nửa dưới cho tới khi cuộn tay | ảnh chụp sau khi kết thúc hội thoại | hiệu ứng cuộn thêm điều kiện hiện thẻ; ảnh sau sửa: thẻ vào đủ khung |
+| G6 | Thấp | Màn lỗi dùng nút xám mặc định; `ShopTalkChat` sập với thông báo về "View" khó hiểu khi host là `ComponentActivity` | ảnh chụp, ma trận tương thích §7 | nút lấy `colorPrimary` của theme app (rồi `colorAccent`); Compose báo thẳng cách sửa và bỏ qua trong @Preview |
+| G7 | Trung bình | Widget thật trên WebView Chrome 37: trang trắng 15 giây rồi màn lỗi nói "kiểm tra mạng", sai nguyên nhân | chạy widget thật trên API 21 | widget cần Chrome 80 trở lên (dùng `??` và module); khi hết giờ chờ mà WebView cũ hơn thì thông điệp là "cập nhật Android System WebView" (6 ngôn ngữ). Ảnh sau sửa đúng như vậy |
+| G8 | Không phải lỗi SDK | Nhận diện mất không đều (5 trên 10 lần) khi chạy bằng trang giả lập | log của bên cung cấp danh tính: được hỏi nhưng không trả lời | trang giả lập báo `ready` ngay lúc đang phân tích HTML, nhanh hơn `onPageStarted` đến luồng chính, nên trạng thái sẵn sàng bị đặt lại. Widget thật chỉ sẵn sàng sau vài trăm mili giây nên không gặp. Trang giả chờ 600 ms; sau đó 10/10 |
+
+### 10.4 Kiểm thêm trên Android 15 (API 35)
+
+| Kiểm | Kết quả |
+|---|---|
+| Camera (ứng dụng camera ảo của emulator) qua mục "Chụp ảnh" | ảnh `image/jpeg` 32 463 byte tới widget, gửi đi, lưu đúng phiên |
+| Chọn PDF qua mục "Tệp" | `application/pdf` 193 byte, loại `file`, lưu đúng phiên |
+| Link ngoài (`https://…`) trong tin nhắn | mở bằng Chrome (ACTION_VIEW), Back quay lại app, hội thoại còn nguyên, không phiên mới. Widget chỉ tự nhận địa chỉ trần, không dựng `[chữ](địa chỉ)` (thiết kế của widget) |
+| Nút Back hệ thống khi không có gì mở | SDK hỏi widget, widget trả "không xử lý", `onCloseRequest` đóng app |
+| Truy cập: cây truy cập của widget thật qua DevTools | 18 điều khiển tương tác, **0 thiếu tên** (tab, nút gửi, đính kèm, cài đặt, ngôn ngữ, đóng, đồng ý, từ chối, ô nhập, các nút menu) |
+| Phục hồi chip sau khi Activity tạo lại | đạt (G2) |
+| `ShopTalkListener.onReady` | 1 lần mỗi lần tải |
+| Nút Thử lại theo màu app | màu `colorAccent` của theme mẫu |
+
+### 10.5 Kiểm tự động trên mã hiện tại
+
+| Bộ | Kết quả |
+|---|---|
+| `packages/types` jest | 176/176 |
+| SDK Kotlin `testReleaseUnitTest` | 72/72 (thêm 4 ca đọc phiên bản WebView) |
+| Widget `node --test` | 50/50 |
+| API `chat`, `tenant`, `embed` jest | 365/366; ca lỗi là `embed-loader` "keeps the widget iframe sandboxed" |
+| API toàn bộ | 2279/2282; 3 ca lỗi nền của Windows: `heic-conversion`, `embed-loader`, `board-attachment` |
+| `tsc` api, widget, web | sạch |
+| `i18n:check` | 6 ngôn ngữ đủ khóa |
+| Lint SDK và Compose | 0 lỗi |
+
+Ca `embed-loader` được chạy lại trên một bản sạch của `origin/main` và lỗi y hệt, nên có từ trước, không liên quan nhánh này.
+
+### 10.6 Hợp nhất
+
+Thử hợp nhất khô bằng `git merge-tree` (không động tới thư mục làm việc): với `origin/main` (không tụt, đi trước 24 commit lúc thử) hợp nhất **sạch**. Với `feature/go2joy-stage1-complete`
+có 7 tệp xung đột do nhánh này, ngoài các xung đột sẵn có giữa main và nhánh đó: `chat/rag.service.ts`, `tenant/entity/tenant.entity.ts`, `error-code.constant.ts`, `widget/hooks/useChat.ts`,
+`widget/services/chatService.ts`, `widget/store/widgetStore.ts`, `packages/types/src/index.ts`. Đều là hai bên cùng thêm vào chỗ kề nhau (khóa export, cột entity, tham số, trường store), giải bằng giữ cả hai.
+Nhánh stage1-complete đã tách phiên ở máy chủ khi người khác nhận diện trên phiên đã gắn người trước (`principalChanged` rồi tạo phiên mới) và widget của nó nhận phiên mới, nên phần lỗi tách phiên cho web
+và app không dùng SDK được giải ở đó. Chưa hợp nhất thử trên thiết bị (hợp đồng nhận diện `attributes` của main và `claims` v2 của nhánh đó vẫn là quyết định Q1).
+
+### 10.7 Chưa kiểm
+
+- Điện thoại thật: camera thật, bàn phím, hiệu năng, WebView cập nhật qua Play, hãng có biến thể WebView riêng.
+- TalkBack thật (mới kiểm cây truy cập, chưa kiểm thứ tự đọc và cử chỉ).
+- Android 7 đến 14 (kiểm 5.0, 6.0, 15; API 22 đi chung đường mã với 21, API 24 đến 34 đi chung đường với 23 và 35).
+- Bộ chọn ảnh hệ thống của Android 5 (thẻ nhớ ảo chỉ đọc).
+- Hiệu năng bộ nhớ lâu, xoay liên tục, chuyển nền rồi quay lại sau khi hệ thống thu hồi tiến trình.
