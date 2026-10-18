@@ -10,7 +10,16 @@ app nhận ngay, không cần phát hành lại. App chỉ cần: mở màn chat
 
 ## 1. Cài đặt
 
-Yêu cầu: JDK 17, Kotlin 2.2.0 (AAR build bằng 2.2.0; app dùng Kotlin ≤ 2.2.0 đều đọc được), `minSdk 24`, `compileSdk 35`.
+Yêu cầu của app chủ (đã kiểm bằng app thử, xem TCR-261016 §7):
+
+| Hạng mục | Yêu cầu | Ghi chú |
+|---|---|---|
+| Kotlin | **2.1.0 trở lên** | AAR build bằng 2.2.0. Kotlin 2.0.x trở xuống không đọc được (trình biên dịch dừng với lỗi nội bộ) |
+| `minSdk` | **24 trở lên** | thấp hơn thì lỗi gộp manifest; cần hạ minSdk của SDK, báo Amoeba |
+| JVM của app | 11 hoặc 17 | cả hai đều đã kiểm |
+| AGP | 8.5.2 và 8.10.1 đã kiểm | AAR không đòi AGP hay compileSdk tối thiểu |
+| Activity chủ | `FragmentActivity` (`AppCompatActivity` cũng là một) | `ComponentActivity` thuần sẽ sập, xem mục 8 |
+| Mã Java | gọi `ShopTalkConfig` phải truyền đủ mọi tham số | chưa có `@JvmOverloads` |
 
 Amoeba giao file AAR (không có trên Maven, không commit vào repo):
 
@@ -22,6 +31,7 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.8.5")  // bỏ nếu app đã có
     // Chỉ khi app dùng Compose (xem mục 8):
     // implementation(files("libs/shoptalk-compose-0.2.0.aar"))
+    // implementation("androidx.fragment:fragment-compose:1.8.5")   // AAR không có POM nên phải tự khai báo
 }
 ```
 
@@ -197,6 +207,11 @@ Bấm nút đính kèm trong widget mở hộp chọn của SDK: **Chụp ảnh*
 
 Module riêng, không kéo Compose vào AAR lõi. Activity chủ phải là `FragmentActivity` (`AppCompatActivity` cũng được).
 
+> ⚠️ **Mẫu Compose chuẩn của Android Studio tạo `MainActivity : ComponentActivity()`.** Với Activity đó, màn chat **sập ngay khi mở**:
+> `IllegalStateException: View ...AndroidComposeView is not within a subclass of FragmentActivity` (đã chạy thật trên Android 15).
+> Cách sửa: đổi lớp cha thành `AppCompatActivity` (và dùng theme AppCompat, ví dụ `Theme.AppCompat.Light.NoActionBar` hoặc theme Material
+> kế thừa nó) hoặc `FragmentActivity`. `setContent { ... }` vẫn dùng như cũ.
+
 ```kotlin
 implementation(files("libs/shoptalk-compose-0.2.0.aar"))   // kèm shoptalk-android-0.2.0.aar
 
@@ -253,6 +268,7 @@ adb shell am start -n site.amoeba.shoptalk.sample/.MainActivity \
 - `ShopTalkListener.onReady` có thể bắn hai lần trong một lần tải; `identityProvider` thì chỉ bị gọi một lần.
 - Màn ngang dùng được nhưng vùng tin nhắn thấp; nên khóa dọc cho Activity chat nếu thiết kế cho phép.
 - Hộp chọn tệp và màn lỗi của SDK dùng giao diện Material mặc định, chưa theo màu thương hiệu của app.
+- Mã Java phải truyền đủ mọi tham số khi tạo `ShopTalkConfig` (chưa có `@JvmOverloads`).
 - Chưa có push nền, badge ngoài màn chat (chỉ `onUnread` khi màn đang mở), dark mode của widget, iOS.
 - Hội thoại gắn với session trên thiết bị; web và app không nối tiếp nhau.
 - SDK 0.2.0 chưa tự gọi `GET /public/widget/app-config`; widget gọi để áp cấu hình admin (kể cả `header` khi app để `null`).

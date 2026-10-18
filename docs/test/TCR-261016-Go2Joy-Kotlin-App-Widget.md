@@ -123,3 +123,26 @@ Còn lặp: `ShopTalkListener.onReady` vẫn gọi hai lần (chỉ callback th�
 
 Chưa kiểm: chụp ảnh bằng camera, chọn tệp PDF/Word qua trình chọn tệp, màn lỗi do hết 15 giây (mới thử lỗi tải ngay), API 24,
 mở link ngoài, `back` của hệ thống, đổi tài khoản (logout rồi identify khác), TalkBack, thiết bị thật.
+
+## 7. Ma trận tương thích với app của khách (2026-10-18)
+
+Mục tiêu: biết AAR 0.2.0 dùng được với những cấu hình app nào, vì Go2Joy mới cho biết Kotlin 2.2.0 và chưa nói Compose hay XML, minSdk, AGP.
+Cách kiểm: một app tối thiểu chỉ có AAR (`implementation(files(...))`, không có POM) cộng androidx tối thiểu, bật R8, `assembleRelease`; Gradle 8.14.3.
+
+| # | Cấu hình app khách | Kết quả |
+|---|---|---|
+| M1 | Kotlin 2.2.0, AGP 8.5.2, JVM 17, minSdk 24, target 35 | đạt |
+| M2 | như M1 nhưng JVM target 11 (mặc định của Android Studio), kèm một lớp Java tham chiếu SDK | đạt, lớp của app ở bytecode Java 11, AAR là Java 17 vẫn dùng được |
+| M3 | Kotlin 2.1.20 | đạt |
+| M4 | **Kotlin 2.0.21** | **lỗi**: trình biên dịch Kotlin dừng với lỗi nội bộ khi đọc metadata của AAR (build bằng 2.2.0). Hướng dẫn cũ ghi "Kotlin ≤ 2.2.0 đều đọc được" là sai |
+| M5 | AGP 8.10.1 (mới nhất mà Kotlin 2.2.0 hỗ trợ) | đạt |
+| M6 | androidx cũ: fragment 1.5.7, appcompat 1.6.1, core 1.10.1 | đạt (build); chưa chạy |
+| M7 | targetSdk 34 | đạt (build); chưa chạy |
+| M8 | **minSdk 21** | **lỗi** gộp manifest: "minSdkVersion 21 cannot be smaller than version 24 declared in library". Lint thử với minSdk 21 chỉ báo một chỗ dùng API 23 (`WebResourceError` ở xử lý lỗi tải trang), nên hạ xuống 21 khả thi bằng một sửa nhỏ, chưa làm |
+| M9 | App Java gọi `new ShopTalkConfig("url")` | **lỗi** biên dịch Java: lớp `data class` có tham số mặc định nhưng không có `@JvmOverloads`, Java phải truyền đủ mọi tham số. Chưa sửa |
+| M10 | Compose, Activity kế thừa `ComponentActivity` (mẫu Compose chuẩn của Android Studio) | **sập khi mở màn chat**: `IllegalStateException: View ...AndroidComposeView is not within a subclass of FragmentActivity` (chạy thật trên emulator API 35) |
+| M11 | Compose, Activity kế thừa `AppCompatActivity` | đạt: không sập, màn lỗi native hiện đúng (địa chỉ widget thử không phải widget thật) |
+
+Siêu dữ liệu AAR: `minCompileSdk=1`, `minAndroidGradlePluginVersion=1.0.0`, tức AAR không đòi compileSdk hay AGP tối thiểu. Chưa kiểm app có compileSdk 34 (máy chỉ cài nền tảng 35).
+
+Chưa kiểm: AGP dưới 8.5, Gradle dưới 8.7, Kotlin 2.3 trở lên, app đã bật `android.enableJetifier`, thiết bị không có Google Play Services, WebView cũ trên Android 7 đến 9.

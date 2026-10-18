@@ -26,7 +26,8 @@
 
 Kotlin Gradle 플러그인 2.2.0은 AGP 7.3.1–8.10.0, Gradle 7.6.3–8.14를 지원한다(kotlinlang.org
 호환표) — 기존 **AGP 8.5.2 + Gradle 8.7 wrapper를 유지**했다(변경 불필요). 소비 앱이 Kotlin 2.2.0이면
-이 AAR(2.2.0 빌드)을 그대로 쓴다. Compose 모듈은 Kotlin 2.x의
+이 AAR(2.2.0 빌드)을 그대로 쓴다. **소비 앱의 Kotlin은 2.1.0 이상이어야 한다**(2.0.21은 메타데이터를 못 읽어
+컴파일러가 내부 오류로 멈춘다. 확인함, TCR-261016 §7). Compose 모듈은 Kotlin 2.x의
 `org.jetbrains.kotlin.plugin.compose` 플러그인(2.2.0)을 쓴다.
 
 ## 빌드
