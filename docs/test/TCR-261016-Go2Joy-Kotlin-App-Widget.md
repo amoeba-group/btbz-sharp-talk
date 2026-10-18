@@ -150,3 +150,44 @@ Chưa kiểm: AGP dưới 8.5, Gradle dưới 8.7, Kotlin 2.3 trở lên, app đ
 Sau khi hạ minSdk và thêm `@JvmOverloads` (2026-10-19): test SDK 53/53 (có thêm 3 test Java), lint 0 lỗi ở minSdk 21, app thử minSdk 21 với lớp Java gọi
 `new ShopTalkConfig(url)` build thành công, app Compose minSdk 21 build và chạy trên emulator API 35: màn lỗi vẫn hiện khi tên miền không phân giải
 (đường `onReceivedError` mới). **Chưa chạy trên máy hoặc emulator Android 5 đến 6**: máy chỉ có image API 35.
+
+## 8. Chạy đủ ở local (2026-10-19)
+
+Môi trường: Docker (MySQL, Redis, RabbitMQ, Qdrant) bật lại sau khi máy tắt; API build mới từ nhánh, cổng 3010, DB nháp `db_kimpl`; widget và console Vite;
+emulator Android 15; app mẫu với AAR 0.2.0 mới nhất (minSdk 21, `@JvmOverloads`). Người dùng ký bằng HMAC phía host như bản chạy thật.
+
+| # | Kiểm | Kết quả |
+|---|---|---|
+| V1 | Người dùng mới A mở app, danh tính ký có thuộc tính | đạt: phiên `verified`, đủ 5 thuộc tính, hội thoại sạch |
+| V2 | Nút ngữ cảnh đặt phòng, gửi tin | đạt: chip "Booking #G2J-8841" **không lặp mã**, điền sẵn ô nhập, dòng hệ thống "Mở từ Booking #G2J-8841", tin AI. Console nhân viên thấy cùng dòng hệ thống |
+| V3 | Console Live chat | đạt: nhãn "Hotel: A In Hotel Del Luna", "South", "Reception", agent "Hotel Admin" |
+| V4 | Đính kèm ảnh từ thư viện, gửi | đạt: bản ghi `image/png` 213 554 byte gắn đúng phiên, AI trả lời |
+| V5 | Logout | **lỗi đã sửa**: máy chủ mở phiên khách mới nhưng màn hình vẫn hiện tin của người trước (trạng thái tin nhắn của widget không đặt lại khi đổi phiên). Sau sửa: chỉ còn lời chào |
+| V6 | Đổi sang người dùng B sau logout | đạt: khách hàng riêng, phiên riêng, không thấy tin của A |
+| V7 | Xoay ngang, cỡ chữ 130 %, dark mode khi đã có hội thoại | đạt: widget tải lại, lịch sử còn, ô nhập và nút gửi hiện đủ, không sập, host được ký lại mỗi lần. Ngang màn vùng tin nhắn thấp |
+| V8 | Cài đặt, nút Back của hệ thống | đạt: màn riêng tư, đồng ý, tiếp thị, CCPA, tải và xóa dữ liệu; Back đóng cài đặt và ở lại app |
+| V9 | Kết thúc hội thoại và đánh giá | đạt: hộp xác nhận, trạng thái `ended`, chấm 5 sao lưu `csat_rating = 5` |
+| V10 | Mất đường tới widget rồi Thử lại | đạt: màn lỗi tiếng Việt ngay khi tải lỗi, bấm Thử lại sau khi nối lại thì vào chat |
+| V11 | Console, mục Mobile app: đổi kiểu menu mở đầu sang thẻ có biểu tượng, lưu | đạt: DB và endpoint công khai có `menuStyle: card`; app sau khi xóa dữ liệu hiện thẻ có biểu tượng, không phát hành lại app. Đã trả về `chip` |
+
+Bộ test tự động chạy cùng lúc:
+
+| Bộ | Kết quả |
+|---|---|
+| `packages/types` jest | 176/176 |
+| API `chat` và `tenant` jest | 322/322 (42 suite) |
+| Widget `node --test` | 50/50 |
+| SDK Kotlin `testReleaseUnitTest` | 53/53 |
+| `tsc` api, widget, web | sạch |
+| `i18n:check` | 6 ngôn ngữ đủ khóa |
+
+### Phát hiện
+
+| # | Mức | Phát hiện | Trạng thái |
+|---|---|---|---|
+| F1 | Cao | Sau `logout` giao diện vẫn hiện tin của người trước | **Đã sửa** trong `useChat` (đặt lại tin, con trỏ và trạng thái khi token đổi; bỏ qua phản hồi của phiên cũ) |
+| F2 | Cao, quyền riêng tư | Nhận diện người khác mà **không** `logout()`: máy chủ gắn phiên cũ sang khách mới, khách mới thấy hội thoại cũ. Tái hiện hai lần (A sang người mới, B sang C). Hợp đồng `attributes` trên main không tách phiên | **Mở.** Giảm nhẹ bằng hướng dẫn (bắt buộc `logout()`). Nên làm thêm: SDK ghi nhớ băm của userId lần trước và tự `logout` khi khác; máy chủ từ chối hoặc tách phiên (nhánh stage1-complete có tách phiên) |
+| F3 | Thấp | Menu dạng thẻ hiện nhãn tiếng Anh trong ngôn ngữ `vi`; thẻ đồng ý có hai dòng tiếng Anh ("What we collect", "Why") | Mở, ở widget web |
+| F4 | Thấp | Sau khi kết thúc, danh sách không cuộn xuống hết nên thẻ đánh giá bị ô nhập che nửa dưới tới khi cuộn | Mở |
+| F5 | Nội dung | Kịch bản mở đầu và kho tri thức trong DB nháp là của cửa hàng Mỹ (Delivery Status, chính sách Mỹ), AI trả lời dài tiếng Anh. Chưa phải nội dung khách sạn Go2Joy | Mở, không thuộc SDK |
+| F6 | Môi trường | Sau khi Docker khởi động lại, container đã chạy nhưng cổng chưa mở ra máy chủ; `docker restart` mới mở | Ghi nhận |

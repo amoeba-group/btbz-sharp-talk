@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { isAuthError } from '../lib/errors';
@@ -44,12 +44,32 @@ export function useChat(sessionToken: string | null) {
   // Reset to null (full fetch) after a send, since the send's own persisted
   // rows are newer than the cursor and must replace the optimistic bubbles.
   const lastServerId = useRef<string | null>(null);
+  // The token the thread on screen belongs to. A response for any other token is stale.
+  const tokenRef = useRef(sessionToken);
+  tokenRef.current = sessionToken;
+
+  // The session changed (logout, then the guest session that replaces it). The thread, the
+  // delta cursor and the conversation state all belonged to the previous session: without this
+  // the next person on the device saw the previous user's messages (seen on an Android
+  // emulator after the host called logout; the server had already opened an empty guest session).
+  const threadToken = useRef(sessionToken);
+  useEffect(() => {
+    if (threadToken.current === sessionToken) return;
+    threadToken.current = sessionToken;
+    setMessages([]);
+    setConversationId(null);
+    setStatus('none');
+    setCanRate(false);
+    lastServerId.current = null;
+  }, [sessionToken]);
 
   useQuery({
     queryKey: ['conversation', sessionToken],
     queryFn: async () => {
       const after = lastServerId.current;
       const conv = await getConversation(sessionToken!, after);
+      // The session changed while this request was in flight: its messages are not ours any more.
+      if (tokenRef.current !== sessionToken) return conv;
       if (!inFlight.current) {
         if (conv.status) setStatus(conv.status);
         // The server decides whether rating is still open (24h window); the

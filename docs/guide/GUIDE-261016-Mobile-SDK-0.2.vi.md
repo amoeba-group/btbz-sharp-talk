@@ -106,7 +106,10 @@ chat.identityProvider = ShopTalkIdentityProvider {
 
 - Trả `null` = chưa đăng nhập, người dùng chat với tư cách khách. SDK **không tự logout** khi gặp `null` (giữ hội thoại khách liền mạch).
 - Provider ném lỗi: SDK gọi `onError(ShopTalkError.IdentityProviderFailed(cause))` và chat tiếp như khách.
-- Đổi tài khoản trên cùng máy: gọi `chat.logout()` rồi `chat.reload()` (provider được hỏi lại).
+- **Đổi tài khoản hoặc đăng xuất khỏi app: bắt buộc gọi `chat.logout()`** rồi `chat.reload()` (provider được hỏi lại). WebView giữ phiên chat
+  giữa các lần mở app. Nếu app gọi nhận diện cho người khác mà không `logout()`, máy chủ gắn phiên cũ sang người mới và người mới thấy
+  hội thoại của người trước (đã tái hiện hai lần trên emulator, TCR-261016 §8). Gọi `logout()` ở chính chỗ app xóa phiên đăng nhập của mình,
+  không chờ tới lần nhận diện kế tiếp.
 - `chat.identify(identity)` thủ công vẫn còn nhưng **chỉ gửi một lần**, không gửi lại khi reload. Dùng provider cho app thật.
 - `ShopTalkUser` (0.1.0) còn biên dịch được nhưng đã deprecated.
 
