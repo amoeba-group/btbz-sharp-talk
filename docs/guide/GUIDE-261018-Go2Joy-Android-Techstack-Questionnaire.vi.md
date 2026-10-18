@@ -9,11 +9,11 @@
 | # | Câu hỏi | Lấy ở đâu | Nếu câu trả lời là… |
 |---|---|---|---|
 | 1 | Phiên bản Kotlin chính xác trong app? | `gradle/libs.versions.toml` hoặc `build.gradle` gốc, dòng `kotlin` | 2.1.0 trở lên: dùng được. Dưới 2.1: AAR không đọc được, Amoeba phải build lại bằng Kotlin thấp hơn hoặc giao mã nguồn |
-| 2 | `minSdk` của app? | `app/build.gradle(.kts)`, `defaultConfig` | 24 trở lên: dùng ngay. 21 đến 23: Amoeba hạ minSdk của SDK xuống 21 (một sửa nhỏ, cần thử lại). Dưới 21: cần bàn |
+| 2 | `minSdk` của app? | `app/build.gradle(.kts)`, `defaultConfig` | 21 trở lên: dùng được (21 đến 23 chưa chạy thử máy thật, Amoeba thử trên máy của họ). Dưới 21: cần bàn |
 | 3 | Màn hình dựng bằng Jetpack Compose, XML hay cả hai? | màn nơi sẽ đặt nút "Hỗ trợ" | XML: dùng Fragment trực tiếp. Compose: dùng thêm module Compose, xem câu 4 |
 | 4 | Activity chứa màn chat kế thừa lớp nào? | tìm `class ... : XxxActivity()` | `AppCompatActivity` hoặc `FragmentActivity`: dùng được. **`ComponentActivity` thuần (mẫu Compose của Android Studio): màn chat sập**, phải đổi lớp cha và theme sang AppCompat |
 | 5 | Phiên bản AGP và Gradle? | `gradle/libs.versions.toml` mục `agp`, `gradle/wrapper/gradle-wrapper.properties` | Đã thử AGP 8.5.2 và 8.10.1. Dưới 8.5 thì Amoeba thử thêm |
-| 6 | Mã Java trong app có gọi SDK không? | tìm các tệp `.java` ở màn sẽ nhúng | Không: bỏ qua. Có: Amoeba thêm `@JvmOverloads` để Java tạo `ShopTalkConfig` ngắn gọn |
+| 6 | Mã Java trong app có gọi SDK không? | tìm các tệp `.java` ở màn sẽ nhúng | Không cần thay gì: hàm tạo ngắn cho Java đã có. Hỏi để biết có phải kiểm thêm phía Java không |
 | 7 | App phân phối thư viện cách nào: file AAR đặt vào `libs/`, hay Maven riêng (Artifactory, Nexus, GitHub Packages)? | cách đang dùng cho SDK khác (bản đồ, thanh toán) | Maven riêng: Amoeba đóng gói thêm POM để khỏi phải tự khai báo androidx. AAR: dùng như hướng dẫn |
 
 ## B. Cần biết để thiết kế đúng

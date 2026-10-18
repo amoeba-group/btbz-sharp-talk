@@ -15,11 +15,11 @@ Yêu cầu của app chủ (đã kiểm bằng app thử, xem TCR-261016 §7):
 | Hạng mục | Yêu cầu | Ghi chú |
 |---|---|---|
 | Kotlin | **2.1.0 trở lên** | AAR build bằng 2.2.0. Kotlin 2.0.x trở xuống không đọc được (trình biên dịch dừng với lỗi nội bộ) |
-| `minSdk` | **24 trở lên** | thấp hơn thì lỗi gộp manifest; cần hạ minSdk của SDK, báo Amoeba |
+| `minSdk` | **21 trở lên** | thấp hơn thì lỗi gộp manifest. Trên Android 5.0 và 5.1 chưa chạy thử máy thật; ở đó lỗi HTTP 4xx/5xx của trang không được báo, chỉ có lỗi mạng và hết 15 giây chờ |
 | JVM của app | 11 hoặc 17 | cả hai đều đã kiểm |
 | AGP | 8.5.2 và 8.10.1 đã kiểm | AAR không đòi AGP hay compileSdk tối thiểu |
 | Activity chủ | `FragmentActivity` (`AppCompatActivity` cũng là một) | `ComponentActivity` thuần sẽ sập, xem mục 8 |
-| Mã Java | gọi `ShopTalkConfig` phải truyền đủ mọi tham số | chưa có `@JvmOverloads` |
+| Mã Java | dùng được | `ShopTalkConfig`, `ShopTalkContext`, `ShopTalkAttachments` có hàm tạo ngắn cho Java |
 
 Amoeba giao file AAR (không có trên Maven, không commit vào repo):
 
@@ -268,7 +268,7 @@ adb shell am start -n site.amoeba.shoptalk.sample/.MainActivity \
 - `ShopTalkListener.onReady` có thể bắn hai lần trong một lần tải; `identityProvider` thì chỉ bị gọi một lần.
 - Màn ngang dùng được nhưng vùng tin nhắn thấp; nên khóa dọc cho Activity chat nếu thiết kế cho phép.
 - Hộp chọn tệp và màn lỗi của SDK dùng giao diện Material mặc định, chưa theo màu thương hiệu của app.
-- Mã Java phải truyền đủ mọi tham số khi tạo `ShopTalkConfig` (chưa có `@JvmOverloads`).
+- Android 5.0 và 5.1 (API 21 và 22) chỉ được kiểm bằng biên dịch và lint, chưa chạy máy thật. Lỗi tải trang ở đó đi qua callback cũ của WebView.
 - Chưa có push nền, badge ngoài màn chat (chỉ `onUnread` khi màn đang mở), dark mode của widget, iOS.
 - Hội thoại gắn với session trên thiết bị; web và app không nối tiếp nhau.
 - SDK 0.2.0 chưa tự gọi `GET /public/widget/app-config`; widget gọi để áp cấu hình admin (kể cả `header` khi app để `null`).

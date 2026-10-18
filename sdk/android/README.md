@@ -6,7 +6,7 @@
 `docs/guide/GUIDE-261016-Mobile-SDK-0.2.vi.md`, 설계: `docs/plan/PLN-261015-Go2Joy-Kotlin-SDK-0.2.md`).
 
 - 모듈: `:shoptalk` (라이브러리 → AAR) · `:shoptalk-compose` (선택, Compose 래퍼) · `:sample` (검증용 앱, 전달물 아님)
-- minSdk 24 · compileSdk 35 · **Kotlin 2.2.0** · JDK 17 · AGP 8.5.2 / Gradle 8.7
+- minSdk 21 · compileSdk 35 · **Kotlin 2.2.0** · JDK 17 · AGP 8.5.2 / Gradle 8.7
 - `:shoptalk` 의존성은 androidx 기본군(core-ktx 1.15.0, fragment-ktx 1.8.5)뿐 — Compose는 `:shoptalk-compose`에만 있다.
   AAR에는 POM이 없으므로 **호스트 앱이 이미 가진 것만** 쓴다.
 

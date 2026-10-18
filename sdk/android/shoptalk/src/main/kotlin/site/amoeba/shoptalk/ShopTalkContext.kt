@@ -9,7 +9,7 @@ package site.amoeba.shoptalk
  * @param label Human text for the chip, e.g. `Booking #G2J-8841`.
  * @param prefill Draft text put into an empty input box (the user can still edit it).
  */
-data class ShopTalkContext(
+data class ShopTalkContext @JvmOverloads constructor(
     val screen: String,
     val ref: String? = null,
     val label: String? = null,

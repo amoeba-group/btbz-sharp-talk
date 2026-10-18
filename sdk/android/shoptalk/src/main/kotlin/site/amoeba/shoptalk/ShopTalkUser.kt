@@ -15,7 +15,7 @@ package site.amoeba.shoptalk
     "Use ShopTalkIdentity + ShopTalkIdentityProvider",
     ReplaceWith("ShopTalkIdentity.of(userId, hash)"),
 )
-data class ShopTalkUser(
+data class ShopTalkUser @JvmOverloads constructor(
     val userId: String,
     val hash: String,
     val name: String? = null,

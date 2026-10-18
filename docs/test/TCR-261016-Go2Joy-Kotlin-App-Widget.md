@@ -138,11 +138,15 @@ Cách kiểm: một app tối thiểu chỉ có AAR (`implementation(files(...))
 | M5 | AGP 8.10.1 (mới nhất mà Kotlin 2.2.0 hỗ trợ) | đạt |
 | M6 | androidx cũ: fragment 1.5.7, appcompat 1.6.1, core 1.10.1 | đạt (build); chưa chạy |
 | M7 | targetSdk 34 | đạt (build); chưa chạy |
-| M8 | **minSdk 21** | **lỗi** gộp manifest: "minSdkVersion 21 cannot be smaller than version 24 declared in library". Lint thử với minSdk 21 chỉ báo một chỗ dùng API 23 (`WebResourceError` ở xử lý lỗi tải trang), nên hạ xuống 21 khả thi bằng một sửa nhỏ, chưa làm |
-| M9 | App Java gọi `new ShopTalkConfig("url")` | **lỗi** biên dịch Java: lớp `data class` có tham số mặc định nhưng không có `@JvmOverloads`, Java phải truyền đủ mọi tham số. Chưa sửa |
+| M8 | minSdk 21 | lỗi ở AAR đầu tiên (minSdk 24). Đã hạ minSdk của SDK và module Compose xuống 21; lint minSdk 21 không còn lỗi (một chỗ dùng API 23 được đánh dấu `@RequiresApi`, thêm callback lỗi cũ cho API 21 và 22). Sau sửa: đạt (build) |
+| M9 | App Java gọi `new ShopTalkConfig("url")` | lỗi ở AAR đầu tiên (thiếu `@JvmOverloads`). Đã thêm cho `ShopTalkConfig`, `ShopTalkAttachments`, `ShopTalkContext`, `ShopTalkUser`, kèm 3 test Java. Sau sửa: đạt |
 | M10 | Compose, Activity kế thừa `ComponentActivity` (mẫu Compose chuẩn của Android Studio) | **sập khi mở màn chat**: `IllegalStateException: View ...AndroidComposeView is not within a subclass of FragmentActivity` (chạy thật trên emulator API 35) |
 | M11 | Compose, Activity kế thừa `AppCompatActivity` | đạt: không sập, màn lỗi native hiện đúng (địa chỉ widget thử không phải widget thật) |
 
 Siêu dữ liệu AAR: `minCompileSdk=1`, `minAndroidGradlePluginVersion=1.0.0`, tức AAR không đòi compileSdk hay AGP tối thiểu. Chưa kiểm app có compileSdk 34 (máy chỉ cài nền tảng 35).
 
 Chưa kiểm: AGP dưới 8.5, Gradle dưới 8.7, Kotlin 2.3 trở lên, app đã bật `android.enableJetifier`, thiết bị không có Google Play Services, WebView cũ trên Android 7 đến 9.
+
+Sau khi hạ minSdk và thêm `@JvmOverloads` (2026-10-19): test SDK 53/53 (có thêm 3 test Java), lint 0 lỗi ở minSdk 21, app thử minSdk 21 với lớp Java gọi
+`new ShopTalkConfig(url)` build thành công, app Compose minSdk 21 build và chạy trên emulator API 35: màn lỗi vẫn hiện khi tên miền không phân giải
+(đường `onReceivedError` mới). **Chưa chạy trên máy hoặc emulator Android 5 đến 6**: máy chỉ có image API 35.

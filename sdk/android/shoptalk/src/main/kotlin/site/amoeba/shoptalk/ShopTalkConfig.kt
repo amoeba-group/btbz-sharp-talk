@@ -20,7 +20,7 @@ enum class ShopTalkHeader { WIDGET, NATIVE }
  *   permission needed). Hidden anyway when no camera app can handle the intent.
  * @param multiple Allow picking several files at once (still bound by the widget input).
  */
-data class ShopTalkAttachments(
+data class ShopTalkAttachments @JvmOverloads constructor(
     val camera: Boolean = true,
     val multiple: Boolean = true,
 )
@@ -52,7 +52,7 @@ data class ShopTalkAttachments(
  *   Any other plain-http host is rejected even when this is true.
  * @throws IllegalArgumentException when [widgetUrl] is not an accepted URL.
  */
-data class ShopTalkConfig(
+data class ShopTalkConfig @JvmOverloads constructor(
     val widgetUrl: String,
     val shop: String? = null,
     val locale: String? = null,

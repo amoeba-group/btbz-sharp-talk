@@ -33,6 +33,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ProgressBar
+import androidx.annotation.RequiresApi
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
@@ -715,10 +716,20 @@ class ShopTalkChatFragment : Fragment() {
             super.onPageFinished(view, url)
         }
 
+        // API 23+. WebResourceError (and its getters) do not exist below that.
+        @RequiresApi(Build.VERSION_CODES.M)
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
             if (request.isForMainFrame) {
                 showError(ShopTalkError.LoadFailed(error.errorCode, error.description?.toString().orEmpty()))
             }
+        }
+
+        // API 21-22 only: this older callback reports main-resource failures there. From 23 the
+        // overload above is called instead, so return early rather than report twice.
+        @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+        override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) return
+            showError(ShopTalkError.LoadFailed(errorCode, description.orEmpty()))
         }
 
         override fun onReceivedHttpError(
