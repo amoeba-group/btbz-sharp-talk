@@ -943,6 +943,7 @@
     "reset": "Hủy thay đổi",
     "unsaved": "Có thay đổi chưa lưu",
     "saved": "Đã lưu cài đặt ứng dụng di động",
-    "saveError": "Không lưu được cài đặt ứng dụng di động"
+    "saveError": "Không lưu được cài đặt ứng dụng di động",
+    "unknownAgent": "Một dòng màn hình đang trỏ tới agent AI mà tenant này không có. Hãy chọn một agent hiện có rồi lưu lại."
   }
 }

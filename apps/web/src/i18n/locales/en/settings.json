@@ -943,6 +943,7 @@
     "reset": "Discard",
     "unsaved": "Unsaved changes",
     "saved": "Mobile app settings saved",
-    "saveError": "Could not save the mobile app settings"
+    "saveError": "Could not save the mobile app settings",
+    "unknownAgent": "A screen entry points at an AI agent this tenant does not have. Pick an existing agent and save again."
   }
 }

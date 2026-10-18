@@ -502,9 +502,13 @@ export function useSaveMobileApp() {
       qc.invalidateQueries({ queryKey: ['mobile-app', tenantKey] });
       toast.success(t('mobileApp.saved'));
     },
-    onError: (e: Error) => {
-      // An entry naming an agent this tenant does not have is refused server-side.
-      toast.error(e.message || t('mobileApp.saveError'), { sticky: true });
+    onError: (e: Error & { code?: string }) => {
+      // An entry naming an agent this tenant does not have is refused server-side (E5150).
+      // The API message is English; the console says it in the operator's language.
+      toast.error(
+        e.code === 'E5150' ? t('mobileApp.unknownAgent') : e.message || t('mobileApp.saveError'),
+        { sticky: true },
+      );
     },
   });
 }

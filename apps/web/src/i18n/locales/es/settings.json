@@ -943,6 +943,7 @@
     "reset": "Descartar",
     "unsaved": "Cambios sin guardar",
     "saved": "Ajustes de la app móvil guardados",
-    "saveError": "No se pudieron guardar los ajustes de la app móvil"
+    "saveError": "No se pudieron guardar los ajustes de la app móvil",
+    "unknownAgent": "Una entrada de pantalla apunta a un agente de IA que este tenant no tiene. Elige un agente existente y guarda de nuevo."
   }
 }

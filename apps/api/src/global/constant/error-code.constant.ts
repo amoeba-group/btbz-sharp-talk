@@ -264,8 +264,9 @@ export const ERROR_CODE = {
   // E5093-E5094 — Customer journey management (PLN-261006).
   JOURNEY_STAGE_UNKNOWN: { code: 'E5093', message: 'No such journey stage for this tenant' },
   JOURNEY_STAGE_IN_USE: { code: 'E5094', message: 'Move the journeys out of a stage before removing it' },
-  // E5095 — Mobile app surface (PLN-261015).
-  MOBILE_APP_UNKNOWN_AGENT: { code: 'E5095', message: 'An entry points at an agent this tenant does not have' },
+  // E5150 — Mobile app surface (PLN-261015). Next free block after E5145-E5149 on every branch
+  // (E5095 was taken by the hotel region routing table on feature/go2joy-stage1-complete).
+  MOBILE_APP_UNKNOWN_AGENT: { code: 'E5150', message: 'An entry points at an agent this tenant does not have' },
 
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
