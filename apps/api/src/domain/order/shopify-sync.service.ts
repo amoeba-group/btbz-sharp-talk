@@ -7,7 +7,6 @@ import { OrderItem } from './entity/order-item.entity';
 import { ShopifyAdminClient, ShopifyOrderDto } from './shopify-admin.client';
 import { TenantService } from '../tenant/tenant.service';
 import { CustomerService } from '../customer/customer.service';
-import { IntegrationService } from '../integration/integration.service';
 import { EventBusService, EVENTS } from '../../infrastructure/infrastructure.module';
 
 /**
@@ -68,7 +67,6 @@ export class ShopifySyncService {
     private readonly client: ShopifyAdminClient,
     private readonly tenantService: TenantService,
     private readonly customerService: CustomerService,
-    private readonly integrationService: IntegrationService,
     private readonly bus: EventBusService,
   ) {}
 
@@ -83,10 +81,14 @@ export class ShopifySyncService {
       );
     }
 
-    // Incremental cursor (PERF-5): last_sync_at minus a lookback overlap.
-    const status = await this.integrationService.findByName(SHOPIFY);
-    const since = status?.lastSyncAt
-      ? new Date(status.lastSyncAt.getTime() - CURSOR_LOOKBACK_MS).toISOString()
+    // Incremental cursor (PERF-5): THIS tenant's last successful sync minus a
+    // lookback overlap. It used to be the provider-wide integration_status row,
+    // so with two Shopify stores one store's run advanced the other's cursor
+    // past orders it had never read (FIX-261019).
+    const startedAt = new Date();
+    const cursor = await this.tenantService.getShopifySyncCursor(tenantId);
+    const since = cursor
+      ? new Date(cursor.getTime() - CURSOR_LOOKBACK_MS).toISOString()
       : undefined;
 
     let synced = 0;
@@ -104,13 +106,16 @@ export class ShopifySyncService {
       } while (pageInfo && pages < MAX_PAGES);
     } catch (e) {
       if (synced === 0) return this.record(tenantId, false, 0, `Sync failed: ${(e as Error).message}`);
-      // Partial progress is kept; report it but flag the interruption.
+      // Partial progress is kept; report it but flag the interruption. The
+      // cursor stays put so the unread pages are retried next run.
       return this.record(tenantId, true, synced, `Synced ${synced} order(s), interrupted: ${(e as Error).message}`);
     }
     const detail = since
       ? `Synced ${synced} order(s) updated since ${since}`
       : `Synced ${synced} order(s) (initial full sync${pageInfo ? ', more pages remain' : ''})`;
-    return this.record(tenantId, true, synced, detail);
+    // Cursor = when this run STARTED, so orders updated while it ran fall
+    // inside the next window (plus the lookback overlap).
+    return this.record(tenantId, true, synced, detail, startedAt);
   }
 
   /**
@@ -376,12 +381,13 @@ export class ShopifySyncService {
     ok: boolean,
     synced: number,
     detail: string,
+    syncedAt?: Date,
   ): Promise<ShopifySyncResult> {
-    // Global row: kept ONLY as the incremental cursor (`last_sync_at`) read above.
-    // It is provider-keyed, so it must not be what any tenant's screen shows.
-    await this.integrationService.upsert(SHOPIFY, ok ? 'connected' : 'error', detail.slice(0, 255));
-    // Per-tenant row: what the platforms tile and dashboard read (PLN-261019 D1).
-    await this.tenantService.recordShopifyOutcome(tenantId, ok, detail);
+    // Everything lands on this tenant's credential row — state for the
+    // platforms tile and dashboard (PLN-261019 D1) and the sync cursor
+    // (FIX-261019). Nothing is written to the provider-wide integration_status
+    // row any more: it is not tenant-scoped, so it cannot hold either.
+    await this.tenantService.recordShopifyOutcome(tenantId, ok, detail, { syncedAt });
     return { ok, synced, detail };
   }
 }

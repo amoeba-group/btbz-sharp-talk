@@ -960,6 +960,7 @@
     "lastChecked": "Kiểm tra lần cuối",
     "registeredAt": "Đã đăng ký",
     "selfNoCommerce": "Tính năng đơn hàng đang tắt nên chỉ cần cài widget là xong. Xem Cài đặt widget → Nhúng & SDK.",
-    "openWidgetSettings": "Mở cài đặt widget"
+    "openWidgetSettings": "Mở cài đặt widget",
+    "emptyHintMarketing": "Chọn dịch vụ bạn đang dùng ở mục \"Thêm nền tảng\" bên dưới."
   }
 }

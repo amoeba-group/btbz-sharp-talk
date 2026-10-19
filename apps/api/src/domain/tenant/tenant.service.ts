@@ -1184,13 +1184,27 @@ export class TenantService {
    * not "error". The global integration_status row is NOT written here; the
    * order sync still stamps it for its incremental cursor only.
    */
-  async recordShopifyOutcome(tenantId: number, ok: boolean, detail: string): Promise<void> {
+  async recordShopifyOutcome(
+    tenantId: number,
+    ok: boolean,
+    detail: string,
+    opts: { syncedAt?: Date } = {},
+  ): Promise<void> {
     const cred = await this.credRepo.findOne({ where: { tenantId, provider: SHOPIFY } });
     if (!cred) return;
     cred.status = ok ? 'connected' : 'error';
     cred.detail = detail.slice(0, 255);
     cred.lastTestedAt = new Date();
+    // Only a successful order sync moves the cursor: a failed page must be
+    // re-read next time, and a mere connection test synced nothing.
+    if (ok && opts.syncedAt) cred.lastSyncedAt = opts.syncedAt;
     await this.credRepo.save(cred);
+  }
+
+  /** This tenant's incremental order-sync cursor (null = never synced → full sync). */
+  async getShopifySyncCursor(tenantId: number): Promise<Date | null> {
+    const cred = await this.credRepo.findOne({ where: { tenantId, provider: SHOPIFY } });
+    return cred?.lastSyncedAt ?? null;
   }
 
 }

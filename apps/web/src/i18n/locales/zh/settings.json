@@ -960,6 +960,7 @@
     "lastChecked": "最近检查",
     "registeredAt": "注册",
     "selfNoCommerce": "订单功能已关闭，只需安装小部件即完成对接。请查看小部件设置 → 嵌入与 SDK。",
-    "openWidgetSettings": "打开小部件设置"
+    "openWidgetSettings": "打开小部件设置",
+    "emptyHintMarketing": "在下方“添加平台”中选择您正在使用的服务。"
   }
 }

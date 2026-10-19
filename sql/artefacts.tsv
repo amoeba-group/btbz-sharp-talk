@@ -84,6 +84,7 @@
 261019-conv-csat-survey.sql	column	conversations	csat_comment
 261019-conv-csat-survey.sql	column	tenants	terms_url
 261019-conv-csat-survey.sql	column	tenants	csat_mode
+261019-integration-credentials-last-synced.sql	column	integration_credentials	last_synced_at
 261019-tenant-widget-languages.sql	column	tenants	widget_languages
 261019-units.sql	table	units	-
 261019-units.sql	table	job_labels_bak_261019	-

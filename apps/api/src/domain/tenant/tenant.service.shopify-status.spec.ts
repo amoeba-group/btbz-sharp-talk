@@ -80,6 +80,28 @@ describe('TenantService — Shopify status is per-tenant (PLN-261019)', () => {
     expect((saved[0].detail as string).length).toBe(255);
   });
 
+  it('a successful sync moves this tenant\'s cursor; a test or a failure leaves it alone (FIX-261019)', async () => {
+    const was = new Date('2026-10-19T10:00:00Z');
+    const cred = { secretEnc: Buffer.from('e'), status: 'connected', detail: null, lastTestedAt: null, lastSyncedAt: was };
+    const { svc, saved } = build(cred);
+    await svc.recordShopifyOutcome(1, true, 'Connected: shop'); // connection test → no syncedAt
+    expect(saved[0].lastSyncedAt).toBe(was);
+    await svc.recordShopifyOutcome(1, false, 'Sync failed', { syncedAt: new Date() });
+    expect(saved[1].lastSyncedAt).toBe(was);
+    const now = new Date('2026-10-19T12:00:00Z');
+    await svc.recordShopifyOutcome(1, true, 'Synced 2 order(s)', { syncedAt: now });
+    expect(saved[2].lastSyncedAt).toBe(now);
+  });
+
+  it('getShopifySyncCursor is per tenant and null when never synced', async () => {
+    const { svc: never } = build({ secretEnc: Buffer.from('e'), lastSyncedAt: null });
+    expect(await never.getShopifySyncCursor(1)).toBeNull();
+    const at = new Date('2026-10-19T12:00:00Z');
+    const { svc: synced, credRepo } = build({ secretEnc: Buffer.from('e'), lastSyncedAt: at });
+    expect(await synced.getShopifySyncCursor(4)).toBe(at);
+    expect(credRepo.findOne).toHaveBeenCalledWith({ where: { tenantId: 4, provider: 'shopify' } });
+  });
+
   it('recordShopifyOutcome without a credential writes nothing (missing store ≠ error)', async () => {
     const { svc, credRepo } = build(null);
     await svc.recordShopifyOutcome(4, false, 'missing');

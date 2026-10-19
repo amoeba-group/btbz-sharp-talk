@@ -89,11 +89,13 @@ export function useUpdateCredential() {
   });
 }
 
-export const useShopifySettings = () => {
+export const useShopifySettings = (enabled = true) => {
   const tenantKey = useTenantKey();
   return useQuery({
     queryKey: ['shopify-settings', tenantKey],
     queryFn: () => settingsService.shopify(),
+    // A tab that never shows Shopify (marketing) must not fetch it.
+    enabled,
   });
 };
 

@@ -960,6 +960,7 @@
     "lastChecked": "Última comprobación",
     "registeredAt": "Registrada",
     "selfNoCommerce": "Los pedidos están desactivados, así que instalar el widget es toda la integración. Ve a Ajustes del widget → Insertar y SDK.",
-    "openWidgetSettings": "Abrir ajustes del widget"
+    "openWidgetSettings": "Abrir ajustes del widget",
+    "emptyHintMarketing": "Elige el servicio que usas en \"Añadir plataforma\"."
   }
 }
