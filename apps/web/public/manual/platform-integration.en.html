@@ -530,9 +530,18 @@
     <p class="lede">
       A practical guide to the values you enter on <code>/settings/platforms</code> to connect
       each store — username, database name, API key and the rest — and <b>where to issue or find
-      each one in the platform's own admin</b>. Prepare the values, paste them into the card, save,
-      then verify with <b>Test connection</b>.
+      each one in the platform's own admin</b>. Prepare the values, pick the platform under <b>Add a platform</b>, paste them into its
+      settings dialog, save, then verify with <b>Test connection</b>.
     </p>
+    <div class="meta" style="display:block">
+      <b>Screen layout (revised 2026-10-19)</b> — <code>/settings/platforms</code> has two sections.
+      <b>Connected platforms</b> shows a card only for platforms whose credential is saved; the badge is
+      <b>Connected</b> (a test or sync succeeded), <b>Error</b>, or <b>Not tested</b> (saved only).
+      <b>Add a platform</b> lists every supported platform as a button; ones already connected are ticked.
+      If you run a platform of your own that is none of Shopify, Cafe24, WooCommerce, Odoo or Haravan,
+      use the <b>Own platform</b> button and register just a name and a note (nothing to issue; it reads
+      "Registered" at once).
+    </div>
     <div class="meta">
       <span>5 platforms · Shopify / Cafe24 / WooCommerce / Odoo / Haravan</span>
       <span>Fields map 1:1 to the console labels</span>
@@ -567,7 +576,7 @@
         <div class="p-badge">S</div>
         <div class="p-title">
           <h2><span class="p-num">01</span>Shopify</h2>
-          <p>Enter the shop domain and Admin API token in the "Shopify" card.</p>
+          <p>Add a platform → <b>Shopify</b> (or the connected card's Configure): enter the shop domain and Admin API token.</p>
         </div>
         <span class="auth-chip">Admin API · custom-app token</span>
       </div>

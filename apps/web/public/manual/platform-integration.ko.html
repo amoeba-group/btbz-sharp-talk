@@ -530,8 +530,16 @@
     <p class="lede">
       <code>/settings/platforms</code> 에서 각 쇼핑몰을 연결할 때 넣는 사용자명·데이터베이스명·
       API 키 같은 값을, <b>플랫폼 관리자 화면 어디에서 발급·확인</b>하는지 정리한 실무 가이드입니다.
-      값을 준비해 카드에 입력 → 저장 → <b>연결 테스트</b>로 검증하세요.
+      값을 준비해 <b>플랫폼 추가</b>에서 플랫폼을 고른 뒤 설정 창에 입력 → 저장 → <b>연결 테스트</b>로 검증하세요.
     </p>
+    <div class="meta" style="display:block">
+      <b>화면 구성(2026-10-19 개편)</b> — <code>/settings/platforms</code>는 두 영역입니다.
+      <b>연결된 플랫폼</b>에는 자격증명을 저장한 플랫폼만 카드로 나타나며 배지는
+      <b>연결됨</b>(테스트·동기화 성공) / <b>오류</b> / <b>미테스트</b>(저장만 함) 세 가지입니다.
+      <b>플랫폼 추가</b>에는 지원 플랫폼이 버튼으로 나열되고, 이미 연결된 것은 ✓로 표시됩니다.
+      Shopify·Cafe24·WooCommerce·Odoo·Haravan 어디에도 속하지 않는 자체 개발 플랫폼이면
+      <b>자체 플랫폼</b> 버튼으로 이름·설명만 등록하면 됩니다(발급할 값 없음, 등록 즉시 "등록됨").
+    </div>
     <div class="meta">
       <span>5개 플랫폼 · Shopify / Cafe24 / WooCommerce / Odoo / Haravan</span>
       <span>필드는 콘솔 라벨과 1:1 대응</span>
@@ -566,7 +574,7 @@
         <div class="p-badge">S</div>
         <div class="p-title">
           <h2><span class="p-num">01</span>Shopify</h2>
-          <p>"Shopify 연동" 카드에서 쇼핑몰 주소와 Admin API 토큰을 입력합니다.</p>
+          <p>플랫폼 추가 → <b>Shopify</b>(또는 연결된 카드의 설정)에서 쇼핑몰 주소와 Admin API 토큰을 입력합니다.</p>
         </div>
         <span class="auth-chip">Admin API · 커스텀 앱 토큰</span>
       </div>
