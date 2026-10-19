@@ -8,6 +8,8 @@ import { AdminUser } from '../domain/auth/entity/admin-user.entity';
 import { User } from '../domain/user/entity/user.entity';
 import { JobLabel } from '../domain/user/entity/job-label.entity';
 import { UserJobLabel } from '../domain/user/entity/user-job-label.entity';
+import { Unit } from '../domain/user/entity/unit.entity';
+import { defaultJobLabels, defaultUnits } from '../domain/user/default-org';
 import { AiEngine } from '../domain/ai-engine/entity/ai-engine.entity';
 import { TenantAiSetting } from '../domain/ai-engine/entity/tenant-ai-setting.entity';
 import { TenantAiConfig } from '../domain/ai-engine/entity/tenant-ai-config.entity';
@@ -121,12 +123,25 @@ export async function runSeed(ds: DataSource, opts: SeedOptions = {}): Promise<v
   // Job labels + assign all to master
   const labelRepo = ds.getRepository(JobLabel);
   const ujlRepo = ds.getRepository(UserJobLabel);
-  for (const [code, name] of [['consult', '상담'], ['accounting', '회계'], ['operations', '운영']]) {
+  for (const { code, name } of defaultJobLabels(tenant.defaultLanguage)) {
     let label = await labelRepo.findOne({ where: { tenantId: tenant.id, code } });
     if (!label) label = await labelRepo.save(labelRepo.create({ tenantId: tenant.id, code, name }));
     if (!(await ujlRepo.findOne({ where: { userId: master.id, jobLabelId: label.id } }))) {
       await ujlRepo.save(ujlRepo.create({ userId: master.id, jobLabelId: label.id }));
     }
+  }
+
+  // Units (teams) — PLN-261019 P1; master goes to management.
+  const unitRepo = ds.getRepository(Unit);
+  let managementUnit: Unit | null = null;
+  for (const [i, { code, name }] of defaultUnits(tenant.defaultLanguage).entries()) {
+    let unit = await unitRepo.findOne({ where: { tenantId: tenant.id, code } });
+    if (!unit) unit = await unitRepo.save(unitRepo.create({ tenantId: tenant.id, code, name, sortOrder: (i + 1) * 10 }));
+    if (code === 'management') managementUnit = unit;
+  }
+  if (managementUnit && master.unitId == null) {
+    master.unitId = managementUnit.id;
+    await userRepo.save(master);
   }
 
   // AI engines: platform stub default + anthropic

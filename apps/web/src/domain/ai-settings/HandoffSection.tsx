@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Input, Label, Select } from '@/components/Field';
 import { cn } from '@/lib/cn';
-import { useUsers } from '../users/users.hooks';
+import { useJobLabels, useUsers } from '../users/users.hooks';
 import { useAiConfig, useUpdateAiConfig } from './ai-settings.hooks';
 import { LanguageTabs } from './LanguageTabs';
 import { RoutingRulesEditor, ROUTING_REGIONS } from './RoutingRulesEditor';
@@ -36,6 +36,17 @@ export function HandoffSection() {
   const { data: config, isLoading, error } = useAiConfig();
   const updateConfig = useUpdateAiConfig();
   const users = useUsers();
+  // Tenant job labels (PLN-261019 P3): names are the tenant's, and labels it
+  // added show up too. Until loaded (or when a stored code is gone) the three
+  // fixed codes fall back to the i18n names, so the select is never empty.
+  const jobLabels = useJobLabels();
+  const labelOptions = useMemo(() => {
+    const fixed = ['consult', 'accounting', 'operations'].map((code) => ({ code, name: t(`handoff.denyLabel.${code}`) }));
+    const rows = (jobLabels.data ?? []).map((l) => ({ code: l.code, name: l.name }));
+    if (!rows.length) return fixed;
+    const seen = new Set(rows.map((r) => r.code));
+    return [...rows, ...fixed.filter((f) => !seen.has(f.code))];
+  }, [jobLabels.data, t]);
 
   const [assignees, setAssignees] = useState<string[]>([]);
   const [hoursOn, setHoursOn] = useState(false);
@@ -222,7 +233,7 @@ export function HandoffSection() {
             <p className="mt-1 text-[11px] text-gray-400">{t('handoff.assigneesHint')}</p>
           </div>
 
-          <RoutingRulesEditor rows={routingRows} onChange={setRoutingRows} agents={agents} />
+          <RoutingRulesEditor rows={routingRows} onChange={setRoutingRows} agents={agents} labels={labelOptions} />
 
           {/* Unanswered-alarm reminder (PLN-261015 D4). */}
           <div className="border-t border-gray-100 pt-4">
@@ -442,9 +453,9 @@ export function HandoffSection() {
                       )
                     }
                   >
-                    {['consult', 'accounting', 'operations'].map((v) => (
-                      <option key={v} value={v}>
-                        {t(`handoff.denyLabel.${v}`)}
+                    {labelOptions.map((l) => (
+                      <option key={l.code} value={l.code}>
+                        {l.name}
                       </option>
                     ))}
                   </Select>

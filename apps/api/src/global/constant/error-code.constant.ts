@@ -32,6 +32,8 @@ export const ERROR_CODE = {
     code: 'E2004',
     message: 'The last active super admin cannot be deactivated',
   },
+  /** Unit (team) id not in this tenant (PLN-261019-Users-Unit-Labels-Routing-Conditions). */
+  UNIT_NOT_FOUND: { code: 'E2005', message: 'Unit not found' },
 
   // E3xxx — chat / conversation
   SESSION_NOT_FOUND: { code: 'E3001', message: 'Session not found' },

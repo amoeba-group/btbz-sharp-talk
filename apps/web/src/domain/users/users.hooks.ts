@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { usersService } from './users.service';
-import type { InviteUserBody, UpdateUserBody } from './users.service';
+import type { InviteUserBody, OrgItemBody, UpdateUserBody } from './users.service';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
 
@@ -19,6 +19,39 @@ export const useJobLabels = () => {
     queryFn: () => usersService.jobLabels(),
   });
 };
+
+export const useUnits = () => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['units', tenantKey],
+    queryFn: () => usersService.units(),
+  });
+};
+
+/**
+ * Label / unit create + rename (PLN-261019 P2). Toasts are the caller's: the
+ * modal knows which row it was saving, so the message can name it.
+ */
+export function useOrgMutations() {
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ['job-labels', tenantKey] });
+    qc.invalidateQueries({ queryKey: ['units', tenantKey] });
+    qc.invalidateQueries({ queryKey: ['users', tenantKey] });
+  };
+  const createLabel = useMutation({ mutationFn: (b: OrgItemBody) => usersService.createJobLabel(b), onSuccess: refresh });
+  const renameLabel = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => usersService.renameJobLabel(id, name),
+    onSuccess: refresh,
+  });
+  const createUnit = useMutation({ mutationFn: (b: OrgItemBody) => usersService.createUnit(b), onSuccess: refresh });
+  const renameUnit = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) => usersService.renameUnit(id, name),
+    onSuccess: refresh,
+  });
+  return { createLabel, renameLabel, createUnit, renameUnit };
+}
 
 export function useInviteUser() {
   const qc = useQueryClient();

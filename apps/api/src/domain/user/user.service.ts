@@ -6,6 +6,7 @@ import { generateToken } from '@sharptalk/common';
 import { User } from './entity/user.entity';
 import { JobLabel } from './entity/job-label.entity';
 import { UserJobLabel } from './entity/user-job-label.entity';
+import { Unit } from './entity/unit.entity';
 import { Invitation } from './entity/invitation.entity';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
@@ -13,6 +14,8 @@ import {
   InviteUserResponse,
   JobLabelMapper,
   JobLabelResponse,
+  UnitMapper,
+  UnitResponse,
   UserMapper,
   UserResponse,
 } from './dto/response/user.response';
@@ -46,6 +49,8 @@ export class UserService {
     private readonly mailer: MailerService,
     private readonly tenantService: TenantService,
     private readonly config: ConfigService,
+    // Last on purpose: existing specs construct the service positionally.
+    @InjectRepository(Unit) private readonly unitRepo: Repository<Unit>,
   ) {}
 
   // ---- Users ----
@@ -63,7 +68,10 @@ export class UserService {
     });
 
     const labelsByUser = await this.loadLabelCodes(users.map((u) => u.id));
-    const items = users.map((u) => UserMapper.toResponse(u, labelsByUser.get(String(u.id)) ?? []));
+    const unitsById = await this.loadUnits(users.map((u) => u.unitId));
+    const items = users.map((u) =>
+      UserMapper.toResponse(u, labelsByUser.get(String(u.id)) ?? [], unitsById.get(String(u.unitId)) ?? null),
+    );
     return { items, total };
   }
 
@@ -74,11 +82,14 @@ export class UserService {
     rank: string,
     labelCodes: string[] = [],
     actorType: 'user' | 'admin' = 'user',
+    unitId: number | null = null,
   ): Promise<InviteUserResponse> {
     const existing = await this.userRepo.findOne({ where: { tenantId, email } });
     if (existing) {
       throw new BusinessException(ERROR_CODE.EMAIL_TAKEN, HttpStatus.CONFLICT);
     }
+    // Resolve before the user row exists: a bad unit id must not leave a half-made invite.
+    const unit = unitId != null ? await this.getTenantUnit(tenantId, unitId) : null;
 
     const now = new Date();
     const tempPassword = this.genTempPassword();
@@ -93,6 +104,7 @@ export class UserService {
         status: 'invited',
         mustChangePassword: 1,
         invitedAt: now,
+        unitId: unit ? unit.id : null,
       }),
     );
 
@@ -236,6 +248,28 @@ export class UserService {
     return this.toResponseWithLabels(user);
   }
 
+  /** Move a user to a unit, or out of any (`unitId` null). PLN-261019 P1. */
+  async updateUnit(
+    tenantId: number,
+    userId: number,
+    unitId: number | null,
+    actorId: number,
+    actorType: 'user' | 'admin' = 'user',
+  ): Promise<UserResponse> {
+    const user = await this.getTenantUser(tenantId, userId);
+    const unit = unitId != null ? await this.getTenantUnit(tenantId, unitId) : null;
+    user.unitId = unit ? unit.id : null;
+    await this.userRepo.save(user);
+    await this.audit.write({
+      tenantId,
+      actorType,
+      actorId,
+      action: 'user.unit_changed',
+      target: `user:${user.id} unit:${unit ? unit.code : '-'}`,
+    });
+    return this.toResponseWithLabels(user);
+  }
+
   async updateStatus(tenantId: number, userId: number, status: string): Promise<UserResponse> {
     const user = await this.getTenantUser(tenantId, userId);
     user.status = status;
@@ -269,7 +303,70 @@ export class UserService {
     return JobLabelMapper.toResponse(label);
   }
 
+  // ---- Units (teams) — PLN-261019 P1 ----
+
+  async listUnits(tenantId: number): Promise<UnitResponse[]> {
+    const units = await this.unitRepo.find({ where: { tenantId }, order: { sortOrder: 'ASC', id: 'ASC' } });
+    return units.map((u) => UnitMapper.toResponse(u));
+  }
+
+  async createUnit(tenantId: number, actorId: number, code: string, name: string): Promise<UnitResponse> {
+    const existing = await this.unitRepo.findOne({ where: { tenantId, code } });
+    if (existing) {
+      this.logger.warn(`createUnit tenant=${tenantId}: code '${code}' already exists`);
+      throw new BusinessException(ERROR_CODE.DUPLICATE_RESOURCE, HttpStatus.CONFLICT);
+    }
+    // Appended after the current last row so the console order is creation order.
+    const last = await this.unitRepo.findOne({ where: { tenantId }, order: { sortOrder: 'DESC' } });
+    const sortOrder = (last?.sortOrder ?? 0) + 10;
+    const unit = await this.unitRepo.save(this.unitRepo.create({ tenantId, code, name, sortOrder }));
+    await this.audit.write({
+      tenantId,
+      actorType: 'user',
+      actorId,
+      action: 'unit.created',
+      target: `unit:${unit.id} ${code}`,
+    });
+    return UnitMapper.toResponse(unit);
+  }
+
+  async renameUnit(tenantId: number, actorId: number, id: number, name: string): Promise<UnitResponse> {
+    const unit = await this.getTenantUnit(tenantId, id);
+    const before = unit.name;
+    unit.name = name;
+    await this.unitRepo.save(unit);
+    await this.audit.write({
+      tenantId,
+      actorType: 'user',
+      actorId,
+      action: 'unit.renamed',
+      target: `unit:${unit.id} ${unit.code}`,
+      metadata: { before, after: name },
+    });
+    return UnitMapper.toResponse(unit);
+  }
+
   // ---- helpers ----
+
+  /** The tenant's unit by id; a foreign tenant's id reads as not found (never leaks). */
+  private async getTenantUnit(tenantId: number, unitId: number): Promise<Unit> {
+    const unit = await this.unitRepo.findOne({ where: { id: unitId, tenantId } });
+    if (!unit) {
+      this.logger.warn(`unit ${unitId} not found in tenant ${tenantId}`);
+      throw new BusinessException(ERROR_CODE.UNIT_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+    return unit;
+  }
+
+  /** Map String(unit id) -> Unit for the ids given (nulls skipped; no query when none). */
+  private async loadUnits(unitIds: Array<number | null | undefined>): Promise<Map<string, Unit>> {
+    const ids = [...new Set(unitIds.filter((id): id is number => id != null))];
+    const result = new Map<string, Unit>();
+    if (!ids.length) return result;
+    const units = await this.unitRepo.find({ where: { id: In(ids) } });
+    for (const u of units) result.set(String(u.id), u);
+    return result;
+  }
 
   /** Readable one-time temp password that satisfies the password policy (e.g. "TmpK7Q2MA3B9X!"). */
   private genTempPassword(): string {
@@ -308,7 +405,12 @@ export class UserService {
 
   private async toResponseWithLabels(user: User): Promise<UserResponse> {
     const labelsByUser = await this.loadLabelCodes([user.id]);
-    return UserMapper.toResponse(user, labelsByUser.get(String(user.id)) ?? []);
+    const unitsById = await this.loadUnits([user.unitId]);
+    return UserMapper.toResponse(
+      user,
+      labelsByUser.get(String(user.id)) ?? [],
+      unitsById.get(String(user.unitId)) ?? null,
+    );
   }
 
   /**

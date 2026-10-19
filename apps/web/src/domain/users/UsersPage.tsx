@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { UserPlus, KeyRound, Copy, Check, ShieldOff, AlertTriangle } from 'lucide-react';
+import { UserPlus, KeyRound, Copy, Check, ShieldOff, AlertTriangle, Tags } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/PageHeader';
 import { Card } from '@/components/Card';
@@ -11,15 +11,18 @@ import type { Column } from '@/components/Table';
 import { Modal } from '@/components/Modal';
 import { FormRow, Input, Select } from '@/components/Field';
 import { toast } from '@/store/toast-store';
+import { useAuthStore } from '@/store/auth-store';
+import { LabelsUnitsModal } from './LabelsUnitsModal';
 import {
   useUsers,
   useJobLabels,
+  useUnits,
   useInviteUser,
   useUpdateUser,
   useIssueTempPassword,
   useResetUserMfa,
 } from './users.hooks';
-import type { JobLabel, TenantUser, UpdateUserBody } from './users.service';
+import type { JobLabel, TenantUser, Unit, UpdateUserBody } from './users.service';
 
 const RANKS = ['master', 'director', 'manager', 'staff'] as const;
 const STATUSES = ['active', 'suspended'] as const;
@@ -65,6 +68,10 @@ export function UsersPage() {
   const { t: tc } = useTranslation('common');
   const { data: users, isLoading, error } = useUsers();
   const { data: jobLabels } = useJobLabels();
+  const { data: unitRows } = useUnits();
+  // Label/unit editing is LABEL_EDIT, which only master holds (permission-matrix.ts).
+  const isMaster = useAuthStore((s) => s.principal?.rank) === 'master';
+  const [orgOpen, setOrgOpen] = useState(false);
   const inviteUser = useInviteUser();
   const updateUser = useUpdateUser();
   const issueTempPw = useIssueTempPassword();
@@ -112,14 +119,19 @@ export function UsersPage() {
     return m;
   }, [labels]);
 
+  const units = useMemo<Unit[]>(() => unitRows ?? [], [unitRows]);
+
   const [inviteOpen, setInviteOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [inviteRank, setInviteRank] = useState<string>('staff');
   const [inviteCodes, setInviteCodes] = useState<string[]>([]);
+  // '' = no unit (the select's empty option); otherwise a unit id.
+  const [inviteUnit, setInviteUnit] = useState<string>('');
 
   const [editing, setEditing] = useState<TenantUser | null>(null);
   const [editRank, setEditRank] = useState<string>('staff');
   const [editCodes, setEditCodes] = useState<string[]>([]);
+  const [editUnit, setEditUnit] = useState<string>('');
   const [editStatus, setEditStatus] = useState<string>('active');
 
   const toggle = (codes: string[], code: string): string[] =>
@@ -129,11 +141,17 @@ export function UsersPage() {
     setEmail('');
     setInviteRank('staff');
     setInviteCodes([]);
+    setInviteUnit('');
     setInviteOpen(true);
   };
 
   const onInvite = async () => {
-    const res = await inviteUser.mutateAsync({ email, rank: inviteRank, label_codes: inviteCodes });
+    const res = await inviteUser.mutateAsync({
+      email,
+      rank: inviteRank,
+      label_codes: inviteCodes,
+      unit_id: inviteUnit ? Number(inviteUnit) : null,
+    });
     setInviteOpen(false);
     // Show the generated temp password so the admin can relay it (besides email).
     setCopied(false);
@@ -163,6 +181,7 @@ export function UsersPage() {
     setEditing(u);
     setEditRank(u.rank);
     setEditCodes(u.labelCodes ?? []);
+    setEditUnit(u.unitId != null ? String(u.unitId) : '');
     setEditStatus(u.status ?? 'active');
   };
 
@@ -175,6 +194,8 @@ export function UsersPage() {
     const body: UpdateUserBody = {};
     if (editRank !== editing.rank) body.rank = editRank;
     if (codesChanged) body.label_codes = editCodes;
+    const prevUnit = editing.unitId != null ? String(editing.unitId) : '';
+    if (editUnit !== prevUnit) body.unit_id = editUnit ? Number(editUnit) : null;
     if (editStatus !== (editing.status ?? 'active')) body.status = editStatus;
     if (Object.keys(body).length > 0) {
       await updateUser.mutateAsync({ id: editing.id, body });
@@ -200,6 +221,7 @@ export function UsersPage() {
         );
       },
     },
+    { key: 'unit', header: t('unit'), render: (u) => (u.unitName ? <Badge tone="info">{u.unitName}</Badge> : '—') },
     { key: 'status', header: t('status'), render: (u) => <StatusBadge status={u.status} /> },
     { key: 'createdAt', header: t('created'), render: (u) => fmtDate(u.createdAt) },
     {
@@ -241,12 +263,22 @@ export function UsersPage() {
         title={t('title')}
         subtitle={t('subtitle')}
         action={
-          <Button onClick={openInvite}>
-            <UserPlus className="mr-1.5 h-4 w-4" />
-            {t('inviteUser')}
-          </Button>
+          <div className="flex gap-2">
+            {isMaster && (
+              <Button variant="secondary" onClick={() => setOrgOpen(true)}>
+                <Tags className="mr-1.5 h-4 w-4" />
+                {t('manageLabelsUnits')}
+              </Button>
+            )}
+            <Button onClick={openInvite}>
+              <UserPlus className="mr-1.5 h-4 w-4" />
+              {t('inviteUser')}
+            </Button>
+          </div>
         }
       />
+
+      <LabelsUnitsModal open={orgOpen} onClose={() => setOrgOpen(false)} />
 
       <Card>
         <Table<TenantUser>
@@ -298,6 +330,16 @@ export function UsersPage() {
             onToggle={(code) => setInviteCodes((prev) => toggle(prev, code))}
           />
         </FormRow>
+        <FormRow label={t('unit')}>
+          <Select value={inviteUnit} onChange={(e) => setInviteUnit(e.target.value)}>
+            <option value="">{t('unitNone')}</option>
+            {units.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
+            ))}
+          </Select>
+        </FormRow>
       </Modal>
 
       <Modal
@@ -330,6 +372,16 @@ export function UsersPage() {
             selected={editCodes}
             onToggle={(code) => setEditCodes((prev) => toggle(prev, code))}
           />
+        </FormRow>
+        <FormRow label={t('unit')}>
+          <Select value={editUnit} onChange={(e) => setEditUnit(e.target.value)}>
+            <option value="">{t('unitNone')}</option>
+            {units.map((u) => (
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
+            ))}
+          </Select>
         </FormRow>
         <FormRow label={t('status')}>
           <Select value={editStatus} onChange={(e) => setEditStatus(e.target.value)}>

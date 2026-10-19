@@ -28,18 +28,14 @@ const NOTIFICATION_CATEGORY_KEYS: string[] = Object.values(NOTIFICATION_CATEGORY
 import { IntegrationCredential } from './entity/integration-credential.entity';
 import { User } from '../user/entity/user.entity';
 import { JobLabel } from '../user/entity/job-label.entity';
+import { Unit } from '../user/entity/unit.entity';
+import { defaultJobLabels, defaultUnits } from '../user/default-org';
 import { UsageType } from '../knowledge/entity/usage-type.entity';
 import { DEFAULT_USAGE_TYPES } from '../knowledge/usage-guide.types';
 import { IntegrationStatusEntity } from '../integration/entity/integration-status.entity';
 import { ContentFilterRule } from '../moderation/entity/content-filter-rule.entity';
 import { DEFAULT_MODERATION_RULES } from '../moderation/moderation.defaults';
 
-/** Job labels every new tenant starts with (matches the seed for tenant ivyusa). */
-const DEFAULT_JOB_LABELS: ReadonlyArray<{ code: string; name: string }> = [
-  { code: 'consult', name: '상담' },
-  { code: 'accounting', name: '회계' },
-  { code: 'operations', name: '운영' },
-];
 import { IntegrationService } from '../integration/integration.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
@@ -119,6 +115,8 @@ export class TenantService {
     // Optional: unit specs build the service positionally without it (P2).
     @Optional() private readonly assets?: TenantAssetService,
     @Optional() private readonly live?: WidgetLiveService,
+    // Last on purpose (constructor-middle injection breaks every positional spec).
+    @Optional() @InjectRepository(Unit) private readonly unitRepo?: Repository<Unit>,
   ) {}
 
   async list(
@@ -221,7 +219,8 @@ export class TenantService {
     });
     const saved = await this.tenantRepo.save(tenant);
     await this.seedDefaultModeration(saved.id);
-    await this.seedDefaultJobLabels(saved.id);
+    await this.seedDefaultJobLabels(saved.id, saved.defaultLanguage);
+    await this.seedDefaultUnits(saved.id, saved.defaultLanguage);
     await this.seedDefaultUsageTypes(saved.id);
     return saved;
   }
@@ -266,11 +265,24 @@ export class TenantService {
     await this.usageTypeRepo.save(rows);
   }
 
-  private async seedDefaultJobLabels(tenantId: number): Promise<void> {
+  private async seedDefaultJobLabels(tenantId: number, language: string | null): Promise<void> {
     const existing = await this.jobLabelRepo.count({ where: { tenantId } });
     if (existing > 0) return;
     await this.jobLabelRepo.save(
-      DEFAULT_JOB_LABELS.map((l) => this.jobLabelRepo.create({ tenantId, code: l.code, name: l.name })),
+      defaultJobLabels(language).map((l) => this.jobLabelRepo.create({ tenantId, code: l.code, name: l.name })),
+    );
+  }
+
+  /** Starter teams (cs/mkt/management) — PLN-261019 P1. Idempotent like the labels. */
+  private async seedDefaultUnits(tenantId: number, language: string | null): Promise<void> {
+    const repo = this.unitRepo;
+    if (!repo) return;
+    const existing = await repo.count({ where: { tenantId } });
+    if (existing > 0) return;
+    await repo.save(
+      defaultUnits(language).map((u, i) =>
+        repo.create({ tenantId, code: u.code, name: u.name, sortOrder: (i + 1) * 10 }),
+      ),
     );
   }
 
@@ -315,7 +327,8 @@ export class TenantService {
       }),
     );
     await this.seedDefaultModeration(saved.id);
-    await this.seedDefaultJobLabels(saved.id);
+    await this.seedDefaultJobLabels(saved.id, saved.defaultLanguage);
+    await this.seedDefaultUnits(saved.id, saved.defaultLanguage);
     await this.seedDefaultUsageTypes(saved.id);
     return saved;
   }
