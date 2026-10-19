@@ -12,7 +12,7 @@
 | SQL `261016-tenant-mobile-app-config.sql` | **chưa áp** trên staging, production Hàn Quốc, Go2Joy. Áp **trước** khi deploy code (`DB_SYNCHRONIZE=false` trên staging) |
 | Deploy | chưa deploy môi trường nào |
 | Chạy thử | local, DB nháp `db_kimpl` |
-| Giao thư viện | `./gradlew deliveryZip` tạo `dist/shoptalk-android-0.2.0-maven.zip` (162.087 byte, SHA-256 `14861643b6e5fb9f…c88e`; thư mục Maven gồm AAR, POM, siêu dữ liệu Gradle, mã nguồn, checksum). AAR lõi 110.069 byte (`db33ac9c…`), AAR Compose 5.791 byte (`cf1e3c5c…`). POM khai báo mức tối thiểu của androidx và stdlib. Test SDK 72/72, lint 0 lỗi. Chạy thật trên emulator Android 5.0, 6.0 và 15 (TCR §10) và ma trận cấu hình app khách (TCR §11); **chưa chạy trên điện thoại thật** |
+| Giao thư viện | `./gradlew deliveryZip` tạo `dist/shoptalk-android-0.2.0-maven.zip` (159.312 byte, SHA-256 `dd9e620e78a9f7f1…e3e9`, giống hệt qua các lần build vì zip không còn chứa `maven-metadata.xml`; thư mục Maven gồm AAR, POM, siêu dữ liệu Gradle, mã nguồn, checksum). AAR lõi 110.069 byte (`db33ac9c…`), AAR Compose 5.791 byte (`cf1e3c5c…`). POM khai báo mức tối thiểu của androidx và stdlib. Test SDK 72/72, lint 0 lỗi. Chạy lại toàn bộ với bản giao cuối trên emulator Android 5.0, 6.0 và 15 (13/13 mỗi máy), ma trận app khách (Android 5.0, 6.0, 15), compileSdk 33 và targetSdk 36 (TCR §12); **chưa chạy trên điện thoại thật** |
 
 ## Đã làm, theo PLN
 

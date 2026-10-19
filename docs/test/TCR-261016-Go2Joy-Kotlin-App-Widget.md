@@ -327,8 +327,8 @@ Ranh giới nằm giữa năm 2020 và 2021: Activity Result API xuất hiện t
 - Thêm xuất bản Maven cho `:shoptalk` và `:shoptalk-compose` (nhóm `site.amoeba.shoptalk`, phiên bản lấy từ `gradle.properties`), kèm mã nguồn.
 - **POM khai báo mức tối thiểu**: `fragment-ktx 1.3.6`, `core-ktx 1.6.0`, `lifecycle-runtime-ktx 2.3.1`, `kotlin-stdlib 2.1.0` (build bằng Kotlin 2.2.0 nhưng
   `coreLibrariesVersion = 2.1.0` và `apiVersion = 2.1`, nên trình biên dịch chặn mọi API stdlib mới hơn mức tối thiểu). Thư viện biên dịch được với các mức này, 72 test đạt.
-- Lệnh một dòng: `./gradlew deliveryZip` tạo `dist/maven/` và `dist/shoptalk-android-0.2.0-maven.zip` (162.087 byte; gồm AAR, POM, siêu dữ liệu Gradle, mã nguồn,
-  checksum từng tệp; thư mục được xóa trước khi xuất bản để không lẫn tệp cũ).
+- Lệnh một dòng: `./gradlew deliveryZip` tạo `dist/maven/` và `dist/shoptalk-android-0.2.0-maven.zip` (159.312 byte; gồm AAR, POM, siêu dữ liệu Gradle, mã nguồn,
+  checksum từng tệp; thư mục được xóa trước khi xuất bản để không lẫn tệp cũ). Zip bỏ `maven-metadata.xml*` (có dấu thời gian `lastUpdated`, chỉ cần cho phiên bản động) nên cùng mã nguồn cho cùng SHA-256 (xem 11.4).
 - App mẫu khai báo androidx mới như một app thật (core-ktx 1.15.0, fragment-ktx 1.8.5, lifecycle 2.8.7); việc kiểm mức tối thiểu do ma trận dưới đây đảm nhiệm.
 - Hướng dẫn: viết lại mục 1 (yêu cầu, cách nhận thư viện, phương án AAR trần kèm mức tối thiểu, cảnh báo về đoạn dán cũ) và mục 2 (gắn provider và listener trong
   `onResumeFragments`); thêm hai dòng vào danh sách kiểm tra; sửa hướng dẫn tiếng Hàn và README; thêm nhóm câu hỏi A2 vào bộ câu hỏi cho Go2Joy.
@@ -357,7 +357,7 @@ Kiểm bổ sung:
 | 72 test đơn vị SDK, lint SDK và Compose | Đạt, 0 lỗi |
 | 13 kiểm tra giao thức trên emulator Android 15 với app mẫu dựng từ cấu hình mới | 13/13; 0 vi phạm StrictMode do mã SDK; app mẫu không sập |
 | 9 lượt đổi người dùng và gián đoạn với widget và API thật | 9/9, không phiên nào đổi chủ |
-| 40 tệp checksum trong thư mục giải nén | Khớp cả 40 |
+| 32 tệp checksum trong thư mục giải nén (sau khi bỏ `maven-metadata.xml*`) | Khớp cả 32 |
 
 ### 11.4 Gắn nhà cung cấp danh tính: hướng dẫn cũ dễ làm mất nhận diện
 
@@ -376,3 +376,78 @@ Hướng dẫn nay dùng mẫu thứ hai. Cũng ghi rõ: `commit { }` chạy b�
   riêng của từng bản Android, và các lượt kiểm trên androidx 2021 (gần mức tối thiểu) chạy trên Android 15; nhưng chưa chạy lại 13 kiểm tra trên API 21 và 23.
 - `targetSdk` 36 và Android 16, `compileSdk` từ 33 trở xuống, Kotlin 2.0 (đã biết không đọc được), điện thoại thật.
 - Build của client có kiểm tra checksum hoặc khóa phiên bản (cần thêm checksum của nhóm `site.amoeba.shoptalk`).
+
+### 11.4 Tính tái lập của bản giao (phát hiện khi chạy lại ngày 2026-10-19)
+
+Build sạch lần hai cho cùng mã nguồn: hai AAR và các POM giống từng byte (`db33ac9c…`, `cf1e3c5c…`), nhưng zip có SHA-256 khác bản đầu
+(`e362b616…` so với `14861643…`). Nguyên nhân duy nhất: `maven-metadata.xml` ghi `lastUpdated` theo giờ build. Sửa: `deliveryZip` loại `**/maven-metadata.xml*`
+(Gradle không cần tệp này với phiên bản cố định; ma trận 12.5 chạy trên thư mục không có nó. Chưa thử tải thư mục lên Artifactory hoặc Nexus thật). Hai lần build liên tiếp sau khi sửa cho cùng
+SHA-256 `dd9e620e78a9f7f1e17f0c58f2f85cbc365d43a6fdc39aecb7586c5b2e12e3e9`, 159.312 byte.
+
+## 12. Chạy lại toàn bộ ở local với bản giao cuối (2026-10-19)
+
+Mục đích: đóng các mục "chưa chạy lại" của §11 trên đúng tệp zip sẽ giao. Mọi ca app khách dùng thư mục giải nén sạch từ zip này.
+
+### 12.1 Phần mềm chung và SDK
+
+| Kiểm | Kết quả |
+|---|---|
+| `i18n:check` (en làm gốc), `env:check` | Đủ 5 ngôn ngữ; mọi biến API đọc đều có trong mẫu |
+| `tsc --noEmit` cho `packages/types`, `packages/common`, `apps/widget`, `apps/web`, `apps/api` | 0 lỗi |
+| Jest `packages/types` | 176/176 |
+| Widget `node --test test/*.test.mjs` | 50/50 |
+| Jest `apps/api` | 2.279/2.282. 3 ca lỗi là lỗi nền của Windows (`embed-loader.spec`: dấu xuống dòng CRLF; `board-attachment.service.spec` và `heic-conversion.spec`: đường dẫn dùng `\`). Nhánh này không sửa các module đó |
+| SDK: `clean`, test, lint, `assembleDebug` app mẫu, `deliveryZip` | Thành công; 72/72 test; lint SDK 0 lỗi (6 cảnh báo), Compose 0 lỗi (2 cảnh báo) |
+| Hai AAR dựng lại từ đầu | Giống từng byte với bản đã giao |
+
+Ghi chú công cụ: `npm run typecheck|lint|test` (turbo) không chạy được trong worktree này vì liên kết `node_modules/.bin` hỏng, và `radius:check` lỗi đường dẫn
+`C:\C:\...` trên Windows. Cả hai là lỗi môi trường có từ trước, nên các kiểm tra trên chạy trực tiếp từng công cụ.
+
+### 12.2 Mười ba kiểm tra giao thức trên ba phiên bản Android (app mẫu, trang giả lập widget)
+
+| Máy ảo | WebView | Kết quả | Sập app | StrictMode do mã SDK |
+|---|---|---|---|---|
+| Android 5.0.2 (API 21) | Chrome 37 | 13/13 | 0 | 0 |
+| Android 6.0 (API 23) | Chrome 44 | 13/13 | 0 | 0 |
+| Android 15 (API 35) | Chrome 124 | 13/13 | 0 | 0 |
+
+Trên Android 6.0 bản AOSP, hệ thống ghi 196 vi phạm StrictMode đọc đĩa. Tất cả nằm trong `WebViewFactory` của nền tảng khi dựng `WebView(context)` lần đầu
+(khung duy nhất của mã chúng ta là dòng `ShopTalkChatFragment.onCreateView` gọi `WebView(context)`); không có khung nào của `site.amoeba.shoptalk.internal`.
+
+### 12.3 Phiên và danh tính với widget và API thật (Android 15)
+
+| Kiểm | Kết quả |
+|---|---|
+| 6 lượt đổi người dùng A/B và 3 lượt gián đoạn (chủ phiên bị đặt `reset` rồi cùng người quay lại) | 9/9; không phiên nào đổi chủ |
+| Kho chủ phiên, 8 bước M0 đến M7 (đọc phiên trong MySQL và tệp `shoptalk_sdk_session.xml`) | Đúng cả tám. M1: người thứ hai có phiên và khách hàng mới, phiên người thứ nhất còn nguyên 2 tin; M2: provider lỗi thì không đổi gì; M3: `identify()` thủ công đổi người tạo phiên mới; M4: cùng người gọi lại không tạo phiên; M5: chủ bị đặt `reset` thì người đó quay lại chỉ mở một phiên mới và kho về đúng dấu vân tay; M6: xoay hai lần không tạo phiên; M7: đăng xuất khỏi app tạo phiên khách và xóa chủ |
+
+### 12.4 compileSdk và targetSdk (app khách giả, một dòng khai báo)
+
+| # | Cấu hình | Kết quả |
+|---|---|---|
+| S1 | `compileSdk 33`, `targetSdk 33`, androidx 2021 (fragment 1.3.6, core 1.6.0) | Build và chạy đạt |
+| S2 | `compileSdk 33`, `targetSdk 33`, androidx 2020 (fragment 1.2.5) | Đạt (POM nâng fragment lên mức tối thiểu) |
+| S3 | `compileSdk 36`, `targetSdk 36` (xác nhận `targetSdk=36` bằng `dumpsys package`), AGP 8.10.1 | Build và chạy đạt trên Android 15 |
+
+Giới hạn: S3 chạy trên máy ảo Android 15, nên các thay đổi hành vi dành riêng cho Android 16 chưa được kiểm.
+
+### 12.5 Ma trận cấu hình app khách (từ zip mới), theo phiên bản Android
+
+| Cấu hình app khách | Android 5.0 | Android 6.0 | Android 15 |
+|---|---|---|---|
+| androidx 2020 (fragment 1.2.5), `compileSdk 34` | Đạt | Đạt | Đạt |
+| androidx 2021 ghim đúng mức tối thiểu, `compileSdk 34` | Đạt | Đạt | Đạt |
+| androidx mới nhất, `compileSdk 35` | Đạt | Đạt | Đạt |
+
+Ca một dòng khai báo, appcompat 1.3.1, không dòng androidx nào (M1) chỉ chạy lại trên Android 15 (Đạt). "Đạt" nghĩa là build thành công, không sập app và trang nhận đủ locale, context và identify.
+
+Ghi chú về cảnh báo build: khi ghép host Kotlin 2.2.0 với AGP 8.5.2, R8 (D8) in cảnh báo "parsing kotlin metadata" cho chính các lớp của app khách (9 lớp
+trong app thử), không cho lớp nào của SDK. Đó là chuyện bộ công cụ cũ so với Kotlin mới, không làm hỏng build; AGP mới hơn (8.10.1) chạy sạch.
+
+### 12.6 Vẫn chưa kiểm
+
+- Điện thoại thật (camera thật, hiệu năng, WebView cập nhật qua Play, biến thể WebView của hãng) và TalkBack thật.
+- Hành vi riêng của Android 16 (targetSdk 36 mới chỉ chạy trên Android 15).
+- compileSdk 30 đến 32, AGP cũ hơn 8.5, host Kotlin 2.0.x (SDK yêu cầu từ 2.1, đã ghi trong hướng dẫn).
+- Tải thư mục Maven lên một Artifactory hoặc Nexus thật (mới thử kho dạng thư mục tương đối).
+- Widget thật trên WebView cũ hơn Chrome 80 (cố ý không hỗ trợ; SDK hiện thông báo cập nhật WebView).

@@ -42,6 +42,9 @@ tasks.register<Zip>("deliveryZip") {
     description = "dist/maven as one zip to hand to the client."
     dependsOn(publishDelivery)
     from(deliveryDir)
+    // maven-metadata.xml carries a lastUpdated timestamp and only matters for dynamic versions; leaving it out makes the
+    // zip (and the SHA-256 we quote for it) identical on every build of the same sources.
+    exclude("**/maven-metadata.xml*")
     destinationDirectory.set(layout.projectDirectory.dir("dist"))
     archiveFileName.set("shoptalk-android-$shoptalkVersion-maven.zip")
     isReproducibleFileOrder = true
