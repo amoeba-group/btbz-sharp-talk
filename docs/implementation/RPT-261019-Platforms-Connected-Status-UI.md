@@ -28,6 +28,12 @@
 - `ConnectedPlatformCard.tsx` 루트 `min-w-0`(좁은 창 넘침), `dashboard/DashboardPage.tsx`·`dashboard.service.ts`(provider 읽기·상태 라벨), `dashboard.json` 6개 언어 `integrationState.*`
 - TCR·RPT
 
+**PR #675 (후속: S4 마케팅 탭 + FIX-261019 커서)**
+- web: `PlatformSections.tsx`(신규, 두 영역 공유), `platform-connections.hooks.ts`(`usePlatformConnections(choices)`, `useQueries`), `settings.hooks.ts`(`useShopifySettings(enabled)`), `SettingsMarketingPage.tsx` 재작성, `SettingsPlatformsPage.tsx` 공유 레이아웃 사용, 삭제 `ProviderGrid.tsx`·`ProviderTile.tsx`, i18n `platforms.emptyHintMarketing`
+- API: `integration-credential.entity.ts`(`last_synced_at`), `tenant.service.ts`(`recordShopifyOutcome(…, {syncedAt})`·`getShopifySyncCursor`), `shopify-sync.service.ts`(테넌트 커서, 전역 쓰기·`IntegrationService` 의존 제거), 스펙 +4
+- SQL: `sql/261019-integration-credentials-last-synced.sql` + `sql/artefacts.tsv`
+- 문서: `docs/bug-fix/FIX-261019-Shopify-Sync-Cursor-Per-Tenant.md`, PLN §6
+
 ## 3. 테스트 결과
 - API jest 237 suites / 2,338 tests ✅ · `npm run typecheck` 9/9 ✅ · `i18n:check` complete ✅ · web build ✅ · CI(PR #669) pass
 - 스테이징 실측 I1~I9 전부 ✅ — TCR §2. 핵심: go2joy `GET /tenants/me/shopify` → `integration.status=null`(배포 전 `connected`+ivyusa 문구), ivyusa는 동기화 1회 후 `connected`.
@@ -38,9 +44,10 @@
 |---|---|
 | PR #669 | main `4e60bcf9` (스쿼시) |
 | 스테이징 | 2026-10-19 12:18 `deploy-staging.sh` — api/web/widget/pwa 재생성, health 200, 접근 로그 2xx·ERROR 0 |
-| 마이그레이션 | 없음(스키마 변경 없음) |
+| 마이그레이션 | #669/#670 없음. **#675**: `261019-integration-credentials-last-synced.sql` — 스테이징·프로덕션 선적용 완료(2026-10-19) |
 | 스테이징 데이터 | go2joy `integration_credentials` provider `self` 1행 등록("Go2Joy / 호텔 파트너 어드민(자체 개발)") — 실사용 값이므로 유지 |
 | PR #670 | main `37c3af21` — 12:33 스테이징 재배포(health 200), 대시보드 "자체 플랫폼 · 연결됨" 실측 ✅ |
+| PR #675 | main `082f8d02` — 스테이징 SQL 선적용 → 배포(13:0x), ivyusa 동기화 2회로 커서 실증(TCR I11), 마케팅 탭 실측(I12). 프로덕션: 백업 `~/sharptalk-production/backups/20261019T125849Z` → SQL 선적용 → `check-migrations` OK → `production` ff `e24b2c1..082f8d0` → `deploy-self-hosted.sh`, health 200, ERROR 0 |
 | 프로덕션 | ✅ #669는 타 세션이 2026-10-19 21:23 KST `production` ff `7992e71..4e60bcf`로 반영(RPT-261019-Routing-Assignee-Groups 참조). #670·#672는 `production` ff `4e60bcf..e24b2c1` → `deploy-self-hosted.sh`(api/web 재생성, `successfully started`, ERROR 0, health 200, 번들 `DashboardPage` 청크에 `integrationState`·`SettingsPlatformsPage` 청크 확인). SQL 없음. #673(매뉴얼 HTML)은 머지 후 ff 예정 |
 
 ## 5. 운영 메모
@@ -48,4 +55,5 @@
 - 전역 `integration_status`·어드민 `GET /integrations/status`는 그대로(어드민 전용 집계). Shopify **연결 테스트** 결과는 더 이상 전역에 기록되지 않고, **동기화** 결과만 커서용으로 기록된다.
 - 자체 플랫폼 행은 기타 설정 탭 "저장된 자격증명" 목록에도 `self`로 보이며 거기서 삭제 가능(삭제 시 카드 사라지고 칩 활성화).
 - 매뉴얼 `platform-integration.{ko,en,vi}.html` 화면 구성 단락 갱신: PR #673.
-- 보류: 자동 동기화 커서 per-tenant화(Shopify 테넌트 2곳 이상일 때), `tenants.platform` 컬럼(어드민 집계), 마케팅 탭 동일 레이아웃.
+- 후속 완료(#675): 마케팅·헬프데스크 탭 동일 레이아웃, Shopify 동기화 커서 테넌트별(배포 후 첫 실행은 테넌트별 전체 동기화 1회 — ivyusa 스테이징 5건, 프로덕션은 다음 30분 틱).
+- 보류: `tenants.platform` 컬럼(어드민 집계), 전역 `integration_status` 시드 mock 정리.
