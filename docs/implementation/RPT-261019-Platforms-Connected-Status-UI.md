@@ -41,10 +41,11 @@
 | 마이그레이션 | 없음(스키마 변경 없음) |
 | 스테이징 데이터 | go2joy `integration_credentials` provider `self` 1행 등록("Go2Joy / 호텔 파트너 어드민(자체 개발)") — 실사용 값이므로 유지 |
 | PR #670 | main `37c3af21` — 12:33 스테이징 재배포(health 200), 대시보드 "자체 플랫폼 · 연결됨" 실측 ✅ |
-| 프로덕션 | 미배포(코드만, SQL 없음) |
+| 프로덕션 | ✅ #669는 타 세션이 2026-10-19 21:23 KST `production` ff `7992e71..4e60bcf`로 반영(RPT-261019-Routing-Assignee-Groups 참조). #670·#672는 `production` ff `4e60bcf..e24b2c1` → `deploy-self-hosted.sh`(api/web 재생성, `successfully started`, ERROR 0, health 200, 번들 `DashboardPage` 청크에 `integrationState`·`SettingsPlatformsPage` 청크 확인). SQL 없음. #673(매뉴얼 HTML)은 머지 후 ff 예정 |
 
 ## 5. 운영 메모
 - **fix-forward**: 배포 직후 Shopify 테넌트는 "미테스트"로 보이다가 다음 자동 동기화 틱(30분) 또는 수동 동기화·연결 테스트 후 "연결됨". ivyusa는 배포 직후 수동 동기화로 바로 전환함.
 - 전역 `integration_status`·어드민 `GET /integrations/status`는 그대로(어드민 전용 집계). Shopify **연결 테스트** 결과는 더 이상 전역에 기록되지 않고, **동기화** 결과만 커서용으로 기록된다.
 - 자체 플랫폼 행은 기타 설정 탭 "저장된 자격증명" 목록에도 `self`로 보이며 거기서 삭제 가능(삭제 시 카드 사라지고 칩 활성화).
-- 보류: 자동 동기화 커서 per-tenant화(Shopify 테넌트 2곳 이상일 때), `tenants.platform` 컬럼(어드민 집계), 마케팅 탭 동일 레이아웃, 매뉴얼 `platform-integration.*` 화면 문단 갱신.
+- 매뉴얼 `platform-integration.{ko,en,vi}.html` 화면 구성 단락 갱신: PR #673.
+- 보류: 자동 동기화 커서 per-tenant화(Shopify 테넌트 2곳 이상일 때), `tenants.platform` 컬럼(어드민 집계), 마케팅 탭 동일 레이아웃.
