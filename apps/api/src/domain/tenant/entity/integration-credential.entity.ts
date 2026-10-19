@@ -28,6 +28,14 @@ export class IntegrationCredential {
   @Column({ type: 'varchar', length: 255, nullable: true })
   detail: string | null;
 
+  /**
+   * When this tenant's last successful order sync ran — the incremental cursor
+   * (FIX-261019). Per tenant on purpose: the global integration_status row it
+   * replaces was shared by every store, so one tenant's sync advanced another's.
+   */
+  @Column({ name: 'last_synced_at', type: 'datetime', nullable: true })
+  lastSyncedAt: Date | null;
+
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 }

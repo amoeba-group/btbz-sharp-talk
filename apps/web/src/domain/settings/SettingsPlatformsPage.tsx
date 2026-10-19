@@ -4,14 +4,19 @@ import { useTranslation } from 'react-i18next';
 import { ShopifyConfigModal } from './ShopifyConfigModal';
 import { IntegrationConfigModal } from './IntegrationConfigModal';
 import { Cafe24ConnectModal } from './Cafe24ConnectModal';
-import { AddPlatformButtons } from './AddPlatformButtons';
+import { PlatformSections } from './PlatformSections';
 import {
   GenericConnectedCard,
   SelfPlatformCard,
   ShopifyConnectedCard,
 } from './ConnectedPlatformCard';
 import { usePlatformConnections } from './platform-connections.hooks';
-import { ECOMMERCE_PROVIDERS, SELF_PLATFORM_PROVIDER, type PlatformChoice } from './integration-providers';
+import {
+  ECOMMERCE_PROVIDERS,
+  PLATFORM_CHOICES,
+  SELF_PLATFORM_PROVIDER,
+  type PlatformChoice,
+} from './integration-providers';
 
 /** Platforms whose settings dialog is the generic credential modal. */
 const GENERIC_PLATFORMS = [...ECOMMERCE_PROVIDERS, SELF_PLATFORM_PROVIDER] as const;
@@ -33,7 +38,7 @@ type Dialog = { kind: 'config'; provider: PlatformChoice } | { kind: 'cafe24-oau
  */
 export function SettingsPlatformsPage() {
   const { t, i18n } = useTranslation('settings');
-  const { connections, loading } = usePlatformConnections();
+  const { connections, loading } = usePlatformConnections(PLATFORM_CHOICES);
   const [dialog, setDialog] = useState<Dialog>(null);
 
   // The credential guide is a static /manual page (works regardless of console
@@ -42,7 +47,6 @@ export function SettingsPlatformsPage() {
     ? i18n.language
     : 'ko';
 
-  const connected = connections.filter((c) => c.configured);
   const close = () => setDialog(null);
   const configure = (provider: PlatformChoice) => setDialog({ kind: 'config', provider });
   // Adding Cafe24 starts OAuth (D6); every other platform opens its settings.
@@ -67,37 +71,21 @@ export function SettingsPlatformsPage() {
         </a>
       </div>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-800">
-          {t('platforms.connectedTitle')}{' '}
-          <span className="font-normal text-gray-400">({loading ? '…' : connected.length})</span>
-        </h2>
-        {!loading && connected.length === 0 && (
-          <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 px-6 py-8 text-center">
-            <p className="text-sm font-medium text-gray-700">{t('platforms.emptyTitle')}</p>
-            <p className="mt-1 text-xs text-gray-500">{t('platforms.emptyHint')}</p>
-          </div>
-        )}
-        {connected.length > 0 && (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {connected.map((c) =>
-              c.provider === 'shopify' ? (
-                <ShopifyConnectedCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
-              ) : c.provider === SELF_PLATFORM_PROVIDER ? (
-                <SelfPlatformCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
-              ) : (
-                <GenericConnectedCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
-              ),
-            )}
-          </div>
-        )}
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-800">{t('platforms.addTitle')}</h2>
-        <p className="text-xs text-gray-500">{t('platforms.addHint')}</p>
-        <AddPlatformButtons connections={connections} onAdd={add} />
-      </section>
+      <PlatformSections
+        connections={connections}
+        loading={loading}
+        emptyHint={t('platforms.emptyHint')}
+        renderCard={(c) =>
+          c.provider === 'shopify' ? (
+            <ShopifyConnectedCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
+          ) : c.provider === SELF_PLATFORM_PROVIDER ? (
+            <SelfPlatformCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
+          ) : (
+            <GenericConnectedCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
+          )
+        }
+        onAdd={add}
+      />
 
       <ShopifyConfigModal open={isOpen('shopify')} onClose={close} />
       {GENERIC_PLATFORMS.map((p) => (

@@ -36,9 +36,19 @@ export const ECOMMERCE_PROVIDERS: EcommerceProvider[] = [
 export const MARKETING_PROVIDERS: MarketingProvider[] = ['klaviyo', 'yotpo'];
 export const HELPDESK_PROVIDERS: HelpdeskProvider[] = ['gorgias'];
 export const SELF_PLATFORM_PROVIDER: SelfPlatformProvider = 'self';
-/** Every platform the "Add a platform" row offers, in display order (PLN-261019 D3). */
-export const PLATFORM_CHOICES = ['shopify', ...ECOMMERCE_PROVIDERS, SELF_PLATFORM_PROVIDER] as const;
-export type PlatformChoice = (typeof PLATFORM_CHOICES)[number];
+/** Anything the connected/add layout can show: Shopify or a generic-flow provider. */
+export type PlatformChoice = 'shopify' | GenericIntegrationProvider;
+/** The platforms tab's "Add a platform" row, in display order (PLN-261019 D3). */
+export const PLATFORM_CHOICES: readonly PlatformChoice[] = [
+  'shopify',
+  ...ECOMMERCE_PROVIDERS,
+  SELF_PLATFORM_PROVIDER,
+];
+/** The marketing · helpdesk tab's row (PLN-261019 S4). */
+export const MARKETING_CHOICES: readonly PlatformChoice[] = [
+  ...MARKETING_PROVIDERS,
+  ...HELPDESK_PROVIDERS,
+];
 
 export const INTEGRATION_FIELDS: Record<GenericIntegrationProvider, IntegrationFieldSpec[]> = {
   cafe24: [

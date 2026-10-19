@@ -164,9 +164,51 @@ Shopify·WooCommerce·Odoo·Haravan 추가 모달은 **현행 설정 모달 그�
 ## 4. 제외·보류
 
 - `tenants.platform` 컬럼(어드민 집계용) — 스키마 변경 회피, 필요 시 별도 PLN.
-- 자동 동기화 커서 per-tenant화 — 별도 FIX.
 - 전역 `integration_status` 시드 mock 행 정리 — 어드민 전용, 이번 범위 밖.
-- 마케팅·헬프데스크 탭의 동일 레이아웃 적용 — 플랫폼 탭 검증 후 결정.
+- ~~자동 동기화 커서 per-tenant화~~ → S1-후속(§6, FIX-261019-Shopify-Sync-Cursor-Per-Tenant).
+- ~~마케팅·헬프데스크 탭의 동일 레이아웃 적용~~ → S4(§6).
+
+## 6. 후속 (S1·S2 스테이징 검증 후 사용자 "계속 진행", 2026-10-19)
+
+### S4 — 마케팅·헬프데스크 탭 동일 레이아웃
+
+| # | 작업 | 파일 |
+|---|---|---|
+| W10 | `PlatformSections`(연결된 플랫폼 / 플랫폼 추가 두 영역) 추출 — 플랫폼 탭과 공유 | `PlatformSections.tsx`(신규), `SettingsPlatformsPage.tsx` |
+| W11 | `usePlatformConnections(choices)`로 일반화(`useQueries`, Shopify는 요청 시만 조회) | `platform-connections.hooks.ts`, `settings.hooks.ts(useShopifySettings(enabled))` |
+| W12 | `SettingsMarketingPage`: Klaviyo·Yotpo·Gorgias를 같은 구성으로. `ProviderGrid`·`ProviderTile` 삭제 | `SettingsMarketingPage.tsx` |
+| W13 | i18n `platforms.emptyHintMarketing` 6개 언어 | `locales/*/settings.json` |
+
+와이어프레임 (go2joy — 마케팅 연동 없음):
+
+```
+설정 › … [마케팅·헬프데스크] …
+Klaviyo, Yotpo, Gorgias
+
+연결된 플랫폼 (0)
+┌──────────────────────────────────────────────────────────────┐
+│          아직 연결된 플랫폼이 없습니다.                        │
+│          아래 "플랫폼 추가"에서 사용 중인 서비스를 선택하세요.   │
+└──────────────────────────────────────────────────────────────┘
+플랫폼 추가
+[ + Klaviyo ] [ + Yotpo ] [ + Gorgias ]
+```
+
+ivyusa(Yotpo 연결됨):
+
+```
+연결된 플랫폼 (1)
+┌ Yotpo ─────────────────────────────────────[연결됨]┐
+│ <app key>  Connected · 마지막 확인 8/27 06:11        │
+│ [⚙ 설정] [⚡ 연결 테스트]                             │
+└──────────────────────────────────────────────────────┘
+플랫폼 추가
+[ + Klaviyo ] [ ✓ Yotpo ] [ + Gorgias ]
+```
+
+### S1-후속 — Shopify 동기화 커서 per-tenant (FIX-261019)
+`integration_credentials.last_synced_at` 1열(SQL 선적용) + `ShopifySyncService` 커서 읽기·쓰기 테넌트화, 전역
+`integration_status` 쓰기 제거. 상세는 FIX 문서.
 
 ## 5. 승인 후 산출물
 

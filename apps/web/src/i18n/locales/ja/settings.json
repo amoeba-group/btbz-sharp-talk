@@ -960,6 +960,7 @@
     "lastChecked": "最終確認",
     "registeredAt": "登録",
     "selfNoCommerce": "注文機能がオフのため、ウィジェットの設置だけで連携は完了です。ウィジェット設定 → 埋め込み・SDK をご覧ください。",
-    "openWidgetSettings": "ウィジェット設定を開く"
+    "openWidgetSettings": "ウィジェット設定を開く",
+    "emptyHintMarketing": "下の「プラットフォームを追加」から利用中のサービスを選んでください。"
   }
 }

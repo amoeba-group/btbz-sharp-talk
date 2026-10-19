@@ -960,6 +960,7 @@
     "lastChecked": "Last checked",
     "registeredAt": "Registered",
     "selfNoCommerce": "Orders are turned off, so installing the widget is the whole integration. See Widget settings → Embed & SDK.",
-    "openWidgetSettings": "Open widget settings"
+    "openWidgetSettings": "Open widget settings",
+    "emptyHintMarketing": "Pick the service you use under \"Add a platform\" below."
   }
 }

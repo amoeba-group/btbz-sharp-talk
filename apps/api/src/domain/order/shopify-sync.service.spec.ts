@@ -25,7 +25,7 @@ describe('ShopifySyncService.syncOrders', () => {
     },
   ];
 
-  function build(orders: unknown[], conn: unknown = { shopDomain: 's.myshopify.com', token: 't' }) {
+  function build(orders: unknown[], conn: unknown = { shopDomain: 's.myshopify.com', token: 't' }, cursor: Date | null = null) {
     const saved: OrderCache[] = [];
     const orderRepo = {
       findOne: jest.fn().mockResolvedValue(null),
@@ -51,12 +51,9 @@ describe('ShopifySyncService.syncOrders', () => {
     const tenantService = {
       getShopifyConnection: jest.fn().mockResolvedValue(conn),
       recordShopifyOutcome: jest.fn().mockResolvedValue(undefined),
+      getShopifySyncCursor: jest.fn().mockResolvedValue(cursor),
     };
     const customerService = { findOrCreateByEmail: jest.fn().mockResolvedValue({ id: 42 }) };
-    const integrationService = {
-      upsert: jest.fn().mockResolvedValue(undefined),
-      findByName: jest.fn().mockResolvedValue(null),
-    };
     const publish = jest.fn(async () => undefined);
     const svc = new ShopifySyncService(
       orderRepo as never,
@@ -64,7 +61,6 @@ describe('ShopifySyncService.syncOrders', () => {
       client as never,
       tenantService as never,
       customerService as never,
-      integrationService as never,
       { publish } as never,
     );
     return {
@@ -75,22 +71,23 @@ describe('ShopifySyncService.syncOrders', () => {
       itemRepo,
       client,
       customerService,
-      integrationService,
       tenantService,
       publish,
     };
   }
 
   it('upserts each order with mapped status and links customers', async () => {
-    const { svc, saved, customerService, integrationService, tenantService } = build(sampleOrders);
+    const { svc, saved, customerService, tenantService } = build(sampleOrders);
     const res = await svc.syncOrders(7);
 
     // The outcome lands on THIS tenant's credential — the row the platforms
-    // tile reads (PLN-261019 D1); the global row below is only the sync cursor.
+    // tile reads (PLN-261019 D1) — and a successful run moves this tenant's
+    // cursor (FIX-261019). No provider-wide row is written.
     expect(tenantService.recordShopifyOutcome).toHaveBeenCalledWith(
       7,
       true,
       'Synced 2 order(s) (initial full sync)',
+      { syncedAt: expect.any(Date) },
     );
 
     expect(res).toEqual({
@@ -116,11 +113,17 @@ describe('ShopifySyncService.syncOrders', () => {
     expect(saved[1]).toMatchObject({ shopifyOrderId: '1002', statusInternal: 'paid' });
     expect(customerService.findOrCreateByEmail).toHaveBeenCalledWith(7, 'c@x.com', undefined, undefined);
 
-    expect(integrationService.upsert).toHaveBeenCalledWith(
-      'shopify',
-      'connected',
-      'Synced 2 order(s) (initial full sync)',
-    );
+  });
+
+  it('reads the incremental window from THIS tenant\'s cursor, not a shared row', async () => {
+    const cursor = new Date('2026-10-19T12:00:00Z');
+    const { svc, client, tenantService } = build(sampleOrders, undefined, cursor);
+    await svc.syncOrders(7);
+    expect(tenantService.getShopifySyncCursor).toHaveBeenCalledWith(7);
+    const since = (client.fetchOrders.mock.calls[0][2] as { updatedAtMin?: string }).updatedAtMin;
+    expect(since).toBeDefined();
+    // Lookback overlap: the window starts before the cursor, never after it.
+    expect(new Date(since as string).getTime()).toBeLessThan(cursor.getTime());
   });
 
   it('maps a paid, unfulfilled order to "paid" (Confirmed)', async () => {
@@ -140,17 +143,19 @@ describe('ShopifySyncService.syncOrders', () => {
   });
 
   it('records an error and syncs nothing when the connection is missing', async () => {
-    const { svc, integrationService, client } = build([], null);
+    const { svc, tenantService, client } = build([], null);
     const res = await svc.syncOrders(1);
     expect(res.ok).toBe(false);
     expect(res.synced).toBe(0);
     expect(res.detail).toMatch(/reconnect the store/);
     expect(client.fetchOrders).not.toHaveBeenCalled();
-    expect(integrationService.upsert).toHaveBeenCalledWith('shopify', 'error', expect.any(String));
+    expect(tenantService.recordShopifyOutcome).toHaveBeenCalledWith(1, false, expect.any(String), {
+      syncedAt: undefined,
+    });
   });
 
   it('records an error when the Admin API call fails', async () => {
-    const { svc, integrationService } = build(sampleOrders);
+    const { svc, tenantService } = build(sampleOrders);
     // Force the client to throw.
     (svc as unknown as { client: { fetchOrders: jest.Mock } }).client.fetchOrders = jest
       .fn()
@@ -158,7 +163,13 @@ describe('ShopifySyncService.syncOrders', () => {
     const res = await svc.syncOrders(1);
     expect(res.ok).toBe(false);
     expect(res.detail).toContain('401');
-    expect(integrationService.upsert).toHaveBeenCalledWith('shopify', 'error', expect.stringContaining('401'));
+    // A failed run must NOT advance the cursor — those orders are still unread.
+    expect(tenantService.recordShopifyOutcome).toHaveBeenCalledWith(
+      1,
+      false,
+      expect.stringContaining('401'),
+      { syncedAt: undefined },
+    );
   });
 
   describe('order number normalization', () => {
@@ -477,7 +488,6 @@ describe('ShopifySyncService — order money breakdown', () => {
       { fetchOrders: jest.fn() } as never,
       { getShopifyConnection: jest.fn() } as never,
       { findOrCreateByEmail: jest.fn().mockResolvedValue({ id: 42 }) } as never,
-      { upsert: jest.fn(), findByName: jest.fn() } as never,
       { publish: jest.fn(async () => undefined) } as never,
     );
     return { svc, saved };
@@ -552,7 +562,6 @@ describe('ShopifySyncService — line item variant and picture', () => {
       { fetchOrders: jest.fn() } as never,
       { getShopifyConnection: jest.fn() } as never,
       { findOrCreateByEmail: jest.fn().mockResolvedValue({ id: 42 }) } as never,
-      { upsert: jest.fn(), findByName: jest.fn() } as never,
       { publish: jest.fn(async () => undefined) } as never,
     );
     return { svc, savedItems };

@@ -1,14 +1,10 @@
-import { useIntegration, useShopifySettings } from './settings.hooks';
-import {
-  ECOMMERCE_PROVIDERS,
-  PLATFORM_CHOICES,
-  SELF_PLATFORM_PROVIDER,
-  isShopifyDomain,
-  type PlatformChoice,
-} from './integration-providers';
-import type { IntegrationSettings } from './settings.service';
+import { useQueries } from '@tanstack/react-query';
+import { useShopifySettings } from './settings.hooks';
+import { useTenantKey } from '@/lib/use-tenant-key';
+import { settingsService, type IntegrationSettings } from './settings.service';
+import { isShopifyDomain, type PlatformChoice } from './integration-providers';
 
-/** One platform as the platforms tab sees it — connected or merely offered (PLN-261019 D3). */
+/** One platform as a settings tab sees it — connected or merely offered (PLN-261019 D3). */
 export interface PlatformConnection {
   provider: PlatformChoice;
   /** A credential row exists → it is shown as a card, not an "add" button. */
@@ -43,27 +39,28 @@ function fromIntegration(
 }
 
 /**
- * Every platform the tab offers, in display order, with this tenant's state.
- * Shopify keeps its own endpoint; the rest share the generic one. Hooks are
- * called unconditionally for a fixed list, so the order never changes.
+ * The given platforms, in the given order, with this tenant's state. Shopify
+ * keeps its own endpoint; every other provider shares the generic one. The
+ * query keys match `useIntegration` / `useShopifySettings`, so a save or test
+ * in a dialog refreshes the cards through the same cache.
  */
-export function usePlatformConnections(): { connections: PlatformConnection[]; loading: boolean } {
-  const shopify = useShopifySettings();
-  const cafe24 = useIntegration(ECOMMERCE_PROVIDERS[0]);
-  const woocommerce = useIntegration(ECOMMERCE_PROVIDERS[1]);
-  const odoo = useIntegration(ECOMMERCE_PROVIDERS[2]);
-  const haravan = useIntegration(ECOMMERCE_PROVIDERS[3]);
-  const self = useIntegration(SELF_PLATFORM_PROVIDER);
+export function usePlatformConnections(choices: readonly PlatformChoice[]): {
+  connections: PlatformConnection[];
+  loading: boolean;
+} {
+  const tenantKey = useTenantKey();
+  const wantsShopify = choices.includes('shopify');
+  const shopify = useShopifySettings(wantsShopify);
+  const generic = choices.filter((p): p is Exclude<PlatformChoice, 'shopify'> => p !== 'shopify');
+  const results = useQueries({
+    queries: generic.map((provider) => ({
+      queryKey: ['integration', provider, tenantKey],
+      queryFn: () => settingsService.integration(provider),
+    })),
+  });
+  const byProvider = new Map(generic.map((p, i) => [p, results[i]]));
 
-  const generic: Record<string, typeof cafe24> = {
-    [ECOMMERCE_PROVIDERS[0]]: cafe24,
-    [ECOMMERCE_PROVIDERS[1]]: woocommerce,
-    [ECOMMERCE_PROVIDERS[2]]: odoo,
-    [ECOMMERCE_PROVIDERS[3]]: haravan,
-    [SELF_PLATFORM_PROVIDER]: self,
-  };
-
-  const connections = PLATFORM_CHOICES.map((provider): PlatformConnection => {
+  const connections = choices.map((provider): PlatformConnection => {
     if (provider === 'shopify') {
       const d = shopify.data;
       return {
@@ -77,10 +74,9 @@ export function usePlatformConnections(): { connections: PlatformConnection[]; l
         identity: isShopifyDomain(d?.shopDomain) ? (d?.shopDomain ?? null) : null,
       };
     }
-    return fromIntegration(provider, generic[provider].data);
+    return fromIntegration(provider, byProvider.get(provider)?.data);
   });
 
-  const loading =
-    shopify.isLoading || Object.values(generic).some((q) => q.isLoading);
+  const loading = (wantsShopify && shopify.isLoading) || results.some((q) => q.isLoading);
   return { connections, loading };
 }
