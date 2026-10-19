@@ -126,8 +126,17 @@ export interface WidgetSettingsResponse {
  * credential values (echoed back); `secrets` maps each secret field key to whether
  * it is currently stored (the value itself is never returned).
  */
+/**
+ * How a Cafe24 credential was established (PLN-261019-Cafe24 D1). OAuth stores a
+ * rotating refresh token and no access token, so the console must send its test
+ * and syncs through the Cafe24 endpoints, not the generic probe.
+ */
+export type Cafe24CredentialMode = 'oauth' | 'manual';
+
 export interface IntegrationSettingsResponse {
   provider: string;
+  /** Cafe24 only: which flow the stored credential came from; null = none stored. */
+  mode?: Cafe24CredentialMode | null;
   fields: Record<string, string | null>;
   secrets: Record<string, boolean>;
   credential: {
@@ -144,6 +153,8 @@ export interface IntegrationSettingsResponse {
 /** Result of a generic e-commerce integration connectivity test. */
 export interface IntegrationTestResponse {
   ok: boolean;
+  /** True when no probe ran and nothing was recorded (OAuth Cafe24 via the generic test). */
+  skipped?: boolean;
   detail: string;
 }
 

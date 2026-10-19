@@ -217,7 +217,8 @@
     },
     "cafe24": {
       "title": "Cafe24",
-      "subtitle": "Conecta tu tienda Cafe24 mediante la Admin API (token OAuth)."
+      "subtitle": "Conecta tu tienda Cafe24 mediante la Admin API (token OAuth).",
+      "oauthTestHint": "Esta tienda está conectada mediante Cafe24 OAuth — ejecute la prueba de conexión desde la tarjeta Cafe24 en plataformas conectadas."
     },
     "woocommerce": {
       "title": "WooCommerce",
@@ -305,7 +306,13 @@
       "errorInvalidScope": "Cafe24 rechazó los permisos solicitados (invalid_scope): agréguelos a la app en Cafe24 Developers y vuelva a conectar",
       "errorAccessDenied": "Se denegó el consentimiento de Cafe24 (access_denied): reinténtelo con la cuenta del operador principal de la tienda",
       "modalTitle": "Conectar Cafe24",
-      "manualEntry": "¿Ya tienes un token? Introdúcelo manualmente"
+      "manualEntry": "¿Ya tienes un token? Introdúcelo manualmente",
+      "reconnectTitle": "Reconectar Cafe24",
+      "reconnectHint": "{{mall}}.cafe24.com está conectado mediante OAuth. Vuelva a conectar si cambiaron los permisos de la app o el token caducó o fue revocado.",
+      "mode": {
+        "oauth": "OAuth",
+        "manual": "Manual (token)"
+      }
     }
   },
   "marketingTitle": "Integraciones de marketing",
@@ -961,6 +968,7 @@
     "registeredAt": "Registrada",
     "selfNoCommerce": "Los pedidos están desactivados, así que instalar el widget es toda la integración. Ve a Ajustes del widget → Insertar y SDK.",
     "openWidgetSettings": "Abrir ajustes del widget",
-    "emptyHintMarketing": "Elige el servicio que usas en \"Añadir plataforma\"."
+    "emptyHintMarketing": "Elige el servicio que usas en \"Añadir plataforma\".",
+    "openSite": "Abrir sitio"
   }
 }

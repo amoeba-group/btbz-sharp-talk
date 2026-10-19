@@ -5,6 +5,7 @@ import {
   GENERIC_INTEGRATION_PROVIDERS,
   GenericIntegrationProvider,
   INTEGRATION_FIELDS,
+  INTEGRATION_PROVIDER,
   SELF_PLATFORM_PROVIDER,
 } from '@sharptalk/types';
 import { IntegrationCredential } from './entity/integration-credential.entity';
@@ -12,12 +13,17 @@ import { IntegrationService } from '../integration/integration.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { decryptSecret, encryptSecret } from '../../global/util/crypto.util';
-import { EcommerceIntegrationMapper } from './ecommerce-integration.mapper';
+import { EcommerceIntegrationMapper, cafe24CredentialMode } from './ecommerce-integration.mapper';
 import { IntegrationSettingsResponse, IntegrationTestResponse } from './dto/response/tenant.response';
 import { probeEcommerce } from './ecommerce-probe.util';
 
 /** Stored as the self platform's `detail`: there is no probe, registration is the state. */
 const SELF_PLATFORM_DETAIL = 'Registered — self-hosted platform, nothing to probe';
+/** Returned (never stored) when the generic probe meets an OAuth-connected Cafe24 mall. */
+const CAFE24_OAUTH_TEST_HINT =
+  "Connected through Cafe24 OAuth — use the Cafe24 card's connection test";
+/** Keys only the OAuth callback writes; a manual token save replaces them (D1 "수동 전환"). */
+const CAFE24_OAUTH_KEYS = ['mallId', 'refreshToken', 'scopes', 'refreshIssuedAt'] as const;
 
 /**
  * Generic per-tenant e-commerce integration settings (cafe24 / woocommerce / odoo /
@@ -82,6 +88,16 @@ export class EcommerceIntegrationService {
         merged[spec.key] = value; // non-secret: set or clear
       }
     }
+    // An operator who types a Cafe24 access token over an OAuth connection is
+    // switching to manual mode: drop the OAuth keys rather than keep a blob that
+    // answers to both flows (PLN-261019-Cafe24 D1).
+    if (
+      p === INTEGRATION_PROVIDER.CAFE24 &&
+      cafe24CredentialMode(merged) === 'oauth' &&
+      String(incoming.access_token ?? '').trim()
+    ) {
+      for (const k of CAFE24_OAUTH_KEYS) delete merged[k];
+    }
 
     const secretEnc = encryptSecret(JSON.stringify(merged));
     // Saving credentials is NOT a connection — a real test decides that
@@ -113,7 +129,16 @@ export class EcommerceIntegrationService {
       // must not flip a registered platform to 'error'.
       return { ok: cred != null, detail: cred ? SELF_PLATFORM_DETAIL : 'Not registered' };
     }
-    const result = await probeEcommerce(p, this.parseConfig(cred));
+    const config = this.parseConfig(cred);
+    if (p === INTEGRATION_PROVIDER.CAFE24 && cafe24CredentialMode(config) === 'oauth') {
+      // The probe reads `mall_id`/`access_token`, which an OAuth blob does not
+      // hold. Reporting that as a failed test overwrote a working connection
+      // with 'error' (REQ-261019-Cafe24 R1); the OAuth test lives in the Cafe24
+      // module (POST /tenants/me/cafe24/test), so point there and leave the
+      // recorded state alone.
+      return { ok: false, skipped: true, detail: CAFE24_OAUTH_TEST_HINT };
+    }
+    const result = await probeEcommerce(p, config);
     // Record the outcome on THIS tenant's credential — the per-tenant source of
     // truth the tiles/dashboard read (FIX-260827). No global write: that table
     // is provider-keyed and would leak one tenant's result to another.

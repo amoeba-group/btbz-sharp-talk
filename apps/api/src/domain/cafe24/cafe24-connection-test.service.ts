@@ -1,0 +1,129 @@
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { INTEGRATION_PROVIDER } from '@sharptalk/types';
+import { IntegrationCredential } from '../tenant/entity/integration-credential.entity';
+import { IntegrationTestResponse } from '../tenant/dto/response/tenant.response';
+import { Cafe24TokenService } from './cafe24-token.service';
+import { Cafe24AdminClient } from './cafe24-admin.client';
+
+const CAFE24 = INTEGRATION_PROVIDER.CAFE24;
+/** One small catalogue call; longer than this means Cafe24 is not answering. */
+const PROBE_TIMEOUT_MS = 6_000;
+
+/**
+ * Connection test for an OAuth-connected Cafe24 mall (PLN-261019-Cafe24 D2).
+ *
+ * The generic probe in TenantModule reads a manually entered access token, which
+ * an OAuth credential never holds — so it reported every OAuth mall as broken.
+ * This test goes the way the syncs do: mint an access token from the stored
+ * refresh token (rotating it, single-flight), read one catalogue row, and
+ * record the outcome on THIS tenant's credential row — the per-tenant state
+ * the cards and dashboard show (FIX-260827). It lives in the Cafe24 module
+ * because Cafe24Module already imports TenantModule; the reverse would be a
+ * cycle.
+ *
+ * Why `/products?limit=1` and not `/store`: the store resource needs
+ * `mall.read_store`, a scope this app never asks for, so an OAuth token
+ * answers 403 insufficient_scope there (staging zhangbayo, first run). The
+ * catalogue sits behind `mall.read_product`, which every consent requests and
+ * both syncs depend on — reaching it proves the token works for what the
+ * tenant actually uses.
+ */
+@Injectable()
+export class Cafe24ConnectionTestService {
+  private readonly logger = new Logger(Cafe24ConnectionTestService.name);
+
+  constructor(
+    @InjectRepository(IntegrationCredential)
+    private readonly credRepo: Repository<IntegrationCredential>,
+    private readonly tokenService: Cafe24TokenService,
+    private readonly client: Cafe24AdminClient,
+  ) {}
+
+  async testConnection(tenantId: number): Promise<IntegrationTestResponse> {
+    const cred = await this.credRepo.findOne({ where: { tenantId, provider: CAFE24 } });
+    if (!cred?.secretEnc) {
+      // Nothing to test and nothing to mark: the card does not exist yet.
+      return { ok: false, detail: 'Cafe24 store is not connected — connect the mall first' };
+    }
+
+    const result = await this.probe(tenantId);
+    // Partial UPDATE, never save(cred): the probe refreshes the access token,
+    // and Cafe24 rotates the refresh token on every refresh — the token
+    // service persists the new one on its own copy of this row. Saving the
+    // entity loaded above would write the OLD, already-consumed refresh token
+    // back over it, and the next refresh answers 400 (staging zhangbayo,
+    // 2026-10-19 — the first run of this test did exactly that).
+    await this.credRepo.update(
+      { id: cred.id },
+      {
+        status: result.ok ? 'connected' : 'error',
+        detail: result.detail.slice(0, 255),
+        lastTestedAt: new Date(),
+      },
+    );
+    return result;
+  }
+
+  private async probe(tenantId: number): Promise<IntegrationTestResponse> {
+    let conn: { mallId: string; accessToken: string } | null;
+    try {
+      conn = await this.tokenService.getConnection(tenantId);
+    } catch (e) {
+      // appConfig() throws when the app keys are absent — a deployment gap, not
+      // the mall's fault, but still "cannot reach Cafe24 from here".
+      return { ok: false, detail: `Cafe24 app is not configured on this server: ${(e as Error).message}` };
+    }
+    if (!conn) {
+      return {
+        ok: false,
+        detail: 'Cafe24 token refresh failed — the refresh token expired or was revoked; reconnect the mall',
+      };
+    }
+    // The token is live (the refresh just succeeded). Now prove it can read
+    // something the tenant uses. A mall's grant can shrink after consent
+    // (staging amoebaorder lost mall.read_product), so try the catalogue
+    // first and the order list second; one reachable resource is a working
+    // connection, none means the mall must be re-authorised.
+    const today = new Date().toISOString().slice(0, 10);
+    const probes: Array<[string, () => Promise<unknown>]> = [
+      ['catalogue', () => this.client.pullProducts(conn.mallId, conn.accessToken, { limit: 1 })],
+      [
+        'orders',
+        () =>
+          this.client.pullOrders(conn.mallId, conn.accessToken, {
+            startDate: today,
+            endDate: today,
+            limit: 1,
+          }),
+      ],
+    ];
+    const failures: string[] = [];
+    for (const [name, run] of probes) {
+      try {
+        await withTimeout(run(), PROBE_TIMEOUT_MS);
+        return { ok: true, detail: `Connected: ${conn.mallId}.cafe24.com (${name} reachable)` };
+      } catch (e) {
+        failures.push(`${name}: ${(e as Error).message || 'unknown error'}`);
+      }
+    }
+    this.logger.warn(`cafe24 connection test tenant ${tenantId} (${conn.mallId}): ${failures.join('; ')}`);
+    return {
+      ok: false,
+      detail:
+        `Cafe24 refused every read for ${conn.mallId} (${failures.join('; ')}) — ` +
+        'the app permissions were reduced or the API is down; re-authorise the mall',
+    };
+  }
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`timed out after ${ms}ms`)), ms);
+    p.then(
+      (v) => { clearTimeout(timer); resolve(v); },
+      (e) => { clearTimeout(timer); reject(e); },
+    );
+  });
+}

@@ -217,7 +217,8 @@
     },
     "cafe24": {
       "title": "Cafe24",
-      "subtitle": "Connect your Cafe24 store via the Admin API (OAuth access token)."
+      "subtitle": "Connect your Cafe24 store via the Admin API (OAuth access token).",
+      "oauthTestHint": "This mall is connected through Cafe24 OAuth — run the connection test from the Cafe24 card under connected platforms."
     },
     "woocommerce": {
       "title": "WooCommerce",
@@ -305,7 +306,13 @@
       "errorInvalidScope": "Cafe24 rejected the requested permissions (invalid_scope) — add them to the app in Cafe24 Developers, then connect again",
       "errorAccessDenied": "Cafe24 consent was denied (access_denied) — retry as the mall’s primary operator account",
       "modalTitle": "Connect Cafe24",
-      "manualEntry": "Already have a token? Enter it manually"
+      "manualEntry": "Already have a token? Enter it manually",
+      "reconnectTitle": "Reconnect Cafe24",
+      "reconnectHint": "{{mall}}.cafe24.com is connected through OAuth. Reconnect if the app permissions changed or the token expired or was revoked.",
+      "mode": {
+        "oauth": "OAuth",
+        "manual": "Manual (token)"
+      }
     }
   },
   "marketingTitle": "Marketing integrations",
@@ -961,6 +968,7 @@
     "registeredAt": "Registered",
     "selfNoCommerce": "Orders are turned off, so installing the widget is the whole integration. See Widget settings → Embed & SDK.",
     "openWidgetSettings": "Open widget settings",
-    "emptyHintMarketing": "Pick the service you use under \"Add a platform\" below."
+    "emptyHintMarketing": "Pick the service you use under \"Add a platform\" below.",
+    "openSite": "Open site"
   }
 }

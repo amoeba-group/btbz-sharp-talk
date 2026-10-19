@@ -217,7 +217,8 @@
     },
     "cafe24": {
       "title": "Cafe24",
-      "subtitle": "通过 Admin API（OAuth 访问令牌）连接您的 Cafe24 店铺。"
+      "subtitle": "通过 Admin API（OAuth 访问令牌）连接您的 Cafe24 店铺。",
+      "oauthTestHint": "该商城通过 Cafe24 OAuth 连接 — 请在已连接平台的 Cafe24 卡片中运行连接测试。"
     },
     "woocommerce": {
       "title": "WooCommerce",
@@ -305,7 +306,13 @@
       "errorInvalidScope": "Cafe24 拒绝了所请求的权限（invalid_scope）——请在 Cafe24 Developers 中为应用添加这些权限后重新连接",
       "errorAccessDenied": "Cafe24 拒绝了授权（access_denied）——请使用商城的主运营账户重试",
       "modalTitle": "连接 Cafe24",
-      "manualEntry": "已有令牌？手动输入"
+      "manualEntry": "已有令牌？手动输入",
+      "reconnectTitle": "重新连接 Cafe24",
+      "reconnectHint": "{{mall}}.cafe24.com 已通过 OAuth 连接。若应用权限已更改或令牌已过期/被撤销，请重新连接。",
+      "mode": {
+        "oauth": "OAuth 连接",
+        "manual": "手动(令牌)"
+      }
     }
   },
   "marketingTitle": "营销集成",
@@ -961,6 +968,7 @@
     "registeredAt": "注册",
     "selfNoCommerce": "订单功能已关闭，只需安装小部件即完成对接。请查看小部件设置 → 嵌入与 SDK。",
     "openWidgetSettings": "打开小部件设置",
-    "emptyHintMarketing": "在下方“添加平台”中选择您正在使用的服务。"
+    "emptyHintMarketing": "在下方“添加平台”中选择您正在使用的服务。",
+    "openSite": "打开站点"
   }
 }
