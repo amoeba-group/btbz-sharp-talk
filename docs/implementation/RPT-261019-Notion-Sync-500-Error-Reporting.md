@@ -56,7 +56,7 @@
 | 환경 | 상태 |
 |---|---|
 | 스테이징 `shoptalk.amoeba.site` | PR #648 배포 완료 2026-10-19 (deploy-staging.sh, `successfully started` 1회, health ok). 마이그레이션 없음 |
-| 프로덕션 `sharptalk.amoeba.site` | 미배포 — `production` 브랜치 반영 시 SQL 없음, 코드만 |
+| 프로덕션 `sharptalk.amoeba.site` | ✅ 2026-10-19 21:23 KST `production` ff `7992e71..4e60bcf`(#648 포함, SQL 없음) — `deploy-self-hosted.sh`, `successfully started`, ERROR 0 |
 
 ## 5. 교훈
 - **토큰 교체 = 통합 가시 범위 리셋.** 기존 소스의 `ok`는 과거 토큰 기준이라 다음 동기화에서 전부 실패한다. 자격증명 교체 시 해당 provider 소스 재검사(G5)는 후속 후보.

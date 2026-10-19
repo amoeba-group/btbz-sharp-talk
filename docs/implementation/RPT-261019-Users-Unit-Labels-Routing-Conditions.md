@@ -11,7 +11,7 @@
 | PR-B (P4) | [#665](https://github.com/amoeba-group/btbz-sharp-talk/pull/665) → main `cdef289` |
 | 스테이징 SQL | `sql/261019-units.sql` 2026-10-19 16:38 선적용(utf8mb4), 백업 `~/backup-pre-units-20261019-163807.sql` + `job_labels_bak_261019`(48행) |
 | 스테이징 배포 | 2026-10-19 18:44 `cdef289`, 컨테이너 재생성, `successfully started`, 스키마 오류 0, `/api/v1/units` 401 |
-| 프로덕션 | **미적용** — 별도 지시 시 `sql/261019-units.sql` 선적용 → 배포(한국 프로덕션엔 go2joy 테넌트 없음 → go2joy INSERT는 no-op) |
+| 프로덕션 | ✅ 2026-10-19 21:23 KST — 백업 `~/backups/sharptalk-production/20261019-2123` → SQL 3건 선적용(`261019-conv-csat-survey`·`261019-tenant-widget-languages`·`261019-units`; ivyusa 팀 CS/MKT/Management 생성, 라벨 상담/회계/운영 → Counsels/Accountant/Operation, 백업 `job_labels_bak_261019`) → `production` ff `7992e71..4e60bcf`(#647~#669) → `check-migrations` OK → `deploy-self-hosted.sh`. API healthy, `successfully started`, ERROR 0, `/api/v1/units` 401, 콘솔 청크 `SettingsBasicPage`에 `assigneeUnitIds`·`manage=1`, `UsersPage`에 `unitName` |
 
 ## 2. 변경 요약
 
@@ -38,7 +38,7 @@
 - 스테이징 콘솔 **클릭 실측(S-03·S-04)은 미수행** — 스테이징 로그인은 자동화 범위 밖. 배포 증빙은 스웨거 경로·웹 번들 문자열·DB 행으로 대체. 사용자 확인 절차: `/users` → [라벨·팀 관리] 팀 탭(go2joy는 7종) → 편집 모달 팀 저장 → `/settings/basic` 규칙 추가 → 고객 정보 조건 저장 후 새로고침.
 
 ## 5. 남은 일
-1. 프로덕션 반영(지시 시): SQL 선적용 → 배포 → 라벨 이름 영어화 영향 테넌트 공지(ivyusa 등).
+1. ~~프로덕션 반영~~ 완료(10/19 21:23). 남은 것: ivyusa에 라벨 이름 영어화 공지.
 2. `docker/init-sql/01-schema.sql` 재생성 — 261019 마이그레이션 3건(csat·widget_languages·units) 뒤처짐.
 3. D7 규칙 담당자 팀 단위 선택(go2joy 지역 팀과 결합) — 후속 REQ.
 4. `users.hooks.ts` 기존 토스트 영어 하드코딩(초대·갱신) — 기존 결함, i18n화 후속.

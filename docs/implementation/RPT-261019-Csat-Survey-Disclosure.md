@@ -8,7 +8,7 @@
 |---|---|
 | PR | **#658** `feat(csat): 만족도 3문항 설문 + AI 고지 하단 배치` — squash merge, main **`684811d`** (REQ/PLN docs #652 선행) |
 | CI | 통과(API jest 2,282 / types / widget / build) |
-| **마이그레이션** | `sql/261019-conv-csat-survey.sql` — 스테이징 **선적용 2026-10-19 12:40(KST)**(`conversations` 3열, `tenants` 2열 확인) → 코드 배포. 프로덕션 미적용(배포 시 선적용 필요). 매니페스트 `sql/artefacts.tsv` 갱신 |
+| **마이그레이션** | `sql/261019-conv-csat-survey.sql` — 스테이징 **선적용 2026-10-19 12:40(KST)**(`conversations` 3열, `tenants` 2열 확인) → 코드 배포. 프로덕션 **선적용 2026-10-19 21:23(KST)**(백업 `~/backups/sharptalk-production/20261019-2123`) → `production` ff `7992e71..4e60bcf` 배포. 매니페스트 `sql/artefacts.tsv` 갱신 |
 | 스테이징 | 2026-10-19 12:45(KST) `deploy-staging.sh` — `Nest application successfully started` |
 | go2joy 설정(P5) | 테넌트 4 `csat_mode = survey`, 디자인 #7 `disclosurePlacement = bottom`(SQL, 감사 로그 없음). `terms_url`은 Go2Joy 제공 대기 → 하단 줄에 링크 없음 |
 

@@ -8,7 +8,7 @@
 |---|---|
 | PR | **#661** `feat(i18n): 테넌트 제공 언어 · 세션 언어 제공 범위 한정 · AI 답변 세션 언어 고정` — main **`e8d4e6d`** · **#662** `fix(ai): 답변 언어 검증을 문자 비율로`(스테이징 첫 턴 오탐 O1) — main **`9ade01c`** (REQ/PLN docs #660) |
 | CI | 통과(API jest 2,306 / types 26 / widget 48 / typecheck 9 / i18n:check) |
-| **마이그레이션** | `sql/261019-tenant-widget-languages.sql`(`tenants.widget_languages json NULL`) — 스테이징 **선적용 2026-10-19 14:38(KST)** → 코드 배포. 프로덕션 미적용(배포 시 선적용). 매니페스트 `sql/artefacts.tsv` 갱신 |
+| **마이그레이션** | `sql/261019-tenant-widget-languages.sql`(`tenants.widget_languages json NULL`) — 스테이징 **선적용 2026-10-19 14:38(KST)** → 코드 배포. 프로덕션 **선적용 2026-10-19 21:23(KST)**(백업 `~/backups/sharptalk-production/20261019-2123`) → `production` ff `7992e71..4e60bcf` 배포. 매니페스트 `sql/artefacts.tsv` 갱신 |
 | 스테이징 | 2026-10-19 14:42 #661 배포 · 14:50 #662 재배포 — `Nest application successfully started`, 컨테이너 재기동 확인 |
 | go2joy 설정 | 테넌트 4 `widget_languages = ["vi","en"]`(SQL, 감사 로그 없음). ivyusa는 NULL(6개) |
 
