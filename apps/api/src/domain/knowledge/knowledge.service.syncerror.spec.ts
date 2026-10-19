@@ -1,4 +1,6 @@
 import { KnowledgeService } from './knowledge.service';
+import { NotionRequestError } from './notion.client';
+import { BusinessException } from '../../global/exception/business.exception';
 
 /**
  * Sync-failure reason persistence (REQ-260828 B1): a thrown sync must record
@@ -70,11 +72,23 @@ describe('KnowledgeService — syncSource failure reason', () => {
     expect(result.fetched).toBe(0);
   });
 
-  it('keeps the original error propagating to the caller', async () => {
-    const h = build(new Error('Could not find page with ID: abc'));
+  it('answers an unshared Notion target with E5095/422 carrying the reason (PLN-261019)', async () => {
+    const h = build(new NotionRequestError('Could not find page with ID: abc', 404, 'object_not_found'));
 
-    await expect(h.svc.syncSource(4, 7, 1)).rejects.toThrow('Could not find page');
-    expect((h.recorded[0][1].error as string)).toContain('Could not find page');
+    const err = await h.svc.syncSource(4, 7, 1).catch((e) => e);
+    expect(err).toBeInstanceOf(BusinessException);
+    expect(err.errorCode).toBe('E5095');
+    expect(err.getStatus()).toBe(422);
+    expect(err.details.reason[0]).toContain('Could not find page');
+    // The row keeps the same reason the response carries.
+    expect(h.recorded[0][1].error as string).toContain('Could not find page');
+  });
+
+  it('keeps a plain error propagating as-is — that one is a real 500', async () => {
+    const h = build(new TypeError('Cannot read properties of undefined'));
+
+    await expect(h.svc.syncSource(4, 7, 1)).rejects.toThrow(TypeError);
+    expect(h.recorded[0][1].error as string).toContain('Cannot read');
   });
 
   it('audits the failed run too — history must not be all-green (PLN-260828)', async () => {

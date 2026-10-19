@@ -402,6 +402,13 @@
     "pending": "대기"
   },
   "notionShareHint": "노션 페이지가 통합에 공유되지 않았습니다 — 노션에서 페이지 ⋯ → 연결(Connections)에 통합을 추가하세요.",
+  "syncError": {
+    "E5095": "소스 대상에 접근할 수 없습니다.",
+    "E5096": "소스 자격증명이 없거나 거부되었습니다.",
+    "E5097": "소스 제공자가 응답하지 않습니다 — 잠시 후 다시 시도하세요."
+  },
+  "gdriveShareHint": "드라이브 폴더를 서비스 계정 이메일에 공유한 뒤 다시 동기화하세요.",
+  "notionPublishedHint": "웹에 공개(Publish)된 notion.site 페이지입니다. 웹 공개는 API 접근 권한을 주지 않으므로 통합 연결(Connections)이 별도로 필요합니다.",
   "groupColumn": "그룹",
   "deleteSource": "소스 삭제",
   "deleteSourceConfirm": "\"{{name}}\" 소스를 삭제합니다. 계속할까요?",

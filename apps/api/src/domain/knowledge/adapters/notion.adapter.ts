@@ -1,6 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { KnowledgeSource } from '../entity/knowledge-source.entity';
-import { SourceAdapter, SourceFetch, SourceItem } from '../source-adapter.interface';
+import {
+  SourceAdapter,
+  SourceCredentialError,
+  SourceFetch,
+  SourceItem,
+  SourceTargetError,
+} from '../source-adapter.interface';
 import { envInt, NotionClient, NotionPageRef } from '../notion.client';
 import { NotionCredentialService, NOTION_PROVIDER } from '../notion-credential.service';
 import { blocksToText } from '../notion-block-text.util';
@@ -69,13 +75,13 @@ export class NotionAdapter implements SourceAdapter {
   async fetchAll(tenantId: number, source: KnowledgeSource): Promise<SourceFetch> {
     const configured = String((source.configJson as Record<string, unknown>)?.targetId ?? '').trim();
     const targetId = extractNotionId(configured);
-    if (!targetId) throw new Error('source has no usable Notion target id');
+    if (!targetId) throw new SourceTargetError('source has no usable Notion target id');
 
     const token = await this.credentials.load(tenantId);
-    if (!token) throw new Error('no Notion integration token is registered');
+    if (!token) throw new SourceCredentialError('no Notion integration token is registered');
 
     const target = await this.client.retrieveTarget(token, targetId);
-    if (target.archived) throw new Error(`the Notion target "${target.ref.title}" is in the trash`);
+    if (target.archived) throw new SourceTargetError(`the Notion target "${target.ref.title}" is in the trash`);
 
     const listing =
       target.kind === 'database'

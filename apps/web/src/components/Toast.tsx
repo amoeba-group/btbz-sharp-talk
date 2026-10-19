@@ -29,7 +29,9 @@ export function ToastViewport() {
             className="flex w-80 items-start gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-lg"
           >
             <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${colors[t.tone]}`} />
-            <p className="flex-1 text-sm text-gray-700">{t.message}</p>
+            {/* pre-line: a sync failure arrives as title / reason / fix on
+                separate lines (PLN-261019); single-line messages are unaffected. */}
+            <p className="flex-1 whitespace-pre-line text-sm text-gray-700">{t.message}</p>
             <button onClick={() => dismiss(t.id)} className="text-gray-400 hover:text-gray-600">
               <X className="h-4 w-4" />
             </button>

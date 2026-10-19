@@ -402,6 +402,13 @@
     "pending": "Pendiente"
   },
   "notionShareHint": "La página de Notion no está compartida con la integración: en Notion, abre la página, ⋯ → Connections y añade la integración.",
+  "syncError": {
+    "E5095": "No se puede leer el destino de la fuente.",
+    "E5096": "La credencial de la fuente falta o fue rechazada.",
+    "E5097": "El proveedor de la fuente no respondió — inténtelo de nuevo más tarde."
+  },
+  "gdriveShareHint": "Comparta la carpeta de Drive con el correo de la cuenta de servicio y vuelva a sincronizar.",
+  "notionPublishedHint": "Esta es una página publicada (notion.site). Publicar en la web no otorga acceso a la API: la página debe conectarse a la integración.",
   "groupColumn": "Grupo",
   "deleteSource": "Eliminar fuente",
   "deleteSourceConfirm": "Se eliminará la fuente \"{{name}}\". ¿Continuar?",

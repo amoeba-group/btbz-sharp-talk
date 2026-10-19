@@ -24,6 +24,7 @@ import { BulkImportService } from './bulk-import.service';
 import { CatalogSyncPreview, CatalogSyncService } from './catalog-sync.service';
 import { UsageGuideService, UsageGuideSummary } from './usage-guide.service';
 import { SourceSyncService } from './source-sync.service';
+import { classifySyncError, syncReasonOf } from './sync-error.util';
 import { IntegrationCredential } from '../tenant/entity/integration-credential.entity';
 import { AuditLog } from '../audit/entity/audit-log.entity';
 import { decryptSecret } from '../../global/util/crypto.util';
@@ -836,6 +837,18 @@ export class KnowledgeService {
         status: 'failed',
         error: ((e as Error).message || String(e)).slice(0, 200),
       });
+      // A failure the operator can fix answers 4xx/502 with a code and the
+      // reason (PLN-261019); until then every one of them was a 500 whose
+      // toast said "Internal server error" — the fix was in Notion's share
+      // menu, and nothing on screen pointed there. 4xx are not logged by the
+      // filter, so the one-line warn here is the server-side trace.
+      const classified = classifySyncError(e);
+      if (classified) {
+        this.logger.warn(
+          `source ${sourceId} (${source.type}) sync failed: ${classified.errorCode} — ${syncReasonOf(e)}`,
+        );
+        throw classified;
+      }
       throw e;
     }
   }

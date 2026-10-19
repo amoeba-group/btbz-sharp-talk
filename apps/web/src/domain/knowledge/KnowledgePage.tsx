@@ -583,7 +583,7 @@ export function KnowledgePage() {
           size="sm"
           disabled={r.supported === false || syncSource.isPending}
           title={r.supported === false ? t('sourceNotReadyHint') : undefined}
-          onClick={() => syncSource.mutate(r.id)}
+          onClick={() => syncSource.mutate({ id: r.id, type: r.type })}
         >
           ↻
         </Button>
@@ -1748,6 +1748,12 @@ export function KnowledgePage() {
                 onChange={(e) => setNotionTarget(e.target.value)}
               />
               <p className="mt-1 text-xs text-gray-500">{t('notionTargetIdHint')}</p>
+              {/* A published (notion.site) page reads as "public", but
+                  publishing grants nothing to the API — the go2joy FAQ was
+                  public and still 404'd until connected (REQ-261019 G6). */}
+              {/notion\.site/i.test(notionTarget) && (
+                <p className="mt-1 text-xs text-warning">{t('notionPublishedHint')}</p>
+              )}
             </FormRow>
             {/* Connecting the target to the integration is a separate step in
                 Notion that nothing prompts for, and skipping it looks exactly

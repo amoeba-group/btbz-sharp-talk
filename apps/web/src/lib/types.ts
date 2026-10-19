@@ -16,7 +16,7 @@ export interface Principal {
 export interface ApiEnvelope<T> {
   success: boolean;
   data: T;
-  error?: { code?: string; message: string } | null;
+  error?: { code?: string; message: string; details?: Record<string, string[]> } | null;
 }
 
 export interface LoginResponse {

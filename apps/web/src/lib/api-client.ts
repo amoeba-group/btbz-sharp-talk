@@ -133,9 +133,17 @@ http.interceptors.response.use(
       (envelope && typeof envelope === 'object' && envelope.error?.message) ||
       error.message ||
       'Request failed';
-    const wrapped = new Error(message) as Error & { status?: number; code?: string };
+    const wrapped = new Error(message) as Error & {
+      status?: number;
+      code?: string;
+      details?: Record<string, string[]>;
+    };
     wrapped.status = error.response?.status;
     wrapped.code = envelope?.error?.code;
+    // Field-level reasons (validation lists, the sync failure's upstream
+    // message). Dropped until PLN-261019, which left the toast with only the
+    // generic code message.
+    wrapped.details = envelope?.error?.details;
     return Promise.reject(wrapped);
   },
 );
