@@ -11,10 +11,14 @@ describe('Cafe24ConnectionTestService.testConnection', () => {
     conn?: { mallId: string; accessToken: string } | null | Error;
     products?: unknown[] | Error;
   }) {
+    // `saved` collects the partial UPDATE payloads (status/detail/lastTestedAt).
     const saved: Record<string, unknown>[] = [];
     const credRepo = {
       findOne: jest.fn(async () => opts.cred),
-      save: jest.fn(async (r: Record<string, unknown>) => { saved.push(r); return r; }),
+      update: jest.fn(async (_where: unknown, patch: Record<string, unknown>) => { saved.push(patch); return { affected: 1 }; }),
+      // Deliberately absent: save() would write the stale secret_enc back over
+      // the refresh token the probe just rotated (see the service comment).
+      save: jest.fn(async () => { throw new Error('save(cred) must not be used — it clobbers the rotated refresh token'); }),
     };
     const tokenService = {
       getConnection: jest.fn(async () => {
@@ -55,6 +59,19 @@ describe('Cafe24ConnectionTestService.testConnection', () => {
     expect(saved[0].status).toBe('connected');
     expect(saved[0].detail).toBe('Connected: zhangbayo.cafe24.com (catalogue reachable)');
     expect(saved[0].lastTestedAt).toBeInstanceOf(Date);
+    // The patch never carries the secret: the token service owns that column.
+    expect(saved[0]).not.toHaveProperty('secretEnc');
+  });
+
+  it('records through a partial update keyed by id, never through save(cred)', async () => {
+    const { svc, saved } = build({
+      cred: CRED(),
+      conn: { mallId: 'zhangbayo', accessToken: 'a1' },
+      products: [],
+    });
+    await svc.testConnection(16);
+    expect(saved).toHaveLength(1);
+    expect(Object.keys(saved[0]).sort()).toEqual(['detail', 'lastTestedAt', 'status']);
   });
 
   it('refresh failed (getConnection null) → error asking to reconnect, recorded', async () => {

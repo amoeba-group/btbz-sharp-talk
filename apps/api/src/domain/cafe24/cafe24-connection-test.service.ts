@@ -49,10 +49,20 @@ export class Cafe24ConnectionTestService {
     }
 
     const result = await this.probe(tenantId);
-    cred.status = result.ok ? 'connected' : 'error';
-    cred.detail = result.detail.slice(0, 255);
-    cred.lastTestedAt = new Date();
-    await this.credRepo.save(cred);
+    // Partial UPDATE, never save(cred): the probe refreshes the access token,
+    // and Cafe24 rotates the refresh token on every refresh — the token
+    // service persists the new one on its own copy of this row. Saving the
+    // entity loaded above would write the OLD, already-consumed refresh token
+    // back over it, and the next refresh answers 400 (staging zhangbayo,
+    // 2026-10-19 — the first run of this test did exactly that).
+    await this.credRepo.update(
+      { id: cred.id },
+      {
+        status: result.ok ? 'connected' : 'error',
+        detail: result.detail.slice(0, 255),
+        lastTestedAt: new Date(),
+      },
+    );
     return result;
   }
 
