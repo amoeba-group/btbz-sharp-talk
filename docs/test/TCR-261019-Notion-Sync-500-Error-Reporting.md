@@ -28,15 +28,15 @@
 
 | ID | 시나리오 | 기대 | 결과 |
 |---|---|---|---|
-| I1 | 소스 9(FAQ, 미공유) [동기화] | HTTP **422**, `error.code=E5095`, `details.reason[0]`=Notion 원문 | ⏳ 배포 후 |
-| I2 | I1 접근 로그 | `POST …/sources/9/sync -> 422` (404 아님) | ⏳ |
-| I3 | I1 서버 로그 | `AllExceptionFilter` ERROR 스택 **없음**, `KnowledgeService` WARN 1줄 `E5095 — Could not find page…` | ⏳ |
-| I4 | I1 콘솔 토스트 | 3줄(제목 i18n / Notion 원문 / Connections 안내), 수동 닫기 | ⏳ |
-| I5 | I1 소스 행 | 빨간 시각 + 사유 + 힌트(현행 유지) | ⏳ |
-| I6 | 소스 7(현 통합에 미공유) [동기화] | I1과 동일 결과 — 과거 `ok`가 `failed`로 갱신 | ⏳ |
-| I7 | 소스 추가 모달에 `hotel-go2joy.notion.site/...` 입력 | 경고색 힌트 "웹 공개 ≠ API 접근" 표시, notion.so 입력 시 미표시 | ⏳ |
+| I1 | 소스 9(FAQ, 미공유) [동기화] | HTTP **422**, `error.code=E5095`, `details.reason[0]`=Notion 원문 | ✅ 422 E5095 (10/19) |
+| I2 | I1 접근 로그 | `POST …/sources/9/sync -> 422` (404 아님) | ✅ |
+| I3 | I1 서버 로그 | `AllExceptionFilter` ERROR 스택 **없음**, `KnowledgeService` WARN 1줄 `E5095 — Could not find page…` | ✅ |
+| I4 | I1 콘솔 토스트 | 3줄(제목 i18n / Notion 원문 / Connections 안내), 수동 닫기 | ✅ 3줄 확인 — 4초 자동 닫힘 → PR 2 sticky |
+| I5 | I1 소스 행 | 빨간 시각 + 사유 + 힌트(현행 유지) | ✅ |
+| I6 | 소스 7(현 통합에 미공유) [동기화] | I1과 동일 결과 — 과거 `ok`가 `failed`로 갱신 | ✅ |
+| I7 | 소스 추가 모달에 `hotel-go2joy.notion.site/...` 입력 | 경고색 힌트 "웹 공개 ≠ API 접근" 표시, notion.so 입력 시 미표시 | ✅ |
 | I8 | go2joy가 FAQ 페이지를 HA-UserGuide에 연결 후 [동기화] | 200, 문서 생성·임베딩 | ⏳ go2joy 조치 대기 |
-| I9 | 기타 라우트 접근 로그 | 변화 없음(HttpException 경로 동일) | ⏳ |
+| I9 | 기타 라우트 접근 로그 | 변화 없음(HttpException 경로 동일) | ✅ |
 
 ## 3. 엣지 케이스
 
