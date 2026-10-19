@@ -7,6 +7,8 @@ import {
   ConsentState,
   SESSION_IDENTITY,
   SESSION_LANGUAGE,
+  isOfferedLanguage,
+  offeredLanguageCodes,
   sessionLanguageForLocale,
   sessionLanguageForTimezone,
   WIDGET_LOGIN_MODE,
@@ -81,6 +83,8 @@ export interface PrivacyNoticeInfo {
   issueFeed?: boolean;
   csatMode: CsatMode;
   termsUrl: string | null;
+  /** Languages the widget offers, lowercase codes in display order (PLN-261019-Widget-Language-Follow-Selection). */
+  languages: string[];
   /**
    * Consent notice lines for this session's language (PLN-261001). Only the
    * lines we can actually fill travel; the widget keeps its bundled copy for
@@ -160,6 +164,11 @@ export class SessionService {
             await this.redis.del(sessionCacheKey(existing.sessionToken));
           }
         }
+        // A language the tenant no longer offers is corrected on the next open
+        // (PLN-261019-Widget-Language-Follow-Selection D6): the sessions that
+        // started in Korean before the tenant narrowed its list fix themselves
+        // here, without a data migration.
+        await this.realignLanguage(existing, locale);
         return existing;
       }
     }
@@ -173,7 +182,7 @@ export class SessionService {
         tenantId: tenant.id,
         // Pinned once here — the session keeps its agent for its whole life.
         aiAgentId: await this.resolveAiAgentId(tenant.id, agentCode),
-        language: this.resolveLanguage(locale, tenant.timezone, tenant.defaultLanguage),
+        language: this.resolveLanguage(locale, tenant.timezone, tenant.defaultLanguage, tenant.widgetLanguages),
         // Impression analytics (PLN-260920). Normalized server-side; a bad value
         // becomes NULL rather than failing the call that mounts the widget.
         landingPath: normalizeLandingPath(landingPath),
@@ -371,7 +380,7 @@ export class SessionService {
       this.sessionRepo.create({
         sessionToken: generateToken(),
         tenantId,
-        language: this.resolveLanguage(locale, owner?.timezone, owner?.defaultLanguage),
+        language: this.resolveLanguage(locale, owner?.timezone, owner?.defaultLanguage, owner?.widgetLanguages),
         consentState: CONSENT_STATE.PENDING,
         customerId,
         identityLevel: SESSION_IDENTITY.VERIFIED,
@@ -650,6 +659,7 @@ export class SessionService {
       // Satisfaction card kind + the terms link for the bottom disclosure line (PLN-261019).
       csatMode: tenant?.csatMode === CSAT_MODE.SURVEY ? CSAT_MODE.SURVEY : CSAT_MODE.RATING,
       termsUrl: tenant?.termsUrl ?? null,
+      languages: offeredLanguageCodes(tenant?.widgetLanguages),
     };
   }
 
@@ -665,6 +675,15 @@ export class SessionService {
 
   async setLanguage(token: string, language: string): Promise<Session> {
     const session = await this.loadByToken(token);
+    const offered = await this.offeredFor(session.tenantId);
+    if (!isOfferedLanguage(language, offered)) {
+      // 4xx are not logged by default; without this line a rejected pick
+      // leaves no trace at all (CLAUDE.md §2).
+      this.logger.warn(
+        `language not offered: session=${session.id} tenant=${session.tenantId} asked=${language} offered=${offered?.join(',') ?? 'all'}`,
+      );
+      throw new BusinessException(ERROR_CODE.LANGUAGE_NOT_OFFERED, HttpStatus.BAD_REQUEST);
+    }
     session.language = this.resolveLanguage(language);
     // An explicit choice outranks detection from here on (PLN-260813 D3).
     session.languageLocked = 1;
@@ -683,10 +702,27 @@ export class SessionService {
    * triggered the switch would still go out in the old language.
    */
   async applyDetectedLanguage(session: Session, language: string): Promise<void> {
+    // Detection may only move a session within the tenant's offered languages
+    // (PLN-261019 D5): two Korean turns on a Vietnamese/English tenant stay in
+    // the language the shopper sees in the picker.
+    const offered = await this.offeredFor(session.tenantId);
+    if (!isOfferedLanguage(language, offered)) {
+      this.logger.log(
+        `session language detected but not offered: session=${session.id} ${language} (offered ${offered?.join(',') ?? 'all'})`,
+      );
+      return;
+    }
     session.language = language;
     await this.sessionRepo.update({ id: session.id }, { language });
     await this.redis.del(sessionCacheKey(session.sessionToken));
     this.logger.log(`session language detected: session=${session.id} → ${language}`);
+  }
+
+  /** `tenants.widget_languages` for a session's tenant; null = every language. */
+  private async offeredFor(tenantId: number | null): Promise<string[] | null> {
+    if (tenantId == null) return null;
+    const tenant = await this.tenantRepo.findOne({ where: { id: tenantId }, select: ['id', 'widgetLanguages'] });
+    return tenant?.widgetLanguages?.length ? tenant.widgetLanguages : null;
   }
 
   async bindCustomer(sessionId: number, customerId: number): Promise<void> {
@@ -711,19 +747,61 @@ export class SessionService {
    */
   async languageForChannel(tenantId: number | null, localeHint?: string | null): Promise<string> {
     const tenant = tenantId != null ? await this.tenantRepo.findOne({ where: { id: tenantId } }) : null;
-    return this.resolveLanguage(localeHint ?? undefined, tenant?.timezone, tenant?.defaultLanguage);
+    return this.resolveLanguage(
+      localeHint ?? undefined,
+      tenant?.timezone,
+      tenant?.defaultLanguage,
+      tenant?.widgetLanguages,
+    );
   }
 
-  private resolveLanguage(locale?: string, timezone?: string | null, defaultLanguage?: string | null): string {
+  private resolveLanguage(
+    locale?: string,
+    timezone?: string | null,
+    defaultLanguage?: string | null,
+    /** `tenants.widget_languages`; null = every registered language. */
+    offered?: readonly string[] | null,
+  ): string {
     const explicit = sessionLanguageForLocale(locale);
     // English is treated as "no preference expressed": an en-US browser in a
     // Seoul tenant should still get Korean, which is the behaviour tenants
     // configured their timezone for.
-    if (explicit && explicit !== SESSION_LANGUAGE.EN) return explicit;
+    if (explicit && explicit !== SESSION_LANGUAGE.EN) {
+      if (isOfferedLanguage(explicit, offered)) return explicit;
+      // A stated preference the tenant does not serve → English, not the
+      // tenant default (PLN-261019-Widget-Language-Follow-Selection D1): a
+      // Korean browser on a Vietnamese tenant is usually a foreign staffer,
+      // for whom English is the readable fallback. go2joy staging ran 57% of
+      // its sessions in Korean this way before the list existed.
+      return SESSION_LANGUAGE.EN;
+    }
     // An explicit tenant default outranks the timezone-derived guess
     // (REQ-260913-VN-Prerequisite-Gaps G1/G2) but never the shopper's own choice.
     const preset = sessionLanguageForLocale(defaultLanguage ?? undefined);
-    if (preset) return preset;
-    return sessionLanguageForTimezone(timezone) ?? SESSION_LANGUAGE.EN;
+    if (preset && isOfferedLanguage(preset, offered)) return preset;
+    const zone = sessionLanguageForTimezone(timezone);
+    if (zone && isOfferedLanguage(zone, offered)) return zone;
+    return SESSION_LANGUAGE.EN;
+  }
+
+  /**
+   * Bring an existing session back inside the tenant's offered languages
+   * (PLN-261019 D6). A session already in an offered language is left alone —
+   * including its lock. One that is not loses its lock as well: a hand-picked
+   * language the tenant stopped offering is no longer a choice to honour.
+   */
+  private async realignLanguage(session: Session, locale?: string): Promise<void> {
+    if (session.tenantId == null) return;
+    const tenant = await this.tenantRepo.findOne({ where: { id: session.tenantId } });
+    if (!tenant?.widgetLanguages?.length) return;
+    if (isOfferedLanguage(session.language, tenant.widgetLanguages)) return;
+    const next = this.resolveLanguage(locale, tenant.timezone, tenant.defaultLanguage, tenant.widgetLanguages);
+    this.logger.log(
+      `session language realigned: session=${session.id} ${session.language} → ${next} (offered ${tenant.widgetLanguages.join(',')})`,
+    );
+    session.language = next;
+    session.languageLocked = 0;
+    await this.sessionRepo.update({ id: session.id }, { language: next, languageLocked: 0 });
+    await this.redis.del(sessionCacheKey(session.sessionToken));
   }
 }

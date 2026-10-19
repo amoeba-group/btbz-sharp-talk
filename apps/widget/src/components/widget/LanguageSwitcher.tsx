@@ -18,12 +18,17 @@ import { setSessionLanguage } from '../../services/sessionService';
 export function LanguageSwitcher() {
   const { t, i18n } = useTranslation();
   const sessionToken = useWidgetStore((s) => s.sessionToken);
+  const offered = useWidgetStore((s) => s.languages);
   const setLanguage = useWidgetStore((s) => s.setLanguage);
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
+  // Only what the tenant offers (PLN-261019-Widget-Language-Follow-Selection):
+  // the server already refuses a pick outside this list, so a button for it
+  // would be a button that fails.
+  const options = LANGUAGE_OPTIONS.filter((l) => offered.includes(l.code));
   const current = (i18n.language || 'en').split('-')[0];
-  const active = LANGUAGE_OPTIONS.find((l) => l.code === current) ?? LANGUAGE_OPTIONS[0];
+  const active = options.find((l) => l.code === current) ?? options[0] ?? LANGUAGE_OPTIONS[0];
 
   // Close on outside click / Esc, the same way the settings popover behaves.
   useEffect(() => {
@@ -41,6 +46,9 @@ export function LanguageSwitcher() {
       document.removeEventListener('keydown', onKey);
     };
   }, [open]);
+
+  // Nothing to switch to — a lone pill saying "EN" is noise in the header.
+  if (options.length <= 1) return null;
 
   function changeTo(code: string) {
     setOpen(false);
@@ -80,7 +88,7 @@ export function LanguageSwitcher() {
           role="listbox"
           className="absolute right-0 z-10 mt-1 min-w-[9rem] overflow-hidden rounded-st-md bg-white py-1 shadow-lg ring-1 ring-black/5"
         >
-          {LANGUAGE_OPTIONS.map((lang) => {
+          {options.map((lang) => {
             const selected = lang.code === current;
             return (
               <li key={lang.code}>

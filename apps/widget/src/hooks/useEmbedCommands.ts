@@ -107,6 +107,9 @@ export function useEmbedCommands(): void {
             // does not immediately override it with the server-side language.
             const code = (d.locale || '').toLowerCase();
             if (!(SUPPORTED_LANGUAGES as readonly string[]).includes(code)) return;
+            // A host asking for a language the tenant does not offer is ignored
+            // the same way the server would refuse it (PLN-261019 D3/D5).
+            if (!useWidgetStore.getState().languages.includes(code)) return;
             void i18n.changeLanguage(code);
             store.setLanguage(code);
             document.documentElement.lang = code;

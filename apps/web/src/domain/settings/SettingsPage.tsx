@@ -16,7 +16,12 @@ import type {
 } from '@sharptalk/types';
 import { LanguageTabs } from '../ai-settings/LanguageTabs';
 // Runtime table from the registry source (see apps/web/src/i18n/i18n.ts for why).
-import { LANGUAGES, LANGUAGE_TIMEZONES } from '../../../../../packages/types/src/common/language';
+import {
+  LANGUAGES,
+  LANGUAGE_CODES,
+  LANGUAGE_TIMEZONES,
+  offeredLanguageCodes,
+} from '../../../../../packages/types/src/common/language';
 import { WIDGET_COPY_DEFAULTS } from '../../../../../packages/types/src/common/widget-copy';
 // Same source-path import as the language registry above: a value import of the
 // package entry point breaks the browser build (CJS `export *`).
@@ -489,7 +494,18 @@ export function WidgetBehaviorCard() {
   const tz = tzPicked ?? data?.timezone ?? '';
   // Explicit default language ('' = follow the timezone) — REQ-260913 G1/G2.
   const [langPicked, setLangPicked] = useState<string | null>(null);
-  const defaultLang = langPicked ?? data?.defaultLanguage ?? '';
+  // Offered languages (PLN-261019-Widget-Language-Follow-Selection): the picker
+  // list. Stored null = every language; English is always in (D3).
+  const [langsPicked, setLangsPicked] = useState<string[] | null>(null);
+  const offered = offeredLanguageCodes(langsPicked ?? data?.widgetLanguages ?? null);
+  const storedOffered = offeredLanguageCodes(data?.widgetLanguages ?? null);
+  const offeredDirty = offered.join(',') !== storedOffered.join(',');
+  const toggleOffered = (code: string) =>
+    setLangsPicked(offered.includes(code) ? offered.filter((c) => c !== code) : [...offered, code]);
+  // A default language the tenant stopped offering cannot start a session,
+  // so the select shows "follow the timezone" for it and saves that.
+  const defaultLangRaw = langPicked ?? data?.defaultLanguage ?? '';
+  const defaultLang = defaultLangRaw && !offered.includes(defaultLangRaw) ? '' : defaultLangRaw;
 
   // Widget copy draft (PLN-260808-Widget-Greetings) — lazily seeded from the
   // stored values; one language tab shared by both message editors.
@@ -540,6 +556,7 @@ export function WidgetBehaviorCard() {
     (value !== data.loginMode ||
       tz !== (data.timezone ?? '') ||
       defaultLang !== (data.defaultLanguage ?? '') ||
+      offeredDirty ||
       copyDirty);
 
   return (
@@ -570,10 +587,34 @@ export function WidgetBehaviorCard() {
           </Select>
         </FormRow>
         <p className="mb-4 text-xs text-gray-400">{t('widgetBehavior.timezoneHint')}</p>
+        <FormRow label={t('widgetBehavior.offeredLanguages')}>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 sm:grid-cols-3">
+            {LANGUAGES.map((l) => {
+              const fixed = l.code === 'en';
+              return (
+                <label
+                  key={l.code}
+                  className={`flex items-center gap-1.5 text-sm ${fixed ? 'text-gray-400' : 'text-gray-700'}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={offered.includes(l.code)}
+                    disabled={isLoading || fixed}
+                    onChange={() => toggleOffered(l.code)}
+                  />
+                  {l.nativeLabel}
+                  {l.reviewed ? '' : ' (β)'}
+                  {fixed ? ` · ${t('widgetBehavior.offeredLanguagesFixed')}` : ''}
+                </label>
+              );
+            })}
+          </div>
+        </FormRow>
+        <p className="mb-4 text-xs text-gray-400">{t('widgetBehavior.offeredLanguagesHint')}</p>
         <FormRow label={t('widgetBehavior.defaultLanguage')}>
           <Select value={defaultLang} disabled={isLoading} onChange={(e) => setLangPicked(e.target.value)}>
             <option value="">{t('widgetBehavior.defaultLanguageFollow')}</option>
-            {LANGUAGES.map((l) => (
+            {LANGUAGES.filter((l) => offered.includes(l.code)).map((l) => (
               <option key={l.code} value={l.code}>
                 {l.nativeLabel}
                 {l.reviewed ? '' : ' (β)'}
@@ -648,13 +689,18 @@ export function WidgetBehaviorCard() {
                 loginMode: value,
                 timezone: tz,
                 defaultLanguage: defaultLang,
+                // null = every language, so a tenant that re-checks all six
+                // goes back to "never narrowed" rather than a frozen list.
+                ...(offeredDirty
+                  ? { widgetLanguages: offered.length === LANGUAGE_CODES.length ? null : offered }
+                  : {}),
                 // Tabs are NOT sent from this card any more — they have their own
                 // (PLN-260818). Omitting them keeps `widget_tabs = NULL` meaning
                 // "never configured", which is what lets a future change to the
                 // built-in default reach tenants who never chose.
                 ...(copyDirty ? { copy } : {}),
               },
-              { onSuccess: () => { setCopyDraft(null); setLangPicked(null); } },
+              { onSuccess: () => { setCopyDraft(null); setLangPicked(null); setLangsPicked(null); } },
             )
           }
           disabled={!dirty || save.isPending}

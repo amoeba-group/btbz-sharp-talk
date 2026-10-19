@@ -64,6 +64,12 @@ export interface SessionResponse {
   /** Terms link for the bottom disclosure line; null → privacyPolicyUrl. */
   termsUrl?: string | null;
   language: string;
+  /**
+   * Languages this tenant's widget offers, lowercase codes in display order
+   * (PLN-261019-Widget-Language-Follow-Selection). Drives the header picker;
+   * absent on an older API = every registered language.
+   */
+  languages?: string[];
   consentState: string;
   authenticated: boolean;
   /** Bound customer's display name; null for guests and until the profile syncs. */

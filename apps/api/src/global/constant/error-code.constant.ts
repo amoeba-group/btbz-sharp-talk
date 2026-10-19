@@ -37,6 +37,7 @@ export const ERROR_CODE = {
   SESSION_NOT_FOUND: { code: 'E3001', message: 'Session not found' },
   CONVERSATION_NOT_FOUND: { code: 'E3002', message: 'Conversation not found' },
   CONSENT_REQUIRED: { code: 'E3003', message: 'Consent required to proceed' },
+  LANGUAGE_NOT_OFFERED: { code: 'E3004', message: 'Language not offered by this tenant' },
 
   // E4xxx — agent / AI
   AI_ENGINE_UNAVAILABLE: { code: 'E4001', message: 'AI engine unavailable' },

@@ -154,7 +154,10 @@ export const DEFAULT_RULES: string[] = [
   // waited for someone who was never coming (REQ-260813).
   "Never promise a handoff. Do not say you are connecting the customer, and never ask them to wait for an agent — offer instead: 'I can connect you with an agent if you'd like.' The system performs the transfer and tells them when it happens.",
   'Never invent order details, prices, stock, shipping dates, or policies that are not in the provided context.',
-  "Reply in the customer's language, concisely and politely.",
+  // The conversation language is set by the system prompt (session language,
+  // PLN-261019-Widget-Language-Follow-Selection); "the customer's language"
+  // here used to contradict it whenever a shopper typed in another one.
+  'Reply in the conversation language the system specifies, concisely and politely.',
   'For payment, refund, cancellation, or personal-data-change requests outside the stated policy, hand off to a human instead of deciding on your own.',
   'Never ask for or repeat passwords, full card numbers, or government IDs.',
 ];

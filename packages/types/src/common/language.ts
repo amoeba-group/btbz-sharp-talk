@@ -143,6 +143,48 @@ export function isSupportedLanguage(code: string | null | undefined): boolean {
 }
 
 /**
+ * Which languages a tenant's widget offers (PLN-261019-Widget-Language-Follow-Selection).
+ *
+ * `saved` is `tenants.widget_languages`: lowercase codes in display order, or
+ * null/empty for "every registered language" — the behaviour every tenant had
+ * before the column existed. Unknown codes are dropped rather than rejected, so
+ * a language removed from the registry cannot wedge a tenant's picker.
+ *
+ * English is always in the result (D3). It is the floor everything else falls
+ * back to — system copy, scenario text, the start language for a browser whose
+ * language the tenant does not offer — and a list without it would have no
+ * floor to fall to.
+ */
+export function offeredLanguages(saved: readonly string[] | null | undefined): LanguageDef[] {
+  const wanted = new Set(
+    (saved ?? []).map((c) => String(c ?? '').trim().toLowerCase()).filter((c) => BY_CODE.has(c)),
+  );
+  if (wanted.size === 0) return [...LANGUAGES];
+  wanted.add('en');
+  // Registry order, not saved order: the picker reads the same top to bottom
+  // for every tenant, and a saved list cannot smuggle in a duplicate.
+  return LANGUAGES.filter((l) => wanted.has(l.code));
+}
+
+/** Lowercase codes of `offeredLanguages(saved)`, in display order. */
+export function offeredLanguageCodes(saved: readonly string[] | null | undefined): string[] {
+  return offeredLanguages(saved).map((l) => l.code);
+}
+
+/**
+ * Is `lang` (a code like 'ko' or a session value like 'KO') among the
+ * languages `saved` offers? Null/empty `saved` offers everything.
+ */
+export function isOfferedLanguage(
+  lang: string | null | undefined,
+  saved: readonly string[] | null | undefined,
+): boolean {
+  const code = languageBySession(lang)?.code ?? languageByCode(lang)?.code;
+  if (!code) return false;
+  return offeredLanguages(saved).some((l) => l.code === code);
+}
+
+/**
  * A BCP-47 locale ('ko', 'es-ES', 'zh-TW', 'pt') → session language, or null
  * when nothing matches. Prefix matching is deliberate: platforms hand us
  * region-tagged locales we do not enumerate, and `zh-TW` resolving to

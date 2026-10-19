@@ -84,6 +84,7 @@
 261019-conv-csat-survey.sql	column	conversations	csat_comment
 261019-conv-csat-survey.sql	column	tenants	terms_url
 261019-conv-csat-survey.sql	column	tenants	csat_mode
+261019-tenant-widget-languages.sql	column	tenants	widget_languages
 migration_agent_coaching.sql	table	agent_coaching_threads	-
 migration_agent_coaching.sql	table	agent_coaching_messages	-
 migration_agent_coaching.sql	table	agent_coaching_proposals	-

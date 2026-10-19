@@ -219,6 +219,14 @@ export class UpdateWidgetSettingsRequest {
   @IsOptional()
   @IsIn([...LANGUAGE_CODES, ''])
   default_language?: string | null;
+  // Languages the widget offers (PLN-261019-Widget-Language-Follow-Selection):
+  // lowercase codes; null/[] = every registered language. English is added by
+  // the server if missing, so a list may omit it.
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(LANGUAGE_CODES.length)
+  @IsIn(LANGUAGE_CODES, { each: true })
+  widget_languages?: string[] | null;
 
   // Widget copy (PLN-260808-Widget-Greetings). PATCH semantics per field:
   // undefined = keep, ''/null = clear back to the widget default. Flat per-language

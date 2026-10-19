@@ -41,6 +41,7 @@ export function useSaveWidgetSettings() {
       defaultLanguage?: string | null;
       commerceEnabled?: boolean;
       csatMode?: 'rating' | 'survey';
+      widgetLanguages?: string[] | null;
     }) =>
       settingsService.saveWidgetSettings(
         v.loginMode,
@@ -51,6 +52,7 @@ export function useSaveWidgetSettings() {
         v.defaultLanguage,
         v.commerceEnabled,
         v.csatMode,
+        v.widgetLanguages,
       ),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['widget-settings', tenantKey] });
