@@ -15,6 +15,8 @@ import { envNumber } from '../../global/util/env-number.util';
 import { signKbVideo } from '../../global/util/crypto.util';
 import { kbVideoPath, parseVideoRef } from '../knowledge/video-ref.util';
 import { CONVERSATION_RULES, transcript, withCurrentTurn } from './conversation-history.util';
+import { PROMPT_LANGUAGE_NAMES } from '../agent/prompt-language';
+import { replyLanguageMismatch } from '../../global/util/reply-language.util';
 
 export interface RetrievedChunk {
   id: number;
@@ -133,6 +135,25 @@ export function splitCitedMarker(raw: string): { text: string; cited: number[] |
  * appends it, so a contact block written by the model would be a duplicate —
  * and the model's copy was where masking and token cut-offs did their damage.
  */
+/**
+ * The one instruction about reply language (PLN-261019-Widget-Language-Follow-Selection).
+ *
+ * It used to be two: this prompt said "Reply in language code: EN" while the
+ * default persona rule said "Reply in the customer's language" — and when a
+ * Korean partner typed Korean into an English or Vietnamese widget, the model
+ * followed the rule it could see an example of. Named language, spelled-out
+ * exceptions, and the persona rule now defers to this line.
+ */
+export function replyLanguageRule(language: string): string {
+  const code = String(language || 'en').toLowerCase();
+  const name = PROMPT_LANGUAGE_NAMES[code] ?? code.toUpperCase();
+  return (
+    `Always reply in ${name} (${code}), even if the customer wrote in another ` +
+    `language or the context documents are in another language. Never switch ` +
+    `languages mid-reply.`
+  );
+}
+
 const FOOTER_RULE =
   '\n- Do not end your reply with contact details (e-mail, phone, hotline, ' +
   'Zalo, working hours): the system appends the official contact block. Give ' +
@@ -634,7 +655,7 @@ export class RagService {
       system:
         `${persona}${rulesBlock}${hasHistory ? CONVERSATION_RULES : ''}${footerOn ? FOOTER_RULE : ''}\n` +
         `${sourceRule} If the information is insufficient, apologize briefly and ` +
-        `offer to connect a human agent. Reply in language code: ${language}.\n` +
+        `offer to connect a human agent. ${replyLanguageRule(language)}\n` +
         `The context items are numbered. After your reply, on its own final line, ` +
         `write "CITED:" followed by the numbers of the items your answer actually ` +
         `used, comma separated (write "CITED:" with nothing after it if you used ` +
@@ -659,7 +680,10 @@ export class RagService {
     // next to it as "referenced" products (FIX-260806 §7-1). Matching the answer
     // text against titles cannot do this — replies are localized while the
     // catalogue titles are English — so the model reports which items it used.
-    const { text, cited } = splitCitedMarker(res.text);
+    const { text: visible, cited } = splitCitedMarker(res.text);
+    // The marker is already split off, so a translation cannot disturb the
+    // citations; the visible text alone is judged and, if need be, redone.
+    const text = await this.enforceReplyLanguage(tenantId, visible, language);
     return {
       text,
       confidence,
@@ -783,12 +807,50 @@ export class RagService {
       feature: 'chat_rewrite',
       system:
         `${persona}\n${rules.map((r) => `- ${r}`).join('\n')}${memory}\n` +
-        `${instruction}\nReply in ${language.toUpperCase()}. Two sentences at most.`,
+        `${instruction}\n${replyLanguageRule(language)} Two sentences at most.`,
       messages: withCurrentTurn(history, query),
     });
     // Empty = no reply could be written; the caller hands off (PLN-261007 D4).
     if (res.degraded) return '';
-    return res.text.trim();
+    return this.enforceReplyLanguage(tenantId, res.text.trim(), language);
+  }
+
+  /**
+   * Safety net behind `replyLanguageRule` (PLN-261019 D4). The model is
+   * probabilistic; when the visible reply is plainly in the wrong script it is
+   * translated once, and the translation is delivered only if it passes the
+   * same check. Either way the mismatch is logged, so how often the prompt
+   * alone fails stays measurable. Costs one extra call on mismatched turns
+   * only — 5 of ~700 go2joy answers in the 45 days before this existed.
+   */
+  private async enforceReplyLanguage(tenantId: number, text: string, language: string): Promise<string> {
+    if (!text || !replyLanguageMismatch(text, language)) return text;
+    const code = String(language || 'en').toLowerCase();
+    const name = PROMPT_LANGUAGE_NAMES[code] ?? code.toUpperCase();
+    this.logger.warn(`reply language mismatch: tenant=${tenantId} expected=${code} — translating once`);
+    try {
+      const res = await this.ai.complete({
+        tenantId,
+        function: AI_FUNCTION.RAG,
+        feature: 'chat_answer_language_fix',
+        maxTokens: envNumber('RAG_MAX_TOKENS', 2048),
+        system:
+          `Translate the assistant reply below into ${name} (${code}). Keep the meaning, ` +
+          `the markdown formatting, lists and links exactly as they are; translate every ` +
+          `sentence, including any written in other languages. Output only the translated reply.`,
+        messages: [{ role: 'user', content: text }],
+      });
+      const fixed = res.text.trim();
+      if (res.degraded || !fixed || replyLanguageMismatch(fixed, language)) {
+        this.logger.warn(`reply language fix failed: tenant=${tenantId} expected=${code} degraded=${res.degraded}`);
+        return text;
+      }
+      this.logger.log(`reply language fixed: tenant=${tenantId} → ${code}`);
+      return fixed;
+    } catch (e) {
+      this.logger.warn(`reply language fix threw: tenant=${tenantId} ${(e as Error).message}`);
+      return text;
+    }
   }
 
   async classifyIntent(

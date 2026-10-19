@@ -9,6 +9,7 @@ import type { SessionResponse } from '../lib/types';
 import i18n, {
   LANG_STORAGE_KEY,
   SUPPORTED_LANGUAGES,
+  cacheOfferedLanguages,
 } from '../i18n/i18n';
 
 /**
@@ -211,6 +212,7 @@ export function useEnsureSession() {
   const setAuthenticated = useWidgetStore((s) => s.setAuthenticated);
   const setCustomerName = useWidgetStore((s) => s.setCustomerName);
   const setLanguage = useWidgetStore((s) => s.setLanguage);
+  const setLanguages = useWidgetStore((s) => s.setLanguages);
   const setWidgetTheme = useWidgetStore((s) => s.setWidgetTheme);
 
   useEffect(() => {
@@ -313,15 +315,34 @@ export function useEnsureSession() {
         // instead of re-asking — see adoptSessionConsent below.
         adoptSessionConsent(res);
 
+        // Which languages the picker offers (PLN-261019). Older APIs send
+        // nothing → every registered language, as before.
+        const offered = res.languages?.filter((c) => (SUPPORTED_LANGUAGES as readonly string[]).includes(c));
+        if (offered?.length) {
+          setLanguages(offered);
+          cacheOfferedLanguages(offered);
+        }
         // Tie default UI language to the backend session, unless the user
-        // has manually overridden it.
+        // has manually overridden it — and a manual pick the tenant no longer
+        // offers is not a choice to keep: it is dropped and the session's
+        // language (already realigned server-side) takes over.
         const code = (res.language || '').toLowerCase();
+        const current = (i18n.language || 'en').split('-')[0];
+        const currentOffered = !offered?.length || offered.includes(current);
         if (
           (SUPPORTED_LANGUAGES as readonly string[]).includes(code) &&
-          !hasManualLanguageOverride()
+          (!hasManualLanguageOverride() || !currentOffered)
         ) {
+          if (!currentOffered) {
+            try {
+              localStorage.removeItem(LANG_STORAGE_KEY);
+            } catch {
+              /* ignore storage failures */
+            }
+          }
           void i18n.changeLanguage(code);
           setLanguage(code);
+          document.documentElement.lang = code;
         }
       })
       .catch(() => {

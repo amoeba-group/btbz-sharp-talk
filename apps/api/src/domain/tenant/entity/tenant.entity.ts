@@ -262,6 +262,12 @@ export class Tenant {
   @Column({ name: 'default_language', type: 'varchar', length: 5, nullable: true })
   defaultLanguage: string | null;
 
+  // Languages the widget offers (lowercase codes, display order), e.g. ['vi','en'].
+  // NULL = every registered language. English is always added at read time —
+  // see offeredLanguages() in @sharptalk/types (PLN-261019-Widget-Language-Follow-Selection).
+  @Column({ name: 'widget_languages', type: 'json', nullable: true })
+  widgetLanguages: string[] | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

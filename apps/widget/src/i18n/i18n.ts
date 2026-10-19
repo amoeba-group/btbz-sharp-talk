@@ -14,6 +14,8 @@ import { ja } from './locales/ja';
 import { zh } from './locales/zh';
 
 export const LANG_STORAGE_KEY = 'ivy_lang';
+/** Per-shop cache of the languages the tenant offers (PLN-261019): `ivy_langs:<shop>`. */
+const OFFERED_CACHE_PREFIX = 'ivy_langs:';
 
 /**
  * Which languages the widget offers — derived from the shared registry so the
@@ -46,19 +48,61 @@ export function browserLanguage(): SupportedLanguage | null {
     : null;
 }
 
-/** Language to open in: manual pick, else browser, else English. */
+/** The `?shop=` the loader put in the iframe URL — the cache key for the offered list. */
+function shopFromUrl(): string {
+  try {
+    return new URLSearchParams(window.location.search).get('shop') ?? '';
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Languages this tenant offered the last time the session was ensured, or
+ * null when nothing is cached (first visit, cleared storage). The server's
+ * answer is the truth; this only stops the first paint from showing a language
+ * the picker is about to take away (PLN-261019 P4).
+ */
+export function cachedOfferedLanguages(): string[] | null {
+  try {
+    const raw = localStorage.getItem(OFFERED_CACHE_PREFIX + shopFromUrl());
+    const list = raw ? (JSON.parse(raw) as unknown) : null;
+    if (!Array.isArray(list)) return null;
+    const codes = list.filter((c): c is string => typeof c === 'string' && SUPPORTED_LANGUAGES.includes(c));
+    return codes.length ? codes : null;
+  } catch {
+    return null;
+  }
+}
+
+export function cacheOfferedLanguages(codes: readonly string[]): void {
+  try {
+    localStorage.setItem(OFFERED_CACHE_PREFIX + shopFromUrl(), JSON.stringify(codes));
+  } catch {
+    /* ignore storage failures */
+  }
+}
+
+/**
+ * Language to open in: manual pick, else browser, else English — each only
+ * if the tenant offers it (cached list; everything when unknown).
+ */
 export function initialLanguage(): SupportedLanguage {
+  const offered = cachedOfferedLanguages();
+  const offers = (code: string) => !offered || offered.includes(code);
   try {
     const stored = localStorage.getItem(LANG_STORAGE_KEY);
-    if (stored && SUPPORTED_LANGUAGES.includes(stored)) {
+    if (stored && SUPPORTED_LANGUAGES.includes(stored) && offers(stored)) {
       return stored;
     }
   } catch {
     /* ignore storage failures */
   }
-  // A manual pick outranks the browser; unsupported browser languages fall to
-  // English, which is also what the server settles on absent a clearer signal.
-  return browserLanguage() ?? 'en';
+  // A manual pick outranks the browser; a browser language the tenant does not
+  // offer falls to English (PLN-261019 D1), which is also what the server
+  // settles on for it.
+  const browser = browserLanguage();
+  return browser && offers(browser) ? browser : 'en';
 }
 
 i18n.use(initReactI18next).init({

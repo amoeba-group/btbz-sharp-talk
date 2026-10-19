@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { setStoredSessionToken } from '../lib/api-client';
-import { initialLanguage } from '../i18n/i18n';
+import { initialLanguage, SUPPORTED_LANGUAGES } from '../i18n/i18n';
 import { WIDGET_TABS_DEFAULT } from '../lib/widget-tabs';
 import { isAppMode } from '../lib/host-bridge';
 import type {
@@ -125,6 +125,9 @@ interface WidgetState {
   setWidgetTheme: (t: WidgetTheme | null) => void;
   setEmbedIdentity: (v: 'pending' | 'verified' | 'anonymous') => void;
   setLanguage: (l: string) => void;
+  /** Languages the tenant offers in the picker (PLN-261019); every registered one until the session says otherwise. */
+  languages: string[];
+  setLanguages: (l: string[]) => void;
   setAiProcessingRegion: (r: string) => void;
   setCsatMode: (m: 'rating' | 'survey') => void;
   setTermsUrl: (u: string | null) => void;
@@ -198,6 +201,8 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setWidgetTheme: (t) => set({ widgetTheme: t }),
   setEmbedIdentity: (v) => set({ embedIdentity: v }),
   setLanguage: (l) => set({ language: l }),
+  languages: [...SUPPORTED_LANGUAGES],
+  setLanguages: (l) => set({ languages: l }),
   setAiProcessingRegion: (r) => set({ aiProcessingRegion: r }),
   setCsatMode: (m) => set({ csatMode: m }),
   setTermsUrl: (u) => set({ termsUrl: u }),

@@ -118,6 +118,8 @@ export interface WidgetSettings {
   timezone: string | null;
   /** Explicit default widget language (code) or null = follow the timezone. */
   defaultLanguage: string | null;
+  /** Offered widget languages (codes) or null = every registered language (PLN-261019). */
+  widgetLanguages?: string[] | null;
   displayName: string | null;
   firstVisit: Record<string, string>;
   loginGreeting: Record<string, string>;
@@ -407,9 +409,11 @@ export const settingsService = {
     defaultLanguage?: string | null,
     commerceEnabled?: boolean,
     csatMode?: 'rating' | 'survey',
+    widgetLanguages?: string[] | null,
   ) =>
     apiPatch<WidgetSettings>('/tenants/widget-settings', {
       login_mode: loginMode,
+      ...(widgetLanguages !== undefined ? { widget_languages: widgetLanguages } : {}),
       ...(commerceEnabled !== undefined ? { commerce_enabled: commerceEnabled } : {}),
       ...(csatMode !== undefined ? { csat_mode: csatMode } : {}),
       ...(defaultLanguage !== undefined ? { default_language: defaultLanguage } : {}),

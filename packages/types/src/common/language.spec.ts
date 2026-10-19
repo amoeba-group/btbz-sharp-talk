@@ -2,8 +2,10 @@ import {
   LANGUAGES,
   LANGUAGE_CODES,
   SESSION_LANGUAGE,
+  isOfferedLanguage,
   isSupportedLanguage,
   languageByCode,
+  offeredLanguageCodes,
   languageBySession,
   localized,
   sessionLanguageForLocale,
@@ -100,5 +102,28 @@ describe('localized', () => {
   it('returns an empty string rather than undefined when nothing matches', () => {
     expect(localized({ KO: '안녕' }, 'VI')).toBe('');
     expect(localized(undefined, 'EN')).toBe('');
+  });
+});
+
+/** PLN-261019-Widget-Language-Follow-Selection — a tenant's offered languages. */
+describe('offeredLanguages / isOfferedLanguage', () => {
+  it('null or empty offers every registered language', () => {
+    expect(offeredLanguageCodes(null)).toEqual(LANGUAGE_CODES);
+    expect(offeredLanguageCodes([])).toEqual(LANGUAGE_CODES);
+    expect(isOfferedLanguage('KO', null)).toBe(true);
+  });
+
+  it('keeps registry order, adds English, drops unknown codes and duplicates', () => {
+    expect(offeredLanguageCodes(['vi', 'ko', 'th', 'vi'])).toEqual(['en', 'ko', 'vi']);
+    expect(offeredLanguageCodes(['VI'])).toEqual(['en', 'vi']);
+  });
+
+  it('answers for codes and session values alike', () => {
+    expect(isOfferedLanguage('ko', ['vi', 'en'])).toBe(false);
+    expect(isOfferedLanguage('KO', ['vi', 'en'])).toBe(false);
+    expect(isOfferedLanguage('VI', ['vi'])).toBe(true);
+    expect(isOfferedLanguage('en', ['vi'])).toBe(true);
+    expect(isOfferedLanguage('th', null)).toBe(false);
+    expect(isOfferedLanguage(null, ['vi'])).toBe(false);
   });
 });

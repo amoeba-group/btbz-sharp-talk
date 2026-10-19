@@ -132,6 +132,7 @@ export class TenantMapper {
       csatMode: t.csatMode === 'survey' ? 'survey' : 'rating',
       timezone: t.timezone ?? null,
       defaultLanguage: t.defaultLanguage ?? null,
+      widgetLanguages: t.widgetLanguages?.length ? t.widgetLanguages : null,
       displayName: t.widgetCopy?.displayName ?? null,
       firstVisit: t.widgetCopy?.firstVisit ?? {},
       loginGreeting: t.widgetCopy?.loginGreeting ?? {},

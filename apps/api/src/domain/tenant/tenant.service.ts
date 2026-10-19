@@ -17,6 +17,8 @@ import {
   WIDGET_TABS_DEFAULT,
   normalizeWidgetTabs,
   CSAT_MODE,
+  LANGUAGE_CODES,
+  offeredLanguageCodes,
 } from '@sharptalk/types';
 
 /** Real categories the policy may mention ('all' is a query filter, not a kind). */
@@ -479,6 +481,12 @@ export class TenantService {
     if (dto.csat_mode !== undefined) tenant.csatMode = dto.csat_mode === CSAT_MODE.SURVEY ? CSAT_MODE.SURVEY : CSAT_MODE.RATING;
     if (dto.timezone !== undefined) tenant.timezone = dto.timezone?.trim() || null;
     if (dto.default_language !== undefined) tenant.defaultLanguage = dto.default_language?.trim().toLowerCase() || null;
+    if (dto.widget_languages !== undefined) {
+      // Stored normalized (registry order, English included) so every reader
+      // sees the same list the widget will; NULL keeps "every language".
+      const codes = offeredLanguageCodes(dto.widget_languages);
+      tenant.widgetLanguages = codes.length === LANGUAGE_CODES.length ? null : codes;
+    }
     tenant.widgetCopy = mergeWidgetCopy(tenant.widgetCopy, dto);
     const saved = await this.tenantRepo.save(tenant);
     await this.audit.write({
@@ -491,6 +499,7 @@ export class TenantService {
         `tabs:${(saved.widgetTabs ?? WIDGET_TABS_DEFAULT).join('+')}@${saved.widgetTabPosition}`,
         saved.timezone,
         saved.defaultLanguage ? `lang:${saved.defaultLanguage}` : null,
+        saved.widgetLanguages ? `langs:${saved.widgetLanguages.join('+')}` : null,
         Number(saved.commerceEnabled) === 0 ? 'commerce:off' : null,
       ]
         .filter(Boolean)

@@ -105,6 +105,8 @@ export interface WidgetSettingsResponse {
   timezone: string | null;
   /** Explicit default widget language (code) or null = follow the timezone. */
   defaultLanguage: string | null;
+  /** Offered widget languages as saved (lowercase codes) or null = all (PLN-261019). */
+  widgetLanguages: string[] | null;
   /** Stored (raw) widget copy — null/missing = widget default; console shows the tenant name as placeholder. */
   displayName: string | null;
   firstVisit: Record<string, string>;
