@@ -48,7 +48,10 @@ describe('ShopifySyncService.syncOrders', () => {
     const client = {
       fetchOrders: jest.fn().mockResolvedValue({ orders, nextPageInfo: null }),
     };
-    const tenantService = { getShopifyConnection: jest.fn().mockResolvedValue(conn) };
+    const tenantService = {
+      getShopifyConnection: jest.fn().mockResolvedValue(conn),
+      recordShopifyOutcome: jest.fn().mockResolvedValue(undefined),
+    };
     const customerService = { findOrCreateByEmail: jest.fn().mockResolvedValue({ id: 42 }) };
     const integrationService = {
       upsert: jest.fn().mockResolvedValue(undefined),
@@ -73,13 +76,22 @@ describe('ShopifySyncService.syncOrders', () => {
       client,
       customerService,
       integrationService,
+      tenantService,
       publish,
     };
   }
 
   it('upserts each order with mapped status and links customers', async () => {
-    const { svc, saved, customerService, integrationService } = build(sampleOrders);
+    const { svc, saved, customerService, integrationService, tenantService } = build(sampleOrders);
     const res = await svc.syncOrders(7);
+
+    // The outcome lands on THIS tenant's credential — the row the platforms
+    // tile reads (PLN-261019 D1); the global row below is only the sync cursor.
+    expect(tenantService.recordShopifyOutcome).toHaveBeenCalledWith(
+      7,
+      true,
+      'Synced 2 order(s) (initial full sync)',
+    );
 
     expect(res).toEqual({
       ok: true,

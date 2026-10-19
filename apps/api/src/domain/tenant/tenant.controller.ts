@@ -483,8 +483,8 @@ export class TenantController {
   @RequireCapability(CAPABILITY.INTEGRATION_CREDENTIALS_MANAGE)
   @ApiOperation({ summary: 'Get this tenant Shopify connection settings' })
   async getShopify(@CurrentUser() user: Principal) {
-    const { tenant, cred, status } = await this.tenantService.getShopifyView(this.tenantId(user));
-    return TenantMapper.toShopifySettings(tenant, cred, status);
+    const { tenant, cred } = await this.tenantService.getShopifyView(this.tenantId(user));
+    return TenantMapper.toShopifySettings(tenant, cred);
   }
 
   @Put('me/shopify')
@@ -494,8 +494,8 @@ export class TenantController {
     @CurrentUser() user: Principal,
     @Body() body: UpdateShopifySettingsRequest,
   ) {
-    const { tenant, cred, status } = await this.tenantService.saveShopify(this.tenantId(user), body);
-    return TenantMapper.toShopifySettings(tenant, cred, status);
+    const { tenant, cred } = await this.tenantService.saveShopify(this.tenantId(user), body);
+    return TenantMapper.toShopifySettings(tenant, cred);
   }
 
   @Post('me/shopify/test')

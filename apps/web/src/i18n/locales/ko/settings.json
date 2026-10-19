@@ -178,7 +178,8 @@
     "state": {
       "connected": "연결됨",
       "error": "오류",
-      "unknown": "미테스트"
+      "unknown": "미테스트",
+      "registered": "등록됨"
     },
     "fields": {
       "mall_id": "몰 ID",
@@ -197,7 +198,9 @@
       "secret_key": "시크릿 키",
       "subdomain": "계정 서브도메인",
       "email": "계정 이메일",
-      "webhook_secret": "웹훅 시크릿 (L2 상태회신)"
+      "webhook_secret": "웹훅 시크릿 (L2 상태회신)",
+      "platform_name": "플랫폼 이름",
+      "description": "설명"
     },
     "ph": {
       "mall_id": "your-mall",
@@ -208,7 +211,9 @@
       "shop_domain": "your-store.myharavan.com",
       "subdomain": "your-company (your-company.gorgias.com의 앞부분)",
       "email": "agent@example.com",
-      "app_key": "yotpo app key"
+      "app_key": "yotpo app key",
+      "platform_name": "Go2Joy",
+      "description": "예: 호텔 파트너 어드민(자체 개발)"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -244,7 +249,15 @@
     "syncing": "동기화 중…",
     "syncProducts": "상품 가져오기",
     "syncOrders": "주문 동기화",
-    "syncHint": "카탈로그/주문을 SharpTalk으로 가져옵니다. 상품을 가져온 뒤 지식 메뉴에서 지식으로 등록하면 위젯 상품 답변에 사용됩니다."
+    "syncHint": "카탈로그/주문을 SharpTalk으로 가져옵니다. 상품을 가져온 뒤 지식 메뉴에서 지식으로 등록하면 위젯 상품 답변에 사용됩니다.",
+    "shopify": {
+      "title": "Shopify",
+      "subtitle": "Admin API 액세스 토큰으로 Shopify 상점을 연결합니다."
+    },
+    "self": {
+      "title": "자체 플랫폼",
+      "subtitle": "직접 개발·운영하는 플랫폼입니다. 이름과 설명만 등록하면 되고, 테스트할 것은 없습니다."
+    }
   },
   "install": {
     "subtitle": "채팅 위젯을 쇼핑몰에 설치합니다. 플랫폼을 선택하세요.",
@@ -290,7 +303,9 @@
       "productsSynced": "상품 {{synced}}건 동기화, {{archived}}건 보관됨 — 지식 메뉴에서 변환을 실행하세요",
       "syncProductsFailed": "Cafe24 상품 가져오기 실패",
       "errorInvalidScope": "Cafe24가 요청 권한을 거부했습니다(invalid_scope) — 개발자센터에서 앱 권한에 해당 항목을 추가한 뒤 다시 연결하세요",
-      "errorAccessDenied": "Cafe24 동의가 거부되었습니다(access_denied) — 몰 대표 운영자 계정으로 다시 시도하세요"
+      "errorAccessDenied": "Cafe24 동의가 거부되었습니다(access_denied) — 몰 대표 운영자 계정으로 다시 시도하세요",
+      "modalTitle": "Cafe24 연결",
+      "manualEntry": "토큰이 이미 있다면 직접 입력"
     }
   },
   "marketingTitle": "마케팅 연동",
@@ -729,7 +744,7 @@
     },
     "platforms": {
       "title": "플랫폼 연동",
-      "subtitle": "쇼핑몰이 돌아가는 곳"
+      "subtitle": "쇼핑몰이 돌아가는 곳. 연결된 플랫폼만 아래에 표시됩니다."
     },
     "marketing": {
       "title": "마케팅·헬프데스크",
@@ -754,7 +769,8 @@
     "configured": "자체 시크릿",
     "usingAppSecret": "앱 공통 시크릿",
     "replaceWarning": "저장하면 시크릿이 즉시 교체됩니다. 보내는 쪽을 같이 바꾸지 않으면 그 시점부터 웹훅이 실패합니다.",
-    "widgetPointer": "위젯 자체는 위젯 설정 → 임베드·SDK를 참고하십시오."
+    "widgetPointer": "위젯 자체는 위젯 설정 → 임베드·SDK를 참고하십시오.",
+    "webhookTitle": "주문 이행 웹훅"
   },
   "integrationGuide": "연동 가이드",
   "knowledgeOptions": {
@@ -933,5 +949,17 @@
     "saveError": "노출 제한을 저장하지 못했습니다",
     "keyIssued": "초대 링크를 발급했습니다",
     "keyError": "초대 링크를 발급하지 못했습니다"
+  },
+  "platforms": {
+    "connectedTitle": "연결된 플랫폼",
+    "emptyTitle": "아직 연결된 플랫폼이 없습니다.",
+    "emptyHint": "아래 \"플랫폼 추가\"에서 사용 중인 플랫폼을 선택하세요. 자체 개발 플랫폼이면 \"자체 플랫폼\"을 등록하면 됩니다.",
+    "addTitle": "플랫폼 추가",
+    "addHint": "지원 플랫폼 중 하나를 선택하면 연결 설정이 열립니다. 이미 연결된 플랫폼은 ✓로 표시됩니다.",
+    "alreadyAdded": "이미 연결됨",
+    "lastChecked": "마지막 확인",
+    "registeredAt": "등록",
+    "selfNoCommerce": "주문 기능이 꺼져 있어 위젯 설치만으로 연동이 끝납니다. 위젯 설치는 위젯 설정 → 임베드·SDK에서 확인하세요.",
+    "openWidgetSettings": "위젯 설정으로"
   }
 }

@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { INTEGRATION_FIELDS, type GenericIntegrationProvider } from './integration-providers';
+import {
+  INTEGRATION_FIELDS,
+  SELF_PLATFORM_PROVIDER,
+  type GenericIntegrationProvider,
+} from './integration-providers';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { Modal } from '@/components/Modal';
@@ -46,6 +50,9 @@ export function IntegrationConfigModal({
   const syncProducts = useSyncEcommerceProducts(provider);
   const syncOrders = useSyncEcommerceOrders(provider);
   const syncable = SYNCABLE.has(provider);
+  // The tenant's own platform has no remote end: nothing to test, nothing to
+  // sync, and saving it registers it (PLN-261019 D4).
+  const self = provider === SELF_PLATFORM_PROVIDER;
   const specs = INTEGRATION_FIELDS[provider];
 
   const [values, setValues] = useState<Record<string, string>>({});
@@ -128,13 +135,15 @@ export function IntegrationConfigModal({
       ))}
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
-        <Button
-          variant="secondary"
-          onClick={() => test.mutate()}
-          disabled={test.isPending || !configured}
-        >
-          {test.isPending ? t('integrations.testing') : t('integrations.testConnection')}
-        </Button>
+        {!self && (
+          <Button
+            variant="secondary"
+            onClick={() => test.mutate()}
+            disabled={test.isPending || !configured}
+          >
+            {test.isPending ? t('integrations.testing') : t('integrations.testConnection')}
+          </Button>
+        )}
         {syncable && (
           <>
             <Button
@@ -159,7 +168,11 @@ export function IntegrationConfigModal({
       <div className="mt-4 space-y-1 border-t border-gray-100 pt-4 text-sm">
         <div className="flex items-center gap-2">
           <span className="text-gray-500">{t('integrations.connectionStatus')}:</span>
-          {statusTone ? (
+          {self ? (
+            <Badge tone={configured ? 'info' : 'gray'}>
+              {configured ? t('integrations.state.registered') : t('notSet')}
+            </Badge>
+          ) : statusTone ? (
             <Badge tone={statusTone}>{t(`integrations.state.${integ?.status}`)}</Badge>
           ) : (
             <Badge>{t('integrations.state.unknown')}</Badge>
@@ -168,9 +181,9 @@ export function IntegrationConfigModal({
         <div className="text-gray-500">
           {t('integrations.credential')}: {configured ? t('connected') : t('notSet')}
         </div>
-        {integ?.detail && <div className="text-gray-500">{integ.detail}</div>}
+        {!self && integ?.detail && <div className="text-gray-500">{integ.detail}</div>}
         <div className="text-xs text-gray-400">
-          {t('integrations.lastTested')}: {fmtDate(integ?.lastSyncAt)}
+          {self ? t('platforms.registeredAt') : t('integrations.lastTested')}: {fmtDate(integ?.lastSyncAt)}
         </div>
       </div>
     </Modal>

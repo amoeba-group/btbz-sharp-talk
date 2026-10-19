@@ -76,6 +76,7 @@ export class ShopifySyncService {
     const conn = await this.tenantService.getShopifyConnection(tenantId);
     if (!conn) {
       return this.record(
+        tenantId,
         false,
         0,
         'Shopify shop domain or a valid access token is missing — reconnect the store',
@@ -102,14 +103,14 @@ export class ShopifySyncService {
         pages++;
       } while (pageInfo && pages < MAX_PAGES);
     } catch (e) {
-      if (synced === 0) return this.record(false, 0, `Sync failed: ${(e as Error).message}`);
+      if (synced === 0) return this.record(tenantId, false, 0, `Sync failed: ${(e as Error).message}`);
       // Partial progress is kept; report it but flag the interruption.
-      return this.record(true, synced, `Synced ${synced} order(s), interrupted: ${(e as Error).message}`);
+      return this.record(tenantId, true, synced, `Synced ${synced} order(s), interrupted: ${(e as Error).message}`);
     }
     const detail = since
       ? `Synced ${synced} order(s) updated since ${since}`
       : `Synced ${synced} order(s) (initial full sync${pageInfo ? ', more pages remain' : ''})`;
-    return this.record(true, synced, detail);
+    return this.record(tenantId, true, synced, detail);
   }
 
   /**
@@ -370,8 +371,17 @@ export class ShopifySyncService {
     return ORDER_STATUS_INTERNAL.PAID;
   }
 
-  private async record(ok: boolean, synced: number, detail: string): Promise<ShopifySyncResult> {
+  private async record(
+    tenantId: number,
+    ok: boolean,
+    synced: number,
+    detail: string,
+  ): Promise<ShopifySyncResult> {
+    // Global row: kept ONLY as the incremental cursor (`last_sync_at`) read above.
+    // It is provider-keyed, so it must not be what any tenant's screen shows.
     await this.integrationService.upsert(SHOPIFY, ok ? 'connected' : 'error', detail.slice(0, 255));
+    // Per-tenant row: what the platforms tile and dashboard read (PLN-261019 D1).
+    await this.tenantService.recordShopifyOutcome(tenantId, ok, detail);
     return { ok, synced, detail };
   }
 }

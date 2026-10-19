@@ -178,7 +178,8 @@
     "state": {
       "connected": "接続済み",
       "error": "エラー",
-      "unknown": "未テスト"
+      "unknown": "未テスト",
+      "registered": "登録済み"
     },
     "fields": {
       "mall_id": "モールID",
@@ -197,7 +198,9 @@
       "secret_key": "シークレットキー",
       "subdomain": "アカウントのサブドメイン",
       "email": "アカウントのメールアドレス",
-      "webhook_secret": "Webhookシークレット（L2ステータス）"
+      "webhook_secret": "Webhookシークレット（L2ステータス）",
+      "platform_name": "プラットフォーム名",
+      "description": "説明"
     },
     "ph": {
       "mall_id": "your-mall",
@@ -208,7 +211,9 @@
       "shop_domain": "your-store.myharavan.com",
       "subdomain": "your-company（your-company.gorgias.com の部分）",
       "email": "agent@example.com",
-      "app_key": "yotpo app key"
+      "app_key": "yotpo app key",
+      "platform_name": "Go2Joy",
+      "description": "例: ホテルパートナー管理画面（自社開発）"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -244,7 +249,15 @@
     "syncing": "同期中…",
     "syncProducts": "商品を取り込む",
     "syncOrders": "注文を同期",
-    "syncHint": "カタログ/注文を SharpTalk に取り込みます。商品を取り込んだ後、ナレッジメニューでナレッジ登録するとウィジェットの商品回答に使えます。"
+    "syncHint": "カタログ/注文を SharpTalk に取り込みます。商品を取り込んだ後、ナレッジメニューでナレッジ登録するとウィジェットの商品回答に使えます。",
+    "shopify": {
+      "title": "Shopify",
+      "subtitle": "Admin API アクセストークンで Shopify ストアを接続します。"
+    },
+    "self": {
+      "title": "自社プラットフォーム",
+      "subtitle": "自社で開発・運用しているプラットフォームです。名前と説明を登録するだけで、テストは不要です。"
+    }
   },
   "install": {
     "subtitle": "ストアフロントにチャットウィジェットを追加します。プラットフォームを選択してください。",
@@ -290,7 +303,9 @@
       "productsSynced": "{{synced}}件の商品を同期し、{{archived}}件をアーカイブしました。ナレッジページで変換を実行してください",
       "syncProductsFailed": "Cafe24からの商品取り込みに失敗しました",
       "errorInvalidScope": "Cafe24が要求した権限を拒否しました（invalid_scope）。Cafe24 Developersでアプリに権限を追加してから、もう一度連携してください",
-      "errorAccessDenied": "Cafe24で連携が拒否されました（access_denied）。モールの代表運営者アカウントで再度お試しください"
+      "errorAccessDenied": "Cafe24で連携が拒否されました（access_denied）。モールの代表運営者アカウントで再度お試しください",
+      "modalTitle": "Cafe24 を接続",
+      "manualEntry": "トークンをお持ちなら手動入力"
     }
   },
   "marketingTitle": "マーケティング連携",
@@ -729,7 +744,7 @@
     },
     "platforms": {
       "title": "プラットフォーム連携",
-      "subtitle": "ショップが動いている場所"
+      "subtitle": "ショップが動いている場所。接続済みのプラットフォームだけを下に表示します。"
     },
     "marketing": {
       "title": "マーケティング・ヘルプデスク",
@@ -754,7 +769,8 @@
     "configured": "自社シークレット",
     "usingAppSecret": "アプリ共通",
     "replaceWarning": "保存するとシークレットは直ちに置き換わります。送信側も同時に変更しないと、その時点からWebhookが失敗します。",
-    "widgetPointer": "ウィジェット自体はウィジェット設定 → 埋め込み・SDK をご覧ください。"
+    "widgetPointer": "ウィジェット自体はウィジェット設定 → 埋め込み・SDK をご覧ください。",
+    "webhookTitle": "注文フルフィルメント Webhook"
   },
   "integrationGuide": "連携ガイド",
   "knowledgeOptions": {
@@ -933,5 +949,17 @@
     "saveError": "表示制限を保存できませんでした",
     "keyIssued": "招待リンクを発行しました",
     "keyError": "招待リンクを発行できませんでした"
+  },
+  "platforms": {
+    "connectedTitle": "接続済みプラットフォーム",
+    "emptyTitle": "まだ接続されたプラットフォームはありません。",
+    "emptyHint": "下の「プラットフォームを追加」から利用中のプラットフォームを選んでください。自社開発なら「自社プラットフォーム」として登録します。",
+    "addTitle": "プラットフォームを追加",
+    "addHint": "対応プラットフォームを選ぶと接続設定が開きます。接続済みのものには ✓ が付きます。",
+    "alreadyAdded": "接続済み",
+    "lastChecked": "最終確認",
+    "registeredAt": "登録",
+    "selfNoCommerce": "注文機能がオフのため、ウィジェットの設置だけで連携は完了です。ウィジェット設定 → 埋め込み・SDK をご覧ください。",
+    "openWidgetSettings": "ウィジェット設定を開く"
   }
 }

@@ -32,7 +32,6 @@ import { Unit } from '../user/entity/unit.entity';
 import { defaultJobLabels, defaultUnits } from '../user/default-org';
 import { UsageType } from '../knowledge/entity/usage-type.entity';
 import { DEFAULT_USAGE_TYPES } from '../knowledge/usage-guide.types';
-import { IntegrationStatusEntity } from '../integration/entity/integration-status.entity';
 import { ContentFilterRule } from '../moderation/entity/content-filter-rule.entity';
 import { DEFAULT_MODERATION_RULES } from '../moderation/moderation.defaults';
 
@@ -959,16 +958,19 @@ export class TenantService {
 
   // ---- Shopify connection settings (self-service, per tenant) ----
 
-  /** Current tenant + Shopify credential/status for the settings view. */
+  /**
+   * Current tenant + Shopify credential for the settings view. The connection
+   * state lives on THIS tenant's credential row — the global `integration_status`
+   * row is provider-keyed and showed every tenant ivyusa's sync result
+   * (PLN-261019 D1, closing the gap FIX-260827 left for Shopify).
+   */
   async getShopifyView(tenantId: number): Promise<{
     tenant: Tenant;
     cred: IntegrationCredential | null;
-    status: IntegrationStatusEntity | null;
   }> {
     const tenant = await this.findById(tenantId);
     const cred = await this.credRepo.findOne({ where: { tenantId, provider: SHOPIFY } });
-    const status = await this.integrationService.findByName(SHOPIFY);
-    return { tenant, cred: cred ?? null, status: status ?? null };
+    return { tenant, cred: cred ?? null };
   }
 
   /**
@@ -982,7 +984,6 @@ export class TenantService {
   ): Promise<{
     tenant: Tenant;
     cred: IntegrationCredential | null;
-    status: IntegrationStatusEntity | null;
   }> {
     const tenant = await this.findById(tenantId);
     const shopDomain = dto.shop_domain.trim();
@@ -1131,6 +1132,7 @@ export class TenantService {
     const conn = await this.getShopifyConnection(tenantId);
     if (!conn) {
       return this.recordShopifyTest(
+        tenantId,
         false,
         'Shopify shop domain or a valid access token is missing — reconnect the store',
       );
@@ -1150,25 +1152,45 @@ export class TenantService {
       );
       clearTimeout(timer);
       if (!res.ok) {
-        return this.recordShopifyTest(false, `Admin API returned ${res.status}`);
+        return this.recordShopifyTest(tenantId, false, `Admin API returned ${res.status}`);
       }
       const data = (await res.json()) as {
         data?: { shop?: { name?: string } };
         errors?: Array<{ message?: string }>;
       };
       if (data.errors?.length) {
-        return this.recordShopifyTest(false, `Admin API error: ${data.errors[0]?.message ?? ''}`);
+        return this.recordShopifyTest(tenantId, false, `Admin API error: ${data.errors[0]?.message ?? ''}`);
       }
       const name = data.data?.shop?.name;
-      return this.recordShopifyTest(true, name ? `Connected: ${name}` : 'Connected');
+      return this.recordShopifyTest(tenantId, true, name ? `Connected: ${name}` : 'Connected');
     } catch (e) {
-      return this.recordShopifyTest(false, `Connection failed: ${(e as Error).message}`);
+      return this.recordShopifyTest(tenantId, false, `Connection failed: ${(e as Error).message}`);
     }
   }
 
-  private async recordShopifyTest(ok: boolean, detail: string): Promise<ShopifyTestResponse> {
-    await this.integrationService.upsert(SHOPIFY, ok ? 'connected' : 'error', detail.slice(0, 255));
+  private async recordShopifyTest(
+    tenantId: number,
+    ok: boolean,
+    detail: string,
+  ): Promise<ShopifyTestResponse> {
+    await this.recordShopifyOutcome(tenantId, ok, detail);
     return { ok, detail };
+  }
+
+  /**
+   * Record a Shopify test/sync outcome on this tenant's credential — the only
+   * state the platforms tile and the dashboard read (PLN-261019 D1/D2). No row
+   * (no credential) means nothing to mark: a missing store is "not connected",
+   * not "error". The global integration_status row is NOT written here; the
+   * order sync still stamps it for its incremental cursor only.
+   */
+  async recordShopifyOutcome(tenantId: number, ok: boolean, detail: string): Promise<void> {
+    const cred = await this.credRepo.findOne({ where: { tenantId, provider: SHOPIFY } });
+    if (!cred) return;
+    cred.status = ok ? 'connected' : 'error';
+    cred.detail = detail.slice(0, 255);
+    cred.lastTestedAt = new Date();
+    await this.credRepo.save(cred);
   }
 
 }

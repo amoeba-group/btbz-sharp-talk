@@ -178,7 +178,8 @@
     "state": {
       "connected": "已连接",
       "error": "错误",
-      "unknown": "未测试"
+      "unknown": "未测试",
+      "registered": "已注册"
     },
     "fields": {
       "mall_id": "商城 ID",
@@ -197,7 +198,9 @@
       "secret_key": "Secret key",
       "subdomain": "账户子域名",
       "email": "账户邮箱",
-      "webhook_secret": "Webhook secret（L2 状态）"
+      "webhook_secret": "Webhook secret（L2 状态）",
+      "platform_name": "平台名称",
+      "description": "说明"
     },
     "ph": {
       "mall_id": "your-mall",
@@ -208,7 +211,9 @@
       "shop_domain": "your-store.myharavan.com",
       "subdomain": "your-company（取自 your-company.gorgias.com）",
       "email": "agent@example.com",
-      "app_key": "yotpo app key"
+      "app_key": "yotpo app key",
+      "platform_name": "Go2Joy",
+      "description": "例如：酒店合作伙伴后台（自研）"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -244,7 +249,15 @@
     "syncing": "同步中…",
     "syncProducts": "导入商品",
     "syncOrders": "同步订单",
-    "syncHint": "将目录/订单导入 SharpTalk。导入商品后在知识菜单中登记为知识，即可用于挂件的商品回答。"
+    "syncHint": "将目录/订单导入 SharpTalk。导入商品后在知识菜单中登记为知识，即可用于挂件的商品回答。",
+    "shopify": {
+      "title": "Shopify",
+      "subtitle": "使用 Admin API 访问令牌连接 Shopify 店铺。"
+    },
+    "self": {
+      "title": "自有平台",
+      "subtitle": "由您自行开发和运营的平台。只需登记名称和说明，无需测试。"
+    }
   },
   "install": {
     "subtitle": "将聊天小组件添加到您的店铺前台。请选择您的平台。",
@@ -290,7 +303,9 @@
       "productsSynced": "已同步 {{synced}} 个商品，{{archived}} 个已归档——请到知识库页面执行转换",
       "syncProductsFailed": "从 Cafe24 导入商品失败",
       "errorInvalidScope": "Cafe24 拒绝了所请求的权限（invalid_scope）——请在 Cafe24 Developers 中为应用添加这些权限后重新连接",
-      "errorAccessDenied": "Cafe24 拒绝了授权（access_denied）——请使用商城的主运营账户重试"
+      "errorAccessDenied": "Cafe24 拒绝了授权（access_denied）——请使用商城的主运营账户重试",
+      "modalTitle": "连接 Cafe24",
+      "manualEntry": "已有令牌？手动输入"
     }
   },
   "marketingTitle": "营销集成",
@@ -729,7 +744,7 @@
     },
     "platforms": {
       "title": "平台集成",
-      "subtitle": "你的商店运行在哪里"
+      "subtitle": "您的商店运行的地方。下方只显示已连接的平台。"
     },
     "marketing": {
       "title": "营销与客服",
@@ -754,7 +769,8 @@
     "configured": "自有密钥",
     "usingAppSecret": "应用级密钥",
     "replaceWarning": "保存后密钥立即被替换。请同时更新发送方，否则其 webhook 会从此失败。",
-    "widgetPointer": "挂件本身请见挂件设置 → 嵌入与 SDK。"
+    "widgetPointer": "挂件本身请见挂件设置 → 嵌入与 SDK。",
+    "webhookTitle": "订单履约 Webhook"
   },
   "integrationGuide": "连接指南",
   "knowledgeOptions": {
@@ -933,5 +949,17 @@
     "saveError": "未能保存展示限制",
     "keyIssued": "已生成邀请链接",
     "keyError": "未能生成邀请链接"
+  },
+  "platforms": {
+    "connectedTitle": "已连接的平台",
+    "emptyTitle": "尚未连接任何平台。",
+    "emptyHint": "在下方“添加平台”中选择您正在使用的平台。如果是自研平台，请注册为“自有平台”。",
+    "addTitle": "添加平台",
+    "addHint": "选择一个受支持的平台即可打开连接设置。已连接的平台会标记 ✓。",
+    "alreadyAdded": "已连接",
+    "lastChecked": "最近检查",
+    "registeredAt": "注册",
+    "selfNoCommerce": "订单功能已关闭，只需安装小部件即完成对接。请查看小部件设置 → 嵌入与 SDK。",
+    "openWidgetSettings": "打开小部件设置"
   }
 }

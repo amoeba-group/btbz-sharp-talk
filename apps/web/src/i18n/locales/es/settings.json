@@ -178,7 +178,8 @@
     "state": {
       "connected": "Conectado",
       "error": "Error",
-      "unknown": "Sin probar"
+      "unknown": "Sin probar",
+      "registered": "Registrada"
     },
     "fields": {
       "mall_id": "ID de tienda",
@@ -197,7 +198,9 @@
       "secret_key": "Clave secreta",
       "subdomain": "Subdominio de la cuenta",
       "email": "Email de la cuenta",
-      "webhook_secret": "Secreto del webhook (estado L2)"
+      "webhook_secret": "Secreto del webhook (estado L2)",
+      "platform_name": "Nombre de la plataforma",
+      "description": "Descripción"
     },
     "ph": {
       "mall_id": "your-mall",
@@ -208,7 +211,9 @@
       "shop_domain": "your-store.myharavan.com",
       "subdomain": "su-empresa (de su-empresa.gorgias.com)",
       "email": "agente@ejemplo.com",
-      "app_key": "yotpo app key"
+      "app_key": "yotpo app key",
+      "platform_name": "Go2Joy",
+      "description": "p. ej. Panel de socios hoteleros (propio)"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -244,7 +249,15 @@
     "syncing": "Sincronizando…",
     "syncProducts": "Importar productos",
     "syncOrders": "Sincronizar pedidos",
-    "syncHint": "Importa el catálogo/pedidos a SharpTalk. Tras importar productos, regístralos como conocimiento en el menú Conocimiento para las respuestas del widget."
+    "syncHint": "Importa el catálogo/pedidos a SharpTalk. Tras importar productos, regístralos como conocimiento en el menú Conocimiento para las respuestas del widget.",
+    "shopify": {
+      "title": "Shopify",
+      "subtitle": "Conecta una tienda Shopify con su token de acceso de la Admin API."
+    },
+    "self": {
+      "title": "Plataforma propia",
+      "subtitle": "Una plataforma que desarrollas y operas tú mismo. Registra un nombre y una nota; no hay nada que probar."
+    }
   },
   "install": {
     "subtitle": "Añade el widget de chat a tu tienda. Elige tu plataforma.",
@@ -290,7 +303,9 @@
       "productsSynced": "{{synced}} producto(s) sincronizados, {{archived}} archivados: ejecute la conversión en Conocimiento",
       "syncProductsFailed": "Error al importar productos de Cafe24",
       "errorInvalidScope": "Cafe24 rechazó los permisos solicitados (invalid_scope): agréguelos a la app en Cafe24 Developers y vuelva a conectar",
-      "errorAccessDenied": "Se denegó el consentimiento de Cafe24 (access_denied): reinténtelo con la cuenta del operador principal de la tienda"
+      "errorAccessDenied": "Se denegó el consentimiento de Cafe24 (access_denied): reinténtelo con la cuenta del operador principal de la tienda",
+      "modalTitle": "Conectar Cafe24",
+      "manualEntry": "¿Ya tienes un token? Introdúcelo manualmente"
     }
   },
   "marketingTitle": "Integraciones de marketing",
@@ -729,7 +744,7 @@
     },
     "platforms": {
       "title": "Integraciones de plataforma",
-      "subtitle": "Dónde funciona tu tienda"
+      "subtitle": "Donde funciona tu tienda. Abajo solo aparecen las plataformas que has conectado."
     },
     "marketing": {
       "title": "Marketing y helpdesk",
@@ -754,7 +769,8 @@
     "configured": "Secreto propio",
     "usingAppSecret": "Secreto de la app",
     "replaceWarning": "Al guardar, el secreto se reemplaza de inmediato. Cambia también el sistema emisor o sus webhooks empezarán a fallar.",
-    "widgetPointer": "Para el widget, ve a Ajustes del widget → Inserción y SDK."
+    "widgetPointer": "Para el widget, ve a Ajustes del widget → Inserción y SDK.",
+    "webhookTitle": "Webhook de envío de pedidos"
   },
   "integrationGuide": "Guía de integración",
   "knowledgeOptions": {
@@ -933,5 +949,17 @@
     "saveError": "No se pudo guardar la restricción",
     "keyIssued": "Enlace emitido",
     "keyError": "No se pudo emitir el enlace"
+  },
+  "platforms": {
+    "connectedTitle": "Plataformas conectadas",
+    "emptyTitle": "Todavía no hay ninguna plataforma conectada.",
+    "emptyHint": "Elige la plataforma que usas en \"Añadir plataforma\". Si la desarrollaste tú, regístrala como \"Plataforma propia\".",
+    "addTitle": "Añadir plataforma",
+    "addHint": "Elige una plataforma compatible para abrir su configuración. Las ya conectadas aparecen marcadas.",
+    "alreadyAdded": "Ya conectada",
+    "lastChecked": "Última comprobación",
+    "registeredAt": "Registrada",
+    "selfNoCommerce": "Los pedidos están desactivados, así que instalar el widget es toda la integración. Ve a Ajustes del widget → Insertar y SDK.",
+    "openWidgetSettings": "Abrir ajustes del widget"
   }
 }

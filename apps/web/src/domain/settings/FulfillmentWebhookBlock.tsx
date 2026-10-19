@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Badge } from '@/components/Badge';
 import { FormRow, Input } from '@/components/Field';
@@ -9,9 +8,9 @@ import { useCredentials, useUpdateCredential } from './settings.hooks';
 const FULFILLMENT = 'fulfillment';
 
 /**
- * Self-developed store integration (PLN-260824 D5).
+ * Order-fulfillment webhook for a self-built store (PLN-260824 D5, moved into
+ * the self-platform card by PLN-261019 D5).
  *
- * For a tenant that built its own shop rather than running Shopify or Cafe24.
  * The pieces already existed — a generic fulfillment webhook and a per-tenant
  * signing secret — but only as an env var and an API; nothing in the console
  * ever showed them, so nobody could set one up without a developer.
@@ -21,7 +20,7 @@ const FULFILLMENT = 'fulfillment';
  * same breath. Saying that plainly beats a button that silently starts
  * rejecting inbound webhooks.
  */
-export function SelfDevelopmentCard() {
+export function FulfillmentWebhookBlock() {
   const { t } = useTranslation('settings');
   const { t: tc } = useTranslation('common');
   const { data } = useCredentials();
@@ -42,8 +41,9 @@ export function SelfDevelopmentCard() {
   };
 
   return (
-    <Card title={t('selfDev.title')}>
-      <p className="mb-3 text-xs text-gray-500">{t('selfDev.hint')}</p>
+    <div>
+      <p className="text-sm font-semibold text-gray-800">{t('selfDev.webhookTitle')}</p>
+      <p className="mb-3 mt-0.5 text-xs text-gray-500">{t('selfDev.hint')}</p>
 
       <FormRow label={t('selfDev.webhookUrl')}>
         <div className="flex items-center gap-2">
@@ -83,8 +83,6 @@ export function SelfDevelopmentCard() {
         </div>
         <p className="mt-1 text-xs text-amber-700">{t('selfDev.replaceWarning')}</p>
       </FormRow>
-
-      <p className="mt-3 text-xs text-gray-500">{t('selfDev.widgetPointer')}</p>
-    </Card>
+    </div>
   );
 }

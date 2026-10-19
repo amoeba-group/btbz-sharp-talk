@@ -325,6 +325,8 @@ export const INTEGRATION_PROVIDER = {
   GORGIAS: 'gorgias',
   GOOGLE_DRIVE: 'google_drive',
   NOTION: 'notion',
+  /** A platform the tenant built and runs itself (PLN-261019 D4) — registered, never probed. */
+  SELF: 'self',
 } as const;
 export type IntegrationProvider = (typeof INTEGRATION_PROVIDER)[keyof typeof INTEGRATION_PROVIDER];
 
@@ -356,11 +358,20 @@ export type MarketingProvider = (typeof MARKETING_PROVIDERS)[number];
 export const HELPDESK_PROVIDERS = [INTEGRATION_PROVIDER.GORGIAS] as const;
 export type HelpdeskProvider = (typeof HELPDESK_PROVIDERS)[number];
 
+/**
+ * The tenant's own platform (PLN-261019 D4). It rides the generic save/get
+ * flow — one encrypted row holding a name and a description — but it is NOT an
+ * e-commerce provider: no sync scheduler, no probe; saving it is the whole
+ * connection, so it is marked connected on save.
+ */
+export const SELF_PLATFORM_PROVIDER = INTEGRATION_PROVIDER.SELF;
+
 /** Every provider served by the generic settings/save/test flow. */
 export const GENERIC_INTEGRATION_PROVIDERS = [
   ...ECOMMERCE_PROVIDERS,
   ...MARKETING_PROVIDERS,
   ...HELPDESK_PROVIDERS,
+  SELF_PLATFORM_PROVIDER,
 ] as const;
 export type GenericIntegrationProvider = (typeof GENERIC_INTEGRATION_PROVIDERS)[number];
 
@@ -422,6 +433,12 @@ export const INTEGRATION_FIELDS: Record<GenericIntegrationProvider, IntegrationF
     // L2 status webhook auth token (POST /webhooks/gorgias) — optional until the
     // tenant wires the Gorgias HTTP Integration (PLN-260809 P3).
     { key: 'webhook_secret', secret: true, required: false },
+  ],
+  // Self-hosted platform (PLN-261019): what to call it on the console and the
+  // dashboard, plus a free-text note. Nothing here is a secret.
+  self: [
+    { key: 'platform_name', secret: false, required: true },
+    { key: 'description', secret: false, required: false },
   ],
 };
 
