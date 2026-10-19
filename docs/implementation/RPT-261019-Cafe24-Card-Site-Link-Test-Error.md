@@ -33,7 +33,7 @@
 | 환경 | 상태 |
 |---|---|
 | 스테이징 | ✅ 완료. 브랜치 직접 배포 4회(6ddad7b5 16:23 → 95bad8ad 16:26 → 7b88f826 16:29 → ddc2652a 16:31 UTC; GitHub Actions 장애로 CI 큐 정체 → 서버에서 `session/platforms-status` 체크아웃 후 `deploy-staging.sh`). 머지 후 main으로 되돌려 재배포 — §6에 기록 |
-| 프로덕션 | ✅ 완료(b0d35b07, 16:42 UTC) — §6 |
+| 프로덕션 | ✅ 완료(b0d35b07, 16:42 UTC) — §6. 후속 #678/#679/#680까지 전부 반영, 최종 main `7c821463`(17:11 UTC) — §6-1 |
 | SQL | 없음. 데이터 정정은 스테이징만 |
 
 ## 6. 머지·최종 배포 기록
@@ -42,7 +42,25 @@
 - **프로덕션**: `origin/main:production` ff(e653dee7→b0d35b07), 백업 `backups/20261019T164121Z`, `check-migrations.sh` OK(applied 102), `deploy-self-hosted.sh` 16:42 UTC — api/web 컨테이너 6~7초, `successfully started` 16:42:45, ERROR 0, `https://sharptalk.amoeba.site/api/v1/health` 200, `POST /tenants/me/cafe24/test` 무인증 **401(=배포됨)**, 콘솔 번들 `index-DMaG3Q3f.js`.
 - 프로덕션 데이터 정정: 대상 없음(`integration_credentials` 0행).
 
+### 6-1. 후속 PR 3건 배포 기록 (전부 2026-10-19 UTC, SQL 없음)
+| PR | main | 내용 | 스테이징 | 프로덕션 |
+|---|---|---|---|---|
+| #678 | `dff61d9f` (16:47) | TCR/RPT 실측 기록 + 매뉴얼 Cafe24 카드 1줄 | 16:49 | 16:49:57 `successfully started`, health 200, `cafe24/test` 무인증 401 |
+| #679 | `6ce14282` (17:00) | `Cafe24TokenService` 액세스 토큰 캐시에 `sha256(secret_enc)` 지문 — 재연결 뒤 구 토큰 ≤2h 사용 결함(`FIX-261019-Cafe24-Access-Cache-Survives-Reconnect`) | 17:01:58 | 17:03:07 `successfully started`, health 200, 401 |
+| #680 | `7c821463` (17:09) | 수동(토큰) Cafe24 카드 "OAuth로 연결" 버튼 + 자격증명 모달 OAuth→수동 전환 경고 | 17:10:33 | 17:11:44 `successfully started`, ERROR 0, health 200, 번들 `platform-connections.hooks-Bb5XlqEf.js`에 `connectOAuth` 키 확인 |
+
+- 매 배포 공통 검증: api/web 컨테이너 6~8초(healthy), `Nest application successfully started`, ERROR 0, `/api/v1/health` 200. 프로덕션은 `origin/main:production` ff → `deploy-self-hosted.sh`.
+- #679·#680 CI는 정상 통과(17:00·17:10 success) — 16시대 GitHub Actions 장애는 해소됨.
+
+### 6-2. 스테이징 Cafe24 자격증명 최종 스냅샷 (2026-10-19 22:27 UTC)
+| id | 테넌트 | 모드 | status | detail | 비고 |
+|---|---|---|---|---|---|
+| 3 | amoebaorder | 수동(토큰) | error | `Cafe24 token invalid or expired` (17:04) | 사용자가 자격증명 모달에 토큰을 저장해 OAuth→수동 전환. **카드 "OAuth로 연결"(#680)로 복귀 필요**. 자동 동기화는 "store is not connected"로 건너뜀(기록 없음) |
+| 4 | annehearts | OAuth | unknown | — | 자동 동기화 정상(21:40 주문 84건). status는 테스트 게이트라 "연결 테스트" 전까지 unknown — 설계대로 |
+| 14 | zhangbayo | OAuth | error | `token refresh failed … reconnect the mall` (16:44) | §4-2 소실 건. **설정(Cafe24 재연결) → 동의 필요**. 자동 동기화 매 틱 400 경고 1줄(기록 없음) |
+
 ## 7. 남은 것
 - 스테이징 zhangbayo Cafe24 재인가(운영자). 재인가 후 카드 "연결 테스트" → `Connected: zhangbayo.cafe24.com (catalogue reachable)` 기대.
-- ~~amoebaorder 몰 권한 복구~~ → 사용자가 16:52 재인가, #679 후 연결됨 확인.
-- 수동(토큰) Cafe24 연결의 동기화 버튼(PLN §4 보류).
+- ~~amoebaorder 몰 권한 복구~~ → 사용자가 16:52 재인가, #679 후 연결됨 확인. 이후 17:04 수동 토큰 저장으로 다시 오류 → #680 "OAuth로 연결" 버튼으로 복귀(운영자 동의 필요, §6-2).
+- 수동(토큰) Cafe24 연결의 동기화 버튼(PLN §4 보류 — 토큰 수명 2h라 비권장).
+- (관찰) 자동 동기화 성공은 `last_synced_at`·status를 갱신하지 않음(Shopify만 `tenant.service` 커서 기록). 카드가 그 값을 표시하지 않아 사용자 영향 없음 — 표시가 필요해지면 그때 함께.
