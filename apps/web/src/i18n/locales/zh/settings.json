@@ -218,7 +218,8 @@
     "cafe24": {
       "title": "Cafe24",
       "subtitle": "通过 Admin API（OAuth 访问令牌）连接您的 Cafe24 店铺。",
-      "oauthTestHint": "该商城通过 Cafe24 OAuth 连接 — 请在已连接平台的 Cafe24 卡片中运行连接测试。"
+      "oauthTestHint": "该商城通过 Cafe24 OAuth 连接 — 请在已连接平台的 Cafe24 卡片中运行连接测试。",
+      "manualOverOauthWarning": "该商城当前通过 OAuth 连接。在此保存令牌将断开 OAuth 连接并切换为手动(令牌)连接。手动令牌两小时后过期且不会自动刷新。"
     },
     "woocommerce": {
       "title": "WooCommerce",
@@ -312,7 +313,8 @@
       "mode": {
         "oauth": "OAuth 连接",
         "manual": "手动(令牌)"
-      }
+      },
+      "connectOAuth": "通过 OAuth 连接"
     }
   },
   "marketingTitle": "营销集成",

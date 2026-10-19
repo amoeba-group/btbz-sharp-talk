@@ -218,7 +218,8 @@
     "cafe24": {
       "title": "Cafe24",
       "subtitle": "Admin API（OAuthアクセストークン）でCafe24ストアと連携します。",
-      "oauthTestHint": "このモールは Cafe24 OAuth で接続されています — 接続テストは接続済みプラットフォームの Cafe24 カードから実行してください。"
+      "oauthTestHint": "このモールは Cafe24 OAuth で接続されています — 接続テストは接続済みプラットフォームの Cafe24 カードから実行してください。",
+      "manualOverOauthWarning": "このモールは現在 OAuth で接続されています。ここでトークンを保存すると OAuth 接続は解除され、手動(トークン)接続に切り替わります。手動トークンは 2 時間で期限切れとなり自動更新されません。"
     },
     "woocommerce": {
       "title": "WooCommerce",
@@ -312,7 +313,8 @@
       "mode": {
         "oauth": "OAuth 接続",
         "manual": "手動(トークン)"
-      }
+      },
+      "connectOAuth": "OAuth で接続"
     }
   },
   "marketingTitle": "マーケティング連携",

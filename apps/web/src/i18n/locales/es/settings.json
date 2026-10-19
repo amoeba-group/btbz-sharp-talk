@@ -218,7 +218,8 @@
     "cafe24": {
       "title": "Cafe24",
       "subtitle": "Conecta tu tienda Cafe24 mediante la Admin API (token OAuth).",
-      "oauthTestHint": "Esta tienda está conectada mediante Cafe24 OAuth — ejecute la prueba de conexión desde la tarjeta Cafe24 en plataformas conectadas."
+      "oauthTestHint": "Esta tienda está conectada mediante Cafe24 OAuth — ejecute la prueba de conexión desde la tarjeta Cafe24 en plataformas conectadas.",
+      "manualOverOauthWarning": "Esta tienda está conectada mediante OAuth. Guardar un token aquí elimina la conexión OAuth y pasa a una conexión manual (token). Un token manual caduca a las dos horas y no se renueva."
     },
     "woocommerce": {
       "title": "WooCommerce",
@@ -312,7 +313,8 @@
       "mode": {
         "oauth": "OAuth",
         "manual": "Manual (token)"
-      }
+      },
+      "connectOAuth": "Conectar con OAuth"
     }
   },
   "marketingTitle": "Integraciones de marketing",

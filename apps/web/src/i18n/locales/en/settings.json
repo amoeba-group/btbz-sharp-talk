@@ -218,7 +218,8 @@
     "cafe24": {
       "title": "Cafe24",
       "subtitle": "Connect your Cafe24 store via the Admin API (OAuth access token).",
-      "oauthTestHint": "This mall is connected through Cafe24 OAuth — run the connection test from the Cafe24 card under connected platforms."
+      "oauthTestHint": "This mall is connected through Cafe24 OAuth — run the connection test from the Cafe24 card under connected platforms.",
+      "manualOverOauthWarning": "This mall is currently connected through OAuth. Saving a token here drops the OAuth connection and switches to a manual (token) connection. A manual token expires after two hours and is not refreshed."
     },
     "woocommerce": {
       "title": "WooCommerce",
@@ -312,7 +313,8 @@
       "mode": {
         "oauth": "OAuth",
         "manual": "Manual (token)"
-      }
+      },
+      "connectOAuth": "Connect with OAuth"
     }
   },
   "marketingTitle": "Marketing integrations",

@@ -95,7 +95,14 @@ export function SettingsPlatformsPage() {
           ) : c.provider === SELF_PLATFORM_PROVIDER ? (
             <SelfPlatformCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
           ) : c.provider === 'cafe24' ? (
-            <Cafe24ConnectedCard key={c.provider} connection={c} onConfigure={() => configureCafe24(c)} />
+            <Cafe24ConnectedCard
+              key={c.provider}
+              connection={c}
+              onConfigure={() => configureCafe24(c)}
+              onConnectOAuth={() =>
+                setDialog({ kind: 'cafe24-oauth', reconnectMallId: c.fields.mall_id ?? '' })
+              }
+            />
           ) : (
             <GenericConnectedCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
           )
