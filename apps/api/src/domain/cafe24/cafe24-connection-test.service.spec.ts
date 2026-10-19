@@ -10,6 +10,7 @@ describe('Cafe24ConnectionTestService.testConnection', () => {
     cred: Record<string, unknown> | null;
     conn?: { mallId: string; accessToken: string } | null | Error;
     products?: unknown[] | Error;
+    orders?: unknown[] | Error;
   }) {
     // `saved` collects the partial UPDATE payloads (status/detail/lastTestedAt).
     const saved: Record<string, unknown>[] = [];
@@ -30,6 +31,10 @@ describe('Cafe24ConnectionTestService.testConnection', () => {
       pullProducts: jest.fn(async () => {
         if (opts.products instanceof Error) throw opts.products;
         return opts.products ?? [];
+      }),
+      pullOrders: jest.fn(async () => {
+        if (opts.orders instanceof Error) throw opts.orders;
+        return opts.orders ?? [];
       }),
     };
     const svc = new Cafe24ConnectionTestService(credRepo as never, tokenService as never, client as never);
@@ -82,15 +87,31 @@ describe('Cafe24ConnectionTestService.testConnection', () => {
     expect(saved[0].status).toBe('error');
   });
 
-  it('catalogue request throws (403 insufficient_scope, 5xx) → error with the mall id, recorded', async () => {
+  it('catalogue 403 but orders readable (grant shrank) → still connected, via orders', async () => {
+    const { svc, saved, client } = build({
+      cred: CRED(),
+      conn: { mallId: 'amoebaorder', accessToken: 'a1' },
+      products: new Error('Cafe24 API error'),
+      orders: [],
+    });
+    const res = await svc.testConnection(3);
+    expect(res).toEqual({ ok: true, detail: 'Connected: amoebaorder.cafe24.com (orders reachable)' });
+    expect(client.pullOrders).toHaveBeenCalledWith('amoebaorder', 'a1', expect.objectContaining({ limit: 1 }));
+    expect(saved[0].status).toBe('connected');
+  });
+
+  it('every read refused (403 insufficient_scope, 5xx) → error naming the mall + both failures, recorded', async () => {
     const { svc, saved } = build({
       cred: CRED(),
       conn: { mallId: 'zhangbayo', accessToken: 'a1' },
       products: new Error('Cafe24 API error'),
+      orders: new Error('Cafe24 API error'),
     });
     const res = await svc.testConnection(16);
     expect(res.ok).toBe(false);
     expect(res.detail).toMatch(/zhangbayo/);
+    expect(res.detail).toMatch(/catalogue: Cafe24 API error; orders: Cafe24 API error/);
+    expect(res.detail).toMatch(/re-authorise/);
     expect(saved[0].status).toBe('error');
   });
 

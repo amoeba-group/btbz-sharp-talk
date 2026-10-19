@@ -81,17 +81,40 @@ export class Cafe24ConnectionTestService {
         detail: 'Cafe24 token refresh failed — the refresh token expired or was revoked; reconnect the mall',
       };
     }
-    try {
-      await withTimeout(
-        this.client.pullProducts(conn.mallId, conn.accessToken, { limit: 1 }),
-        PROBE_TIMEOUT_MS,
-      );
-      return { ok: true, detail: `Connected: ${conn.mallId}.cafe24.com (catalogue reachable)` };
-    } catch (e) {
-      const msg = (e as Error).message || 'unknown error';
-      this.logger.warn(`cafe24 connection test tenant ${tenantId} (${conn.mallId}): ${msg}`);
-      return { ok: false, detail: `Cafe24 request failed (${conn.mallId}): ${msg} — check the app permissions or reconnect` };
+    // The token is live (the refresh just succeeded). Now prove it can read
+    // something the tenant uses. A mall's grant can shrink after consent
+    // (staging amoebaorder lost mall.read_product), so try the catalogue
+    // first and the order list second; one reachable resource is a working
+    // connection, none means the mall must be re-authorised.
+    const today = new Date().toISOString().slice(0, 10);
+    const probes: Array<[string, () => Promise<unknown>]> = [
+      ['catalogue', () => this.client.pullProducts(conn.mallId, conn.accessToken, { limit: 1 })],
+      [
+        'orders',
+        () =>
+          this.client.pullOrders(conn.mallId, conn.accessToken, {
+            startDate: today,
+            endDate: today,
+            limit: 1,
+          }),
+      ],
+    ];
+    const failures: string[] = [];
+    for (const [name, run] of probes) {
+      try {
+        await withTimeout(run(), PROBE_TIMEOUT_MS);
+        return { ok: true, detail: `Connected: ${conn.mallId}.cafe24.com (${name} reachable)` };
+      } catch (e) {
+        failures.push(`${name}: ${(e as Error).message || 'unknown error'}`);
+      }
     }
+    this.logger.warn(`cafe24 connection test tenant ${tenantId} (${conn.mallId}): ${failures.join('; ')}`);
+    return {
+      ok: false,
+      detail:
+        `Cafe24 refused every read for ${conn.mallId} (${failures.join('; ')}) — ` +
+        'the app permissions were reduced or the API is down; re-authorise the mall',
+    };
   }
 }
 
