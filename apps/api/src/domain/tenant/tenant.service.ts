@@ -1161,6 +1161,7 @@ function mergeWidgetCopy(
     firstVisit: { ...(current?.firstVisit ?? {}) },
     loginGreeting: { ...(current?.loginGreeting ?? {}) },
     headerTitle: { ...(current?.headerTitle ?? {}) },
+    headerGreeting: { ...(current?.headerGreeting ?? {}) },
     aiSenderName: { ...(current?.aiSenderName ?? {}) },
     agentSenderName: { ...(current?.agentSenderName ?? {}) },
     launcherTeaser: { ...(current?.launcherTeaser ?? {}) },
@@ -1195,6 +1196,12 @@ function mergeWidgetCopy(
   setLang(copy.headerTitle!, 'VI', dto.header_title_vi);
   setLang(copy.headerTitle!, 'JA', dto.header_title_ja);
   setLang(copy.headerTitle!, 'ZH', dto.header_title_zh);
+  setLang(copy.headerGreeting!, 'EN', dto.header_greeting_en);
+  setLang(copy.headerGreeting!, 'ES', dto.header_greeting_es);
+  setLang(copy.headerGreeting!, 'KO', dto.header_greeting_ko);
+  setLang(copy.headerGreeting!, 'VI', dto.header_greeting_vi);
+  setLang(copy.headerGreeting!, 'JA', dto.header_greeting_ja);
+  setLang(copy.headerGreeting!, 'ZH', dto.header_greeting_zh);
   setLang(copy.aiSenderName!, 'EN', dto.ai_sender_name_en);
   setLang(copy.aiSenderName!, 'ES', dto.ai_sender_name_es);
   setLang(copy.aiSenderName!, 'KO', dto.ai_sender_name_ko);
@@ -1215,7 +1222,7 @@ function mergeWidgetCopy(
   setLang(copy.launcherTeaser!, 'ZH', dto.launcher_teaser_zh);
   // An empty bag is dropped rather than stored as `{}`: the JSON a tenant saved
   // before these keys existed must keep comparing equal in the settings snapshot diff.
-  for (const key of ['headerTitle', 'aiSenderName', 'agentSenderName', 'launcherTeaser'] as const) {
+  for (const key of ['headerTitle', 'headerGreeting', 'aiSenderName', 'agentSenderName', 'launcherTeaser'] as const) {
     if (Object.keys(copy[key]!).length === 0) delete copy[key];
   }
   const empty =
@@ -1223,6 +1230,7 @@ function mergeWidgetCopy(
     Object.keys(copy.firstVisit!).length === 0 &&
     Object.keys(copy.loginGreeting!).length === 0 &&
     !copy.headerTitle &&
+    !copy.headerGreeting &&
     !copy.aiSenderName &&
     !copy.agentSenderName &&
     !copy.launcherTeaser;

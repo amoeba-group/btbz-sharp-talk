@@ -5,7 +5,7 @@ import { useWidgetStore, type TabKey } from '../../store/widgetStore';
 import { isAppMode, postToHost } from '../../lib/host-bridge';
 import { logoUrl } from '../../lib/branding';
 import { resolveLauncher } from '../../lib/launcher';
-import { pickCopy } from '../../lib/copy';
+import { fill, pickCopy } from '../../lib/copy';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { TopTabs } from './TopTabs';
 import { BottomTabs } from './BottomTabs';
@@ -44,7 +44,11 @@ export function WidgetPanel() {
   const setShowSettings = useWidgetStore((s) => s.setSettingsOpen);
   const displayName = useWidgetStore((s) => s.widgetCopy?.displayName);
   // Per-language header title (PLN-261019 P3); empty = the display name.
-  const headerTitle = pickCopy(useWidgetStore((s) => s.widgetCopy?.headerTitle), useWidgetStore((s) => s.language));
+  const language = useWidgetStore((s) => s.language);
+  const headerTitle = pickCopy(useWidgetStore((s) => s.widgetCopy?.headerTitle), language);
+  // Known-customer greeting is tenant copy too (REQ-261019 HA): `{name}` alone
+  // shows the bare name; empty falls back to the built-in "Hi, {name}".
+  const headerGreeting = pickCopy(useWidgetStore((s) => s.widgetCopy?.headerGreeting), language);
   const customerName = useWidgetStore((s) => s.customerName);
   const theme = useWidgetStore((s) => s.widgetTheme);
   // `logo-title` keeps the mark beside the words (PLN-261019 P3); `logo`
@@ -64,7 +68,9 @@ export function WidgetPanel() {
   // being addressed matters more than the logo at that moment.
   const logo = theme?.logo && (logoWithTitle || !customerName) ? logoUrl(theme.logo) : null;
   const title = customerName
-    ? t('header.greeting', { name: customerName })
+    ? headerGreeting
+      ? fill(headerGreeting, '{name}', customerName)
+      : t('header.greeting', { name: customerName })
     : headerTitle || displayName || t('notificationCenter');
   const visibleTabs = useWidgetStore((s) => s.visibleTabs);
   const tabPosition = useWidgetStore((s) => s.tabPosition);

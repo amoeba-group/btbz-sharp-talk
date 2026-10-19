@@ -99,7 +99,9 @@
     "agentSenderName": "客服发送者名称",
     "agentSenderNameHint": "人工客服的通用称呼（如“Go2Joy 客服”）。留空 = 客服本人姓名。",
     "launcherTeaser": "启动问候语",
-    "launcherTeaserHint": "启动按钮旁问候气泡的文案（主题卡 → 问候气泡）。{shop} 会替换为显示名称。留空 = 默认。"
+    "launcherTeaserHint": "启动按钮旁问候气泡的文案（主题卡 → 问候气泡）。{shop} 会替换为显示名称。留空 = 默认。",
+    "headerGreeting": "标题栏问候（已登录用户）",
+    "headerGreetingHint": "识别到用户时标题栏显示的文字。{name} 会替换为姓名，只填 {name} 则仅显示姓名。留空 = “你好，{name}”。"
   },
   "shopify": {
     "title": "Shopify 连接",

@@ -123,6 +123,7 @@ describe('TenantService.updatePrivacyNotice', () => {
         login_mode: 'redirect',
         header_title_vi: 'Trung tâm hỗ trợ',
         header_title_en: ' Support center ',
+        header_greeting_vi: '{name}',
         ai_sender_name_vi: 'JoyBot - Tổng đài viên AI',
         agent_sender_name_vi: 'Nhân viên hỗ trợ Go2Joy',
         launcher_teaser_vi: '',
@@ -132,6 +133,7 @@ describe('TenantService.updatePrivacyNotice', () => {
         firstVisit: {},
         loginGreeting: {},
         headerTitle: { VI: 'Trung tâm hỗ trợ', EN: 'Support center' },
+        headerGreeting: { VI: '{name}' },
         aiSenderName: { VI: 'JoyBot - Tổng đài viên AI' },
         agentSenderName: { VI: 'Nhân viên hỗ trợ Go2Joy' },
       });
@@ -141,6 +143,7 @@ describe('TenantService.updatePrivacyNotice', () => {
         login_mode: 'redirect',
         header_title_vi: '',
         header_title_en: null,
+        header_greeting_vi: '',
         ai_sender_name_vi: '',
         agent_sender_name_vi: '',
       });

@@ -99,7 +99,9 @@
     "agentSenderName": "Tên người gửi nhân viên",
     "agentSenderNameHint": "Nhãn chung cho nhân viên (ví dụ \"Nhân viên hỗ trợ Go2Joy\"). Để trống = tên thật của nhân viên.",
     "launcherTeaser": "Lời chào nút mở",
-    "launcherTeaserHint": "Nội dung bong bóng chào cạnh nút mở (thẻ giao diện → Bong bóng chào). {shop} chèn tên hiển thị. Để trống = mặc định."
+    "launcherTeaserHint": "Nội dung bong bóng chào cạnh nút mở (thẻ giao diện → Bong bóng chào). {shop} chèn tên hiển thị. Để trống = mặc định.",
+    "headerGreeting": "Lời chào ở đầu widget (đã đăng nhập)",
+    "headerGreetingHint": "Văn bản phần đầu khi nhận ra khách. {name} chèn tên — chỉ nhập {name} để hiện riêng tên. Để trống = \"Chào {name}\"."
   },
   "shopify": {
     "title": "Kết nối Shopify",

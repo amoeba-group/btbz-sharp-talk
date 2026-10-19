@@ -107,6 +107,7 @@ export interface WidgetSettingsResponse {
   loginGreeting: Record<string, string>;
   /** PLN-261019 P3 bags (stored, raw). */
   headerTitle: Record<string, string>;
+  headerGreeting: Record<string, string>;
   aiSenderName: Record<string, string>;
   agentSenderName: Record<string, string>;
   launcherTeaser: Record<string, string>;

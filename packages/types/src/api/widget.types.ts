@@ -50,6 +50,8 @@ export interface WidgetCopy {
    * own name), and the launcher greeting pill (empty → the built-in default).
    */
   headerTitle?: WidgetCopyText;
+  /** Greeting in the header for a known customer; `{name}` substituted. Empty → the built-in "Hi, {name}" (REQ-261019 HA). */
+  headerGreeting?: WidgetCopyText;
   aiSenderName?: WidgetCopyText;
   agentSenderName?: WidgetCopyText;
   launcherTeaser?: WidgetCopyText;

@@ -153,7 +153,12 @@ export class EmbedService {
 
     // Profile fields are unsigned, so they fill gaps but never overwrite what a
     // verified platform path (Shopify/Cafe24 order sync) already established.
-    if (input.name && !customer.name) customer.name = input.name;
+    // The display NAME is the exception (PLN-261019 HA D2): only a host that
+    // signed the identify reaches here, and the host is the source of truth
+    // for what its own user is called — a rename in the host's profile must
+    // show in the widget header, not the first name ever seen.
+    const name = input.name?.trim();
+    if (name) customer.name = name;
     if (input.email && !customer.email) customer.email = input.email;
     if (input.phone && !customer.phone) customer.phone = input.phone;
 
