@@ -42,6 +42,20 @@
 | 좁은 창(≤640px) 카드 넘침 | 그리드 열 268px에 카드 316px — 그리드 아이템 `min-width:auto` → `ConnectedPlatformCard` 루트에 `min-w-0`. 데스크톱 폭에는 영향 없음 |
 | 대시보드 연동 상태 라벨 | `/tenants/me/integrations` 응답 필드는 `provider`인데 `DashboardPage`가 `it.name`을 읽어 모든 행이 "integration.undefined"(FIX-260827 잔여). `provider` 우선 + 상태 배지 i18n(`integrationState.*`) |
 
+## 2.2 후속 (PR #675 — S4 마케팅 탭·FIX-261019 커서, 스테이징 2026-10-19 13:0x)
+
+| ID | 시나리오 | 기대 | 결과 |
+|---|---|---|---|
+| U14 | `shopify-sync.service.spec` | 커서는 `getShopifySyncCursor(tenantId)`에서, 창 시작은 커서보다 lookback만큼 앞 | ✅ |
+| U15 | 〃 | 연결 누락·API 실패 시 `recordShopifyOutcome(…, {syncedAt: undefined})` — 커서 불변 | ✅ |
+| U16 | `tenant.service.shopify-status.spec` | 연결 테스트·실패는 `lastSyncedAt` 유지, 성공 동기화만 전진; `getShopifySyncCursor` null/값 | ✅ |
+| U17 | 전체 | API jest 237 suites / 2,341 tests, typecheck 9/9, i18n complete, web build | ✅ |
+| I10 | SQL 선적용 | 스테이징 `integration_credentials.last_synced_at` 추가 → 코드 배포 → health 200, ERROR 0 | ✅ |
+| I11 | ivyusa 동기화 2회 | 1회차 "initial full sync"(5건), 2회차 "updated since 12:51:57"(=시작 13:01:57 − 10분), DB `last_synced_at=13:01:58`, 전역 `integration_status.shopify.last_sync_at`은 12:19:29 그대로 | ✅ |
+| I12 | ivyusa `/settings/marketing` | "연결된 플랫폼 (1)" Yotpo 카드(연결됨, 설정·연결 테스트), 칩 Klaviyo·Yotpo ✓·Gorgias | ✅ |
+| I13 | ivyusa `/settings/platforms` 회귀 | Shopify 카드 1장·칩 6개 그대로(공유 `PlatformSections` 전환 후) | ✅ |
+| I14 | 프로덕션 | 백업 `~/sharptalk-production/backups/20261019T125849Z` → SQL 선적용(열 확인) → `check-migrations` OK → `production` ff `e24b2c1..082f8d0` 배포 → health 200, ERROR 0 | ✅ |
+
 ## 3. 엣지 케이스
 
 | ID | 케이스 | 처리 |
