@@ -8,7 +8,7 @@ import { Cafe24TokenService } from './cafe24-token.service';
 import { Cafe24AdminClient } from './cafe24-admin.client';
 
 const CAFE24 = INTEGRATION_PROVIDER.CAFE24;
-/** The store resource is one small call; longer than this means Cafe24 is not answering. */
+/** One small catalogue call; longer than this means Cafe24 is not answering. */
 const PROBE_TIMEOUT_MS = 6_000;
 
 /**
@@ -17,10 +17,18 @@ const PROBE_TIMEOUT_MS = 6_000;
  * The generic probe in TenantModule reads a manually entered access token, which
  * an OAuth credential never holds — so it reported every OAuth mall as broken.
  * This test goes the way the syncs do: mint an access token from the stored
- * refresh token (rotating it, single-flight), read `/admin/store`, and record
- * the outcome on THIS tenant's credential row — the per-tenant state the cards
- * and dashboard show (FIX-260827). It lives in the Cafe24 module because
- * Cafe24Module already imports TenantModule; the reverse would be a cycle.
+ * refresh token (rotating it, single-flight), read one catalogue row, and
+ * record the outcome on THIS tenant's credential row — the per-tenant state
+ * the cards and dashboard show (FIX-260827). It lives in the Cafe24 module
+ * because Cafe24Module already imports TenantModule; the reverse would be a
+ * cycle.
+ *
+ * Why `/products?limit=1` and not `/store`: the store resource needs
+ * `mall.read_store`, a scope this app never asks for, so an OAuth token
+ * answers 403 insufficient_scope there (staging zhangbayo, first run). The
+ * catalogue sits behind `mall.read_product`, which every consent requests and
+ * both syncs depend on — reaching it proves the token works for what the
+ * tenant actually uses.
  */
 @Injectable()
 export class Cafe24ConnectionTestService {
@@ -64,13 +72,15 @@ export class Cafe24ConnectionTestService {
       };
     }
     try {
-      const store = await withTimeout(this.client.getStore(conn.mallId, conn.accessToken), PROBE_TIMEOUT_MS);
-      const name = store?.shop_name?.trim();
-      return { ok: true, detail: name ? `Connected: ${name} (${conn.mallId})` : `Connected: ${conn.mallId}` };
+      await withTimeout(
+        this.client.pullProducts(conn.mallId, conn.accessToken, { limit: 1 }),
+        PROBE_TIMEOUT_MS,
+      );
+      return { ok: true, detail: `Connected: ${conn.mallId}.cafe24.com (catalogue reachable)` };
     } catch (e) {
       const msg = (e as Error).message || 'unknown error';
       this.logger.warn(`cafe24 connection test tenant ${tenantId} (${conn.mallId}): ${msg}`);
-      return { ok: false, detail: `Cafe24 store request failed (${conn.mallId}): ${msg}` };
+      return { ok: false, detail: `Cafe24 request failed (${conn.mallId}): ${msg} — check the app permissions or reconnect` };
     }
   }
 }

@@ -2,13 +2,14 @@ import { Cafe24ConnectionTestService } from './cafe24-connection-test.service';
 
 /**
  * PLN-261019-Cafe24 D2 — the OAuth test mints a token the way the syncs do,
- * reads /admin/store, and records the outcome on the tenant's own row.
+ * reads one catalogue row (/products?limit=1 — the store resource needs a scope
+ * the app never requests), and records the outcome on the tenant's own row.
  */
 describe('Cafe24ConnectionTestService.testConnection', () => {
   function build(opts: {
     cred: Record<string, unknown> | null;
     conn?: { mallId: string; accessToken: string } | null | Error;
-    store?: { shop_name?: string } | null | Error;
+    products?: unknown[] | Error;
   }) {
     const saved: Record<string, unknown>[] = [];
     const credRepo = {
@@ -22,9 +23,9 @@ describe('Cafe24ConnectionTestService.testConnection', () => {
       }),
     };
     const client = {
-      getStore: jest.fn(async () => {
-        if (opts.store instanceof Error) throw opts.store;
-        return opts.store ?? null;
+      pullProducts: jest.fn(async () => {
+        if (opts.products instanceof Error) throw opts.products;
+        return opts.products ?? [];
       }),
     };
     const svc = new Cafe24ConnectionTestService(credRepo as never, tokenService as never, client as never);
@@ -42,17 +43,17 @@ describe('Cafe24ConnectionTestService.testConnection', () => {
     expect(tokenService.getConnection).not.toHaveBeenCalled();
   });
 
-  it('token + store OK → connected with the shop name, recorded on the row', async () => {
+  it('token + one catalogue row OK → connected, recorded on the row (even an empty catalogue)', async () => {
     const { svc, saved, client } = build({
       cred: CRED(),
       conn: { mallId: 'zhangbayo', accessToken: 'a1' },
-      store: { shop_name: '짱바요몰' },
+      products: [],
     });
     const res = await svc.testConnection(16);
-    expect(res).toEqual({ ok: true, detail: 'Connected: 짱바요몰 (zhangbayo)' });
-    expect(client.getStore).toHaveBeenCalledWith('zhangbayo', 'a1');
+    expect(res).toEqual({ ok: true, detail: 'Connected: zhangbayo.cafe24.com (catalogue reachable)' });
+    expect(client.pullProducts).toHaveBeenCalledWith('zhangbayo', 'a1', { limit: 1 });
     expect(saved[0].status).toBe('connected');
-    expect(saved[0].detail).toBe('Connected: 짱바요몰 (zhangbayo)');
+    expect(saved[0].detail).toBe('Connected: zhangbayo.cafe24.com (catalogue reachable)');
     expect(saved[0].lastTestedAt).toBeInstanceOf(Date);
   });
 
@@ -64,11 +65,11 @@ describe('Cafe24ConnectionTestService.testConnection', () => {
     expect(saved[0].status).toBe('error');
   });
 
-  it('store request throws → error with the mall id, recorded', async () => {
+  it('catalogue request throws (403 insufficient_scope, 5xx) → error with the mall id, recorded', async () => {
     const { svc, saved } = build({
       cred: CRED(),
       conn: { mallId: 'zhangbayo', accessToken: 'a1' },
-      store: new Error('E5082'),
+      products: new Error('Cafe24 API error'),
     });
     const res = await svc.testConnection(16);
     expect(res.ok).toBe(false);
@@ -76,11 +77,11 @@ describe('Cafe24ConnectionTestService.testConnection', () => {
     expect(saved[0].status).toBe('error');
   });
 
-  it('app keys missing (appConfig throws) → error, recorded, no store call', async () => {
+  it('app keys missing (appConfig throws) → error, recorded, no catalogue call', async () => {
     const { svc, saved, client } = build({ cred: CRED(), conn: new Error('Cafe24 app not configured') });
     const res = await svc.testConnection(16);
     expect(res.ok).toBe(false);
-    expect(client.getStore).not.toHaveBeenCalled();
+    expect(client.pullProducts).not.toHaveBeenCalled();
     expect(saved[0].status).toBe('error');
   });
 });
