@@ -404,17 +404,15 @@
       frame.style.width = CLOSED.w;
       frame.style.height = CLOSED.h;
     }
+    var remembered = {
+      position: next.position,
+      size: next.size,
+      frame: next.frame,
+      mode: next.mode,
+      offsetTop: next.offsetTop,
+    };
     try {
-      localStorage.setItem(
-        LAUNCHER_KEY,
-        JSON.stringify({
-          position: next.position,
-          size: next.size,
-          frame: next.frame,
-          mode: next.mode,
-          offsetTop: next.offsetTop,
-        }),
-      );
+      localStorage.setItem(LAUNCHER_KEY, JSON.stringify(remembered));
     } catch (_) {
       /* not remembering only costs a reposition on the next visit */
     }
