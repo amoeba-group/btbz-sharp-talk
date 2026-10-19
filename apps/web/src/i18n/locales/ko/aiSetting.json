@@ -212,6 +212,21 @@
             "regular": "단골"
           }
         }
+      },
+      "assignee": {
+        "view": "보기",
+        "view_all": "전체",
+        "view_unit": "팀별",
+        "view_label": "라벨별",
+        "group": "그룹 배정",
+        "units": "팀",
+        "labels": "라벨",
+        "preview": "지금 {{count}}명:",
+        "previewNone": "지금은 해당자가 없습니다 — 인계 시 이 규칙은 건너뜁니다.",
+        "noConsult": "상담 라벨 없음 — 라이브챗 처리 불가",
+        "people": "개인 지정",
+        "needOne": "개인 또는 그룹을 하나 이상 고르세요 — 담당자 없는 규칙은 저장되지 않습니다",
+        "manageLink": "라벨·팀 관리 →"
       }
     },
     "reAlert": {

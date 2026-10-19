@@ -212,6 +212,21 @@
             "regular": "Habitual"
           }
         }
+      },
+      "assignee": {
+        "view": "Ver",
+        "view_all": "Todos",
+        "view_unit": "Por equipo",
+        "view_label": "Por etiqueta",
+        "group": "Grupo",
+        "units": "Equipo",
+        "labels": "Etiqueta",
+        "preview": "Ahora {{count}}:",
+        "previewNone": "Nadie coincide ahora — esta regla se omitiría al derivar.",
+        "noConsult": "Sin etiqueta de atención — no puede atender el chat",
+        "people": "Personas",
+        "needOne": "Elija una persona o un grupo — las reglas sin agentes no se guardan",
+        "manageLink": "Gestionar etiquetas y equipos →"
       }
     },
     "reAlert": {

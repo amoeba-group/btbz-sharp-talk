@@ -50,5 +50,6 @@
   "permissionHint": "Solo los códigos predeterminados consult / accounting / operations dan acceso a menús y atención de chat. Las etiquetas nuevas son solo para mostrar y clasificar.",
   "orgCreated": "\"{{name}}\" añadido.",
   "orgRenamed": "Renombrado a \"{{name}}\".",
-  "orgSaveError": "No se pudo guardar."
+  "orgSaveError": "No se pudo guardar.",
+  "manageLink": "Gestionar etiquetas y equipos →"
 }

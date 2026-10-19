@@ -50,5 +50,6 @@
   "permissionHint": "Only the default codes consult / accounting / operations unlock menus and chat handling. Labels you add are for display and classification.",
   "orgCreated": "\"{{name}}\" added.",
   "orgRenamed": "Renamed to \"{{name}}\".",
-  "orgSaveError": "Save failed."
+  "orgSaveError": "Save failed.",
+  "manageLink": "Manage labels & units →"
 }

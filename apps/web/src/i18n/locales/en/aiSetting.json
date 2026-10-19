@@ -212,6 +212,21 @@
             "regular": "Regular"
           }
         }
+      },
+      "assignee": {
+        "view": "View",
+        "view_all": "All",
+        "view_unit": "By unit",
+        "view_label": "By label",
+        "group": "Group",
+        "units": "Unit",
+        "labels": "Label",
+        "preview": "Right now {{count}}:",
+        "previewNone": "Nobody matches right now — this rule would be skipped at handoff.",
+        "noConsult": "No consult label — cannot handle live chat",
+        "people": "People",
+        "needOne": "Pick a person or a group — rules without agents are not saved",
+        "manageLink": "Manage labels & units →"
       }
     },
     "reAlert": {

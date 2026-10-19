@@ -212,6 +212,21 @@
             "regular": "Khách quen"
           }
         }
+      },
+      "assignee": {
+        "view": "Xem",
+        "view_all": "Tất cả",
+        "view_unit": "Theo đội",
+        "view_label": "Theo nhãn",
+        "group": "Nhóm",
+        "units": "Đội",
+        "labels": "Nhãn",
+        "preview": "Hiện có {{count}}:",
+        "previewNone": "Hiện không có ai phù hợp — quy tắc này sẽ bị bỏ qua khi chuyển.",
+        "noConsult": "Không có nhãn tư vấn — không xử lý được chat",
+        "people": "Cá nhân",
+        "needOne": "Chọn ít nhất một người hoặc một nhóm — quy tắc không có nhân viên sẽ không được lưu",
+        "manageLink": "Quản lý nhãn & đội →"
       }
     },
     "reAlert": {

@@ -141,7 +141,16 @@ export interface RoutingRule {
    * matches (the rule is skipped, with a warning) rather than matching wide.
    */
   conditions?: RoutingCondition[];
+  /** Explicitly chosen agents. */
   assigneeUserIds: number[];
+  /**
+   * Group selector (PLN-261019-Routing-Assignee-Groups): active users in one of
+   * these units AND holding one of these labels, resolved at handoff time.
+   * Either list alone is a group; both together intersect. A rule needs an
+   * explicit agent or a group selector to be usable.
+   */
+  assigneeUnitIds?: number[];
+  assigneeLabelCodes?: string[];
   mode?: RoutingMode;
 }
 

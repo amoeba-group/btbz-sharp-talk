@@ -50,5 +50,6 @@
   "permissionHint": "仅默认代码 consult / accounting / operations 关联菜单与聊天处理权限。新增标签仅用于显示和分类。",
   "orgCreated": "已添加“{{name}}”。",
   "orgRenamed": "已重命名为“{{name}}”。",
-  "orgSaveError": "保存失败。"
+  "orgSaveError": "保存失败。",
+  "manageLink": "管理标签与团队 →"
 }

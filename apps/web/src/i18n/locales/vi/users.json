@@ -50,5 +50,6 @@
   "permissionHint": "Chỉ các mã mặc định consult / accounting / operations mở quyền menu và xử lý chat. Nhãn thêm mới chỉ để hiển thị và phân loại.",
   "orgCreated": "Đã thêm \"{{name}}\".",
   "orgRenamed": "Đã đổi tên thành \"{{name}}\".",
-  "orgSaveError": "Lưu thất bại."
+  "orgSaveError": "Lưu thất bại.",
+  "manageLink": "Quản lý nhãn & đội →"
 }
