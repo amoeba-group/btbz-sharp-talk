@@ -444,10 +444,26 @@ Ca một dòng khai báo, appcompat 1.3.1, không dòng androidx nào (M1) chỉ
 Ghi chú về cảnh báo build: khi ghép host Kotlin 2.2.0 với AGP 8.5.2, R8 (D8) in cảnh báo "parsing kotlin metadata" cho chính các lớp của app khách (9 lớp
 trong app thử), không cho lớp nào của SDK. Đó là chuyện bộ công cụ cũ so với Kotlin mới, không làm hỏng build; AGP mới hơn (8.10.1) chạy sạch.
 
-### 12.6 Vẫn chưa kiểm
+### 12.6 Chạy bổ sung các mục còn lại (cùng ngày)
 
-- Điện thoại thật (camera thật, hiệu năng, WebView cập nhật qua Play, biến thể WebView của hãng) và TalkBack thật.
-- Hành vi riêng của Android 16 (targetSdk 36 mới chỉ chạy trên Android 15).
-- compileSdk 30 đến 32, AGP cũ hơn 8.5, host Kotlin 2.0.x (SDK yêu cầu từ 2.1, đã ghi trong hướng dẫn).
-- Tải thư mục Maven lên một Artifactory hoặc Nexus thật (mới thử kho dạng thư mục tương đối).
+| Mục | Cách làm | Kết quả |
+|---|---|---|
+| Android 16 thật (API 36, WebView Chrome 133) | Máy ảo `google_apis` x86_64, 13 kiểm tra giao thức | 13/13 ở lần chạy thứ hai và thứ ba (có thao tác thủ công). Lần đầu ngay sau khi bật máy trượt 3 ca (đăng xuất khỏi app, người mới sau đăng xuất, trang không sẵn sàng); chạy lại đúng kịch bản bằng tay thì đạt, nên đây là độ trễ khởi động nguội của máy ảo chứ không phải lỗi logic. 0 sập app, 0 vi phạm StrictMode |
+| `targetSdk 36` trên Android 16 | App khách giả (AGP 8.10.1, `dumpsys` xác nhận `targetSdk=36`), một dòng khai báo | Build và chạy đạt: locale, context, identify đến trang |
+| Bố cục trên Android 16 | Chụp màn hình widget thật (edge-to-edge bắt buộc từ targetSdk 35) | Thanh trạng thái và thanh cử chỉ không che nội dung; ô nhập và nút gửi nằm trọn |
+| `compileSdk` 30, 31, 32 | App khách giả, androidx 2021, một dòng khai báo | Build đạt cả ba (chỉ build, chưa chạy) |
+| AGP cũ hơn 8.5 | Gradle 8.5: AGP 8.0.2 (`compileSdk 33`) và 8.1.4 (`compileSdk 34`) | Build đạt cả hai (chỉ build, chưa chạy) |
+| Kotlin của host | 2.1.21: đạt. **2.0.21: thất bại** (lỗi nội bộ trình biên dịch khi đọc lớp của SDK). **1.9.25: thất bại** (siêu dữ liệu 2.2.0 và stdlib 2.1.0 không đọc được) | Khớp yêu cầu đã ghi: host cần Kotlin từ 2.1. Go2Joy nói dùng 2.2.0 |
+| Tải thư mục Maven lên một kho thật | Reposilite 3 (Docker, giấy phép Apache) có xác thực: tải lên 40 tệp bằng HTTP PUT, gửi PUT không xác thực bị từ chối 401, tải xuống AAR cùng SHA-256, app khách build qua `http://…/releases` | Đạt; kho không tự tạo `maven-metadata.xml` (404) nhưng Gradle không cần cho phiên bản cố định |
+
+Ghi chú: Nexus 3 từ chối nhận tệp (403) cho tới khi người dùng chấp nhận EULA của Sonatype; việc đó thuộc về người dùng nên không làm, và đã dùng Reposilite thay thế. Artifactory chưa thử. Lần thử đầu qua kho HTTP trượt vì tôi để androidx mới nhất với `compileSdk 34` (core 1.15 đòi 35), không phải lỗi của thư viện.
+
+TalkBack thật (Google TalkBack trên Android 16): bật được dịch vụ và cây truy cập của widget có tên cho mọi nút (Ngôn ngữ, Cài đặt, Đóng, ba tab, sáu nút chủ đề, Đính kèm tệp, Gửi) theo đúng thứ tự trên màn hình; phím Tab di chuyển tiêu điểm bàn phím qua các nút với vòng tiêu điểm rõ. Chưa duyệt được bằng cử chỉ TalkBack: lệnh `adb input` không được TalkBack xem là cử chỉ khám phá (chạm lọt xuống như bấm thường), nên thứ tự đọc thật và cách đọc từng câu vẫn cần thử bằng tay trên máy.
+
+### 12.7 Vẫn chưa kiểm
+
+- Điện thoại thật: không có thiết bị nối vào máy này. Cần camera thật, hiệu năng, WebView cập nhật qua Play, biến thể WebView của hãng.
+- Thứ tự đọc và cử chỉ TalkBack thật (xem trên).
+- Chạy thật (không chỉ build) trên `compileSdk` 30 đến 32 và AGP 8.0, 8.1.
+- Tải lên Artifactory thật.
 - Widget thật trên WebView cũ hơn Chrome 80 (cố ý không hỗ trợ; SDK hiện thông báo cập nhật WebView).
