@@ -530,9 +530,18 @@
     <p class="lede">
       Hướng dẫn thực tế về các giá trị bạn nhập ở <code>/settings/platforms</code> để kết nối
       từng cửa hàng — tên đăng nhập, tên cơ sở dữ liệu, API key… — và <b>phát hành hoặc tìm mỗi
-      giá trị ở đâu trong trang quản trị của nền tảng</b>. Chuẩn bị giá trị, dán vào thẻ, lưu, rồi
-      kiểm tra bằng <b>Kiểm tra kết nối</b>.
+      giá trị ở đâu trong trang quản trị của nền tảng</b>. Chuẩn bị giá trị, chọn nền tảng ở <b>Thêm nền tảng</b>, dán vào hộp thoại cài đặt,
+      lưu, rồi kiểm tra bằng <b>Kiểm tra kết nối</b>.
     </p>
+    <div class="meta" style="display:block">
+      <b>Bố cục màn hình (sửa ngày 19/10/2026)</b> — <code>/settings/platforms</code> có hai phần.
+      <b>Nền tảng đã kết nối</b> chỉ hiển thị thẻ cho nền tảng đã lưu thông tin xác thực; nhãn là
+      <b>Đã kết nối</b> (kiểm tra hoặc đồng bộ thành công), <b>Lỗi</b>, hoặc <b>Chưa kiểm tra</b> (mới lưu).
+      <b>Thêm nền tảng</b> liệt kê mọi nền tảng được hỗ trợ dưới dạng nút; nền tảng đã kết nối được đánh dấu ✓.
+      Nếu bạn vận hành nền tảng tự phát triển, không thuộc Shopify, Cafe24, WooCommerce, Odoo hay Haravan,
+      hãy dùng nút <b>Nền tảng riêng</b> và chỉ đăng ký tên cùng mô tả (không cần phát hành giá trị nào; hiển thị
+      "Đã đăng ký" ngay).
+    </div>
     <div class="meta">
       <span>5 nền tảng · Shopify / Cafe24 / WooCommerce / Odoo / Haravan</span>
       <span>Các trường tương ứng 1:1 với nhãn trong bảng điều khiển</span>
@@ -567,7 +576,7 @@
         <div class="p-badge">S</div>
         <div class="p-title">
           <h2><span class="p-num">01</span>Shopify</h2>
-          <p>Nhập địa chỉ cửa hàng và token Admin API trong thẻ "Shopify".</p>
+          <p>Thêm nền tảng → <b>Shopify</b> (hoặc nút Cấu hình trên thẻ đã kết nối): nhập địa chỉ cửa hàng và token Admin API.</p>
         </div>
         <span class="auth-chip">Admin API · token app tùy chỉnh</span>
       </div>
