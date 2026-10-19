@@ -54,7 +54,9 @@
     "consentSource_widget": "Widget banner — the visitor accepts in the widget",
     "consentSource_host_terms": "Host app terms — signed-in users agreed to our terms",
     "consentSourceWidgetHint": "Every visitor sees the consent banner and accepts it before chatting.",
-    "consentSourceHostHint": "Users your app signs (embed identify) are recorded as consented — time and notice version — without a banner. Make sure your terms cover AI support and its processing region. Unsigned visitors still see the banner."
+    "consentSourceHostHint": "Users your app signs (embed identify) are recorded as consented — time and notice version — without a banner. Make sure your terms cover AI support and its processing region. Unsigned visitors still see the banner.",
+    "termsUrl": "Terms of service URL",
+    "termsUrlHint": "Linked from the widget's bottom disclosure line (custom widget › AI disclosure placement). Empty = the privacy policy URL."
   },
   "widgetBehavior": {
     "title": "Widget behavior",
@@ -101,7 +103,11 @@
     "launcherTeaser": "Launcher greeting",
     "launcherTeaserHint": "The greeting pill beside the launcher (theme card → Greeting pill). {shop} inserts the display name. Empty = default.",
     "headerGreeting": "Signed-in greeting (header)",
-    "headerGreetingHint": "Header text for a recognized shopper. {name} inserts their name — enter just {name} to show the name alone. Empty = \"Hi, {name}\"."
+    "headerGreetingHint": "Header text for a recognized shopper. {name} inserts their name — enter just {name} to show the name alone. Empty = \"Hi, {name}\".",
+    "csatMode": "Satisfaction card",
+    "csatModeRating": "Rating only (default) — five faces, one tap",
+    "csatModeSurvey": "Survey — resolved? + rating + reason when unhappy",
+    "csatModeHint": "Shown when a chat ends. The survey adds \"was it resolved?\" (which feeds the resolution rate) and asks why for ratings of 1–2."
   },
   "shopify": {
     "title": "Shopify connection",
@@ -865,7 +871,11 @@
     "avatarHint": "Round 28px avatars from Design files (icon, png/webp). Names come from Widget copy → AI sender name / Agent sender name.",
     "attachIcon": "Attach button icon",
     "attachPaperclip": "Paperclip (default)",
-    "attachImage": "Picture"
+    "attachImage": "Picture",
+    "disclosurePlacement": "AI disclosure placement",
+    "disclosureTop": "Bar above the chat (default)",
+    "disclosureBottom": "One line under the composer",
+    "disclosureHint": "Same legal notice, different spot. The bottom line also links the terms of service (Privacy notice › Terms URL)."
   },
   "settingsSnapshots": {
     "title": "Settings snapshots",

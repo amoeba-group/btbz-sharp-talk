@@ -59,7 +59,21 @@
     "ratingAll": "Rating: all",
     "agentFilter": "Agent filter",
     "agentAll": "Agent: all",
-    "empty": "No ratings in this window."
+    "empty": "No ratings in this window.",
+    "resolvedTitle": "Resolved? (survey)",
+    "resolvedYes": "resolved",
+    "resolvedNo": "not resolved",
+    "reasonsTitle": "Why not satisfied",
+    "resolved": "Resolved?",
+    "reason": "Reason",
+    "comment": "Comment",
+    "reasons": {
+      "unclear": "Unclear instructions",
+      "slow": "Took too long",
+      "no_response": "No response",
+      "software_error": "Software error",
+      "other": "Other"
+    }
   },
   "staleWarning": "No question data since {{date}} ({{days}} days). The table shows what was aggregated up to then.",
   "neverAggregated": "No question snapshot has been written yet.",
@@ -100,7 +114,8 @@
       "prompted_closed": "Asked, then closed",
       "open": "Still open",
       "abandoned": "Ended with no close",
-      "customer_last": "Customer spoke last"
+      "customer_last": "Customer spoke last",
+      "customer_unresolved": "Customer said: not resolved"
     }
   },
   "hours": {

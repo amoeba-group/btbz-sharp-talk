@@ -54,7 +54,9 @@
     "consentSource_widget": "Banner del widget — el visitante acepta en el widget",
     "consentSource_host_terms": "Términos de la app anfitriona — los usuarios con sesión aceptaron los términos",
     "consentSourceWidgetHint": "Todos los visitantes ven el banner y deben aceptarlo antes de chatear.",
-    "consentSourceHostHint": "Los usuarios que tu app firma (embed identify) quedan registrados como consentidos —hora y versión del aviso— sin banner. Tus términos deben cubrir el soporte con IA y su región de procesamiento. Los visitantes sin firma siguen viendo el banner."
+    "consentSourceHostHint": "Los usuarios que tu app firma (embed identify) quedan registrados como consentidos —hora y versión del aviso— sin banner. Tus términos deben cubrir el soporte con IA y su región de procesamiento. Los visitantes sin firma siguen viendo el banner.",
+    "termsUrl": "URL de los términos del servicio",
+    "termsUrlHint": "Enlazada desde la línea de aviso inferior del widget (widget personalizado › posición del aviso de IA). Vacío = la URL de la política de privacidad."
   },
   "widgetBehavior": {
     "title": "Comportamiento del widget",
@@ -101,7 +103,11 @@
     "launcherTeaser": "Saludo del lanzador",
     "launcherTeaserHint": "Texto de la burbuja junto al lanzador (tarjeta de tema → Burbuja de saludo). {shop} inserta el nombre para mostrar. Vacío = predeterminado.",
     "headerGreeting": "Saludo en la cabecera (usuario reconocido)",
-    "headerGreetingHint": "Texto de la cabecera cuando se reconoce al cliente. {name} inserta su nombre; escribe solo {name} para mostrar únicamente el nombre. Vacío = \"Hola, {name}\"."
+    "headerGreetingHint": "Texto de la cabecera cuando se reconoce al cliente. {name} inserta su nombre; escribe solo {name} para mostrar únicamente el nombre. Vacío = \"Hola, {name}\".",
+    "csatMode": "Tarjeta de satisfacción",
+    "csatModeRating": "Solo valoración (predeterminado): cinco caras, un toque",
+    "csatModeSurvey": "Encuesta: ¿resuelto? + valoración + motivo si no está satisfecho",
+    "csatModeHint": "Se muestra al terminar un chat. La encuesta añade \"¿se resolvió?\" (cuenta en la tasa de resolución) y pregunta el motivo con 1–2."
   },
   "shopify": {
     "title": "Conexión de Shopify",
@@ -865,7 +871,11 @@
     "avatarHint": "Avatares redondos de 28px desde Archivos de diseño (icono, png/webp). Los nombres vienen de Textos del widget → Nombre del remitente IA / agente.",
     "attachIcon": "Icono del botón adjuntar",
     "attachPaperclip": "Clip (predeterminado)",
-    "attachImage": "Imagen"
+    "attachImage": "Imagen",
+    "disclosurePlacement": "Posición del aviso de IA",
+    "disclosureTop": "Barra sobre el chat (predeterminado)",
+    "disclosureBottom": "Una línea bajo el cuadro de mensaje",
+    "disclosureHint": "El mismo aviso legal en otro sitio. La línea inferior también enlaza los términos del servicio (Aviso de privacidad › URL de términos)."
   },
   "settingsSnapshots": {
     "title": "Instantáneas de configuración",

@@ -59,7 +59,21 @@
     "ratingAll": "Puntuación: todas",
     "agentFilter": "Filtro de agente",
     "agentAll": "Agente: todos",
-    "empty": "Sin valoraciones en este periodo."
+    "empty": "Sin valoraciones en este periodo.",
+    "resolvedTitle": "¿Resuelto? (encuesta)",
+    "resolvedYes": "resuelto",
+    "resolvedNo": "no resuelto",
+    "reasonsTitle": "Motivos de insatisfacción",
+    "resolved": "¿Resuelto?",
+    "reason": "Motivo",
+    "comment": "Comentario",
+    "reasons": {
+      "unclear": "Instrucciones poco claras",
+      "slow": "Tardó demasiado",
+      "no_response": "Sin respuesta",
+      "software_error": "Error del software",
+      "other": "Otro"
+    }
   },
   "staleWarning": "Sin datos de preguntas desde {{date}} ({{days}} días). La tabla muestra lo agregado hasta entonces.",
   "neverAggregated": "Todavía no se ha escrito ninguna instantánea de preguntas.",
@@ -100,7 +114,8 @@
       "prompted_closed": "Preguntamos y se cerró",
       "open": "Abierta",
       "abandoned": "Terminó sin cierre",
-      "customer_last": "Habló último el cliente"
+      "customer_last": "Habló último el cliente",
+      "customer_unresolved": "El cliente dijo: no resuelto"
     }
   },
   "hours": {

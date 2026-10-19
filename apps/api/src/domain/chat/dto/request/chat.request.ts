@@ -1,15 +1,6 @@
 import { Type } from 'class-transformer';
-import {
-  IsArray,
-  IsEmail,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  MaxLength,
-  Min,
-  MinLength,
-} from 'class-validator';
+import { CSAT_COMMENT_MAX_CHARS, CSAT_REASON_VALUES } from '@sharptalk/types';
+import { IsArray, IsBoolean, IsEmail, IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min, MinLength } from 'class-validator';
 
 /** Request DTOs — snake_case (amoeba_code_convention). */
 export class SendMessageRequest {
@@ -56,4 +47,9 @@ export class RateChatRequest {
   @IsString() session_token: string;
   @Type(() => Number) @IsInt() conversation_id: number;
   @Type(() => Number) @IsInt() @Min(1) @Max(5) rating: number;
+  // Survey answers (PLN-261019) — optional so the one-question card keeps
+  // sending exactly what it always has.
+  @IsOptional() @IsBoolean() resolved?: boolean;
+  @IsOptional() @IsIn(CSAT_REASON_VALUES as unknown as string[]) reason?: string;
+  @IsOptional() @IsString() @MaxLength(CSAT_COMMENT_MAX_CHARS) comment?: string;
 }

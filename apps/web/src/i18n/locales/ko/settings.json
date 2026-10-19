@@ -54,7 +54,9 @@
     "consentSource_widget": "위젯 배너 — 방문자가 위젯에서 동의",
     "consentSource_host_terms": "호스트 앱 약관 — 로그인 사용자가 약관에 동의함",
     "consentSourceWidgetHint": "모든 방문자에게 동의 배너가 보이고, 동의해야 대화할 수 있습니다.",
-    "consentSourceHostHint": "호스트 앱이 서명한 로그인 사용자(임베드 identify)는 배너 없이 동의로 기록됩니다(시각·고지 버전). 약관에 AI 상담과 처리 지역이 포함돼 있어야 합니다. 서명되지 않은 방문자에게는 배너가 그대로 보입니다."
+    "consentSourceHostHint": "호스트 앱이 서명한 로그인 사용자(임베드 identify)는 배너 없이 동의로 기록됩니다(시각·고지 버전). 약관에 AI 상담과 처리 지역이 포함돼 있어야 합니다. 서명되지 않은 방문자에게는 배너가 그대로 보입니다.",
+    "termsUrl": "이용약관 URL",
+    "termsUrlHint": "위젯 하단 고지 줄(커스텀 위젯 › AI 고지 위치)에서 링크됩니다. 비우면 개인정보 처리방침 URL을 씁니다."
   },
   "widgetBehavior": {
     "title": "위젯 동작",
@@ -101,7 +103,11 @@
     "launcherTeaser": "런처 인사 말풍선",
     "launcherTeaserHint": "런처 옆 인사 말풍선 문구입니다(테마 카드 → 인사 말풍선). {shop}은 표시명으로 바뀝니다. 비우면 기본 문구를 씁니다.",
     "headerGreeting": "로그인 사용자 인사말(헤더)",
-    "headerGreetingHint": "로그인 사용자가 확인됐을 때 헤더에 보이는 문구입니다. {name}은 이름으로 바뀝니다 — {name}만 적으면 이름만 표시. 비우면 \"{name}님\"."
+    "headerGreetingHint": "로그인 사용자가 확인됐을 때 헤더에 보이는 문구입니다. {name}은 이름으로 바뀝니다 — {name}만 적으면 이름만 표시. 비우면 \"{name}님\".",
+    "csatMode": "만족도 카드",
+    "csatModeRating": "별점만(기본) — 얼굴 5개, 한 번 탭",
+    "csatModeSurvey": "설문 — 해결 여부 + 별점 + 불만족 사유",
+    "csatModeHint": "대화 종료 뒤에 보입니다. 설문은 \"해결됐나요?\"(해결률에 반영)를 먼저 묻고 1~2점이면 이유를 묻습니다."
   },
   "shopify": {
     "title": "Shopify 연동",
@@ -865,7 +871,11 @@
     "avatarHint": "디자인 파일(아이콘, png/webp)에서 고르는 28px 원형 아바타입니다. 이름은 위젯 문구 → AI 발신자명 / 상담원 발신자명에서 정합니다.",
     "attachIcon": "첨부 버튼 아이콘",
     "attachPaperclip": "클립(기본)",
-    "attachImage": "사진"
+    "attachImage": "사진",
+    "disclosurePlacement": "AI 고지 위치",
+    "disclosureTop": "채팅 위 바(기본)",
+    "disclosureBottom": "입력창 아래 한 줄",
+    "disclosureHint": "같은 법적 고지를 자리만 바꿉니다. 하단 줄은 이용약관(개인정보 안내 › 약관 URL)도 링크합니다."
   },
   "settingsSnapshots": {
     "title": "설정 스냅샷",

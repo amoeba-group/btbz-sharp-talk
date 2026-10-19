@@ -57,6 +57,10 @@ interface WidgetState {
   language: string;
   /** Region named in the AI disclosure (from session ensure; default US). */
   aiProcessingRegion: string;
+  /** Which satisfaction card a finished chat shows (PLN-261019). */
+  csatMode: 'rating' | 'survey';
+  /** Terms link for the bottom disclosure line; null → the privacy policy URL. */
+  termsUrl: string | null;
   /** Loader could not find the configured trigger element, so the floating launcher stands in (FIX-260916). */
   triggerUnavailable: boolean;
   /** The launcher greeting pill is on screen (PLN-261019 P2) — the loader widens the closed frame for it. */
@@ -122,6 +126,8 @@ interface WidgetState {
   setEmbedIdentity: (v: 'pending' | 'verified' | 'anonymous') => void;
   setLanguage: (l: string) => void;
   setAiProcessingRegion: (r: string) => void;
+  setCsatMode: (m: 'rating' | 'survey') => void;
+  setTermsUrl: (u: string | null) => void;
   setTriggerUnavailable: (v: boolean) => void;
   setTeaserVisible: (v: boolean) => void;
   setConsentInfo: (c: ConsentInfo | null) => void;
@@ -160,6 +166,8 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   // 'en' (PLN-260813 P4).
   language: initialLanguage(),
   aiProcessingRegion: 'US',
+  csatMode: 'rating',
+  termsUrl: null,
   triggerUnavailable: false,
   teaserVisible: false,
   consent: null,
@@ -191,6 +199,8 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setEmbedIdentity: (v) => set({ embedIdentity: v }),
   setLanguage: (l) => set({ language: l }),
   setAiProcessingRegion: (r) => set({ aiProcessingRegion: r }),
+  setCsatMode: (m) => set({ csatMode: m }),
+  setTermsUrl: (u) => set({ termsUrl: u }),
   setTriggerUnavailable: (v) => set({ triggerUnavailable: v }),
   setTeaserVisible: (v) => set({ teaserVisible: v }),
   setConsentInfo: (c) => set({ consent: c }),

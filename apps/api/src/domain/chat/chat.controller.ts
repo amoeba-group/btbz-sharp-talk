@@ -73,7 +73,11 @@ export class ChatController {
   @ApiOperation({ summary: 'Rate a finished conversation, 1..5 stars (PLN-260810)' })
   async rate(@Body() body: RateChatRequest) {
     const session = await this.sessionService.findByToken(body.session_token);
-    return this.chatService.rate(session, body.conversation_id, body.rating);
+    return this.chatService.rate(session, body.conversation_id, body.rating, {
+      resolved: body.resolved,
+      reason: body.reason,
+      comment: body.comment,
+    });
   }
 
   @Get('conversation')

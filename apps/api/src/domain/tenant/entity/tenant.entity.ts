@@ -102,6 +102,14 @@ export class Tenant {
   @Column({ name: 'consent_source', type: 'varchar', length: 16, default: 'widget' })
   consentSource: string;
 
+  /** 'rating' (one-question emoji card, default) | 'survey' (resolved? + rating + reason) — PLN-261019. */
+  @Column({ name: 'csat_mode', type: 'varchar', length: 8, default: 'rating' })
+  csatMode: string;
+
+  /** Terms-of-service link for the widget's bottom disclosure line; null → privacy_policy_url (PLN-261019). */
+  @Column({ name: 'terms_url', type: 'varchar', length: 512, nullable: true })
+  termsUrl: string | null;
+
   /** Per-language rewrites of individual notice lines; NULL = profile copy only. */
   @Column({ name: 'privacy_notice_copy', type: 'json', nullable: true })
   privacyNoticeCopy: PrivacyNoticeCopy | null;

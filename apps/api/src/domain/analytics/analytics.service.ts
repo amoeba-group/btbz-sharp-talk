@@ -214,7 +214,7 @@ export class AnalyticsService {
   ): Promise<{ ended: number; resolved: number }> {
     const ended = await this.realConversations(tenantId)
       .andWhere('c.status = :ended', { ended: CONVERSATION_STATUS.ENDED })
-      .select(['c.id', 'c.status', 'c.csat_rating', 'c.ended_at'])
+      .select(['c.id', 'c.status', 'c.csat_rating', 'c.csat_resolved', 'c.ended_at'])
       .getMany();
     if (!ended.length) return { ended: 0, resolved: 0 };
 
@@ -225,7 +225,7 @@ export class AnalyticsService {
     let resolved = 0;
     for (const conv of ended) {
       const outcome = classifyOutcome(
-        { status: conv.status, csatRating: conv.csatRating, endedAt: conv.endedAt },
+        { status: conv.status, csatRating: conv.csatRating, csatResolved: conv.csatResolved, endedAt: conv.endedAt },
         lastSenders.get(Number(conv.id)) ?? null,
         prompted.has(Number(conv.id)),
       );

@@ -143,6 +143,25 @@ export const zh: Translation = {
       5: '非常满意',
     },
     csatFailed: '评价保存失败，请重试。',
+    aiDisclosureShort: 'AI 生成的回复 · 在{{region}}处理',
+    termsLink: '服务条款',
+    csatSurvey: {
+      title: '满意度调查',
+      q1: '您的问题解决了吗？',
+      q1Resolved: '已解决',
+      q1Unresolved: '尚未解决',
+      q2: '您对我们的支持服务满意吗？',
+      reasonTitle: '您不满意的原因是什么？',
+      reasons: {
+        unclear: '说明不清楚或令人困惑',
+        slow: '支持耗时过长',
+        no_response: '无人回复',
+        software_error: '软件错误',
+        other: '其他原因',
+      },
+      otherPlaceholder: '请输入原因',
+      submit: '提交反馈',
+    },
   },
 
   auth: {

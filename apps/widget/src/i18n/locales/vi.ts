@@ -145,6 +145,25 @@ export const vi: Translation = {
       5: 'Rất hài lòng',
     },
     csatFailed: 'Không lưu được đánh giá của bạn. Vui lòng thử lại.',
+    aiDisclosureShort: 'Được tạo bởi AI · xử lý tại {{region}}',
+    termsLink: 'điều khoản dịch vụ',
+    csatSurvey: {
+      title: 'Khảo sát mức độ hài lòng',
+      q1: 'Quý khách đã được hỗ trợ thành công chưa?',
+      q1Resolved: 'Đã xử lý xong',
+      q1Unresolved: 'Chưa được xử lý',
+      q2: 'Quý khách có hài lòng về dịch vụ hỗ trợ không?',
+      reasonTitle: 'Lý do Quý khách KHÔNG hài lòng về dịch vụ hỗ trợ?',
+      reasons: {
+        unclear: 'Hướng dẫn khó hiểu, vòng vo',
+        slow: 'Thời gian hỗ trợ lâu',
+        no_response: 'Không phản hồi',
+        software_error: 'Lỗi phần mềm',
+        other: 'Lý do khác',
+      },
+      otherPlaceholder: 'Nhập lý do',
+      submit: 'Gửi phản hồi',
+    },
   },
 
   auth: {

@@ -799,7 +799,11 @@ export function WidgetTabsCard() {
   const tabsChanged = tabsPicked != null && JSON.stringify(tabsPicked) !== JSON.stringify(data?.tabs);
   const positionChanged = positionPicked != null && positionPicked !== data?.tabPosition;
   const commerceChanged = commercePicked != null && commercePicked !== data?.commerceEnabled;
-  const dirty = data != null && (tabsChanged || positionChanged || commerceChanged);
+  // Satisfaction card kind (PLN-261019 Csat/Disclosure).
+  const [csatPicked, setCsatPicked] = useState<'rating' | 'survey' | null>(null);
+  const csatMode = csatPicked ?? data?.csatMode ?? 'rating';
+  const csatChanged = csatPicked != null && csatPicked !== (data?.csatMode ?? 'rating');
+  const dirty = data != null && (tabsChanged || positionChanged || commerceChanged || csatChanged);
 
   return (
     <Card title={t('widgetTabs.title')}>
@@ -867,14 +871,35 @@ export function WidgetTabsCard() {
         </label>
         <p className="mb-4 text-xs text-gray-400">{t('widgetTabs.commerceHint')}</p>
 
+        {/* Satisfaction card kind (PLN-261019): the one-question emoji card, or
+            the survey (resolved? + rating + reason). */}
+        <div className="mb-2 border-t border-gray-100 pt-4 text-sm font-medium text-gray-700">
+          {t('widgetBehavior.csatMode')}
+        </div>
+        <div className="mb-1 flex flex-col gap-1.5 text-sm text-gray-700">
+          <label className="flex items-center gap-2">
+            <input type="radio" name="csat-mode" checked={csatMode === 'rating'} disabled={isLoading} onChange={() => setCsatPicked('rating')} />
+            {t('widgetBehavior.csatModeRating')}
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="radio" name="csat-mode" checked={csatMode === 'survey'} disabled={isLoading} onChange={() => setCsatPicked('survey')} />
+            {t('widgetBehavior.csatModeSurvey')}
+          </label>
+        </div>
+        <p className="mb-4 text-xs text-gray-400">{t('widgetBehavior.csatModeHint')}</p>
+
         <Button
           onClick={() =>
-            save.mutate({
-              loginMode: data?.loginMode ?? 'redirect',
-              ...(tabsChanged ? { tabs } : {}),
-              ...(positionChanged ? { tabPosition } : {}),
-              ...(commerceChanged ? { commerceEnabled } : {}),
-            })
+            save.mutate(
+              {
+                loginMode: data?.loginMode ?? 'redirect',
+                ...(tabsChanged ? { tabs } : {}),
+                ...(positionChanged ? { tabPosition } : {}),
+                ...(commerceChanged ? { commerceEnabled } : {}),
+                ...(csatChanged ? { csatMode } : {}),
+              },
+              { onSuccess: () => setCsatPicked(null) },
+            )
           }
           disabled={!dirty || save.isPending}
         >

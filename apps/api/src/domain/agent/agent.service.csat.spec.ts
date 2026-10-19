@@ -83,6 +83,8 @@ describe('AgentService — CSAT statistics', () => {
       to: '2026-08-26',
       ended: 10,
       rated: 4,
+      resolved: { yes: 0, no: 0 },
+      reasons: { unclear: 0, slow: 0, no_response: 0, software_error: 0, other: 0 },
       avg: 4.25,
       distribution: { '1': 0, '2': 0, '3': 1, '4': 1, '5': 2 },
     });

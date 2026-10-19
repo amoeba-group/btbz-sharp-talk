@@ -496,7 +496,7 @@ export class AnalyticsBreakdownService {
     const convs = await this.scoped(tenantId, window)
       // Property paths, not column names: `c.session_id` selects the column but
       // leaves the entity's `sessionId` undefined, and the id then binds as NaN.
-      .select(['c.id', 'c.sessionId', 'c.agentId', 'c.status', 'c.csatRating', 'c.endedAt'])
+      .select(['c.id', 'c.sessionId', 'c.agentId', 'c.status', 'c.csatRating', 'c.csatResolved', 'c.endedAt'])
       .getMany();
     if (!convs.length) return { ai: [], human: [] };
 
@@ -549,7 +549,7 @@ export class AnalyticsBreakdownService {
       let csatSum = 0;
       for (const c of list) {
         const outcome = classifyOutcome(
-          { status: c.status, csatRating: c.csatRating, endedAt: c.endedAt },
+          { status: c.status, csatRating: c.csatRating, csatResolved: c.csatResolved, endedAt: c.endedAt },
           lastSenders.get(Number(c.id)) ?? null,
           prompted.has(Number(c.id)),
         );

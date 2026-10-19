@@ -178,7 +178,8 @@
     "prompted_closed": "Closed after check-in",
     "open": "Open",
     "abandoned": "Abandoned",
-    "customer_last": "Customer spoke last"
+    "customer_last": "Customer spoke last",
+    "customer_unresolved": "Customer said: not resolved"
   },
   "fiveA": {
     "aware": "Aware",

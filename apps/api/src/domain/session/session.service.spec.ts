@@ -134,6 +134,8 @@ describe('SessionService consent (PLN-Privacy-Control-Gap Stage 1-2)', () => {
         widgetTabs: [...WIDGET_TABS_DEFAULT],
         widgetTabPosition: 'top',
         commerceEnabled: true,
+        csatMode: 'rating',
+        termsUrl: null,
         // Null, not absent: an unthemed tenant needs no variables written, and
         // the widget's own stylesheet already holds the built-in palette.
         widgetTheme: null,

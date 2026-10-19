@@ -142,6 +142,25 @@ export const ko: Translation = {
       5: '매우 만족',
     },
     csatFailed: '평가를 저장하지 못했습니다. 다시 시도해 주세요.',
+    aiDisclosureShort: 'AI가 생성한 답변 · {{region}}에서 처리',
+    termsLink: '이용약관',
+    csatSurvey: {
+      title: '만족도 설문',
+      q1: '문의가 해결되었나요?',
+      q1Resolved: '해결됨',
+      q1Unresolved: '아직 해결되지 않음',
+      q2: '지원 서비스에 만족하셨나요?',
+      reasonTitle: '만족하지 못한 이유는 무엇인가요?',
+      reasons: {
+        unclear: '안내가 어렵거나 혼란스러움',
+        slow: '지원이 오래 걸림',
+        no_response: '응답이 없음',
+        software_error: '소프트웨어 오류',
+        other: '기타 사유',
+      },
+      otherPlaceholder: '사유를 입력하세요',
+      submit: '의견 보내기',
+    },
   },
 
   auth: {

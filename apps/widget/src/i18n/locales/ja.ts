@@ -145,6 +145,25 @@ export const ja: Translation = {
       5: 'とても満足',
     },
     csatFailed: '評価を保存できませんでした。もう一度お試しください。',
+    aiDisclosureShort: 'AIが生成した回答 · {{region}}で処理',
+    termsLink: '利用規約',
+    csatSurvey: {
+      title: '満足度アンケート',
+      q1: 'お問い合わせは解決しましたか？',
+      q1Resolved: '解決した',
+      q1Unresolved: 'まだ解決していない',
+      q2: 'サポートに満足いただけましたか？',
+      reasonTitle: '満足いただけなかった理由は？',
+      reasons: {
+        unclear: '案内が分かりにくい',
+        slow: '対応に時間がかかった',
+        no_response: '返答がなかった',
+        software_error: 'ソフトウェアの不具合',
+        other: 'その他',
+      },
+      otherPlaceholder: '理由を入力',
+      submit: '送信する',
+    },
   },
 
   auth: {

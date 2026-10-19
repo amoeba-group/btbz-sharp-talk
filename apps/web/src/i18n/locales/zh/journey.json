@@ -178,7 +178,8 @@
     "prompted_closed": "确认后关闭",
     "open": "进行中",
     "abandoned": "已搁置",
-    "customer_last": "客户最后发言"
+    "customer_last": "客户最后发言",
+    "customer_unresolved": "客户回答：未解决"
   },
   "fiveA": {
     "aware": "认知",

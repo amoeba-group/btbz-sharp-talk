@@ -178,7 +178,8 @@
     "prompted_closed": "確認後に終了",
     "open": "対応中",
     "abandoned": "放置",
-    "customer_last": "顧客の発言で終了"
+    "customer_last": "顧客の発言で終了",
+    "customer_unresolved": "顧客の回答: 未解決"
   },
   "fiveA": {
     "aware": "認知",

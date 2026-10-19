@@ -2,14 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { isAuthError } from '../lib/errors';
-import {
-  endChat as endChatApi,
-  escalate as escalateApi,
-  getConversation,
-  sendMessage,
-  sendScenario,
-  rateChat,
-} from '../services/chatService';
+import { endChat as endChatApi, escalate as escalateApi, getConversation, sendMessage, sendScenario, rateChat, type CsatSurveyAnswers } from '../services/chatService';
 import type { ChatAttachment, ChatMessage, ChatReply, ScenarioPostAction } from '../lib/types';
 
 export interface SendResult {
@@ -229,9 +222,9 @@ export function useChat(sessionToken: string | null) {
     }
   }, [sessionToken, append, t]);
 
-  const rate = async (rating: number) => {
+  const rate = async (rating: number, survey?: CsatSurveyAnswers) => {
     if (!sessionToken || !conversationId) return;
-    await rateChat(sessionToken, conversationId, rating);
+    await rateChat(sessionToken, conversationId, rating, survey);
     setCanRate(false);
   };
 

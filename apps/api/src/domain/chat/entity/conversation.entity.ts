@@ -61,6 +61,22 @@ export class Conversation {
   csatRatedAt: Date | null;
 
   /**
+   * Survey answers (PLN-261019-Csat-Survey-Disclosure). All null in `rating`
+   * mode and on rows rated before the survey existed. `csatResolved` feeds the
+   * shared resolution definition: a customer who says "not resolved" is not
+   * counted as resolved just because they answered.
+   */
+  @Column({ name: 'csat_resolved', type: 'tinyint', width: 1, nullable: true })
+  csatResolved: number | null;
+
+  @Column({ name: 'csat_reason', type: 'varchar', length: 32, nullable: true })
+  csatReason: string | null;
+
+  /** Free text for "other reason" — PII-masked before it is stored. */
+  @Column({ name: 'csat_comment', type: 'varchar', length: 80, nullable: true })
+  csatComment: string | null;
+
+  /**
    * Team-shared queue pin (PLN-260826): non-null floats the row to the top of
    * the live-chat list, max 3 active pins per tenant (service-enforced).
    */

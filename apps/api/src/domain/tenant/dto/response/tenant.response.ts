@@ -69,6 +69,8 @@ export interface PrivacyNoticeResponse {
   privacyProfile: string | null;
   /** widget | host_terms (PLN-261015 D9). */
   consentSource: string;
+  /** Terms link for the widget disclosure line (PLN-261019); null → privacy URL. */
+  termsUrl: string | null;
   /** The profile actually in force right now — what the console previews. */
   effectiveProfile: string;
   /** Per-language line rewrites, exactly as stored. */
@@ -98,6 +100,8 @@ export interface WidgetSettingsResponse {
   tabPosition: WidgetTabPosition;
   /** Store features (order sign-in gate, commerce chips) — PLN-261001. */
   commerceEnabled: boolean;
+  /** rating | survey (PLN-261019). */
+  csatMode: string;
   timezone: string | null;
   /** Explicit default widget language (code) or null = follow the timezone. */
   defaultLanguage: string | null;

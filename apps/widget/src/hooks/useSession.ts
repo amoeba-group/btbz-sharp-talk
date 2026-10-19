@@ -194,6 +194,8 @@ export function adoptTenantConfig(res: SessionResponse): void {
   s.setCommerceEnabled(res.commerceEnabled !== false);
   // Deployment-level: where inference runs, named in the AI disclosure (G7).
   s.setAiProcessingRegion((res.aiProcessingRegion || 'US').toUpperCase());
+  s.setCsatMode(res.csatMode === 'survey' ? 'survey' : 'rating');
+  s.setTermsUrl(res.termsUrl ?? null);
 }
 
 /**
