@@ -99,7 +99,9 @@
     "agentSenderName": "Agent sender name",
     "agentSenderNameHint": "A generic label for human agents (e.g. \"Go2Joy Support\"). Empty = the agent's own name.",
     "launcherTeaser": "Launcher greeting",
-    "launcherTeaserHint": "The greeting pill beside the launcher (theme card → Greeting pill). {shop} inserts the display name. Empty = default."
+    "launcherTeaserHint": "The greeting pill beside the launcher (theme card → Greeting pill). {shop} inserts the display name. Empty = default.",
+    "headerGreeting": "Signed-in greeting (header)",
+    "headerGreetingHint": "Header text for a recognized shopper. {name} inserts their name — enter just {name} to show the name alone. Empty = \"Hi, {name}\"."
   },
   "shopify": {
     "title": "Shopify connection",

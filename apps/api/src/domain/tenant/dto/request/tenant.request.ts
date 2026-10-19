@@ -232,6 +232,12 @@ export class UpdateWidgetSettingsRequest {
   @IsOptional() @IsString() @MaxLength(80) header_title_vi?: string | null;
   @IsOptional() @IsString() @MaxLength(80) header_title_ja?: string | null;
   @IsOptional() @IsString() @MaxLength(80) header_title_zh?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) header_greeting_en?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) header_greeting_es?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) header_greeting_ko?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) header_greeting_vi?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) header_greeting_ja?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) header_greeting_zh?: string | null;
   @IsOptional() @IsString() @MaxLength(80) ai_sender_name_en?: string | null;
   @IsOptional() @IsString() @MaxLength(80) ai_sender_name_es?: string | null;
   @IsOptional() @IsString() @MaxLength(80) ai_sender_name_ko?: string | null;

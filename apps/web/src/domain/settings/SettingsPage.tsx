@@ -500,6 +500,7 @@ export function WidgetBehaviorCard() {
     firstVisit: data?.firstVisit ?? {},
     loginGreeting: data?.loginGreeting ?? {},
     headerTitle: data?.headerTitle ?? {},
+    headerGreeting: data?.headerGreeting ?? {},
     aiSenderName: data?.aiSenderName ?? {},
     agentSenderName: data?.agentSenderName ?? {},
     launcherTeaser: data?.launcherTeaser ?? {},
@@ -631,6 +632,7 @@ export function WidgetBehaviorCard() {
           {defaultCopy('loginGreeting')}
         </p>
         {copyLine('headerTitle', 80)}
+        {copyLine('headerGreeting', 80)}
         {copyLine('aiSenderName', 80)}
         {copyLine('agentSenderName', 80)}
         {copyLine('launcherTeaser', 120)}

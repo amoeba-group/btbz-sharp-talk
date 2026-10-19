@@ -134,6 +134,7 @@ export class TenantMapper {
       firstVisit: t.widgetCopy?.firstVisit ?? {},
       loginGreeting: t.widgetCopy?.loginGreeting ?? {},
       headerTitle: t.widgetCopy?.headerTitle ?? {},
+      headerGreeting: t.widgetCopy?.headerGreeting ?? {},
       aiSenderName: t.widgetCopy?.aiSenderName ?? {},
       agentSenderName: t.widgetCopy?.agentSenderName ?? {},
       launcherTeaser: t.widgetCopy?.launcherTeaser ?? {},

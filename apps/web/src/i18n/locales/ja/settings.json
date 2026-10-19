@@ -99,7 +99,9 @@
     "agentSenderName": "担当者送信者名",
     "agentSenderNameHint": "人間の担当者の汎用ラベル（例:「Go2Joyサポート」）。空なら担当者本人の名前を使います。",
     "launcherTeaser": "ランチャーのあいさつ",
-    "launcherTeaserHint": "ランチャー横の吹き出しの文言です（テーマカード → あいさつの吹き出し）。{shop} は表示名に置き換わります。空なら既定文言。"
+    "launcherTeaserHint": "ランチャー横の吹き出しの文言です（テーマカード → あいさつの吹き出し）。{shop} は表示名に置き換わります。空なら既定文言。",
+    "headerGreeting": "ヘッダーのあいさつ（ログインユーザー）",
+    "headerGreetingHint": "ユーザーを認識したときのヘッダー文言です。{name} は名前に置き換わります。{name} だけを入力すると名前のみ表示。空なら「{name}さん」。"
   },
   "shopify": {
     "title": "Shopify連携",

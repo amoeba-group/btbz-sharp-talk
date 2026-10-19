@@ -3,7 +3,7 @@
 - 근거: [REQ-261019-Go2Joy-HA-Consent-Skip-Header-Name](../analysis/REQ-261019-Go2Joy-HA-Consent-Skip-Header-Name.md)
 - **UI 변경 있음**(§4 — 헤더 제목 자리, 콘솔 문구 행 1개). **스키마 변경 없음.**
 - 전제 결정(REQ §5 제안): D1ⓐ 서명 identify · D2 name 덮어씀 · D3 이름만 · D4 서명 전 배너 유지
-- 상태: **승인 대기** — 승인 전 구현하지 않음
+- 상태: **승인(2026-10-19) → 구현·배포 진행**
 
 ## 1. 단계
 
@@ -18,7 +18,7 @@
 - 테스트: `tenant.service.spec`(headerGreeting bag), `embed.service.spec`, i18n:check.
 
 ### P3 — Go2Joy 통합 안내 (문서)
-- `docs/guide/GUIDE-261019-Go2Joy-HA-Identify.md`(ko/vi 요지): HA 로그인 완료 시점에 서버가 `hash = HMAC-SHA256(embed_secret, "<userId>\nhotel_id=…\nregion=…\nrole=…")`를 내려주고, 페이지가 `ShopTalk.identify({ userId, hash, name: <profile 이름>, attributes })`를 호출. 로그아웃 시 `ShopTalk.reset()`(가이드 §4). 시크릿 전달 경로(스테이징 `secrets/`, 프로덕션 별도 발급).
+- `docs/guide/GUIDE-261019-Go2Joy-HA-Identify.md`(ko/vi 요지): HA 로그인 완료 시점에 서버가 `hash = HMAC-SHA256(embed_secret, "<userId>\nhotel_id=…\nregion=…\nrole=…")`를 내려주고, 페이지가 `ShopTalk.identify({ userId, hash, name: <profile 이름>, attributes })`를 호출. 로그아웃 시 `ShopTalk.logout()`(가이드 §4). 시크릿 전달 경로(스테이징 `secrets/`, 프로덕션 별도 발급).
 - 체크리스트: 서명 실패 시 401 → 게스트로 계속(배너 표시) — "이름이 안 뜨면 서명부터 의심".
 
 ### P4 — 검증·RPT

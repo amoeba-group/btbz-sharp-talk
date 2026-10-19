@@ -99,7 +99,9 @@
     "agentSenderName": "Nombre del remitente agente",
     "agentSenderNameHint": "Etiqueta genérica para agentes humanos (p. ej. \"Soporte Go2Joy\"). Vacío = el nombre del agente.",
     "launcherTeaser": "Saludo del lanzador",
-    "launcherTeaserHint": "Texto de la burbuja junto al lanzador (tarjeta de tema → Burbuja de saludo). {shop} inserta el nombre para mostrar. Vacío = predeterminado."
+    "launcherTeaserHint": "Texto de la burbuja junto al lanzador (tarjeta de tema → Burbuja de saludo). {shop} inserta el nombre para mostrar. Vacío = predeterminado.",
+    "headerGreeting": "Saludo en la cabecera (usuario reconocido)",
+    "headerGreetingHint": "Texto de la cabecera cuando se reconoce al cliente. {name} inserta su nombre; escribe solo {name} para mostrar únicamente el nombre. Vacío = \"Hola, {name}\"."
   },
   "shopify": {
     "title": "Conexión de Shopify",

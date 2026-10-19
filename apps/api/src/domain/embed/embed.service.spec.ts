@@ -108,13 +108,17 @@ describe('EmbedService.identify', () => {
     expect(h.customers).toHaveLength(1);
   });
 
-  it('fills gaps in the profile but never overwrites what is already known', async () => {
+  it('follows the host for the display name, but fills only gaps for email (PLN-261019 HA D2)', async () => {
     const h = build();
-    await h.service.identify({ sessionToken: 'tok', userId: USER, hash: HASH, name: 'First' });
-    await h.service.identify({ sessionToken: 'tok', userId: USER, hash: HASH, name: 'Second' });
-    // Profile fields are unsigned; letting them overwrite would make an
-    // unsigned field able to rewrite a verified record.
-    expect(h.customers[0]).toMatchObject({ name: 'First' });
+    await h.service.identify({ sessionToken: 'tok', userId: USER, hash: HASH, name: 'First', email: 'a@x.vn' });
+    await h.service.identify({ sessionToken: 'tok', userId: USER, hash: HASH, name: 'Second', email: 'b@x.vn' });
+    // The signed host is the source of truth for what its user is called — a
+    // rename in its profile must reach the widget header. Email stays
+    // gap-fill: it is matched against orders and must not be rewritten.
+    expect(h.customers[0]).toMatchObject({ name: 'Second', email: 'a@x.vn' });
+    // A blank name is "nothing to say", not "clear the name".
+    await h.service.identify({ sessionToken: 'tok', userId: USER, hash: HASH, name: '  ' });
+    expect(h.customers[0]).toMatchObject({ name: 'Second' });
   });
 });
 

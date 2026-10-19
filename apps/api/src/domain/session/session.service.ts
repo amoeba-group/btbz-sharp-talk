@@ -635,6 +635,7 @@ export class SessionService {
         // PLN-261019 P3: tenant bags as stored; the widget resolves the
         // fallbacks (displayName / the agent's own name / the built-in pill).
         headerTitle: tenant?.widgetCopy?.headerTitle ?? {},
+        headerGreeting: tenant?.widgetCopy?.headerGreeting ?? {},
         aiSenderName: tenant?.widgetCopy?.aiSenderName ?? {},
         agentSenderName: tenant?.widgetCopy?.agentSenderName ?? {},
         launcherTeaser: tenant?.widgetCopy?.launcherTeaser ?? {},
