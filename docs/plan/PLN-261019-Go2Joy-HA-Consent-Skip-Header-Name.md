@@ -3,7 +3,7 @@
 - 근거: [REQ-261019-Go2Joy-HA-Consent-Skip-Header-Name](../analysis/REQ-261019-Go2Joy-HA-Consent-Skip-Header-Name.md)
 - **UI 변경 있음**(§4 — 헤더 제목 자리, 콘솔 문구 행 1개). **스키마 변경 없음.**
 - 전제 결정(REQ §5 제안): D1ⓐ 서명 identify · D2 name 덮어씀 · D3 이름만 · D4 서명 전 배너 유지
-- 상태: **승인(2026-10-19) → 구현·배포 진행**
+- 상태: **구현·스테이징 배포 완료(2026-10-19, PR #656)** — 결과는 [RPT-261019](../implementation/RPT-261019-Go2Joy-HA-Consent-Skip-Header-Name.md)
 
 ## 1. 단계
 
