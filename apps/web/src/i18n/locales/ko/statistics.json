@@ -59,7 +59,21 @@
     "ratingAll": "평점: 전체",
     "agentFilter": "상담원 필터",
     "agentAll": "상담원: 전체",
-    "empty": "이 기간에 평가가 없습니다."
+    "empty": "이 기간에 평가가 없습니다.",
+    "resolvedTitle": "해결 여부(설문)",
+    "resolvedYes": "해결",
+    "resolvedNo": "미해결",
+    "reasonsTitle": "불만족 사유",
+    "resolved": "해결",
+    "reason": "사유",
+    "comment": "코멘트",
+    "reasons": {
+      "unclear": "안내가 어려움",
+      "slow": "오래 걸림",
+      "no_response": "응답 없음",
+      "software_error": "소프트웨어 오류",
+      "other": "기타"
+    }
   },
   "staleWarning": "{{date}} 이후 질문 집계가 없습니다({{days}}일). 표는 그때까지 집계된 값입니다.",
   "neverAggregated": "아직 집계된 질문 스냅샷이 없습니다.",
@@ -100,7 +114,8 @@
       "prompted_closed": "확인 후 종료",
       "open": "진행 중",
       "abandoned": "종료 처리 없이 끝남",
-      "customer_last": "고객이 마지막 발화"
+      "customer_last": "고객이 마지막 발화",
+      "customer_unresolved": "고객 응답: 미해결"
     }
   },
   "hours": {

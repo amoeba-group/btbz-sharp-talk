@@ -26,6 +26,8 @@ export class SessionMapper {
       noticeOutdated: s.consentVersion != null && s.consentVersion !== notice.consentNoticeVersion,
       consentAt: s.consentAt ? new Date(s.consentAt).toISOString() : null,
       widgetLoginMode: notice.widgetLoginMode,
+      csatMode: notice.csatMode,
+      termsUrl: notice.termsUrl,
       widgetTabs: notice.widgetTabs,
       widgetTabPosition: notice.widgetTabPosition,
       commerceEnabled: notice.commerceEnabled ?? true,

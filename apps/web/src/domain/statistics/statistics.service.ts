@@ -80,6 +80,9 @@ export interface CsatSummary {
   rated: number;
   avg: number | null;
   distribution: Record<'1' | '2' | '3' | '4' | '5', number>;
+  /** Survey mode (PLN-261019); absent on an older API. */
+  resolved?: { yes: number; no: number };
+  reasons?: Record<string, number>;
 }
 
 export interface CsatAgentRow {
@@ -100,6 +103,10 @@ export interface CsatConversationRow {
   rating: number | null;
   ratedAt: string | null;
   endedAt: string | null;
+  /** Survey answers (PLN-261019); null on rating-mode rows. */
+  resolved?: boolean | null;
+  reason?: string | null;
+  comment?: string | null;
 }
 
 export interface CsatListParams {

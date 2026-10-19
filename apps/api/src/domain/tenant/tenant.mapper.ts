@@ -86,6 +86,7 @@ export class TenantMapper {
       consentNoticeVersion: t.consentNoticeVersion,
       privacyProfile: t.privacyProfile ?? null,
       consentSource: t.consentSource === 'host_terms' ? 'host_terms' : 'widget',
+      termsUrl: t.termsUrl ?? null,
       effectiveProfile,
       privacyNoticeCopy: (t.privacyNoticeCopy ?? null) as Record<string, Record<string, string>> | null,
       profileCopy: profileCopy as Record<string, Record<string, string>>,
@@ -128,6 +129,7 @@ export class TenantMapper {
           ? WIDGET_TAB_POSITION.BOTTOM
           : WIDGET_TAB_POSITION.TOP,
       commerceEnabled: Number(t.commerceEnabled ?? 1) !== 0,
+      csatMode: t.csatMode === 'survey' ? 'survey' : 'rating',
       timezone: t.timezone ?? null,
       defaultLanguage: t.defaultLanguage ?? null,
       displayName: t.widgetCopy?.displayName ?? null,

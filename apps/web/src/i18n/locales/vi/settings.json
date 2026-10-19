@@ -54,7 +54,9 @@
     "consentSource_widget": "Biểu ngữ widget — khách đồng ý trong widget",
     "consentSource_host_terms": "Điều khoản ứng dụng chủ — người dùng đăng nhập đã đồng ý điều khoản",
     "consentSourceWidgetHint": "Mọi khách đều thấy biểu ngữ đồng ý và phải đồng ý trước khi trò chuyện.",
-    "consentSourceHostHint": "Người dùng được ứng dụng của bạn ký xác thực (embed identify) được ghi nhận là đã đồng ý — thời điểm và phiên bản thông báo — mà không hiện biểu ngữ. Điều khoản phải bao gồm hỗ trợ AI và khu vực xử lý. Khách chưa ký xác thực vẫn thấy biểu ngữ."
+    "consentSourceHostHint": "Người dùng được ứng dụng của bạn ký xác thực (embed identify) được ghi nhận là đã đồng ý — thời điểm và phiên bản thông báo — mà không hiện biểu ngữ. Điều khoản phải bao gồm hỗ trợ AI và khu vực xử lý. Khách chưa ký xác thực vẫn thấy biểu ngữ.",
+    "termsUrl": "URL điều khoản dịch vụ",
+    "termsUrlHint": "Được liên kết từ dòng thông báo dưới cùng của widget (widget tùy chỉnh › vị trí thông báo AI). Trống = URL chính sách bảo mật."
   },
   "widgetBehavior": {
     "title": "Hành vi của widget",
@@ -101,7 +103,11 @@
     "launcherTeaser": "Lời chào nút mở",
     "launcherTeaserHint": "Nội dung bong bóng chào cạnh nút mở (thẻ giao diện → Bong bóng chào). {shop} chèn tên hiển thị. Để trống = mặc định.",
     "headerGreeting": "Lời chào ở đầu widget (đã đăng nhập)",
-    "headerGreetingHint": "Văn bản phần đầu khi nhận ra khách. {name} chèn tên — chỉ nhập {name} để hiện riêng tên. Để trống = \"Chào {name}\"."
+    "headerGreetingHint": "Văn bản phần đầu khi nhận ra khách. {name} chèn tên — chỉ nhập {name} để hiện riêng tên. Để trống = \"Chào {name}\".",
+    "csatMode": "Thẻ hài lòng",
+    "csatModeRating": "Chỉ đánh giá (mặc định) — năm biểu cảm, một chạm",
+    "csatModeSurvey": "Khảo sát — đã giải quyết? + đánh giá + lý do khi không hài lòng",
+    "csatModeHint": "Hiện khi cuộc trò chuyện kết thúc. Khảo sát hỏi thêm \"đã giải quyết chưa?\" (tính vào tỷ lệ giải quyết) và hỏi lý do khi chấm 1–2."
   },
   "shopify": {
     "title": "Kết nối Shopify",
@@ -865,7 +871,11 @@
     "avatarHint": "Ảnh tròn 28px chọn từ Tệp thiết kế (biểu tượng, png/webp). Tên lấy từ Nội dung widget → Tên người gửi AI / nhân viên.",
     "attachIcon": "Biểu tượng nút đính kèm",
     "attachPaperclip": "Kẹp giấy (mặc định)",
-    "attachImage": "Hình ảnh"
+    "attachImage": "Hình ảnh",
+    "disclosurePlacement": "Vị trí thông báo AI",
+    "disclosureTop": "Thanh phía trên chat (mặc định)",
+    "disclosureBottom": "Một dòng dưới ô nhập",
+    "disclosureHint": "Cùng thông báo pháp lý, chỉ đổi chỗ. Dòng dưới cũng liên kết điều khoản dịch vụ (Thông báo bảo mật › URL điều khoản)."
   },
   "settingsSnapshots": {
     "title": "Ảnh chụp cài đặt",

@@ -9,6 +9,7 @@ import {
   SENDER_TYPE,
   isSupportedLanguage,
   localized,
+  CSAT_REASON_VALUES,
 } from '@sharptalk/types';
 import type { LocalizedText } from '@sharptalk/types';
 import { Conversation } from '../chat/entity/conversation.entity';
@@ -1528,6 +1529,9 @@ export class AgentService {
     rated: number;
     avg: number | null;
     distribution: Record<'1' | '2' | '3' | '4' | '5', number>;
+    /** Survey mode only (PLN-261019): answers to "resolved?" and the unhappy reasons. */
+    resolved: { yes: number; no: number };
+    reasons: Record<string, number>;
   }> {
     const range = this.csatRange(from, to);
     const qb = this.convRepo
@@ -1542,6 +1546,10 @@ export class AgentService {
     for (const n of [1, 2, 3, 4, 5]) {
       qb.addSelect(`SUM(c.csat_rating = ${n})`, `r${n}`);
     }
+    qb.addSelect('SUM(c.csat_resolved = 1)', 'resYes').addSelect('SUM(c.csat_resolved = 0)', 'resNo');
+    for (const reason of CSAT_REASON_VALUES) {
+      qb.addSelect(`SUM(c.csat_reason = '${reason}')`, `reason_${reason}`);
+    }
     const row = await qb.getRawOne<Record<string, string | null>>();
     return {
       ...range,
@@ -1555,6 +1563,8 @@ export class AgentService {
         '4': Number(row?.r4 ?? 0),
         '5': Number(row?.r5 ?? 0),
       },
+      resolved: { yes: Number(row?.resYes ?? 0), no: Number(row?.resNo ?? 0) },
+      reasons: Object.fromEntries(CSAT_REASON_VALUES.map((r) => [r, Number(row?.[`reason_${r}`] ?? 0)])),
     };
   }
 
@@ -1607,6 +1617,10 @@ export class AgentService {
       rating: number | null;
       ratedAt: Date | null;
       endedAt: Date | null;
+      /** Survey answers (PLN-261019); null on rating-mode rows. */
+      resolved: boolean | null;
+      reason: string | null;
+      comment: string | null;
     }>;
     total: number;
   }> {
@@ -1657,6 +1671,9 @@ export class AgentService {
           rating: c.csatRating,
           ratedAt: c.csatRatedAt,
           endedAt: c.endedAt,
+          resolved: c.csatResolved == null ? null : Number(c.csatResolved) === 1,
+          reason: c.csatReason ?? null,
+          comment: c.csatComment ?? null,
         };
       }),
     };

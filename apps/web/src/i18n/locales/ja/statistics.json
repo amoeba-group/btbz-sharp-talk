@@ -59,7 +59,21 @@
     "ratingAll": "評価: すべて",
     "agentFilter": "担当者フィルター",
     "agentAll": "担当者: すべて",
-    "empty": "この期間の評価はありません。"
+    "empty": "この期間の評価はありません。",
+    "resolvedTitle": "解決？（アンケート）",
+    "resolvedYes": "解決",
+    "resolvedNo": "未解決",
+    "reasonsTitle": "不満の理由",
+    "resolved": "解決",
+    "reason": "理由",
+    "comment": "コメント",
+    "reasons": {
+      "unclear": "案内が分かりにくい",
+      "slow": "時間がかかった",
+      "no_response": "返答なし",
+      "software_error": "ソフトウェア不具合",
+      "other": "その他"
+    }
   },
   "staleWarning": "{{date}} 以降の質問集計がありません（{{days}}日）。表はその時点までの集計です。",
   "neverAggregated": "まだ質問のスナップショットが作成されていません。",
@@ -100,7 +114,8 @@
       "prompted_closed": "確認して終了",
       "open": "進行中",
       "abandoned": "終了処理なし",
-      "customer_last": "お客様が最後の発話"
+      "customer_last": "お客様が最後の発話",
+      "customer_unresolved": "顧客の回答: 未解決"
     }
   },
   "hours": {

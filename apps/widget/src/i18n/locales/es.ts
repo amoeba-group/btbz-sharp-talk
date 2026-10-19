@@ -142,6 +142,25 @@ export const es: Translation = {
       5: 'Muy satisfecho',
     },
     csatFailed: 'No pudimos guardar tu valoración. Inténtalo de nuevo.',
+    aiDisclosureShort: 'Respuestas generadas por IA · procesadas en {{region}}',
+    termsLink: 'términos del servicio',
+    csatSurvey: {
+      title: 'Encuesta de satisfacción',
+      q1: '¿Se resolvió tu consulta?',
+      q1Resolved: 'Resuelta',
+      q1Unresolved: 'Aún no resuelta',
+      q2: '¿Qué tan satisfecho estás con nuestro soporte?',
+      reasonTitle: '¿Por qué NO quedaste satisfecho?',
+      reasons: {
+        unclear: 'Instrucciones poco claras o confusas',
+        slow: 'El soporte tardó demasiado',
+        no_response: 'Sin respuesta',
+        software_error: 'Error del software',
+        other: 'Otro motivo',
+      },
+      otherPlaceholder: 'Escribe el motivo',
+      submit: 'Enviar opinión',
+    },
   },
 
   auth: {

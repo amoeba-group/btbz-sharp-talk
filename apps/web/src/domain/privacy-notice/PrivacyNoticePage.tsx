@@ -42,6 +42,7 @@ export function PrivacyNoticePage() {
   const update = useUpdatePrivacyNotice();
 
   const [policyUrl, setPolicyUrl] = useState('');
+  const [termsUrl, setTermsUrl] = useState('');
   const [version, setVersion] = useState('');
   const [profile, setProfile] = useState<string>('');
   const [consentSource, setConsentSource] = useState<'widget' | 'host_terms'>('widget');
@@ -55,6 +56,7 @@ export function PrivacyNoticePage() {
   useEffect(() => {
     if (data) {
       setPolicyUrl(data.privacyPolicyUrl ?? '');
+      setTermsUrl(data.termsUrl ?? '');
       setVersion(data.consentNoticeVersion ?? '');
       setProfile(data.privacyProfile ?? '');
       setConsentSource(data.consentSource === 'host_terms' ? 'host_terms' : 'widget');
@@ -83,6 +85,7 @@ export function PrivacyNoticePage() {
     const trimmedVersion = version.trim();
     update.mutate({
       privacy_policy_url: policyUrl.trim() || null,
+      terms_url: termsUrl.trim() || null,
       ...(trimmedVersion ? { consent_notice_version: trimmedVersion } : {}),
       // '' = "decide from whether this tenant sells", which is the state every
       // tenant starts in — never store it as a profile name.
@@ -127,6 +130,18 @@ export function PrivacyNoticePage() {
                 <p className="mt-1 text-xs text-warning">{t('privacyNotice.unsetUrl')}</p>
               )}
               <p className="mt-1 text-xs text-gray-400">{t('privacyNotice.policyUrlHint')}</p>
+            </FormRow>
+
+            {/* Terms link (PLN-261019): the widget's bottom disclosure line points here, else at the policy URL. */}
+            <FormRow label={t('privacyNotice.termsUrl')}>
+              <Input
+                type="url"
+                value={termsUrl}
+                onChange={(e) => setTermsUrl(e.target.value)}
+                placeholder="https://"
+                maxLength={512}
+              />
+              <p className="mt-1 text-xs text-gray-400">{t('privacyNotice.termsUrlHint')}</p>
             </FormRow>
 
             <FormRow label={t('privacyNotice.version')}>

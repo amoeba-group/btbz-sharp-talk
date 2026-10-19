@@ -113,6 +113,8 @@ export interface WidgetSettings {
   tabPosition: WidgetTabPosition;
   /** Store features: order sign-in gate + order chips (PLN-261001). */
   commerceEnabled: boolean;
+  /** rating | survey (PLN-261019). */
+  csatMode: 'rating' | 'survey';
   timezone: string | null;
   /** Explicit default widget language (code) or null = follow the timezone. */
   defaultLanguage: string | null;
@@ -173,6 +175,8 @@ export interface WidgetDesignDraft {
   messageStyle?: 'plain' | 'avatar';
   /** PLN-261019: 'paperclip' | 'image'. */
   attachIcon?: 'paperclip' | 'image';
+  /** PLN-261019 Csat/Disclosure: 'top' | 'bottom'. */
+  disclosurePlacement?: 'top' | 'bottom';
   /** PLN-261019: uploaded icon assets for the avatar slots. */
   botAvatarUuid?: string | null;
   agentAvatarUuid?: string | null;
@@ -240,6 +244,7 @@ export function designToWire(design: WidgetDesignDraft) {
     header_layout: design.headerLayout ?? 'logo',
     message_style: design.messageStyle ?? 'plain',
     attach_icon: design.attachIcon ?? 'paperclip',
+    disclosure_placement: design.disclosurePlacement ?? 'top',
     bot_avatar_uuid: design.botAvatarUuid ?? null,
     agent_avatar_uuid: design.agentAvatarUuid ?? null,
   };
@@ -401,10 +406,12 @@ export const settingsService = {
     tabPosition?: WidgetTabPosition,
     defaultLanguage?: string | null,
     commerceEnabled?: boolean,
+    csatMode?: 'rating' | 'survey',
   ) =>
     apiPatch<WidgetSettings>('/tenants/widget-settings', {
       login_mode: loginMode,
       ...(commerceEnabled !== undefined ? { commerce_enabled: commerceEnabled } : {}),
+      ...(csatMode !== undefined ? { csat_mode: csatMode } : {}),
       ...(defaultLanguage !== undefined ? { default_language: defaultLanguage } : {}),
       ...(tabs !== undefined ? { tabs } : {}),
       ...(tabPosition !== undefined ? { tab_position: tabPosition } : {}),

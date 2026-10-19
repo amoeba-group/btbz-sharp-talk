@@ -141,6 +141,25 @@ export const en = {
       5: 'Very happy',
     },
     csatFailed: 'We couldn\'t save your rating. Please try again.',
+    aiDisclosureShort: 'AI-generated replies · processed in {{region}}',
+    termsLink: 'terms of service',
+    csatSurvey: {
+      title: 'Satisfaction survey',
+      q1: 'Was your issue resolved?',
+      q1Resolved: 'Resolved',
+      q1Unresolved: 'Not yet resolved',
+      q2: 'How satisfied are you with our support?',
+      reasonTitle: 'Why were you NOT satisfied?',
+      reasons: {
+        unclear: 'Instructions unclear or confusing',
+        slow: 'Support took too long',
+        no_response: 'No response',
+        software_error: 'Software error',
+        other: 'Other reason',
+      },
+      otherPlaceholder: 'Enter reason',
+      submit: 'Submit feedback',
+    },
   },
 
   auth: {

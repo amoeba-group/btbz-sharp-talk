@@ -323,3 +323,11 @@ describe('header layout, avatar rows, attach glyph, icon slots (PLN-261019 P3/P4
     expect(normalizeDesign({ radius: 'sm' })).toEqual({ radius: 'sm' });
   });
 });
+
+describe('AI disclosure placement (PLN-261019 Csat/Disclosure P4)', () => {
+  it('stores only the non-default placement', () => {
+    expect(normalizeDesign({ disclosurePlacement: 'top' })).toBeNull();
+    expect(normalizeDesign({ disclosurePlacement: 'bottom' })).toEqual({ disclosurePlacement: 'bottom' });
+    expect(normalizeDesign({ disclosurePlacement: 'sideways' })).toBeNull();
+  });
+});

@@ -178,7 +178,8 @@
     "prompted_closed": "Đóng sau khi hỏi lại",
     "open": "Đang mở",
     "abandoned": "Bỏ dở",
-    "customer_last": "Khách nói sau cùng"
+    "customer_last": "Khách nói sau cùng",
+    "customer_unresolved": "Khách trả lời: chưa giải quyết"
   },
   "fiveA": {
     "aware": "Nhận biết",

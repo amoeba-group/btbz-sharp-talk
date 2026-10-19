@@ -4,6 +4,7 @@ export * from './common/enum.types';
 export * from './common/language';
 export * from './common/widget-copy';
 export * from './common/widget-theme';
+export * from './common/csat';
 export * from './common/widget-access';
 export * from './common/privacy-notice-copy';
 export * from './common/order-status';

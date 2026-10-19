@@ -35,6 +35,7 @@ const EMPTY: WidgetDesignDraft = {
   headerLayout: 'logo',
   messageStyle: 'plain',
   attachIcon: 'paperclip',
+  disclosurePlacement: 'top',
   botAvatarUuid: null,
   agentAvatarUuid: null,
 };
@@ -54,6 +55,7 @@ function toDraft(d: WidgetDesignItem['design']): WidgetDesignDraft {
     headerLayout: d.headerLayout === 'logo-title' ? 'logo-title' : 'logo',
     messageStyle: d.messageStyle === 'avatar' ? 'avatar' : 'plain',
     attachIcon: d.attachIcon === 'image' ? 'image' : 'paperclip',
+    disclosurePlacement: d.disclosurePlacement === 'bottom' ? 'bottom' : 'top',
     botAvatarUuid: d.icons?.botAvatar?.uuid ?? null,
     agentAvatarUuid: d.icons?.agentAvatar?.uuid ?? null,
   };
@@ -432,6 +434,13 @@ export function WidgetDesignsCard() {
                   <option value="image">{t('widgetDesigns.attachImage')}</option>
                 </Select>
               </FormRow>
+              <FormRow label={t('widgetDesigns.disclosurePlacement')}>
+                <Select value={ed.draft.disclosurePlacement ?? 'top'} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, disclosurePlacement: e.target.value as 'top' | 'bottom' } })} className="w-44">
+                  <option value="top">{t('widgetDesigns.disclosureTop')}</option>
+                  <option value="bottom">{t('widgetDesigns.disclosureBottom')}</option>
+                </Select>
+              </FormRow>
+              <p className="mb-2 text-xs text-gray-400">{t('widgetDesigns.disclosureHint')}</p>
               {cssAllowed && (
                 <FormRow label={t('widgetDesigns.customCss')}>
                   <textarea

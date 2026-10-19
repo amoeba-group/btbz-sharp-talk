@@ -16,6 +16,7 @@ import {
   NOTIFICATION_CATEGORY,
   WIDGET_TABS_DEFAULT,
   normalizeWidgetTabs,
+  CSAT_MODE,
 } from '@sharptalk/types';
 
 /** Real categories the policy may mention ('all' is a query filter, not a kind). */
@@ -374,6 +375,7 @@ export class TenantService {
       tenant.privacyProfile = profile;
     }
     if (dto.consent_source !== undefined) tenant.consentSource = dto.consent_source;
+    if (dto.terms_url !== undefined) tenant.termsUrl = dto.terms_url?.trim() || null;
     if (dto.privacy_notice_copy !== undefined) {
       tenant.privacyNoticeCopy = normalizePrivacyNoticeCopy(dto.privacy_notice_copy);
     }
@@ -474,6 +476,7 @@ export class TenantService {
     }
     if (dto.tab_position !== undefined) tenant.widgetTabPosition = dto.tab_position;
     if (dto.commerce_enabled !== undefined) tenant.commerceEnabled = dto.commerce_enabled ? 1 : 0;
+    if (dto.csat_mode !== undefined) tenant.csatMode = dto.csat_mode === CSAT_MODE.SURVEY ? CSAT_MODE.SURVEY : CSAT_MODE.RATING;
     if (dto.timezone !== undefined) tenant.timezone = dto.timezone?.trim() || null;
     if (dto.default_language !== undefined) tenant.defaultLanguage = dto.default_language?.trim().toLowerCase() || null;
     tenant.widgetCopy = mergeWidgetCopy(tenant.widgetCopy, dto);
@@ -813,6 +816,7 @@ export class TenantService {
       headerLayout: d.header_layout ?? null,
       messageStyle: d.message_style ?? null,
       attachIcon: d.attach_icon ?? null,
+      disclosurePlacement: d.disclosure_placement ?? null,
       icons: {
         botAvatar: await ref(d.bot_avatar_uuid, 'icon'),
         agentAvatar: await ref(d.agent_avatar_uuid, 'icon'),

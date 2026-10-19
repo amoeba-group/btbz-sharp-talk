@@ -42,7 +42,7 @@ const GROUND_RULES = [
  */
 export const RESOLUTION_RULE = [
   'Resolved: the customer answered the satisfaction survey (csat_answered); or an agent closed the conversation (agent_closed); or it was closed after an "anything else?" prompt and the last word before the silence was ours (prompted_closed).',
-  'Unresolved: still open (open); ended with no close and no prompt (abandoned); or closed after the prompt while the customer had spoken last — they were still asking (customer_last).',
+  'Unresolved: still open (open); ended with no close and no prompt (abandoned); closed after the prompt while the customer had spoken last — they were still asking (customer_last); or the customer answered the survey saying it was NOT resolved (customer_unresolved), which outranks having answered.',
   'Resolution time: median minutes from the first message to the recorded end, over resolved conversations. A resolved conversation without a recorded end time is counted as resolved but excluded from the median.',
 ].join('\n');
 

@@ -107,6 +107,7 @@ Settings > Widget settings > **Custom widgets** card → **[Create custom widget
 | Header with logo | logo replaces the title (default) · logo beside the title | Only applies when the theme card has a logo. Beside the title the logo is capped at 24px tall, so use a compact mark. The title is the copy card's **Header title** (per language); empty = display name |
 | AI / agent messages | bubble only (default) · avatar + sender name | Avatar rows put a 28px round avatar left of AI and agent bubbles and the sender's name on the bubble's first line. Pick the images under **AI avatar / Agent avatar** (design files, icon kind); the names are the copy card's **AI sender name / Agent sender name** (per language); empty = display name / the agent's own name |
 | Attach button icon | paperclip (default) · picture | The glyph on the composer's attach button |
+| AI disclosure placement | bar above the chat (default) · one line under the composer | The same legal notice in a different spot. The bottom line is a short sentence + a terms link (Settings › Privacy notice › Terms URL, else the privacy policy URL) + the end-chat link |
 | Custom CSS (add-on) | sanitized CSS | Visible only for tenants whose platform admin enabled the add-on (Ch. 5) |
 | Note | free text | Operational notes such as "Spring 2026, owner ○○". Never shown to shoppers |
 

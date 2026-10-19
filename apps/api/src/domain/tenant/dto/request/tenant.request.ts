@@ -24,6 +24,7 @@ import {
   WidgetTab,
   WidgetTabPosition,
   LANGUAGE_CODES,
+  CSAT_MODE_VALUES,
 } from '@sharptalk/types';
 import { TENANT_SLUG_PATTERN } from '../../../../global/constant/reserved-slug.constant';
 
@@ -144,6 +145,12 @@ export class UpdatePrivacyNoticeRequest {
   /** widget (banner) | host_terms (signed host users consented via host terms) — PLN-261015 D9. */
   @IsOptional() @IsIn(['widget', 'host_terms']) consent_source?: string;
 
+  /** Terms-of-service link for the widget's disclosure line (PLN-261019); null clears. */
+  @IsOptional()
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
+  @MaxLength(512)
+  terms_url?: string | null;
+
   /** Industry wording: commerce | lodging | generic. Null/absent = infer. */
   @IsOptional() @IsString() @MaxLength(16) privacy_profile?: string | null;
 
@@ -196,6 +203,11 @@ export class UpdateWidgetSettingsRequest {
   @ValidateIf((_o, value) => value !== undefined)
   @IsBoolean()
   commerce_enabled?: boolean;
+
+  // Satisfaction card kind (PLN-261019): rating (default) | survey.
+  @ValidateIf((_o, value) => value !== undefined)
+  @IsIn(CSAT_MODE_VALUES as unknown as string[])
+  csat_mode?: string;
 
   // IANA timezone (e.g. 'Asia/Seoul'); drives the default widget language. Empty
   // string / null clears it. Optional so a login-mode-only update leaves it intact.
@@ -310,6 +322,8 @@ export class UpdateWidgetThemeRequest {
     message_style?: string | null;
     /** PLN-261019: 'paperclip' (default) | 'image'. */
     attach_icon?: string | null;
+    /** PLN-261019 Csat/Disclosure: 'top' (default) | 'bottom'. */
+    disclosure_placement?: string | null;
     /** PLN-261019: uploaded icon assets for the avatar slots (uuids checked like the launcher icon). */
     bot_avatar_uuid?: string | null;
     agent_avatar_uuid?: string | null;

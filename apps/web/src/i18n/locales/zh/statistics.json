@@ -59,7 +59,21 @@
     "ratingAll": "评分：全部",
     "agentFilter": "客服筛选",
     "agentAll": "客服：全部",
-    "empty": "该时间段内没有评价。"
+    "empty": "该时间段内没有评价。",
+    "resolvedTitle": "是否解决（问卷）",
+    "resolvedYes": "已解决",
+    "resolvedNo": "未解决",
+    "reasonsTitle": "不满意原因",
+    "resolved": "解决",
+    "reason": "原因",
+    "comment": "备注",
+    "reasons": {
+      "unclear": "说明不清楚",
+      "slow": "耗时过长",
+      "no_response": "无人回复",
+      "software_error": "软件错误",
+      "other": "其他"
+    }
   },
   "staleWarning": "自 {{date}} 起没有问题统计数据（{{days}} 天）。表格显示的是截至当时的汇总。",
   "neverAggregated": "尚未生成问题统计快照。",
@@ -100,7 +114,8 @@
       "prompted_closed": "询问后关闭",
       "open": "进行中",
       "abandoned": "结束但未关闭",
-      "customer_last": "客户最后发言"
+      "customer_last": "客户最后发言",
+      "customer_unresolved": "客户回答：未解决"
     }
   },
   "hours": {

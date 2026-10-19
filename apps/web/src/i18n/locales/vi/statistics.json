@@ -59,7 +59,21 @@
     "ratingAll": "Điểm: tất cả",
     "agentFilter": "Lọc nhân viên",
     "agentAll": "Nhân viên: tất cả",
-    "empty": "Không có đánh giá trong khoảng này."
+    "empty": "Không có đánh giá trong khoảng này.",
+    "resolvedTitle": "Đã giải quyết? (khảo sát)",
+    "resolvedYes": "đã giải quyết",
+    "resolvedNo": "chưa giải quyết",
+    "reasonsTitle": "Lý do không hài lòng",
+    "resolved": "Giải quyết",
+    "reason": "Lý do",
+    "comment": "Nhận xét",
+    "reasons": {
+      "unclear": "Hướng dẫn khó hiểu",
+      "slow": "Mất nhiều thời gian",
+      "no_response": "Không phản hồi",
+      "software_error": "Lỗi phần mềm",
+      "other": "Khác"
+    }
   },
   "staleWarning": "Không có dữ liệu câu hỏi kể từ {{date}} ({{days}} ngày). Bảng hiển thị số liệu tổng hợp đến thời điểm đó.",
   "neverAggregated": "Chưa có bản tổng hợp câu hỏi nào được ghi.",
@@ -100,7 +114,8 @@
       "prompted_closed": "Hỏi lại rồi đóng",
       "open": "Đang mở",
       "abandoned": "Kết thúc không đóng",
-      "customer_last": "Khách nói sau cùng"
+      "customer_last": "Khách nói sau cùng",
+      "customer_unresolved": "Khách trả lời: chưa giải quyết"
     }
   },
   "hours": {

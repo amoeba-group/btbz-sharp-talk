@@ -54,7 +54,9 @@
     "consentSource_widget": "ウィジェットのバナー — 訪問者がウィジェットで同意",
     "consentSource_host_terms": "ホストアプリの規約 — ログインユーザーが規約に同意済み",
     "consentSourceWidgetHint": "すべての訪問者に同意バナーが表示され、同意後にチャットできます。",
-    "consentSourceHostHint": "ホストアプリが署名したログインユーザー(embed identify)は、バナーなしで同意として記録されます(日時・通知バージョン)。規約にAIサポートと処理地域が含まれている必要があります。署名のない訪問者にはバナーが表示されます。"
+    "consentSourceHostHint": "ホストアプリが署名したログインユーザー(embed identify)は、バナーなしで同意として記録されます(日時・通知バージョン)。規約にAIサポートと処理地域が含まれている必要があります。署名のない訪問者にはバナーが表示されます。",
+    "termsUrl": "利用規約URL",
+    "termsUrlHint": "ウィジェット下部の告知行（カスタムウィジェット › AI告知の位置）からリンクされます。空ならプライバシーポリシーURL。"
   },
   "widgetBehavior": {
     "title": "ウィジェットの動作",
@@ -101,7 +103,11 @@
     "launcherTeaser": "ランチャーのあいさつ",
     "launcherTeaserHint": "ランチャー横の吹き出しの文言です（テーマカード → あいさつの吹き出し）。{shop} は表示名に置き換わります。空なら既定文言。",
     "headerGreeting": "ヘッダーのあいさつ（ログインユーザー）",
-    "headerGreetingHint": "ユーザーを認識したときのヘッダー文言です。{name} は名前に置き換わります。{name} だけを入力すると名前のみ表示。空なら「{name}さん」。"
+    "headerGreetingHint": "ユーザーを認識したときのヘッダー文言です。{name} は名前に置き換わります。{name} だけを入力すると名前のみ表示。空なら「{name}さん」。",
+    "csatMode": "満足度カード",
+    "csatModeRating": "評価のみ（既定）— 顔5つ、1タップ",
+    "csatModeSurvey": "アンケート — 解決？＋評価＋不満の理由",
+    "csatModeHint": "チャット終了時に表示。アンケートは「解決しましたか？」（解決率に反映）を先に聞き、1～2点なら理由を聞きます。"
   },
   "shopify": {
     "title": "Shopify連携",
@@ -865,7 +871,11 @@
     "avatarHint": "デザインファイル（アイコン、png/webp）から選ぶ28pxの丸いアバターです。名前はウィジェット文言 → AI送信者名／担当者送信者名で設定します。",
     "attachIcon": "添付ボタンのアイコン",
     "attachPaperclip": "クリップ（既定）",
-    "attachImage": "画像"
+    "attachImage": "画像",
+    "disclosurePlacement": "AI告知の位置",
+    "disclosureTop": "チャット上のバー（既定）",
+    "disclosureBottom": "入力欄の下に1行",
+    "disclosureHint": "同じ法的告知の場所を変えるだけです。下部の行は利用規約（プライバシー告知 › 規約URL）にもリンクします。"
   },
   "settingsSnapshots": {
     "title": "設定スナップショット",

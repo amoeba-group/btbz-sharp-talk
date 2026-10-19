@@ -50,15 +50,27 @@ export function endChat(
 }
 
 /** Star rating for a finished conversation (PLN-260810 P3). */
+export interface CsatSurveyAnswers {
+  resolved?: boolean;
+  reason?: string;
+  comment?: string;
+}
+
 export function rateChat(
   sessionToken: string,
   conversationId: string,
   rating: number,
+  survey: CsatSurveyAnswers = {},
 ): Promise<{ rating: number }> {
   return apiClient.post('/chat/csat', {
     session_token: sessionToken,
     conversation_id: conversationId,
     rating,
+    // Survey answers (PLN-261019) only when given — the one-question card
+    // keeps sending exactly what it always has.
+    ...(survey.resolved !== undefined ? { resolved: survey.resolved } : {}),
+    ...(survey.reason ? { reason: survey.reason } : {}),
+    ...(survey.comment ? { comment: survey.comment } : {}),
   });
 }
 

@@ -99,6 +99,11 @@ export function ChatTab() {
   const shopName = widgetCopy?.displayName || t('appName');
   // Composer attach glyph is a design option (PLN-261019 P4).
   const attachImage = useWidgetStore((s) => s.widgetTheme?.design?.attachIcon) === 'image';
+  // Satisfaction card kind + where the AI disclosure sits (PLN-261019 Csat/Disclosure).
+  const csatMode = useWidgetStore((s) => s.csatMode);
+  const disclosureBottom = useWidgetStore((s) => s.widgetTheme?.design?.disclosurePlacement) === 'bottom';
+  const termsUrl = useWidgetStore((s) => s.termsUrl);
+  const disclosureLink = termsUrl || consent?.privacyPolicyUrl || null;
   // The default text comes from the shared registry rather than this app's
   // i18n bundle, so the console shows the very string a shopper would see
   // (PLN-260903 S2). Same wording as before — one source instead of two.
@@ -342,8 +347,11 @@ export function ChatTab() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* AI disclosure + end-chat control */}
-      <div className="flex items-center gap-1.5 border-b border-gray-100 bg-gray-50 px-3 py-1.5 text-[11px] text-gray-500">
+      {/* AI disclosure + end-chat control. `bottom` placement moves the same
+          notice to one line under the composer (PLN-261019 D4) — the words stay
+          a legal notice, only the spot changes. */}
+      {!disclosureBottom && (
+      <div className="st-disclosure flex items-center gap-1.5 border-b border-gray-100 bg-gray-50 px-3 py-1.5 text-[11px] text-gray-500">
         <Sparkles className="h-3 w-3 flex-shrink-0 text-primary-400" />
         <span className="min-w-0 flex-1">{t('chat.aiDisclosure', { region: t(`regions.${aiRegion}`, { defaultValue: aiRegion }) })}</span>
         {chatLive && (
@@ -355,6 +363,7 @@ export function ChatTab() {
           </button>
         )}
       </div>
+      )}
 
       {/* Thread */}
       <div
@@ -478,7 +487,7 @@ export function ChatTab() {
         {/* Satisfaction (PLN-260810 P3). The server decides whether the window
             is still open, so the card cannot outlive what the API accepts. */}
         {status === 'ended' && canRate && conversationId && (
-          <CsatCard conversationId={conversationId} onRate={rate} />
+          <CsatCard conversationId={conversationId} mode={csatMode} onRate={rate} />
         )}
 
         {waitMode && <TypingBubble mode={waitMode} />}
@@ -646,6 +655,35 @@ export function ChatTab() {
           <Send className="h-[18px] w-[18px]" />
         </button>
       </form>
+      {disclosureBottom && (
+        <div className="st-disclosure flex items-center justify-center gap-2 px-3 pb-2 text-center text-[10px] leading-snug text-gray-400">
+          <span>
+            {t('chat.aiDisclosureShort', { region: t(`regions.${aiRegion}`, { defaultValue: aiRegion }) })}
+            {disclosureLink && (
+              <>
+                {' · '}
+                <a
+                  href={disclosureLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 hover:text-gray-600"
+                >
+                  {t('chat.termsLink')}
+                </a>
+              </>
+            )}
+          </span>
+          {chatLive && (
+            <button
+              type="button"
+              onClick={() => setEndConfirm(true)}
+              className="flex-shrink-0 whitespace-nowrap font-medium text-gray-400 underline-offset-2 hover:text-gray-600 hover:underline"
+            >
+              {t('chat.endChat')}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

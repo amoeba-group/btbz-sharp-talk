@@ -72,6 +72,22 @@ describe('ChatService.rate', () => {
     expect(updates[0].patch.csatRatedAt).toBeInstanceOf(Date);
   });
 
+  it('stores survey answers; a reason only for an unhappy rating; "other" text PII-masked (PLN-261019)', async () => {
+    const { svc, updates } = build(ended());
+    await svc.rate(session, 42, 2, { resolved: false, reason: 'other', comment: 'call me 0908754789 pls' });
+    expect(updates[0].patch).toMatchObject({ csatRating: 2, csatResolved: 0, csatReason: 'other' });
+    expect(String(updates[0].patch.csatComment)).not.toContain('8754789');
+
+    const happy = build(ended());
+    await happy.svc.rate(session, 42, 5, { resolved: true, reason: 'slow', comment: 'x' });
+    // A reason makes no sense for a happy rating; the comment belongs to "other" only.
+    expect(happy.updates[0].patch).toMatchObject({ csatResolved: 1, csatReason: null, csatComment: null });
+
+    const plain = build(ended());
+    await plain.svc.rate(session, 42, 4);
+    expect(plain.updates[0].patch).toMatchObject({ csatResolved: null, csatReason: null, csatComment: null });
+  });
+
   it('overwrites an earlier rating — a misclick must be correctable', async () => {
     const { svc, updates } = build(ended({ csatRating: 1 }));
 

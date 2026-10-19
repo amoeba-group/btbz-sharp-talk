@@ -107,6 +107,7 @@ Cài đặt > Cài đặt widget > thẻ **Widget tùy chỉnh** → **[Tạo wi
 | Tiêu đề khi có logo | logo thay tiêu đề (mặc định) · logo cạnh tiêu đề | Chỉ áp dụng khi thẻ chủ đề có logo. Cạnh tiêu đề, logo bị giới hạn cao 24px nên hãy dùng biểu trưng nhỏ. Tiêu đề lấy từ thẻ nội dung **Tiêu đề đầu widget** (theo ngôn ngữ); trống = tên hiển thị |
 | Tin nhắn AI / nhân viên | chỉ bong bóng (mặc định) · ảnh đại diện + tên người gửi | Hàng có ảnh đại diện đặt ảnh tròn 28px bên trái bong bóng AI và nhân viên, tên người gửi ở dòng đầu bong bóng. Chọn ảnh ở **Ảnh đại diện AI / nhân viên** (tệp thiết kế, loại biểu tượng); tên lấy từ thẻ nội dung **Tên người gửi AI / nhân viên** (theo ngôn ngữ); trống = tên hiển thị / tên thật của nhân viên |
 | Biểu tượng nút đính kèm | kẹp giấy (mặc định) · hình ảnh | Hình trên nút đính kèm cạnh ô nhập |
+| Vị trí thông báo AI | thanh phía trên chat (mặc định) · một dòng dưới ô nhập | Cùng một thông báo pháp lý, chỉ đổi chỗ. Dòng dưới gồm câu ngắn + liên kết điều khoản (Cài đặt › Thông báo bảo mật › URL điều khoản, nếu không có thì URL chính sách bảo mật) + liên kết kết thúc chat |
 | CSS tùy chỉnh (tiện ích) | CSS đã lọc | Chỉ hiện với tenant được quản trị viên nền tảng bật tiện ích (chương 5) |
 | Ghi chú | văn bản tự do | Ghi chú vận hành như "Xuân 2026, phụ trách ○○". Khách hàng không thấy |
 

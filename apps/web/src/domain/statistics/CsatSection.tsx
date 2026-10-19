@@ -113,7 +113,36 @@ export function CsatSection({ from, to }: { from: string; to: string }) {
         </span>
       ),
     },
+    // Survey answers (PLN-261019); '—' on rating-mode rows.
+    {
+      key: 'resolved',
+      header: t('csat.resolved'),
+      render: (r) =>
+        r.resolved == null ? (
+          <span className="text-gray-300">—</span>
+        ) : (
+          <span className={r.resolved ? 'text-success' : 'text-error'}>
+            {t(r.resolved ? 'csat.resolvedYes' : 'csat.resolvedNo')}
+          </span>
+        ),
+    },
+    {
+      key: 'reason',
+      header: t('csat.reason'),
+      render: (r) => (
+        <span className="text-gray-600">{r.reason ? t(`csat.reasons.${r.reason}`, { defaultValue: r.reason }) : '—'}</span>
+      ),
+    },
+    {
+      key: 'comment',
+      header: t('csat.comment'),
+      className: 'max-w-[16rem]',
+      render: (r) => <span className="block truncate text-gray-500" title={r.comment ?? ''}>{r.comment ?? '—'}</span>,
+    },
   ];
+  const resolvedCounts = summary.data?.resolved;
+  const reasons = summary.data?.reasons ?? {};
+  const reasonTotal = Object.values(reasons).reduce((a, b) => a + b, 0);
 
   return (
     <div className="space-y-4">
@@ -154,6 +183,38 @@ export function CsatSection({ from, to }: { from: string; to: string }) {
           </div>
         </Card>
       </div>
+
+      {/* Survey mode (PLN-261019): shown once at least one survey answer exists. */}
+      {((resolvedCounts && resolvedCounts.yes + resolvedCounts.no > 0) || reasonTotal > 0) && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Card>
+            <p className="text-xs text-gray-500">{t('csat.resolvedTitle')}</p>
+            <p className="mt-1 text-sm text-gray-900">
+              <span className="text-2xl font-semibold tabular-nums text-success">{resolvedCounts?.yes ?? 0}</span>{' '}
+              <span className="text-gray-500">{t('csat.resolvedYes')}</span>
+              <span className="mx-3 text-gray-300">|</span>
+              <span className="text-2xl font-semibold tabular-nums text-error">{resolvedCounts?.no ?? 0}</span>{' '}
+              <span className="text-gray-500">{t('csat.resolvedNo')}</span>
+            </p>
+          </Card>
+          <Card>
+            <p className="mb-1 text-xs text-gray-500">{t('csat.reasonsTitle')}</p>
+            <ul className="space-y-1 text-sm">
+              {Object.entries(reasons)
+                .sort((a, b) => b[1] - a[1])
+                .map(([k, n]) => (
+                  <li key={k} className="flex items-center gap-2">
+                    <span className="w-40 truncate text-gray-700">{t(`csat.reasons.${k}`, { defaultValue: k })}</span>
+                    <div className="h-2 flex-1 overflow-hidden rounded bg-gray-100">
+                      <div className="h-full bg-error/70" style={{ width: `${reasonTotal ? Math.round((n / reasonTotal) * 100) : 0}%` }} />
+                    </div>
+                    <span className="w-12 text-right tabular-nums text-gray-500">{reasonTotal ? Math.round((n / reasonTotal) * 100) : 0}%</span>
+                  </li>
+                ))}
+            </ul>
+          </Card>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-5">
         <Card className="xl:col-span-2" title={t('csat.byAgentTitle')}>

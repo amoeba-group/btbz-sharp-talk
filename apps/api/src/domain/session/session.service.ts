@@ -18,7 +18,10 @@ import {
   WidgetTabPosition,
   WidgetTheme,
   normalizeWidgetTabs,
-  normalizeWidgetTheme, stripCustomCss,
+  normalizeWidgetTheme,
+  stripCustomCss,
+  CSAT_MODE,
+  CsatMode,
 } from '@sharptalk/types';
 import { generateToken } from '@sharptalk/common';
 import { normalizeLandingPath } from '../../global/util/landing-path.util';
@@ -76,6 +79,8 @@ export interface PrivacyNoticeInfo {
   aiProcessingRegion?: string;
   /** Tenant runs an issue workflow (native/bridge) — the widget shows an Inquiries chip. */
   issueFeed?: boolean;
+  csatMode: CsatMode;
+  termsUrl: string | null;
   /**
    * Consent notice lines for this session's language (PLN-261001). Only the
    * lines we can actually fill travel; the widget keeps its bundled copy for
@@ -642,6 +647,9 @@ export class SessionService {
       },
       // 'base' (the default) has no shopper-facing issue feed (PLN-260923 D-2).
       issueFeed: !!tenant?.workflowMode && tenant.workflowMode !== 'base',
+      // Satisfaction card kind + the terms link for the bottom disclosure line (PLN-261019).
+      csatMode: tenant?.csatMode === CSAT_MODE.SURVEY ? CSAT_MODE.SURVEY : CSAT_MODE.RATING,
+      termsUrl: tenant?.termsUrl ?? null,
     };
   }
 

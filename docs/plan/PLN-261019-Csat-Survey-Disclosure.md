@@ -3,7 +3,7 @@
 - 근거: [REQ-261019-Csat-Survey-Disclosure](../analysis/REQ-261019-Csat-Survey-Disclosure.md)
 - **UI 변경 있음**(§4). **스키마 변경 있음**(§1 P1 — `conversations` 3열, `tenants` 2열; SQL 선적용 필요)
 - 전제 결정(REQ §5 제안): D1ⓑ · D2 고정 4종 · D3 rating ≤ 2 · D4 제출 버튼 · D5 디자인 옵션 · D6 `terms_url`
-- 상태: **승인 대기** — 승인 전 구현하지 않음
+- 상태: **승인(2026-10-19 "진행") → 구현·배포 진행**
 
 ## 1. 단계
 

@@ -154,6 +154,14 @@ export const ATTACH_ICON = { PAPERCLIP: 'paperclip', IMAGE: 'image' } as const;
 export type AttachIcon = (typeof ATTACH_ICON)[keyof typeof ATTACH_ICON];
 
 /**
+ * Where the AI disclosure sits (PLN-261019-Csat-Survey-Disclosure P4): the bar
+ * above the thread every tenant has had, or one small line under the composer.
+ * The wording stays a legal notice in both — only the placement is a design choice.
+ */
+export const DISCLOSURE_PLACEMENT = { TOP: 'top', BOTTOM: 'bottom' } as const;
+export type DisclosurePlacement = (typeof DISCLOSURE_PLACEMENT)[keyof typeof DISCLOSURE_PLACEMENT];
+
+/**
  * Image slots a design may fill with an uploaded icon asset (png/webp). Adding a
  * slot means adding its name here — the normalizer, the package export/import
  * and the console editor all iterate this list rather than naming slots.
@@ -195,6 +203,8 @@ export interface WidgetDesign {
   messageStyle?: MessageStyle | null;
   /** Absent = `paperclip` — PLN-261019 P4. */
   attachIcon?: AttachIcon | null;
+  /** Absent = `top` (bar above the thread) — PLN-261019 Csat/Disclosure P4. */
+  disclosurePlacement?: DisclosurePlacement | null;
   /** Uploaded images for the avatar slots; a missing slot draws the built-in glyph. */
   icons?: WidgetIconSlots | null;
   /**
@@ -545,6 +555,7 @@ export function normalizeDesign(input: unknown): WidgetDesign | null {
   if (raw.headerLayout === HEADER_LAYOUT.LOGO_TITLE) out.headerLayout = HEADER_LAYOUT.LOGO_TITLE;
   if (raw.messageStyle === MESSAGE_STYLE.AVATAR) out.messageStyle = MESSAGE_STYLE.AVATAR;
   if (raw.attachIcon === ATTACH_ICON.IMAGE) out.attachIcon = ATTACH_ICON.IMAGE;
+  if (raw.disclosurePlacement === DISCLOSURE_PLACEMENT.BOTTOM) out.disclosurePlacement = DISCLOSURE_PLACEMENT.BOTTOM;
   if (raw.icons && typeof raw.icons === 'object') {
     const icons: WidgetIconSlots = {};
     for (const slot of ICON_SLOTS) {

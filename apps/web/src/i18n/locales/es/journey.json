@@ -178,7 +178,8 @@
     "prompted_closed": "Cerrada tras consulta",
     "open": "Abierta",
     "abandoned": "Abandonada",
-    "customer_last": "El cliente habló último"
+    "customer_last": "El cliente habló último",
+    "customer_unresolved": "El cliente dijo: no resuelto"
   },
   "fiveA": {
     "aware": "Conocer",

@@ -14,6 +14,7 @@ import {
 import type { LocalizedText } from '@sharptalk/types';
 import { Conversation } from './entity/conversation.entity';
 import { CSAT_WINDOW_MS } from './chat.mapper';
+import { CSAT_COMMENT_MAX_CHARS, CSAT_REASON, CSAT_REASON_MAX_RATING } from '@sharptalk/types';
 import { Message } from './entity/message.entity';
 import { DOC_GROUP } from '../knowledge/entity/kb-document.entity';
 import { Session } from '../session/entity/session.entity';
@@ -353,7 +354,12 @@ export class ChatService {
    * personal data, so no consent gate — but a stranger must not be able to
    * score someone else's thread.
    */
-  async rate(session: Session, conversationId: number, rating: number): Promise<{ rating: number }> {
+  async rate(
+    session: Session,
+    conversationId: number,
+    rating: number,
+    survey: { resolved?: boolean; reason?: string; comment?: string } = {},
+  ): Promise<{ rating: number }> {
     const conversation = await this.convRepo.findOne({ where: { id: conversationId } });
     if (!conversation || Number(conversation.sessionId) !== Number(session.id)) {
       throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
@@ -375,9 +381,24 @@ export class ChatService {
 
     // Re-rating overwrites: a misclick the customer cannot correct produces
     // worse data than one they can (PLN-260810 D6).
+    // Survey answers (PLN-261019): a reason only makes sense for an unhappy
+    // rating, and the free text is masked before it touches the row — it is
+    // typed by the customer and read in the console, so a phone number in it
+    // would otherwise sit in plain text for 400 days.
+    const reason = survey.reason && rating <= CSAT_REASON_MAX_RATING ? survey.reason : null;
+    const comment =
+      reason === CSAT_REASON.OTHER && survey.comment?.trim()
+        ? scrubPii(survey.comment.trim().slice(0, CSAT_COMMENT_MAX_CHARS)).text.slice(0, 80)
+        : null;
     await this.convRepo.update(
       { id: conversationId },
-      { csatRating: rating, csatRatedAt: new Date() },
+      {
+        csatRating: rating,
+        csatRatedAt: new Date(),
+        csatResolved: survey.resolved === undefined ? null : survey.resolved ? 1 : 0,
+        csatReason: reason,
+        csatComment: comment,
+      },
     );
     void this.recordCsatForAgent(conversation).catch((e: Error) =>
       this.logger.warn(`csat stat update failed: ${e.message}`),

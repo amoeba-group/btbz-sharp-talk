@@ -25,6 +25,8 @@ export const UNRESOLVED_REASON = {
   ABANDONED: 'abandoned',
   /** Asked "anything else?" and the customer spoke last: they were still asking. */
   CUSTOMER_LAST: 'customer_last',
+  /** The survey asked "was it resolved?" and the customer said no (PLN-261019). */
+  CUSTOMER_UNRESOLVED: 'customer_unresolved',
 } as const;
 
 export interface Outcome {
@@ -48,11 +50,17 @@ export interface Outcome {
  * this signature it does not have to, and neither caller can drift.
  */
 export function classifyOutcome(
-  conv: { status: string; csatRating: number | null; endedAt: Date | null },
+  conv: { status: string; csatRating: number | null; endedAt: Date | null; csatResolved?: number | null },
   lastNonSystemSender: string | null,
   wasPrompted: boolean,
 ): Outcome {
   if (conv.csatRating != null) {
+    // The survey's own answer outranks "they answered, so they were there":
+    // a customer who said "not resolved" must not land in the resolved column
+    // (PLN-261019 D1). Rating-mode rows (no question asked) keep the old rule.
+    if (Number(conv.csatResolved) === 0 && conv.csatResolved != null) {
+      return { resolved: false, reason: UNRESOLVED_REASON.CUSTOMER_UNRESOLVED };
+    }
     return { resolved: true, reason: RESOLUTION_REASON.CSAT_ANSWERED };
   }
   if (conv.status !== 'ended') {

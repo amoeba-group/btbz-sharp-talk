@@ -178,7 +178,8 @@
     "prompted_closed": "확인 후 종료",
     "open": "열림",
     "abandoned": "방치",
-    "customer_last": "고객 발화로 끝남"
+    "customer_last": "고객 발화로 끝남",
+    "customer_unresolved": "고객 응답: 미해결"
   },
   "fiveA": {
     "aware": "인지",
