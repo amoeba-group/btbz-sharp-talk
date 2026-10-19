@@ -55,9 +55,9 @@
 | ID | 항목 | 결과 |
 |---|---|---|
 | S-01 | SQL 선적용(utf8mb4, 백업 `~/backup-pre-units-20261019-163807.sql`) | units 16테넌트×3 + go2joy 4 = 52행, 라벨 영어화 45행(zhangbayo KO 제외), `job_labels_bak_261019` 48행 |
-| S-02 | 배포 후 부팅·`/api/v1/units` 401 | (RPT 참조) |
-| S-03 | go2joy 사용자 편집 팀 목록 7종 | (RPT 참조) |
-| S-04 | 규칙 조건 저장 라운드트립 | (RPT 참조) |
+| S-02 | 배포 후 부팅·`/api/v1/units` 401 | 통과 — 커밋 `cdef289`, api 컨테이너 재생성(14s), `successfully started`, 스키마 오류 로그 0, 스웨거에 `/units`·`/units/{id}`·`/users/{id}/unit` |
+| S-03 | go2joy 사용자 편집 팀 목록 7종 | DB 7행 확인(CS/MKT/Management/North/North Center/South/South Center) · 웹 번들에 모달 문구 포함 · **콘솔 클릭 실측은 사용자 확인 필요**(스테이징 로그인은 자동화 범위 밖) |
+| S-04 | 규칙 조건 저장 라운드트립 | 로컬 실측 통과(C-07) · 스테이징 번들에 `routing.customer.*`·`hotel_name` 포함 · **콘솔 클릭 실측은 사용자 확인 필요** |
 
 ## 5. 엣지 케이스
 
