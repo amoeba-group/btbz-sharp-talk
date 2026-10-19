@@ -217,7 +217,8 @@
     },
     "cafe24": {
       "title": "Cafe24",
-      "subtitle": "Admin API(OAuth 액세스 토큰)로 카페24 상점을 연결합니다."
+      "subtitle": "Admin API(OAuth 액세스 토큰)로 카페24 상점을 연결합니다.",
+      "oauthTestHint": "Cafe24 OAuth로 연결된 몰입니다 — 연결 테스트는 연결된 플랫폼의 Cafe24 카드에서 실행하세요."
     },
     "woocommerce": {
       "title": "WooCommerce",
@@ -305,7 +306,13 @@
       "errorInvalidScope": "Cafe24가 요청 권한을 거부했습니다(invalid_scope) — 개발자센터에서 앱 권한에 해당 항목을 추가한 뒤 다시 연결하세요",
       "errorAccessDenied": "Cafe24 동의가 거부되었습니다(access_denied) — 몰 대표 운영자 계정으로 다시 시도하세요",
       "modalTitle": "Cafe24 연결",
-      "manualEntry": "토큰이 이미 있다면 직접 입력"
+      "manualEntry": "토큰이 이미 있다면 직접 입력",
+      "reconnectTitle": "Cafe24 재연결",
+      "reconnectHint": "{{mall}}.cafe24.com 이(가) OAuth로 연결되어 있습니다. 앱 권한이 바뀌었거나 토큰이 만료·해지되었다면 다시 연결하세요.",
+      "mode": {
+        "oauth": "OAuth 연결",
+        "manual": "수동(토큰)"
+      }
     }
   },
   "marketingTitle": "마케팅 연동",
@@ -961,6 +968,7 @@
     "registeredAt": "등록",
     "selfNoCommerce": "주문 기능이 꺼져 있어 위젯 설치만으로 연동이 끝납니다. 위젯 설치는 위젯 설정 → 임베드·SDK에서 확인하세요.",
     "openWidgetSettings": "위젯 설정으로",
-    "emptyHintMarketing": "아래 \"플랫폼 추가\"에서 사용 중인 서비스를 선택하세요."
+    "emptyHintMarketing": "아래 \"플랫폼 추가\"에서 사용 중인 서비스를 선택하세요.",
+    "openSite": "사이트 열기"
   }
 }

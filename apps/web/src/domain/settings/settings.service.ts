@@ -58,8 +58,12 @@ export interface ShopifyWebhookRegisterResult {
 }
 
 /** Generic e-commerce integration settings (cafe24 / woocommerce / odoo / haravan). */
+/** How a Cafe24 credential was established (PLN-261019-Cafe24 D1); other providers omit it. */
+export type Cafe24CredentialMode = 'oauth' | 'manual';
+
 export interface IntegrationSettings {
   provider: string;
+  mode?: Cafe24CredentialMode | null;
   fields: Record<string, string | null>;
   secrets: Record<string, boolean>;
   credential: { configured: boolean; updatedAt: string | null };
@@ -68,6 +72,8 @@ export interface IntegrationSettings {
 
 export interface IntegrationTestResult {
   ok: boolean;
+  /** No probe ran and nothing was recorded (generic test on an OAuth Cafe24 mall). */
+  skipped?: boolean;
   detail: string;
 }
 
@@ -471,6 +477,9 @@ export const settingsService = {
   connectCafe24: (mallId: string) =>
     apiPost<{ authorizeUrl: string }>('/tenants/me/cafe24/connect', { mall_id: mallId }),
   syncCafe24: () => apiPost<Cafe24SyncResult>('/tenants/me/cafe24/sync'),
+  // OAuth-aware connection test (PLN-261019-Cafe24 D2): mints an access token
+  // from the stored refresh token, unlike the generic `/integrations/cafe24/test`.
+  testCafe24: () => apiPost<IntegrationTestResult>('/tenants/me/cafe24/test'),
   // Catalogue pull (PLN-260808-Cafe24-Product-Knowledge). Fills products_cache;
   // turning those rows into knowledge stays a separate, previewed step.
   syncCafe24Products: () =>

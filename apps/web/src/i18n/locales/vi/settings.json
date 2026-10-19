@@ -217,7 +217,8 @@
     },
     "cafe24": {
       "title": "Cafe24",
-      "subtitle": "Kết nối cửa hàng Cafe24 của bạn qua Admin API (token OAuth)."
+      "subtitle": "Kết nối cửa hàng Cafe24 của bạn qua Admin API (token OAuth).",
+      "oauthTestHint": "Cửa hàng này kết nối qua Cafe24 OAuth — hãy chạy kiểm tra kết nối từ thẻ Cafe24 trong mục nền tảng đã kết nối."
     },
     "woocommerce": {
       "title": "WooCommerce",
@@ -305,7 +306,13 @@
       "errorInvalidScope": "Cafe24 từ chối các quyền được yêu cầu (invalid_scope) — hãy thêm các quyền đó cho ứng dụng trong Cafe24 Developers rồi kết nối lại",
       "errorAccessDenied": "Cafe24 đã từ chối cấp quyền (access_denied) — hãy thử lại bằng tài khoản vận hành chính của gian hàng",
       "modalTitle": "Kết nối Cafe24",
-      "manualEntry": "Đã có token? Nhập thủ công"
+      "manualEntry": "Đã có token? Nhập thủ công",
+      "reconnectTitle": "Kết nối lại Cafe24",
+      "reconnectHint": "{{mall}}.cafe24.com đang kết nối qua OAuth. Kết nối lại nếu quyền ứng dụng thay đổi hoặc token đã hết hạn/bị thu hồi.",
+      "mode": {
+        "oauth": "OAuth",
+        "manual": "Thủ công (token)"
+      }
     }
   },
   "marketingTitle": "Tích hợp marketing",
@@ -961,6 +968,7 @@
     "registeredAt": "Đã đăng ký",
     "selfNoCommerce": "Tính năng đơn hàng đang tắt nên chỉ cần cài widget là xong. Xem Cài đặt widget → Nhúng & SDK.",
     "openWidgetSettings": "Mở cài đặt widget",
-    "emptyHintMarketing": "Chọn dịch vụ bạn đang dùng ở mục \"Thêm nền tảng\" bên dưới."
+    "emptyHintMarketing": "Chọn dịch vụ bạn đang dùng ở mục \"Thêm nền tảng\" bên dưới.",
+    "openSite": "Mở trang"
   }
 }

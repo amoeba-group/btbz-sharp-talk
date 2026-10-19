@@ -6,6 +6,7 @@ import { IntegrationConfigModal } from './IntegrationConfigModal';
 import { Cafe24ConnectModal } from './Cafe24ConnectModal';
 import { PlatformSections } from './PlatformSections';
 import {
+  Cafe24ConnectedCard,
   GenericConnectedCard,
   SelfPlatformCard,
   ShopifyConnectedCard,
@@ -24,8 +25,15 @@ const GENERIC_PLATFORMS = [...ECOMMERCE_PROVIDERS, SELF_PLATFORM_PROVIDER] as co
 /** Manual guide languages that exist under public/manual (PLN-260826). */
 const GUIDE_LANGS = ['ko', 'en', 'vi'] as const;
 
-/** Which dialog is open: a platform's settings, or the Cafe24 OAuth connect. */
-type Dialog = { kind: 'config'; provider: PlatformChoice } | { kind: 'cafe24-oauth' } | null;
+/**
+ * Which dialog is open: a platform's settings, or the Cafe24 OAuth connect —
+ * which doubles as "reconnect" for a mall already connected that way
+ * (PLN-261019-Cafe24 D4), pre-filled with its mall id.
+ */
+type Dialog =
+  | { kind: 'config'; provider: PlatformChoice }
+  | { kind: 'cafe24-oauth'; reconnectMallId?: string }
+  | null;
 
 /**
  * Tenant settings — platforms (PLN-261019).
@@ -52,6 +60,12 @@ export function SettingsPlatformsPage() {
   // Adding Cafe24 starts OAuth (D6); every other platform opens its settings.
   const add = (provider: PlatformChoice) =>
     provider === 'cafe24' ? setDialog({ kind: 'cafe24-oauth' }) : configure(provider);
+  // "Configure" on a Cafe24 mall connected through OAuth re-runs the consent
+  // flow (scopes changed, token revoked); a typed token edits the credential.
+  const configureCafe24 = (c: { mode: string | null; fields: Record<string, string | null> }) =>
+    c.mode === 'oauth'
+      ? setDialog({ kind: 'cafe24-oauth', reconnectMallId: c.fields.mall_id ?? '' })
+      : configure('cafe24');
 
   const isOpen = (provider: PlatformChoice) =>
     dialog?.kind === 'config' && dialog.provider === provider;
@@ -80,6 +94,8 @@ export function SettingsPlatformsPage() {
             <ShopifyConnectedCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
           ) : c.provider === SELF_PLATFORM_PROVIDER ? (
             <SelfPlatformCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
+          ) : c.provider === 'cafe24' ? (
+            <Cafe24ConnectedCard key={c.provider} connection={c} onConfigure={() => configureCafe24(c)} />
           ) : (
             <GenericConnectedCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
           )
@@ -93,6 +109,7 @@ export function SettingsPlatformsPage() {
       ))}
       <Cafe24ConnectModal
         open={dialog?.kind === 'cafe24-oauth'}
+        reconnectMallId={dialog?.kind === 'cafe24-oauth' ? dialog.reconnectMallId : undefined}
         onClose={close}
         onManual={() => configure('cafe24')}
       />

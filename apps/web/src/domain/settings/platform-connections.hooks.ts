@@ -1,7 +1,7 @@
 import { useQueries } from '@tanstack/react-query';
 import { useShopifySettings } from './settings.hooks';
 import { useTenantKey } from '@/lib/use-tenant-key';
-import { settingsService, type IntegrationSettings } from './settings.service';
+import { settingsService, type Cafe24CredentialMode, type IntegrationSettings } from './settings.service';
 import { isShopifyDomain, type PlatformChoice } from './integration-providers';
 
 /** One platform as a settings tab sees it — connected or merely offered (PLN-261019 D3). */
@@ -15,6 +15,10 @@ export interface PlatformConnection {
   detail: string | null;
   /** Store domain / mall id / platform name — whatever identifies this connection. */
   identity: string | null;
+  /** Non-secret fields as stored (store URL, subdomain…) — what the site link is built from. */
+  fields: Record<string, string | null>;
+  /** Cafe24 only: 'oauth' (connected through the Cafe24 modal) or 'manual' (typed token). */
+  mode: Cafe24CredentialMode | null;
 }
 
 /** The first non-secret field with a value: mall id, store URL, platform name… */
@@ -35,6 +39,8 @@ function fromIntegration(
     lastCheckedAt: data?.integration.lastSyncAt ?? null,
     detail: data?.integration.detail ?? null,
     identity: identityOf(data),
+    fields: data?.fields ?? {},
+    mode: data?.mode ?? null,
   };
 }
 
@@ -72,6 +78,8 @@ export function usePlatformConnections(choices: readonly PlatformChoice[]): {
         // `shop_domain` doubles as the tenant's store domain for ANY platform;
         // only a real *.myshopify.com host identifies a Shopify store.
         identity: isShopifyDomain(d?.shopDomain) ? (d?.shopDomain ?? null) : null,
+        fields: { shop_domain: d?.shopDomain ?? null },
+        mode: null,
       };
     }
     return fromIntegration(provider, byProvider.get(provider)?.data);

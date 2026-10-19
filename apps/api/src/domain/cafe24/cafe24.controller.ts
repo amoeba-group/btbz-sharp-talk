@@ -4,6 +4,7 @@ import { CAPABILITY, Principal } from '@sharptalk/types';
 import { Cafe24OAuthService } from './cafe24-oauth.service';
 import { Cafe24SyncService } from './cafe24-sync.service';
 import { Cafe24ProductSyncService } from './cafe24-product-sync.service';
+import { Cafe24ConnectionTestService } from './cafe24-connection-test.service';
 import { Cafe24ConnectRequest } from './dto/cafe24.request';
 import { RequireCapability, RequireMenu } from '../../global/decorator/auth.decorator';
 import { CurrentUser } from '../../global/decorator/current-user.decorator';
@@ -20,6 +21,7 @@ export class Cafe24Controller {
     private readonly oauthService: Cafe24OAuthService,
     private readonly syncService: Cafe24SyncService,
     private readonly productSyncService: Cafe24ProductSyncService,
+    private readonly connectionTest: Cafe24ConnectionTestService,
   ) {}
 
   private tenantId(user: Principal): number {
@@ -34,6 +36,18 @@ export class Cafe24Controller {
   @ApiOperation({ summary: 'Begin Cafe24 OAuth — returns the authorize URL to open' })
   async connect(@CurrentUser() user: Principal, @Body() body: Cafe24ConnectRequest) {
     return this.oauthService.createInstall(this.tenantId(user), body.mall_id);
+  }
+
+  /**
+   * OAuth-aware connectivity test (PLN-261019-Cafe24 D2). The generic
+   * `POST /tenants/me/integrations/cafe24/test` only understands a manually
+   * entered access token; this one mints one from the stored refresh token.
+   */
+  @Post('test')
+  @RequireCapability(CAPABILITY.INTEGRATION_CREDENTIALS_MANAGE)
+  @ApiOperation({ summary: 'Test the OAuth-connected Cafe24 mall and record the per-tenant status' })
+  async test(@CurrentUser() user: Principal) {
+    return this.connectionTest.testConnection(this.tenantId(user));
   }
 
   @Post('sync')

@@ -219,16 +219,69 @@ export function useSyncEcommerceOrders(provider: string) {
 export function useTestIntegration(provider: string) {
   const qc = useQueryClient();
   const tenantKey = useTenantKey();
+  const { t } = useTranslation('settings');
   return useMutation({
     mutationFn: () => settingsService.testIntegration(provider),
     onSuccess: (res) => {
       qc.invalidateQueries({ queryKey: ['integration', provider, tenantKey] });
-      if (res.ok) toast.success(res.detail);
+      // An OAuth-connected Cafe24 mall is not testable here; the server
+      // recorded nothing, so this is guidance, not a failure (PLN-261019-Cafe24 D3).
+      if (res.skipped) toast.info(t('integrations.cafe24.oauthTestHint'));
+      else if (res.ok) toast.success(res.detail);
       else toast.error(res.detail);
     },
     onError: (e: Error) => {
       toast.error(e.message || 'Integration test failed.');
     },
+  });
+}
+
+// ---- Cafe24 OAuth connection (PLN-261019-Cafe24 D4): test + syncs from the card ----
+// All three refresh the generic `integration/cafe24` query the card reads.
+
+export function useTestCafe24() {
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: () => settingsService.testCafe24(),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['integration', 'cafe24', tenantKey] });
+      if (res.ok) toast.success(res.detail);
+      else toast.error(res.detail);
+    },
+    onError: (e: Error) => toast.error(e.message || 'Cafe24 test failed.'),
+  });
+}
+
+export function useSyncCafe24Orders() {
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  const { t } = useTranslation('settings');
+  return useMutation({
+    mutationFn: () => settingsService.syncCafe24(),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['integration', 'cafe24', tenantKey] });
+      if (res.ok) toast.success(res.detail);
+      else toast.error(res.detail);
+    },
+    onError: () => toast.error(t('cafe24.oauth.syncFailed')),
+  });
+}
+
+export function useSyncCafe24Products() {
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  const { t } = useTranslation('settings');
+  return useMutation({
+    mutationFn: () => settingsService.syncCafe24Products(),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: ['integration', 'cafe24', tenantKey] });
+      // The catalogue lands in products_cache; turning it into knowledge is a
+      // separate, previewed step — the toast points there.
+      if (res.ok) toast.success(t('cafe24.oauth.productsSynced', { synced: res.synced, archived: res.archived }));
+      else toast.error(res.detail);
+    },
+    onError: () => toast.error(t('cafe24.oauth.syncProductsFailed')),
   });
 }
 

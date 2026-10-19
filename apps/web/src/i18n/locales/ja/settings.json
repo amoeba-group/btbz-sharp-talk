@@ -217,7 +217,8 @@
     },
     "cafe24": {
       "title": "Cafe24",
-      "subtitle": "Admin API（OAuthアクセストークン）でCafe24ストアと連携します。"
+      "subtitle": "Admin API（OAuthアクセストークン）でCafe24ストアと連携します。",
+      "oauthTestHint": "このモールは Cafe24 OAuth で接続されています — 接続テストは接続済みプラットフォームの Cafe24 カードから実行してください。"
     },
     "woocommerce": {
       "title": "WooCommerce",
@@ -305,7 +306,13 @@
       "errorInvalidScope": "Cafe24が要求した権限を拒否しました（invalid_scope）。Cafe24 Developersでアプリに権限を追加してから、もう一度連携してください",
       "errorAccessDenied": "Cafe24で連携が拒否されました（access_denied）。モールの代表運営者アカウントで再度お試しください",
       "modalTitle": "Cafe24 を接続",
-      "manualEntry": "トークンをお持ちなら手動入力"
+      "manualEntry": "トークンをお持ちなら手動入力",
+      "reconnectTitle": "Cafe24 再接続",
+      "reconnectHint": "{{mall}}.cafe24.com は OAuth で接続されています。アプリ権限が変わった場合やトークンが期限切れ・失効した場合は再接続してください。",
+      "mode": {
+        "oauth": "OAuth 接続",
+        "manual": "手動(トークン)"
+      }
     }
   },
   "marketingTitle": "マーケティング連携",
@@ -961,6 +968,7 @@
     "registeredAt": "登録",
     "selfNoCommerce": "注文機能がオフのため、ウィジェットの設置だけで連携は完了です。ウィジェット設定 → 埋め込み・SDK をご覧ください。",
     "openWidgetSettings": "ウィジェット設定を開く",
-    "emptyHintMarketing": "下の「プラットフォームを追加」から利用中のサービスを選んでください。"
+    "emptyHintMarketing": "下の「プラットフォームを追加」から利用中のサービスを選んでください。",
+    "openSite": "サイトを開く"
   }
 }

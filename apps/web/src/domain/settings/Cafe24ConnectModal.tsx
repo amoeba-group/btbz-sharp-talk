@@ -18,10 +18,17 @@ import { settingsService } from './settings.service';
  */
 export function Cafe24ConnectModal({
   open,
+  reconnectMallId,
   onClose,
   onManual,
 }: {
   open: boolean;
+  /**
+   * Set when a mall is already connected through OAuth and the operator chose
+   * "configure": the dialog reads as "reconnect" and starts from that mall id
+   * (PLN-261019-Cafe24 D4).
+   */
+  reconnectMallId?: string;
   onClose: () => void;
   /** Switch to the credential modal for operators who already hold a token. */
   onManual: () => void;
@@ -30,6 +37,12 @@ export function Cafe24ConnectModal({
   const { t: tc } = useTranslation('common');
   const [mallId, setMallId] = useState('');
   const [connecting, setConnecting] = useState(false);
+  const reconnect = reconnectMallId !== undefined;
+
+  // Pre-fill the connected mall each time the dialog opens as "reconnect".
+  useEffect(() => {
+    if (open) setMallId(reconnectMallId ?? '');
+  }, [open, reconnectMallId]);
 
   // Surface the OAuth round-trip outcome the callback appended to the URL.
   useEffect(() => {
@@ -68,7 +81,7 @@ export function Cafe24ConnectModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={t('cafe24.oauth.modalTitle')}
+      title={reconnect ? t('cafe24.oauth.reconnectTitle') : t('cafe24.oauth.modalTitle')}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>
@@ -80,7 +93,11 @@ export function Cafe24ConnectModal({
         </>
       }
     >
-      <p className="mb-4 text-sm text-gray-500">{t('cafe24.oauth.hint')}</p>
+      <p className="mb-4 text-sm text-gray-500">
+        {reconnect
+          ? t('cafe24.oauth.reconnectHint', { mall: reconnectMallId || '—' })
+          : t('cafe24.oauth.hint')}
+      </p>
       <FormRow label={t('cafe24.oauth.mallId')}>
         <div className="flex items-center gap-2">
           <Input value={mallId} placeholder="amoebaorder" onChange={(e) => setMallId(e.target.value)} />

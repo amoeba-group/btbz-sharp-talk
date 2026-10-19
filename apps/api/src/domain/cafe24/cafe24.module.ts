@@ -13,6 +13,7 @@ import { Cafe24TokenService } from './cafe24-token.service';
 import { Cafe24OAuthService } from './cafe24-oauth.service';
 import { Cafe24SyncService } from './cafe24-sync.service';
 import { Cafe24ProductSyncService } from './cafe24-product-sync.service';
+import { Cafe24ConnectionTestService } from './cafe24-connection-test.service';
 import { Cafe24CustomerAuthService } from './cafe24-customer-auth.service';
 import { ScheduledCafe24SyncService } from './scheduled-cafe24-sync.service';
 import { Cafe24OAuthController } from './cafe24-oauth.controller';
@@ -40,6 +41,7 @@ import { Cafe24Controller } from './cafe24.controller';
     Cafe24OAuthService,
     Cafe24SyncService,
     Cafe24ProductSyncService,
+    Cafe24ConnectionTestService,
     Cafe24CustomerAuthService,
     ScheduledCafe24SyncService,
   ],
