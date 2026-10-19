@@ -1,8 +1,4 @@
-import {
-  REPLY_LANGUAGE_CJK_LEAK,
-  REPLY_LANGUAGE_MIN_LETTERS,
-  replyLanguageMismatch,
-} from './reply-language.util';
+import { REPLY_LANGUAGE_MIN_LETTERS, replyLanguageMismatch } from './reply-language.util';
 
 /** PLN-261019 D4 — script-level check behind the reply-language rule. */
 describe('replyLanguageMismatch', () => {
@@ -35,10 +31,22 @@ describe('replyLanguageMismatch', () => {
     expect(replyLanguageMismatch(EN, 'ES')).toBe(false);
   });
 
-  it('tolerates a quoted CJK name inside a Latin reply, up to the leak limit', () => {
-    const name = '가'.repeat(REPLY_LANGUAGE_CJK_LEAK - 1);
-    expect(replyLanguageMismatch(`${EN} The hotel is listed as ${name}.`, 'EN')).toBe(false);
-    expect(replyLanguageMismatch(`${EN} The hotel is listed as ${name}가.`, 'EN')).toBe(true);
+  it('tolerates bilingual glossary terms inside a Latin reply (go2joy staging turn, RPT-261019 O1)', () => {
+    const glossary =
+      'Go2Joy có ba loại đặt phòng: Theo giờ (시간제 / Hourly): đặt phòng sử dụng theo đơn vị giờ. ' +
+      'Qua đêm (오버나이트 / Overnight): đặt phòng lưu trú qua đêm. Theo ngày (일 단위 / Daily): đặt phòng theo ngày.';
+    expect(replyLanguageMismatch(glossary, 'VI')).toBe(false);
+    expect(replyLanguageMismatch(`${EN} The hotel is listed as 서울호텔강남점.`, 'EN')).toBe(false);
+  });
+
+  it('flags a reply that is mostly CJK even with a Latin tail', () => {
+    expect(replyLanguageMismatch(`${KO} (Hourly booking)`, 'EN')).toBe(true);
+    expect(replyLanguageMismatch('ご予約の確認はダッシュボードから行えます。管理画面を開いてください。 Dashboard', 'VI')).toBe(true);
+  });
+
+  it('accepts a Korean reply that quotes English terms, rejects one that is barely Korean', () => {
+    expect(replyLanguageMismatch(`${KO} (Hourly / Overnight / Daily)`, 'KO')).toBe(false);
+    expect(replyLanguageMismatch(`${EN} (예약)`, 'KO')).toBe(true);
   });
 
   it('does not judge short replies', () => {
