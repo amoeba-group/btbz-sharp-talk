@@ -224,6 +224,32 @@ export class UpdateWidgetSettingsRequest {
   @IsOptional() @IsString() @MaxLength(500) login_greeting_vi?: string | null;
   @IsOptional() @IsString() @MaxLength(500) login_greeting_ja?: string | null;
   @IsOptional() @IsString() @MaxLength(500) login_greeting_zh?: string | null;
+  // PLN-261019 P3: header title, AI / agent sender names, launcher greeting pill.
+  // Same PATCH semantics and the same explicit per-language listing as above.
+  @IsOptional() @IsString() @MaxLength(80) header_title_en?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) header_title_es?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) header_title_ko?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) header_title_vi?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) header_title_ja?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) header_title_zh?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) ai_sender_name_en?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) ai_sender_name_es?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) ai_sender_name_ko?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) ai_sender_name_vi?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) ai_sender_name_ja?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) ai_sender_name_zh?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) agent_sender_name_en?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) agent_sender_name_es?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) agent_sender_name_ko?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) agent_sender_name_vi?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) agent_sender_name_ja?: string | null;
+  @IsOptional() @IsString() @MaxLength(80) agent_sender_name_zh?: string | null;
+  @IsOptional() @IsString() @MaxLength(120) launcher_teaser_en?: string | null;
+  @IsOptional() @IsString() @MaxLength(120) launcher_teaser_es?: string | null;
+  @IsOptional() @IsString() @MaxLength(120) launcher_teaser_ko?: string | null;
+  @IsOptional() @IsString() @MaxLength(120) launcher_teaser_vi?: string | null;
+  @IsOptional() @IsString() @MaxLength(120) launcher_teaser_ja?: string | null;
+  @IsOptional() @IsString() @MaxLength(120) launcher_teaser_zh?: string | null;
 }
 
 /**
@@ -272,6 +298,15 @@ export class UpdateWidgetThemeRequest {
     review_link_template?: string | null;
     /** Raw custom CSS; the service sanitizes it and drops it when the add-on is off (P5). */
     custom_css?: string | null;
+    /** PLN-261019: 'logo' (default) | 'logo-title'. */
+    header_layout?: string | null;
+    /** PLN-261019: 'plain' (default) | 'avatar'. */
+    message_style?: string | null;
+    /** PLN-261019: 'paperclip' (default) | 'image'. */
+    attach_icon?: string | null;
+    /** PLN-261019: uploaded icon assets for the avatar slots (uuids checked like the launcher icon). */
+    bot_avatar_uuid?: string | null;
+    agent_avatar_uuid?: string | null;
   } | null;
 }
 

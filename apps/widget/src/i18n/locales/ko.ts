@@ -342,6 +342,7 @@ export const ko: Translation = {
   a11y: {
     supportWidget: '고객 지원 위젯',
     openSupport: '고객 지원 열기',
+    closeTeaser: '인사말 닫기',
     closeSupport: '고객 지원 닫기',
     close: '닫기',
     messageThread: '메시지 목록',

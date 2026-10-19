@@ -338,6 +338,7 @@ export const zh: Translation = {
   a11y: {
     supportWidget: '客服小组件',
     openSupport: '打开客服',
+    closeTeaser: '关闭问候',
     closeSupport: '关闭客服',
     close: '关闭',
     messageThread: '消息记录',

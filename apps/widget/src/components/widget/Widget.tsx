@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { CircleHelp, Headset, MessageCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { CircleHelp, Headset, MessageCircle, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useWidgetStore, type TabKey } from '../../store/widgetStore';
 import { useEnsureSession } from '../../hooks/useSession';
@@ -16,6 +16,25 @@ import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { LAUNCHER_CLASSES, resolveLauncher } from '../../lib/launcher';
 import { assetUrl, logoUrl } from '../../lib/branding';
 import { hostKind, isAppMode, postToHost } from '../../lib/host-bridge';
+import { fill, pickCopy } from '../../lib/copy';
+import { WIDGET_COPY_DEFAULTS } from '../../../../../packages/types/src/common/widget-copy';
+
+/** Once dismissed (or the panel opened), the greeting pill stays away for the rest of the tab's session. */
+const TEASER_SEEN_KEY = 'ivy:teaser-seen';
+function teaserSeen(): boolean {
+  try {
+    return sessionStorage.getItem(TEASER_SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+function markTeaserSeen(): void {
+  try {
+    sessionStorage.setItem(TEASER_SEEN_KEY, '1');
+  } catch {
+    /* no storage — the pill simply shows again next page */
+  }
+}
 
 export function Widget() {
   const { t } = useTranslation();
@@ -44,9 +63,50 @@ export function Widget() {
   const sizeClasses = LAUNCHER_CLASSES[launcher.size] ?? LAUNCHER_CLASSES.md;
   const brandMark = theme?.logo ? logoUrl(theme.logo) : null;
   const customIcon = theme?.design?.launcherIcon ? assetUrl(theme.design.launcherIcon) : null;
+  // `bare` draws the uploaded icon as the whole button (PLN-261019 P2); the
+  // normalizer already dropped it when there is no icon to draw.
+  const bare = launcher.style === 'bare' && !!customIcon;
   // A host app opens the widget from its own button and owns the whole screen,
   // so there is no floating launcher and nothing to open into.
   const appMode = isAppMode();
+  const launcherShown = !panelOpen && !appMode && !triggerHidesLauncher;
+
+  // Greeting pill beside the launcher (PLN-261019 P2): appears after the
+  // configured delay, once per tab session; opening the panel or closing the
+  // pill counts as seen. The loader widens the closed frame while it shows and
+  // narrows it again the moment it goes — a wide invisible frame would swallow
+  // clicks on the page (FIX-260916 class).
+  const widgetCopy = useWidgetStore((s) => s.widgetCopy);
+  const language = useWidgetStore((s) => s.language);
+  const setTeaserVisible = useWidgetStore((s) => s.setTeaserVisible);
+  const teaserCfg = launcher.teaser?.enabled ? launcher.teaser : null;
+  const [teaserDismissed, setTeaserDismissed] = useState(teaserSeen);
+  const [teaserReady, setTeaserReady] = useState(false);
+  useEffect(() => {
+    if (!teaserCfg || teaserDismissed) return;
+    const timer = window.setTimeout(() => setTeaserReady(true), teaserCfg.delaySec * 1000);
+    return () => window.clearTimeout(timer);
+  }, [teaserCfg, teaserDismissed]);
+  const dismissTeaser = () => {
+    markTeaserSeen();
+    setTeaserDismissed(true);
+  };
+  useEffect(() => {
+    if (panelOpen && teaserCfg && !teaserDismissed) dismissTeaser();
+    // dismissTeaser is a stable closure over setters; the deps that matter are these.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [panelOpen, teaserCfg, teaserDismissed]);
+  const teaserVisible = launcherShown && !!teaserCfg && teaserReady && !teaserDismissed;
+  useEffect(() => {
+    setTeaserVisible(teaserVisible);
+  }, [teaserVisible, setTeaserVisible]);
+  const teaserText = fill(
+    pickCopy(widgetCopy?.launcherTeaser, language) ??
+      (WIDGET_COPY_DEFAULTS.launcherTeaser as Record<string, string>)[(language || 'en').toUpperCase()] ??
+      WIDGET_COPY_DEFAULTS.launcherTeaser.EN,
+    '{shop}',
+    widgetCopy?.displayName || t('appName'),
+  );
 
   // Returning from a redirect-mode sign-in: the loader consumed its one-shot
   // flag and passed ?reopen=<tab>, so bring the widget straight back up where
@@ -153,35 +213,72 @@ export function Widget() {
       {/* Floating launcher — closed state only. While the panel is open the
           bottom-right X would duplicate the panel header's close button (and
           sit right under it on mobile), so closing is the header X / Esc. */}
-      {!panelOpen && !appMode && !triggerHidesLauncher && (
-        <button
-          onClick={togglePanel}
-          aria-label={t('a11y.openSupport')}
-          aria-expanded={false}
-          className={`st-launcher fixed bottom-5 z-10 flex items-center justify-center rounded-full bg-primary-500 text-on-primary shadow-lg transition-transform hover:scale-105 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 active:scale-95 ${
-            launcher.position === 'left' ? 'left-5' : 'right-5'
-          } ${sizeClasses.button}`}
+      {launcherShown && (
+        <div
+          className={`fixed bottom-5 z-10 flex items-center gap-2 ${
+            launcher.position === 'left' ? 'left-5 flex-row-reverse' : 'right-5'
+          }`}
         >
-          {customIcon ? (
-            // An uploaded icon draws as-is (no brand mask): the tenant chose its colours.
-            <img src={customIcon} alt="" className={`${sizeClasses.icon} object-contain`} />
-          ) : launcher.icon === 'logo' && brandMark ? (
-            // Cropped to a circle: an uploaded logo is rarely square, and letting
-            // it letterbox inside the button looks like a rendering bug.
-            <img src={brandMark} alt="" className={`${sizeClasses.button} rounded-full object-cover`} />
-          ) : launcher.icon === 'question' ? (
-            <CircleHelp className={sizeClasses.icon} />
-          ) : launcher.icon === 'headset' ? (
-            <Headset className={sizeClasses.icon} />
-          ) : (
-            <MessageCircle className={sizeClasses.icon} />
+          {teaserVisible && (
+            <div
+              role="status"
+              className="st-teaser relative max-w-[260px] rounded-full bg-primary-500 text-on-primary shadow-lg"
+            >
+              <button
+                type="button"
+                onClick={togglePanel}
+                className="block px-4 py-2.5 text-left text-sm font-medium leading-snug focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+              >
+                {teaserText}
+              </button>
+              <button
+                type="button"
+                onClick={dismissTeaser}
+                aria-label={t('a11y.closeTeaser')}
+                className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-white text-gray-500 shadow ring-1 ring-black/10 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
           )}
-          {unread > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-white ring-2 ring-white">
-              {unread > 99 ? '99+' : unread}
-            </span>
-          )}
-        </button>
+          <button
+            onClick={togglePanel}
+            aria-label={t('a11y.openSupport')}
+            aria-expanded={false}
+            className={`st-launcher relative flex flex-shrink-0 items-center justify-center transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 active:scale-95 ${
+              bare
+                ? 'rounded-st-md'
+                : 'rounded-full bg-primary-500 text-on-primary shadow-lg hover:bg-primary-600'
+            } ${sizeClasses.button}`}
+          >
+            {customIcon ? (
+              // An uploaded icon draws as-is (no brand mask): the tenant chose its
+              // colours. In `bare` style it IS the button and fills it.
+              <img src={customIcon} alt="" className={`${bare ? 'h-full w-full' : sizeClasses.icon} object-contain`} />
+            ) : launcher.icon === 'logo' && brandMark ? (
+              // Cropped to a circle: an uploaded logo is rarely square, and letting
+              // it letterbox inside the button looks like a rendering bug.
+              <img src={brandMark} alt="" className={`${sizeClasses.button} rounded-full object-cover`} />
+            ) : launcher.icon === 'question' ? (
+              <CircleHelp className={sizeClasses.icon} />
+            ) : launcher.icon === 'headset' ? (
+              <Headset className={sizeClasses.icon} />
+            ) : (
+              <MessageCircle className={sizeClasses.icon} />
+            )}
+            {unread > 0 && (
+              // A bare mascot has no circle to hang the badge on, so it sits on
+              // the page side — toward the teaser — instead of the window edge.
+              <span
+                className={`absolute -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-error px-1 text-[10px] font-bold text-white ring-2 ring-white ${
+                  bare && launcher.position !== 'left' ? '-left-0.5' : '-right-0.5'
+                }`}
+              >
+                {unread > 99 ? '99+' : unread}
+              </span>
+            )}
+          </button>
+        </div>
       )}
     </>
   );

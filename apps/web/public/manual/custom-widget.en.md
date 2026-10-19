@@ -1,6 +1,6 @@
 # SharpTalk Custom Widget Manual — per-tenant widget design
 
-> Version 1.0 · First edition 2026-09-13 · Written against the code
+> Version 1.1 · First edition 2026-09-13 · Revised 2026-10-19 (launcher style, greeting pill, header layout, avatar messages, attach icon) · Written against the code
 > Audience: tenant operators (master/director — design files, custom widgets and settings snapshots are limited to these two ranks) · Ch. 6 is for platform administrators
 > Online: https://shoptalk.amoeba.site/manual (HTML edition, KO original and VI translation)
 > Read first: [Quick Setup Manual](quick-setup.en.md) Ch. 5 (widget install · theme)
@@ -103,6 +103,10 @@ Settings > Widget settings > **Custom widgets** card → **[Create custom widget
 | Corners | Small 8px · Medium 12px · Large 16px | Panel corner radius; bubbles and buttons follow proportionally |
 | Panel size | width 360–480 · height 480–720 (default 404×600) | **Desktop only.** Mobile and app mode fill the screen |
 | Icon file | the theme card's launcher icon (default) · an uploaded icon | Artwork on the round launcher button. An uploaded icon overrides the theme card's icon choice |
+| Quick-reply style | filled chips (default) · icon cards | Shape of the scenario buttons on the chat's first screen. Cards are white with an outline and an icon |
+| Header with logo | logo replaces the title (default) · logo beside the title | Only applies when the theme card has a logo. Beside the title the logo is capped at 24px tall, so use a compact mark. The title is the copy card's **Header title** (per language); empty = display name |
+| AI / agent messages | bubble only (default) · avatar + sender name | Avatar rows put a 28px round avatar left of AI and agent bubbles and the sender's name on the bubble's first line. Pick the images under **AI avatar / Agent avatar** (design files, icon kind); the names are the copy card's **AI sender name / Agent sender name** (per language); empty = display name / the agent's own name |
+| Attach button icon | paperclip (default) · picture | The glyph on the composer's attach button |
 | Custom CSS (add-on) | sanitized CSS | Visible only for tenants whose platform admin enabled the add-on (Ch. 5) |
 | Note | free text | Operational notes such as "Spring 2026, owner ○○". Never shown to shoppers |
 
@@ -147,6 +151,19 @@ Applying is **immediate, with no deployment**. The server rewrites the tenant's 
 - A shopper opening a new page: new design right away
 - A shopper who already has the widget open: new design after a page refresh
 - The widget paints its cached theme first and then refreshes from the live file, so the old look may flash very briefly
+
+### 3.2-2 Launcher style · greeting pill (widget theme card)
+
+The floating launcher's look and its greeting are chosen under **Settings > Widget > Widget theme**. Neither applies in trigger mode or app mode.
+
+| Setting | Values | Behaviour |
+|---|---|---|
+| Launcher style | filled button (default) · **icon only** | With icon only, the **icon file** of the custom widget in use becomes the button itself — no circle, no shadow (made for a mascot with its own outline). Without an icon file the filled button is drawn. The unread badge sits on the page-side corner |
+| Greeting pill | off (default) · on + delay (0–30 s) | A brand-coloured speech bubble appears beside the launcher after the delay. Once per browser session; closing it with its X or opening the widget hides it. Tapping the pill opens the widget |
+
+The pill's text is per language under **Widget copy > Launcher greeting** (`{shop}` = display name; empty = the default).
+
+💡 **Tip**: upload an icon-only mascot as a transparent PNG at 2× (e.g. 128×128). If it blends into the page, give the artwork its own white outline — CSS cannot draw the circle back.
 
 ### 3.3 Editing the design in use
 
@@ -221,6 +238,11 @@ The widget exposes 13 **stable classes** — hook points whose names never chang
 | `.st-composer` / `.st-input` / `.st-send` | composer area / input / send button |
 | `.st-launcher` | launcher button |
 | `.st-quick-reply` | quick-reply (scenario) button |
+| `.st-header-control` | the header's language, settings and close buttons |
+| `.st-sender` / `.st-avatar` | sender name / avatar on avatar rows (avatar message style) |
+| `.st-attach` | attach button |
+| `.st-teaser` | the greeting pill beside the launcher |
+| `.st-csat` / `.st-csat-option` | satisfaction card / emoji options |
 
 **Allowed**
 - Selectors: `.st-*` classes and their combinations (`.st-panel .st-tab`, `.st-a > .st-b`), optionally ending in `:hover` `:focus` `:active` `:first-child` `:last-child` `:disabled`

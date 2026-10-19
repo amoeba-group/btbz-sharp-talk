@@ -133,6 +133,10 @@ export class TenantMapper {
       displayName: t.widgetCopy?.displayName ?? null,
       firstVisit: t.widgetCopy?.firstVisit ?? {},
       loginGreeting: t.widgetCopy?.loginGreeting ?? {},
+      headerTitle: t.widgetCopy?.headerTitle ?? {},
+      aiSenderName: t.widgetCopy?.aiSenderName ?? {},
+      agentSenderName: t.widgetCopy?.agentSenderName ?? {},
+      launcherTeaser: t.widgetCopy?.launcherTeaser ?? {},
       displayNameFallback: t.name ?? null,
     };
   }

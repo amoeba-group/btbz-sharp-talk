@@ -361,12 +361,26 @@
     applyFrame(next.frame);
     triggerMode = next.mode === 'trigger' || !!cfg.trigger;
     triggerOffset = Math.max(0, Math.min(240, Number(next.offsetTop) || 0));
-    var px = Math.max(64, Math.min(160, Number(next.size) || 96)) + 'px';
+    var base = Math.max(64, Math.min(160, Number(next.size) || 96));
+    var px = base + 'px';
     launcherSizePx = px;
     if (triggerFellBack) triggerMode = false;
+    // Closed box (PLN-261019 P2): the launcher square, or the strip the widget
+    // asks for while its greeting pill shows beside the button. Clamped — the
+    // loader never trusts a number it did not bound — and NOT remembered: the
+    // pill is per-session, and a cached wide frame would cover page content
+    // before the widget had reported anything (FIX-260916 class of bug).
+    var closedW = px;
+    var closedH = px;
+    if (next.closed && typeof next.closed === 'object') {
+      var cw = Number(next.closed.w);
+      var ch = Number(next.closed.h);
+      if (isFinite(cw)) closedW = Math.max(base, Math.min(360, Math.round(cw))) + 'px';
+      if (isFinite(ch)) closedH = Math.max(base, Math.min(160, Math.round(ch))) + 'px';
+    }
     // Trigger mode: nothing to draw while closed, so the frame takes no room and
     // cannot intercept clicks on the page beneath it.
-    CLOSED = triggerMode ? { w: '0px', h: '0px' } : { w: px, h: px };
+    CLOSED = triggerMode ? { w: '0px', h: '0px' } : { w: closedW, h: closedH };
     // The mode and the offset both feed the open box, and both are only known
     // here — recompute before anything paints with them.
     recomputeOpen();
@@ -390,8 +404,15 @@
       frame.style.width = CLOSED.w;
       frame.style.height = CLOSED.h;
     }
+    var remembered = {
+      position: next.position,
+      size: next.size,
+      frame: next.frame,
+      mode: next.mode,
+      offsetTop: next.offsetTop,
+    };
     try {
-      localStorage.setItem(LAUNCHER_KEY, JSON.stringify(next));
+      localStorage.setItem(LAUNCHER_KEY, JSON.stringify(remembered));
     } catch (_) {
       /* not remembering only costs a reposition on the next visit */
     }
@@ -917,6 +938,7 @@
         frame: d.frame,
         mode: d.mode,
         offsetTop: d.offsetTop,
+        closed: d.closed,
       });
     } else if (d.type === 'ivy:unread') {
       setBadge(d.count);

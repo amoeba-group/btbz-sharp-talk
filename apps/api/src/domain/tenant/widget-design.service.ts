@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { normalizeDesign, normalizeWidgetTheme, stripCustomCss, WidgetTheme } from '@sharptalk/types';
+import { ICON_SLOTS, normalizeDesign, normalizeWidgetTheme, stripCustomCss, WidgetTheme } from '@sharptalk/types';
 import { Tenant } from './entity/tenant.entity';
 import { WIDGET_DESIGN_STATUS, WidgetDesignRow } from './entity/widget-design.entity';
 import { WidgetDesignRevision } from './entity/widget-design-revision.entity';
@@ -266,6 +266,8 @@ export class WidgetDesignService {
     };
     await embed('font', row.designJson.font?.asset);
     await embed('launcherIcon', row.designJson.launcherIcon);
+    // Avatar slots (PLN-261019 P3) travel under their slot name.
+    for (const slot of ICON_SLOTS) await embed(slot, row.designJson.icons?.[slot]);
     return {
       format: WidgetDesignService.PACKAGE_FORMAT,
       exportedAt: new Date().toISOString(),
@@ -306,6 +308,15 @@ export class WidgetDesignService {
       radius: d.radius ?? null,
       panel: d.panel ?? null,
       launcherIcon: byRole.get('launcherIcon') ?? null,
+      // Options without a file travel as-is (normalizeDesign re-checks every
+      // enum). Custom CSS stays behind on purpose: it is sanitized per tenant
+      // and delivered only under the add-on, so it is re-entered, not imported.
+      quickReplyStyle: d.quickReplyStyle ?? null,
+      reviewLinkTemplate: d.reviewLinkTemplate ?? null,
+      headerLayout: d.headerLayout ?? null,
+      messageStyle: d.messageStyle ?? null,
+      attachIcon: d.attachIcon ?? null,
+      icons: Object.fromEntries(ICON_SLOTS.map((slot) => [slot, byRole.get(slot) ?? null])),
     });
     if (!design) throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.BAD_REQUEST);
     let name = String(pkg.name).slice(0, 64);

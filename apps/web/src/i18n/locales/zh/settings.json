@@ -91,7 +91,15 @@
       "orders": "订单",
       "chat": "聊天"
     },
-    "defaultCopy": "默认文案："
+    "defaultCopy": "默认文案：",
+    "headerTitle": "标题栏标题",
+    "headerTitleHint": "此语言下组件标题栏的标题。留空 = 显示名称。",
+    "aiSenderName": "AI 发送者名称",
+    "aiSenderNameHint": "自定义组件使用头像行时显示在 AI 消息上。留空 = 显示名称。",
+    "agentSenderName": "客服发送者名称",
+    "agentSenderNameHint": "人工客服的通用称呼（如“Go2Joy 客服”）。留空 = 客服本人姓名。",
+    "launcherTeaser": "启动问候语",
+    "launcherTeaserHint": "启动按钮旁问候气泡的文案（主题卡 → 问候气泡）。{shop} 会替换为显示名称。留空 = 默认。"
   },
   "shopify": {
     "title": "Shopify 连接",
@@ -534,7 +542,15 @@
     "panel": "面板尺寸",
     "panelWidth": "面板宽度",
     "panelHeight": "面板高度",
-    "panelHint": "仅桌面端 — 宽 {{wmin}}–{{wmax}}，高 {{hmin}}–{{hmax}} px。手机和应用模式会铺满屏幕。"
+    "panelHint": "仅桌面端 — 宽 {{wmin}}–{{wmax}}，高 {{hmin}}–{{hmax}} px。手机和应用模式会铺满屏幕。",
+    "launcherStyle": "启动按钮样式",
+    "launcherStyleButton": "填充按钮（默认）",
+    "launcherStyleBare": "仅图标 — 上传的图标即按钮（无圆形、无阴影）",
+    "launcherStyleHint": "“仅图标”需要正在使用的自定义组件中有图标文件（带自身轮廓的吉祥物效果最佳）。没有时按填充按钮绘制。",
+    "teaser": "问候气泡",
+    "teaserOn": "在启动按钮旁显示问候",
+    "teaserDelay": "延迟（秒）",
+    "teaserHint": "启动按钮旁的小气泡，每个浏览器会话显示一次；关闭它或打开组件后隐藏。文案在组件文案 → 启动问候语中修改。"
   },
   "embed": {
     "title": "嵌入与 SDK",
@@ -823,7 +839,7 @@
     "import": "导入包",
     "customCss": "自定义 CSS（附加功能）",
     "customCssCheck": "检查",
-    "customCssHint": "仅限稳定类：.st-panel .st-header .st-header-title .st-tabs .st-tab .st-message .st-message-user .st-message-bot .st-composer .st-input .st-send .st-launcher .st-quick-reply。只允许颜色、字体、间距、边框和阴影；布局、隐藏和 url() 会被移除。",
+    "customCssHint": "仅限稳定类名：.st-panel .st-header .st-header-title .st-header-control .st-tabs .st-tab .st-message .st-message-user .st-message-bot .st-sender .st-avatar .st-composer .st-input .st-attach .st-send .st-launcher .st-teaser .st-quick-reply .st-csat .st-csat-option。仅允许颜色、字体、间距、边框和阴影；布局、隐藏和 url() 会被移除。",
     "customCssKept": "将保留 {{n}} 条规则。",
     "history": "历史",
     "quickReplyStyle": "快捷回复样式",
@@ -833,7 +849,21 @@
     "reviewLinkHint": "小部件评价标签中“写评价”跳转的地址。留空＝商品页面。使用 {productUrl}#reviews 跳到评价应用区域，或输入包含 {productUrl} 的完整 https:// 地址。",
     "historyTitle": "变更历史 — {{name}}",
     "historyEmpty": "暂无早期版本（每次编辑都会保存快照）",
-    "restoreRevision": "恢复此版本"
+    "restoreRevision": "恢复此版本",
+    "headerLayout": "有 Logo 时的标题栏",
+    "headerLayoutLogo": "Logo 替代标题（默认）",
+    "headerLayoutLogoTitle": "Logo 与标题并排",
+    "headerLayoutHint": "仅在主题卡中上传了 Logo 时生效。并排时 Logo 高度限制为 24px，请使用紧凑的标志。",
+    "messageStyle": "AI / 客服消息",
+    "messageStylePlain": "仅气泡（默认）",
+    "messageStyleAvatar": "头像 + 发送者名称",
+    "botAvatar": "AI 头像",
+    "agentAvatar": "客服头像",
+    "avatarDefault": "内置图标",
+    "avatarHint": "从设计文件（图标，png/webp）中选择的 28px 圆形头像。名称来自组件文案 → AI 发送者名称 / 客服发送者名称。",
+    "attachIcon": "附件按钮图标",
+    "attachPaperclip": "回形针（默认）",
+    "attachImage": "图片"
   },
   "settingsSnapshots": {
     "title": "设置快照",

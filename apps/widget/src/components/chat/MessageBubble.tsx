@@ -4,6 +4,10 @@ import type { ChatMessage } from '../../lib/types';
 import { formatTime } from '../../lib/format';
 import { MessageAttachments } from './MessageAttachments';
 import { resolveFileUrl } from '../../lib/api-client';
+import { Bot, User } from 'lucide-react';
+import { useWidgetStore } from '../../store/widgetStore';
+import { assetUrl } from '../../lib/branding';
+import { pickCopy } from '../../lib/copy';
 
 /**
  * Citation URLs come from tenant-editable KB sources — only allow http(s) so a
@@ -21,11 +25,46 @@ function safeHttpUrl(url: string): string | null {
 export function MessageBubble({ message }: { message: ChatMessage }) {
   const { t, i18n } = useTranslation();
   const mine = message.senderType === 'user';
+  // Avatar rows (PLN-261019 P3): a design option, off for every tenant that
+  // never chose it. AI and agent turns get a round avatar on the left and the
+  // sender's name inside the bubble; the shopper's own turns are unchanged.
+  const design = useWidgetStore((s) => s.widgetTheme?.design);
+  const widgetCopy = useWidgetStore((s) => s.widgetCopy);
+  const language = useWidgetStore((s) => s.language);
+  const isAi = message.senderType === 'ai';
+  const isAgent = message.senderType === 'agent';
+  const avatarRow = design?.messageStyle === 'avatar' && (isAi || isAgent);
+  const avatarRef = isAi ? design?.icons?.botAvatar : isAgent ? design?.icons?.agentAvatar : null;
+  // AI: the configured name, else the widget's display name. Agent: the
+  // configured generic label ("Go2Joy support"), else the person's own name.
+  const senderLabel = isAi
+    ? pickCopy(widgetCopy?.aiSenderName, language) ?? widgetCopy?.displayName ?? null
+    : isAgent
+      ? pickCopy(widgetCopy?.agentSenderName, language) ?? message.senderName ?? null
+      : null;
   return (
-    <div className={`group flex ${mine ? 'justify-end' : 'justify-start'}`}>
-      <div className="max-w-[85%]">
-        {message.senderType === 'agent' && message.senderName && (
+    <div className={`group flex ${mine ? 'justify-end' : 'justify-start'} ${avatarRow ? 'gap-2' : ''}`}>
+      {avatarRow && (
+        <div
+          className="st-avatar mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-primary-100 text-primary-600"
+          aria-hidden="true"
+        >
+          {avatarRef ? (
+            <img src={assetUrl(avatarRef)} alt="" className="h-full w-full object-cover" />
+          ) : isAi ? (
+            <Bot className="h-4 w-4" />
+          ) : (
+            <User className="h-4 w-4" />
+          )}
+        </div>
+      )}
+      <div className="min-w-0 max-w-[85%]">
+        {!avatarRow && message.senderType === 'agent' && message.senderName && (
           <div className="mb-0.5 text-[11px] font-medium text-gray-500">{message.senderName}</div>
+        )}
+        {avatarRow && senderLabel && !message.body?.trim() && (
+          // Attachment-only turn: no bubble to hold the name, so it sits above.
+          <div className="st-sender mb-0.5 text-xs font-semibold text-primary-600">{senderLabel}</div>
         )}
         {/* A file sent with no words is a valid turn (PLN-260814) — render the
             attachments alone rather than an empty bubble above them. */}
@@ -39,6 +78,9 @@ export function MessageBubble({ message }: { message: ChatMessage }) {
               mine ? 'st-message-user bg-primary-500 text-on-primary' : 'st-message-bot bg-gray-100 text-gray-800',
             ].join(' ')}
           >
+            {avatarRow && senderLabel && (
+              <div className="st-sender mb-0.5 text-xs font-semibold text-primary-600">{senderLabel}</div>
+            )}
             {/* The shopper's own words stay exactly as typed (PLN-261008 D1);
                 AI, agent and system messages show their markdown as formatting. */}
             {mine ? message.body : <RichText text={message.body} />}

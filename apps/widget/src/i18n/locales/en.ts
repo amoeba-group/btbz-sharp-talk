@@ -341,6 +341,7 @@ export const en = {
   a11y: {
     supportWidget: 'Support widget',
     openSupport: 'Open support',
+    closeTeaser: 'Dismiss greeting',
     closeSupport: 'Close support',
     close: 'Close',
     messageThread: 'Message thread',

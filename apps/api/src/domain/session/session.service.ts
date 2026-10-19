@@ -632,6 +632,12 @@ export class SessionService {
           null,
         firstVisit: agentGreeting ?? tenant?.widgetCopy?.firstVisit ?? {},
         loginGreeting: tenant?.widgetCopy?.loginGreeting ?? {},
+        // PLN-261019 P3: tenant bags as stored; the widget resolves the
+        // fallbacks (displayName / the agent's own name / the built-in pill).
+        headerTitle: tenant?.widgetCopy?.headerTitle ?? {},
+        aiSenderName: tenant?.widgetCopy?.aiSenderName ?? {},
+        agentSenderName: tenant?.widgetCopy?.agentSenderName ?? {},
+        launcherTeaser: tenant?.widgetCopy?.launcherTeaser ?? {},
       },
       // 'base' (the default) has no shopper-facing issue feed (PLN-260923 D-2).
       issueFeed: !!tenant?.workflowMode && tenant.workflowMode !== 'base',

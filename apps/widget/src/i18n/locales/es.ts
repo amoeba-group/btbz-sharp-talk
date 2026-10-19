@@ -342,6 +342,7 @@ export const es: Translation = {
   a11y: {
     supportWidget: 'Widget de soporte',
     openSupport: 'Abrir soporte',
+    closeTeaser: 'Cerrar saludo',
     closeSupport: 'Cerrar soporte',
     close: 'Cerrar',
     messageThread: 'Hilo de mensajes',

@@ -26,4 +26,13 @@ export const WIDGET_COPY_DEFAULTS = {
     JA: '{name}さん、おかえりなさい。本日はどのようなご用件でしょうか？下記からトピックを選ぶか、ご質問を入力してください。',
     ZH: '{name}，欢迎回到 {shop}。今天有什么可以帮您？请在下方选择主题或输入您的问题。',
   },
+  /** Greeting pill beside the closed launcher (PLN-261019 P2); shown only when the theme turns it on. */
+  launcherTeaser: {
+    EN: 'Hi! {shop} is here to help.',
+    ES: '¡Hola! {shop} está aquí para ayudarte.',
+    KO: '안녕하세요! {shop}이(가) 도와드릴게요.',
+    VI: 'Xin chào! {shop} sẵn sàng hỗ trợ bạn!',
+    JA: 'こんにちは！{shop}がサポートします。',
+    ZH: '您好！{shop} 随时为您服务。',
+  },
 } as const;

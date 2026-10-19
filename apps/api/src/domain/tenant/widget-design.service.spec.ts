@@ -103,6 +103,33 @@ describe('WidgetDesignService', () => {
     await expect(h.svc.importPackage(1, Buffer.from('{"format":"x"}'), 7)).rejects.toMatchObject({ errorCode: 'E5003' });
   });
 
+  it('export/import carries the avatar slots and the file-less options (PLN-261019)', async () => {
+    const h = build();
+    const bot = '11111111-2222-4333-8444-555555555555';
+    h.assets.get.mockResolvedValue({ uuid: bot, kind: 'icon', filename: 'joybot.png', label: 'JoyBot', mime: 'image/png' });
+    h.assets.readBuffer.mockResolvedValue(Buffer.from('PNG'));
+    h.assets.store.mockResolvedValue({ uuid: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee', version: 1 });
+    const row = await h.svc.create(1, { name: 'B', design: wire } as never, 7);
+    row.designJson = {
+      ...row.designJson,
+      headerLayout: 'logo-title',
+      messageStyle: 'avatar',
+      attachIcon: 'image',
+      quickReplyStyle: 'card',
+      icons: { botAvatar: { uuid: bot, version: 1 } },
+    };
+    const pkg = await h.svc.exportPackage(1, Number(row.id));
+    expect((pkg.assets as any[]).map((a) => a.role)).toEqual(['botAvatar']);
+    const imported = await h.svc.importPackage(1, Buffer.from(JSON.stringify(pkg)), 7);
+    expect(imported.designJson).toMatchObject({
+      headerLayout: 'logo-title',
+      messageStyle: 'avatar',
+      attachIcon: 'image',
+      quickReplyStyle: 'card',
+      icons: { botAvatar: { uuid: 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee', version: 1 } },
+    });
+  });
+
   it('refuses to archive or delete the live design, and revert clears pointer + live copy', async () => {
     const h = build();
     const row = await h.svc.create(1, { name: 'A', design: wire } as never, 7);

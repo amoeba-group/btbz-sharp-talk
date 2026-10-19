@@ -91,7 +91,15 @@
       "orders": "注文",
       "chat": "チャット"
     },
-    "defaultCopy": "既定の文言:"
+    "defaultCopy": "既定の文言:",
+    "headerTitle": "ヘッダータイトル",
+    "headerTitleHint": "この言語でのウィジェットヘッダーのタイトルです。空なら表示名を使います。",
+    "aiSenderName": "AI送信者名",
+    "aiSenderNameHint": "カスタムウィジェットがアバター行を使うときAIメッセージに表示されます。空なら表示名を使います。",
+    "agentSenderName": "担当者送信者名",
+    "agentSenderNameHint": "人間の担当者の汎用ラベル（例:「Go2Joyサポート」）。空なら担当者本人の名前を使います。",
+    "launcherTeaser": "ランチャーのあいさつ",
+    "launcherTeaserHint": "ランチャー横の吹き出しの文言です（テーマカード → あいさつの吹き出し）。{shop} は表示名に置き換わります。空なら既定文言。"
   },
   "shopify": {
     "title": "Shopify連携",
@@ -534,7 +542,15 @@
     "panel": "パネルサイズ",
     "panelWidth": "パネル幅",
     "panelHeight": "パネル高さ",
-    "panelHint": "デスクトップのみ — 幅 {{wmin}}〜{{wmax}}、高さ {{hmin}}〜{{hmax}} px。モバイル・アプリモードは画面いっぱいに表示します。"
+    "panelHint": "デスクトップのみ — 幅 {{wmin}}〜{{wmax}}、高さ {{hmin}}〜{{hmax}} px。モバイル・アプリモードは画面いっぱいに表示します。",
+    "launcherStyle": "ランチャーのスタイル",
+    "launcherStyleButton": "塗りつぶしボタン（既定）",
+    "launcherStyleBare": "アイコンのみ — アップロードしたアイコンがそのままボタン（円・影なし）",
+    "launcherStyleHint": "「アイコンのみ」は使用中のカスタムウィジェットにアイコンファイルが必要です（輪郭を持つマスコットが最適）。ない場合は塗りつぶしボタンで描画されます。",
+    "teaser": "あいさつの吹き出し",
+    "teaserOn": "ランチャーの横にあいさつを表示",
+    "teaserDelay": "表示まで（秒）",
+    "teaserHint": "ランチャーの横に出る小さな吹き出しです。ブラウザセッションごとに1回表示され、閉じるかウィジェットを開くと消えます。文言はウィジェット文言 → ランチャーのあいさつで変更します。"
   },
   "embed": {
     "title": "埋め込み・SDK",
@@ -823,7 +839,7 @@
     "import": "パッケージを取り込む",
     "customCss": "カスタムCSS（アドオン）",
     "customCssCheck": "チェック",
-    "customCssHint": "安定クラスのみ: .st-panel .st-header .st-header-title .st-tabs .st-tab .st-message .st-message-user .st-message-bot .st-composer .st-input .st-send .st-launcher .st-quick-reply。色・フォント・余白・枠線・影のみ許可。配置・非表示・url() は除去されます。",
+    "customCssHint": "安定クラスのみ: .st-panel .st-header .st-header-title .st-header-control .st-tabs .st-tab .st-message .st-message-user .st-message-bot .st-sender .st-avatar .st-composer .st-input .st-attach .st-send .st-launcher .st-teaser .st-quick-reply .st-csat .st-csat-option。色・フォント・余白・枠線・影のみ許可され、配置・非表示・url() は除去されます。",
     "customCssKept": "{{n}} 件のルールが保持されます。",
     "history": "履歴",
     "quickReplyStyle": "クイック返信のスタイル",
@@ -833,7 +849,21 @@
     "reviewLinkHint": "ウィジェットのレビュータブの「レビューを書く」の遷移先です。空欄＝商品ページ。レビューアプリの欄へ直接移動するには {productUrl}#reviews、または {productUrl} を含む完全な https:// URL を入力してください。",
     "historyTitle": "変更履歴 — {{name}}",
     "historyEmpty": "以前のバージョンはまだありません（編集のたびにスナップショットを保存）",
-    "restoreRevision": "このバージョンに復元"
+    "restoreRevision": "このバージョンに復元",
+    "headerLayout": "ロゴがあるときのヘッダー",
+    "headerLayoutLogo": "ロゴがタイトルの代わり（既定）",
+    "headerLayoutLogoTitle": "ロゴ＋タイトル",
+    "headerLayoutHint": "テーマカードでロゴをアップロードしている場合のみ適用されます。タイトル横のロゴは高さ24pxに制限されるため、小さなマークを使ってください。",
+    "messageStyle": "AI・担当者のメッセージ",
+    "messageStylePlain": "吹き出しのみ（既定）",
+    "messageStyleAvatar": "アバター＋送信者名",
+    "botAvatar": "AIアバター",
+    "agentAvatar": "担当者アバター",
+    "avatarDefault": "標準アイコン",
+    "avatarHint": "デザインファイル（アイコン、png/webp）から選ぶ28pxの丸いアバターです。名前はウィジェット文言 → AI送信者名／担当者送信者名で設定します。",
+    "attachIcon": "添付ボタンのアイコン",
+    "attachPaperclip": "クリップ（既定）",
+    "attachImage": "画像"
   },
   "settingsSnapshots": {
     "title": "設定スナップショット",

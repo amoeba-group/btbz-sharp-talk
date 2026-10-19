@@ -351,6 +351,7 @@ export const ja: Translation = {
   a11y: {
     supportWidget: 'サポートウィジェット',
     openSupport: 'サポートを開く',
+    closeTeaser: 'あいさつを閉じる',
     closeSupport: 'サポートを閉じる',
     close: '閉じる',
     messageThread: 'メッセージスレッド',

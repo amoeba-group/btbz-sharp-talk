@@ -91,7 +91,15 @@
       "orders": "Đơn hàng",
       "chat": "Trò chuyện"
     },
-    "defaultCopy": "Mặc định:"
+    "defaultCopy": "Mặc định:",
+    "headerTitle": "Tiêu đề đầu widget",
+    "headerTitleHint": "Tiêu đề phần đầu widget cho ngôn ngữ này. Để trống = tên hiển thị.",
+    "aiSenderName": "Tên người gửi AI",
+    "aiSenderNameHint": "Hiện trên tin nhắn AI khi widget tùy chỉnh dùng hàng có ảnh đại diện. Để trống = tên hiển thị.",
+    "agentSenderName": "Tên người gửi nhân viên",
+    "agentSenderNameHint": "Nhãn chung cho nhân viên (ví dụ \"Nhân viên hỗ trợ Go2Joy\"). Để trống = tên thật của nhân viên.",
+    "launcherTeaser": "Lời chào nút mở",
+    "launcherTeaserHint": "Nội dung bong bóng chào cạnh nút mở (thẻ giao diện → Bong bóng chào). {shop} chèn tên hiển thị. Để trống = mặc định."
   },
   "shopify": {
     "title": "Kết nối Shopify",
@@ -534,7 +542,15 @@
     "panel": "Kích thước bảng",
     "panelWidth": "Chiều rộng bảng",
     "panelHeight": "Chiều cao bảng",
-    "panelHint": "Chỉ máy tính — rộng {{wmin}}–{{wmax}}, cao {{hmin}}–{{hmax}} px. Di động và chế độ app lấp đầy màn hình."
+    "panelHint": "Chỉ máy tính — rộng {{wmin}}–{{wmax}}, cao {{hmin}}–{{hmax}} px. Di động và chế độ app lấp đầy màn hình.",
+    "launcherStyle": "Kiểu nút mở",
+    "launcherStyleButton": "Nút tô màu (mặc định)",
+    "launcherStyleBare": "Chỉ biểu tượng — biểu tượng đã tải lên chính là nút (không vòng tròn, không bóng)",
+    "launcherStyleHint": "\"Chỉ biểu tượng\" cần một tệp biểu tượng trong widget tùy chỉnh đang dùng (linh vật có đường viền riêng là đẹp nhất). Không có thì vẽ nút tô màu.",
+    "teaser": "Bong bóng chào",
+    "teaserOn": "Hiện lời chào cạnh nút mở",
+    "teaserDelay": "sau (giây)",
+    "teaserHint": "Một bong bóng nhỏ cạnh nút mở, mỗi phiên trình duyệt một lần; đóng nó hoặc mở widget sẽ ẩn đi. Nội dung ở Nội dung widget → Lời chào nút mở."
   },
   "embed": {
     "title": "Nhúng & SDK",
@@ -823,7 +839,7 @@
     "import": "Nhập gói",
     "customCss": "CSS tùy chỉnh (tiện ích)",
     "customCssCheck": "Kiểm tra",
-    "customCssHint": "Chỉ lớp ổn định: .st-panel .st-header .st-header-title .st-tabs .st-tab .st-message .st-message-user .st-message-bot .st-composer .st-input .st-send .st-launcher .st-quick-reply. Chỉ màu, phông, khoảng cách, viền, bóng; bố cục, ẩn và url() bị loại bỏ.",
+    "customCssHint": "Chỉ các lớp ổn định: .st-panel .st-header .st-header-title .st-header-control .st-tabs .st-tab .st-message .st-message-user .st-message-bot .st-sender .st-avatar .st-composer .st-input .st-attach .st-send .st-launcher .st-teaser .st-quick-reply .st-csat .st-csat-option. Chỉ màu, phông, khoảng cách, viền và bóng; bố cục, ẩn và url() bị loại bỏ.",
     "customCssKept": "Sẽ giữ {{n}} quy tắc.",
     "history": "Lịch sử",
     "quickReplyStyle": "Kiểu trả lời nhanh",
@@ -833,7 +849,21 @@
     "reviewLinkHint": "Nơi nút \"Viết đánh giá\" trong tab Đánh giá của widget dẫn tới. Để trống = trang sản phẩm. Dùng {productUrl}#reviews để tới phần ứng dụng đánh giá, hoặc một URL https:// đầy đủ có chứa {productUrl}.",
     "historyTitle": "Lịch sử — {{name}}",
     "historyEmpty": "Chưa có phiên bản trước (mỗi lần sửa sẽ lưu một bản chụp)",
-    "restoreRevision": "Khôi phục phiên bản này"
+    "restoreRevision": "Khôi phục phiên bản này",
+    "headerLayout": "Tiêu đề khi có logo",
+    "headerLayoutLogo": "Logo thay cho tiêu đề (mặc định)",
+    "headerLayoutLogoTitle": "Logo cạnh tiêu đề",
+    "headerLayoutHint": "Chỉ áp dụng khi đã tải logo trong thẻ giao diện. Cạnh tiêu đề, logo bị giới hạn cao 24px — hãy dùng biểu trưng nhỏ gọn.",
+    "messageStyle": "Tin nhắn AI / nhân viên",
+    "messageStylePlain": "Chỉ bong bóng (mặc định)",
+    "messageStyleAvatar": "Ảnh đại diện + tên người gửi",
+    "botAvatar": "Ảnh đại diện AI",
+    "agentAvatar": "Ảnh đại diện nhân viên",
+    "avatarDefault": "Biểu tượng mặc định",
+    "avatarHint": "Ảnh tròn 28px chọn từ Tệp thiết kế (biểu tượng, png/webp). Tên lấy từ Nội dung widget → Tên người gửi AI / nhân viên.",
+    "attachIcon": "Biểu tượng nút đính kèm",
+    "attachPaperclip": "Kẹp giấy (mặc định)",
+    "attachImage": "Hình ảnh"
   },
   "settingsSnapshots": {
     "title": "Ảnh chụp cài đặt",

@@ -91,7 +91,15 @@
       "orders": "Orders",
       "chat": "Chat"
     },
-    "defaultCopy": "Default:"
+    "defaultCopy": "Default:",
+    "headerTitle": "Header title",
+    "headerTitleHint": "Title in the widget header for this language. Empty = display name.",
+    "aiSenderName": "AI sender name",
+    "aiSenderNameHint": "Shown on AI messages when the custom widget uses avatar rows. Empty = display name.",
+    "agentSenderName": "Agent sender name",
+    "agentSenderNameHint": "A generic label for human agents (e.g. \"Go2Joy Support\"). Empty = the agent's own name.",
+    "launcherTeaser": "Launcher greeting",
+    "launcherTeaserHint": "The greeting pill beside the launcher (theme card → Greeting pill). {shop} inserts the display name. Empty = default."
   },
   "shopify": {
     "title": "Shopify connection",
@@ -534,7 +542,15 @@
     "panel": "Panel size",
     "panelWidth": "Panel width",
     "panelHeight": "Panel height",
-    "panelHint": "Desktop only — width {{wmin}}–{{wmax}}, height {{hmin}}–{{hmax}} px. Phones and app mode fill the screen."
+    "panelHint": "Desktop only — width {{wmin}}–{{wmax}}, height {{hmin}}–{{hmax}} px. Phones and app mode fill the screen.",
+    "launcherStyle": "Launcher style",
+    "launcherStyleButton": "Filled button (default)",
+    "launcherStyleBare": "Icon only — the uploaded icon is the button (no circle, no shadow)",
+    "launcherStyleHint": "Icon only needs an uploaded icon file in the custom widget in use (a mascot with its own outline works best). Without one the filled button is drawn.",
+    "teaser": "Greeting pill",
+    "teaserOn": "Show a greeting beside the launcher",
+    "teaserDelay": "after (s)",
+    "teaserHint": "A small speech bubble next to the launcher, once per browser session; closing it or opening the widget hides it. The text is in Widget copy → Launcher greeting."
   },
   "embed": {
     "title": "Embed & SDK",
@@ -823,7 +839,7 @@
     "import": "Import package",
     "customCss": "Custom CSS (add-on)",
     "customCssCheck": "Check",
-    "customCssHint": "Only stable classes: .st-panel .st-header .st-header-title .st-tabs .st-tab .st-message .st-message-user .st-message-bot .st-composer .st-input .st-send .st-launcher .st-quick-reply. Colours, fonts, spacing, borders and shadows only; layout, hiding and url() are dropped.",
+    "customCssHint": "Only stable classes: .st-panel .st-header .st-header-title .st-header-control .st-tabs .st-tab .st-message .st-message-user .st-message-bot .st-sender .st-avatar .st-composer .st-input .st-attach .st-send .st-launcher .st-teaser .st-quick-reply .st-csat .st-csat-option. Colours, fonts, spacing, borders and shadows only; layout, hiding and url() are dropped.",
     "customCssKept": "{{n}} rule(s) will be kept.",
     "history": "History",
     "quickReplyStyle": "Quick-reply style",
@@ -833,7 +849,21 @@
     "reviewLinkHint": "Where \"Write a review\" in the widget's Review tab goes. Empty = the product page. Use {productUrl}#reviews to jump to your review app's section, or a full https:// URL containing {productUrl}.",
     "historyTitle": "History — {{name}}",
     "historyEmpty": "No earlier versions yet (a snapshot is taken on every edit)",
-    "restoreRevision": "Restore this version"
+    "restoreRevision": "Restore this version",
+    "headerLayout": "Header with logo",
+    "headerLayoutLogo": "Logo replaces the title (default)",
+    "headerLayoutLogoTitle": "Logo beside the title",
+    "headerLayoutHint": "Only applies when a logo is uploaded in the theme card. Beside the title the logo is capped at 24px tall — use a compact mark.",
+    "messageStyle": "AI / agent messages",
+    "messageStylePlain": "Bubble only (default)",
+    "messageStyleAvatar": "Avatar + sender name",
+    "botAvatar": "AI avatar",
+    "agentAvatar": "Agent avatar",
+    "avatarDefault": "Built-in icon",
+    "avatarHint": "Round 28px avatars from Design files (icon, png/webp). Names come from Widget copy → AI sender name / Agent sender name.",
+    "attachIcon": "Attach button icon",
+    "attachPaperclip": "Paperclip (default)",
+    "attachImage": "Picture"
   },
   "settingsSnapshots": {
     "title": "Settings snapshots",

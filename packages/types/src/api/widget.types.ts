@@ -26,6 +26,9 @@ export interface WidgetCopyText {
   EN?: string;
   ES?: string;
   KO?: string;
+  VI?: string;
+  JA?: string;
+  ZH?: string;
 }
 
 /**
@@ -39,6 +42,17 @@ export interface WidgetCopy {
   firstVisit: WidgetCopyText;
   /** Signed-in greeting template; `{name}` (and `{shop}`) substituted. */
   loginGreeting: WidgetCopyText;
+  /**
+   * PLN-261019 P3 — all optional so an older widget build ignores them and a
+   * tenant that never set them falls back exactly as before:
+   * header title per language (empty → displayName), the name shown on AI
+   * messages (empty → displayName) and on agent messages (empty → the agent's
+   * own name), and the launcher greeting pill (empty → the built-in default).
+   */
+  headerTitle?: WidgetCopyText;
+  aiSenderName?: WidgetCopyText;
+  agentSenderName?: WidgetCopyText;
+  launcherTeaser?: WidgetCopyText;
 }
 
 export interface SessionResponse {

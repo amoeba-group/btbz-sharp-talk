@@ -116,7 +116,7 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
 <header class="hero">
   <div class="eyebrow">SharpTalk User Guides · Custom widgets</div>
   <h1>SharpTalk Custom Widget Manual</h1>
-  <div class="meta"><span>Version 1.0 · First edition 2026-09-13 · Written against the code</span><span>Audience: tenant operators (master/director — design files, custom widgets and settings snapshots are limited to these two ranks) · Ch. 6 is for platform administrators</span></div>
+  <div class="meta"><span>Version 1.1 · First edition 2026-09-13 · Revised 2026-10-19 (launcher style, greeting pill, header layout, avatar messages, attach icon) · Written against the code</span><span>Audience: tenant operators (master/director — design files, custom widgets and settings snapshots are limited to these two ranks) · Ch. 6 is for platform administrators</span></div>
   <p class="lead">Each chapter runs <strong>glossary → procedure → 💡 tips</strong>. Every screen is on the <strong>Tenant Settings &gt; Widget settings</strong> tab (Ch. 6 only: platform admin console).</p>
 </header>
 
@@ -207,6 +207,10 @@ Custom widget (design library)              ── applied only while in use
     <tr><td>Corners</td><td>Small 8px · Medium 12px · Large 16px</td><td>Panel corner radius; bubbles and buttons follow proportionally</td></tr>
     <tr><td>Panel size</td><td>width 360–480 · height 480–720 (default 404×600)</td><td><strong>Desktop only.</strong> Mobile and app mode fill the screen</td></tr>
     <tr><td>Icon file</td><td>the theme card's launcher icon (default) · an uploaded icon</td><td>Artwork on the round launcher button. An uploaded icon overrides the theme card's icon choice</td></tr>
+    <tr><td>Quick-reply style</td><td>filled chips (default) · icon cards</td><td>Shape of the scenario buttons on the chat's first screen. Cards are white with an outline and an icon</td></tr>
+    <tr><td>Header with logo</td><td>logo replaces the title (default) · logo beside the title</td><td>Only applies when the theme card has a logo. Beside the title the logo is capped at 24px tall, so use a compact mark. The title is the copy card's <strong>Header title</strong> (per language); empty = display name</td></tr>
+    <tr><td>AI / agent messages</td><td>bubble only (default) · avatar + sender name</td><td>Avatar rows put a 28px round avatar left of AI and agent bubbles and the sender's name on the bubble's first line. Pick the images under <strong>AI avatar / Agent avatar</strong> (design files, icon kind); the names are the copy card's <strong>AI sender name / Agent sender name</strong> (per language); empty = display name / the agent's own name</td></tr>
+    <tr><td>Attach button icon</td><td>paperclip (default) · picture</td><td>The glyph on the composer's attach button</td></tr>
     <tr><td>Custom CSS (add-on)</td><td>sanitized CSS</td><td>Visible only for tenants whose platform admin enabled the add-on (Ch. 5)</td></tr>
     <tr><td>Note</td><td>free text</td><td>Operational notes such as "Spring 2026, owner ○○". Never shown to shoppers</td></tr>
   </table></div>
@@ -246,6 +250,16 @@ Custom widget (design library)              ── applied only while in use
     <li>A shopper who already has the widget open: new design after a page refresh</li>
     <li>The widget paints its cached theme first and then refreshes from the live file, so the old look may flash very briefly</li>
   </ul>
+  <h3>3.2-2 Launcher style · greeting pill (widget theme card)</h3>
+  <p>The floating launcher's look and its greeting are chosen under <strong>Settings &gt; Widget &gt; Widget theme</strong>. Neither applies in trigger mode or app mode.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Setting</th><th>Values</th><th>Behaviour</th></tr>
+    <tr><td>Launcher style</td><td>filled button (default) · <strong>icon only</strong></td><td>With icon only, the <strong>icon file</strong> of the custom widget in use becomes the button itself — no circle, no shadow (made for a mascot with its own outline). Without an icon file the filled button is drawn. The unread badge sits on the page-side corner</td></tr>
+    <tr><td>Greeting pill</td><td>off (default) · on + delay (0–30 s)</td><td>A brand-coloured speech bubble appears beside the launcher after the delay. Once per browser session; closing it with its X or opening the widget hides it. Tapping the pill opens the widget</td></tr>
+  </table></div>
+  <p>The pill's text is per language under <strong>Widget copy &gt; Launcher greeting</strong> (<code>{shop}</code> = display name; empty = the default).</p>
+  <div class="callout"><span class="c-label">💡 Tip</span>
+    <p>upload an icon-only mascot as a transparent PNG at 2× (e.g. 128×128). If it blends into the page, give the artwork its own white outline — CSS cannot draw the circle back.</p></div>
   <h3>3.3 Editing the design in use</h3>
   <p>[Edit] on a design with the <strong>In use</strong> badge warns on save: <em>"This design is in use — saving applies it to shoppers immediately."</em></p>
   <div class="callout warn"><span class="c-label">⚠️ Recommended</span>
@@ -309,6 +323,11 @@ Custom widget (design library)              ── applied only while in use
     <tr><td><code>.st-composer</code> / <code>.st-input</code> / <code>.st-send</code></td><td>composer area / input / send button</td></tr>
     <tr><td><code>.st-launcher</code></td><td>launcher button</td></tr>
     <tr><td><code>.st-quick-reply</code></td><td>quick-reply (scenario) button</td></tr>
+    <tr><td><code>.st-header-control</code></td><td>the header's language, settings and close buttons</td></tr>
+    <tr><td><code>.st-sender</code> / <code>.st-avatar</code></td><td>sender name / avatar on avatar rows (avatar message style)</td></tr>
+    <tr><td><code>.st-attach</code></td><td>attach button</td></tr>
+    <tr><td><code>.st-teaser</code></td><td>the greeting pill beside the launcher</td></tr>
+    <tr><td><code>.st-csat</code> / <code>.st-csat-option</code></td><td>satisfaction card / emoji options</td></tr>
   </table></div>
   <p><strong>Allowed</strong></p>
   <ul>

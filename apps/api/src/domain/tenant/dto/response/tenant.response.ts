@@ -105,6 +105,11 @@ export interface WidgetSettingsResponse {
   displayName: string | null;
   firstVisit: Record<string, string>;
   loginGreeting: Record<string, string>;
+  /** PLN-261019 P3 bags (stored, raw). */
+  headerTitle: Record<string, string>;
+  aiSenderName: Record<string, string>;
+  agentSenderName: Record<string, string>;
+  launcherTeaser: Record<string, string>;
   /** Fallback used when displayName is unset (the tenant's name). */
   displayNameFallback: string | null;
 }
