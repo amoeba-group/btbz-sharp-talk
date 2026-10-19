@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -29,7 +30,15 @@ export interface Cafe24Credential {
 @Injectable()
 export class Cafe24TokenService {
   private readonly logger = new Logger(Cafe24TokenService.name);
-  private readonly accessCache = new Map<number, { token: string; expiresAt: number }>();
+  /**
+   * Access tokens by tenant. `credKey` fingerprints the stored credential the
+   * token was minted from: a reconnect through the console rewrites the row,
+   * and until that was checked the cache kept serving the token of the OLD
+   * grant for up to two hours — so re-authorising a mall whose permissions
+   * had shrunk changed nothing visible (staging amoebaorder, 2026-10-19:
+   * reconnect 16:52, test still 403 insufficient_scope).
+   */
+  private readonly accessCache = new Map<number, { token: string; expiresAt: number; credKey: string }>();
   private readonly refreshInFlight = new Map<number, Promise<string | null>>();
 
   constructor(
@@ -109,7 +118,11 @@ export class Cafe24TokenService {
     const parsed = this.parseCredential(decryptSecret(cred.secretEnc));
     if (!parsed) return null;
     const cached = this.accessCache.get(tenantId);
-    if (cached && cached.expiresAt - Date.now() > ACCESS_TTL_MARGIN_MS) {
+    if (
+      cached &&
+      cached.expiresAt - Date.now() > ACCESS_TTL_MARGIN_MS &&
+      cached.credKey === credentialKey(cred)
+    ) {
       return { mallId: parsed.mallId, accessToken: cached.token };
     }
     const token = await this.refresh(tenantId, parsed, cred);
@@ -194,7 +207,13 @@ export class Cafe24TokenService {
           await this.credRepo.save(cred);
         }
         const ttlMs = (Number(data.expires_in) || 7200) * 1000;
-        this.accessCache.set(tenantId, { token: data.access_token, expiresAt: Date.now() + ttlMs });
+        // Keyed to the credential as it is NOW (after a rotation save), so the
+        // next call reuses this token until the row is rewritten by a reconnect.
+        this.accessCache.set(tenantId, {
+          token: data.access_token,
+          expiresAt: Date.now() + ttlMs,
+          credKey: credentialKey(cred),
+        });
         return data.access_token;
       } catch (e) {
         this.logger.warn(`cafe24 token refresh error tenant ${tenantId}: ${(e as Error).message}`);
@@ -206,4 +225,9 @@ export class Cafe24TokenService {
     this.refreshInFlight.set(tenantId, run);
     return run;
   }
+}
+
+/** Fingerprint of the stored secret — changes whenever the credential row is rewritten. */
+function credentialKey(cred: IntegrationCredential): string {
+  return createHash('sha256').update(cred.secretEnc ?? Buffer.alloc(0)).digest('hex');
 }
