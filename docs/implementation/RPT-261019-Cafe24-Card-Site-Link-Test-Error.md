@@ -19,13 +19,15 @@
 
 ## 3. 테스트 결과
 - 단위 18건 ✅(TCR §1), `jest src/domain/cafe24 src/domain/tenant` 162 ✅, API/웹 tsc ✅, 웹 build ✅, i18n:check ✅
-- 스테이징 실측 I1~I14(TCR §2): UI·링크·모달·토스트·일반 테스트 가드·데이터 정정 전부 ✅. **OAuth 테스트의 "연결됨" 분기는 스테이징에서 재현 불가**(아래 §5).
+- 스테이징 실측 I1~I14(TCR §2): UI·링크·모달·토스트·일반 테스트 가드·데이터 정정 전부 ✅. OAuth 테스트 "연결됨" 분기는 #679 배포 후 amoebaorder로 실측 ✅(§4-3).
 
 ## 4. 실측이 잡은 결함 2건 (머지 전 수정, TCR §2.1)
 1. `/admin/store` 프로브 → 앱이 `mall.read_store`를 요청하지 않아 403. `/products?limit=1`(+`/orders` 폴백)로 교체.
 2. **회전 토큰 덮어쓰기**: 테스트 서비스가 먼저 읽어 둔 `cred`를 `save()` → 프로브 중 토큰 서비스가 회전·저장한 refresh 토큰을 구 값으로 되돌림 → 다음 refresh 400. `repository.update({id}, {status, detail, lastTestedAt})`로 교체하고 `save()`를 throw하는 더블로 스펙 고정.
    - **영향**: 스테이징 **zhangbayo(tenant 16)의 Cafe24 refresh 토큰이 첫 실측(16:24 UTC)에서 소실**. 자동 동기화·테스트가 "token refresh failed — reconnect" 상태. **운영자가 카드 → 설정(Cafe24 재연결) → Cafe24 연결로 재인가해야 복구**(몰 관리자 로그인 필요). 프로덕션은 Cafe24 자격증명이 없어 무영향.
    - amoebaorder(tenant 3)는 refresh 정상·읽기 403(몰 권한 축소, 기존 상태) → 카드가 "re-authorise" 오류를 정확히 표시.
+
+3. **재연결 후 구 액세스 토큰 사용(기존 결함, 후속 PR #679)**: `Cafe24TokenService` 캐시가 테넌트 id만으로 조회돼 콘솔 재연결 뒤에도 이전 grant 토큰을 ≤2h 사용. 사용자가 amoebaorder를 16:52 재인가했는데 테스트가 계속 403이던 원인. `sha256(secret_enc)` 지문으로 캐시 대조 → 배포 후 16:56 **`Connected: amoebaorder.cafe24.com (catalogue reachable)`** 실측(OAuth 테스트 성공 경로 확인). `FIX-261019-Cafe24-Access-Cache-Survives-Reconnect.md`.
 
 ## 5. 배포 상태
 | 환경 | 상태 |
@@ -42,5 +44,5 @@
 
 ## 7. 남은 것
 - 스테이징 zhangbayo Cafe24 재인가(운영자). 재인가 후 카드 "연결 테스트" → `Connected: zhangbayo.cafe24.com (catalogue reachable)` 기대.
-- amoebaorder 몰 권한 복구(Cafe24 개발자센터) 또는 재인가.
+- ~~amoebaorder 몰 권한 복구~~ → 사용자가 16:52 재인가, #679 후 연결됨 확인.
 - 수동(토큰) Cafe24 연결의 동기화 버튼(PLN §4 보류).

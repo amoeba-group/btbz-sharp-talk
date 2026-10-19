@@ -33,7 +33,7 @@
 |---|---|---|
 | I1 | `GET /tenants/me/integrations/cafe24` (zhangbayo·amoebaorder) | ✅ `mode:'oauth'`, `fields.mall_id='zhangbayo'`/`'amoebaorder'`, status unknown(정정 직후). 배포 전 기준값은 `mall_id:null`·새 라우트 404 |
 | I2 | 일반 `POST …/integrations/cafe24/test` (OAuth 테넌트) | ✅ `{ok:false, skipped:true, detail:"Connected through Cafe24 OAuth — …"}`, DB 3행 모두 불변 |
-| I3 | `POST /tenants/me/cafe24/test` | ⚠️ **성공 경로는 스테이징에서 재현 불가** — (a) zhangbayo: 첫 실행(16:24, `/store` 프로브)에서 토큰 재발급은 성공했으나 `/store` 403 insufficient_scope → 프로브를 `/products`로 교체; 그런데 첫 구현의 `save(cred)`가 **회전된 refresh 토큰을 구 값으로 되돌려** 2회차부터 refresh 400(아래 §2.1). (b) amoebaorder: refresh 성공, `/products`·`/orders` 모두 403 insufficient_scope(몰 권한 축소, 8월 토큰 서비스 주석과 일치) → `ok:false "Cafe24 refused every read … re-authorise the mall"`, status error 기록. 즉 **토큰 발급→읽기→기록 경로는 실동작 확인**, "connected" 분기는 단위 테스트(U10·fallback)로 보증 |
+| I3 | `POST /tenants/me/cafe24/test` | ✅ **성공 경로 실측(16:56 UTC, FIX-261019 캐시 수정 배포 후)**: amoebaorder → `ok:true "Connected: amoebaorder.cafe24.com (catalogue reachable)"`, DB status connected·last_tested_at 기록, 2회차 14ms(캐시 재사용). 그 전 경과: (a) zhangbayo 첫 실행(16:24, `/store` 프로브)은 403 insufficient_scope → `/products`로 교체했으나 첫 구현의 `save(cred)`가 회전된 refresh 토큰을 되돌려 2회차부터 refresh 400(§2.1 F2, **운영자 재인가 필요**). (b) amoebaorder는 16:29~16:32 `/products`·`/orders` 403(당시 grant 축소) → 사용자가 16:52 재연결했는데도 403 지속 → **원인: 토큰 캐시가 자격증명 교체를 모름**(F3, FIX-261019-Cafe24-Access-Cache-Survives-Reconnect) |
 | I4 | 카드 UI(zhangbayo) | ✅ 제목 Cafe24, 부제 `zhangbayo.cafe24.com · OAuth 연결`, 배지, 버튼 설정·연결 테스트·주문 동기화·상품 가져오기 + 링크 사이트 열기 |
 | I5 | 카드 "연결 테스트" 클릭 | ✅ 오류 토스트(circle-alert) "Cafe24 token refresh failed — … reconnect the mall", 배지 오류·detail·마지막 확인 16:32:10 갱신 |
 | I6 | "사이트 열기" href | ✅ `https://eclogin.cafe24.com/Shop/?mall_id=zhangbayo`, `target=_blank`, `rel=noopener noreferrer` |
@@ -50,6 +50,7 @@
 | # | 결함 | 수정 커밋 |
 |---|---|---|
 | F1 | OAuth 테스트 프로브가 `/admin/store` → 앱이 `mall.read_store`를 요청하지 않아 항상 403 | 95bad8ad `/products?limit=1`, ddc2652a `/orders` 폴백 |
+| F3 | `Cafe24TokenService.accessCache`가 테넌트 id만으로 조회되어 콘솔 재연결로 refresh 토큰이 바뀌어도 이전 grant의 액세스 토큰을 ≤2h 계속 사용 → 재인가가 무효처럼 보임(amoebaorder 16:52) | PR #679 9b91969d `credKey=sha256(secret_enc)` 대조 + 스펙 3건(U19~U21) · `docs/bug-fix/FIX-261019-Cafe24-Access-Cache-Survives-Reconnect.md` |
 | F2 | 테스트 서비스가 먼저 읽은 `cred` 엔티티를 `save()` → 프로브 중 토큰 서비스가 회전·저장한 refresh 토큰을 **구 토큰으로 덮어씀** → 다음 refresh 400. 스테이징 zhangbayo의 refresh 토큰이 이렇게 소실됨(**운영자 재연결 필요**: 카드 → 설정 → Cafe24 연결) | 7b88f826 `update({id}, {status,detail,lastTestedAt})` + 스펙(U15·U16) |
 
 - U15 `save()` 호출 시 throw하는 레포 더블로 partial update만 허용 ✅ · U16 패치 키 = `detail,lastTestedAt,status` ✅ · U17 catalogue 403·orders OK → connected(orders) ✅ · U18 둘 다 거부 → 두 실패 병기 + re-authorise ✅
