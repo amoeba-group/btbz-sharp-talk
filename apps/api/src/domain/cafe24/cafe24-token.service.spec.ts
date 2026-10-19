@@ -100,3 +100,65 @@ describe('Cafe24TokenService.refresh — recorded scopes', () => {
     expect(warns.join(' ')).not.toContain('no longer grants');
   });
 });
+
+/**
+ * FIX-261019 — the access-token cache must die with the credential it came
+ * from. A console reconnect rewrites `secret_enc`; serving the previous
+ * grant's token after that made re-authorising a mall look like a no-op.
+ */
+describe('Cafe24TokenService.getConnection — cache follows the credential', () => {
+  const OLD_ENV = process.env;
+  let fetchCalls: number;
+  const respond = (token: string) => {
+    global.fetch = jest.fn(async () => {
+      fetchCalls++;
+      return { ok: true, json: async () => ({ access_token: token, expires_in: 7200, refresh_token: 'same' }) };
+    }) as never;
+  };
+  const blob = (refreshToken: string) =>
+    encryptSecret(JSON.stringify({ mallId: 'amoebaorder', refreshToken, scopes: ['mall.read_order'] }));
+
+  beforeEach(() => {
+    process.env = { ...OLD_ENV, CAFE24_CLIENT_ID: 'cid', CAFE24_CLIENT_SECRET: 'sec', CRED_ENC_KEY: randomBytes(32).toString('base64') };
+    fetchCalls = 0;
+  });
+  afterEach(() => { process.env = OLD_ENV; jest.restoreAllMocks(); });
+
+  function build() {
+    const cred: any = { id: 3, tenantId: 3, provider: 'cafe24', secretEnc: blob('same') };
+    const repo = { findOne: jest.fn(async () => cred), save: jest.fn(async (c: any) => c) };
+    const svc = new Cafe24TokenService(repo as never);
+    jest.spyOn((svc as any).logger, 'warn').mockImplementation(() => undefined);
+    return { svc, cred };
+  }
+
+  it('reuses the cached token while the stored credential is unchanged', async () => {
+    const { svc } = build();
+    respond('a1');
+    expect((await svc.getConnection(3))?.accessToken).toBe('a1');
+    expect((await svc.getConnection(3))?.accessToken).toBe('a1');
+    expect(fetchCalls).toBe(1);
+  });
+
+  it('refreshes again once the credential row was rewritten (console reconnect)', async () => {
+    const { svc, cred } = build();
+    respond('a1');
+    await svc.getConnection(3);
+    // The OAuth callback stores a brand-new refresh token for the same tenant.
+    cred.secretEnc = blob('fresh-from-reconnect');
+    respond('a2');
+    expect((await svc.getConnection(3))?.accessToken).toBe('a2');
+    expect(fetchCalls).toBe(2);
+  });
+
+  it('a rotation the service saved itself does NOT invalidate its own cache', async () => {
+    const { svc } = build();
+    global.fetch = jest.fn(async () => {
+      fetchCalls++;
+      return { ok: true, json: async () => ({ access_token: 'a1', expires_in: 7200, refresh_token: 'rotated' }) };
+    }) as never;
+    await svc.getConnection(3); // rotates → saves new secretEnc → cache keyed to it
+    await svc.getConnection(3);
+    expect(fetchCalls).toBe(1);
+  });
+});
