@@ -121,29 +121,50 @@ func userContentController(_ c: WKUserContentController, didReceive m: WKScriptM
 }
 ```
 
-## 6. Android — Kotlin SDK (AAR, 권장)
+## 6. Android — Kotlin SDK (Maven 폴더, 권장)
 
-Android는 완성된 라이브러리가 있습니다 (`sdk/android`, PLN-260827). AAR 파일을 받아
-`libs/`에 넣으면 아래가 전부입니다 — §6-수동의 브리지·파일선택기·외부링크·키보드 처리를
-라이브러리가 대신합니다.
+Android는 완성된 라이브러리가 있습니다 (`sdk/android`, PLN-260827). §6-수동의 브리지·파일선택기·외부링크·키보드 처리를
+라이브러리가 대신합니다. 전달물은 **Maven 형식 폴더**(`shoptalk-android-<버전>-maven.zip`: AAR + POM + Gradle 메타데이터 + 소스 + 체크섬)입니다.
+자세한 설치·요구 버전·AAR 직접 전달 대안은 `GUIDE-261016-Mobile-SDK-0.2.vi.md` §1 참고.
 
 ```kotlin
-dependencies {
-    implementation(files("libs/shoptalk-android-0.1.0.aar"))
-    implementation("androidx.core:core-ktx:1.15.0")        // 이미 있다면 생략
-    implementation("androidx.fragment:fragment-ktx:1.8.5")  // 이미 있다면 생략
+// settings.gradle.kts — zip을 third_party/shoptalk-maven에 풀었거나, 사내 Artifactory/Nexus에 폴더를 올린 경우
+dependencyResolutionManagement {
+    repositories {
+        google(); mavenCentral()
+        maven { url = uri("third_party/shoptalk-maven"); content { includeGroup("site.amoeba.shoptalk") } }
+    }
 }
+// app/build.gradle.kts — 한 줄. androidx는 POM이 최저 버전만 선언하므로 앱의 더 높은 버전이 그대로 유지된다.
+dependencies { implementation("site.amoeba.shoptalk:shoptalk-android:0.2.0") }
 ```
 
+> ⚠️ AAR만 받는 경우 POM이 없으므로 앱이 `fragment-ktx 1.3.6` · `core-ktx 1.6.0` · `lifecycle-runtime-ktx 2.3.1` **이상**을 직접 가져야 한다.
+> "최신 버전"을 그대로 붙여 넣지 말 것: `core-ktx 1.15.0`은 `compileSdk 35`를 요구해 `compileSdk 34` 앱의 빌드가 실패하고,
+> fragment 1.2.x(2020년)에서는 Fragment 생성 시 앱이 종료된다.
+
 ```kotlin
-val chat = ShopTalkChatFragment.newInstance(
-    ShopTalkConfig(widgetUrl = "https://talk.example.com/widget/", shop = "<스토어도메인>", locale = "vi")
-)
-chat.identify(ShopTalkUser(userId = uid, hash = serverSignedHash)) // hash는 §3대로 서버 서명
-chat.listener = object : ShopTalkListener {
-    override fun onCloseRequest() { supportFragmentManager.popBackStack() } // 필수
+class SupportActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_support)
+        if (savedInstanceState == null) {
+            val chat = ShopTalkChatFragment.newInstance(
+                ShopTalkConfig(widgetUrl = "https://talk.example.com/widget/", shop = "<스토어도메인>", locale = "vi")
+            )
+            supportFragmentManager.commit { replace(R.id.container, chat, "chat") }
+        }
+    }
+
+    // 매번 여기서 붙인다: Activity가 재생성되면 새 Fragment가 만들어지고 provider/listener는 저장되지 않는 일반 필드다.
+    override fun onResumeFragments() {
+        super.onResumeFragments()
+        (supportFragmentManager.findFragmentByTag("chat") as? ShopTalkChatFragment)?.apply {
+            identityProvider = ShopTalkIdentityProvider { api.sharpTalkIdentity() } // 서명은 §3대로 서버가 한다
+            listener = object : ShopTalkListener { override fun onCloseRequest() { finish() } } // 필수
+        }
+    }
 }
-supportFragmentManager.commit { replace(R.id.container, chat) }
 ```
 
 제어는 `chat.open(ShopTalkTab.ORDERS)` · `chat.setLocale("vi")` · `chat.logout()`.

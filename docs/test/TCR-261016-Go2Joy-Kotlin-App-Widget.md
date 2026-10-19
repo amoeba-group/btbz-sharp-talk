@@ -305,3 +305,74 @@ và app không dùng SDK được giải ở đó. Chưa hợp nhất thử trê
 - Android 7 đến 14 (kiểm 5.0, 6.0, 15; API 22 đi chung đường mã với 21, API 24 đến 34 đi chung đường với 23 và 35).
 - Bộ chọn ảnh hệ thống của Android 5 (thẻ nhớ ảo chỉ đọc).
 - Hiệu năng bộ nhớ lâu, xoay liên tục, chuyển nền rồi quay lại sau khi hệ thống thu hồi tiến trình.
+
+## 11. Cách giao thư viện: thư mục Maven và mức androidx tối thiểu (2026-10-19)
+
+### 11.1 Vấn đề
+
+Tệp AAR không có POM, và dự án chưa có cấu hình xuất bản, nên app của Go2Joy phải tự khai báo androidx. Hướng dẫn cũ bảo họ thêm `core-ktx 1.15.0` và
+`fragment-ktx 1.8.5` ("bỏ nếu app đã có"). Chạy thử một app khách giả (Kotlin 2.2.0, AGP 8.5.2) trên emulator Android 15 với trang giả lập widget:
+
+| # | Cấu hình app khách | Cách lấy SDK | Kết quả trước khi sửa |
+|---|---|---|---|
+| P1 | Đoạn khai báo trong hướng dẫn cũ, `compileSdk 34` | AAR trần | **Build thất bại**: `core 1.15.0` đòi `compileSdk` 35 |
+| P2 | androidx năm 2020 (fragment 1.2.5, activity 1.1.0, core 1.3.2, lifecycle 2.2.0) | AAR trần | **App sập** khi tạo fragment: `NoClassDefFoundError ... ActivityResultContracts$StartActivityForResult` |
+| P3 | androidx 2023, `compileSdk 34`, kho Maven với POM ghim `core-ktx 1.15.0` và `fragment-ktx 1.8.5` | Maven (bản thử) | **Build thất bại**, cùng nguyên nhân P1 |
+| P4 | androidx 2021 (fragment 1.3.6, core 1.6.0, activity 1.2.4, lifecycle 2.3.1) hoặc 2023 | AAR trần | Chạy đủ: locale, context, identify đến trang |
+
+Ranh giới nằm giữa năm 2020 và 2021: Activity Result API xuất hiện từ fragment 1.3.0 và activity 1.2.0.
+
+### 11.2 Thay đổi
+
+- Thêm xuất bản Maven cho `:shoptalk` và `:shoptalk-compose` (nhóm `site.amoeba.shoptalk`, phiên bản lấy từ `gradle.properties`), kèm mã nguồn.
+- **POM khai báo mức tối thiểu**: `fragment-ktx 1.3.6`, `core-ktx 1.6.0`, `lifecycle-runtime-ktx 2.3.1`, `kotlin-stdlib 2.1.0` (build bằng Kotlin 2.2.0 nhưng
+  `coreLibrariesVersion = 2.1.0` và `apiVersion = 2.1`, nên trình biên dịch chặn mọi API stdlib mới hơn mức tối thiểu). Thư viện biên dịch được với các mức này, 72 test đạt.
+- Lệnh một dòng: `./gradlew deliveryZip` tạo `dist/maven/` và `dist/shoptalk-android-0.2.0-maven.zip` (162.087 byte; gồm AAR, POM, siêu dữ liệu Gradle, mã nguồn,
+  checksum từng tệp; thư mục được xóa trước khi xuất bản để không lẫn tệp cũ).
+- App mẫu khai báo androidx mới như một app thật (core-ktx 1.15.0, fragment-ktx 1.8.5, lifecycle 2.8.7); việc kiểm mức tối thiểu do ma trận dưới đây đảm nhiệm.
+- Hướng dẫn: viết lại mục 1 (yêu cầu, cách nhận thư viện, phương án AAR trần kèm mức tối thiểu, cảnh báo về đoạn dán cũ) và mục 2 (gắn provider và listener trong
+  `onResumeFragments`); thêm hai dòng vào danh sách kiểm tra; sửa hướng dẫn tiếng Hàn và README; thêm nhóm câu hỏi A2 vào bộ câu hỏi cho Go2Joy.
+
+### 11.3 Kết quả sau khi sửa
+
+Mọi ca dùng thư mục giải nén sạch từ zip (như client làm), app khách giả trên emulator Android 15 (API 35), trang giả lập widget:
+
+| # | Cấu hình app khách | Cách lấy SDK | Kết quả |
+|---|---|---|---|
+| V1 | Chỉ MỘT dòng khai báo + appcompat 1.3.1, không dòng androidx nào, `compileSdk 34` | Maven | Đạt |
+| V2 | androidx 2023 (fragment 1.5.7, core 1.10.1), `compileSdk 34`, không ghim | Maven | Đạt; Gradle giữ fragment 1.5.7 và core-ktx 1.10.1 của app |
+| V3 | androidx 2020 (fragment 1.2.5), `compileSdk 34`, không ghim | Maven | **Đạt** (trước đây sập): Gradle tự nâng fragment lên mức tối thiểu |
+| V4 | androidx mới nhất, `compileSdk 35` | Maven | Đạt |
+| V5 | Đúng mức tối thiểu (2021) ghim cứng, `compileSdk 34` | Maven | Đạt |
+| V6 | Host dùng **Kotlin 2.1.20**, một dòng khai báo | Maven | Đạt; stdlib giữ 2.1.20 (không bị kéo lên 2.2.0) |
+| R1 | Kho là thư mục tương đối `third_party/shoptalk-maven` kèm `includeGroup` (đúng dòng hướng dẫn) | Maven | Đạt |
+| R2 | Mức tối thiểu của hướng dẫn mục 1.3, `compileSdk 34` | AAR trần | Đạt |
+| C1 | Module Compose, host `AppCompatActivity`, một dòng `shoptalk-compose` | Maven | Đạt (locale, identify đến trang) |
+| C2 | Module Compose, host `ComponentActivity` | Maven | Báo lỗi chủ ý nêu cách sửa, không sập mờ |
+
+Kiểm bổ sung:
+
+| Kiểm | Kết quả |
+|---|---|
+| 72 test đơn vị SDK, lint SDK và Compose | Đạt, 0 lỗi |
+| 13 kiểm tra giao thức trên emulator Android 15 với app mẫu dựng từ cấu hình mới | 13/13; 0 vi phạm StrictMode do mã SDK; app mẫu không sập |
+| 9 lượt đổi người dùng và gián đoạn với widget và API thật | 9/9, không phiên nào đổi chủ |
+| 40 tệp checksum trong thư mục giải nén | Khớp cả 40 |
+
+### 11.4 Gắn nhà cung cấp danh tính: hướng dẫn cũ dễ làm mất nhận diện
+
+Hướng dẫn cũ đặt `identityProvider` và `listener` trên fragment ngay lúc tạo, chỉ khi Activity mới. Hai app thử, cùng bật dark mode để buộc Activity tạo lại:
+
+| App thử | Nhận diện lần mở đầu | Sau khi Activity tạo lại | Nút Back |
+|---|---|---|---|
+| Gắn một lần khi tạo mới (đúng mẫu cũ) | có | **mất**: người dùng chat như khách, không có lỗi nào | đóng |
+| Gắn trong `onResumeFragments` | có | **còn** | đóng |
+
+Hướng dẫn nay dùng mẫu thứ hai. Cũng ghi rõ: `commit { }` chạy bất đồng bộ nên `findFragmentByTag` ngay sau đó trả về rỗng.
+
+### 11.5 Chưa kiểm
+
+- Android 5.0 và 6.0 với bản thư viện mới (AVD và ảnh hệ thống đã xóa sau lần kiểm trước). Thay đổi chỉ ở đường biên dịch (mức androidx, stdlib), không đụng mã
+  riêng của từng bản Android, và các lượt kiểm trên androidx 2021 (gần mức tối thiểu) chạy trên Android 15; nhưng chưa chạy lại 13 kiểm tra trên API 21 và 23.
+- `targetSdk` 36 và Android 16, `compileSdk` từ 33 trở xuống, Kotlin 2.0 (đã biết không đọc được), điện thoại thật.
+- Build của client có kiểm tra checksum hoặc khóa phiên bản (cần thêm checksum của nhóm `site.amoeba.shoptalk`).

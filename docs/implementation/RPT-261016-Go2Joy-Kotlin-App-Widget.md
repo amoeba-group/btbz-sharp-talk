@@ -8,11 +8,11 @@
 | Hạng mục | Trạng thái |
 |---|---|
 | PR | **chưa mở**, nhánh chưa push |
-| Commit | `aab60de0` (S2+S3), `8415bfa9` (S9 backend), `62dc18f7` (S8+S9 console, widget), `8f27c23c` (sửa import), `5c041715` (SDK), `96894a79` (RPT/TCR), `8b997970` (build Gradle/AAR), `872be732`, `a0eea30b` (lỗi từ emulator), `99c68974` (minSdk 21, `@JvmOverloads`), `45766076` + `ae4b6861` (SDK tự đăng xuất khi đổi người dùng, chủ phiên chỉ ghi sau khi widget xác nhận), `7df8be61` (logout xóa tin cũ), `45ef864c` (chủ phiên trên luồng riêng, chip sau khi tạo lại, `onReady` một lần, màn lỗi theo màu app, WebView cũ), `9564c48e` (menu đúng ngôn ngữ, thẻ đánh giá), `e93a51ab` (E5095 sang E5150) và các commit tài liệu. Nhánh `feature/go2joy-kotlin-app-impl`, 28 commit trên `origin/main` (không tụt), **chưa push** |
+| Commit | `aab60de0` (S2+S3), `8415bfa9` (S9 backend), `62dc18f7` (S8+S9 console, widget), `8f27c23c` (sửa import), `5c041715` (SDK), `96894a79` (RPT/TCR), `8b997970` (build Gradle/AAR), `872be732`, `a0eea30b` (lỗi từ emulator), `99c68974` (minSdk 21, `@JvmOverloads`), `45766076` + `ae4b6861` (SDK tự đăng xuất khi đổi người dùng, chủ phiên chỉ ghi sau khi widget xác nhận), `7df8be61` (logout xóa tin cũ), `45ef864c` (chủ phiên trên luồng riêng, chip sau khi tạo lại, `onReady` một lần, màn lỗi theo màu app, WebView cũ), `9564c48e` (menu đúng ngôn ngữ, thẻ đánh giá), `e93a51ab` (E5095 sang E5150) và các commit tài liệu. và các commit về cách giao thư viện (thư mục Maven, mức tối thiểu, sửa hướng dẫn). Nhánh `feature/go2joy-kotlin-app-impl`, **chưa push**; main đã tiến thêm 3 commit (1 xung đột một dòng trong `ChatTab.tsx`) |
 | SQL `261016-tenant-mobile-app-config.sql` | **chưa áp** trên staging, production Hàn Quốc, Go2Joy. Áp **trước** khi deploy code (`DB_SYNCHRONIZE=false` trên staging) |
 | Deploy | chưa deploy môi trường nào |
 | Chạy thử | local, DB nháp `db_kimpl` |
-| AAR 0.2.0 | `dist/shoptalk-android-0.2.0.aar` 110 147 byte (sha256 `d38ece67…`), `shoptalk-compose-0.2.0.aar` 5 791 byte (`cf1e3c5c…`); `minSdk 21`; test SDK 72/72, lint 0 lỗi, app khách R8 build được. **Chạy thật trên emulator Android 5.0, 6.0 và 15** (13 kiểm tra giao thức mỗi mức, TCR §10); **chưa chạy trên điện thoại thật** |
+| Giao thư viện | `./gradlew deliveryZip` tạo `dist/shoptalk-android-0.2.0-maven.zip` (162.087 byte, SHA-256 `14861643b6e5fb9f…c88e`; thư mục Maven gồm AAR, POM, siêu dữ liệu Gradle, mã nguồn, checksum). AAR lõi 110.069 byte (`db33ac9c…`), AAR Compose 5.791 byte (`cf1e3c5c…`). POM khai báo mức tối thiểu của androidx và stdlib. Test SDK 72/72, lint 0 lỗi. Chạy thật trên emulator Android 5.0, 6.0 và 15 (TCR §10) và ma trận cấu hình app khách (TCR §11); **chưa chạy trên điện thoại thật** |
 
 ## Đã làm, theo PLN
 
@@ -66,6 +66,6 @@ Kiểm thử: TCR-261016 (đặc biệt §10: ba mức Android, StrictMode, truy
   - [ ] Go2Joy
 - Rollback: `ALTER TABLE tenants DROP COLUMN mobile_app_config;` (code cũ không đọc cột này; code mới chạy được khi cột còn nhưng rỗng).
 - Mã lỗi mới: `E5150` (trống trên 51 nhánh).
-- Không có hạ tầng mới. AAR giao bằng tệp (`sdk/android/dist/` không commit).
+- Không có hạ tầng mới. Thư viện giao bằng thư mục Maven `dist/shoptalk-android-0.2.0-maven.zip` (`./gradlew deliveryZip`; `sdk/android/dist/` không commit).
 
 🤖 Generated with [Claude Code](https://claude.com/claude-code)

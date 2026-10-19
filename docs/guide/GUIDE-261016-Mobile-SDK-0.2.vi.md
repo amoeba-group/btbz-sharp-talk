@@ -1,6 +1,6 @@
 # Hướng dẫn tích hợp SharpTalk vào app Android (Kotlin SDK 0.2.0)
 
-> **Đối tượng.** Dev app Go2Joy (Kotlin 2.2.0). **Phiên bản.** SDK 0.2.0, ngày 2026-10-16.
+> **Đối tượng.** Dev app Go2Joy (Kotlin 2.2.0). **Phiên bản.** SDK 0.2.0, cập nhật 2026-10-19 (cách giao và yêu cầu androidx).
 > **Tham chiếu.** `PLN-261015-Go2Joy-Kotlin-SDK-0.2`, `REQ-261015-Go2Joy-Kotlin-App-Widget`,
 > `sdk/android/README.md`, hợp đồng bridge `모바일SDK연동가이드_Mobile-SDK.ko.md`, chữ ký danh tính
 > `임베드SDK설치가이드_Embed-SDK.ko.md` §3.4.
@@ -10,54 +10,139 @@ app nhận ngay, không cần phát hành lại. App chỉ cần: mở màn chat
 
 ## 1. Cài đặt
 
-Yêu cầu của app chủ (đã kiểm bằng app thử, xem TCR-261016 §7):
+### 1.1 Yêu cầu của app chủ
+
+Tất cả đã kiểm bằng app thử chạy trên emulator (TCR-261016 mục 7, 10 và 11).
 
 | Hạng mục | Yêu cầu | Ghi chú |
 |---|---|---|
-| Kotlin | **2.1.0 trở lên** | AAR build bằng 2.2.0. Kotlin 2.0.x trở xuống không đọc được (trình biên dịch dừng với lỗi nội bộ) |
-| `minSdk` | **21 trở lên** | thấp hơn thì lỗi gộp manifest. Đã chạy thật trên Android 5.0 (API 21), 6.0 (API 23) và 15 (API 35), xem TCR-261016 §10. Trên Android 5.x lỗi HTTP 4xx/5xx của trang không được báo riêng, chỉ có lỗi mạng và hết 15 giây chờ |
-| Android System WebView của máy | **Chrome 80 trở lên** | widget là ứng dụng web hiện đại. WebView cũ hơn tải được trang nhưng không chạy được, nên sau 15 giây SDK hiện màn lỗi "cập nhật Android System WebView". Máy có Google Play tự cập nhật WebView; máy không có (hoặc đã tắt cập nhật) thì không dùng được chat |
-| JVM của app | 11 hoặc 17 | cả hai đều đã kiểm |
-| AGP | 8.5.2 và 8.10.1 đã kiểm | AAR không đòi AGP hay compileSdk tối thiểu |
-| Activity chủ | `FragmentActivity` (`AppCompatActivity` cũng là một) | `ComponentActivity` thuần sẽ sập, xem mục 8 |
-| Mã Java | dùng được | `ShopTalkConfig`, `ShopTalkContext`, `ShopTalkAttachments` có hàm tạo ngắn cho Java |
+| Kotlin | **2.1.0 trở lên** | Thư viện build bằng 2.2.0. Kotlin 2.0.x trở xuống không đọc được (trình biên dịch dừng với lỗi nội bộ). App dùng Kotlin 2.1 vẫn giữ stdlib 2.1 của mình, không bị kéo lên 2.2.0 |
+| `minSdk` | **21 trở lên** | Thấp hơn thì lỗi gộp manifest. Đã chạy thật trên Android 5.0 (API 21), 6.0 (API 23) và 15 (API 35). Trên Android 5.x lỗi HTTP 4xx/5xx của trang không được báo riêng, chỉ có lỗi mạng và hết 15 giây chờ |
+| `compileSdk`, `targetSdk` | Không đòi mức tối thiểu | SDK không ép app nâng `compileSdk`. Đã kiểm `compileSdk` 34 và 35, `targetSdk` 34 và 35; **chưa kiểm 36**. Lưu ý: nếu app tự khai báo androidx mới thì chính thư viện đó có thể đòi `compileSdk` cao (xem 1.3) |
+| androidx của app | **fragment-ktx 1.3.6, core-ktx 1.6.0, lifecycle-runtime-ktx 2.3.1, activity 1.2.4 trở lên** | Đây là mức thấp nhất đã chạy (androidx năm 2021). **fragment 1.2.5 và activity 1.1.0 (năm 2020) làm app sập ngay khi tạo fragment** vì chưa có API kết quả hoạt động. Nhận qua Maven thì Gradle tự nâng lên mức này; app có bản cao hơn thì giữ nguyên |
+| Android System WebView của máy | **Chrome 80 trở lên** | Widget là ứng dụng web hiện đại. WebView cũ hơn tải được trang nhưng không chạy được, nên sau 15 giây SDK hiện màn lỗi "cập nhật Android System WebView". Máy có Google Play tự cập nhật WebView; máy không có (hoặc đã tắt cập nhật) thì không dùng được chat |
+| JVM của app | 11 hoặc 17 | Cả hai đều đã kiểm |
+| AGP | 8.5.2 và 8.10.1 đã kiểm | Thư viện không đòi AGP tối thiểu |
+| Activity chủ | `FragmentActivity` (`AppCompatActivity` cũng là một) | `ComponentActivity` thuần sẽ báo lỗi ngay, xem mục 8 |
+| Mã Java | Dùng được | `ShopTalkConfig`, `ShopTalkContext`, `ShopTalkAttachments` có hàm tạo ngắn cho Java |
 
-Amoeba giao file AAR (không có trên Maven, không commit vào repo):
+### 1.2 Nhận thư viện: thư mục Maven (khuyên dùng)
+
+Amoeba giao tệp `shoptalk-android-0.2.0-maven.zip` (khoảng 160 KB) kèm mã SHA-256 của tệp zip. Bên trong là một kho Maven nhỏ: AAR, tệp POM
+khai báo các thư viện cần thiết, siêu dữ liệu Gradle, mã nguồn và checksum cho từng tệp. Không commit tệp này vào repo của Amoeba;
+trong repo của Go2Joy thì tùy đội.
+
+**Cách A: để thư mục trong repo của app** (không cần Artifactory):
+
+```bash
+unzip shoptalk-android-0.2.0-maven.zip -d third_party/shoptalk-maven
+```
+
+```kotlin
+// settings.gradle.kts
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url = uri("third_party/shoptalk-maven")
+            content { includeGroup("site.amoeba.shoptalk") }   // chỉ nhóm của Amoeba lấy từ thư mục này
+        }
+    }
+}
+```
+
+```kotlin
+// app/build.gradle.kts: MỘT dòng, không cần khai báo androidx nào thêm
+dependencies {
+    implementation("site.amoeba.shoptalk:shoptalk-android:0.2.0")
+    // Chỉ khi app dùng Compose (mục 8); tự kéo theo shoptalk-android và fragment-compose:
+    // implementation("site.amoeba.shoptalk:shoptalk-compose:0.2.0")
+}
+```
+
+**Cách B: công ty đã có Artifactory, Nexus hoặc GitHub Packages.** Tải nguyên nội dung thư mục lên kho đó (giữ cấu trúc
+`site/amoeba/shoptalk/...`). App chỉ cần hai đoạn trên, thay đường dẫn bằng địa chỉ kho của họ.
+
+Vì sao dùng cách này:
+- POM chỉ nêu **mức thấp nhất** của androidx và stdlib. Gradle chọn bản cao hơn giữa app và thư viện, nên app giữ androidx của mình, không bị nâng
+  bản và không bị ép nâng `compileSdk`. Đã kiểm: app có fragment 1.5.7 và core-ktx 1.10.1 vẫn giữ nguyên hai bản đó; app Kotlin 2.1.20 vẫn giữ stdlib 2.1.20.
+- App quá cũ (fragment 1.2.5) cũng được Gradle tự nâng lên 1.3.6, thay vì sập.
+- Nâng phiên bản sau này chỉ là đổi số trong một dòng; có mã nguồn và checksum để kiểm tra.
+- Nếu build của họ bật kiểm tra checksum thư viện (dependency verification), cần thêm checksum của `site.amoeba.shoptalk` vào tệp xác minh;
+  mỗi tệp trong thư mục có sẵn `.sha256`.
+
+### 1.3 Phương án dự phòng: tệp AAR trần
+
+Dùng khi build không cho thêm kho. AAR nằm trong zip tại `site/amoeba/shoptalk/shoptalk-android/0.2.0/shoptalk-android-0.2.0.aar`
+(Amoeba cũng gửi riêng nếu cần). **AAR không có POM, nên app phải tự có các thư viện sau, từ phiên bản này trở lên:**
 
 ```kotlin
 // app/build.gradle.kts
 dependencies {
     implementation(files("libs/shoptalk-android-0.2.0.aar"))
-    implementation("androidx.core:core-ktx:1.15.0")         // bỏ nếu app đã có
-    implementation("androidx.fragment:fragment-ktx:1.8.5")  // bỏ nếu app đã có
-    // Chỉ khi app dùng Compose (xem mục 8):
+    // Mức thấp nhất đã chạy. Nếu app ĐÃ có bản cao hơn thì giữ nguyên, đừng hạ; nếu thiếu thì thêm đúng các dòng này.
+    implementation("androidx.fragment:fragment-ktx:1.3.6")
+    implementation("androidx.core:core-ktx:1.6.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
+    // Chỉ khi app dùng Compose (mục 8):
     // implementation(files("libs/shoptalk-compose-0.2.0.aar"))
-    // implementation("androidx.fragment:fragment-compose:1.8.5")   // AAR không có POM nên phải tự khai báo
+    // implementation("androidx.fragment:fragment-compose:1.8.5")
 }
 ```
 
-AAR không kéo thêm thư viện nào khác. Quyền `INTERNET`, `FileProvider` cho camera và khai báo `<queries>` đã nằm trong manifest
-của AAR, tự gộp vào app. Không cần khai báo thêm.
+> ⚠️ **Đừng dán phiên bản androidx mới nhất "cho chắc".** Phiên bản cũ của hướng dẫn này ghi `core-ktx:1.15.0` và `fragment-ktx:1.8.5`.
+> Dán nguyên văn vào app có `compileSdk 34` thì **build thất bại** (core 1.15.0 đòi `compileSdk` 35, fragment 1.8.5 đòi 34). Dùng đúng mức tối thiểu ở trên
+> hoặc giữ bản app đang có.
 
-Muốn nhúng dạng source: `include(":shoptalk")` (và `":shoptalk-compose"`) trỏ tới thư mục trong `sdk/android`.
+Muốn nhúng dạng mã nguồn: `include(":shoptalk")` (và `":shoptalk-compose"`) trỏ tới thư mục trong `sdk/android`.
+
+Quyền `INTERNET`, `FileProvider` cho camera và khai báo `<queries>` đã nằm trong manifest của thư viện, tự gộp vào app. Không cần khai báo thêm.
+Thư viện không chứa mã native (`.so`), nên không vướng yêu cầu trang bộ nhớ 16 KB của Google Play.
 
 ## 2. Mở màn chat
 
 ```kotlin
-val chat = ShopTalkChatFragment.newInstance(
-    ShopTalkConfig(
-        widgetUrl = cfg.widgetUrl,   // staging: https://shoptalk.amoeba.site/widget/
-        shop = cfg.shop,             // "https://www.go2joy.vn"
-        agent = cfg.agent,           // "hotel-admin"
-        locale = "vi",
-    )
-)
-chat.identityProvider = ShopTalkIdentityProvider { api.sharpTalkIdentity() }   // mục 3
-chat.listener = object : ShopTalkListener {
-    override fun onCloseRequest() { finish() }                                  // BẮT BUỘC
+class SupportActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_support)          // có một FrameLayout id container
+        if (savedInstanceState == null) {
+            val chat = ShopTalkChatFragment.newInstance(
+                ShopTalkConfig(
+                    widgetUrl = cfg.widgetUrl,   // staging: https://shoptalk.amoeba.site/widget/
+                    shop = cfg.shop,             // "https://www.go2joy.vn"
+                    agent = cfg.agent,           // "hotel-admin"
+                    locale = "vi",
+                )
+            )
+            supportFragmentManager.commit { replace(R.id.container, chat, CHAT_TAG) }
+        }
+    }
+
+    // GẮN Ở ĐÂY, mỗi lần: lần đầu và cả sau khi Activity bị tạo lại.
+    override fun onResumeFragments() {
+        super.onResumeFragments()
+        (supportFragmentManager.findFragmentByTag(CHAT_TAG) as? ShopTalkChatFragment)?.apply {
+            identityProvider = ShopTalkIdentityProvider { api.sharpTalkIdentity() }   // mục 3
+            listener = object : ShopTalkListener {
+                override fun onCloseRequest() { finish() }                              // BẮT BUỘC
+            }
+        }
+    }
+
+    private companion object { const val CHAT_TAG = "shoptalk-chat" }
 }
-supportFragmentManager.commit { replace(R.id.container, chat) }
 ```
+
+> ⚠️ **Đừng chỉ gắn `identityProvider` và `listener` trong khối `if (savedInstanceState == null)`.** `identityProvider` và `listener` là trường thường,
+> không được lưu. Khi Activity bị tạo lại (dark mode, đổi cỡ chữ hệ thống, xoay màn nếu Activity không tự xử lý), `FragmentManager` dựng một
+> fragment **mới** không có hai trường này: người dùng chat như khách và **không có lỗi nào báo ra**. Đã tái hiện trên emulator: mẫu gắn một lần mất
+> nhận diện sau khi bật dark mode, mẫu gắn trong `onResumeFragments` thì vẫn nhận diện lại (TCR-261016 mục 11).
+>
+> Cũng đừng gọi `findFragmentByTag` ngay sau `commit { }` trong `onCreate`: `commit` chạy bất đồng bộ nên lúc đó chưa có fragment. Cần ngay
+> thì dùng `commitNow { }`, hoặc gắn trong `onResumeFragments` như trên.
 
 ### 2.1 Giá trị cấu hình
 
@@ -228,7 +313,8 @@ Module riêng, không kéo Compose vào AAR lõi. Activity chủ phải là `Fra
 > kế thừa nó) hoặc `FragmentActivity`. `setContent { ... }` vẫn dùng như cũ.
 
 ```kotlin
-implementation(files("libs/shoptalk-compose-0.2.0.aar"))   // kèm shoptalk-android-0.2.0.aar
+implementation("site.amoeba.shoptalk:shoptalk-compose:0.2.0")   // kéo theo shoptalk-android và fragment-compose qua POM (mục 1.2)
+// Dùng AAR trần thì thêm hai AAR và fragment-compose:1.8.5 như mục 1.3. fragment-compose 1.8.x đòi compileSdk 34 trở lên.
 
 @Composable
 fun SupportScreen(onClose: () -> Unit) {
@@ -263,6 +349,8 @@ adb shell am start -n site.amoeba.shoptalk.sample/.MainActivity \
 | ✓ | Mục | Vì sao |
 |---|---|---|
 | ☐ | `onCloseRequest()` đóng màn | Widget chiếm cả màn; không đóng thì còn màn trắng |
+| ☐ | `identityProvider` và `listener` gắn trong `onResumeFragments`, không chỉ khi tạo mới | Activity tạo lại (dark mode, cỡ chữ) thì fragment mới không có hai trường này: người dùng chat như khách, không có lỗi |
+| ☐ | Thư viện lấy qua thư mục Maven (hoặc AAR kèm đúng mức tối thiểu ở 1.3); **không** dán androidx mới nhất | `core-ktx 1.15` đòi `compileSdk` 35 và làm hỏng build; fragment 1.2.x làm app sập |
 | ☐ | Secret chỉ ở backend; `hash` do backend ký mỗi lần | Secret trong APK bị lấy ra được |
 | ☐ | `identityProvider` được đặt (không dùng `identify()` một lần cho app thật) | Chữ ký có thể hết hạn; SDK không còn cache |
 | ☐ | `shop` là `https://www.go2joy.vn`, `agent` là `hotel-admin`, `widgetUrl` lấy từ remote config | Tra tenant, đổi địa chỉ không cần phát hành |

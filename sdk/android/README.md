@@ -7,8 +7,10 @@
 
 - 모듈: `:shoptalk` (라이브러리 → AAR) · `:shoptalk-compose` (선택, Compose 래퍼) · `:sample` (검증용 앱, 전달물 아님)
 - minSdk 21 · compileSdk 35 · **Kotlin 2.2.0** · JDK 17 · AGP 8.5.2 / Gradle 8.7
-- `:shoptalk` 의존성은 androidx 기본군(core-ktx 1.15.0, fragment-ktx 1.8.5)뿐 — Compose는 `:shoptalk-compose`에만 있다.
-  AAR에는 POM이 없으므로 **호스트 앱이 이미 가진 것만** 쓴다.
+- `:shoptalk`의 선언 의존성은 **최저 버전**(fragment-ktx 1.3.6, core-ktx 1.6.0, lifecycle-runtime-ktx 2.3.1, kotlin-stdlib 2.1.0)이다.
+  이 값이 POM에 그대로 실려 호스트 앱의 더 높은 버전이 유지되고 `compileSdk`도 강제되지 않는다. **최신 버전으로 올리지 말 것**
+  (core 1.15는 `compileSdk 35` 요구). 올리려면 TCR-261016 §11 방식으로 최저 버전 실기 검증부터 다시 한다.
+  Compose는 `:shoptalk-compose`에만 있다(fragment-compose 1.8.5).
 
 ## 0.2.0 변경 요약 (0.1.0 → 0.2.0)
 
@@ -52,48 +54,65 @@ export ANDROID_HOME="$HOME/Library/Android/sdk"
 > (결과: `docs/test/TCR-261016-Go2Joy-Kotlin-App-Widget.md` §5–§6). 실기기와 API 24는 아직 확인하지 않았다.
 > 로컬 개발 서버를 에뮬레이터에 연결할 때는 `adb reverse`가 IPv4만 닿으므로 `vite --host 127.0.0.1`로 띄운다.
 
-## 전달 (AAR 직접 전달)
+## 전달 (Maven 형식 폴더)
 
 ```bash
-./gradlew :shoptalk:assembleRelease
-cp shoptalk/build/outputs/aar/shoptalk-release.aar dist/shoptalk-android-0.2.0.aar
-# Compose 앱이면 추가:
-./gradlew :shoptalk-compose:assembleRelease
-cp shoptalk-compose/build/outputs/aar/shoptalk-compose-release.aar dist/shoptalk-compose-0.2.0.aar
+./gradlew deliveryZip
+# → dist/maven/                              AAR + POM + Gradle 모듈 메타데이터 + 소스 jar + 파일별 체크섬(.sha256 등)
+# → dist/shoptalk-android-<shoptalk.version>-maven.zip   고객에게 보낼 단일 파일
+sha256sum dist/shoptalk-android-0.2.0-maven.zip         # 이 값을 메시지로 함께 전달
 ```
 
-AAR과 함께 연동 가이드를 전달한다. **AAR·secret·서명 해시는 리포에 커밋하지 않는다.**
-소스 모듈로 넣고 싶은 앱은 `:shoptalk`(와 `:shoptalk-compose`) 디렉터리를 `include`하면 된다.
+`shoptalk.version`은 `gradle.properties` 한 곳에서 올린다. 고객은 zip을 repo의 `third_party/shoptalk-maven`에 풀거나 사내 Artifactory/Nexus에
+폴더째 올리고, 앱에서는 `implementation("site.amoeba.shoptalk:shoptalk-android:0.2.0")` 한 줄만 쓴다(Compose는 `shoptalk-compose`).
+설치 방법·최소 버전 표·AAR 직접 전달 대안은 `docs/guide/GUIDE-261016-Mobile-SDK-0.2.vi.md` §1.
+
+- **AAR만 필요한 고객**(저장소 추가 불가): `dist/maven/site/amoeba/shoptalk/shoptalk-android/0.2.0/shoptalk-android-0.2.0.aar`을 보내고,
+  가이드 §1.3의 **최저 버전 표**를 함께 준다. AAR에는 POM이 없어 고객 앱이 androidx를 직접 가져야 한다.
+- 소스 모듈로 넣고 싶은 앱은 `:shoptalk`(와 `:shoptalk-compose`) 디렉터리를 `include`하면 된다.
+- **AAR·zip·secret·서명 해시는 리포에 커밋하지 않는다**(`dist/`는 gitignore).
+- 릴리스 전 필수 검증: ①`:shoptalk:testReleaseUnitTest` ②고객 환경을 흉내 낸 소비 앱(최저 androidx·`compileSdk 34`·한 줄 의존성)으로 빌드와 실행
+  ③13개 프로토콜 시나리오. 방법과 결과는 TCR-261016 §11.
 
 ## 호스트 앱 통합 (요약)
 
 ```kotlin
-// libs/에 AAR 복사 후
+// Maven 폴더를 저장소로 추가한 뒤 (가이드 §1.2). androidx는 POM이 최저 버전만 선언한다.
 dependencies {
-    implementation(files("libs/shoptalk-android-0.2.0.aar"))
-    implementation("androidx.core:core-ktx:1.15.0")        // 이미 있다면 생략
-    implementation("androidx.fragment:fragment-ktx:1.8.5") // 이미 있다면 생략
+    implementation("site.amoeba.shoptalk:shoptalk-android:0.2.0")
 }
 ```
 
 ```kotlin
-val chat = ShopTalkChatFragment.newInstance(
-    ShopTalkConfig(
-        widgetUrl = "https://shoptalk.amoeba.site/widget/",
-        shop = "https://www.go2joy.vn",   // 테넌트 조회 키(tenants.shop_domain). 앱 도메인이 아님
-        agent = "hotel-admin",
-        locale = "vi",
-    )
-)
-// 서명은 호스트 백엔드가 한다. 앱은 받아서 넘기기만 — 시크릿은 앱에 없다.
-chat.identityProvider = ShopTalkIdentityProvider {
-    ShopTalkIdentity.fromJson(api.sharpTalkIdentityJson()) // {userId, hash, attributes|claims, ...}
+// onCreate: 처음 한 번만 Fragment를 넣는다 (commit은 비동기이므로 바로 뒤에 findFragmentByTag를 하지 말 것)
+if (savedInstanceState == null) {
+    supportFragmentManager.commit {
+        replace(R.id.container, ShopTalkChatFragment.newInstance(
+            ShopTalkConfig(
+                widgetUrl = "https://shoptalk.amoeba.site/widget/",
+                shop = "https://www.go2joy.vn",   // 테넌트 조회 키(tenants.shop_domain). 앱 도메인이 아님
+                agent = "hotel-admin",
+                locale = "vi",
+            )
+        ), "chat")
+    }
 }
-chat.listener = object : ShopTalkListener {
-    override fun onCloseRequest() { supportFragmentManager.popBackStack() } // 필수
-    override fun onError(error: ShopTalkError) { /* 선택 */ }
+
+// onResumeFragments: 매번 붙인다. Activity가 재생성되면 새 Fragment가 생기고 provider/listener는 저장되지 않는다
+// (한 번만 붙이면 다크모드 등 이후 사용자가 조용히 게스트가 된다. TCR-261016 §11).
+override fun onResumeFragments() {
+    super.onResumeFragments()
+    (supportFragmentManager.findFragmentByTag("chat") as? ShopTalkChatFragment)?.apply {
+        // 서명은 호스트 백엔드가 한다. 앱은 받아서 넘기기만 — 시크릿은 앱에 없다.
+        identityProvider = ShopTalkIdentityProvider {
+            ShopTalkIdentity.fromJson(api.sharpTalkIdentityJson()) // {userId, hash, attributes|claims, ...}
+        }
+        listener = object : ShopTalkListener {
+            override fun onCloseRequest() { finish() } // 필수
+            override fun onError(error: ShopTalkError) { /* 선택 */ }
+        }
+    }
 }
-supportFragmentManager.commit { replace(R.id.container, chat) }
 ```
 
 ## 공개 API (0.2.0)
