@@ -32,4 +32,8 @@ kotlin {
 
 dependencies {
     implementation(project(":shoptalk"))
+    // A host app brings its own, newer androidx; the SDK only declares the floor (see :shoptalk).
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
 }
