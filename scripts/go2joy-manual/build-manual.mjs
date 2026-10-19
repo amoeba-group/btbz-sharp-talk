@@ -23,6 +23,12 @@ const DOCS = {
     en: { title: 'Go2Joy Knowledge Conflict Triage (78 pairs)', short: 'Knowledge conflict triage', desc: 'Classification of 78 staging knowledge conflicts, recommended actions and decisions for Go2Joy' },
     vi: { title: 'Phân loại 78 xung đột tri thức Go2Joy', short: 'Phân loại xung đột tri thức', desc: 'Phân loại 78 xung đột tri thức trên staging, hành động đề xuất và các quyết định của Go2Joy' },
   },
+  'notion-setup': {
+    date: '2026-10-19',
+    ko: { title: 'Go2Joy 노션 지식 연동 설정 가이드', short: '노션 연동 설정', desc: '노션 페이지를 SharpTalk 지식으로 쓰기 위해 Go2Joy 노션 관리자가 할 일 — 통합 연결·워크스페이스·ID 확인·토큰 교체 주의·자가 확인' },
+    en: { title: 'Go2Joy Notion Knowledge Setup Guide', short: 'Notion setup', desc: 'What the Go2Joy Notion admin must do so SharpTalk can read Notion pages as knowledge: connect pages, check workspace and IDs, token caveats, self-check' },
+    vi: { title: 'Hướng dẫn kết nối Notion với SharpTalk cho Go2Joy', short: 'Kết nối Notion', desc: 'Việc quản trị Notion của Go2Joy cần làm để SharpTalk đọc được trang Notion làm tri thức: kết nối trang, kiểm tra workspace và ID, lưu ý token, tự kiểm tra' },
+  },
 };
 const UI = {
   ko: { home: '← Go2Joy 문서 목록', docs: '문서', lang: '언어', eyebrow: 'Go2Joy 전용 문서', foot: 'Amoeba(BitBiz) · SharpTalk for Go2Joy', idxTitle: 'SharpTalk for Go2Joy 문서', idxLead: 'Go2Joy와 함께 보는 1단계 계획·진행 문서입니다. 언어를 고르세요.', open: '열기' },
@@ -96,7 +102,7 @@ function page(doc, lang, body) {
   const docChips = Object.keys(DOCS).map((d) => `<a class="chip" href="${d}.${lang}.html"${d === doc ? ' aria-current="page"' : ''}>${esc(DOCS[d][lang].short)}</a>`).join('');
   return shell(lang, m.title, m.desc, `<header class="masthead"><div class="wrap">
   <nav class="topnav"><a href="./">${u.home}</a><span class="chips" aria-label="${u.docs}">${docChips}</span><span class="chips" aria-label="${u.lang}">${langChips}</span></nav>
-  <p class="eyebrow">${u.eyebrow} · 2026-10-15</p>
+  <p class="eyebrow">${u.eyebrow} · ${DOCS[doc].date || '2026-10-15'}</p>
   <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
   <p class="domain">${esc(m.title)}</p>
 </div></header>

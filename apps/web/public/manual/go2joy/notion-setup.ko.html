@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Go2Joy 노션 지식 연동 설정 가이드</title>
+<meta name="description" content="노션 페이지를 SharpTalk 지식으로 쓰기 위해 Go2Joy 노션 관리자가 할 일 — 통합 연결·워크스페이스·ID 확인·토큰 교체 주의·자가 확인">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>/* Layout: single reading column (~72ch) under a slim masthead; tables/diagrams/figures break wider inside their own scrollers. */
+:root {
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --fg: #1d1f24;
+  --muted: #5d6270;
+  --line: #e4e1dc;
+  --tint: #fff1e6;
+  --accent: #e8650a;
+  --accent-ink: #b44c04;
+  --ink2: #2b3a67;
+  --f-display: "Be Vietnam Pro", "Noto Sans KR", system-ui, sans-serif;
+  --f-body: "Noto Sans KR", "Be Vietnam Pro", system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+    --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+  --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15.5px; line-height: 1.72; word-break: keep-all; overflow-wrap: anywhere; }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.masthead { border-bottom: 1px solid var(--line); background: var(--surface); }
+.masthead .wrap { padding-block: 40px 28px; display: grid; gap: 6px; }
+.eyebrow { margin: 0; font-size: 12px; letter-spacing: .06em; color: var(--muted); }
+.brand { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; }
+.brand .g2j { color: var(--accent); }
+.domain { margin: 0; font-family: var(--f-mono); font-size: 13px; color: var(--accent-ink); }
+.doc { padding-block: 24px 64px; }
+.doc > * { max-width: 72ch; }
+.doc > .scroll, .doc > .diagram, .doc > figure, .doc > blockquote.lead { max-width: 100%; }
+h1 { display: none; }
+h2 { font-family: var(--f-display); font-size: 25px; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--fg); text-wrap: balance; }
+h3 { font-size: 18.5px; margin: 34px 0 8px; text-wrap: balance; }
+h4 { font-size: 16px; margin: 24px 0 6px; color: var(--ink2); }
+p, ul, ol { margin: 0 0 14px; }
+li { margin-bottom: 4px; }
+a { color: var(--accent-ink); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+strong { font-weight: 700; }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--tint); color: var(--accent-ink); padding: 1px 5px; border-radius: 4px; }
+.docref { color: var(--ink2); font-weight: 500; }
+hr { border: 0; height: 0; margin: 8px 0; }
+blockquote { margin: 0 0 16px; padding: 10px 16px; border-left: 3px solid var(--line); color: var(--muted); }
+blockquote p:last-child { margin-bottom: 0; }
+blockquote.lead { background: var(--tint); border-left: 0; border-radius: 10px; color: var(--fg); padding: 18px 22px; font-size: 16.5px; }
+.scroll { overflow-x: auto; margin: 0 0 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.55; background: var(--surface); font-variant-numeric: tabular-nums; }
+th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; min-width: 5.5em; }
+th { font-weight: 700; font-size: 12.5px; letter-spacing: .03em; color: var(--muted); border-bottom: 1.5px solid var(--fg); white-space: nowrap; }
+pre.code { margin: 0; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.5; }
+pre.code code { background: none; color: var(--fg); padding: 0; font-size: inherit; }
+.diagram { overflow-x: auto; margin: 6px 0 22px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.diagram pre.mermaid { margin: 0; display: flex; justify-content: center; background: none; }
+figure { margin: 8px 0 26px; display: grid; gap: 8px; justify-items: start; }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; max-height: 720px; width: auto; }
+figcaption { font-size: 13px; color: var(--muted); max-width: 72ch; }
+.foot { padding-block: 20px 40px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+@media (max-width: 520px) { body { font-size: 15px; } h2 { font-size: 21px; } .masthead .wrap { padding-block: 28px 20px; } }
+
+/* Diagrams are pre-rendered in mermaid's light theme: keep their card light in both themes. */
+.diagram { background: #fbfaf8; border-color: #e3ddd4; }
+.diagram svg { max-width: 100%; height: auto; }
+@media (max-width: 700px) { .diagram svg { min-width: 620px; } }
+/* Labels were measured with browser defaults; inherit nothing that changes their size. */
+.diagram { font-size: 16px; line-height: normal; word-break: normal; overflow-wrap: normal; letter-spacing: normal; }
+.topnav { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 13px; }
+.topnav a { color: var(--accent-ink); text-decoration: none; }
+.topnav a:hover { text-decoration: underline; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-block; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--fg) !important; }
+.chip[aria-current="page"] { border-color: var(--accent); color: var(--accent-ink) !important; font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 18px 0 30px; }
+.card { display: grid; gap: 6px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); text-decoration: none; color: var(--fg); }
+.card:hover { border-color: var(--accent); }
+.card b { font-size: 16px; }
+.card span { font-size: 13px; color: var(--muted); }
+.langblock h2 { margin-top: 28px; }
+</style>
+</head>
+<body>
+<header class="masthead"><div class="wrap">
+  <nav class="topnav"><a href="./">← Go2Joy 문서 목록</a><span class="chips" aria-label="문서"><a class="chip" href="plan.ko.html">프로젝트 계획서</a><a class="chip" href="kb-conflicts.ko.html">지식 충돌 분류</a><a class="chip" href="notion-setup.ko.html" aria-current="page">노션 연동 설정</a></span><span class="chips" aria-label="언어"><a class="chip" href="notion-setup.ko.html" aria-current="page" hreflang="ko">한국어</a><a class="chip" href="notion-setup.en.html" hreflang="en">English</a><a class="chip" href="notion-setup.vi.html" hreflang="vi">Tiếng Việt</a></span></nav>
+  <p class="eyebrow">Go2Joy 전용 문서 · 2026-10-19</p>
+  <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
+  <p class="domain">Go2Joy 노션 지식 연동 설정 가이드</p>
+</div></header>
+<main class="wrap doc"><h1 id="go2joy-노션-지식-연동-설정-가이드">Go2Joy 노션 지식 연동 설정 가이드</h1>
+<ul>
+<li>대상: Go2Joy 노션 워크스페이스 관리자 (통합 "HA-UserGuide" 소유자)</li>
+<li>기준일: 2026-10-19 (스테이징 실측)</li>
+<li>이전 안내(2026-08-28, 통합 "Truc connection" 기준)는 10/16 토큰 교체로 내용이 바뀌어 이 문서로 대체합니다.</li>
+</ul>
+<blockquote class="lead">
+<p>노션 페이지를 SharpTalk 상담 AI의 지식으로 쓰려면 Go2Joy 노션 관리자가 해야 할 일을 정리했습니다. 작업은 노션 화면에서만 하며, 페이지당 1분이면 됩니다.</p>
+</blockquote>
+<h2 id="1-현재-상태">1. 현재 상태</h2>
+<p>SharpTalk 쪽 설정은 모두 정상입니다. 토큰은 유효하고, 통합의 정체와 접근 범위를 Notion API로 직접 확인했습니다.</p>
+<div class="scroll"><table><thead><tr>
+<th>항목</th>
+<th>확인 결과</th>
+</tr>
+</thead><tbody><tr>
+<td>등록된 통합</td>
+<td><strong>HA-UserGuide</strong> (10/16 교체)</td>
+</tr>
+<tr>
+<td>통합이 속한 워크스페이스</td>
+<td><strong>Go2Joy</strong></td>
+</tr>
+<tr>
+<td>통합이 볼 수 있는 페이지</td>
+<td><strong>1건뿐</strong> — "Hướng dẫn sử dụng Hotel Admin" (ID <code>bfb56ba4…</code>)</td>
+</tr>
+</tbody></table></div>
+<p>SharpTalk에 등록된 노션 소스 3건은 전부 동기화 실패 상태이며 원인은 모두 같습니다. <strong>해당 페이지가 "HA-UserGuide" 통합에 연결(Connections)되어 있지 않습니다.</strong></p>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>SharpTalk 소스 이름</th>
+<th>등록된 노션 대상</th>
+<th>상태</th>
+</tr>
+</thead><tbody><tr>
+<td>1</td>
+<td>Go2Joy Hotel FAQ (Notion)</td>
+<td><code>hotel-go2joy.notion.site/FAQ-f03737634c38…</code></td>
+<td>❌ 미연결</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Hướng dẫn sử dụng Hotel Admin</td>
+<td><code>…8968fee0bb548347a35e01756b4cc89c</code></td>
+<td>❌ 미연결 (통합에는 같은 제목의 다른 ID <code>bfb56ba4…</code>만 보임 — 2-D 참고)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Hướng dẫn đăng ký khách sạn trên Go2Joy</td>
+<td><code>…2026dfbd464d800085cedea4c57f8d15</code></td>
+<td>❌ 미연결</td>
+</tr>
+</tbody></table></div>
+<h2 id="2-go2joy에서-해야-할-작업">2. Go2Joy에서 해야 할 작업</h2>
+<h3 id="a-페이지-3건을-통합에-연결-페이지당-약-1분">A. 페이지 3건을 통합에 연결 (페이지당 약 1분)</h3>
+<p>아래 3개 페이지 각각에서:</p>
+<ol>
+<li>노션에서 페이지를 엽니다.</li>
+<li>우측 상단 <strong>⋯</strong>(더보기) → 아래쪽 <strong>연결(Connections)</strong>.</li>
+<li>검색란에 <strong>HA-UserGuide</strong> 입력 → 선택 → 액세스 허용 <strong>확인</strong>.</li>
+<li><strong>⋯ → 연결</strong> 목록에 "HA-UserGuide"가 보이면 완료.</li>
+</ol>
+<p>대상 페이지:</p>
+<ul>
+<li><strong>Go2Joy Hotel FAQ</strong> — <code>https://hotel-go2joy.notion.site/FAQ-f03737634c3848339910d50f7e77bf7b</code></li>
+<li><strong>Hướng dẫn sử dụng Hotel Admin</strong> — ID <code>8968fee0bb548347a35e01756b4cc89c</code> (2-D 참고)</li>
+<li><strong>Hướng dẫn đăng ký khách sạn trên Go2Joy</strong> — ID <code>2026dfbd464d800085cedea4c57f8d15</code></li>
+</ul>
+<p><strong>하위 페이지는 자동 상속됩니다.</strong> 상위 페이지 1곳만 연결하면 그 아래 페이지는 따로 연결할 필요가 없습니다.</p>
+<h3 id="b-웹에-공개는-연결이-아닙니다">B. "웹에 공개"는 연결이 아닙니다</h3>
+<p>FAQ 페이지는 <code>hotel-go2joy.notion.site</code> 주소로 웹에 공개(Publish)되어 있습니다. 공개 페이지는 브라우저로는 누구나 볼 수 있지만, <strong>Notion API는 공개 여부와 무관하게 "통합에 연결된 페이지"만 읽을 수 있습니다.</strong> 공개 페이지라도 A의 연결 작업이 반드시 필요합니다.</p>
+<h3 id="c-워크스페이스-확인">C. 워크스페이스 확인</h3>
+<p>통합 "HA-UserGuide"는 <strong>Go2Joy 워크스페이스</strong>에 설치되어 있습니다. 3개 페이지가 모두 이 워크스페이스 안에 있어야 연결 목록에 "HA-UserGuide"가 나타납니다. 검색해도 나오지 않으면 그 페이지는 다른 워크스페이스에 있는 것입니다. 페이지를 Go2Joy 워크스페이스로 옮기거나, 그 워크스페이스에 통합을 새로 만들고 토큰을 SharpTalk에 다시 등록해야 합니다(E 주의).</p>
+<h3 id="d-hướng-dẫn-sử-dụng-hotel-admin--어느-페이지가-맞는지-확인">D. "Hướng dẫn sử dụng Hotel Admin" — 어느 페이지가 맞는지 확인</h3>
+<p>SharpTalk에 등록된 ID는 <code>8968fee0…</code>인데, 현재 통합에 연결된 페이지는 같은 제목의 <code>bfb56ba4…</code>입니다. 둘 중 하나입니다.</p>
+<ul>
+<li>페이지가 복제·이동되어 ID가 바뀜 → <code>bfb56ba4…</code>가 최신본이면 알려주세요. SharpTalk 쪽에서 대상 ID를 바꿉니다(Go2Joy 작업 없음).</li>
+<li>두 페이지가 별개 → <code>8968fee0…</code> 페이지도 A대로 연결해 주세요.</li>
+</ul>
+<p>확인 방법: 노션에서 그 페이지를 열고 브라우저 주소창 끝의 32자리 영숫자를 봅니다.</p>
+<h3 id="e-토큰통합을-바꿀-때-주의">E. 토큰(통합)을 바꿀 때 주의</h3>
+<p>10/16에 통합이 "Truc connection"에서 "HA-UserGuide"로 바뀌면서 <strong>이전 통합에 연결해 둔 페이지는 전부 새 통합에서 보이지 않게 되었습니다.</strong> 연결은 통합별로 따로 관리되기 때문입니다. 앞으로 토큰을 교체할 일이 있으면:</p>
+<ol>
+<li>새 통합을 만들고,</li>
+<li>SharpTalk 소스로 쓰는 <strong>모든 페이지에 새 통합을 다시 연결</strong>한 뒤,</li>
+<li>SharpTalk 콘솔에 새 토큰을 등록합니다.</li>
+</ol>
+<p>가능하면 토큰은 바꾸지 말고 유지하는 것이 가장 안전합니다.</p>
+<h2 id="3-연결-후-확인--go2joy가-직접-할-수-있습니다">3. 연결 후 확인 — Go2Joy가 직접 할 수 있습니다</h2>
+<ol>
+<li>SharpTalk 콘솔 → <strong>지식</strong> → <strong>소스</strong> 표 → 해당 소스 행의 <strong>↻</strong>(동기화) 클릭.</li>
+<li>성공하면 초록 알림과 함께 소스 행에 마지막 동기화 시각이 검정으로 표시됩니다.</li>
+<li>실패하면 빨간 알림이 원인과 조치 방법을 그대로 보여줍니다. 아래 메시지가 나오면 A가 아직 안 된 것입니다.</li>
+<li>동기화 성공 후 챗 위젯에서 해당 내용을 질문하면 답변 근거로 인용됩니다.</li>
+</ol>
+<p>실패 알림 예:</p>
+<div class="scroll"><pre class="code"><code>소스 대상에 접근할 수 없습니다.
+Could not find page with ID: f0373763-… Make sure the relevant pages and databases are shared with your integration "HA-UserGuide".
+노션 페이지가 통합에 공유되지 않았습니다 — 노션에서 페이지 ⋯ → 연결(Connections)에 통합을 추가하세요.</code></pre></div>
+<p>성공 알림 예: <code>동기화: 생성 1건, 갱신 0건</code></p>
+<h2 id="4-수집-범위와-제약">4. 수집 범위와 제약</h2>
+<div class="scroll"><table><thead><tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead><tbody><tr>
+<td>수집 범위</td>
+<td>대상 페이지 본문 + 바로 아래 1단계 하위 페이지. 더 깊은 중첩은 수집되지 않습니다.</td>
+</tr>
+<tr>
+<td>텍스트만</td>
+<td>문단·제목·리스트·토글·표·코드. 이미지·첨부·임베드는 제외.</td>
+</tr>
+<tr>
+<td>분량</td>
+<td>1회 최대 200페이지, 페이지당 약 30,000자. 아주 긴 페이지는 하위 페이지로 나누는 것을 권장.</td>
+</tr>
+<tr>
+<td>수정 반영</td>
+<td>노션 수정은 자동 반영되지 않습니다. 콘솔에서 ↻를 다시 클릭하면 변경분만 갱신됩니다.</td>
+</tr>
+<tr>
+<td>페이지 삭제</td>
+<td>지식에서 삭제되지 않고 숨김 처리됩니다.</td>
+</tr>
+<tr>
+<td>보안</td>
+<td>토큰은 암호화 저장, 읽기 전용. 연결한 페이지(와 하위)만 접근할 수 있습니다.</td>
+</tr>
+</tbody></table></div>
+<h2 id="5-회신-체크리스트">5. 회신 체크리스트</h2>
+<ul>
+<li><input disabled="" type="checkbox"> FAQ 페이지(<code>f0373763…</code>)에 HA-UserGuide 연결 완료</li>
+<li><input disabled="" type="checkbox"> "Hướng dẫn đăng ký khách sạn…"(<code>2026dfbd…</code>)에 HA-UserGuide 연결 완료</li>
+<li><input disabled="" type="checkbox"> "Hướng dẫn sử dụng Hotel Admin": <code>8968fee0…</code>에 연결 완료, 또는 <code>bfb56ba4…</code>가 최신본임을 회신</li>
+<li><input disabled="" type="checkbox"> 연결 목록 스크린샷 1장(선택 — 확인이 빨라집니다)</li>
+</ul>
+<p>문의: SharpTalk 운영팀(기존 연락 채널).</p>
+</main>
+<footer class="wrap foot">Amoeba(BitBiz) · SharpTalk for Go2Joy</footer>
+</body>
+</html>
