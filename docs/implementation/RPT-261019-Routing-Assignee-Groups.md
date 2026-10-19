@@ -10,7 +10,7 @@
 | PR | [#667](https://github.com/amoeba-group/btbz-sharp-talk/pull/667) → main `13752ca` |
 | 마이그레이션 | 없음(JSON 컬럼) |
 | 스테이징 배포 | 2026-10-19 `13752ca`, api/web/nginx 재생성, `successfully started`, 오류 로그 0, `/api/v1/units` 401, 웹 번들에 `routing.assignee.*`·`assigneeLabelCodes`·`manage=1` 포함 |
-| 프로덕션 | 미적용 — 별도 지시 시(선행 PR #664 SQL `sql/261019-units.sql` 선적용 필수) |
+| 프로덕션 | ✅ 2026-10-19 21:23 KST — 백업 `~/backups/sharptalk-production/20261019-2123` → SQL 3건 선적용(`261019-conv-csat-survey`·`261019-tenant-widget-languages`·`261019-units`; ivyusa 팀 CS/MKT/Management 생성, 라벨 상담/회계/운영 → Counsels/Accountant/Operation, 백업 `job_labels_bak_261019`) → `production` ff `7992e71..4e60bcf`(#647~#669) → `check-migrations` OK → `deploy-self-hosted.sh`. API healthy, `successfully started`, ERROR 0, `/api/v1/units` 401, 콘솔 청크 `SettingsBasicPage`에 `assigneeUnitIds`·`manage=1`, `UsersPage`에 `unitName` |
 
 ## 2. 변경 요약
 
@@ -33,6 +33,6 @@
 - 없음. 담당자 후보 필터 결함(G5)은 함께 수정.
 
 ## 5. 남은 일
-1. 프로덕션 반영(지시 시) — #664 SQL 선적용 → #664/#665/#667 코드 배포.
+1. ~~프로덕션 반영~~ 완료(10/19 21:23, #664/#665/#667 포함).
 2. `docker/init-sql/01-schema.sql` 재생성(261019 마이그레이션 3건 뒤처짐).
 3. 기본 담당자(규칙 밖 `assigneeUserIds`)와 미수락 재알림 리드도 그룹 선택이 필요하면 후속 REQ.
