@@ -1,3 +1,4 @@
+import type { RoutingCondition } from '@sharptalk/types';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/Card';
@@ -5,6 +6,9 @@ import { Button } from '@/components/Button';
 import { Input, Label, Select } from '@/components/Field';
 import { cn } from '@/lib/cn';
 import { useJobLabels, useUsers } from '../users/users.hooks';
+import { useWidgetSettings } from '../settings/settings.hooks';
+import { routingConditionDef } from '../../../../../packages/types/src/common/routing-condition';
+import { offeredLanguageCodes } from '../../../../../packages/types/src/common/language';
 import { useAiConfig, useUpdateAiConfig } from './ai-settings.hooks';
 import { LanguageTabs } from './LanguageTabs';
 import { RoutingRulesEditor, ROUTING_REGIONS } from './RoutingRulesEditor';
@@ -40,6 +44,9 @@ export function HandoffSection() {
   // added show up too. Until loaded (or when a stored code is gone) the three
   // fixed codes fall back to the i18n names, so the select is never empty.
   const jobLabels = useJobLabels();
+  // The `language` condition offers exactly what the widget offers (PLN-261019 Widget-Language).
+  const widgetSettings = useWidgetSettings();
+  const languages = useMemo(() => offeredLanguageCodes(widgetSettings.data?.widgetLanguages ?? null), [widgetSettings.data?.widgetLanguages]);
   const labelOptions = useMemo(() => {
     const fixed = ['consult', 'accounting', 'operations'].map((code) => ({ code, name: t(`handoff.denyLabel.${code}`) }));
     const rows = (jobLabels.data ?? []).map((l) => ({ code: l.code, name: l.name }));
@@ -116,6 +123,13 @@ export function HandoffSection() {
         regions: (r.regions ?? []).filter((x) => (ROUTING_REGIONS as readonly string[]).includes(x)),
         keywords: (r.keywords ?? []).join(', '),
         labels: r.labels ?? [],
+        // Enum fields keep their values; text fields are edited as one comma-joined line.
+        // A field outside today's catalog is kept so it can be seen and removed.
+        conditions: (r.conditions ?? []).map((c) => ({
+          field: String(c.field),
+          values: routingConditionDef(String(c.field))?.kind === 'enum' ? (c.values ?? []) : [],
+          text: routingConditionDef(String(c.field))?.kind === 'enum' ? '' : (c.values ?? []).join(', '),
+        })),
         assignees: (r.assigneeUserIds ?? []).map(String),
         mode: r.mode === ROUTING_MODE.BROADCAST ? ROUTING_MODE.BROADCAST : ROUTING_MODE.LEAST_LOADED,
       })),
@@ -177,6 +191,19 @@ export function HandoffSection() {
           .map((k) => k.trim())
           .filter(Boolean),
         labels: r.labels,
+        conditions: r.conditions
+          .map((c) => ({
+            field: c.field as RoutingCondition['field'],
+            values:
+              routingConditionDef(c.field)?.kind === 'enum'
+                ? c.values
+                : c.text
+                    .split(',')
+                    .map((v) => v.trim())
+                    .filter(Boolean),
+          }))
+          // Nothing chosen = nothing asked; dropping it keeps the stored rule honest.
+          .filter((c) => c.values.length > 0),
         assigneeUserIds: r.assignees.map(Number).filter(Number.isFinite),
         mode: r.mode,
       }))
@@ -233,7 +260,7 @@ export function HandoffSection() {
             <p className="mt-1 text-[11px] text-gray-400">{t('handoff.assigneesHint')}</p>
           </div>
 
-          <RoutingRulesEditor rows={routingRows} onChange={setRoutingRows} agents={agents} labels={labelOptions} />
+          <RoutingRulesEditor rows={routingRows} onChange={setRoutingRows} agents={agents} labels={labelOptions} languages={languages} />
 
           {/* Unanswered-alarm reminder (PLN-261015 D4). */}
           <div className="border-t border-gray-100 pt-4">

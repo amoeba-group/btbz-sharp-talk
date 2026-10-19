@@ -181,7 +181,38 @@
         "central": "Central",
         "south": "South"
       },
-      "unlisted": "Not in the agent list (no consult label or inactive) — click to remove"
+      "unlisted": "Not in the agent list (no consult label or inactive) — click to remove",
+      "customer": {
+        "title": "Customer",
+        "add": "+ Add condition",
+        "hint": "Session and customer facts the rule also requires. Hotel, province and role match only when the host signed them in. Empty = any.",
+        "opIn": "is one of",
+        "opContains": "contains",
+        "textPh": "Comma-separated values",
+        "remove": "Remove condition",
+        "unknownField": "unknown field — remove",
+        "field": {
+          "language": "Language",
+          "identity_level": "Identity",
+          "customer_tier": "Customer tier",
+          "hotel_id": "Hotel ID",
+          "hotel_name": "Hotel name",
+          "province": "Province",
+          "role": "Role",
+          "landing_path": "Landing path"
+        },
+        "value": {
+          "identity_level": {
+            "guest": "Guest",
+            "verified": "Verified"
+          },
+          "customer_tier": {
+            "guest": "Guest",
+            "subscriber": "Subscriber",
+            "regular": "Regular"
+          }
+        }
+      }
     },
     "reAlert": {
       "title": "Reminder when nobody picks up",

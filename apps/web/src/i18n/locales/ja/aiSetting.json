@@ -181,7 +181,38 @@
         "central": "中部",
         "south": "南部"
       },
-      "unlisted": "担当者一覧にないユーザー(相談ラベルなし・無効) — クリックで削除"
+      "unlisted": "担当者一覧にないユーザー(相談ラベルなし・無効) — クリックで削除",
+      "customer": {
+        "title": "顧客情報",
+        "add": "+ 条件を追加",
+        "hint": "ルールが併せて要求するセッション・顧客情報です。ホテル・省・役割はホストが署名して送った値のときだけ一致します。空欄＝すべて。",
+        "opIn": "次のいずれか",
+        "opContains": "を含む",
+        "textPh": "カンマ区切りで入力",
+        "remove": "条件を削除",
+        "unknownField": "不明なフィールド — 削除してください",
+        "field": {
+          "language": "言語",
+          "identity_level": "認証レベル",
+          "customer_tier": "顧客ランク",
+          "hotel_id": "ホテルID",
+          "hotel_name": "ホテル名",
+          "province": "省",
+          "role": "役割",
+          "landing_path": "流入パス"
+        },
+        "value": {
+          "identity_level": {
+            "guest": "ゲスト",
+            "verified": "認証済み"
+          },
+          "customer_tier": {
+            "guest": "ゲスト",
+            "subscriber": "購読者",
+            "regular": "常連"
+          }
+        }
+      }
     },
     "reAlert": {
       "title": "未対応時の再通知",

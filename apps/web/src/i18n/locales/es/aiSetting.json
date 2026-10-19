@@ -181,7 +181,38 @@
         "central": "Centro",
         "south": "Sur"
       },
-      "unlisted": "No está en la lista de agentes (sin etiqueta de consulta o inactivo): haz clic para quitarlo"
+      "unlisted": "No está en la lista de agentes (sin etiqueta de consulta o inactivo): haz clic para quitarlo",
+      "customer": {
+        "title": "Cliente",
+        "add": "+ Añadir condición",
+        "hint": "Datos de sesión y cliente que la regla también exige. Hotel, provincia y rol solo coinciden si el host los firmó. Vacío = cualquiera.",
+        "opIn": "es uno de",
+        "opContains": "contiene",
+        "textPh": "Valores separados por comas",
+        "remove": "Quitar condición",
+        "unknownField": "campo desconocido — elimínelo",
+        "field": {
+          "language": "Idioma",
+          "identity_level": "Identificación",
+          "customer_tier": "Nivel de cliente",
+          "hotel_id": "ID del hotel",
+          "hotel_name": "Nombre del hotel",
+          "province": "Provincia",
+          "role": "Rol",
+          "landing_path": "Ruta de entrada"
+        },
+        "value": {
+          "identity_level": {
+            "guest": "Invitado",
+            "verified": "Verificado"
+          },
+          "customer_tier": {
+            "guest": "Invitado",
+            "subscriber": "Suscriptor",
+            "regular": "Habitual"
+          }
+        }
+      }
     },
     "reAlert": {
       "title": "Recordatorio si nadie atiende",

@@ -181,7 +181,38 @@
         "central": "중부",
         "south": "남부"
       },
-      "unlisted": "상담원 목록에 없는 사용자(상담 라벨 없음 또는 비활성) — 눌러서 제거"
+      "unlisted": "상담원 목록에 없는 사용자(상담 라벨 없음 또는 비활성) — 눌러서 제거",
+      "customer": {
+        "title": "고객 정보",
+        "add": "+ 조건 추가",
+        "hint": "규칙이 함께 요구하는 세션·고객 정보입니다. 호텔·지역(성)·역할은 호스트가 서명해 보낸 값일 때만 맞습니다. 비우면 전체.",
+        "opIn": "다음 중 하나",
+        "opContains": "포함",
+        "textPh": "쉼표로 구분해 입력",
+        "remove": "조건 삭제",
+        "unknownField": "알 수 없는 필드 — 삭제하세요",
+        "field": {
+          "language": "언어",
+          "identity_level": "인증 수준",
+          "customer_tier": "고객 등급",
+          "hotel_id": "호텔 ID",
+          "hotel_name": "호텔명",
+          "province": "지역(성)",
+          "role": "역할",
+          "landing_path": "방문 경로"
+        },
+        "value": {
+          "identity_level": {
+            "guest": "게스트",
+            "verified": "인증됨"
+          },
+          "customer_tier": {
+            "guest": "게스트",
+            "subscriber": "구독자",
+            "regular": "단골"
+          }
+        }
+      }
     },
     "reAlert": {
       "title": "미수락 재알림",

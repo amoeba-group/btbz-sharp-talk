@@ -1,4 +1,4 @@
-import { HandoffRouterService, matchRoutingRule } from './handoff-router.service';
+import { HandoffRouterService, describeConditions, matchRoutingRule } from './handoff-router.service';
 import type { AiConfigService } from './ai-config.service';
 import type { HandoffConfig } from './entity/tenant-ai-config.entity';
 
@@ -282,5 +282,64 @@ describe('HandoffRouterService.route — routing rules', () => {
       }).route(4, 'VI', { region: 'north' }),
     );
     expect(route.mode).toBe('email');
+  });
+});
+
+describe('matchRoutingRule — customer-information conditions (PLN-261019 P4)', () => {
+  const rules = [
+    {
+      name: 'hanoi-vi',
+      regions: ['north'],
+      conditions: [
+        { field: 'language' as const, values: ['vi'] },
+        { field: 'hotel_name' as const, values: ['Hanoi', 'Ha Noi'] },
+      ],
+      assigneeUserIds: [1],
+    },
+    { name: 'verified-regular', conditions: [{ field: 'identity_level' as const, values: ['verified'] }, { field: 'customer_tier' as const, values: ['regular'] }], assigneeUserIds: [2] },
+    { name: 'booking-page', conditions: [{ field: 'landing_path' as const, values: ['/booking'] }], assigneeUserIds: [3] },
+    { name: 'legacy-no-conditions', regions: ['south'], assigneeUserIds: [4] },
+    { name: 'empty-values', conditions: [{ field: 'role' as const, values: [] }], assigneeUserIds: [5] },
+  ];
+
+  it('all conditions must hold, AND-ed with the region', () => {
+    const ctx = { region: 'north', language: 'VI', identityAttributes: { hotel_name: 'Khách sạn Hanoi Center' } };
+    expect(matchRoutingRule(rules, ctx)?.rule.name).toBe('hanoi-vi');
+    // Same hotel, English session: the language condition fails → falls through.
+    expect(matchRoutingRule(rules, { ...ctx, language: 'EN' })?.rule.name).toBe('empty-values');
+    // Right language, wrong region.
+    expect(matchRoutingRule(rules, { ...ctx, region: 'south' })?.rule.name).toBe('legacy-no-conditions');
+  });
+
+  it('enum conditions compare exact values case-insensitively', () => {
+    expect(matchRoutingRule(rules, { identityLevel: 'Verified', customerTier: 'REGULAR' })?.rule.name).toBe('verified-regular');
+    expect(matchRoutingRule(rules, { identityLevel: 'verified', customerTier: 'guest' })?.rule.name).toBe('empty-values');
+    // No customer on the session → tier unknown → the tier condition does not hold.
+    expect(matchRoutingRule(rules, { identityLevel: 'verified', customerTier: null })?.rule.name).toBe('empty-values');
+  });
+
+  it('text conditions use substring match for contains-fields and exact match for in-fields', () => {
+    expect(matchRoutingRule(rules, { landingPath: '/vi/booking/123' })?.rule.name).toBe('booking-page');
+    const roleRule = [{ name: 'managers', conditions: [{ field: 'role' as const, values: ['manager'] }], assigneeUserIds: [7] }];
+    expect(matchRoutingRule(roleRule, { identityAttributes: { role: 'Manager' } })?.rule.name).toBe('managers');
+    expect(matchRoutingRule(roleRule, { identityAttributes: { role: 'assistant manager' } })).toBeNull();
+  });
+
+  it('a rule written before conditions existed keeps matching exactly as before', () => {
+    expect(matchRoutingRule(rules, { region: 'south', text: 'x' })?.rule.name).toBe('legacy-no-conditions');
+  });
+
+  it('an empty value list is "anything" and a field outside the catalog never matches', () => {
+    expect(matchRoutingRule(rules, { region: null })?.rule.name).toBe('empty-values');
+    const stale = [
+      { name: 'stale', conditions: [{ field: 'email' as never, values: ['a@b.c'] }], assigneeUserIds: [8] },
+      { name: 'fallback', assigneeUserIds: [9] },
+    ];
+    expect(matchRoutingRule(stale, { region: null })?.rule.name).toBe('fallback');
+  });
+
+  it('describes the matched conditions for the log line', () => {
+    expect(describeConditions(rules[0].conditions)).toBe('language=vi, hotel_name~Hanoi|Ha Noi');
+    expect(describeConditions(rules[4].conditions)).toBe('');
   });
 });

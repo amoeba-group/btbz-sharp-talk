@@ -181,7 +181,38 @@
         "central": "中部",
         "south": "南部"
       },
-      "unlisted": "不在客服列表中(无咨询标签或已停用) — 点击移除"
+      "unlisted": "不在客服列表中(无咨询标签或已停用) — 点击移除",
+      "customer": {
+        "title": "客户信息",
+        "add": "+ 添加条件",
+        "hint": "规则同时要求的会话与客户信息。酒店、省份和角色仅在宿主签名传入时匹配。留空＝不限。",
+        "opIn": "属于以下之一",
+        "opContains": "包含",
+        "textPh": "用逗号分隔输入",
+        "remove": "删除条件",
+        "unknownField": "未知字段 — 请删除",
+        "field": {
+          "language": "语言",
+          "identity_level": "认证级别",
+          "customer_tier": "客户等级",
+          "hotel_id": "酒店 ID",
+          "hotel_name": "酒店名称",
+          "province": "省份",
+          "role": "角色",
+          "landing_path": "访问路径"
+        },
+        "value": {
+          "identity_level": {
+            "guest": "访客",
+            "verified": "已认证"
+          },
+          "customer_tier": {
+            "guest": "访客",
+            "subscriber": "订阅者",
+            "regular": "常客"
+          }
+        }
+      }
     },
     "reAlert": {
       "title": "无人接手时再次提醒",
