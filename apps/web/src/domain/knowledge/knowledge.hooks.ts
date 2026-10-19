@@ -199,7 +199,9 @@ export function useSyncSource() {
       if (err.code === 'E5095') {
         lines.push(t(type === 'gdrive' ? 'gdriveShareHint' : 'notionShareHint'));
       }
-      toast.error(lines.filter(Boolean).join('\n'));
+      // Sticky: three lines of "what, why, where to fix it" are not read in
+      // the 4s an auto-closing toast allows (error toasts close by hand — §2).
+      toast.error(lines.filter(Boolean).join('\n'), { sticky: true });
     },
   });
 }
