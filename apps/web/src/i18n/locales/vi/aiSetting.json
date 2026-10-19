@@ -181,7 +181,38 @@
         "central": "Miền Trung",
         "south": "Miền Nam"
       },
-      "unlisted": "Không có trong danh sách nhân viên (thiếu nhãn tư vấn hoặc ngừng hoạt động) — bấm để gỡ"
+      "unlisted": "Không có trong danh sách nhân viên (thiếu nhãn tư vấn hoặc ngừng hoạt động) — bấm để gỡ",
+      "customer": {
+        "title": "Khách hàng",
+        "add": "+ Thêm điều kiện",
+        "hint": "Thông tin phiên và khách hàng mà quy tắc cũng yêu cầu. Khách sạn, tỉnh và vai trò chỉ khớp khi host đã ký gửi. Để trống = bất kỳ.",
+        "opIn": "là một trong",
+        "opContains": "chứa",
+        "textPh": "Các giá trị, cách nhau bằng dấu phẩy",
+        "remove": "Xóa điều kiện",
+        "unknownField": "trường không xác định — hãy xóa",
+        "field": {
+          "language": "Ngôn ngữ",
+          "identity_level": "Xác thực",
+          "customer_tier": "Hạng khách hàng",
+          "hotel_id": "Mã khách sạn",
+          "hotel_name": "Tên khách sạn",
+          "province": "Tỉnh",
+          "role": "Vai trò",
+          "landing_path": "Đường dẫn vào"
+        },
+        "value": {
+          "identity_level": {
+            "guest": "Khách",
+            "verified": "Đã xác thực"
+          },
+          "customer_tier": {
+            "guest": "Khách",
+            "subscriber": "Người đăng ký",
+            "regular": "Khách quen"
+          }
+        }
+      }
     },
     "reAlert": {
       "title": "Nhắc lại khi chưa ai nhận",

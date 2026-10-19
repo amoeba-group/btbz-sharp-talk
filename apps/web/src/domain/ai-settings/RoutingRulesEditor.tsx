@@ -4,9 +4,26 @@ import { Input, Label, Select } from '@/components/Field';
 import { cn } from '@/lib/cn';
 import { ROUTING_MODE } from './ai-settings.service';
 import type { RoutingMode } from './ai-settings.service';
+import {
+  ROUTING_CONDITION_ENUM_VALUES,
+  ROUTING_CONDITION_FIELDS,
+  routingConditionDef,
+} from '../../../../../packages/types/src/common/routing-condition';
+import { languageByCode } from '../../../../../packages/types/src/common/language';
 
 /** Region values the Hotel Admin signs (PLN-261015 D2); free text is not offered on purpose. */
 export const ROUTING_REGIONS = ['north', 'central', 'south'] as const;
+
+/**
+ * One customer-information condition as edited (PLN-261019 P4): enum fields
+ * keep chosen `values`; text fields keep the comma-joined `text` the operator
+ * types, split on save.
+ */
+export interface RoutingConditionRow {
+  field: string;
+  values: string[];
+  text: string;
+}
 
 /** Editable row — keywords as the comma-joined string the operator types. */
 export interface RoutingRuleRow {
@@ -14,6 +31,7 @@ export interface RoutingRuleRow {
   regions: string[];
   keywords: string;
   labels: string[];
+  conditions: RoutingConditionRow[];
   assignees: string[];
   mode: RoutingMode;
 }
@@ -23,9 +41,12 @@ export const emptyRoutingRow = (): RoutingRuleRow => ({
   regions: [],
   keywords: '',
   labels: [],
+  conditions: [],
   assignees: [],
   mode: ROUTING_MODE.LEAST_LOADED,
 });
+
+const isEnumField = (field: string) => routingConditionDef(field)?.kind === 'enum';
 
 /**
  * Region × topic routing rules (PLN-261015 D3, wireframe §6.5.2).
@@ -39,12 +60,15 @@ export function RoutingRulesEditor({
   onChange,
   agents,
   labels,
+  languages,
 }: {
   rows: RoutingRuleRow[];
   onChange: (rows: RoutingRuleRow[]) => void;
   agents: Array<{ id: string; email: string; name?: string | null }>;
   /** Tenant job labels — code + the tenant's own name (PLN-261019 P3). */
   labels: Array<{ code: string; name: string }>;
+  /** Language codes the tenant's widget offers — the `language` condition's options. */
+  languages: string[];
 }) {
   const { t } = useTranslation('aiSetting');
   const { t: tc } = useTranslation('common');
@@ -58,6 +82,20 @@ export function RoutingRulesEditor({
     [next[i], next[j]] = [next[j], next[i]];
     onChange(next);
   };
+  // --- customer-information conditions (PLN-261019 P4) ---
+  const patchCond = (i: number, c: number, next: Partial<RoutingConditionRow>) =>
+    patch(i, { conditions: rows[i].conditions.map((x, k) => (k === c ? { ...x, ...next } : x)) });
+  const removeCond = (i: number, c: number) => patch(i, { conditions: rows[i].conditions.filter((_, k) => k !== c) });
+  const addCond = (i: number, field: string) => {
+    if (!field || rows[i].conditions.some((x) => x.field === field)) return;
+    patch(i, { conditions: [...rows[i].conditions, { field, values: [], text: '' }] });
+  };
+  const enumOptions = (field: string): string[] =>
+    field === 'language' ? languages : [...(ROUTING_CONDITION_ENUM_VALUES[field as keyof typeof ROUTING_CONDITION_ENUM_VALUES] ?? [])];
+  const valueLabel = (field: string, v: string) =>
+    field === 'language' ? (languageByCode(v)?.nativeLabel ?? v.toUpperCase()) : t(`handoff.routing.customer.value.${field}.${v}`, { defaultValue: v });
+  const fieldLabel = (field: string) => t(`handoff.routing.customer.field.${field}`, { defaultValue: field });
+
   const chip = (on: boolean) =>
     cn(
       'rounded-full border px-2.5 py-1 text-xs',
@@ -132,6 +170,63 @@ export function RoutingRulesEditor({
                   {l.name}
                 </button>
               ))}
+            </div>
+
+            <div className="flex flex-wrap items-start gap-1.5">
+              <span className="w-16 shrink-0 pt-1 text-xs text-gray-500">{t('handoff.routing.customer.title')}</span>
+              <div className="min-w-[220px] flex-1 space-y-1.5">
+                {row.conditions.map((c, k) => {
+                  const def = routingConditionDef(c.field);
+                  return (
+                    <div key={c.field} className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-xs text-gray-600">{fieldLabel(c.field)}</span>
+                      <span className="text-[11px] text-gray-400">
+                        {def ? t(def.op === 'contains' ? 'handoff.routing.customer.opContains' : 'handoff.routing.customer.opIn') : t('handoff.routing.customer.unknownField')}
+                      </span>
+                      {def && isEnumField(c.field) ? (
+                        enumOptions(c.field).map((v) => (
+                          <button key={v} type="button" className={chip(c.values.includes(v))} onClick={() => patchCond(i, k, { values: toggle(c.values, v) })}>
+                            {valueLabel(c.field, v)}
+                          </button>
+                        ))
+                      ) : def ? (
+                        <div className="min-w-[200px] flex-1">
+                          <Input
+                            value={c.text}
+                            placeholder={t('handoff.routing.customer.textPh')}
+                            onChange={(e) => patchCond(i, k, { text: e.target.value })}
+                          />
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="text-xs text-gray-500 hover:underline"
+                        aria-label={t('handoff.routing.customer.remove')}
+                        onClick={() => removeCond(i, k)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                })}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="w-56">
+                    <Select
+                      aria-label={t('handoff.routing.customer.add')}
+                      value=""
+                      onChange={(e) => addCond(i, e.target.value)}
+                    >
+                      <option value="">{t('handoff.routing.customer.add')}</option>
+                      {ROUTING_CONDITION_FIELDS.filter((f) => !row.conditions.some((c) => c.field === f.field)).map((f) => (
+                        <option key={f.field} value={f.field}>
+                          {fieldLabel(f.field)}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                  <span className="text-[11px] text-gray-400">{t('handoff.routing.customer.hint')}</span>
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">

@@ -1,3 +1,4 @@
+import type { RoutingCondition } from '@sharptalk/types';
 import type { SessionLanguage } from '@sharptalk/types';
 import { apiGet, apiPut, apiPost, apiDelete } from '@/lib/api-client';
 
@@ -142,6 +143,8 @@ export interface RoutingRule {
   regions?: string[];
   keywords?: string[];
   labels?: string[];
+  /** Customer-information conditions (PLN-261019 P4); every one must hold. */
+  conditions?: RoutingCondition[];
   assigneeUserIds: number[];
   mode?: RoutingMode;
 }

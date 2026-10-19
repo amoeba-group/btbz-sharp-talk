@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { localized } from '@sharptalk/types';
-import type { LocalizedText } from '@sharptalk/types';
+import { localized, routingConditionDef } from '@sharptalk/types';
+import type { LocalizedText, RoutingCondition, RoutingConditionField } from '@sharptalk/types';
 import { AiConfigService } from './ai-config.service';
 import { DENY_MODE, ROUTING_MODE } from './entity/tenant-ai-config.entity';
 import type { DenyMode, HandoffConfig, RoutingMode, RoutingRule } from './entity/tenant-ai-config.entity';
@@ -24,7 +24,7 @@ export interface HandoffRoute {
   ruleName?: string;
 }
 
-/** What routing may look at (PLN-261015 D3). All optional. */
+/** What routing may look at (PLN-261015 D3, PLN-261019 P4). All optional. */
 export interface RoutingContext {
   /** Signed session region — `sessions.identity_attributes.region`. */
   region?: string | null;
@@ -32,9 +32,67 @@ export interface RoutingContext {
   text?: string | null;
   /** Deny-rule label stamp, when a deny rule forced the handoff. */
   label?: string | null;
+  /** `sessions.language` (EN/VI/…); compared case-insensitively to a rule's language codes. */
+  language?: string | null;
+  /** `sessions.identity_level` — guest | verified. */
+  identityLevel?: string | null;
+  /** `customers.tier` — guest | subscriber | regular; null when the session has no customer. */
+  customerTier?: string | null;
+  /** Every signed attribute (hotel_id, hotel_name, province, role, region). */
+  identityAttributes?: Record<string, string> | null;
+  /** `sessions.landing_path`. */
+  landingPath?: string | null;
 }
 
 const norm = (v: unknown) => (typeof v === 'string' ? v.trim().toLowerCase() : '');
+const ruleLogger = new Logger('RoutingRules');
+
+/** The context value a condition field reads; null when the session does not carry it. */
+function conditionValue(ctx: RoutingContext, field: RoutingConditionField): string | null {
+  switch (field) {
+    case 'language':
+      return ctx.language ?? null;
+    case 'identity_level':
+      return ctx.identityLevel ?? null;
+    case 'customer_tier':
+      return ctx.customerTier ?? null;
+    case 'landing_path':
+      return ctx.landingPath ?? null;
+    case 'hotel_id':
+    case 'hotel_name':
+    case 'province':
+    case 'role':
+      return ctx.identityAttributes?.[field] ?? null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Does one stored condition hold for this context? Empty values hold (nothing
+ * was asked). A field outside the allow-list never holds: matching wide on a
+ * condition we cannot read would page the wrong team silently (REQ D6).
+ */
+export function conditionHolds(cond: RoutingCondition, ctx: RoutingContext): boolean {
+  const values = (cond?.values ?? []).map(norm).filter(Boolean);
+  if (!values.length) return true;
+  const def = routingConditionDef(String(cond?.field));
+  if (!def) {
+    ruleLogger.warn(`routing condition field '${String(cond?.field)}' is not in the catalog — rule skipped`);
+    return false;
+  }
+  const actual = norm(conditionValue(ctx, def.field));
+  if (!actual) return false;
+  return def.op === 'contains' ? values.some((v) => actual.includes(v)) : values.includes(actual);
+}
+
+/** `language=vi, hotel_name~hanoi` — for the routing log line. */
+export function describeConditions(conds: RoutingCondition[] | undefined): string {
+  return (conds ?? [])
+    .filter((c) => (c?.values ?? []).length)
+    .map((c) => `${c.field}${routingConditionDef(String(c.field))?.op === 'contains' ? '~' : '='}${c.values.join('|')}`)
+    .join(', ');
+}
 
 /**
  * First rule whose filters all match (PLN-261015 D3). An empty filter list
@@ -57,6 +115,8 @@ export function matchRoutingRule(
     if (keywords.length && !keywords.some((k) => text.includes(k))) continue;
     const labels = (rule.labels ?? []).map(norm).filter(Boolean);
     if (labels.length && !labels.includes(label)) continue;
+    // Customer-information conditions (PLN-261019 P4): all must hold.
+    if ((rule.conditions ?? []).some((c) => !conditionHolds(c, ctx))) continue;
     return { rule, index, assigneeUserIds };
   }
   return null;
@@ -109,6 +169,14 @@ export class HandoffRouterService {
     return null;
   }
 
+  /** Does any routing rule of this tenant condition on the customer tier? (Saves the customer read otherwise.) */
+  async needsCustomerTier(tenantId: number | null): Promise<boolean> {
+    const config = await this.aiConfig.getHandoffConfig(tenantId);
+    return (config?.routingRules ?? []).some((r) =>
+      (r.conditions ?? []).some((c) => c?.field === 'customer_tier' && (c.values ?? []).length > 0),
+    );
+  }
+
   async route(tenantId: number | null, language: string, ctx: RoutingContext = {}): Promise<HandoffRoute> {
     const config = await this.aiConfig.getHandoffConfig(tenantId);
     const targetUserIds = config?.assigneeUserIds?.filter((id) => Number.isFinite(id)) ?? [];
@@ -131,8 +199,9 @@ export class HandoffRouterService {
     const hit = matchRoutingRule(config?.routingRules, ctx);
     if (hit) {
       const ruleName = hit.rule.name?.trim() || `#${hit.index + 1}`;
+      const conds = describeConditions(hit.rule.conditions);
       this.logger.log(
-        `handoff routed by rule ${ruleName} (tenant ${tenantId}, region ${ctx.region ?? '-'}, ${hit.assigneeUserIds.length} agent(s))`,
+        `handoff routed by rule ${ruleName} (tenant ${tenantId}, region ${ctx.region ?? '-'}${conds ? `, ${conds}` : ''}, ${hit.assigneeUserIds.length} agent(s))`,
       );
       return {
         mode: 'agents',

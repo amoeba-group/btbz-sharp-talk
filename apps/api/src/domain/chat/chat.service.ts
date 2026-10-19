@@ -31,6 +31,7 @@ import { OrderService } from '../order/order.service';
 import { SessionService, sessionCacheKey } from '../session/session.service';
 import { CustomerService } from '../customer/customer.service';
 import { HandoffRouterService } from '../ai-engine/handoff-router.service';
+import type { RoutingContext } from '../ai-engine/handoff-router.service';
 import { EventBusService, EVENTS, RedisService } from '../../infrastructure/infrastructure.module';
 import { AttachmentService } from '../attachment/attachment.service';
 import { MessageAttachment } from '../attachment/entity/message-attachment.entity';
@@ -1211,6 +1212,40 @@ export class ChatService {
     return false;
   }
 
+  /**
+   * What a routing rule may look at (PLN-261015 D3, PLN-261019 P4): the signed
+   * region, the triggering text, the deny label, and the session/customer facts
+   * behind the customer-information conditions. The customer row is read only
+   * when some rule actually asks for the tier — most tenants never will, and
+   * the handoff path should not pay a query for a condition nobody wrote.
+   */
+  private async routingContext(
+    tenantId: number,
+    session: Session,
+    text: string | null,
+    label: string | null,
+  ): Promise<RoutingContext> {
+    const ctx: RoutingContext = {
+      region: session.identityAttributes?.region ?? null,
+      text,
+      label,
+      language: session.language ?? null,
+      identityLevel: session.identityLevel ?? null,
+      identityAttributes: session.identityAttributes ?? null,
+      landingPath: session.landingPath ?? null,
+    };
+    if (session.customerId != null && (await this.handoffRouter.needsCustomerTier(tenantId))) {
+      try {
+        const customer = await this.customerService.findById(tenantId, Number(session.customerId));
+        ctx.customerTier = customer.tier ?? null;
+      } catch {
+        // A missing customer row is "no tier", not a failed handoff.
+        ctx.customerTier = null;
+      }
+    }
+    return ctx;
+  }
+
   async handoff(
     conversationId: number,
     session: Session,
@@ -1222,11 +1257,11 @@ export class ChatService {
     // Routing decides both who gets paged and what the customer is told:
     // outside business hours the message goes to a mailbox and the shopper is
     // told to expect an email reply instead of a live agent (PLN-AiSetting W3).
-    const route = await this.handoffRouter.route(tenantId, session.language, {
-      region: session.identityAttributes?.region ?? null,
-      text: preview,
-      label: stamp?.issueLabel ?? null,
-    });
+    const route = await this.handoffRouter.route(
+      tenantId,
+      session.language,
+      await this.routingContext(tenantId, session, preview, stamp?.issueLabel ?? null),
+    );
     // Off hours the answer travels by email, so we need somewhere to send it.
     // Without an address on file the widget asks for one (PLN-260806) and the
     // notice says so, instead of promising a reply we cannot deliver.
@@ -1323,10 +1358,11 @@ export class ChatService {
     // Same routing as the automatic handoff (PLN-AiSetting W3). Off hours the
     // widget's local "connecting you" line would be a lie, so persist the
     // off-hours notice — the conversation poll shows it to the customer.
-    const route = await this.handoffRouter.route(tenantId, session.language, {
-      region: session.identityAttributes?.region ?? null,
-      text: lastUser?.body ?? null,
-    });
+    const route = await this.handoffRouter.route(
+      tenantId,
+      session.language,
+      await this.routingContext(tenantId, session, lastUser?.body ?? null, null),
+    );
     if (route.mode === 'email' && route.notice) {
       await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, route.notice, session.language, {
         reason: 'user_request',

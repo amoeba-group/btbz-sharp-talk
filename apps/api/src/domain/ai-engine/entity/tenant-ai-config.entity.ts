@@ -1,4 +1,5 @@
 import type { AnswerFooter } from '../answer-footer.util';
+import type { RoutingCondition } from '@sharptalk/types';
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import type { LocalizedText } from '@sharptalk/types';
 import { bigintTransformer } from '../../../global/util/transformers';
@@ -133,6 +134,13 @@ export interface RoutingRule {
   keywords?: string[];
   /** Deny-rule label stamp (consult|accounting|operations); empty = any. */
   labels?: string[];
+  /**
+   * Session / customer facts the rule also requires (PLN-261019 P4): every
+   * condition must hold. The field set is the allow-list in
+   * `@sharptalk/types` routing-condition.ts; a stored field outside it never
+   * matches (the rule is skipped, with a warning) rather than matching wide.
+   */
+  conditions?: RoutingCondition[];
   assigneeUserIds: number[];
   mode?: RoutingMode;
 }
