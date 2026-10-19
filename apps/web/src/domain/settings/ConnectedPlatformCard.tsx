@@ -58,7 +58,7 @@ function Shell({
   actions: ReactNode;
 }) {
   return (
-    <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-5">
+    <div className="flex min-w-0 flex-col rounded-xl border border-gray-200 bg-white p-5">
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-500/10 text-primary-600">

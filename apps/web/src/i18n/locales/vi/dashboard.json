@@ -30,5 +30,10 @@
     "cafe24": "Cafe24",
     "notion": "Notion",
     "self": "Nền tảng riêng"
+  },
+  "integrationState": {
+    "connected": "Đã kết nối",
+    "error": "Lỗi",
+    "unknown": "Chưa kiểm tra"
   }
 }

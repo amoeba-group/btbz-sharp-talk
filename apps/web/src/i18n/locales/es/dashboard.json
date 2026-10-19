@@ -30,5 +30,10 @@
     "cafe24": "Cafe24",
     "notion": "Notion",
     "self": "Plataforma propia"
+  },
+  "integrationState": {
+    "connected": "Conectado",
+    "error": "Error",
+    "unknown": "Sin probar"
   }
 }
