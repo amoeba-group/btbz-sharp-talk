@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Hướng dẫn kết nối Notion với SharpTalk cho Go2Joy</title>
+<meta name="description" content="Việc quản trị Notion của Go2Joy cần làm để SharpTalk đọc được trang Notion làm tri thức: kết nối trang, kiểm tra workspace và ID, lưu ý token, tự kiểm tra">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>/* Layout: single reading column (~72ch) under a slim masthead; tables/diagrams/figures break wider inside their own scrollers. */
+:root {
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --fg: #1d1f24;
+  --muted: #5d6270;
+  --line: #e4e1dc;
+  --tint: #fff1e6;
+  --accent: #e8650a;
+  --accent-ink: #b44c04;
+  --ink2: #2b3a67;
+  --f-display: "Be Vietnam Pro", "Noto Sans KR", system-ui, sans-serif;
+  --f-body: "Noto Sans KR", "Be Vietnam Pro", system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+    --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+  --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15.5px; line-height: 1.72; word-break: keep-all; overflow-wrap: anywhere; }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.masthead { border-bottom: 1px solid var(--line); background: var(--surface); }
+.masthead .wrap { padding-block: 40px 28px; display: grid; gap: 6px; }
+.eyebrow { margin: 0; font-size: 12px; letter-spacing: .06em; color: var(--muted); }
+.brand { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; }
+.brand .g2j { color: var(--accent); }
+.domain { margin: 0; font-family: var(--f-mono); font-size: 13px; color: var(--accent-ink); }
+.doc { padding-block: 24px 64px; }
+.doc > * { max-width: 72ch; }
+.doc > .scroll, .doc > .diagram, .doc > figure, .doc > blockquote.lead { max-width: 100%; }
+h1 { display: none; }
+h2 { font-family: var(--f-display); font-size: 25px; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--fg); text-wrap: balance; }
+h3 { font-size: 18.5px; margin: 34px 0 8px; text-wrap: balance; }
+h4 { font-size: 16px; margin: 24px 0 6px; color: var(--ink2); }
+p, ul, ol { margin: 0 0 14px; }
+li { margin-bottom: 4px; }
+a { color: var(--accent-ink); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+strong { font-weight: 700; }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--tint); color: var(--accent-ink); padding: 1px 5px; border-radius: 4px; }
+.docref { color: var(--ink2); font-weight: 500; }
+hr { border: 0; height: 0; margin: 8px 0; }
+blockquote { margin: 0 0 16px; padding: 10px 16px; border-left: 3px solid var(--line); color: var(--muted); }
+blockquote p:last-child { margin-bottom: 0; }
+blockquote.lead { background: var(--tint); border-left: 0; border-radius: 10px; color: var(--fg); padding: 18px 22px; font-size: 16.5px; }
+.scroll { overflow-x: auto; margin: 0 0 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.55; background: var(--surface); font-variant-numeric: tabular-nums; }
+th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; min-width: 5.5em; }
+th { font-weight: 700; font-size: 12.5px; letter-spacing: .03em; color: var(--muted); border-bottom: 1.5px solid var(--fg); white-space: nowrap; }
+pre.code { margin: 0; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.5; }
+pre.code code { background: none; color: var(--fg); padding: 0; font-size: inherit; }
+.diagram { overflow-x: auto; margin: 6px 0 22px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.diagram pre.mermaid { margin: 0; display: flex; justify-content: center; background: none; }
+figure { margin: 8px 0 26px; display: grid; gap: 8px; justify-items: start; }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; max-height: 720px; width: auto; }
+figcaption { font-size: 13px; color: var(--muted); max-width: 72ch; }
+.foot { padding-block: 20px 40px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+@media (max-width: 520px) { body { font-size: 15px; } h2 { font-size: 21px; } .masthead .wrap { padding-block: 28px 20px; } }
+
+/* Diagrams are pre-rendered in mermaid's light theme: keep their card light in both themes. */
+.diagram { background: #fbfaf8; border-color: #e3ddd4; }
+.diagram svg { max-width: 100%; height: auto; }
+@media (max-width: 700px) { .diagram svg { min-width: 620px; } }
+/* Labels were measured with browser defaults; inherit nothing that changes their size. */
+.diagram { font-size: 16px; line-height: normal; word-break: normal; overflow-wrap: normal; letter-spacing: normal; }
+.topnav { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 13px; }
+.topnav a { color: var(--accent-ink); text-decoration: none; }
+.topnav a:hover { text-decoration: underline; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-block; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--fg) !important; }
+.chip[aria-current="page"] { border-color: var(--accent); color: var(--accent-ink) !important; font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 18px 0 30px; }
+.card { display: grid; gap: 6px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); text-decoration: none; color: var(--fg); }
+.card:hover { border-color: var(--accent); }
+.card b { font-size: 16px; }
+.card span { font-size: 13px; color: var(--muted); }
+.langblock h2 { margin-top: 28px; }
+</style>
+</head>
+<body>
+<header class="masthead"><div class="wrap">
+  <nav class="topnav"><a href="./">← Tài liệu Go2Joy</a><span class="chips" aria-label="Tài liệu"><a class="chip" href="plan.vi.html">Kế hoạch dự án</a><a class="chip" href="kb-conflicts.vi.html">Phân loại xung đột tri thức</a><a class="chip" href="notion-setup.vi.html" aria-current="page">Kết nối Notion</a></span><span class="chips" aria-label="Ngôn ngữ"><a class="chip" href="notion-setup.ko.html" hreflang="ko">한국어</a><a class="chip" href="notion-setup.en.html" hreflang="en">English</a><a class="chip" href="notion-setup.vi.html" aria-current="page" hreflang="vi">Tiếng Việt</a></span></nav>
+  <p class="eyebrow">Tài liệu dành cho Go2Joy · 2026-10-19</p>
+  <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
+  <p class="domain">Hướng dẫn kết nối Notion với SharpTalk cho Go2Joy</p>
+</div></header>
+<main class="wrap doc"><h1 id="hướng-dẫn-kết-nối-notion-với-sharptalk-cho-go2joy">Hướng dẫn kết nối Notion với SharpTalk cho Go2Joy</h1>
+<ul>
+<li>Đối tượng: Quản trị workspace Notion của Go2Joy (chủ sở hữu integration "HA-UserGuide")</li>
+<li>Ngày kiểm tra: 19/10/2026 (đo thực tế trên staging)</li>
+<li>Hướng dẫn trước (28/08/2026, theo integration "Truc connection") không còn đúng sau khi đổi token ngày 16/10; tài liệu này thay thế.</li>
+</ul>
+<blockquote class="lead">
+<p>Những việc quản trị Notion của Go2Joy cần làm để SharpTalk đọc được trang Notion làm tri thức cho AI tư vấn. Thao tác hoàn toàn trong Notion, mỗi trang khoảng 1 phút.</p>
+</blockquote>
+<h2 id="1-tình-trạng-hiện-tại">1. Tình trạng hiện tại</h2>
+<p>Cấu hình phía SharpTalk đã hợp lệ. Token hoạt động, và chúng tôi đã kiểm tra trực tiếp qua Notion API danh tính cùng phạm vi truy cập của integration.</p>
+<div class="scroll"><table><thead><tr>
+<th>Mục</th>
+<th>Kết quả</th>
+</tr>
+</thead><tbody><tr>
+<td>Integration đã đăng ký</td>
+<td><strong>HA-UserGuide</strong> (đổi ngày 16/10)</td>
+</tr>
+<tr>
+<td>Workspace của integration</td>
+<td><strong>Go2Joy</strong></td>
+</tr>
+<tr>
+<td>Trang integration nhìn thấy</td>
+<td><strong>Chỉ 1 trang</strong> — "Hướng dẫn sử dụng Hotel Admin" (ID <code>bfb56ba4…</code>)</td>
+</tr>
+</tbody></table></div>
+<p>Cả 3 nguồn Notion đã đăng ký trong SharpTalk đều đồng bộ thất bại vì cùng một lý do: <strong>trang chưa được kết nối (Connections) với integration "HA-UserGuide".</strong></p>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Nguồn trong SharpTalk</th>
+<th>Trang Notion đã đăng ký</th>
+<th>Trạng thái</th>
+</tr>
+</thead><tbody><tr>
+<td>1</td>
+<td>Go2Joy Hotel FAQ (Notion)</td>
+<td><code>hotel-go2joy.notion.site/FAQ-f03737634c38…</code></td>
+<td>❌ Chưa kết nối</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Hướng dẫn sử dụng Hotel Admin</td>
+<td><code>…8968fee0bb548347a35e01756b4cc89c</code></td>
+<td>❌ Chưa kết nối (integration chỉ thấy trang cùng tên có ID <code>bfb56ba4…</code> — xem 2-D)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Hướng dẫn đăng ký khách sạn trên Go2Joy</td>
+<td><code>…2026dfbd464d800085cedea4c57f8d15</code></td>
+<td>❌ Chưa kết nối</td>
+</tr>
+</tbody></table></div>
+<h2 id="2-việc-cần-làm-phía-go2joy">2. Việc cần làm phía Go2Joy</h2>
+<h3 id="a-kết-nối-3-trang-với-integration-khoảng-1-phút-mỗi-trang">A. Kết nối 3 trang với integration (khoảng 1 phút mỗi trang)</h3>
+<p>Với từng trang trong 3 trang dưới đây:</p>
+<ol>
+<li>Mở trang trong Notion.</li>
+<li>Bấm <strong>⋯</strong> ở góc trên bên phải → chọn <strong>Connections</strong> ở phần dưới menu.</li>
+<li>Gõ <strong>HA-UserGuide</strong> → chọn → <strong>xác nhận</strong> cấp quyền truy cập.</li>
+<li>Khi "HA-UserGuide" xuất hiện trong <strong>⋯ → Connections</strong> của trang là xong.</li>
+</ol>
+<p>Các trang cần kết nối:</p>
+<ul>
+<li><strong>Go2Joy Hotel FAQ</strong> — <code>https://hotel-go2joy.notion.site/FAQ-f03737634c3848339910d50f7e77bf7b</code></li>
+<li><strong>Hướng dẫn sử dụng Hotel Admin</strong> — ID <code>8968fee0bb548347a35e01756b4cc89c</code> (xem 2-D)</li>
+<li><strong>Hướng dẫn đăng ký khách sạn trên Go2Joy</strong> — ID <code>2026dfbd464d800085cedea4c57f8d15</code></li>
+</ul>
+<p><strong>Trang con tự động kế thừa.</strong> Chỉ cần kết nối trang cha, không cần làm từng trang con.</p>
+<h3 id="b-publish-to-web-không-phải-là-kết-nối">B. "Publish to web" không phải là kết nối</h3>
+<p>Trang FAQ đang được publish tại <code>hotel-go2joy.notion.site</code>. Publish chỉ cho phép xem bằng trình duyệt; <strong>Notion API chỉ đọc được trang đã được kết nối với integration</strong>, bất kể trang có public hay không. Vì vậy vẫn phải làm bước A.</p>
+<h3 id="c-kiểm-tra-workspace">C. Kiểm tra workspace</h3>
+<p>Integration "HA-UserGuide" được cài trong workspace <strong>Go2Joy</strong>. Cả 3 trang phải nằm trong workspace này thì "HA-UserGuide" mới xuất hiện khi tìm trong Connections. Nếu không tìm thấy, trang đang ở workspace khác: chuyển trang sang Go2Joy, hoặc tạo integration mới trong workspace đó và đăng ký lại token (xem mục E).</p>
+<h3 id="d-hướng-dẫn-sử-dụng-hotel-admin-xác-nhận-đúng-trang">D. "Hướng dẫn sử dụng Hotel Admin": xác nhận đúng trang</h3>
+<p>ID đăng ký trong SharpTalk là <code>8968fee0…</code>, nhưng integration hiện chỉ thấy trang cùng tên có ID <code>bfb56ba4…</code>. Có 2 khả năng:</p>
+<ul>
+<li>Trang đã được nhân bản hoặc di chuyển nên đổi ID → nếu <code>bfb56ba4…</code> là bản mới nhất, chỉ cần báo chúng tôi; SharpTalk sẽ đổi ID nguồn (Go2Joy không cần làm gì thêm).</li>
+<li>Là 2 trang khác nhau → kết nối cả trang <code>8968fee0…</code> theo mục A.</li>
+</ul>
+<p>Cách kiểm tra: mở trang trong Notion và xem 32 ký tự cuối trên thanh địa chỉ.</p>
+<h3 id="e-lưu-ý-khi-thay-token-integration">E. Lưu ý khi thay token (integration)</h3>
+<p>Ngày 16/10 integration đổi từ "Truc connection" sang "HA-UserGuide" nên <strong>mọi trang đã kết nối với integration cũ không còn hiển thị với integration mới</strong> (Connections được quản lý riêng theo từng integration). Nếu sau này cần đổi token:</p>
+<ol>
+<li>Tạo integration mới,</li>
+<li><strong>Kết nối lại tất cả trang</strong> đang dùng làm nguồn SharpTalk,</li>
+<li>Đăng ký token mới trong console SharpTalk.</li>
+</ol>
+<p>Tốt nhất là giữ nguyên token hiện tại.</p>
+<h2 id="3-sau-khi-kết-nối-go2joy-tự-kiểm-tra-được">3. Sau khi kết nối: Go2Joy tự kiểm tra được</h2>
+<ol>
+<li>Console SharpTalk → <strong>Tri thức</strong> → bảng <strong>Nguồn</strong> → bấm <strong>↻</strong> (đồng bộ) ở dòng nguồn tương ứng.</li>
+<li>Thành công: thông báo xanh và thời gian đồng bộ (màu đen) trên dòng nguồn.</li>
+<li>Thất bại: thông báo đỏ hiển thị nguyên nhân và cách xử lý. Thấy thông báo dưới đây nghĩa là bước A chưa xong.</li>
+<li>Sau khi đồng bộ thành công, hỏi thử trong chat widget: AI sẽ trích dẫn nội dung trang.</li>
+</ol>
+<p>Ví dụ thông báo thất bại:</p>
+<div class="scroll"><pre class="code"><code>Không thể đọc đích của nguồn.
+Could not find page with ID: f0373763-… Make sure the relevant pages and databases are shared with your integration "HA-UserGuide".
+Trang Notion chưa được chia sẻ với integration — mở trang trong Notion, ⋯ → Connections, thêm integration.</code></pre></div>
+<p>Ví dụ thông báo thành công: <code>Đồng bộ: tạo 1, cập nhật 0</code></p>
+<h2 id="4-phạm-vi-và-giới-hạn">4. Phạm vi và giới hạn</h2>
+<div class="scroll"><table><thead><tr>
+<th>Mục</th>
+<th>Nội dung</th>
+</tr>
+</thead><tbody><tr>
+<td>Phạm vi</td>
+<td>Trang chính + trang con cấp 1. Trang lồng sâu hơn không được thu thập.</td>
+</tr>
+<tr>
+<td>Chỉ văn bản</td>
+<td>Đoạn văn, tiêu đề, danh sách, toggle, bảng, code. Không thu thập hình ảnh, tệp, embed.</td>
+</tr>
+<tr>
+<td>Giới hạn</td>
+<td>Tối đa 200 trang mỗi lần, khoảng 30.000 ký tự mỗi trang. Trang quá dài nên tách thành trang con.</td>
+</tr>
+<tr>
+<td>Cập nhật</td>
+<td>Sửa trên Notion không tự cập nhật. Bấm ↻ lại trong console, chỉ phần thay đổi được cập nhật.</td>
+</tr>
+<tr>
+<td>Xóa trang</td>
+<td>Trang bị xóa sẽ được ẩn, không xóa vĩnh viễn.</td>
+</tr>
+<tr>
+<td>Bảo mật</td>
+<td>Token được mã hóa, chỉ đọc. Chỉ truy cập được trang đã kết nối và trang con của nó.</td>
+</tr>
+</tbody></table></div>
+<h2 id="5-danh-sách-phản-hồi">5. Danh sách phản hồi</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Đã kết nối HA-UserGuide vào trang FAQ (<code>f0373763…</code>)</li>
+<li><input disabled="" type="checkbox"> Đã kết nối HA-UserGuide vào "Hướng dẫn đăng ký khách sạn…" (<code>2026dfbd…</code>)</li>
+<li><input disabled="" type="checkbox"> "Hướng dẫn sử dụng Hotel Admin": đã kết nối <code>8968fee0…</code>, hoặc xác nhận <code>bfb56ba4…</code> là bản mới nhất</li>
+<li><input disabled="" type="checkbox"> Ảnh chụp danh sách Connections (tùy chọn)</li>
+</ul>
+<p>Liên hệ: đội vận hành SharpTalk (kênh liên lạc hiện có).</p>
+</main>
+<footer class="wrap foot">Amoeba(BitBiz) · SharpTalk for Go2Joy</footer>
+</body>
+</html>
