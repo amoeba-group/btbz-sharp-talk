@@ -10,7 +10,7 @@
 | # | Câu hỏi | Lấy ở đâu | Nếu câu trả lời là… |
 |---|---|---|---|
 | 1 | Phiên bản Kotlin chính xác trong app? | `gradle/libs.versions.toml` hoặc `build.gradle` gốc, dòng `kotlin` | 2.1.0 trở lên: dùng được. Dưới 2.1: AAR không đọc được, Amoeba phải build lại bằng Kotlin thấp hơn hoặc giao mã nguồn |
-| 2 | `minSdk` của app? | `app/build.gradle(.kts)`, `defaultConfig` | 21 trở lên: dùng được (21 đến 23 chưa chạy thử máy thật, Amoeba thử trên máy của họ). Dưới 21: cần bàn |
+| 2 | `minSdk` của app? | `app/build.gradle(.kts)`, `defaultConfig` | 21 trở lên: dùng được (21 đến 23 đã chạy trên máy ảo, chưa thử máy thật; nhờ đội Android của Go2Joy thử trên máy của họ). Dưới 21: cần bàn |
 | 3 | Màn hình dựng bằng Jetpack Compose, XML hay cả hai? | màn nơi sẽ đặt nút "Hỗ trợ" | XML: dùng Fragment trực tiếp. Compose: dùng thêm module Compose, xem câu 4 |
 | 4 | Activity chứa màn chat kế thừa lớp nào? | tìm `class ... : XxxActivity()` | `AppCompatActivity` hoặc `FragmentActivity`: dùng được. **`ComponentActivity` thuần (mẫu Compose của Android Studio): màn chat sập**, phải đổi lớp cha và theme sang AppCompat |
 | 5 | Phiên bản AGP và Gradle? | `gradle/libs.versions.toml` mục `agp`, `gradle/wrapper/gradle-wrapper.properties` | Đã thử AGP 8.5.2 và 8.10.1. Dưới 8.5 thì Amoeba thử thêm |

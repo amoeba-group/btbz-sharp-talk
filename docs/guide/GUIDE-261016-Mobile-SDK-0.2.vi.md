@@ -17,8 +17,8 @@ Tất cả đã kiểm bằng app thử chạy trên emulator (TCR-261016 mục 
 | Hạng mục | Yêu cầu | Ghi chú |
 |---|---|---|
 | Kotlin | **2.1.0 trở lên** | Thư viện build bằng 2.2.0. Kotlin 2.0.x trở xuống không đọc được (trình biên dịch dừng với lỗi nội bộ). App dùng Kotlin 2.1 vẫn giữ stdlib 2.1 của mình, không bị kéo lên 2.2.0 |
-| `minSdk` | **21 trở lên** | Thấp hơn thì lỗi gộp manifest. Đã chạy thật trên Android 5.0 (API 21), 6.0 (API 23) và 15 (API 35). Trên Android 5.x lỗi HTTP 4xx/5xx của trang không được báo riêng, chỉ có lỗi mạng và hết 15 giây chờ |
-| `compileSdk`, `targetSdk` | Không đòi mức tối thiểu | SDK không ép app nâng `compileSdk`. Đã kiểm `compileSdk` 34 và 35, `targetSdk` 34 và 35; **chưa kiểm 36**. Lưu ý: nếu app tự khai báo androidx mới thì chính thư viện đó có thể đòi `compileSdk` cao (xem 1.3) |
+| `minSdk` | **21 trở lên** | Thấp hơn thì lỗi gộp manifest. Đã chạy thật trên máy ảo Android 5.0 (API 21), 6.0 (API 23), 15 (API 35) và 16 (API 36); chưa thử trên điện thoại thật. Trên Android 5.x lỗi HTTP 4xx/5xx của trang không được báo riêng, chỉ có lỗi mạng và hết 15 giây chờ |
+| `compileSdk`, `targetSdk` | Không đòi mức tối thiểu | SDK không ép app nâng `compileSdk`. Đã build thử với `compileSdk` và `targetSdk` từ 30 đến 36 (mức 36 chạy trên máy ảo Android 16). Lưu ý: nếu app tự khai báo androidx mới thì chính thư viện đó có thể đòi `compileSdk` cao (xem 1.3) |
 | androidx của app | **fragment-ktx 1.3.6, core-ktx 1.6.0, lifecycle-runtime-ktx 2.3.1, activity 1.2.4 trở lên** | Đây là mức thấp nhất đã chạy (androidx năm 2021). **fragment 1.2.5 và activity 1.1.0 (năm 2020) làm app sập ngay khi tạo fragment** vì chưa có API kết quả hoạt động. Nhận qua Maven thì Gradle tự nâng lên mức này; app có bản cao hơn thì giữ nguyên |
 | Android System WebView của máy | **Chrome 80 trở lên** | Widget là ứng dụng web hiện đại. WebView cũ hơn tải được trang nhưng không chạy được, nên sau 15 giây SDK hiện màn lỗi "cập nhật Android System WebView". Máy có Google Play tự cập nhật WebView; máy không có (hoặc đã tắt cập nhật) thì không dùng được chat |
 | JVM của app | 11 hoặc 17 | Cả hai đều đã kiểm |
