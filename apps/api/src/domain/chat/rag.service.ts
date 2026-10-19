@@ -842,7 +842,7 @@ export class RagService {
       });
       const fixed = res.text.trim();
       if (res.degraded || !fixed || replyLanguageMismatch(fixed, language)) {
-        this.logger.warn(`reply language fix failed: tenant=${tenantId} expected=${code} degraded=${res.degraded}`);
+        this.logger.warn(`reply language fix failed: tenant=${tenantId} expected=${code} degraded=${!!res.degraded}`);
         return text;
       }
       this.logger.log(`reply language fixed: tenant=${tenantId} → ${code}`);
