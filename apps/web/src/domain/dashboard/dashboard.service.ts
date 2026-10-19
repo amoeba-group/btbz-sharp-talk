@@ -14,9 +14,13 @@ export interface DashboardData {
 // Mirrors the API's integration_status row — the field is `name`, and reading
 // a `provider` that never existed is what left the dashboard labels blank.
 export interface IntegrationStatus {
-  name: string; // shopify/fulfillment/klaviyo/odoo/google_drive/…
-  status: string; // connected / error / disconnected
+  /** Provider key (shopify/cafe24/odoo/notion/self/…) — the per-tenant endpoint's field (FIX-260827). */
+  provider: string;
+  /** Legacy field of the global /integrations/status row; kept for callers still passing it. */
+  name?: string;
+  status: string; // connected / error / unknown
   lastSyncAt?: string | null;
+  lastTestedAt?: string | null;
   detail?: string | null;
 }
 

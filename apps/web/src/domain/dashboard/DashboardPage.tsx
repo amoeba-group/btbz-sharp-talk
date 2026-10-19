@@ -109,25 +109,34 @@ export function DashboardPage() {
             <p className="text-sm text-gray-400">{t('noIntegrations')}</p>
           )}
           <ul className="space-y-3">
-            {integrations?.map((it) => (
-              <li key={it.name} className="text-sm">
+            {integrations?.map((it) => {
+              // The per-tenant endpoint names the row `provider`; reading
+              // `name` here printed "integration.undefined" for every row.
+              const key = it.provider ?? it.name ?? '';
+              const when = it.lastTestedAt ?? it.lastSyncAt;
+              return (
+              <li key={key} className="text-sm">
                 <div className="flex items-center justify-between">
                   <span className="font-medium text-gray-700">
-                    {t(`integration.${it.name}`, { defaultValue: it.name })}
+                    {t(`integration.${key}`, { defaultValue: key })}
                   </span>
-                  <StatusBadge status={it.status} />
+                  <StatusBadge
+                    status={it.status}
+                    label={t(`integrationState.${it.status}`, { defaultValue: it.status })}
+                  />
                 </div>
                 {/* What the state means and when it was last true — an
                     "error" badge alone gave nothing to act on. */}
-                {(it.detail || it.lastSyncAt) && (
+                {(it.detail || when) && (
                   <p className="mt-0.5 truncate text-xs text-gray-400" title={it.detail ?? undefined}>
                     {it.detail}
-                    {it.detail && it.lastSyncAt ? ' · ' : ''}
-                    {it.lastSyncAt ? new Date(it.lastSyncAt).toLocaleString() : ''}
+                    {it.detail && when ? ' · ' : ''}
+                    {when ? new Date(when).toLocaleString() : ''}
                   </p>
                 )}
               </li>
-            ))}
+              );
+            })}
           </ul>
         </Card>
       </div>

@@ -30,5 +30,10 @@
     "cafe24": "Cafe24",
     "notion": "Notion",
     "self": "自有平台"
+  },
+  "integrationState": {
+    "connected": "已连接",
+    "error": "错误",
+    "unknown": "未测试"
   }
 }
