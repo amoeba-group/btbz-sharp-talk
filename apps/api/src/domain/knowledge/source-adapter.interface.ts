@@ -83,3 +83,16 @@ export interface SourceAdapter {
    */
   fetchAll(tenantId: number, source: KnowledgeSource): Promise<SourceItem[] | SourceFetch>;
 }
+
+/**
+ * Failures an adapter raises that the operator can act on, as classes rather
+ * than message text so the service can map them to an error code without
+ * matching wording (PLN-261019). Everything else an adapter throws is treated
+ * as the provider's fault (its own error classes) or ours (a plain Error).
+ */
+
+/** The configured target cannot be used: missing, malformed, trashed, not shared. */
+export class SourceTargetError extends Error {}
+
+/** No credential is registered for this source type, or it cannot be used. */
+export class SourceCredentialError extends Error {}

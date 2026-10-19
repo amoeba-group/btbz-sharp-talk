@@ -403,6 +403,13 @@
     "pending": "待处理"
   },
   "notionShareHint": "Notion 页面尚未与集成共享 — 请在 Notion 中打开页面，⋯ → Connections 添加该集成。",
+  "syncError": {
+    "E5095": "无法读取来源目标。",
+    "E5096": "来源凭证缺失或被拒绝。",
+    "E5097": "来源提供方未响应 — 请稍后重试。"
+  },
+  "gdriveShareHint": "将 Drive 文件夹共享给服务账号的邮箱后再重新同步。",
+  "notionPublishedHint": "这是已发布(notion.site)的页面。发布到网页不会授予 API 访问权限，页面仍需连接到集成。",
   "deleteSource": "删除来源",
   "deleteSourceConfirm": "将删除来源“{{name}}”。是否继续?",
   "deleteSourceDocsNote": "该来源的文档不会被删除——它们将被停用并从检索中排除。您可以在文档列表中重新启用。",

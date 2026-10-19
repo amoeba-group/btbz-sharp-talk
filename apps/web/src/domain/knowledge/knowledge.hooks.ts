@@ -167,7 +167,7 @@ export function useSyncSource() {
   const tenantKey = useTenantKey();
   const { t } = useTranslation('knowledge');
   return useMutation({
-    mutationFn: (id: string) => knowledgeService.syncSource(id),
+    mutationFn: ({ id }: { id: string; type: string }) => knowledgeService.syncSource(id),
     onSuccess: (r) => {
       qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'sources'] });
       qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'documents'] });
@@ -189,9 +189,23 @@ export function useSyncSource() {
       const incomplete = !!(r.failed || r.embedFailed || r.dropped || r.truncated);
       toast[incomplete ? 'error' : 'success'](t('syncSummary', { detail: parts.join(', ') }));
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error & { code?: string; details?: Record<string, string[]> }, { type }) => {
+      // The row already shows the stored reason, but the toast is what the
+      // operator reads first — and until PLN-261019 it said "Internal server
+      // error" for a page that merely was not shared with the integration.
+      qc.invalidateQueries({ queryKey: ['knowledge', tenantKey, 'sources'] });
+      const known = !!err.code && SYNC_ERROR_CODES.includes(err.code);
+      const lines = [known ? t(`syncError.${err.code}`) : err.message, err.details?.reason?.[0]];
+      if (err.code === 'E5095') {
+        lines.push(t(type === 'gdrive' ? 'gdriveShareHint' : 'notionShareHint'));
+      }
+      toast.error(lines.filter(Boolean).join('\n'));
+    },
   });
 }
+
+/** Sync failures the API classifies (E5095 target, E5096 credential, E5097 provider). */
+const SYNC_ERROR_CODES = ['E5095', 'E5096', 'E5097'];
 
 export function useDocuments(params: DocumentListParams) {
   const tenantKey = useTenantKey();

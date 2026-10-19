@@ -1,4 +1,11 @@
-import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } from '@nestjs/common';
+import {
+  CallHandler,
+  ExecutionContext,
+  HttpException,
+  Injectable,
+  Logger,
+  NestInterceptor,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import type { Request, Response } from 'express';
@@ -26,11 +33,20 @@ export class LoggingInterceptor implements NestInterceptor {
         next: () => {
           this.logger.log(`${method} ${path} -> ${res.statusCode} (${Date.now() - start}ms)`);
         },
-        error: (err: { status?: number }) => {
-          const status = typeof err?.status === 'number' ? err.status : 500;
-          this.logger.warn(`${method} ${path} -> ${status} (${Date.now() - start}ms)`);
+        error: (err: unknown) => {
+          this.logger.warn(`${method} ${path} -> ${statusOf(err)} (${Date.now() - start}ms)`);
         },
       }),
     );
   }
+}
+
+/**
+ * The status the exception filter will answer with — which is only what an
+ * HttpException says. Any other error becomes a 500 there, however it is
+ * shaped: a Notion client error carrying `status: 404` used to be logged as
+ * "-> 404" while the response was 500 (PLN-261019 G3).
+ */
+export function statusOf(err: unknown): number {
+  return err instanceof HttpException ? err.getStatus() : 500;
 }

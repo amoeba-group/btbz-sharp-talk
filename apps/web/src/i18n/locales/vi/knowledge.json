@@ -403,6 +403,13 @@
     "pending": "Đang chờ"
   },
   "notionShareHint": "Trang Notion chưa được chia sẻ với integration — mở trang trong Notion, ⋯ → Connections và thêm integration.",
+  "syncError": {
+    "E5095": "Không thể đọc đích của nguồn.",
+    "E5096": "Thông tin xác thực của nguồn bị thiếu hoặc bị từ chối.",
+    "E5097": "Nhà cung cấp nguồn không phản hồi — hãy thử lại sau."
+  },
+  "gdriveShareHint": "Chia sẻ thư mục Drive với email của tài khoản dịch vụ, rồi đồng bộ lại.",
+  "notionPublishedHint": "Đây là trang đã xuất bản (notion.site). Xuất bản lên web không cấp quyền truy cập API — trang vẫn phải được kết nối với integration.",
   "deleteSource": "Xóa nguồn",
   "deleteSourceConfirm": "Sẽ xóa nguồn \"{{name}}\". Tiếp tục?",
   "deleteSourceDocsNote": "Tài liệu của nguồn này không bị xóa — chúng bị vô hiệu hóa và loại khỏi tìm kiếm. Bạn có thể kích hoạt lại từ danh sách tài liệu.",

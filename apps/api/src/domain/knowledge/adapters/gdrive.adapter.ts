@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { KnowledgeSource } from '../entity/knowledge-source.entity';
-import { SourceAdapter, SourceItem } from '../source-adapter.interface';
+import {
+  SourceAdapter,
+  SourceCredentialError,
+  SourceItem,
+  SourceTargetError,
+} from '../source-adapter.interface';
 import { GdriveClient } from '../gdrive.client';
 import { GDRIVE_PROVIDER, GdriveCredentialService } from '../gdrive-credential.service';
 
@@ -47,10 +52,10 @@ export class GdriveAdapter implements SourceAdapter {
 
   async fetchAll(tenantId: number, source: KnowledgeSource): Promise<SourceItem[]> {
     const folderId = String((source.configJson as Record<string, unknown>)?.folderId ?? '').trim();
-    if (!folderId) throw new Error('source has no folderId configured');
+    if (!folderId) throw new SourceTargetError('source has no folderId configured');
 
     const sa = await this.credentials.load(tenantId);
-    if (!sa) throw new Error('no Google service account key is registered');
+    if (!sa) throw new SourceCredentialError('no Google service account key is registered');
 
     const token = await this.client.getAccessToken(sa);
     const files = await this.client.listFolder(token, folderId);

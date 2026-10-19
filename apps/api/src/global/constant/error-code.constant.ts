@@ -265,6 +265,13 @@ export const ERROR_CODE = {
   JOURNEY_STAGE_UNKNOWN: { code: 'E5093', message: 'No such journey stage for this tenant' },
   JOURNEY_STAGE_IN_USE: { code: 'E5094', message: 'Move the journeys out of a stage before removing it' },
 
+  // E5095-E5097 — Knowledge source sync failures (PLN-261019). A sync that fails
+  // because the operator can fix something (share the page, replace the token)
+  // is not an internal error; 500 told them to call us instead of Notion.
+  KB_SOURCE_TARGET_UNREACHABLE: { code: 'E5095', message: 'The source target cannot be read — check that it is shared with the integration' },
+  KB_SOURCE_CREDENTIAL_INVALID: { code: 'E5096', message: 'The source credential is missing or was rejected' },
+  KB_SOURCE_UPSTREAM_FAILED: { code: 'E5097', message: 'The source provider did not respond' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

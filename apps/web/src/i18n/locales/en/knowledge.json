@@ -402,6 +402,13 @@
     "pending": "Pending"
   },
   "notionShareHint": "The Notion page isn't shared with the integration — open the page in Notion, ⋯ → Connections, and add the integration.",
+  "syncError": {
+    "E5095": "The source target cannot be read.",
+    "E5096": "The source credential is missing or was rejected.",
+    "E5097": "The source provider did not respond — try again later."
+  },
+  "gdriveShareHint": "Share the Drive folder with the service account's email address, then sync again.",
+  "notionPublishedHint": "This is a published (notion.site) page. Publishing to the web does not grant API access — the page still has to be connected to the integration.",
   "groupColumn": "Group",
   "deleteSource": "Delete source",
   "deleteSourceConfirm": "Delete the source \"{{name}}\". Continue?",
