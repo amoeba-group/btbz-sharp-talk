@@ -59,6 +59,8 @@ interface WidgetState {
   aiProcessingRegion: string;
   /** Loader could not find the configured trigger element, so the floating launcher stands in (FIX-260916). */
   triggerUnavailable: boolean;
+  /** The launcher greeting pill is on screen (PLN-261019 P2) — the loader widens the closed frame for it. */
+  teaserVisible: boolean;
   /**
    * Privacy consent — gates chat persistence AND GA4 (Consent Mode).
    * Null until session/ensure has reported the server-side state (server is
@@ -121,6 +123,7 @@ interface WidgetState {
   setLanguage: (l: string) => void;
   setAiProcessingRegion: (r: string) => void;
   setTriggerUnavailable: (v: boolean) => void;
+  setTeaserVisible: (v: boolean) => void;
   setConsentInfo: (c: ConsentInfo | null) => void;
   /** Record a fresh, server-acknowledged consent choice (clears outdated flag). */
   updateConsentState: (
@@ -158,6 +161,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   language: initialLanguage(),
   aiProcessingRegion: 'US',
   triggerUnavailable: false,
+  teaserVisible: false,
   consent: null,
   pendingChatMessage: null,
   notificationFilter: 'all',
@@ -188,6 +192,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setLanguage: (l) => set({ language: l }),
   setAiProcessingRegion: (r) => set({ aiProcessingRegion: r }),
   setTriggerUnavailable: (v) => set({ triggerUnavailable: v }),
+  setTeaserVisible: (v) => set({ teaserVisible: v }),
   setConsentInfo: (c) => set({ consent: c }),
   setNotificationFilter: (f) => set({ notificationFilter: f }),
   /**

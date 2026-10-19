@@ -1,6 +1,6 @@
 # Sổ tay tạo widget tùy chỉnh SharpTalk — thiết kế widget theo từng tenant
 
-> Phiên bản 1.0 · Bản đầu 2026-09-13 · Biên soạn dựa trên mã nguồn
+> Phiên bản 1.1 · Bản đầu 2026-09-13 · Sửa đổi 2026-10-19 (kiểu nút mở, bong bóng chào, bố cục đầu, tin nhắn có ảnh đại diện, biểu tượng đính kèm) · Biên soạn dựa trên mã nguồn
 > Đối tượng: người vận hành tenant (master/director — tệp thiết kế, widget tùy chỉnh và ảnh chụp cài đặt chỉ dành cho hai cấp này) · Chương 6 dành cho quản trị viên nền tảng
 > Bản trực tuyến: https://shoptalk.amoeba.site/manual (bản HTML, bản gốc tiếng Hàn và bản dịch tiếng Anh)
 > Đọc trước: [Sổ tay cài đặt nhanh](quick-setup.vi.md) chương 5 (cài widget · chủ đề)
@@ -103,6 +103,10 @@ Cài đặt > Cài đặt widget > thẻ **Widget tùy chỉnh** → **[Tạo wi
 | Bo góc | Nhỏ 8px · Vừa 12px · Lớn 16px | Bo góc bảng; bong bóng và nút theo tỉ lệ |
 | Kích thước bảng | rộng 360–480 · cao 480–720 (mặc định 404×600) | **Chỉ máy tính.** Di động và chế độ ứng dụng lấp đầy màn hình |
 | Tệp biểu tượng | biểu tượng nút mở của thẻ chủ đề (mặc định) · biểu tượng tải lên | Hình trên nút mở tròn. Biểu tượng tải lên sẽ thay cho lựa chọn ở thẻ chủ đề |
+| Kiểu trả lời nhanh | chip tô màu (mặc định) · thẻ có biểu tượng | Hình dáng các nút kịch bản ở màn hình chat đầu tiên. Thẻ nền trắng có viền và biểu tượng |
+| Tiêu đề khi có logo | logo thay tiêu đề (mặc định) · logo cạnh tiêu đề | Chỉ áp dụng khi thẻ chủ đề có logo. Cạnh tiêu đề, logo bị giới hạn cao 24px nên hãy dùng biểu trưng nhỏ. Tiêu đề lấy từ thẻ nội dung **Tiêu đề đầu widget** (theo ngôn ngữ); trống = tên hiển thị |
+| Tin nhắn AI / nhân viên | chỉ bong bóng (mặc định) · ảnh đại diện + tên người gửi | Hàng có ảnh đại diện đặt ảnh tròn 28px bên trái bong bóng AI và nhân viên, tên người gửi ở dòng đầu bong bóng. Chọn ảnh ở **Ảnh đại diện AI / nhân viên** (tệp thiết kế, loại biểu tượng); tên lấy từ thẻ nội dung **Tên người gửi AI / nhân viên** (theo ngôn ngữ); trống = tên hiển thị / tên thật của nhân viên |
+| Biểu tượng nút đính kèm | kẹp giấy (mặc định) · hình ảnh | Hình trên nút đính kèm cạnh ô nhập |
 | CSS tùy chỉnh (tiện ích) | CSS đã lọc | Chỉ hiện với tenant được quản trị viên nền tảng bật tiện ích (chương 5) |
 | Ghi chú | văn bản tự do | Ghi chú vận hành như "Xuân 2026, phụ trách ○○". Khách hàng không thấy |
 
@@ -147,6 +151,19 @@ Cài đặt > Cài đặt widget > thẻ **Widget tùy chỉnh** → **[Tạo wi
 - Khách mở trang mới: thấy thiết kế mới ngay
 - Khách đang mở widget: thấy thiết kế mới sau khi tải lại trang
 - Widget vẽ chủ đề trong bộ nhớ đệm trước rồi mới cập nhật từ tệp trực tiếp, nên diện mạo cũ có thể lóe lên rất ngắn
+
+### 3.2-2 Kiểu nút mở · bong bóng chào (thẻ chủ đề widget)
+
+Hình dáng và lời chào của nút mở nổi được chọn ở **Cài đặt > Widget > Chủ đề widget**. Cả hai không dùng ở chế độ kích hoạt và chế độ ứng dụng.
+
+| Cài đặt | Giá trị | Hoạt động |
+|---|---|---|
+| Kiểu nút mở | nút tô màu (mặc định) · **chỉ biểu tượng** | Với chỉ biểu tượng, **tệp biểu tượng** của widget tùy chỉnh đang dùng chính là nút — không vòng tròn, không bóng (hợp với linh vật có đường viền riêng). Không có tệp biểu tượng thì vẽ nút tô màu. Huy hiệu chưa đọc nằm ở góc phía trang |
+| Bong bóng chào | tắt (mặc định) · bật + độ trễ (0–30 giây) | Bong bóng màu thương hiệu xuất hiện cạnh nút mở sau độ trễ. Mỗi phiên trình duyệt một lần; bấm X hoặc mở widget sẽ ẩn. Bấm vào bong bóng sẽ mở widget |
+
+Nội dung bong bóng đặt theo ngôn ngữ ở **Nội dung widget > Lời chào nút mở** (`{shop}` = tên hiển thị; trống = mặc định).
+
+💡 **Mẹo**: tải linh vật cho kiểu chỉ biểu tượng dưới dạng PNG nền trong suốt ở 2× (ví dụ 128×128). Nếu lẫn vào nền trang, hãy thêm viền trắng ngay trong hình — CSS không vẽ lại vòng tròn được.
 
 ### 3.3 Sửa thiết kế đang dùng
 
@@ -221,6 +238,11 @@ Widget cung cấp 13 **lớp ổn định** — các điểm móc có tên khôn
 | `.st-composer` / `.st-input` / `.st-send` | vùng soạn / ô nhập / nút gửi |
 | `.st-launcher` | nút mở widget |
 | `.st-quick-reply` | nút trả lời nhanh (kịch bản) |
+| `.st-header-control` | các nút ngôn ngữ, cài đặt, đóng ở phần đầu |
+| `.st-sender` / `.st-avatar` | tên người gửi / ảnh đại diện trên hàng có ảnh đại diện |
+| `.st-attach` | nút đính kèm |
+| `.st-teaser` | bong bóng chào cạnh nút mở |
+| `.st-csat` / `.st-csat-option` | thẻ khảo sát hài lòng / lựa chọn biểu cảm |
 
 **Được phép**
 - Bộ chọn: các lớp `.st-*` và tổ hợp của chúng (`.st-panel .st-tab`, `.st-a > .st-b`), có thể kết thúc bằng `:hover` `:focus` `:active` `:first-child` `:last-child` `:disabled`

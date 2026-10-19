@@ -44,7 +44,7 @@ import {
   useUpdateStorefront,
   useWidgetSettings,
 } from './settings.hooks';
-import type { WidgetCopyDraft } from './settings.service';
+import type { WidgetCopyBag, WidgetCopyDraft } from './settings.service';
 import { MessengerChannelCard } from './MessengerChannelCard';
 import { MessengerChannelModal } from './MessengerChannelModal';
 import {
@@ -499,10 +499,28 @@ export function WidgetBehaviorCard() {
     displayName: data?.displayName ?? '',
     firstVisit: data?.firstVisit ?? {},
     loginGreeting: data?.loginGreeting ?? {},
+    headerTitle: data?.headerTitle ?? {},
+    aiSenderName: data?.aiSenderName ?? {},
+    agentSenderName: data?.agentSenderName ?? {},
+    launcherTeaser: data?.launcherTeaser ?? {},
   };
   const copy = copyDraft ?? storedCopy;
-  const setCopyText = (field: 'firstVisit' | 'loginGreeting', text: string) =>
+  const setCopyText = (field: WidgetCopyBag, text: string) =>
     setCopyDraft({ ...copy, [field]: { ...copy[field], [copyLang]: text } });
+  // PLN-261019 P3 one-line bags: header title, sender names, launcher pill.
+  const copyLine = (field: Exclude<WidgetCopyBag, 'firstVisit' | 'loginGreeting'>, maxLength: number) => (
+    <>
+      <FormRow label={t(`widgetBehavior.${field}`)}>
+        <Input
+          value={copy[field][copyLang] ?? ''}
+          maxLength={maxLength}
+          disabled={isLoading}
+          onChange={(e) => setCopyText(field, e.target.value)}
+        />
+      </FormRow>
+      <p className="mb-3 text-xs text-gray-400">{t(`widgetBehavior.${field}Hint`)}</p>
+    </>
+  );
 
   const copyDirty = copyDraft != null && JSON.stringify(copyDraft) !== JSON.stringify(storedCopy);
 
@@ -611,6 +629,14 @@ export function WidgetBehaviorCard() {
         <p className="mb-4 text-xs text-gray-400">
           <span className="text-gray-500">{t('widgetBehavior.defaultCopy')}</span>{' '}
           {defaultCopy('loginGreeting')}
+        </p>
+        {copyLine('headerTitle', 80)}
+        {copyLine('aiSenderName', 80)}
+        {copyLine('agentSenderName', 80)}
+        {copyLine('launcherTeaser', 120)}
+        <p className="mb-4 text-xs text-gray-400">
+          <span className="text-gray-500">{t('widgetBehavior.defaultCopy')}</span>{' '}
+          {(WIDGET_COPY_DEFAULTS.launcherTeaser as Record<string, string>)[copyLang] ?? WIDGET_COPY_DEFAULTS.launcherTeaser.EN}
         </p>
 
         <Button
@@ -907,7 +933,12 @@ export function WidgetThemeCard() {
       launcher.icon !== storedLauncher.icon ||
       (launcher.mode ?? 'floating') !== (storedLauncher.mode ?? 'floating') ||
       (launcher.offsetTop ?? 72) !== (storedLauncher.offsetTop ?? 72) ||
-      (launcher.triggerSelector ?? '') !== (storedLauncher.triggerSelector ?? ''));
+      (launcher.triggerSelector ?? '') !== (storedLauncher.triggerSelector ?? '') ||
+      (launcher.style ?? 'button') !== (storedLauncher.style ?? 'button') ||
+      !!launcher.teaser?.enabled !== !!storedLauncher.teaser?.enabled ||
+      (launcher.teaser?.delaySec ?? 3) !== (storedLauncher.teaser?.delaySec ?? 3));
+  const bareStyle = (launcher.style ?? 'button') === 'bare';
+  const teaserOn = !!launcher.teaser?.enabled;
   const triggerMode = (launcher.mode ?? 'floating') === 'trigger';
   const triggerSnippet =
     `<!-- storefront header: the element that opens SharpTalk (any selector works) -->\n` +
@@ -1059,6 +1090,73 @@ export function WidgetThemeCard() {
             </Select>
           </FormRow>
           <p className="mb-4 text-xs text-gray-400">{t('widgetTheme.launcherHint')}</p>
+
+          {/* Launcher style (PLN-261019 P2): the filled circle, or the uploaded icon as the button. */}
+          <FormRow label={t('widgetTheme.launcherStyle')}>
+            <div className="flex flex-col gap-1.5 text-sm text-gray-700">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="launcher-style"
+                  checked={!bareStyle}
+                  disabled={isLoading}
+                  onChange={() => setLauncherPicked({ ...launcher, style: 'button' })}
+                />
+                {t('widgetTheme.launcherStyleButton')}
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="launcher-style"
+                  checked={bareStyle}
+                  disabled={isLoading}
+                  onChange={() => setLauncherPicked({ ...launcher, style: 'bare' })}
+                />
+                {t('widgetTheme.launcherStyleBare')}
+              </label>
+            </div>
+          </FormRow>
+          <p className="mb-4 text-xs text-gray-400">{t('widgetTheme.launcherStyleHint')}</p>
+
+          {/* Greeting pill beside the launcher (PLN-261019 P2); its text lives in the copy card. */}
+          <FormRow label={t('widgetTheme.teaser')}>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-700">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={teaserOn}
+                  disabled={isLoading}
+                  onChange={(e) =>
+                    setLauncherPicked({
+                      ...launcher,
+                      teaser: e.target.checked ? { enabled: true, delaySec: launcher.teaser?.delaySec ?? 3 } : null,
+                    })
+                  }
+                />
+                {t('widgetTheme.teaserOn')}
+              </label>
+              {teaserOn && (
+                <label className="flex items-center gap-2">
+                  {t('widgetTheme.teaserDelay')}
+                  <input
+                    type="number"
+                    min={0}
+                    max={30}
+                    value={launcher.teaser?.delaySec ?? 3}
+                    disabled={isLoading}
+                    onChange={(e) =>
+                      setLauncherPicked({
+                        ...launcher,
+                        teaser: { enabled: true, delaySec: Math.max(0, Math.min(30, Number(e.target.value) || 0)) },
+                      })
+                    }
+                    className="w-20 rounded-lg border border-gray-200 px-2 py-1.5"
+                  />
+                </label>
+              )}
+            </div>
+          </FormRow>
+          <p className="mb-4 text-xs text-gray-400">{t('widgetTheme.teaserHint')}</p>
 
           {/* Launcher mode (PLN-260916 P2): floating button vs the storefront's own header trigger. */}
           <FormRow label={t('widgetTheme.launcherMode')}>

@@ -119,6 +119,11 @@ export interface WidgetSettings {
   displayName: string | null;
   firstVisit: Record<string, string>;
   loginGreeting: Record<string, string>;
+  /** PLN-261019 P3 bags; absent on an older API = empty. */
+  headerTitle?: Record<string, string>;
+  aiSenderName?: Record<string, string>;
+  agentSenderName?: Record<string, string>;
+  launcherTeaser?: Record<string, string>;
   displayNameFallback: string | null;
 }
 
@@ -127,7 +132,15 @@ export interface WidgetCopyDraft {
   displayName: string;
   firstVisit: Record<string, string>;
   loginGreeting: Record<string, string>;
+  headerTitle: Record<string, string>;
+  aiSenderName: Record<string, string>;
+  agentSenderName: Record<string, string>;
+  launcherTeaser: Record<string, string>;
 }
+
+/** The per-language bags a WidgetCopyDraft carries — one place to iterate. */
+export const WIDGET_COPY_BAGS = ['firstVisit', 'loginGreeting', 'headerTitle', 'aiSenderName', 'agentSenderName', 'launcherTeaser'] as const;
+export type WidgetCopyBag = (typeof WIDGET_COPY_BAGS)[number];
 
 /** Tenant delivery policy — a ceiling on what the shop sends, per category. */
 export interface NotificationChannels {
@@ -152,6 +165,15 @@ export interface WidgetDesignDraft {
   reviewLinkTemplate?: string | null;
   /** Raw custom CSS as typed; the API sanitizes and may drop parts (P5). */
   customCss?: string | null;
+  /** PLN-261019: 'logo' | 'logo-title'. */
+  headerLayout?: 'logo' | 'logo-title';
+  /** PLN-261019: 'plain' | 'avatar'. */
+  messageStyle?: 'plain' | 'avatar';
+  /** PLN-261019: 'paperclip' | 'image'. */
+  attachIcon?: 'paperclip' | 'image';
+  /** PLN-261019: uploaded icon assets for the avatar slots. */
+  botAvatarUuid?: string | null;
+  agentAvatarUuid?: string | null;
 }
 
 /** Custom widget library (PLN-260910 P3). */
@@ -183,6 +205,26 @@ export interface WidgetDesignList {
 }
 
 /** Draft → the snake-cased `design` payload both the theme PATCH and the library accept. */
+const COPY_WIRE_KEYS: Record<WidgetCopyBag, string> = {
+  firstVisit: 'first_visit',
+  loginGreeting: 'login_greeting',
+  headerTitle: 'header_title',
+  aiSenderName: 'ai_sender_name',
+  agentSenderName: 'agent_sender_name',
+  launcherTeaser: 'launcher_teaser',
+};
+
+/** Flatten the per-language bags into the API's `{bag}_{lang}` fields. */
+export function copyWire(copy: WidgetCopyDraft): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const bag of WIDGET_COPY_BAGS) {
+    for (const lang of ['EN', 'ES', 'KO', 'VI', 'JA', 'ZH']) {
+      out[`${COPY_WIRE_KEYS[bag]}_${lang.toLowerCase()}`] = copy[bag]?.[lang] ?? '';
+    }
+  }
+  return out;
+}
+
 export function designToWire(design: WidgetDesignDraft) {
   return {
     font: { preset: design.fontPreset, asset_uuid: design.fontAssetUuid ?? null, base_size: design.baseSize },
@@ -192,6 +234,11 @@ export function designToWire(design: WidgetDesignDraft) {
     quick_reply_style: design.quickReplyStyle ?? 'chip',
     review_link_template: design.reviewLinkTemplate?.trim() || null,
     custom_css: design.customCss ?? null,
+    header_layout: design.headerLayout ?? 'logo',
+    message_style: design.messageStyle ?? 'plain',
+    attach_icon: design.attachIcon ?? 'paperclip',
+    bot_avatar_uuid: design.botAvatarUuid ?? null,
+    agent_avatar_uuid: design.agentAvatarUuid ?? null,
   };
 }
 
@@ -278,14 +325,7 @@ export const settingsService = {
       // undefined = keep what is stored; null = clear; object = replace (P2).
       ...(design !== undefined
         ? {
-            design: design
-              ? {
-                  font: { preset: design.fontPreset, asset_uuid: design.fontAssetUuid ?? null, base_size: design.baseSize },
-                  radius: design.radius,
-                  panel: { width: design.panelWidth, height: design.panelHeight },
-                  launcher_icon_uuid: design.launcherIconUuid ?? null,
-                }
-              : null,
+            design: design ? designToWire(design) : null,
           }
         : {}),
     }),
@@ -366,17 +406,11 @@ export const settingsService = {
       ...(tabs !== undefined ? { tabs } : {}),
       ...(tabPosition !== undefined ? { tab_position: tabPosition } : {}),
       ...(timezone !== undefined ? { timezone } : {}),
-      ...(copy
-        ? {
-            display_name: copy.displayName,
-            first_visit_en: copy.firstVisit.EN ?? '',
-            first_visit_es: copy.firstVisit.ES ?? '',
-            first_visit_ko: copy.firstVisit.KO ?? '',
-            login_greeting_en: copy.loginGreeting.EN ?? '',
-            login_greeting_es: copy.loginGreeting.ES ?? '',
-            login_greeting_ko: copy.loginGreeting.KO ?? '',
-          }
-        : {}),
+      // Every bag is sent for every language, '' meaning "clear". Listed per
+      // language on purpose (the API DTO is flat): VI/JA/ZH were missing here
+      // for the greetings until PLN-261019, so a Vietnamese greeting typed in
+      // the console was silently never saved.
+      ...(copy ? { display_name: copy.displayName, ...copyWire(copy) } : {}),
     }),
   updateCredential: (provider: string, body: UpdateCredentialBody) =>
     apiPut<CredentialStatus>(`/tenants/me/credentials/${provider}`, body),

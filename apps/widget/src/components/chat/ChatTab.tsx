@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Check, FileText, Paperclip, Send, Sparkles, Headphones, X } from 'lucide-react';
+import { Check, FileText, Image as ImageIcon, Paperclip, Send, Sparkles, Headphones, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { WIDGET_COPY_DEFAULTS } from '../../../../../packages/types/src/common/widget-copy';
 import { useWidgetStore } from '../../store/widgetStore';
@@ -14,7 +14,6 @@ import type {
   ChatAttachment,
   ScenarioButton,
   ScenarioPostAction,
-  WidgetCopyText,
 } from '../../lib/types';
 import { MessageBubble } from './MessageBubble';
 import { TypingBubble } from './TypingBubble';
@@ -27,19 +26,10 @@ import { ContactCard } from './ContactCard';
 import { AffiliateCard } from './AffiliateCard';
 import { InlineOrdersAnswer } from './InlineOrderCard';
 import { replyChips } from './reply-chips';
+import { fill, pickCopy } from '../../lib/copy';
 
 type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'orders' | null;
 
-/** Pick the tenant-configured copy for the active language, if any. */
-function pickCopy(bag: WidgetCopyText | undefined, language: string): string | null {
-  const key = (language || 'en').toUpperCase() as keyof WidgetCopyText;
-  return bag?.[key]?.trim() || null;
-}
-
-/** Substitute a template placeholder everywhere (ES2020-safe replaceAll). */
-function fill(template: string, key: string, value: string): string {
-  return template.split(key).join(value);
-}
 
 export function ChatTab() {
   const { t } = useTranslation();
@@ -107,6 +97,8 @@ export function ChatTab() {
   // tenant's shoppers must never be welcomed to "IVY USA").
   const widgetCopy = useWidgetStore((s) => s.widgetCopy);
   const shopName = widgetCopy?.displayName || t('appName');
+  // Composer attach glyph is a design option (PLN-261019 P4).
+  const attachImage = useWidgetStore((s) => s.widgetTheme?.design?.attachIcon) === 'image';
   // The default text comes from the shared registry rather than this app's
   // i18n bundle, so the console shows the very string a shopper would see
   // (PLN-260903 S2). Same wording as before — one source instead of two.
@@ -418,7 +410,7 @@ export function ChatTab() {
                     key={q.id}
                     onClick={() => handleQuickReply(q.id, q.label)}
                     disabled={sending}
-                    className={`rounded-full border bg-white px-3.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-40 ${
+                    className={`st-quick-reply rounded-full border bg-white px-3.5 py-1.5 text-xs font-medium transition-colors disabled:opacity-40 ${
                       /* The design outlines only the conversation-ending chip in
                          blue (frame 65) — everything else is a quiet gray pill. */
                       q.id === 'end_chat'
@@ -498,7 +490,7 @@ export function ChatTab() {
                 key={a.id}
                 // A scenario button behaves exactly as it does in the menu.
                 onClick={() => (a.button ? handleScenario(a.button) : handleQuickReply(a.id, a.label))}
-                className="rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50"
+                className="st-quick-reply rounded-full border border-gray-200 bg-white px-3.5 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:border-gray-300 hover:bg-gray-50"
               >
                 {a.label}
               </button>
@@ -635,9 +627,9 @@ export function ChatTab() {
           onClick={() => fileInputRef.current?.click()}
           disabled={sending}
           aria-label={t('chat.attachment.attach')}
-          className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-st-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-40"
+          className="st-attach flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-st-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-40"
         >
-          <Paperclip className="h-4 w-4" />
+          {attachImage ? <ImageIcon className="h-[18px] w-[18px]" /> : <Paperclip className="h-4 w-4" />}
         </button>
         <input
           value={input}

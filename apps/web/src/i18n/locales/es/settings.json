@@ -91,7 +91,15 @@
       "orders": "Pedidos",
       "chat": "Chat"
     },
-    "defaultCopy": "Predeterminado:"
+    "defaultCopy": "Predeterminado:",
+    "headerTitle": "Título de la cabecera",
+    "headerTitleHint": "Título de la cabecera del widget en este idioma. Vacío = nombre para mostrar.",
+    "aiSenderName": "Nombre del remitente IA",
+    "aiSenderNameHint": "Se muestra en los mensajes de IA cuando el widget personalizado usa filas con avatar. Vacío = nombre para mostrar.",
+    "agentSenderName": "Nombre del remitente agente",
+    "agentSenderNameHint": "Etiqueta genérica para agentes humanos (p. ej. \"Soporte Go2Joy\"). Vacío = el nombre del agente.",
+    "launcherTeaser": "Saludo del lanzador",
+    "launcherTeaserHint": "Texto de la burbuja junto al lanzador (tarjeta de tema → Burbuja de saludo). {shop} inserta el nombre para mostrar. Vacío = predeterminado."
   },
   "shopify": {
     "title": "Conexión de Shopify",
@@ -534,7 +542,15 @@
     "panel": "Tamaño del panel",
     "panelWidth": "Ancho del panel",
     "panelHeight": "Alto del panel",
-    "panelHint": "Solo escritorio — ancho {{wmin}}–{{wmax}}, alto {{hmin}}–{{hmax}} px. Móvil y modo app llenan la pantalla."
+    "panelHint": "Solo escritorio — ancho {{wmin}}–{{wmax}}, alto {{hmin}}–{{hmax}} px. Móvil y modo app llenan la pantalla.",
+    "launcherStyle": "Estilo del lanzador",
+    "launcherStyleButton": "Botón relleno (predeterminado)",
+    "launcherStyleBare": "Solo icono: el icono subido es el botón (sin círculo ni sombra)",
+    "launcherStyleHint": "\"Solo icono\" necesita un archivo de icono en el widget personalizado en uso (una mascota con su propio contorno funciona mejor). Sin él se dibuja el botón relleno.",
+    "teaser": "Burbuja de saludo",
+    "teaserOn": "Mostrar un saludo junto al lanzador",
+    "teaserDelay": "tras (s)",
+    "teaserHint": "Una pequeña burbuja junto al lanzador, una vez por sesión del navegador; cerrarla o abrir el widget la oculta. El texto está en Textos del widget → Saludo del lanzador."
   },
   "embed": {
     "title": "Integración y SDK",
@@ -823,7 +839,7 @@
     "import": "Importar paquete",
     "customCss": "CSS personalizado (complemento)",
     "customCssCheck": "Comprobar",
-    "customCssHint": "Solo clases estables: .st-panel .st-header .st-header-title .st-tabs .st-tab .st-message .st-message-user .st-message-bot .st-composer .st-input .st-send .st-launcher .st-quick-reply. Solo colores, fuentes, espaciado, bordes y sombras; disposición, ocultación y url() se eliminan.",
+    "customCssHint": "Solo clases estables: .st-panel .st-header .st-header-title .st-header-control .st-tabs .st-tab .st-message .st-message-user .st-message-bot .st-sender .st-avatar .st-composer .st-input .st-attach .st-send .st-launcher .st-teaser .st-quick-reply .st-csat .st-csat-option. Solo colores, fuentes, espaciado, bordes y sombras; se descartan maquetación, ocultación y url().",
     "customCssKept": "Se conservarán {{n}} regla(s).",
     "history": "Historial",
     "quickReplyStyle": "Estilo de respuestas rápidas",
@@ -833,7 +849,21 @@
     "reviewLinkHint": "Adónde lleva \"Escribir una reseña\" en la pestaña Reseñas del widget. Vacío = la página del producto. Use {productUrl}#reviews para ir a la sección de su app de reseñas, o una URL https:// completa que contenga {productUrl}.",
     "historyTitle": "Historial — {{name}}",
     "historyEmpty": "Aún no hay versiones anteriores (cada edición guarda una instantánea)",
-    "restoreRevision": "Restaurar esta versión"
+    "restoreRevision": "Restaurar esta versión",
+    "headerLayout": "Cabecera con logo",
+    "headerLayoutLogo": "El logo sustituye al título (predeterminado)",
+    "headerLayoutLogoTitle": "Logo junto al título",
+    "headerLayoutHint": "Solo aplica cuando hay un logo en la tarjeta de tema. Junto al título el logo se limita a 24px de alto: usa una marca compacta.",
+    "messageStyle": "Mensajes de IA / agente",
+    "messageStylePlain": "Solo burbuja (predeterminado)",
+    "messageStyleAvatar": "Avatar + nombre del remitente",
+    "botAvatar": "Avatar de IA",
+    "agentAvatar": "Avatar del agente",
+    "avatarDefault": "Icono integrado",
+    "avatarHint": "Avatares redondos de 28px desde Archivos de diseño (icono, png/webp). Los nombres vienen de Textos del widget → Nombre del remitente IA / agente.",
+    "attachIcon": "Icono del botón adjuntar",
+    "attachPaperclip": "Clip (predeterminado)",
+    "attachImage": "Imagen"
   },
   "settingsSnapshots": {
     "title": "Instantáneas de configuración",

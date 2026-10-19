@@ -9,6 +9,7 @@ import {
   panelFrame,
   stripCustomCss,
   normalizeLauncher,
+  normalizeDesign,
   clampRadius,
   radiusVars,
 } from './widget-theme';
@@ -277,5 +278,48 @@ describe('normalizeLauncher trigger mode (PLN-260916 P2)', () => {
   });
   it('drops an unknown mode', () => {
     expect(normalizeLauncher({ mode: 'sidebar' })).not.toHaveProperty('mode');
+  });
+});
+
+describe('launcher style + greeting pill (PLN-261019 P2)', () => {
+  it('stores bare / teaser only when chosen, and clamps the delay', () => {
+    expect(normalizeLauncher({ position: 'right', size: 'md', icon: 'chat' })).toEqual({ position: 'right', size: 'md', icon: 'chat' });
+    expect(normalizeLauncher({ style: 'bare', teaser: { enabled: true, delaySec: 99 } })).toMatchObject({ style: 'bare', teaser: { enabled: true, delaySec: 30 } });
+    expect(normalizeLauncher({ teaser: { enabled: true, delay_sec: -4 } })).toMatchObject({ teaser: { enabled: true, delaySec: 0 } });
+    expect(normalizeLauncher({ teaser: { enabled: true } })).toMatchObject({ teaser: { enabled: true, delaySec: 3 } });
+    expect(normalizeLauncher({ style: 'neon', teaser: { enabled: false } })).toEqual({ position: 'right', size: 'md', icon: 'chat' });
+  });
+  it('a bare launcher without an uploaded icon falls back to the filled button', () => {
+    const noIcon = normalizeWidgetTheme({ brand: '#1570EF', launcher: { style: 'bare', teaser: { enabled: true } } });
+    expect(noIcon?.launcher).toEqual({ position: 'right', size: 'md', icon: 'chat', teaser: { enabled: true, delaySec: 3 } });
+    const withIcon = normalizeWidgetTheme({
+      brand: '#1570EF',
+      launcher: { style: 'bare' },
+      design: { launcherIcon: { uuid: '94c2949c-3ce5-47be-acb3-3c4cfa7c58b3', version: 2 } },
+    });
+    expect(withIcon?.launcher?.style).toBe('bare');
+  });
+});
+
+describe('header layout, avatar rows, attach glyph, icon slots (PLN-261019 P3/P4)', () => {
+  const uuid = '94c2949c-3ce5-47be-acb3-3c4cfa7c58b3';
+  it('keeps only non-default choices and only valid slot refs', () => {
+    expect(normalizeDesign({ headerLayout: 'logo', messageStyle: 'plain', attachIcon: 'paperclip', icons: {} })).toBeNull();
+    expect(
+      normalizeDesign({
+        headerLayout: 'logo-title',
+        messageStyle: 'avatar',
+        attachIcon: 'image',
+        icons: { botAvatar: { uuid, version: 3 }, agentAvatar: { uuid: 'nope' }, unknownSlot: { uuid, version: 1 } },
+      }),
+    ).toEqual({
+      headerLayout: 'logo-title',
+      messageStyle: 'avatar',
+      attachIcon: 'image',
+      icons: { botAvatar: { uuid, version: 3 } },
+    });
+  });
+  it('a design saved before the options existed is unchanged by them', () => {
+    expect(normalizeDesign({ radius: 'sm' })).toEqual({ radius: 'sm' });
   });
 });

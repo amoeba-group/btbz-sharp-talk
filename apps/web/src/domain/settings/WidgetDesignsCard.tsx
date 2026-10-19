@@ -32,6 +32,11 @@ const EMPTY: WidgetDesignDraft = {
   quickReplyStyle: 'chip',
   reviewLinkTemplate: '',
   customCss: '',
+  headerLayout: 'logo',
+  messageStyle: 'plain',
+  attachIcon: 'paperclip',
+  botAvatarUuid: null,
+  agentAvatarUuid: null,
 };
 
 function toDraft(d: WidgetDesignItem['design']): WidgetDesignDraft {
@@ -46,6 +51,11 @@ function toDraft(d: WidgetDesignItem['design']): WidgetDesignDraft {
     quickReplyStyle: d.quickReplyStyle === 'card' ? 'card' : 'chip',
     reviewLinkTemplate: d.reviewLinkTemplate ?? '',
     customCss: d.customCss ?? '',
+    headerLayout: d.headerLayout === 'logo-title' ? 'logo-title' : 'logo',
+    messageStyle: d.messageStyle === 'avatar' ? 'avatar' : 'plain',
+    attachIcon: d.attachIcon === 'image' ? 'image' : 'paperclip',
+    botAvatarUuid: d.icons?.botAvatar?.uuid ?? null,
+    agentAvatarUuid: d.icons?.agentAvatar?.uuid ?? null,
   };
 }
 
@@ -379,6 +389,47 @@ export function WidgetDesignsCard() {
                   {(iconAssets.data?.items ?? []).map((a) => (
                     <option key={a.uuid} value={a.uuid}>{a.label || a.filename}</option>
                   ))}
+                </Select>
+              </FormRow>
+              {/* PLN-261019: header layout, avatar message rows, attach glyph. */}
+              <FormRow label={t('widgetDesigns.headerLayout')}>
+                <Select value={ed.draft.headerLayout ?? 'logo'} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, headerLayout: e.target.value as 'logo' | 'logo-title' } })} className="w-44">
+                  <option value="logo">{t('widgetDesigns.headerLayoutLogo')}</option>
+                  <option value="logo-title">{t('widgetDesigns.headerLayoutLogoTitle')}</option>
+                </Select>
+              </FormRow>
+              <p className="mb-2 text-xs text-gray-400">{t('widgetDesigns.headerLayoutHint')}</p>
+              <FormRow label={t('widgetDesigns.messageStyle')}>
+                <Select value={ed.draft.messageStyle ?? 'plain'} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, messageStyle: e.target.value as 'plain' | 'avatar' } })} className="w-44">
+                  <option value="plain">{t('widgetDesigns.messageStylePlain')}</option>
+                  <option value="avatar">{t('widgetDesigns.messageStyleAvatar')}</option>
+                </Select>
+              </FormRow>
+              {ed.draft.messageStyle === 'avatar' && (
+                <>
+                  <FormRow label={t('widgetDesigns.botAvatar')}>
+                    <Select value={ed.draft.botAvatarUuid ?? ''} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, botAvatarUuid: e.target.value || null } })} className="w-44">
+                      <option value="">{t('widgetDesigns.avatarDefault')}</option>
+                      {(iconAssets.data?.items ?? []).map((a) => (
+                        <option key={a.uuid} value={a.uuid}>{a.label || a.filename}</option>
+                      ))}
+                    </Select>
+                  </FormRow>
+                  <FormRow label={t('widgetDesigns.agentAvatar')}>
+                    <Select value={ed.draft.agentAvatarUuid ?? ''} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, agentAvatarUuid: e.target.value || null } })} className="w-44">
+                      <option value="">{t('widgetDesigns.avatarDefault')}</option>
+                      {(iconAssets.data?.items ?? []).map((a) => (
+                        <option key={a.uuid} value={a.uuid}>{a.label || a.filename}</option>
+                      ))}
+                    </Select>
+                  </FormRow>
+                  <p className="mb-2 text-xs text-gray-400">{t('widgetDesigns.avatarHint')}</p>
+                </>
+              )}
+              <FormRow label={t('widgetDesigns.attachIcon')}>
+                <Select value={ed.draft.attachIcon ?? 'paperclip'} onChange={(e) => setEditing({ ...ed, draft: { ...ed.draft, attachIcon: e.target.value as 'paperclip' | 'image' } })} className="w-44">
+                  <option value="paperclip">{t('widgetDesigns.attachPaperclip')}</option>
+                  <option value="image">{t('widgetDesigns.attachImage')}</option>
                 </Select>
               </FormRow>
               {cssAllowed && (

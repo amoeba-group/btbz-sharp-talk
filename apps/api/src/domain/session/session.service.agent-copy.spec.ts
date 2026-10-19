@@ -63,6 +63,12 @@ describe('SessionService.privacyNotice — agent copy overrides', () => {
     expect(notice.widgetCopy.firstVisit).toEqual({ KO: '상점 공통 인사' });
   });
 
+  it('PLN-261019 bags pass through as stored, empty when the tenant never set them', async () => {
+    const h = build([{ id: 7, tenantId: 1, displayName: 'Livy', greeting: {}, isDefault: 0 }]);
+    const notice = await h.svc.privacyNotice(1, 7);
+    expect(notice.widgetCopy).toMatchObject({ headerTitle: {}, aiSenderName: {}, agentSenderName: {}, launcherTeaser: {} });
+  });
+
   it('an agent with no overrides changes nothing', async () => {
     const h = build([{ id: 7, tenantId: 1, displayName: null, greeting: {}, isDefault: 0 }]);
 

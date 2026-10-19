@@ -5,6 +5,7 @@ import { useWidgetStore, type TabKey } from '../../store/widgetStore';
 import { isAppMode, postToHost } from '../../lib/host-bridge';
 import { logoUrl } from '../../lib/branding';
 import { resolveLauncher } from '../../lib/launcher';
+import { pickCopy } from '../../lib/copy';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { TopTabs } from './TopTabs';
 import { BottomTabs } from './BottomTabs';
@@ -42,8 +43,13 @@ export function WidgetPanel() {
   const showSettings = useWidgetStore((s) => s.settingsOpen);
   const setShowSettings = useWidgetStore((s) => s.setSettingsOpen);
   const displayName = useWidgetStore((s) => s.widgetCopy?.displayName);
+  // Per-language header title (PLN-261019 P3); empty = the display name.
+  const headerTitle = pickCopy(useWidgetStore((s) => s.widgetCopy?.headerTitle), useWidgetStore((s) => s.language));
   const customerName = useWidgetStore((s) => s.customerName);
   const theme = useWidgetStore((s) => s.widgetTheme);
+  // `logo-title` keeps the mark beside the words (PLN-261019 P3); `logo`
+  // replaces the words with the mark, as every tenant before it.
+  const logoWithTitle = theme?.design?.headerLayout === 'logo-title';
   // Trigger mode (PLN-260916 P2): the storefront's own header element opens the
   // panel, which docks under that header. The design drops the language pill
   // and the X from the header; the loader closes on outside click / Esc, and on
@@ -56,7 +62,10 @@ export function WidgetPanel() {
   const fullBleed = compact || isAppMode();
   // A greeting names the customer, so it wins over the brand mark: the shopper
   // being addressed matters more than the logo at that moment.
-  const logo = theme?.logo && !customerName ? logoUrl(theme.logo) : null;
+  const logo = theme?.logo && (logoWithTitle || !customerName) ? logoUrl(theme.logo) : null;
+  const title = customerName
+    ? t('header.greeting', { name: customerName })
+    : headerTitle || displayName || t('notificationCenter');
   const visibleTabs = useWidgetStore((s) => s.visibleTabs);
   const tabPosition = useWidgetStore((s) => s.tabPosition);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -127,7 +136,7 @@ export function WidgetPanel() {
             (frames 48/49). The two design variants are the two sign-in states,
             not a contradiction. `truncate` keeps a long name from pushing the
             three controls on the right off the header. */}
-        {logo ? (
+        {logo && !logoWithTitle ? (
           // The name still exists for screen readers; a logo replaces the text
           // only visually. Height-capped so a tall upload cannot push the header
           // out of shape.
@@ -136,19 +145,22 @@ export function WidgetPanel() {
             alt={displayName || t('notificationCenter')}
             className="max-h-8 max-w-[60%] object-contain"
           />
+        ) : logo ? (
+          // Mark beside the title: capped lower than the lone logo so the pair
+          // fits the header row, and the title keeps its truncation.
+          <div className="flex min-w-0 items-center gap-2">
+            <img src={logo} alt="" className="max-h-6 max-w-[96px] flex-shrink-0 object-contain" />
+            <span className="st-header-title truncate text-xl font-bold text-header-fg">{title}</span>
+          </div>
         ) : (
-        <span className="st-header-title truncate text-xl font-bold text-header-fg">
-          {customerName
-            ? t('header.greeting', { name: customerName })
-            : displayName || t('notificationCenter')}
-        </span>
+        <span className="st-header-title truncate text-xl font-bold text-header-fg">{title}</span>
         )}
         <div className="flex flex-shrink-0 items-center gap-0.5">
           {!triggerMode && <LanguageSwitcher />}
           <button
             onClick={() => setShowSettings(!showSettings)}
             aria-label={t('settings')}
-            className={`rounded-st-md p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+            className={`st-header-control rounded-st-md p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
               showSettings ? 'bg-header-fg/10 text-header-fg' : ''
             }`}
           >
@@ -158,7 +170,7 @@ export function WidgetPanel() {
             <button
               onClick={dismiss}
               aria-label={t('a11y.close')}
-              className="rounded-st-md p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="st-header-control rounded-st-md p-1.5 text-header-dim hover:bg-header-fg/10 hover:text-header-fg focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <X className="h-5 w-5" />
             </button>

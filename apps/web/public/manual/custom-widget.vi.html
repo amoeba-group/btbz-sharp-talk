@@ -116,7 +116,7 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
 <header class="hero">
   <div class="eyebrow">Tài liệu SharpTalk · Widget tùy chỉnh</div>
   <h1>Sổ tay tạo widget tùy chỉnh SharpTalk</h1>
-  <div class="meta"><span>Phiên bản 1.0 · Bản đầu 2026-09-13 · Biên soạn dựa trên mã nguồn</span><span>Đối tượng: người vận hành tenant (master/director — tệp thiết kế, widget tùy chỉnh và ảnh chụp cài đặt chỉ dành cho hai cấp này) · Chương 6 dành cho quản trị viên nền tảng</span></div>
+  <div class="meta"><span>Phiên bản 1.1 · Bản đầu 2026-09-13 · Sửa đổi 2026-10-19 (kiểu nút mở, bong bóng chào, bố cục đầu, tin nhắn có ảnh đại diện, biểu tượng đính kèm) · Biên soạn dựa trên mã nguồn</span><span>Đối tượng: người vận hành tenant (master/director — tệp thiết kế, widget tùy chỉnh và ảnh chụp cài đặt chỉ dành cho hai cấp này) · Chương 6 dành cho quản trị viên nền tảng</span></div>
   <p class="lead">Mỗi chương theo thứ tự <strong>thuật ngữ → các bước → 💡 mẹo</strong>. Mọi màn hình đều nằm ở tab <strong>Cài đặt gian hàng &gt; Cài đặt widget</strong> (riêng chương 6: bảng quản trị nền tảng).</p>
 </header>
 
@@ -207,6 +207,10 @@ Widget tùy chỉnh (thư viện thiết kế)          ── chỉ áp dụng 
     <tr><td>Bo góc</td><td>Nhỏ 8px · Vừa 12px · Lớn 16px</td><td>Bo góc bảng; bong bóng và nút theo tỉ lệ</td></tr>
     <tr><td>Kích thước bảng</td><td>rộng 360–480 · cao 480–720 (mặc định 404×600)</td><td><strong>Chỉ máy tính.</strong> Di động và chế độ ứng dụng lấp đầy màn hình</td></tr>
     <tr><td>Tệp biểu tượng</td><td>biểu tượng nút mở của thẻ chủ đề (mặc định) · biểu tượng tải lên</td><td>Hình trên nút mở tròn. Biểu tượng tải lên sẽ thay cho lựa chọn ở thẻ chủ đề</td></tr>
+    <tr><td>Kiểu trả lời nhanh</td><td>chip tô màu (mặc định) · thẻ có biểu tượng</td><td>Hình dáng các nút kịch bản ở màn hình chat đầu tiên. Thẻ nền trắng có viền và biểu tượng</td></tr>
+    <tr><td>Tiêu đề khi có logo</td><td>logo thay tiêu đề (mặc định) · logo cạnh tiêu đề</td><td>Chỉ áp dụng khi thẻ chủ đề có logo. Cạnh tiêu đề, logo bị giới hạn cao 24px nên hãy dùng biểu trưng nhỏ. Tiêu đề lấy từ thẻ nội dung <strong>Tiêu đề đầu widget</strong> (theo ngôn ngữ); trống = tên hiển thị</td></tr>
+    <tr><td>Tin nhắn AI / nhân viên</td><td>chỉ bong bóng (mặc định) · ảnh đại diện + tên người gửi</td><td>Hàng có ảnh đại diện đặt ảnh tròn 28px bên trái bong bóng AI và nhân viên, tên người gửi ở dòng đầu bong bóng. Chọn ảnh ở <strong>Ảnh đại diện AI / nhân viên</strong> (tệp thiết kế, loại biểu tượng); tên lấy từ thẻ nội dung <strong>Tên người gửi AI / nhân viên</strong> (theo ngôn ngữ); trống = tên hiển thị / tên thật của nhân viên</td></tr>
+    <tr><td>Biểu tượng nút đính kèm</td><td>kẹp giấy (mặc định) · hình ảnh</td><td>Hình trên nút đính kèm cạnh ô nhập</td></tr>
     <tr><td>CSS tùy chỉnh (tiện ích)</td><td>CSS đã lọc</td><td>Chỉ hiện với tenant được quản trị viên nền tảng bật tiện ích (chương 5)</td></tr>
     <tr><td>Ghi chú</td><td>văn bản tự do</td><td>Ghi chú vận hành như "Xuân 2026, phụ trách ○○". Khách hàng không thấy</td></tr>
   </table></div>
@@ -246,6 +250,16 @@ Widget tùy chỉnh (thư viện thiết kế)          ── chỉ áp dụng 
     <li>Khách đang mở widget: thấy thiết kế mới sau khi tải lại trang</li>
     <li>Widget vẽ chủ đề trong bộ nhớ đệm trước rồi mới cập nhật từ tệp trực tiếp, nên diện mạo cũ có thể lóe lên rất ngắn</li>
   </ul>
+  <h3>3.2-2 Kiểu nút mở · bong bóng chào (thẻ chủ đề widget)</h3>
+  <p>Hình dáng và lời chào của nút mở nổi được chọn ở <strong>Cài đặt &gt; Widget &gt; Chủ đề widget</strong>. Cả hai không dùng ở chế độ kích hoạt và chế độ ứng dụng.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Cài đặt</th><th>Giá trị</th><th>Hoạt động</th></tr>
+    <tr><td>Kiểu nút mở</td><td>nút tô màu (mặc định) · <strong>chỉ biểu tượng</strong></td><td>Với chỉ biểu tượng, <strong>tệp biểu tượng</strong> của widget tùy chỉnh đang dùng chính là nút — không vòng tròn, không bóng (hợp với linh vật có đường viền riêng). Không có tệp biểu tượng thì vẽ nút tô màu. Huy hiệu chưa đọc nằm ở góc phía trang</td></tr>
+    <tr><td>Bong bóng chào</td><td>tắt (mặc định) · bật + độ trễ (0–30 giây)</td><td>Bong bóng màu thương hiệu xuất hiện cạnh nút mở sau độ trễ. Mỗi phiên trình duyệt một lần; bấm X hoặc mở widget sẽ ẩn. Bấm vào bong bóng sẽ mở widget</td></tr>
+  </table></div>
+  <p>Nội dung bong bóng đặt theo ngôn ngữ ở <strong>Nội dung widget &gt; Lời chào nút mở</strong> (<code>{shop}</code> = tên hiển thị; trống = mặc định).</p>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>tải linh vật cho kiểu chỉ biểu tượng dưới dạng PNG nền trong suốt ở 2× (ví dụ 128×128). Nếu lẫn vào nền trang, hãy thêm viền trắng ngay trong hình — CSS không vẽ lại vòng tròn được.</p></div>
   <h3>3.3 Sửa thiết kế đang dùng</h3>
   <p>[Sửa] thiết kế có huy hiệu <strong>Đang dùng</strong> sẽ cảnh báo khi lưu: <em>"Thiết kế này đang dùng — lưu sẽ áp dụng ngay cho khách."</em></p>
   <div class="callout warn"><span class="c-label">⚠️ Khuyến nghị</span>
@@ -309,6 +323,11 @@ Widget tùy chỉnh (thư viện thiết kế)          ── chỉ áp dụng 
     <tr><td><code>.st-composer</code> / <code>.st-input</code> / <code>.st-send</code></td><td>vùng soạn / ô nhập / nút gửi</td></tr>
     <tr><td><code>.st-launcher</code></td><td>nút mở widget</td></tr>
     <tr><td><code>.st-quick-reply</code></td><td>nút trả lời nhanh (kịch bản)</td></tr>
+    <tr><td><code>.st-header-control</code></td><td>các nút ngôn ngữ, cài đặt, đóng ở phần đầu</td></tr>
+    <tr><td><code>.st-sender</code> / <code>.st-avatar</code></td><td>tên người gửi / ảnh đại diện trên hàng có ảnh đại diện</td></tr>
+    <tr><td><code>.st-attach</code></td><td>nút đính kèm</td></tr>
+    <tr><td><code>.st-teaser</code></td><td>bong bóng chào cạnh nút mở</td></tr>
+    <tr><td><code>.st-csat</code> / <code>.st-csat-option</code></td><td>thẻ khảo sát hài lòng / lựa chọn biểu cảm</td></tr>
   </table></div>
   <p><strong>Được phép</strong></p>
   <ul>

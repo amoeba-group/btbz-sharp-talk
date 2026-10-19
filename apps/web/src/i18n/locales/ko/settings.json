@@ -91,7 +91,15 @@
       "orders": "주문",
       "chat": "채팅"
     },
-    "defaultCopy": "기본 문구:"
+    "defaultCopy": "기본 문구:",
+    "headerTitle": "헤더 제목",
+    "headerTitleHint": "이 언어의 위젯 헤더 제목입니다. 비우면 표시명을 씁니다.",
+    "aiSenderName": "AI 발신자명",
+    "aiSenderNameHint": "커스텀 위젯이 아바타 행을 쓸 때 AI 메시지에 표시됩니다. 비우면 표시명을 씁니다.",
+    "agentSenderName": "상담원 발신자명",
+    "agentSenderNameHint": "사람 상담원의 일반 호칭(예: \"Go2Joy 고객지원\")입니다. 비우면 상담원 실명을 씁니다.",
+    "launcherTeaser": "런처 인사 말풍선",
+    "launcherTeaserHint": "런처 옆 인사 말풍선 문구입니다(테마 카드 → 인사 말풍선). {shop}은 표시명으로 바뀝니다. 비우면 기본 문구를 씁니다."
   },
   "shopify": {
     "title": "Shopify 연동",
@@ -534,7 +542,15 @@
     "panel": "패널 크기",
     "panelWidth": "패널 폭",
     "panelHeight": "패널 높이",
-    "panelHint": "데스크톱만 적용 — 폭 {{wmin}}~{{wmax}}, 높이 {{hmin}}~{{hmax}} px. 모바일·앱모드는 화면을 채웁니다."
+    "panelHint": "데스크톱만 적용 — 폭 {{wmin}}~{{wmax}}, 높이 {{hmin}}~{{hmax}} px. 모바일·앱모드는 화면을 채웁니다.",
+    "launcherStyle": "런처 스타일",
+    "launcherStyleButton": "채운 버튼(기본)",
+    "launcherStyleBare": "아이콘만 — 업로드한 아이콘이 곧 버튼(원·그림자 없음)",
+    "launcherStyleHint": "아이콘만 스타일은 사용 중인 커스텀 위젯에 아이콘 파일이 있어야 합니다(외곽선이 있는 마스코트가 가장 잘 어울립니다). 없으면 채운 버튼으로 그려집니다.",
+    "teaser": "인사 말풍선",
+    "teaserOn": "런처 옆에 인사 말풍선 표시",
+    "teaserDelay": "지연(초)",
+    "teaserHint": "런처 옆의 작은 말풍선입니다. 브라우저 세션당 1회 나타나고, 닫거나 위젯을 열면 사라집니다. 문구는 위젯 문구 → 런처 인사 말풍선에서 바꿉니다."
   },
   "embed": {
     "title": "임베드 · SDK",
@@ -823,7 +839,7 @@
     "import": "패키지 가져오기",
     "customCss": "커스텀 CSS (애드온)",
     "customCssCheck": "검사",
-    "customCssHint": "안정 클래스만: .st-panel .st-header .st-header-title .st-tabs .st-tab .st-message .st-message-user .st-message-bot .st-composer .st-input .st-send .st-launcher .st-quick-reply. 색·폰트·간격·테두리·그림자만 허용되며 배치·숨김·url()은 제거됩니다.",
+    "customCssHint": "안정 클래스만: .st-panel .st-header .st-header-title .st-header-control .st-tabs .st-tab .st-message .st-message-user .st-message-bot .st-sender .st-avatar .st-composer .st-input .st-attach .st-send .st-launcher .st-teaser .st-quick-reply .st-csat .st-csat-option. 색·폰트·간격·테두리·그림자만 허용되고 배치·숨김·url()은 제거됩니다.",
     "customCssKept": "{{n}}개 규칙이 유지됩니다.",
     "history": "이력",
     "quickReplyStyle": "빠른 답장 스타일",
@@ -833,7 +849,21 @@
     "reviewLinkHint": "위젯 리뷰 탭의 '리뷰 쓰기'가 이동할 주소입니다. 비우면 상품 페이지로 이동합니다. 리뷰 앱 영역으로 바로 가려면 {productUrl}#reviews 처럼, 또는 {productUrl}을 포함한 전체 https:// 주소를 입력하세요.",
     "historyTitle": "변경 이력 — {{name}}",
     "historyEmpty": "이전 버전이 없습니다 (편집할 때마다 스냅샷이 남습니다)",
-    "restoreRevision": "이 버전으로 복원"
+    "restoreRevision": "이 버전으로 복원",
+    "headerLayout": "로고가 있을 때 헤더",
+    "headerLayoutLogo": "로고가 제목을 대신(기본)",
+    "headerLayoutLogoTitle": "로고 + 제목 함께",
+    "headerLayoutHint": "테마 카드에 로고를 올렸을 때만 적용됩니다. 제목 옆 로고는 높이 24px로 제한되니 작은 심벌을 쓰세요.",
+    "messageStyle": "AI·상담원 메시지",
+    "messageStylePlain": "말풍선만(기본)",
+    "messageStyleAvatar": "아바타 + 발신자명",
+    "botAvatar": "AI 아바타",
+    "agentAvatar": "상담원 아바타",
+    "avatarDefault": "기본 아이콘",
+    "avatarHint": "디자인 파일(아이콘, png/webp)에서 고르는 28px 원형 아바타입니다. 이름은 위젯 문구 → AI 발신자명 / 상담원 발신자명에서 정합니다.",
+    "attachIcon": "첨부 버튼 아이콘",
+    "attachPaperclip": "클립(기본)",
+    "attachImage": "사진"
   },
   "settingsSnapshots": {
     "title": "설정 스냅샷",

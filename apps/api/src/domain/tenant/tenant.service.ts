@@ -808,6 +808,15 @@ export class TenantService {
       panel: d.panel ?? null,
       launcherIcon: await ref(d.launcher_icon_uuid, 'icon'),
       quickReplyStyle: d.quick_reply_style === 'card' ? 'card' : null,
+      // PLN-261019: enums are re-checked by normalizeDesign; the avatar slots
+      // go through the same ownership check as the launcher icon.
+      headerLayout: d.header_layout ?? null,
+      messageStyle: d.message_style ?? null,
+      attachIcon: d.attach_icon ?? null,
+      icons: {
+        botAvatar: await ref(d.bot_avatar_uuid, 'icon'),
+        agentAvatar: await ref(d.agent_avatar_uuid, 'icon'),
+      },
       // Normalized again with the whole theme; invalid → the product page (null).
       reviewLinkTemplate: normalizeReviewLinkTemplate(d.review_link_template),
       customCss,
@@ -1151,6 +1160,10 @@ function mergeWidgetCopy(
     displayName: current?.displayName ?? null,
     firstVisit: { ...(current?.firstVisit ?? {}) },
     loginGreeting: { ...(current?.loginGreeting ?? {}) },
+    headerTitle: { ...(current?.headerTitle ?? {}) },
+    aiSenderName: { ...(current?.aiSenderName ?? {}) },
+    agentSenderName: { ...(current?.agentSenderName ?? {}) },
+    launcherTeaser: { ...(current?.launcherTeaser ?? {}) },
   };
   if (dto.display_name !== undefined) copy.displayName = dto.display_name?.trim() || null;
   const setLang = (bag: Record<string, string>, lang: string, v: string | null | undefined) => {
@@ -1175,9 +1188,43 @@ function mergeWidgetCopy(
   setLang(copy.loginGreeting!, 'VI', dto.login_greeting_vi);
   setLang(copy.loginGreeting!, 'JA', dto.login_greeting_ja);
   setLang(copy.loginGreeting!, 'ZH', dto.login_greeting_zh);
+  // PLN-261019 P3 bags — listed field by field for the same reason as above.
+  setLang(copy.headerTitle!, 'EN', dto.header_title_en);
+  setLang(copy.headerTitle!, 'ES', dto.header_title_es);
+  setLang(copy.headerTitle!, 'KO', dto.header_title_ko);
+  setLang(copy.headerTitle!, 'VI', dto.header_title_vi);
+  setLang(copy.headerTitle!, 'JA', dto.header_title_ja);
+  setLang(copy.headerTitle!, 'ZH', dto.header_title_zh);
+  setLang(copy.aiSenderName!, 'EN', dto.ai_sender_name_en);
+  setLang(copy.aiSenderName!, 'ES', dto.ai_sender_name_es);
+  setLang(copy.aiSenderName!, 'KO', dto.ai_sender_name_ko);
+  setLang(copy.aiSenderName!, 'VI', dto.ai_sender_name_vi);
+  setLang(copy.aiSenderName!, 'JA', dto.ai_sender_name_ja);
+  setLang(copy.aiSenderName!, 'ZH', dto.ai_sender_name_zh);
+  setLang(copy.agentSenderName!, 'EN', dto.agent_sender_name_en);
+  setLang(copy.agentSenderName!, 'ES', dto.agent_sender_name_es);
+  setLang(copy.agentSenderName!, 'KO', dto.agent_sender_name_ko);
+  setLang(copy.agentSenderName!, 'VI', dto.agent_sender_name_vi);
+  setLang(copy.agentSenderName!, 'JA', dto.agent_sender_name_ja);
+  setLang(copy.agentSenderName!, 'ZH', dto.agent_sender_name_zh);
+  setLang(copy.launcherTeaser!, 'EN', dto.launcher_teaser_en);
+  setLang(copy.launcherTeaser!, 'ES', dto.launcher_teaser_es);
+  setLang(copy.launcherTeaser!, 'KO', dto.launcher_teaser_ko);
+  setLang(copy.launcherTeaser!, 'VI', dto.launcher_teaser_vi);
+  setLang(copy.launcherTeaser!, 'JA', dto.launcher_teaser_ja);
+  setLang(copy.launcherTeaser!, 'ZH', dto.launcher_teaser_zh);
+  // An empty bag is dropped rather than stored as `{}`: the JSON a tenant saved
+  // before these keys existed must keep comparing equal in the settings snapshot diff.
+  for (const key of ['headerTitle', 'aiSenderName', 'agentSenderName', 'launcherTeaser'] as const) {
+    if (Object.keys(copy[key]!).length === 0) delete copy[key];
+  }
   const empty =
     !copy.displayName &&
     Object.keys(copy.firstVisit!).length === 0 &&
-    Object.keys(copy.loginGreeting!).length === 0;
+    Object.keys(copy.loginGreeting!).length === 0 &&
+    !copy.headerTitle &&
+    !copy.aiSenderName &&
+    !copy.agentSenderName &&
+    !copy.launcherTeaser;
   return empty ? null : copy;
 }

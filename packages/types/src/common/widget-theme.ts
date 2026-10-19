@@ -46,6 +46,32 @@ export const LAUNCHER_ICON = {
 export type LauncherIcon = (typeof LAUNCHER_ICON)[keyof typeof LAUNCHER_ICON];
 
 /**
+ * How the floating button is drawn (PLN-261019 P2). `button` is the filled
+ * circle with a shadow every tenant has had; `bare` draws the uploaded icon AS
+ * the button — a mascot with its own silhouette, no circle behind it — so it
+ * only makes sense with `design.launcherIcon` and falls back to `button` without one.
+ */
+export const LAUNCHER_STYLE = { BUTTON: 'button', BARE: 'bare' } as const;
+export type LauncherStyle = (typeof LAUNCHER_STYLE)[keyof typeof LAUNCHER_STYLE];
+
+/**
+ * Greeting pill beside the closed launcher (PLN-261019 P2): "Hi! Need help?".
+ * Shown once per browser session after `delaySec`; the shopper can dismiss it.
+ * The text itself is widget copy (`launcherTeaser`), not theme.
+ */
+export interface LauncherTeaser {
+  enabled: boolean;
+  delaySec: number;
+}
+export const TEASER_DELAY = { min: 0, max: 30, default: 3 } as const;
+/**
+ * Widest closed iframe the teaser may claim, in px. The loader clamps to the
+ * same number: a closed frame that is wider than what it draws intercepts
+ * clicks on the page beneath it (FIX-260916 class of bug).
+ */
+export const TEASER_FRAME_WIDTH = 360;
+
+/**
  * Button edge in px, and the iframe the loader must reserve for it.
  *
  * The frame has to clear the button PLUS its offset from the edge, or the
@@ -86,6 +112,10 @@ export interface WidgetLauncher {
   offsetTop?: number;
   /** Trigger mode only: CSS selector of the storefront element that opens the widget (snippet hint). */
   triggerSelector?: string | null;
+  /** Absent = `button` (the filled circle). `bare` needs an uploaded icon (PLN-261019). */
+  style?: LauncherStyle;
+  /** Absent = no greeting pill (PLN-261019). */
+  teaser?: LauncherTeaser | null;
 }
 
 // ---- Design profile (PLN-260910 P2) ------------------------------------------
@@ -104,6 +134,33 @@ export const WIDGET_RADIUS = { SM: 'sm', MD: 'md', LG: 'lg' } as const;
 export const QUICK_REPLY_STYLE = { CHIP: 'chip', CARD: 'card' } as const;
 export type QuickReplyStyle = (typeof QUICK_REPLY_STYLE)[keyof typeof QUICK_REPLY_STYLE];
 export type WidgetRadius = (typeof WIDGET_RADIUS)[keyof typeof WIDGET_RADIUS];
+
+/**
+ * Header with a logo (PLN-261019 P3): `logo` replaces the title with the image
+ * (every tenant before this), `logo-title` draws the mark beside the title.
+ */
+export const HEADER_LAYOUT = { LOGO: 'logo', LOGO_TITLE: 'logo-title' } as const;
+export type HeaderLayout = (typeof HEADER_LAYOUT)[keyof typeof HEADER_LAYOUT];
+
+/**
+ * AI / agent message rows (PLN-261019 P3): `plain` is the bubble alone;
+ * `avatar` adds a round avatar on the left and the sender's name inside the bubble.
+ */
+export const MESSAGE_STYLE = { PLAIN: 'plain', AVATAR: 'avatar' } as const;
+export type MessageStyle = (typeof MESSAGE_STYLE)[keyof typeof MESSAGE_STYLE];
+
+/** Composer attach button glyph (PLN-261019 P4). */
+export const ATTACH_ICON = { PAPERCLIP: 'paperclip', IMAGE: 'image' } as const;
+export type AttachIcon = (typeof ATTACH_ICON)[keyof typeof ATTACH_ICON];
+
+/**
+ * Image slots a design may fill with an uploaded icon asset (png/webp). Adding a
+ * slot means adding its name here — the normalizer, the package export/import
+ * and the console editor all iterate this list rather than naming slots.
+ */
+export const ICON_SLOTS = ['botAvatar', 'agentAvatar'] as const;
+export type IconSlot = (typeof ICON_SLOTS)[number];
+export type WidgetIconSlots = Partial<Record<IconSlot, WidgetAssetRef | null>>;
 
 /** A tenant design asset the widget fetches publicly; `version` is the cache key. */
 export interface WidgetAssetRef {
@@ -132,6 +189,14 @@ export interface WidgetDesign {
   launcherIcon?: WidgetAssetRef | null;
   /** Opening scenario menu: filled chips (default) or outlined cards with an icon (PLN-260916 P4). */
   quickReplyStyle?: QuickReplyStyle | null;
+  /** Absent = `logo` (image replaces the title) — PLN-261019 P3. */
+  headerLayout?: HeaderLayout | null;
+  /** Absent = `plain` — PLN-261019 P3. */
+  messageStyle?: MessageStyle | null;
+  /** Absent = `paperclip` — PLN-261019 P4. */
+  attachIcon?: AttachIcon | null;
+  /** Uploaded images for the avatar slots; a missing slot draws the built-in glyph. */
+  icons?: WidgetIconSlots | null;
   /**
    * Where the Review chip's "write a review" goes (PLN-260923 P3). Must contain
    * `{productUrl}`: either it LEADS the template (`{productUrl}#reviews` — the
@@ -474,6 +539,20 @@ export function normalizeDesign(input: unknown): WidgetDesign | null {
   const icon = normalizeAssetRef(raw.launcherIcon);
   if (icon) out.launcherIcon = icon;
   if (raw.quickReplyStyle === QUICK_REPLY_STYLE.CARD) out.quickReplyStyle = QUICK_REPLY_STYLE.CARD;
+  // PLN-261019: each option is stored only when it is NOT the default, so a
+  // design saved before the option existed and one that never chose it are the
+  // same JSON — and the default is the rendering every tenant already had.
+  if (raw.headerLayout === HEADER_LAYOUT.LOGO_TITLE) out.headerLayout = HEADER_LAYOUT.LOGO_TITLE;
+  if (raw.messageStyle === MESSAGE_STYLE.AVATAR) out.messageStyle = MESSAGE_STYLE.AVATAR;
+  if (raw.attachIcon === ATTACH_ICON.IMAGE) out.attachIcon = ATTACH_ICON.IMAGE;
+  if (raw.icons && typeof raw.icons === 'object') {
+    const icons: WidgetIconSlots = {};
+    for (const slot of ICON_SLOTS) {
+      const ref = normalizeAssetRef((raw.icons as Record<string, unknown>)[slot]);
+      if (ref) icons[slot] = ref;
+    }
+    if (Object.keys(icons).length) out.icons = icons;
+  }
   const reviewLink = normalizeReviewLinkTemplate(raw.reviewLinkTemplate);
   if (reviewLink) out.reviewLinkTemplate = reviewLink;
   if (typeof raw.customCss === 'string' && raw.customCss.trim()) {
@@ -556,6 +635,13 @@ export function normalizeWidgetTheme(input: unknown): WidgetTheme | null {
   if (theme.launcher?.icon === LAUNCHER_ICON.CUSTOM && !design?.launcherIcon) {
     theme.launcher = { ...theme.launcher, icon: LAUNCHER_DEFAULTS.icon };
   }
+  // A bare launcher is the uploaded icon and nothing else; without the file it
+  // would be an invisible button (PLN-261019 P2).
+  if (theme.launcher?.style === LAUNCHER_STYLE.BARE && !design?.launcherIcon) {
+    const { style: _style, ...rest } = theme.launcher;
+    void _style;
+    theme.launcher = rest;
+  }
   return theme;
 }
 
@@ -622,6 +708,19 @@ export function normalizeLauncher(input: unknown): WidgetLauncher | null {
       : TRIGGER_OFFSET.default;
     const sel = String(loose.triggerSelector ?? loose.trigger_selector ?? '').trim();
     out.triggerSelector = sel && TRIGGER_SELECTOR_RE.test(sel) ? sel : null;
+  }
+  // PLN-261019 P2. Stored only when chosen, so every launcher saved before the
+  // option existed keeps reading as the filled button it has always been.
+  if (raw.style === LAUNCHER_STYLE.BARE) out.style = LAUNCHER_STYLE.BARE;
+  const teaser = (raw.teaser ?? null) as Record<string, unknown> | null;
+  if (teaser && typeof teaser === 'object' && (teaser.enabled === true || teaser.enabled === 1)) {
+    const delay = Number(teaser.delaySec ?? teaser.delay_sec);
+    out.teaser = {
+      enabled: true,
+      delaySec: Number.isFinite(delay)
+        ? Math.min(TEASER_DELAY.max, Math.max(TEASER_DELAY.min, Math.round(delay)))
+        : TEASER_DELAY.default,
+    };
   }
   return out;
 }

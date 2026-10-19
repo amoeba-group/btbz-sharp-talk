@@ -117,6 +117,35 @@ describe('TenantService.updatePrivacyNotice', () => {
       });
       expect(cleared.widgetCopy).toBeNull();
     });
+
+    it('PLN-261019 bags: stored only when a language is set, cleared like the greetings', async () => {
+      const saved = await svc.updateWidgetSettings(1, 7, {
+        login_mode: 'redirect',
+        header_title_vi: 'Trung tâm hỗ trợ',
+        header_title_en: ' Support center ',
+        ai_sender_name_vi: 'JoyBot - Tổng đài viên AI',
+        agent_sender_name_vi: 'Nhân viên hỗ trợ Go2Joy',
+        launcher_teaser_vi: '',
+      });
+      expect(saved.widgetCopy).toEqual({
+        displayName: null,
+        firstVisit: {},
+        loginGreeting: {},
+        headerTitle: { VI: 'Trung tâm hỗ trợ', EN: 'Support center' },
+        aiSenderName: { VI: 'JoyBot - Tổng đài viên AI' },
+        agentSenderName: { VI: 'Nhân viên hỗ trợ Go2Joy' },
+      });
+      // Empty bags are dropped, not stored as {} — and all-empty is null.
+      expect(saved.widgetCopy).not.toHaveProperty('launcherTeaser');
+      const cleared = await svc.updateWidgetSettings(1, 7, {
+        login_mode: 'redirect',
+        header_title_vi: '',
+        header_title_en: null,
+        ai_sender_name_vi: '',
+        agent_sender_name_vi: '',
+      });
+      expect(cleared.widgetCopy).toBeNull();
+    });
   });
 
   /**

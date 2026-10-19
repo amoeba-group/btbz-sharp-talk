@@ -19,6 +19,11 @@ export interface TenantWidgetCopy {
   displayName?: string | null;
   firstVisit?: Record<string, string>;
   loginGreeting?: Record<string, string>;
+  /** PLN-261019 P3 — per-language bags like the two above; absent = fall back. */
+  headerTitle?: Record<string, string>;
+  aiSenderName?: Record<string, string>;
+  agentSenderName?: Record<string, string>;
+  launcherTeaser?: Record<string, string>;
 }
 
 /** tenants — a tenant = a Shopify shop (FR-051). */

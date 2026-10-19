@@ -351,6 +351,7 @@ export const vi: Translation = {
   a11y: {
     supportWidget: 'Khung hỗ trợ',
     openSupport: 'Mở hỗ trợ',
+    closeTeaser: 'Đóng lời chào',
     closeSupport: 'Đóng hỗ trợ',
     close: 'Đóng',
     messageThread: 'Chuỗi tin nhắn',
