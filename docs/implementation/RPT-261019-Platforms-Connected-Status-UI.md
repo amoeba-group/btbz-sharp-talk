@@ -40,7 +40,7 @@
 | 스테이징 | 2026-10-19 12:18 `deploy-staging.sh` — api/web/widget/pwa 재생성, health 200, 접근 로그 2xx·ERROR 0 |
 | 마이그레이션 | 없음(스키마 변경 없음) |
 | 스테이징 데이터 | go2joy `integration_credentials` provider `self` 1행 등록("Go2Joy / 호텔 파트너 어드민(자체 개발)") — 실사용 값이므로 유지 |
-| PR 2 | 후속 수정·문서 — 머지 후 스테이징 재배포 |
+| PR #670 | main `37c3af21` — 12:33 스테이징 재배포(health 200), 대시보드 "자체 플랫폼 · 연결됨" 실측 ✅ |
 | 프로덕션 | 미배포(코드만, SQL 없음) |
 
 ## 5. 운영 메모
