@@ -5,6 +5,7 @@ import { IntegrationCredential } from './entity/integration-credential.entity';
 import { User } from '../user/entity/user.entity';
 import { ContentFilterRule } from '../moderation/entity/content-filter-rule.entity';
 import { JobLabel } from '../user/entity/job-label.entity';
+import { Unit } from '../user/entity/unit.entity';
 import { UsageType } from '../knowledge/entity/usage-type.entity';
 import { TenantService } from './tenant.service';
 import { EcommerceIntegrationService } from './ecommerce-integration.service';
@@ -32,6 +33,7 @@ import { TenantAssetModule } from '../tenant-asset/tenant-asset.module';
       User,
       ContentFilterRule,
       JobLabel,
+      Unit,
       UsageType,
       WidgetDesignRow,
       WidgetDesignRevision,

@@ -27,6 +27,10 @@ export class User {
   @Column({ type: 'varchar', length: 16, default: 'active' })
   status: string; // invited/active/suspended
 
+  /** Team the user belongs to (`units.id`), at most one; NULL = unassigned (PLN-261019 P1). */
+  @Column({ name: 'unit_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
+  unitId: number | null;
+
   @Column({ name: 'must_change_password', type: 'tinyint', width: 1, default: 1 })
   mustChangePassword: number;
 

@@ -7,7 +7,6 @@ import type { RoutingMode } from './ai-settings.service';
 
 /** Region values the Hotel Admin signs (PLN-261015 D2); free text is not offered on purpose. */
 export const ROUTING_REGIONS = ['north', 'central', 'south'] as const;
-const LABELS = ['consult', 'accounting', 'operations'] as const;
 
 /** Editable row — keywords as the comma-joined string the operator types. */
 export interface RoutingRuleRow {
@@ -39,10 +38,13 @@ export function RoutingRulesEditor({
   rows,
   onChange,
   agents,
+  labels,
 }: {
   rows: RoutingRuleRow[];
   onChange: (rows: RoutingRuleRow[]) => void;
   agents: Array<{ id: string; email: string; name?: string | null }>;
+  /** Tenant job labels — code + the tenant's own name (PLN-261019 P3). */
+  labels: Array<{ code: string; name: string }>;
 }) {
   const { t } = useTranslation('aiSetting');
   const { t: tc } = useTranslation('common');
@@ -125,9 +127,9 @@ export function RoutingRulesEditor({
                   onChange={(e) => patch(i, { keywords: e.target.value })}
                 />
               </div>
-              {LABELS.map((l) => (
-                <button key={l} type="button" className={chip(row.labels.includes(l))} onClick={() => patch(i, { labels: toggle(row.labels, l) })}>
-                  {t(`handoff.denyLabel.${l}`)}
+              {labels.map((l) => (
+                <button key={l.code} type="button" className={chip(row.labels.includes(l.code))} onClick={() => patch(i, { labels: toggle(row.labels, l.code) })}>
+                  {l.name}
                 </button>
               ))}
             </div>

@@ -1,5 +1,6 @@
 import { User } from '../../entity/user.entity';
 import { JobLabel } from '../../entity/job-label.entity';
+import { Unit } from '../../entity/unit.entity';
 
 /** Response DTOs — camelCase. Never expose passwordHash. */
 export interface UserResponse {
@@ -11,8 +12,19 @@ export interface UserResponse {
   status: string;
   mustChangePassword: boolean;
   labelCodes: string[];
+  /** Team (PLN-261019 P1); null = unassigned. */
+  unitId: number | null;
+  unitName: string | null;
   invitedAt: Date | null;
   createdAt: Date;
+}
+
+export interface UnitResponse {
+  id: number;
+  tenantId: number;
+  code: string;
+  name: string;
+  sortOrder: number;
 }
 
 export interface JobLabelResponse {
@@ -30,7 +42,7 @@ export interface InviteUserResponse {
 
 /** Static mappers (entity -> response). */
 export class UserMapper {
-  static toResponse(user: User, labelCodes: string[]): UserResponse {
+  static toResponse(user: User, labelCodes: string[], unit?: Unit | null): UserResponse {
     return {
       id: user.id,
       tenantId: user.tenantId,
@@ -40,6 +52,8 @@ export class UserMapper {
       status: user.status,
       mustChangePassword: user.mustChangePassword === 1,
       labelCodes,
+      unitId: user.unitId ?? null,
+      unitName: unit?.name ?? null,
       invitedAt: user.invitedAt,
       createdAt: user.createdAt,
     };
@@ -53,6 +67,18 @@ export class JobLabelMapper {
       tenantId: label.tenantId,
       code: label.code,
       name: label.name,
+    };
+  }
+}
+
+export class UnitMapper {
+  static toResponse(unit: Unit): UnitResponse {
+    return {
+      id: unit.id,
+      tenantId: unit.tenantId,
+      code: unit.code,
+      name: unit.name,
+      sortOrder: unit.sortOrder,
     };
   }
 }

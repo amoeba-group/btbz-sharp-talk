@@ -4,9 +4,12 @@ import {
   IsBoolean,
   IsEmail,
   IsIn,
+  IsInt,
   IsOptional,
   IsString,
+  Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 import { USER_RANK } from '@sharptalk/types';
 import { IsStrongPassword } from '../../../../global/util/password-policy.util';
@@ -29,6 +32,13 @@ export class InviteUserRequest {
   @ArrayUnique()
   @IsString({ each: true })
   label_codes?: string[];
+
+  /** Team (`units.id`) to place the invitee in; omitted or null = none (PLN-261019 P1). */
+  @IsOptional()
+  @ValidateIf((_, v) => v !== null)
+  @IsInt()
+  @Min(1)
+  unit_id?: number | null;
 }
 
 export class AcceptInviteRequest {
@@ -52,6 +62,14 @@ export class UpdateLabelsRequest {
   @ArrayUnique()
   @IsString({ each: true })
   label_codes: string[];
+}
+
+export class UpdateUnitRequest {
+  /** `null` clears the assignment. */
+  @ValidateIf((_, v) => v !== null)
+  @IsInt()
+  @Min(1)
+  unit_id: number | null;
 }
 
 export class UpdateStatusRequest {

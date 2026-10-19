@@ -25,6 +25,7 @@ import {
   UpdateLabelsRequest,
   UpdateRankRequest,
   UpdateStatusRequest,
+  UpdateUnitRequest,
 } from './dto/request/user.request';
 
 @ApiTags('Users')
@@ -62,6 +63,8 @@ export class UserController {
       body.email,
       body.rank,
       body.label_codes,
+      'user',
+      body.unit_id ?? null,
     );
   }
 
@@ -114,6 +117,18 @@ export class UserController {
     @Body() body: UpdateLabelsRequest,
   ) {
     return this.userService.updateLabels(asTenantUser(user).tenantId, id, body.label_codes);
+  }
+
+  @Patch(':id/unit')
+  @RequireCapability(CAPABILITY.LABEL_ASSIGN)
+  @ApiOperation({ summary: 'Move a user to a unit (team), or clear it with null' })
+  updateUnit(
+    @CurrentUser() user: Principal,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: UpdateUnitRequest,
+  ) {
+    const actor = asTenantUser(user);
+    return this.userService.updateUnit(actor.tenantId, id, body.unit_id, actor.userId);
   }
 
   @Patch(':id/status')
