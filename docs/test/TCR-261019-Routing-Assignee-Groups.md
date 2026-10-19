@@ -44,7 +44,7 @@
 
 | ID | 항목 | 결과 |
 |---|---|---|
-| S-01 | 배포 후 부팅·스키마 오류 0·웹 번들 문구 | (RPT) |
+| S-01 | 배포 후 부팅·스키마 오류 0·웹 번들 문구 | 통과 — `13752ca`, api/web/nginx 재생성, `successfully started`, 오류 0, 번들에 `routing.assignee.*`·`assigneeLabelCodes`·`manage=1` |
 | S-02 | go2joy 규칙에서 North 팀 × Counsels 그룹 미리보기·저장 | 콘솔 클릭은 사용자 확인 |
 
 ## 5. 엣지 케이스
