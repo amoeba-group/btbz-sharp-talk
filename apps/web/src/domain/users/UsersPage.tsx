@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { UserPlus, KeyRound, Copy, Check, ShieldOff, AlertTriangle, Tags } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '@/components/PageHeader';
@@ -72,6 +73,29 @@ export function UsersPage() {
   // Label/unit editing is LABEL_EDIT, which only master holds (permission-matrix.ts).
   const isMaster = useAuthStore((s) => s.principal?.rank) === 'master';
   const [orgOpen, setOrgOpen] = useState(false);
+  // `/users?manage=1` (from the handoff rule editor) opens the manage modal straight away.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (searchParams.get('manage') === '1' && isMaster) {
+      setOrgOpen(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('manage');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams, isMaster]);
+  const manageLink = (close: () => void) =>
+    isMaster ? (
+      <button
+        type="button"
+        className="mr-auto text-sm text-primary-600 hover:underline"
+        onClick={() => {
+          close();
+          setOrgOpen(true);
+        }}
+      >
+        {t('manageLink')}
+      </button>
+    ) : null;
   const inviteUser = useInviteUser();
   const updateUser = useUpdateUser();
   const issueTempPw = useIssueTempPassword();
@@ -297,6 +321,7 @@ export function UsersPage() {
         title={t('inviteUser')}
         footer={
           <>
+            {manageLink(() => setInviteOpen(false))}
             <Button variant="ghost" onClick={() => setInviteOpen(false)}>
               {tc('cancel')}
             </Button>
@@ -348,6 +373,7 @@ export function UsersPage() {
         title={t('editUser')}
         footer={
           <>
+            {manageLink(() => setEditing(null))}
             <Button variant="ghost" onClick={() => setEditing(null)}>
               {tc('cancel')}
             </Button>

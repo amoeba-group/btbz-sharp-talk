@@ -5,7 +5,8 @@ import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Input, Label, Select } from '@/components/Field';
 import { cn } from '@/lib/cn';
-import { useJobLabels, useUsers } from '../users/users.hooks';
+import { useJobLabels, useUnits, useUsers } from '../users/users.hooks';
+import { useAuthStore } from '@/store/auth-store';
 import { useWidgetSettings } from '../settings/settings.hooks';
 import { routingConditionDef } from '../../../../../packages/types/src/common/routing-condition';
 import { offeredLanguageCodes } from '../../../../../packages/types/src/common/language';
@@ -131,15 +132,31 @@ export function HandoffSection() {
           text: routingConditionDef(String(c.field))?.kind === 'enum' ? '' : (c.values ?? []).join(', '),
         })),
         assignees: (r.assigneeUserIds ?? []).map(String),
+        assigneeUnits: (r.assigneeUnitIds ?? []).map(String),
+        assigneeLabels: r.assigneeLabelCodes ?? [],
         mode: r.mode === ROUTING_MODE.BROADCAST ? ROUTING_MODE.BROADCAST : ROUTING_MODE.LEAST_LOADED,
       })),
     );
   }, [config]);
 
   // Only consult-label agents handle conversations, so only they can be assigned.
-  const agents = (users.data ?? []).filter(
-    (u) => u.labelCodes?.includes('consult') && u.status !== 'inactive',
-  );
+  // Assignee candidates = active users (PLN-261019 groups, G5: the old
+  // `status !== 'inactive'` never excluded anyone — statuses are
+  // invited/active/suspended). Consult-less users are flagged in the editor.
+  const agents = (users.data ?? [])
+    .filter((u) => u.status === 'active')
+    .map((u) => ({
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      status: u.status,
+      unitId: u.unitId != null ? String(u.unitId) : null,
+      unitName: u.unitName ?? null,
+      labelCodes: u.labelCodes ?? [],
+    }));
+  const unitRows = useUnits();
+  const unitOptions = (unitRows.data ?? []).map((u) => ({ id: String(u.id), name: u.name }));
+  const isMaster = useAuthStore((s) => s.principal?.rank) === 'master';
 
   const toggle = <T,>(list: T[], value: T): T[] =>
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -205,10 +222,12 @@ export function HandoffSection() {
           // Nothing chosen = nothing asked; dropping it keeps the stored rule honest.
           .filter((c) => c.values.length > 0),
         assigneeUserIds: r.assignees.map(Number).filter(Number.isFinite),
+        assigneeUnitIds: r.assigneeUnits.map(Number).filter(Number.isFinite),
+        assigneeLabelCodes: r.assigneeLabels,
         mode: r.mode,
       }))
-      // A rule that pages nobody is skipped by the server anyway; don't store it.
-      .filter((r) => r.assigneeUserIds.length > 0);
+      // Same rule as the server: an agent or a group, else the rule pages nobody.
+      .filter((r) => r.assigneeUserIds.length > 0 || r.assigneeUnitIds.length > 0 || r.assigneeLabelCodes.length > 0);
     if (routingRules.length) handoff.routingRules = routingRules;
     const reMin = Math.round(Number(reAlertMin));
     if (Number.isFinite(reMin) && reMin >= 1 && reMin <= 240) {
@@ -260,7 +279,15 @@ export function HandoffSection() {
             <p className="mt-1 text-[11px] text-gray-400">{t('handoff.assigneesHint')}</p>
           </div>
 
-          <RoutingRulesEditor rows={routingRows} onChange={setRoutingRows} agents={agents} labels={labelOptions} languages={languages} />
+          <RoutingRulesEditor
+            rows={routingRows}
+            onChange={setRoutingRows}
+            agents={agents}
+            labels={labelOptions}
+            units={unitOptions}
+            languages={languages}
+            manageHref={isMaster ? '/users?manage=1' : undefined}
+          />
 
           {/* Unanswered-alarm reminder (PLN-261015 D4). */}
           <div className="border-t border-gray-100 pt-4">

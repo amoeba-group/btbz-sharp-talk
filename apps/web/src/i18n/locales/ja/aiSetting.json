@@ -212,6 +212,21 @@
             "regular": "常連"
           }
         }
+      },
+      "assignee": {
+        "view": "表示",
+        "view_all": "すべて",
+        "view_unit": "チーム別",
+        "view_label": "ラベル別",
+        "group": "グループ",
+        "units": "チーム",
+        "labels": "ラベル",
+        "preview": "現在 {{count}}名:",
+        "previewNone": "現在該当者がいません — 引き継ぎ時にこのルールはスキップされます。",
+        "noConsult": "相談ラベルなし — ライブチャット対応不可",
+        "people": "個人指定",
+        "needOne": "個人またはグループを1つ以上選んでください — 担当者のないルールは保存されません",
+        "manageLink": "ラベル・チーム管理 →"
       }
     },
     "reAlert": {

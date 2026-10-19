@@ -212,6 +212,21 @@
             "regular": "常客"
           }
         }
+      },
+      "assignee": {
+        "view": "查看",
+        "view_all": "全部",
+        "view_unit": "按团队",
+        "view_label": "按标签",
+        "group": "分组",
+        "units": "团队",
+        "labels": "标签",
+        "preview": "当前 {{count}} 人：",
+        "previewNone": "当前无人匹配 — 转接时将跳过此规则。",
+        "noConsult": "无咨询标签 — 无法处理实时聊天",
+        "people": "指定个人",
+        "needOne": "请至少选择一人或一个分组 — 没有客服的规则不会保存",
+        "manageLink": "管理标签与团队 →"
       }
     },
     "reAlert": {

@@ -1,5 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { localized, routingConditionDef } from '@sharptalk/types';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { hasAssigneeGroup, localized, routingConditionDef } from '@sharptalk/types';
+import { RoutingAssigneeService } from './routing-assignee.service';
 import type { LocalizedText, RoutingCondition, RoutingConditionField } from '@sharptalk/types';
 import { AiConfigService } from './ai-config.service';
 import { DENY_MODE, ROUTING_MODE } from './entity/tenant-ai-config.entity';
@@ -94,21 +95,30 @@ export function describeConditions(conds: RoutingCondition[] | undefined): strin
     .join(', ');
 }
 
+export interface RoutingRuleHit {
+  rule: RoutingRule;
+  index: number;
+  /** Explicit agents on the rule (may be empty when the rule names a group). */
+  assigneeUserIds: number[];
+  /** Whether the rule also names a unit/label group to resolve at handoff time. */
+  hasGroup: boolean;
+}
+
 /**
- * First rule whose filters all match (PLN-261015 D3). An empty filter list
- * matches anything; a rule with no usable assignee is skipped, because a match
- * that pages nobody would be worse than the fallback. Pure — tested directly.
+ * Every rule whose filters all match, in rule order (PLN-261015 D3). An empty
+ * filter list matches anything. A rule with neither an explicit agent nor a
+ * group selector is skipped: a match that pages nobody would be worse than the
+ * fallback. Pure — tested directly.
  */
-export function matchRoutingRule(
-  rules: RoutingRule[] | undefined,
-  ctx: RoutingContext,
-): { rule: RoutingRule; index: number; assigneeUserIds: number[] } | null {
+export function matchRoutingRules(rules: RoutingRule[] | undefined, ctx: RoutingContext): RoutingRuleHit[] {
   const region = norm(ctx.region);
   const text = norm(ctx.text);
   const label = norm(ctx.label);
+  const hits: RoutingRuleHit[] = [];
   for (const [index, rule] of (rules ?? []).entries()) {
     const assigneeUserIds = (rule?.assigneeUserIds ?? []).map(Number).filter((id) => Number.isFinite(id) && id > 0);
-    if (!assigneeUserIds.length) continue;
+    const hasGroup = hasAssigneeGroup({ unitIds: rule?.assigneeUnitIds, labelCodes: rule?.assigneeLabelCodes });
+    if (!assigneeUserIds.length && !hasGroup) continue;
     const regions = (rule.regions ?? []).map(norm).filter(Boolean);
     if (regions.length && !regions.includes(region)) continue;
     const keywords = (rule.keywords ?? []).map(norm).filter(Boolean);
@@ -117,9 +127,14 @@ export function matchRoutingRule(
     if (labels.length && !labels.includes(label)) continue;
     // Customer-information conditions (PLN-261019 P4): all must hold.
     if ((rule.conditions ?? []).some((c) => !conditionHolds(c, ctx))) continue;
-    return { rule, index, assigneeUserIds };
+    hits.push({ rule, index, assigneeUserIds, hasGroup });
   }
-  return null;
+  return hits;
+}
+
+/** First matching rule — the pre-group behaviour, kept for callers and tests. */
+export function matchRoutingRule(rules: RoutingRule[] | undefined, ctx: RoutingContext): RoutingRuleHit | null {
+  return matchRoutingRules(rules, ctx)[0] ?? null;
 }
 
 /** Built-in off-hours wording (used when the tenant left the notice blank). */
@@ -141,7 +156,12 @@ const DEFAULT_OFF_HOURS_NOTICE: LocalizedText = {
 export class HandoffRouterService {
   private readonly logger = new Logger(HandoffRouterService.name);
 
-  constructor(private readonly aiConfig: AiConfigService) {}
+  constructor(
+    private readonly aiConfig: AiConfigService,
+    // Optional: specs build the service positionally without it; without a
+    // resolver a group-only rule resolves to nobody and is skipped (logged).
+    @Optional() private readonly assignees?: RoutingAssigneeService,
+  ) {}
 
   /**
    * Policy deny-list check (PLN-260808-Issue-Workflow-P2): does this customer
@@ -196,21 +216,41 @@ export class HandoffRouterService {
     }
     // Region × topic rules (PLN-261015 D3). Off hours wins above: nobody in
     // any group is on shift, so the mailbox route stands.
-    const hit = matchRoutingRule(config?.routingRules, ctx);
-    if (hit) {
+    // Rules are tried in order; a rule whose group resolves to nobody right now
+    // (team all suspended) is skipped for the next one (PLN-261019 groups D4).
+    for (const hit of matchRoutingRules(config?.routingRules, ctx)) {
       const ruleName = hit.rule.name?.trim() || `#${hit.index + 1}`;
+      const group = hit.hasGroup && tenantId != null ? await this.resolveGroup(tenantId, hit.rule) : [];
+      const targets = [...new Set([...hit.assigneeUserIds, ...group])];
+      if (!targets.length) {
+        this.logger.warn(`routing rule ${ruleName} (tenant ${tenantId}) resolved to no active agent — skipped`);
+        continue;
+      }
       const conds = describeConditions(hit.rule.conditions);
+      const groupDesc = hit.hasGroup
+        ? `, group(unit:${(hit.rule.assigneeUnitIds ?? []).join('|') || '*'}×label:${(hit.rule.assigneeLabelCodes ?? []).join('|') || '*'}) ${group.length}`
+        : '';
       this.logger.log(
-        `handoff routed by rule ${ruleName} (tenant ${tenantId}, region ${ctx.region ?? '-'}${conds ? `, ${conds}` : ''}, ${hit.assigneeUserIds.length} agent(s))`,
+        `handoff routed by rule ${ruleName} (tenant ${tenantId}, region ${ctx.region ?? '-'}${conds ? `, ${conds}` : ''}, explicit ${hit.assigneeUserIds.length}${groupDesc} → ${targets.length} agent(s))`,
       );
       return {
         mode: 'agents',
-        targetUserIds: hit.assigneeUserIds,
+        targetUserIds: targets,
         assignMode: hit.rule.mode === ROUTING_MODE.BROADCAST ? ROUTING_MODE.BROADCAST : ROUTING_MODE.LEAST_LOADED,
         ruleName,
       };
     }
     return { mode: 'agents', targetUserIds };
+  }
+
+  private async resolveGroup(tenantId: number, rule: RoutingRule): Promise<number[]> {
+    if (!this.assignees) return [];
+    try {
+      return await this.assignees.resolve(tenantId, { unitIds: rule.assigneeUnitIds, labelCodes: rule.assigneeLabelCodes });
+    } catch (err) {
+      this.logger.warn(`assignee group resolution failed (tenant ${tenantId}): ${(err as Error).message}`);
+      return [];
+    }
   }
 
   private notice(config: HandoffConfig, language: string): string {

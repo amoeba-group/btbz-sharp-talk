@@ -50,5 +50,6 @@
   "permissionHint": "既定コード consult / accounting / operations のみメニューとチャット対応の権限に連動します。追加したラベルは表示・分類用です。",
   "orgCreated": "「{{name}}」を追加しました。",
   "orgRenamed": "「{{name}}」に変更しました。",
-  "orgSaveError": "保存に失敗しました。"
+  "orgSaveError": "保存に失敗しました。",
+  "manageLink": "ラベル・チーム管理 →"
 }

@@ -343,3 +343,46 @@ describe('matchRoutingRule — customer-information conditions (PLN-261019 P4)',
     expect(describeConditions(rules[4].conditions)).toBe('');
   });
 });
+
+describe('HandoffRouterService — assignee groups (PLN-261019-Routing-Assignee-Groups)', () => {
+  const config: HandoffConfig = {
+    assigneeUserIds: [99],
+    routingRules: [
+      { name: 'north-team', regions: ['north'], assigneeUnitIds: [7], assigneeLabelCodes: ['consult'], assigneeUserIds: [] },
+      { name: 'north-person', regions: ['north'], assigneeUserIds: [5] },
+      { name: 'mixed', regions: ['south'], assigneeUserIds: [5], assigneeUnitIds: [8] },
+      { name: 'nobody', regions: ['east'], assigneeUserIds: [], assigneeUnitIds: [] },
+    ],
+  };
+  const service = (resolve: jest.Mock) =>
+    new HandoffRouterService({ getHandoffConfig: async () => config } as unknown as AiConfigService, { resolve } as never);
+
+  it('resolves the group at handoff time and pages its members', async () => {
+    const resolve = jest.fn(async () => [10, 12]);
+    const r = await service(resolve).route(4, 'VI', { region: 'north' });
+    expect(resolve).toHaveBeenCalledWith(4, { unitIds: [7], labelCodes: ['consult'] });
+    expect(r).toMatchObject({ mode: 'agents', targetUserIds: [10, 12], ruleName: 'north-team' });
+  });
+
+  it('a group that resolves to nobody is skipped for the next matching rule', async () => {
+    const r = await service(jest.fn(async () => [])).route(4, 'VI', { region: 'north' });
+    expect(r).toMatchObject({ targetUserIds: [5], ruleName: 'north-person' });
+  });
+
+  it('explicit agents and the group are unioned without duplicates', async () => {
+    const r = await service(jest.fn(async () => [5, 6])).route(4, 'VI', { region: 'south' });
+    expect(r).toMatchObject({ targetUserIds: [5, 6], ruleName: 'mixed' });
+  });
+
+  it('a rule with neither agents nor a group never matches; no rule → default assignees', async () => {
+    const r = await service(jest.fn(async () => [1])).route(4, 'VI', { region: 'east' });
+    expect(r).toMatchObject({ targetUserIds: [99] });
+    expect(r.ruleName).toBeUndefined();
+  });
+
+  it('without a resolver (positional specs) a group-only rule is skipped, explicit rules still work', async () => {
+    const svc = new HandoffRouterService({ getHandoffConfig: async () => config } as unknown as AiConfigService);
+    const r = await svc.route(4, 'VI', { region: 'north' });
+    expect(r).toMatchObject({ targetUserIds: [5], ruleName: 'north-person' });
+  });
+});

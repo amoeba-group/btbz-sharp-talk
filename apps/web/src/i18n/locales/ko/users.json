@@ -50,5 +50,6 @@
   "permissionHint": "기본 코드 consult / accounting / operations만 메뉴·상담 처리 권한에 연결됩니다. 새로 만든 라벨은 표시·분류용입니다.",
   "orgCreated": "\"{{name}}\"을(를) 추가했습니다.",
   "orgRenamed": "\"{{name}}\"(으)로 변경했습니다.",
-  "orgSaveError": "저장에 실패했습니다."
+  "orgSaveError": "저장에 실패했습니다.",
+  "manageLink": "라벨·팀 관리 →"
 }

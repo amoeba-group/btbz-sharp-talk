@@ -146,6 +146,9 @@ export interface RoutingRule {
   /** Customer-information conditions (PLN-261019 P4); every one must hold. */
   conditions?: RoutingCondition[];
   assigneeUserIds: number[];
+  /** Unit/label group resolved at handoff time (PLN-261019-Routing-Assignee-Groups). */
+  assigneeUnitIds?: number[];
+  assigneeLabelCodes?: string[];
   mode?: RoutingMode;
 }
 

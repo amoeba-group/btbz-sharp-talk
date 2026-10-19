@@ -7,6 +7,9 @@ import { TenantAiConfigRevision } from './entity/tenant-ai-config-revision.entit
 import { AiAgent } from './entity/ai-agent.entity';
 import { Session } from '../session/entity/session.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
+import { User } from '../user/entity/user.entity';
+import { JobLabel } from '../user/entity/job-label.entity';
+import { UserJobLabel } from '../user/entity/user-job-label.entity';
 import { SessionModule } from '../session/session.module';
 import { AuditModule } from '../audit/audit.module';
 import { AiEngineService } from './ai-engine.service';
@@ -16,6 +19,7 @@ import { AiConfigService } from './ai-config.service';
 import { AiConfigRevisionService } from './ai-config-revision.service';
 import { AiAgentService } from './ai-agent.service';
 import { HandoffRouterService } from './handoff-router.service';
+import { RoutingAssigneeService } from './routing-assignee.service';
 import { AiEngineController } from './ai-engine.controller';
 import { TenantAiEngineController } from './tenant-ai-engine.controller';
 import { AiSettingController } from './ai-setting.controller';
@@ -32,6 +36,11 @@ import { AiAgentController } from './ai-agent.controller';
       AiAgent,
       Session,
       Tenant,
+      // Repositories only (no UserModule import → no cycle): routing resolves
+      // unit/label assignee groups at handoff time (PLN-261019 groups).
+      User,
+      JobLabel,
+      UserJobLabel,
     ]),
     SessionModule,
     AuditModule,
@@ -50,6 +59,7 @@ import { AiAgentController } from './ai-agent.controller';
     AiConfigService,
     AiConfigRevisionService,
     AiAgentService,
+    RoutingAssigneeService,
     HandoffRouterService,
   ],
   exports: [

@@ -3,6 +3,7 @@ export * from './api/widget.types';
 export * from './common/enum.types';
 export * from './common/language';
 export * from './common/routing-condition';
+export * from './common/routing-assignee';
 export * from './common/widget-copy';
 export * from './common/widget-theme';
 export * from './common/csat';
