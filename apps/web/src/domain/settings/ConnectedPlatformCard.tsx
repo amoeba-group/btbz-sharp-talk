@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Download, ExternalLink, RefreshCw, Settings2, Store, Building2, Zap } from 'lucide-react';
+import { Download, ExternalLink, KeyRound, RefreshCw, Settings2, Store, Building2, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/Badge';
@@ -205,9 +205,17 @@ export function GenericConnectedCard({
 export function Cafe24ConnectedCard({
   connection,
   onConfigure,
+  onConnectOAuth,
 }: {
   connection: PlatformConnection;
   onConfigure: () => void;
+  /**
+   * Manual (typed-token) mode only: start the OAuth consent for this mall. A
+   * typed token lives two hours and cannot be refreshed, so this is the way
+   * back to a working connection once the token expires — the "add" chip is
+   * disabled while a credential exists, so without this there was none.
+   */
+  onConnectOAuth: () => void;
 }) {
   const { t } = useTranslation('settings');
   const oauth = connection.mode === 'oauth';
@@ -243,6 +251,12 @@ export function Cafe24ConnectedCard({
             <Zap className="mr-1.5 h-4 w-4" />
             {test.isPending ? t('integrations.testing') : t('integrations.testConnection')}
           </Button>
+          {!oauth && (
+            <Button variant="secondary" size="sm" onClick={onConnectOAuth}>
+              <KeyRound className="mr-1.5 h-4 w-4" />
+              {t('cafe24.oauth.connectOAuth')}
+            </Button>
+          )}
           {oauth && (
             <>
               <Button

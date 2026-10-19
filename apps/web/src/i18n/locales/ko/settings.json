@@ -218,7 +218,8 @@
     "cafe24": {
       "title": "Cafe24",
       "subtitle": "Admin API(OAuth 액세스 토큰)로 카페24 상점을 연결합니다.",
-      "oauthTestHint": "Cafe24 OAuth로 연결된 몰입니다 — 연결 테스트는 연결된 플랫폼의 Cafe24 카드에서 실행하세요."
+      "oauthTestHint": "Cafe24 OAuth로 연결된 몰입니다 — 연결 테스트는 연결된 플랫폼의 Cafe24 카드에서 실행하세요.",
+      "manualOverOauthWarning": "이 몰은 현재 OAuth로 연결되어 있습니다. 여기서 토큰을 저장하면 OAuth 연결이 끊기고 수동(토큰) 연결로 바뀝니다. 수동 토큰은 2시간 뒤 만료되며 자동 갱신되지 않습니다."
     },
     "woocommerce": {
       "title": "WooCommerce",
@@ -312,7 +313,8 @@
       "mode": {
         "oauth": "OAuth 연결",
         "manual": "수동(토큰)"
-      }
+      },
+      "connectOAuth": "OAuth로 연결"
     }
   },
   "marketingTitle": "마케팅 연동",

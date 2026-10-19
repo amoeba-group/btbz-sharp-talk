@@ -115,6 +115,11 @@ export function IntegrationConfigModal({
       }
     >
       <p className="mb-4 text-sm text-gray-500">{t(`integrations.${provider}.subtitle`)}</p>
+      {data?.mode === 'oauth' && (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          {t('integrations.cafe24.manualOverOauthWarning')}
+        </p>
+      )}
 
       {specs.map((s) => (
         <FormRow key={s.key} label={t(`integrations.fields.${s.key}`) + (s.required ? ' *' : '')}>

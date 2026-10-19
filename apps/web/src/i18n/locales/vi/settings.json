@@ -218,7 +218,8 @@
     "cafe24": {
       "title": "Cafe24",
       "subtitle": "Kết nối cửa hàng Cafe24 của bạn qua Admin API (token OAuth).",
-      "oauthTestHint": "Cửa hàng này kết nối qua Cafe24 OAuth — hãy chạy kiểm tra kết nối từ thẻ Cafe24 trong mục nền tảng đã kết nối."
+      "oauthTestHint": "Cửa hàng này kết nối qua Cafe24 OAuth — hãy chạy kiểm tra kết nối từ thẻ Cafe24 trong mục nền tảng đã kết nối.",
+      "manualOverOauthWarning": "Cửa hàng này hiện kết nối qua OAuth. Lưu token ở đây sẽ ngắt kết nối OAuth và chuyển sang kết nối thủ công (token). Token thủ công hết hạn sau hai giờ và không được làm mới."
     },
     "woocommerce": {
       "title": "WooCommerce",
@@ -312,7 +313,8 @@
       "mode": {
         "oauth": "OAuth",
         "manual": "Thủ công (token)"
-      }
+      },
+      "connectOAuth": "Kết nối bằng OAuth"
     }
   },
   "marketingTitle": "Tích hợp marketing",
