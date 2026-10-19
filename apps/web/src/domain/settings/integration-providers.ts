@@ -14,7 +14,13 @@ export type EcommerceProvider = 'cafe24' | 'woocommerce' | 'odoo' | 'haravan';
 /** Marketing platforms + helpdesks on the same generic flow (PLN-260808). */
 export type MarketingProvider = 'klaviyo' | 'yotpo';
 export type HelpdeskProvider = 'gorgias';
-export type GenericIntegrationProvider = EcommerceProvider | MarketingProvider | HelpdeskProvider;
+/** The tenant's own platform (PLN-261019 D4): registered, never probed or synced. */
+export type SelfPlatformProvider = 'self';
+export type GenericIntegrationProvider =
+  | EcommerceProvider
+  | MarketingProvider
+  | HelpdeskProvider
+  | SelfPlatformProvider;
 
 export interface IntegrationFieldSpec {
   key: string;
@@ -29,6 +35,10 @@ export const ECOMMERCE_PROVIDERS: EcommerceProvider[] = [
 ];
 export const MARKETING_PROVIDERS: MarketingProvider[] = ['klaviyo', 'yotpo'];
 export const HELPDESK_PROVIDERS: HelpdeskProvider[] = ['gorgias'];
+export const SELF_PLATFORM_PROVIDER: SelfPlatformProvider = 'self';
+/** Every platform the "Add a platform" row offers, in display order (PLN-261019 D3). */
+export const PLATFORM_CHOICES = ['shopify', ...ECOMMERCE_PROVIDERS, SELF_PLATFORM_PROVIDER] as const;
+export type PlatformChoice = (typeof PLATFORM_CHOICES)[number];
 
 export const INTEGRATION_FIELDS: Record<GenericIntegrationProvider, IntegrationFieldSpec[]> = {
   cafe24: [
@@ -62,6 +72,10 @@ export const INTEGRATION_FIELDS: Record<GenericIntegrationProvider, IntegrationF
     { key: 'email', secret: false, required: true },
     { key: 'api_key', secret: true, required: true },
     { key: 'webhook_secret', secret: true, required: false },
+  ],
+  self: [
+    { key: 'platform_name', secret: false, required: true },
+    { key: 'description', secret: false, required: false },
   ],
 };
 

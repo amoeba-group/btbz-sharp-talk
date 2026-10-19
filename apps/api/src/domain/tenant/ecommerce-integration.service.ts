@@ -5,6 +5,7 @@ import {
   GENERIC_INTEGRATION_PROVIDERS,
   GenericIntegrationProvider,
   INTEGRATION_FIELDS,
+  SELF_PLATFORM_PROVIDER,
 } from '@sharptalk/types';
 import { IntegrationCredential } from './entity/integration-credential.entity';
 import { IntegrationService } from '../integration/integration.service';
@@ -14,6 +15,9 @@ import { decryptSecret, encryptSecret } from '../../global/util/crypto.util';
 import { EcommerceIntegrationMapper } from './ecommerce-integration.mapper';
 import { IntegrationSettingsResponse, IntegrationTestResponse } from './dto/response/tenant.response';
 import { probeEcommerce } from './ecommerce-probe.util';
+
+/** Stored as the self platform's `detail`: there is no probe, registration is the state. */
+const SELF_PLATFORM_DETAIL = 'Registered — self-hosted platform, nothing to probe';
 
 /**
  * Generic per-tenant e-commerce integration settings (cafe24 / woocommerce / odoo /
@@ -82,13 +86,19 @@ export class EcommerceIntegrationService {
     const secretEnc = encryptSecret(JSON.stringify(merged));
     // Saving credentials is NOT a connection — a real test decides that
     // (FIX-260827). Changing the credential also invalidates any prior test.
+    // The one exception is the tenant's own platform (PLN-261019 D4): there is
+    // no remote end to probe, so registering it IS the connection.
+    const self = p === SELF_PLATFORM_PROVIDER;
+    const status = self ? 'connected' : 'unknown';
+    const detail = self ? SELF_PLATFORM_DETAIL : null;
+    const lastTestedAt = self ? new Date() : null;
     if (cred) {
       cred.secretEnc = secretEnc;
-      cred.status = 'unknown';
-      cred.detail = null;
-      cred.lastTestedAt = null;
+      cred.status = status;
+      cred.detail = detail;
+      cred.lastTestedAt = lastTestedAt;
     } else {
-      cred = this.credRepo.create({ tenantId, provider: p, secretEnc, status: 'unknown' });
+      cred = this.credRepo.create({ tenantId, provider: p, secretEnc, status, detail, lastTestedAt });
     }
     await this.credRepo.save(cred);
     return this.getSettings(tenantId, p);
@@ -98,6 +108,11 @@ export class EcommerceIntegrationService {
   async test(tenantId: number, provider: string): Promise<IntegrationTestResponse> {
     const p = this.assertProvider(provider);
     const cred = await this.credRepo.findOne({ where: { tenantId, provider: p } });
+    if (p === SELF_PLATFORM_PROVIDER) {
+      // Nothing to reach: the console hides the test button, and a direct call
+      // must not flip a registered platform to 'error'.
+      return { ok: cred != null, detail: cred ? SELF_PLATFORM_DETAIL : 'Not registered' };
+    }
     const result = await probeEcommerce(p, this.parseConfig(cred));
     // Record the outcome on THIS tenant's credential — the per-tenant source of
     // truth the tiles/dashboard read (FIX-260827). No global write: that table

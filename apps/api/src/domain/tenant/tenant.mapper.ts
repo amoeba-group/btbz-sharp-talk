@@ -1,7 +1,6 @@
 import { Tenant } from './entity/tenant.entity';
 import { WidgetDesignRow } from './entity/widget-design.entity';
 import { IntegrationCredential } from './entity/integration-credential.entity';
-import { IntegrationStatusEntity } from '../integration/entity/integration-status.entity';
 import {
   EXTERNAL_CHANNELS,
   LANGUAGES,
@@ -224,7 +223,6 @@ export class TenantMapper {
   static toShopifySettings(
     tenant: Tenant,
     cred: IntegrationCredential | null,
-    status: IntegrationStatusEntity | null,
   ): ShopifySettingsResponse {
     return {
       shopDomain: tenant.shopDomain,
@@ -234,10 +232,13 @@ export class TenantMapper {
         configured: cred?.secretEnc != null,
         updatedAt: cred?.updatedAt ?? null,
       },
+      // Per-tenant connection state, same rule as the generic providers
+      // (FIX-260827 / PLN-261019): no credential → no state; saved → 'unknown';
+      // a real test or sync decides 'connected' / 'error'.
       integration: {
-        status: status?.status ?? null,
-        lastSyncAt: status?.lastSyncAt ?? null,
-        detail: status?.detail ?? null,
+        status: cred?.status ?? null,
+        lastSyncAt: cred?.lastTestedAt ?? null,
+        detail: cred?.detail ?? null,
       },
     };
   }

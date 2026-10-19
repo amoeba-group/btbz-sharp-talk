@@ -178,7 +178,8 @@
     "state": {
       "connected": "Đã kết nối",
       "error": "Lỗi",
-      "unknown": "Chưa kiểm tra"
+      "unknown": "Chưa kiểm tra",
+      "registered": "Đã đăng ký"
     },
     "fields": {
       "mall_id": "Mall ID",
@@ -197,7 +198,9 @@
       "secret_key": "Secret key",
       "subdomain": "Subdomain tài khoản",
       "email": "Email tài khoản",
-      "webhook_secret": "Webhook secret (trạng thái L2)"
+      "webhook_secret": "Webhook secret (trạng thái L2)",
+      "platform_name": "Tên nền tảng",
+      "description": "Mô tả"
     },
     "ph": {
       "mall_id": "gian-hang-cua-ban",
@@ -208,7 +211,9 @@
       "shop_domain": "cua-hang-cua-ban.myharavan.com",
       "subdomain": "cong-ty-cua-ban (từ cong-ty-cua-ban.gorgias.com)",
       "email": "agent@example.com",
-      "app_key": "yotpo app key"
+      "app_key": "yotpo app key",
+      "platform_name": "Go2Joy",
+      "description": "VD: Trang quản trị đối tác khách sạn (tự phát triển)"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -244,7 +249,15 @@
     "syncing": "Đang đồng bộ…",
     "syncProducts": "Nhập sản phẩm",
     "syncOrders": "Đồng bộ đơn hàng",
-    "syncHint": "Nhập danh mục/đơn hàng vào SharpTalk. Sau khi nhập sản phẩm, đăng ký làm tri thức trong menu Tri thức để trả lời sản phẩm trên widget."
+    "syncHint": "Nhập danh mục/đơn hàng vào SharpTalk. Sau khi nhập sản phẩm, đăng ký làm tri thức trong menu Tri thức để trả lời sản phẩm trên widget.",
+    "shopify": {
+      "title": "Shopify",
+      "subtitle": "Kết nối cửa hàng Shopify bằng access token của Admin API."
+    },
+    "self": {
+      "title": "Nền tảng riêng",
+      "subtitle": "Nền tảng do bạn tự phát triển và vận hành. Chỉ cần đăng ký tên và mô tả, không có gì để kiểm tra."
+    }
   },
   "install": {
     "subtitle": "Thêm widget trò chuyện vào cửa hàng của bạn. Hãy chọn nền tảng.",
@@ -290,7 +303,9 @@
       "productsSynced": "Đã đồng bộ {{synced}} sản phẩm, {{archived}} đã lưu trữ — hãy chạy chuyển đổi ở trang Kho tri thức",
       "syncProductsFailed": "Nhập sản phẩm từ Cafe24 thất bại",
       "errorInvalidScope": "Cafe24 từ chối các quyền được yêu cầu (invalid_scope) — hãy thêm các quyền đó cho ứng dụng trong Cafe24 Developers rồi kết nối lại",
-      "errorAccessDenied": "Cafe24 đã từ chối cấp quyền (access_denied) — hãy thử lại bằng tài khoản vận hành chính của gian hàng"
+      "errorAccessDenied": "Cafe24 đã từ chối cấp quyền (access_denied) — hãy thử lại bằng tài khoản vận hành chính của gian hàng",
+      "modalTitle": "Kết nối Cafe24",
+      "manualEntry": "Đã có token? Nhập thủ công"
     }
   },
   "marketingTitle": "Tích hợp marketing",
@@ -729,7 +744,7 @@
     },
     "platforms": {
       "title": "Tích hợp nền tảng",
-      "subtitle": "Nơi cửa hàng của bạn vận hành"
+      "subtitle": "Nơi cửa hàng của bạn vận hành. Chỉ các nền tảng đã kết nối mới hiển thị bên dưới."
     },
     "marketing": {
       "title": "Marketing & Helpdesk",
@@ -754,7 +769,8 @@
     "configured": "Khóa riêng",
     "usingAppSecret": "Khóa chung",
     "replaceWarning": "Lưu sẽ thay khóa ngay lập tức. Hãy cập nhật hệ thống gửi trong cùng lần thay đổi, nếu không webhook sẽ bắt đầu lỗi.",
-    "widgetPointer": "Với widget, xem Cài đặt widget → Nhúng & SDK."
+    "widgetPointer": "Với widget, xem Cài đặt widget → Nhúng & SDK.",
+    "webhookTitle": "Webhook giao hàng đơn hàng"
   },
   "integrationGuide": "Hướng dẫn kết nối",
   "knowledgeOptions": {
@@ -933,5 +949,17 @@
     "saveError": "Không lưu được giới hạn hiển thị",
     "keyIssued": "Đã phát hành liên kết mời",
     "keyError": "Không phát hành được liên kết mời"
+  },
+  "platforms": {
+    "connectedTitle": "Nền tảng đã kết nối",
+    "emptyTitle": "Chưa có nền tảng nào được kết nối.",
+    "emptyHint": "Chọn nền tảng bạn đang dùng ở mục \"Thêm nền tảng\" bên dưới. Nếu tự phát triển, hãy đăng ký là \"Nền tảng riêng\".",
+    "addTitle": "Thêm nền tảng",
+    "addHint": "Chọn một nền tảng được hỗ trợ để mở cài đặt kết nối. Nền tảng đã kết nối được đánh dấu ✓.",
+    "alreadyAdded": "Đã kết nối",
+    "lastChecked": "Kiểm tra lần cuối",
+    "registeredAt": "Đã đăng ký",
+    "selfNoCommerce": "Tính năng đơn hàng đang tắt nên chỉ cần cài widget là xong. Xem Cài đặt widget → Nhúng & SDK.",
+    "openWidgetSettings": "Mở cài đặt widget"
   }
 }
