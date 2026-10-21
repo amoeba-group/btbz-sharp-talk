@@ -33,6 +33,7 @@ import { AgentConsoleController } from './agent-console.controller';
 import { ModerationModule } from '../moderation/moderation.module';
 import { CustomerModule } from '../customer/customer.module';
 import { AuditModule } from '../audit/audit.module';
+import { CompanyModule } from '../company/company.module';
 import { SessionModule } from '../session/session.module';
 import { AnswerReuseModule } from '../answer-reuse/answer-reuse.module';
 import { JobLabel } from '../user/entity/job-label.entity';
@@ -87,6 +88,8 @@ import { AttachmentModule } from '../attachment/attachment.module';
     AnswerReuseModule,
     // Issue P1: accept/end hooks drive the conversation's ticket.
     IssueModule,
+    // B2B company + its other conversations on the detail (PLN-261022 stage 2).
+    CompanyModule,
   ],
   controllers: [AgentConsoleController],
   providers: [

@@ -35,5 +35,8 @@
     "ai": "IA",
     "agent": "Agente",
     "system": "Sistema"
-  }
+  },
+  "segment": "Segmento",
+  "segmentB2b": "Empresa (B2B)",
+  "segmentB2c": "Consumidor (B2C)"
 }

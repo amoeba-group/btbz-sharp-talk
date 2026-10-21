@@ -431,5 +431,16 @@
     "savedAccurate": "평가를 저장했습니다.",
     "savedGap": "평가를 저장했습니다. 정확하지 않은 AI 답변은 지식 › 지식 갭 제안에 올라갑니다.",
     "saveError": "평가를 저장하지 못했습니다."
+  },
+  "company": {
+    "badge": "기업",
+    "earlier": "이 기업(호텔)의 이전 대화 {{count}}건",
+    "earlierTitle": "이 기업(호텔)의 이전 대화",
+    "status": {
+      "ai_active": "AI 응대",
+      "waiting": "대기",
+      "agent": "상담 중",
+      "ended": "종료"
+    }
   }
 }

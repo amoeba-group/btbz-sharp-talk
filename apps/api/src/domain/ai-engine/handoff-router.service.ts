@@ -40,6 +40,8 @@ export interface RoutingContext {
   identityLevel?: string | null;
   /** `customers.tier` — guest | subscriber | regular; null when the session has no customer. */
   customerTier?: string | null;
+  /** `customers.customer_type` — b2c | b2b_contact (PLN-261022); null when the session has no customer. */
+  customerType?: string | null;
   /** Every signed attribute (hotel_id, hotel_name, province, role, region). */
   identityAttributes?: Record<string, string> | null;
   /** `sessions.landing_path`. */
@@ -58,6 +60,8 @@ function conditionValue(ctx: RoutingContext, field: RoutingConditionField): stri
       return ctx.identityLevel ?? null;
     case 'customer_tier':
       return ctx.customerTier ?? null;
+    case 'customer_type':
+      return ctx.customerType ?? null;
     case 'landing_path':
       return ctx.landingPath ?? null;
     case 'hotel_id':
@@ -196,11 +200,13 @@ export class HandoffRouterService {
     return null;
   }
 
-  /** Does any routing rule of this tenant condition on the customer tier? (Saves the customer read otherwise.) */
+  /** Does any routing rule of this tenant condition on the customer row (tier / type)? (Saves the read otherwise.) */
   async needsCustomerTier(tenantId: number | null): Promise<boolean> {
     const config = await this.aiConfig.getHandoffConfig(tenantId);
     return (config?.routingRules ?? []).some((r) =>
-      (r.conditions ?? []).some((c) => c?.field === 'customer_tier' && (c.values ?? []).length > 0),
+      (r.conditions ?? []).some(
+        (c) => (c?.field === 'customer_tier' || c?.field === 'customer_type') && (c.values ?? []).length > 0,
+      ),
     );
   }
 

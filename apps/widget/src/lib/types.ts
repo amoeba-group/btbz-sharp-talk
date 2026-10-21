@@ -18,6 +18,8 @@ import type {
   ChatMessageResponse,
   ChatTurnResponse,
   ConversationResponse,
+  ThreadConversationResponse,
+  ThreadResponse,
   NotificationPrefResponse,
   NotificationResponse,
   OrderDetailResponse,
@@ -79,6 +81,8 @@ export interface ChatMessage extends Omit<ChatMessageResponse, 'senderName'> {
 export type ChatAttachment = ChatAttachmentResponse;
 
 export type Conversation = ConversationResponse;
+export type Thread = ThreadResponse;
+export type ThreadConversation = ThreadConversationResponse;
 export type ChatReply = ChatTurnResponse;
 export type ScenarioFollowUp = ScenarioFollowUpResponse;
 export type ScenarioReply = ScenarioTurnResponse;

@@ -44,7 +44,16 @@ describe('SessionMapper.toResponse', () => {
       widgetCopy: { displayName: 'Shop', firstVisit: {}, loginGreeting: {} },
       aiProcessingRegion: 'US',
       issueFeed: false,
+      threadAvailable: false,
     });
+  });
+
+  it('offers earlier conversations only to a verified customer of a continuity tenant (PLN-261022)', () => {
+    const on = { ...notice, threadContinuity: true };
+    expect(SessionMapper.toResponse(session({ customerId: 4, identityLevel: 'verified' }), on).threadAvailable).toBe(true);
+    expect(SessionMapper.toResponse(session({ customerId: 4, identityLevel: 'guest' }), on).threadAvailable).toBe(false);
+    expect(SessionMapper.toResponse(session({ identityLevel: 'verified' }), on).threadAvailable).toBe(false);
+    expect(SessionMapper.toResponse(session({ customerId: 4, identityLevel: 'verified' }), notice).threadAvailable).toBe(false);
   });
 
   it('defaults customerName to null (guest, or profile not resolved yet)', () => {

@@ -136,6 +136,13 @@ export const ja: Translation = {
       restock: 'この商品が再入荷したら知らせてください。',
     },
     endedTitle: 'チャットが終了しました',
+    // Earlier conversations of the signed-in account (PLN-261022 stage 2).
+    threadLoadPrevious: '以前の会話を表示',
+    threadLoading: '読み込み中…',
+    threadDivider: '以前の会話 · {{date}}',
+    threadColleagues: '同じ会社の同僚による以前のお問い合わせ {{count}} 件は担当者が確認できます。',
+    threadLoadError: '以前の会話を読み込めませんでした',
+    threadNone: '以前の会話はありません',
     endedThanks: 'ご利用ありがとうございました！',
     csatLevel: {
       1: 'とても不満',

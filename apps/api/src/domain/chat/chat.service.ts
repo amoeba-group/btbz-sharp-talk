@@ -31,6 +31,9 @@ import { OrderService } from '../order/order.service';
 import { SessionService, sessionCacheKey } from '../session/session.service';
 import { CustomerService } from '../customer/customer.service';
 import { HandoffRouterService } from '../ai-engine/handoff-router.service';
+import type { HandoffRoute } from '../ai-engine/handoff-router.service';
+import { ROUTING_MODE } from '../ai-engine/entity/tenant-ai-config.entity';
+import { ThreadService } from './thread.service';
 import type { RoutingContext } from '../ai-engine/handoff-router.service';
 import { EventBusService, EVENTS, RedisService } from '../../infrastructure/infrastructure.module';
 import { AttachmentService } from '../attachment/attachment.service';
@@ -247,6 +250,8 @@ export class ChatService {
     private readonly statRepo?: Repository<AgentDailyStat>,
     /** Files uploaded before the send call are claimed here (PLN-260814). */
     private readonly attachments?: AttachmentService,
+    /** Account threads (PLN-261022 stage 2): previous conversation link, sticky agent, AI excerpt. */
+    private readonly threads?: ThreadService,
   ) {}
 
   /**
@@ -267,7 +272,7 @@ export class ChatService {
     }
   }
 
-  async getOrCreateConversation(sessionId: number): Promise<Conversation> {
+  async getOrCreateConversation(sessionId: number, session?: Session): Promise<Conversation> {
     // Reuse waiting/agent conversations too — a customer replying during or
     // after a handoff must stay in the same thread (FR-S4), not fork a new one.
     const open = await this.convRepo.findOne({
@@ -282,15 +287,47 @@ export class ChatService {
       order: { id: 'DESC' },
     });
     if (open) return open;
+    // The account the new thread belongs to (PLN-261022 stage 2) and, when the
+    // account already has conversations, the newest one — the sticky agent and
+    // the AI's previous-conversation excerpt start from it.
+    const account = session ? ThreadService.accountOf(session) : null;
+    const tenantId = session?.tenantId != null ? Number(session.tenantId) : null;
+    const prev = account && tenantId != null && this.threads ? await this.threads.previousOf(tenantId, account) : null;
     return this.convRepo.save(
       this.convRepo.create({
         sessionId,
+        ...(tenantId != null ? { tenantId } : {}),
         channel: 'widget',
         status: CONVERSATION_STATUS.AI_ACTIVE,
         escalated: 0,
         agentId: null,
+        customerId: account?.customerId ?? null,
+        companyId: account?.companyId ?? null,
+        prevConversationId: prev ? Number(prev.id) : null,
       }),
     );
+  }
+
+  /**
+   * Sticky handoff (PLN-261022 D13): a conversation that continues a recent
+   * one goes to that conversation's agent when routing would page them anyway
+   * (they are among the rule's targets, or the route broadcasts to everyone).
+   * Off-hours mailbox routes are left alone.
+   */
+  private async preferPreviousAgent(tenantId: number, conversationId: number, route: HandoffRoute): Promise<HandoffRoute> {
+    if (!this.threads || route.mode !== 'agents') return route;
+    const conversation = await this.convRepo.findOne({ where: { id: conversationId } });
+    if (!conversation) return route;
+    const agentId = await this.threads.stickyAgent(tenantId, conversation);
+    if (agentId == null) return route;
+    if (route.targetUserIds.length && !route.targetUserIds.map(Number).includes(agentId)) return route;
+    this.logger.log(`handoff sticky to agent ${agentId} (conversation ${conversationId} continues ${conversation.prevConversationId})`);
+    return {
+      ...route,
+      targetUserIds: [agentId],
+      assignMode: ROUTING_MODE.LEAST_LOADED,
+      ruleName: route.ruleName ? `${route.ruleName} (sticky)` : 'sticky',
+    };
   }
 
   /**
@@ -540,7 +577,7 @@ export class ChatService {
     }
 
     const tenantId = session.tenantId ?? (await this.resolveTenantId());
-    const conversation = await this.getOrCreateConversation(session.id);
+    const conversation = await this.getOrCreateConversation(session.id, session);
 
     const userTurn = await this.persist(tenantId, conversation.id, SENDER_TYPE.USER, text, session.language);
     // Files were uploaded before this call and are claimed here, inside the
@@ -902,6 +939,10 @@ export class ChatService {
           effectiveAgentId,
           undefined,
           history,
+          // The account's previous conversation, for continuity (PLN-261022 D14).
+          // Kept out of retrievalQuery on purpose: an old topic must not steer
+          // the search for the new question (PR #597 lesson).
+          conversation.prevConversationId != null ? await this.threads?.previousExcerpt(tenantId, conversation) : undefined,
         );
 
     // Mandatory moderation gate (FR-069).
@@ -1238,9 +1279,11 @@ export class ChatService {
       try {
         const customer = await this.customerService.findById(tenantId, Number(session.customerId));
         ctx.customerTier = customer.tier ?? null;
+        ctx.customerType = customer.customerType ?? null;
       } catch {
         // A missing customer row is "no tier", not a failed handoff.
         ctx.customerTier = null;
+        ctx.customerType = null;
       }
     }
     return ctx;
@@ -1257,10 +1300,14 @@ export class ChatService {
     // Routing decides both who gets paged and what the customer is told:
     // outside business hours the message goes to a mailbox and the shopper is
     // told to expect an email reply instead of a live agent (PLN-AiSetting W3).
-    const route = await this.handoffRouter.route(
+    const route = await this.preferPreviousAgent(
       tenantId,
-      session.language,
-      await this.routingContext(tenantId, session, preview, stamp?.issueLabel ?? null),
+      conversationId,
+      await this.handoffRouter.route(
+        tenantId,
+        session.language,
+        await this.routingContext(tenantId, session, preview, stamp?.issueLabel ?? null),
+      ),
     );
     // Off hours the answer travels by email, so we need somewhere to send it.
     // Without an address on file the widget asks for one (PLN-260806) and the
@@ -1358,10 +1405,14 @@ export class ChatService {
     // Same routing as the automatic handoff (PLN-AiSetting W3). Off hours the
     // widget's local "connecting you" line would be a lie, so persist the
     // off-hours notice — the conversation poll shows it to the customer.
-    const route = await this.handoffRouter.route(
+    const route = await this.preferPreviousAgent(
       tenantId,
-      session.language,
-      await this.routingContext(tenantId, session, lastUser?.body ?? null, null),
+      conversationId,
+      await this.handoffRouter.route(
+        tenantId,
+        session.language,
+        await this.routingContext(tenantId, session, lastUser?.body ?? null, null),
+      ),
     );
     if (route.mode === 'email' && route.notice) {
       await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, route.notice, session.language, {

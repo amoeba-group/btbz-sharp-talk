@@ -564,6 +564,8 @@ export class RagService {
     aiAgentId?: number | null,
     extraCandidates?: RagCandidateInput[],
     history?: AiMessage[],
+    /** The account's previous conversation as a short transcript (PLN-261022 D14). */
+    previousConversation?: string,
   ): Promise<RagAnswer> {
     // The caller decides the group preference; RAG only applies it. Keeping the
     // judgement out of here means the chat path can use its intent label and
@@ -642,6 +644,16 @@ export class RagService {
         'never invent order numbers, dates or tracking details that are not listed.'
       : 'Answer ONLY from the context.';
     const hasHistory = !!history?.length;
+    // Continuity, not evidence: the earlier chat explains "last time" and an
+    // ongoing issue; the answer's facts still come from CONTEXT (PLN-261022 D14).
+    const previousBlock = previousConversation?.trim()
+      ? `\nPREVIOUS_CONVERSATION_START\n${previousConversation.trim()}\nPREVIOUS_CONVERSATION_END`
+      : '';
+    const previousRule = previousBlock
+      ? 'PREVIOUS_CONVERSATION is this customer\'s earlier chat with us. Use it to understand references to it ' +
+        '(an issue they raised before, "as I said last time") and to avoid asking again for what they already told us. ' +
+        'Base facts and instructions on CONTEXT.\n'
+      : '';
 
     // The tenant's contact footer is appended by the system (R4); the model is
     // told not to write its own, which also frees the output budget.
@@ -654,6 +666,7 @@ export class RagService {
       maxTokens: envNumber('RAG_MAX_TOKENS', 2048),
       system:
         `${persona}${rulesBlock}${hasHistory ? CONVERSATION_RULES : ''}${footerOn ? FOOTER_RULE : ''}\n` +
+        previousRule +
         `${sourceRule} If the information is insufficient, apologize briefly and ` +
         `offer to connect a human agent. ${replyLanguageRule(language)}\n` +
         `The context items are numbered. After your reply, on its own final line, ` +
@@ -662,7 +675,8 @@ export class RagService {
         `none). That line is internal bookkeeping: never mention it, never number ` +
         `or refer to the context items in the visible reply.\n` +
         `CONTEXT_START\n${context || '(no relevant documents found)'}\nCONTEXT_END` +
-        orderBlock,
+        orderBlock +
+        previousBlock,
       messages: withCurrentTurn(history, query),
     });
 

@@ -15,5 +15,40 @@
   "reveal": "查看完整信息",
   "revealAudited": "已显示客户联系信息。本次查看已记入审计日志。",
   "maskedHint": "客户标识信息已脱敏显示。仅主账号和总监可查看完整信息。",
-  "maskedHintWithReveal": "客户标识信息已脱敏显示。查看后显示 5 分钟，并记入审计日志。"
+  "maskedHintWithReveal": "客户标识信息已脱敏显示。查看后显示 5 分钟，并记入审计日志。",
+  "tab_all": "全部",
+  "tab_b2b": "企业客户",
+  "tab_b2c": "预订客户",
+  "customerType": "类型",
+  "typeB2b": "企业",
+  "typeB2c": "个人",
+  "companyName": "企业（酒店）",
+  "companyRegion": "大区",
+  "companyProvince": "省 / 市",
+  "companyContacts": "联系人",
+  "companyConversations": "对话",
+  "companyLastActivity": "最近活动",
+  "companyOpen": "查看",
+  "companySearchPlaceholder": "按企业名称搜索",
+  "allRegions": "全部大区",
+  "companyHint": "主应用中已登录的用户（例如 Go2Joy 酒店后台员工）开始聊天时会登记为企业客户。联系人姓名与个人客户列表一样做遮蔽显示。",
+  "companyEmpty": "暂无企业客户",
+  "companyDetail": "企业客户",
+  "companyBack": "返回",
+  "companyLoading": "加载中…",
+  "companyContactsTitle": "联系人 ({{count}})",
+  "companyConversationsTitle": "对话 ({{count}})",
+  "region": {
+    "north": "北部",
+    "north_center": "中北部",
+    "central": "中部",
+    "south_center": "中南部",
+    "south": "南部"
+  },
+  "status": {
+    "ai_active": "AI",
+    "waiting": "等待中",
+    "agent": "人工处理中",
+    "ended": "已结束"
+  }
 }

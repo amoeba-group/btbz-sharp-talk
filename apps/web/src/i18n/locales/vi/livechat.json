@@ -431,5 +431,16 @@
     "savedAccurate": "Đã lưu đánh giá.",
     "savedGap": "Đã lưu đánh giá. Câu trả lời AI chưa chính xác sẽ được đưa vào Tri thức › Đề xuất bổ sung.",
     "saveError": "Không lưu được đánh giá."
+  },
+  "company": {
+    "badge": "Doanh nghiệp",
+    "earlier": "{{count}} cuộc trò chuyện trước của doanh nghiệp này",
+    "earlierTitle": "Các cuộc trò chuyện trước của doanh nghiệp này",
+    "status": {
+      "ai_active": "AI",
+      "waiting": "Đang chờ",
+      "agent": "Đang tư vấn",
+      "ended": "Đã kết thúc"
+    }
   }
 }

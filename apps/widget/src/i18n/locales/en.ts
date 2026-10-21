@@ -132,6 +132,13 @@ export const en = {
       restock: 'Please notify me when this product is back in stock.',
     },
     endedTitle: 'This conversation has ended',
+    // Earlier conversations of the signed-in account (PLN-261022 stage 2).
+    threadLoadPrevious: 'Show earlier conversations',
+    threadLoading: 'Loading…',
+    threadDivider: 'Earlier conversation · {{date}}',
+    threadColleagues: '{{count}} earlier conversation(s) from colleagues at your company — our team can see them.',
+    threadLoadError: 'Couldn\'t load earlier conversations',
+    threadNone: 'No earlier conversations',
     endedThanks: 'Thanks for reaching out!',
     csatLevel: {
       1: 'Very unhappy',

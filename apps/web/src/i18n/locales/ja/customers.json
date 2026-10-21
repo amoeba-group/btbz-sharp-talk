@@ -15,5 +15,40 @@
   "reveal": "全体を表示",
   "revealAudited": "顧客情報を表示しました。この閲覧は監査ログに記録されます。",
   "maskedHint": "顧客の識別情報はマスクされています。全体の表示はマスター・ディレクターのみ可能です。",
-  "maskedHintWithReveal": "顧客の識別情報はマスクされています。表示すると5分間だけ表示され、監査ログに記録されます。"
+  "maskedHintWithReveal": "顧客の識別情報はマスクされています。表示すると5分間だけ表示され、監査ログに記録されます。",
+  "tab_all": "すべて",
+  "tab_b2b": "法人顧客",
+  "tab_b2c": "予約顧客",
+  "customerType": "種別",
+  "typeB2b": "法人",
+  "typeB2c": "一般",
+  "companyName": "法人（ホテル）",
+  "companyRegion": "地域区分",
+  "companyProvince": "省・市",
+  "companyContacts": "連絡先",
+  "companyConversations": "会話",
+  "companyLastActivity": "最終アクティビティ",
+  "companyOpen": "表示",
+  "companySearchPlaceholder": "法人名で検索",
+  "allRegions": "すべての地域",
+  "companyHint": "ホストアプリにログインしたユーザー（例: Go2Joy ホテル管理画面のスタッフ）がチャットを開始すると法人顧客として登録されます。連絡先の氏名は一般顧客リストと同様にマスクされます。",
+  "companyEmpty": "法人顧客はまだありません",
+  "companyDetail": "法人顧客",
+  "companyBack": "戻る",
+  "companyLoading": "読み込み中…",
+  "companyContactsTitle": "連絡先 ({{count}})",
+  "companyConversationsTitle": "会話 ({{count}})",
+  "region": {
+    "north": "北部",
+    "north_center": "北中部",
+    "central": "中部",
+    "south_center": "南中部",
+    "south": "南部"
+  },
+  "status": {
+    "ai_active": "AI対応",
+    "waiting": "待機中",
+    "agent": "対応中",
+    "ended": "終了"
+  }
 }

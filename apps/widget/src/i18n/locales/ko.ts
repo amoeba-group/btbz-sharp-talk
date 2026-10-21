@@ -133,6 +133,13 @@ export const ko: Translation = {
       restock: '이 제품이 재입고되면 알려 주세요.',
     },
     endedTitle: '상담이 종료되었습니다',
+    // Earlier conversations of the signed-in account (PLN-261022 stage 2).
+    threadLoadPrevious: '이전 대화 보기',
+    threadLoading: '불러오는 중…',
+    threadDivider: '이전 대화 · {{date}}',
+    threadColleagues: '같은 회사 동료의 이전 문의 {{count}}건은 상담원이 함께 확인합니다.',
+    threadLoadError: '이전 대화를 불러오지 못했습니다',
+    threadNone: '이전 대화가 없습니다',
     endedThanks: '이용해 주셔서 감사합니다!',
     csatLevel: {
       1: '매우 불만족',

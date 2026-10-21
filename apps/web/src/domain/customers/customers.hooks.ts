@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { customersService } from './customers.service';
-import type { CustomerListParams } from './customers.service';
+import type { CompanyListParams, CustomerListParams } from './customers.service';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
 
@@ -44,3 +44,23 @@ export function useUpdateTier() {
     },
   });
 }
+
+/** B2B companies (PLN-261022 stage 2). */
+export const useCompanies = (params: CompanyListParams, enabled = true) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['companies', tenantKey, params],
+    queryFn: () => customersService.companies(params),
+    placeholderData: keepPreviousData,
+    enabled,
+  });
+};
+
+export const useCompany = (id: string | null) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['company', tenantKey, id],
+    queryFn: () => customersService.company(id!),
+    enabled: !!id,
+  });
+};

@@ -40,6 +40,7 @@ export function HistoryPage() {
   const [to, setTo] = useState('');
   const [agentId, setAgentId] = useState('');
   const [includePreview, setIncludePreview] = useState(false);
+  const [segment, setSegment] = useState<'' | 'b2b' | 'b2c'>('');
   // Draft vs applied: typing in the search box must not refire a query (and an
   // audit-free but still paginated one) on every keystroke.
   const [searchDraft, setSearchDraft] = useState('');
@@ -61,6 +62,7 @@ export function HistoryPage() {
     agentId: agentId || undefined,
     q: search || undefined,
     includePreview,
+    segment: segment || undefined,
   });
 
   const reset = <T,>(setter: (v: T) => void) => (v: T) => {
@@ -134,6 +136,13 @@ export function HistoryPage() {
               <option value="all">{tc('all')}</option>
               <option value="yes">{tc('yes')}</option>
               <option value="no">{tc('no')}</option>
+            </Select>
+          </FormRow>
+          <FormRow label={t('segment')}>
+            <Select value={segment} onChange={(e) => reset(setSegment)(e.target.value as '' | 'b2b' | 'b2c')}>
+              <option value="">{tc('all')}</option>
+              <option value="b2b">{t('segmentB2b')}</option>
+              <option value="b2c">{t('segmentB2c')}</option>
             </Select>
           </FormRow>
           <FormRow label={t('searchMessages')}>

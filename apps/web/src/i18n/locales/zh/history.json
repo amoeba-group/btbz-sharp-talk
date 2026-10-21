@@ -35,5 +35,8 @@
     "ai": "AI",
     "agent": "客服",
     "system": "系统"
-  }
+  },
+  "segment": "客户类型",
+  "segmentB2b": "企业 (B2B)",
+  "segmentB2c": "个人 (B2C)"
 }

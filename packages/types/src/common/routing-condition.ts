@@ -19,6 +19,8 @@ export const ROUTING_CONDITION_FIELDS = [
   { field: 'language', kind: 'enum', op: 'in', source: 'session' },
   { field: 'identity_level', kind: 'enum', op: 'in', source: 'session' },
   { field: 'customer_tier', kind: 'enum', op: 'in', source: 'customer' },
+  // B2B contact vs consumer (PLN-261022 stage 2).
+  { field: 'customer_type', kind: 'enum', op: 'in', source: 'customer' },
   { field: 'hotel_id', kind: 'text', op: 'in', source: 'identity' },
   { field: 'hotel_name', kind: 'text', op: 'contains', source: 'identity' },
   { field: 'province', kind: 'text', op: 'contains', source: 'identity' },
@@ -40,6 +42,7 @@ export interface RoutingCondition {
 export const ROUTING_CONDITION_ENUM_VALUES: Readonly<Partial<Record<RoutingConditionField, readonly string[]>>> = {
   identity_level: ['guest', 'verified'],
   customer_tier: ['guest', 'subscriber', 'regular'],
+  customer_type: ['b2c', 'b2b_contact'],
 };
 
 export function routingConditionDef(field: string): RoutingConditionDef | undefined {

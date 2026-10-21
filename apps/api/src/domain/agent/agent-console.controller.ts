@@ -73,6 +73,7 @@ import {
 } from './agent.mapper';
 import { ListAlertsQuery, RateAnswerRequest, RatingSummaryQuery } from './dto/request/agent.request';
 import { AnswerRatingService } from './answer-rating.service';
+import { CompanyService } from '../company/company.service';
 
 function tenantOf(user: Principal): number {
   return user.actorType === 'user' ? user.tenantId : 0;
@@ -93,6 +94,7 @@ export class AgentConsoleController {
     private readonly commentService: ChatCommentService,
     private readonly groupService: ChatGroupService,
     private readonly ratingService: AnswerRatingService,
+    private readonly companyService: CompanyService,
   ) {}
 
   // ---- answer accuracy ratings (PLN-261015 D7) ----
@@ -155,6 +157,21 @@ export class AgentConsoleController {
       members: body.session_ids.length,
     });
     return toGroupResponse(group, body.session_ids.length);
+  }
+
+  /**
+   * The B2B company's other conversations (PLN-261022 stage 2) — "earlier
+   * conversations at this hotel" in the live-chat header. Empty for a thread
+   * without a company. Tenant-scoped through the conversation lookup.
+   */
+  @Get('conversations/:id/company-conversations')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: "The same company's other conversations (B2B)" })
+  async companyConversations(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    const tenantId = tenantOf(user);
+    const conversation = await this.agentService.findConversation(id, tenantId);
+    if (conversation.companyId == null) return { total: 0, items: [] };
+    return this.companyService.conversationsOf(tenantId, Number(conversation.companyId), id, 30);
   }
 
   @Get('conversations/:id/related-sessions')
@@ -575,6 +592,15 @@ export class AgentConsoleController {
       sessionId: String(conversation.sessionId),
       ...sessionState,
       identity: toIdentityResponse(identityAttributes),
+      // B2B company of the thread (PLN-261022 stage 2) — header badge + "earlier
+      // conversations at this hotel". Null for consumers and guests.
+      company:
+        conversation.companyId != null
+          ? {
+              id: String(conversation.companyId),
+              otherConversations: (await this.companyService.conversationsOf(tenantId, Number(conversation.companyId), id, 0)).total,
+            }
+          : null,
       // Carried on the detail as well as the list row: a deep link from the
       // escalation alarm opens a conversation the filtered list may not hold,
       // and the composer needs the channel to know whether a reply is possible.

@@ -3,6 +3,7 @@ import type {
   ChatMessageResponse,
   ConversationResponse,
   ScenarioFollowUpResponse,
+  ThreadResponse,
 } from '@sharptalk/types';
 import { Conversation } from './entity/conversation.entity';
 import { Message } from './entity/message.entity';
@@ -89,6 +90,31 @@ export class ChatMapper {
           attachments?.get(String(m.id)),
         ),
       ),
+    };
+  }
+
+  /** Earlier conversations of the account (PLN-261022 stage 2), newest first. */
+  static toThreadResponse(
+    page: {
+      conversations: Array<{ conversation: Conversation; messages: Message[]; own: boolean }>;
+      hasMore: boolean;
+      colleagueCount: number;
+    },
+    senderNames?: Map<string, string>,
+  ): ThreadResponse {
+    return {
+      conversations: page.conversations.map(({ conversation, messages, own }) => ({
+        conversationId: String(conversation.id),
+        status: conversation.status,
+        createdAt: conversation.createdAt.toISOString(),
+        endedAt: conversation.endedAt ? conversation.endedAt.toISOString() : null,
+        own,
+        messages: messages.map((m) =>
+          ChatMapper.toMessageResponse(m, m.senderId != null ? senderNames?.get(String(m.senderId)) ?? null : null),
+        ),
+      })),
+      hasMore: page.hasMore,
+      colleagueCount: page.colleagueCount,
     };
   }
 }

@@ -77,6 +77,7 @@ export class AnalyticsController {
       agentId: query.agent_id ? Number(query.agent_id) : undefined,
       q: query.q,
       includePreview: query.include_preview === 'true' || query.include_preview === '1',
+      segment: query.segment === 'b2b' || query.segment === 'b2c' ? query.segment : undefined,
       restrictToAgentId: visibilityScope(user),
       page,
       size,

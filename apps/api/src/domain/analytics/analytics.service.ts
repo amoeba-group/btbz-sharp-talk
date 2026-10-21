@@ -47,6 +47,8 @@ export interface ConversationSearchParams {
    * on this screen (PLN D8).
    */
   includePreview?: boolean;
+  /** b2b = conversations of a B2B company, b2c = everything else (PLN-261022 stage 2). */
+  segment?: 'b2b' | 'b2c';
   /**
    * Visibility floor from RBAC (PLN D1): when set, only conversations handled
    * by this agent are visible, whatever the other filters say.
@@ -319,6 +321,8 @@ export class AnalyticsService {
         "NOT EXISTS (SELECT 1 FROM sessions ps WHERE ps.id = c.session_id AND ps.channel = 'preview')",
       );
     }
+    if (params.segment === 'b2b') qb.andWhere('c.company_id IS NOT NULL');
+    if (params.segment === 'b2c') qb.andWhere('c.company_id IS NULL');
     if (params.q) {
       qb.andWhere('EXISTS (SELECT 1 FROM messages qm WHERE qm.conversation_id = c.id AND qm.body LIKE :q)', {
         q: `%${params.q}%`,

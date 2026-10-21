@@ -436,3 +436,19 @@ describe('HandoffRouterService — region match (PLN-261022 stage 1)', () => {
   });
 });
 
+
+describe('routing condition customer_type (PLN-261022 stage 2)', () => {
+  const rules = [
+    { name: 'b2b', assigneeUserIds: [1], conditions: [{ field: 'customer_type' as const, values: ['b2b_contact'] }] },
+    { name: 'rest', assigneeUserIds: [2] },
+  ];
+  it('matches a business contact, skips a consumer or an unknown customer', () => {
+    expect(matchRoutingRules(rules, { customerType: 'b2b_contact' })[0].rule.name).toBe('b2b');
+    expect(matchRoutingRules(rules, { customerType: 'b2c' })[0].rule.name).toBe('rest');
+    expect(matchRoutingRules(rules, {})[0].rule.name).toBe('rest');
+  });
+  it('a customer_type condition makes routing read the customer row', async () => {
+    const svc = new HandoffRouterService({ getHandoffConfig: async () => ({ routingRules: rules }) } as unknown as AiConfigService);
+    await expect(svc.needsCustomerTier(4)).resolves.toBe(true);
+  });
+});

@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 
 /** Request DTOs — snake_case (amoeba_code_convention). */
 export class ListCustomersQuery {
@@ -13,6 +13,11 @@ export class ListCustomersQuery {
   @IsOptional()
   @IsString()
   email?: string;
+
+  /** b2c | b2b_contact (PLN-261022 stage 2); omitted = both. */
+  @IsOptional()
+  @IsIn(['b2c', 'b2b_contact'])
+  customer_type?: string;
 }
 
 /**
@@ -35,6 +40,11 @@ export class SearchCustomersRequest {
   @IsString()
   @MaxLength(320)
   email?: string;
+
+  /** b2c | b2b_contact (PLN-261022 stage 2); omitted = both. */
+  @IsOptional()
+  @IsIn(['b2c', 'b2b_contact'])
+  customer_type?: string;
 }
 
 export class UpdateCustomerRequest {

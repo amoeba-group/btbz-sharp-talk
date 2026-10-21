@@ -133,6 +133,13 @@ export const es: Translation = {
       restock: 'Avísenme cuando este producto vuelva a estar disponible.',
     },
     endedTitle: 'La conversación ha terminado',
+    // Earlier conversations of the signed-in account (PLN-261022 stage 2).
+    threadLoadPrevious: 'Ver conversaciones anteriores',
+    threadLoading: 'Cargando…',
+    threadDivider: 'Conversación anterior · {{date}}',
+    threadColleagues: '{{count}} conversación(es) anteriores de compañeros de tu empresa — nuestro equipo puede verlas.',
+    threadLoadError: 'No se pudieron cargar las conversaciones anteriores',
+    threadNone: 'No hay conversaciones anteriores',
     endedThanks: '¡Gracias por escribirnos!',
     csatLevel: {
       1: 'Muy insatisfecho',

@@ -96,6 +96,8 @@ interface WidgetState {
   tabsResolved: boolean;
   /** Tenant runs an issue workflow → the single list tab offers an Inquiries chip (PLN-260923 D-2). */
   issueFeed: boolean;
+  /** The signed-in account's earlier conversations can be loaded (PLN-261022 stage 2). */
+  threadAvailable: boolean;
   /**
    * Tenant has orders to look up (PLN-261001). False = a hotel partner desk or
    * B2B help desk: reply chips come from the tenant's scenario buttons. Seeded
@@ -118,6 +120,7 @@ interface WidgetState {
   setLoginMode: (m: WidgetLoginMode) => void;
   setWidgetCopy: (c: WidgetCopy | null) => void;
   setIssueFeed: (v: boolean) => void;
+  setThreadAvailable: (v: boolean) => void;
   setCommerceEnabled: (v: boolean) => void;
   setCustomerName: (n: string | null) => void;
   /** Tenant theme, for the parts that are markup rather than CSS (logo, launcher). */
@@ -180,6 +183,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   tabPosition: 'top',
   tabsResolved: false,
   issueFeed: false,
+  threadAvailable: false,
   commerceEnabled: true,
   chatUnread: 0,
   setSessionToken: (t) => {
@@ -195,6 +199,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setLoginMode: (m) => set({ loginMode: m }),
   setWidgetCopy: (c) => set({ widgetCopy: c }),
   setIssueFeed: (v) => set({ issueFeed: v }),
+  setThreadAvailable: (v) => set({ threadAvailable: v }),
   setCommerceEnabled: (v) => set({ commerceEnabled: v }),
   setCustomerName: (n) => set({ customerName: n }),
   widgetTheme: null,

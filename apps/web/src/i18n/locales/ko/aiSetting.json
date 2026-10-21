@@ -201,7 +201,8 @@
           "hotel_name": "호텔명",
           "province": "지역(성)",
           "role": "역할",
-          "landing_path": "방문 경로"
+          "landing_path": "방문 경로",
+          "customer_type": "고객 유형"
         },
         "value": {
           "identity_level": {
@@ -212,6 +213,10 @@
             "guest": "게스트",
             "subscriber": "구독자",
             "regular": "단골"
+          },
+          "customer_type": {
+            "b2c": "일반 고객",
+            "b2b_contact": "기업 연락처"
           }
         }
       },

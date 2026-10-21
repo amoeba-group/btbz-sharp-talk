@@ -43,6 +43,8 @@ export interface AgentSession {
   channel?: string | null;
   /** Hotel · region · role signed by the host app (PLN-261015 D5); null when unsigned. */
   identity?: SessionIdentity | null;
+  /** B2B company of the thread (PLN-261022 stage 2); null for consumers/guests. */
+  companyId?: string | null;
   /** Team pin (PLN-260826) — pinned rows arrive first from the server. */
   pinned?: boolean;
   pinnedAt?: string | null;
@@ -140,6 +142,8 @@ export interface ConversationDetail {
   aiAgentId?: string | null;
   aiAgentName?: string | null;
   identity?: SessionIdentity | null;
+  /** B2B company + how many of its other conversations exist (PLN-261022 stage 2). */
+  company?: { id: string; otherConversations: number } | null;
   messages: ChatMessage[];
   /** Older messages exist before the first one returned (PLN-260807). */
   hasMore?: boolean;
@@ -300,6 +304,9 @@ export const liveChatService = {
   // Read-only: returns the stored briefing (or briefing:null) — generation is
   // an explicit POST since REQ-260824 R3.
   briefing: (id: string) => apiGet<StoredBriefing>(`/agent/conversations/${id}/briefing`),
+  /** The same company's other conversations (PLN-261022 stage 2). */
+  companyConversations: (id: string) =>
+    apiGet<{ total: number; items: CompanyConversationRow[] }>(`/agent/conversations/${id}/company-conversations`),
   generateBriefing: (id: string) =>
     apiPost<StoredBriefing>(`/agent/conversations/${id}/briefing`),
   translateBriefing: (briefingId: string, lang: string) =>
@@ -379,3 +386,14 @@ export const liveChatService = {
   createCustomer: (id: string, lead: CustomerLead) =>
     apiPost<CustomerContext>(`/agent/conversations/${id}/create-customer`, lead),
 };
+
+/** One of a B2B company's conversations (PLN-261022 stage 2); the contact name is masked. */
+export interface CompanyConversationRow {
+  id: string;
+  status: string;
+  customerId: string | null;
+  customerName: string | null;
+  agentId: string | null;
+  createdAt: string;
+  endedAt: string | null;
+}

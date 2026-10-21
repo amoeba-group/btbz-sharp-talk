@@ -81,6 +81,8 @@ export interface PrivacyNoticeInfo {
   aiProcessingRegion?: string;
   /** Tenant runs an issue workflow (native/bridge) — the widget shows an Inquiries chip. */
   issueFeed?: boolean;
+  /** Tenant switched on account conversation threads (PLN-261022 stage 2). */
+  threadContinuity?: boolean;
   csatMode: CsatMode;
   termsUrl: string | null;
   /** Languages the widget offers, lowercase codes in display order (PLN-261019-Widget-Language-Follow-Selection). */
@@ -656,6 +658,7 @@ export class SessionService {
       },
       // 'base' (the default) has no shopper-facing issue feed (PLN-260923 D-2).
       issueFeed: !!tenant?.workflowMode && tenant.workflowMode !== 'base',
+      threadContinuity: Number(tenant?.threadContinuity ?? 0) === 1,
       // Satisfaction card kind + the terms link for the bottom disclosure line (PLN-261019).
       csatMode: tenant?.csatMode === CSAT_MODE.SURVEY ? CSAT_MODE.SURVEY : CSAT_MODE.RATING,
       termsUrl: tenant?.termsUrl ?? null,

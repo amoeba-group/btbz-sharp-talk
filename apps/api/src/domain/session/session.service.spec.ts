@@ -144,6 +144,8 @@ describe('SessionService consent (PLN-Privacy-Control-Gap Stage 1-2)', () => {
         widgetCopy: expect.objectContaining({ firstVisit: {}, loginGreeting: {} }),
         // 'base' (the default) has no shopper-facing issue feed.
         issueFeed: false,
+        // Account threads are off unless the tenant switched them on (PLN-261022).
+        threadContinuity: false,
         // Notice copy now travels too (PLN-261001). A tenant that chose no
         // profile gets the commerce wording here because it sells — the
         // guarantee that nobody's notice changed when this shipped.

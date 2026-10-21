@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 export class ConversationSearchQuery {
   @IsOptional() @IsString() status?: string;
@@ -13,6 +13,8 @@ export class ConversationSearchQuery {
   @IsOptional() @IsString() q?: string;
   /** 'true'/'1' includes admin-preview sandbox threads (excluded by default). */
   @IsOptional() @IsString() include_preview?: string;
+  /** b2b = threads of a B2B company, b2c = the rest (PLN-261022 stage 2). */
+  @IsOptional() @IsIn(['b2b', 'b2c']) segment?: string;
   @IsOptional() @IsString() page?: string;
   @IsOptional() @IsString() size?: string;
 }

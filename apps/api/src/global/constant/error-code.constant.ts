@@ -279,6 +279,11 @@ export const ERROR_CODE = {
   KB_SOURCE_CREDENTIAL_INVALID: { code: 'E5096', message: 'The source credential is missing or was rejected' },
   KB_SOURCE_UPSTREAM_FAILED: { code: 'E5097', message: 'The source provider did not respond' },
 
+  // E5098-E5099 — B2B companies & account conversation threads (PLN-261022 stage 2).
+  COMPANY_NOT_FOUND: { code: 'E5098', message: 'No such company for this tenant' },
+  /** Earlier conversations are only for a signed-in user of a tenant that enabled continuity. */
+  THREAD_NOT_AVAILABLE: { code: 'E5099', message: 'Earlier conversations are not available for this session' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

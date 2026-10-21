@@ -43,6 +43,8 @@ export function toSessionResponse(
      * an agent sees which hotel is asking. camelCase keys, like every response.
      */
     identity: toIdentityResponse(identityAttributes),
+    /** B2B company of the thread (PLN-261022 stage 2); null for consumers/guests. */
+    companyId: c.companyId != null ? String(c.companyId) : null,
     status: c.status,
     /** Effective AI agent of the session (REQ-260825 R6) — NULL pin = default. */
     aiAgentId: aiAgent.id != null ? String(aiAgent.id) : null,

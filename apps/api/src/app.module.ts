@@ -49,6 +49,7 @@ import { AiEngineModule } from './domain/ai-engine/ai-engine.module';
 import { AiCoachModule } from './domain/ai-coach/ai-coach.module';
 import { AnalyticsModule } from './domain/analytics/analytics.module';
 import { CustomerModule } from './domain/customer/customer.module';
+import { CompanyModule } from './domain/company/company.module';
 import { JourneyModule } from './domain/journey/journey.module';
 import { PrivacyModule } from './domain/privacy/privacy.module';
 import { HealthModule } from './domain/health/health.module';
@@ -90,6 +91,7 @@ import { ShopifyProxyModule } from './domain/shopify-proxy/shopify-proxy.module'
     MenuAccessModule,
     UserModule,
     CustomerModule,
+    CompanyModule,
     OrderModule,
     ProductModule,
     ShopifyOAuthModule,

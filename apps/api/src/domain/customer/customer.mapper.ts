@@ -36,6 +36,7 @@ export class CustomerMapper {
       phone: reveal ? c.phone : maskPhone(c.phone),
       masked: !reveal,
       tier: c.tier,
+      customerType: c.customerType ?? 'b2c',
       shopifyTier: c.shopifyTier,
       orders: stats?.orders ?? 0,
       totalSpent: stats?.totalSpent ?? 0,

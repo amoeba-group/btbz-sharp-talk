@@ -125,6 +125,11 @@ export interface SessionResponse {
    * reads as "no feed".
    */
   issueFeed?: boolean;
+  /**
+   * The signed-in user can load the account's earlier conversations
+   * (`GET /chat/thread`, PLN-261022 stage 2). Optional: absent = no.
+   */
+  threadAvailable?: boolean;
 }
 
 // ---- chat ---------------------------------------------------------------
@@ -199,6 +204,26 @@ export interface ConversationResponse {
    */
   csatRating?: number | null;
   canRate?: boolean;
+}
+
+/** One earlier conversation of the signed-in account (PLN-261022 stage 2). */
+export interface ThreadConversationResponse {
+  conversationId: string;
+  status: string;
+  createdAt: string;
+  endedAt: string | null;
+  /** Written by this user (false = a colleague's, shown only with scope 'company'). */
+  own: boolean;
+  messages: ChatMessageResponse[];
+}
+
+/** `GET /chat/thread` — earlier conversations, newest first, a page at a time. */
+export interface ThreadResponse {
+  conversations: ThreadConversationResponse[];
+  /** More conversations exist before the oldest one returned. */
+  hasMore: boolean;
+  /** Colleagues' earlier conversations at the same company that are not shown. */
+  colleagueCount: number;
 }
 
 export interface ChatTurnResponse {

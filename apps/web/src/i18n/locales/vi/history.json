@@ -35,5 +35,8 @@
     "ai": "AI",
     "agent": "Nhân viên",
     "system": "Hệ thống"
-  }
+  },
+  "segment": "Phân khúc",
+  "segmentB2b": "Doanh nghiệp (B2B)",
+  "segmentB2c": "Cá nhân (B2C)"
 }

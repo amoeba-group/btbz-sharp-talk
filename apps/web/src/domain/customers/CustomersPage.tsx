@@ -14,6 +14,8 @@ import type { Customer } from './customers.service';
 import { useAuthStore } from '@/store/auth-store';
 import { makeCan } from '@/lib/rbac';
 import { toast } from '@/store/toast-store';
+import { cn } from '@/lib/cn';
+import { CompaniesPanel } from './CompaniesPanel';
 
 const PAGE_SIZE = 20;
 /**
@@ -47,6 +49,8 @@ function fmtDate(value?: string): string {
 export function CustomersPage() {
   const { t } = useTranslation('customers');
   const { t: tc } = useTranslation('common');
+  // All / business customers (companies) / booking customers (PLN-261022 stage 2).
+  const [tab, setTab] = useState<'all' | 'b2b' | 'b2c'>('all');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -99,6 +103,7 @@ export function CustomersPage() {
     page,
     pageSize: PAGE_SIZE,
     email: debouncedSearch || undefined,
+    customerType: tab === 'b2c' ? 'b2c' : undefined,
   });
   const updateTier = useUpdateTier();
 
@@ -128,6 +133,12 @@ export function CustomersPage() {
           </span>
         );
       },
+    },
+    {
+      key: 'type',
+      header: t('customerType'),
+      render: (c) =>
+        c.customerType === 'b2b_contact' ? <Badge tone="info">{t('typeB2b')}</Badge> : <Badge tone="gray">{t('typeB2c')}</Badge>,
     },
     {
       key: 'tier',
@@ -177,6 +188,31 @@ export function CustomersPage() {
     <div>
       <PageHeader title={t('title')} subtitle={t('subtitle')} />
 
+      <div className="mb-4 flex gap-2" role="tablist">
+        {(['all', 'b2b', 'b2c'] as const).map((key) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => {
+              setTab(key);
+              setPage(1);
+            }}
+            className={cn(
+              'rounded-md px-3 py-1.5 text-sm font-medium',
+              tab === key ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+            )}
+          >
+            {t(`tab_${key}`)}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'b2b' ? (
+        <CompaniesPanel />
+      ) : (
+      <>
       <div className="mb-4">
         <input
           type="search"
@@ -207,6 +243,8 @@ export function CustomersPage() {
         total={data?.total ?? 0}
         onPageChange={setPage}
       />
+      </>
+      )}
 
       <Modal
         open={!!editing}

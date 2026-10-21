@@ -35,5 +35,8 @@
     "ai": "AI",
     "agent": "担当者",
     "system": "システム"
-  }
+  },
+  "segment": "顧客区分",
+  "segmentB2b": "法人 (B2B)",
+  "segmentB2c": "一般 (B2C)"
 }

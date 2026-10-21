@@ -4,6 +4,8 @@ import { Tenant } from '../tenant/entity/tenant.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { Session } from '../session/entity/session.entity';
 import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
+import { Conversation } from '../chat/entity/conversation.entity';
+import { CompanyModule } from '../company/company.module';
 import { EmbedService } from './embed.service';
 import { EmbedController } from './embed.controller';
 import { SessionModule } from '../session/session.module';
@@ -14,7 +16,7 @@ import { SessionModule } from '../session/session.module';
  * pulling in the whole customer graph would make the module cycle.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Tenant, Customer, Session, TenantAiConfig]), SessionModule],
+  imports: [TypeOrmModule.forFeature([Tenant, Customer, Session, TenantAiConfig, Conversation]), SessionModule, CompanyModule],
   controllers: [EmbedController],
   providers: [EmbedService],
   exports: [EmbedService],

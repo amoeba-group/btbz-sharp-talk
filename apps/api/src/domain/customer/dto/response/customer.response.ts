@@ -11,6 +11,8 @@ export interface CustomerResponse {
    *  decide whether to offer the reveal control, and to label what is shown. */
   masked: boolean;
   tier: string;
+  /** b2c | b2b_contact (PLN-261022 stage 2). */
+  customerType: string;
   shopifyTier: string | null;
   orders: number;
   totalSpent: number;
