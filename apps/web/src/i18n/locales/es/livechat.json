@@ -399,7 +399,9 @@
     "hotel": "Hotel",
     "region": {
       "north": "Norte",
+      "north_center": "Centro-Norte",
       "central": "Centro",
+      "south_center": "Centro-Sur",
       "south": "Sur"
     },
     "role": {

@@ -62,5 +62,22 @@
   "orgDeleted": "\"{{name}}\" deleted.",
   "orgDeleteError": "Delete failed.",
   "permissionLabelNoDelete": "Permission-linked labels cannot be deleted.",
-  "orgInUseByRule": "Used by routing rules: {{rules}}. Remove it from the rule first (Agent handoff › Routing rules)."
+  "orgInUseByRule": "Used by routing rules: {{rules}}. Remove it from the rule first (Agent handoff › Routing rules).",
+  "scopeTitle": "Covered places",
+  "scopeNone": "No places",
+  "scopeEdit": "Set places",
+  "scopeRegions": "Regions",
+  "scopeProvinces": "Provinces / cities",
+  "scopeProvincePh": "Type or pick a province",
+  "scopeAdd": "Add",
+  "scopeSaved": "Saved the places {{name}} covers",
+  "scopeSaveError": "Could not save the places",
+  "scopeHint": "Routing rules set to \"assign by region\" page the people whose team or labels cover the conversation's province (first) or region.",
+  "region": {
+    "north": "North",
+    "north_center": "North Center",
+    "central": "Central",
+    "south_center": "South Center",
+    "south": "South"
+  }
 }

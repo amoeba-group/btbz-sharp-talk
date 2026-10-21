@@ -11,10 +11,8 @@ import {
   routingConditionDef,
 } from '../../../../../packages/types/src/common/routing-condition';
 import { languageByCode } from '../../../../../packages/types/src/common/language';
-import { resolveAssigneeGroup } from '../../../../../packages/types/src/common/routing-assignee';
-
-/** Region values the Hotel Admin signs (PLN-261015 D2); free text is not offered on purpose. */
-export const ROUTING_REGIONS = ['north', 'central', 'south'] as const;
+import { resolveAssigneeGroup, resolveRegionAssignees } from '../../../../../packages/types/src/common/routing-assignee';
+import { REGION_CODES } from '../../../../../packages/types/src/common/region';
 
 /**
  * One customer-information condition as edited (PLN-261019 P4): enum fields
@@ -39,6 +37,8 @@ export interface RoutingRuleRow {
   /** Group selector — unit ids / label codes, resolved at handoff time. */
   assigneeUnits: string[];
   assigneeLabels: string[];
+  /** Assign by region (PLN-261022): units/labels above then only narrow the pool. */
+  byRegion: boolean;
   mode: RoutingMode;
 }
 
@@ -51,11 +51,14 @@ export interface AssigneeAgent {
   unitId?: string | null;
   unitName?: string | null;
   labelCodes?: string[];
+  /** Places covered — unit scope ∪ label scopes (PLN-261022), for the by-region preview. */
+  regions?: string[];
+  provinces?: string[];
 }
 
 /** A rule pages someone when it names an agent or a group (server rule, mirrored). */
 export const rowHasAssignee = (r: RoutingRuleRow) =>
-  r.assignees.length > 0 || r.assigneeUnits.length > 0 || r.assigneeLabels.length > 0;
+  r.byRegion || r.assignees.length > 0 || r.assigneeUnits.length > 0 || r.assigneeLabels.length > 0;
 
 type AgentView = 'all' | 'unit' | 'label';
 
@@ -68,6 +71,7 @@ export const emptyRoutingRow = (): RoutingRuleRow => ({
   assignees: [],
   assigneeUnits: [],
   assigneeLabels: [],
+  byRegion: false,
   mode: ROUTING_MODE.LEAST_LOADED,
 });
 
@@ -110,6 +114,23 @@ export function RoutingRulesEditor({
   /** Group members right now — the same resolver the API runs at handoff time. */
   const groupMembers = (row: RoutingRuleRow) =>
     resolveAssigneeGroup(agents, { unitIds: row.assigneeUnits, labelCodes: row.assigneeLabels });
+  /** By-region preview: how many would be paged for each region right now (same resolver as the API). */
+  const regionCounts = (row: RoutingRuleRow) =>
+    REGION_CODES.map((region) => ({
+      region,
+      count: resolveRegionAssignees(agents, { byRegion: true, unitIds: row.assigneeUnits, labelCodes: row.assigneeLabels }, { region }).ids.length,
+    }));
+  /** Provinces someone covers explicitly, with how many in the pool cover each. */
+  const provinceCounts = (row: RoutingRuleRow) => {
+    const pool = new Set(
+      row.assigneeUnits.length || row.assigneeLabels.length
+        ? resolveAssigneeGroup(agents, { unitIds: row.assigneeUnits, labelCodes: row.assigneeLabels })
+        : agents.map((a) => a.id),
+    );
+    const counts = new Map<string, number>();
+    for (const a of agents) if (pool.has(a.id)) for (const p of new Set(a.provinces ?? [])) counts.set(p, (counts.get(p) ?? 0) + 1);
+    return [...counts.entries()];
+  };
   const hasConsult = (a: AssigneeAgent) => (a.labelCodes ?? []).includes('consult');
   /** Agents grouped for the [by unit] / [by label] views; a multi-label user appears under each label. */
   const grouped = (): Array<{ key: string; title: string; members: AssigneeAgent[] }> => {
@@ -202,11 +223,19 @@ export function RoutingRulesEditor({
 
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="w-16 shrink-0 text-xs text-gray-500">{t('handoff.routing.regions')}</span>
-              {ROUTING_REGIONS.map((r) => (
+              {REGION_CODES.map((r) => (
                 <button key={r} type="button" className={chip(row.regions.includes(r))} onClick={() => patch(i, { regions: toggle(row.regions, r) })}>
                   {t(`handoff.routing.region.${r}`)}
                 </button>
               ))}
+              {/* A stored value outside the catalogue is kept visible so it can be removed — never dropped silently. */}
+              {row.regions
+                .filter((r) => !(REGION_CODES as readonly string[]).includes(r))
+                .map((r) => (
+                  <button key={r} type="button" className={chip(true)} onClick={() => patch(i, { regions: toggle(row.regions, r) })}>
+                    {t('handoff.routing.regionOther')}: {r} ×
+                  </button>
+                ))}
               {row.regions.length === 0 && <span className="text-[11px] text-gray-400">{t('handoff.routing.any')}</span>}
             </div>
 
@@ -299,10 +328,50 @@ export function RoutingRulesEditor({
                 )}
               </div>
 
+              {/* Assign by region (PLN-261022): whoever's team/labels cover the session's place. */}
+              <div className="flex flex-wrap items-start gap-1.5">
+                <span className="w-16 shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <label className="flex items-center gap-2 text-xs text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={row.byRegion}
+                      onChange={(e) => patch(i, { byRegion: e.target.checked })}
+                    />
+                    <span className="font-medium">{t('handoff.routing.assignee.byRegion')}</span>
+                    {manageHref && (
+                      <a href={manageHref} className="text-primary-600 hover:underline">
+                        {t('handoff.routing.assignee.byRegionScopeLink')}
+                      </a>
+                    )}
+                  </label>
+                  {row.byRegion && (
+                    <>
+                      <p className="text-[11px] text-gray-400">{t('handoff.routing.assignee.byRegionHint')}</p>
+                      <p className="flex flex-wrap gap-x-2 text-[11px] text-gray-500">
+                        <span>{t('handoff.routing.assignee.byRegionPreview')}</span>
+                        {regionCounts(row).map(({ region, count }) => (
+                          <span key={region} className={count === 0 ? 'text-warning' : undefined}>
+                            {t(`handoff.routing.region.${region}`)} {count}
+                            {count === 0 && ` (${t('handoff.routing.assignee.byRegionNoneWarn')})`}
+                          </span>
+                        ))}
+                        {provinceCounts(row).map(([p, n]) => (
+                          <span key={p}>
+                            {p} {n}
+                          </span>
+                        ))}
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+
               {/* Group selector: units × labels, resolved when the handoff happens. */}
               <div className="flex flex-wrap items-start gap-1.5">
                 <span className="w-16 shrink-0 pt-1 text-xs text-gray-500">{t('handoff.routing.assignee.group')}</span>
                 <div className="flex-1 space-y-1.5">
+                  {row.byRegion && <p className="text-[11px] text-gray-400">{t('handoff.routing.assignee.byRegionFilters')}</p>}
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="w-10 text-[11px] text-gray-400">{t('handoff.routing.assignee.units')}</span>
                     {units.length === 0 && <span className="text-[11px] text-gray-400">—</span>}
@@ -320,7 +389,7 @@ export function RoutingRulesEditor({
                       </button>
                     ))}
                   </div>
-                  {(row.assigneeUnits.length > 0 || row.assigneeLabels.length > 0) && (() => {
+                  {!row.byRegion && (row.assigneeUnits.length > 0 || row.assigneeLabels.length > 0) && (() => {
                     const ids = groupMembers(row);
                     const members = ids.map((id) => agents.find((a) => a.id === id)).filter((a): a is AssigneeAgent => !!a);
                     return ids.length === 0 ? (

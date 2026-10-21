@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { usersService } from './users.service';
-import type { InviteUserBody, OrgItemBody, UpdateUserBody } from './users.service';
+import type { InviteUserBody, OrgItemBody, RegionScopeBody, UpdateUserBody } from './users.service';
 import { toast } from '@/store/toast-store';
 import { useTenantKey } from '@/lib/use-tenant-key';
 
@@ -52,7 +52,16 @@ export function useOrgMutations() {
   });
   const deleteLabel = useMutation({ mutationFn: (id: string) => usersService.deleteJobLabel(id), onSuccess: refresh });
   const deleteUnit = useMutation({ mutationFn: (id: string) => usersService.deleteUnit(id), onSuccess: refresh });
-  return { createLabel, renameLabel, createUnit, renameUnit, deleteLabel, deleteUnit };
+  // Covered places (PLN-261022): routing's "assign by region" reads these.
+  const setLabelScope = useMutation({
+    mutationFn: ({ id, ...body }: { id: string } & RegionScopeBody) => usersService.setJobLabelScope(id, body),
+    onSuccess: refresh,
+  });
+  const setUnitScope = useMutation({
+    mutationFn: ({ id, ...body }: { id: string } & RegionScopeBody) => usersService.setUnitScope(id, body),
+    onSuccess: refresh,
+  });
+  return { createLabel, renameLabel, createUnit, renameUnit, deleteLabel, deleteUnit, setLabelScope, setUnitScope };
 }
 
 export function useInviteUser() {

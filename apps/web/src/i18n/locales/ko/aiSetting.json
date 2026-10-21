@@ -178,7 +178,9 @@
       "add": "규칙 추가",
       "region": {
         "north": "북부",
+        "north_center": "중북부",
         "central": "중부",
+        "south_center": "중남부",
         "south": "남부"
       },
       "unlisted": "상담원 목록에 없는 사용자(상담 라벨 없음 또는 비활성) — 눌러서 제거",
@@ -226,8 +228,15 @@
         "noConsult": "상담 라벨 없음 — 라이브챗 처리 불가",
         "people": "개인 지정",
         "needOne": "개인 또는 그룹을 하나 이상 고르세요 — 담당자 없는 규칙은 저장되지 않습니다",
-        "manageLink": "라벨·팀 관리 →"
-      }
+        "manageLink": "라벨·팀 관리 →",
+        "byRegion": "지역 담당자에게 배정",
+        "byRegionHint": "팀·라벨의 담당 지역이 대화의 성·시(우선) 또는 권역과 맞는 활성 상담원을 호출합니다. 아래 팀·라벨은 후보를 좁히는 필터입니다.",
+        "byRegionFilters": "추가 필터(선택)",
+        "byRegionPreview": "권역별 후보:",
+        "byRegionNoneWarn": "담당자 없음 → 다음 규칙",
+        "byRegionScopeLink": "팀·라벨 담당 지역 설정"
+      },
+      "regionOther": "기타"
     },
     "reAlert": {
       "title": "미수락 재알림",

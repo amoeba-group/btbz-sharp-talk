@@ -35,14 +35,17 @@ export class UnitController {
 
   @Patch(':id')
   @RequireCapability(CAPABILITY.LABEL_EDIT)
-  @ApiOperation({ summary: 'Rename a unit' })
+  @ApiOperation({ summary: 'Rename a unit and/or set the regions/provinces it covers' })
   update(
     @CurrentUser() user: Principal,
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateUnitRequest,
   ) {
     const actor = asTenantUser(user);
-    return this.userService.renameUnit(actor.tenantId, actor.userId, id, body.name);
+    return this.userService.renameUnit(actor.tenantId, actor.userId, id, body.name, {
+      regions: body.regions,
+      provinces: body.provinces,
+    });
   }
 
   @Delete(':id')

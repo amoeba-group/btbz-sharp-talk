@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { Session } from '../session/entity/session.entity';
+import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { EmbedService } from './embed.service';
 import { EmbedController } from './embed.controller';
 import { SessionModule } from '../session/session.module';
@@ -13,7 +14,7 @@ import { SessionModule } from '../session/session.module';
  * pulling in the whole customer graph would make the module cycle.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Tenant, Customer, Session]), SessionModule],
+  imports: [TypeOrmModule.forFeature([Tenant, Customer, Session, TenantAiConfig]), SessionModule],
   controllers: [EmbedController],
   providers: [EmbedService],
   exports: [EmbedService],

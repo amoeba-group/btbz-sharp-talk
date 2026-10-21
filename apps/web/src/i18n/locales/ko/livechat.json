@@ -399,7 +399,9 @@
     "hotel": "호텔",
     "region": {
       "north": "북부",
+      "north_center": "중북부",
       "central": "중부",
+      "south_center": "중남부",
       "south": "남부"
     },
     "role": {

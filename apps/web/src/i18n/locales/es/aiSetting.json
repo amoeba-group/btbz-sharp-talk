@@ -178,7 +178,9 @@
       "add": "Añadir regla",
       "region": {
         "north": "Norte",
+        "north_center": "Centro-Norte",
         "central": "Centro",
+        "south_center": "Centro-Sur",
         "south": "Sur"
       },
       "unlisted": "No está en la lista de agentes (sin etiqueta de consulta o inactivo): haz clic para quitarlo",
@@ -226,8 +228,15 @@
         "noConsult": "Sin etiqueta de atención — no puede atender el chat",
         "people": "Personas",
         "needOne": "Elija una persona o un grupo — las reglas sin agentes no se guardan",
-        "manageLink": "Gestionar etiquetas y equipos →"
-      }
+        "manageLink": "Gestionar etiquetas y equipos →",
+        "byRegion": "Asignar a responsables de la región",
+        "byRegionHint": "Avisa a quienes, por su equipo o etiquetas, atienden la provincia (primero) o la región de la conversación. Las unidades/etiquetas de abajo acotan el grupo.",
+        "byRegionFilters": "Acotar por (opcional)",
+        "byRegionPreview": "Candidatos por región:",
+        "byRegionNoneWarn": "nadie → siguiente regla",
+        "byRegionScopeLink": "Definir zonas de equipos/etiquetas"
+      },
+      "regionOther": "Otra"
     },
     "reAlert": {
       "title": "Recordatorio si nadie atiende",

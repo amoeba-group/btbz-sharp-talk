@@ -1,3 +1,5 @@
+import { canonicalRegion, provinceKey } from '@sharptalk/types';
+
 /**
  * Signed identity attributes (PLN-261015 D2).
  *
@@ -47,4 +49,50 @@ export function identitySigningString(userId: string, attributes: IdentityAttrib
     .sort()
     .map((key) => `${key}=${attributes[key]}`);
   return [userId, ...lines].join('\n');
+}
+
+/** What `storedIdentityAttributes` decided about the region, for the identify log. */
+export type RegionSource = 'signed' | 'map' | 'none';
+
+/**
+ * The attributes as they are STORED and routed on (PLN-261022 stage 1). Runs
+ * only after the signature verified against the raw values — nothing here may
+ * feed back into `identitySigningString`.
+ *
+ *  - every value NFC (Vietnamese tone marks arrive composed or decomposed)
+ *  - `region` folded to its canonical code ("North Center" → `north_center`)
+ *  - no region but a province: the tenant's province → region map fills it
+ *  - both present but the map disagrees: the signed region stands (the host
+ *    knows its own hotel); `mismatch` carries the mapped value for a warning
+ */
+export function storedIdentityAttributes(
+  attributes: IdentityAttributes | null,
+  provinceRegions?: Record<string, string> | null,
+): { attributes: IdentityAttributes | null; regionSource: RegionSource; mismatch?: string } {
+  if (!attributes) return { attributes: null, regionSource: 'none' };
+  const out: IdentityAttributes = {};
+  for (const key of Object.keys(attributes) as IdentityAttributeKey[]) {
+    const value = attributes[key];
+    if (value) out[key] = value.normalize('NFC');
+  }
+  const mapped = mappedRegion(out.province, provinceRegions);
+  if (out.region) {
+    out.region = canonicalRegion(out.region);
+    const mismatch = mapped && mapped !== out.region ? mapped : undefined;
+    return { attributes: out, regionSource: 'signed', mismatch };
+  }
+  if (mapped) {
+    out.region = mapped;
+    return { attributes: out, regionSource: 'map' };
+  }
+  return { attributes: out, regionSource: 'none' };
+}
+
+function mappedRegion(province: string | undefined, map: Record<string, string> | null | undefined): string | undefined {
+  const key = provinceKey(province);
+  if (!key || !map) return undefined;
+  for (const [name, region] of Object.entries(map)) {
+    if (provinceKey(name) === key) return canonicalRegion(region) || undefined;
+  }
+  return undefined;
 }

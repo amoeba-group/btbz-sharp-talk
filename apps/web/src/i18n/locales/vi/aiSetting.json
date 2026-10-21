@@ -178,7 +178,9 @@
       "add": "Thêm quy tắc",
       "region": {
         "north": "Miền Bắc",
+        "north_center": "Bắc Trung Bộ",
         "central": "Miền Trung",
+        "south_center": "Nam Trung Bộ",
         "south": "Miền Nam"
       },
       "unlisted": "Không có trong danh sách nhân viên (thiếu nhãn tư vấn hoặc ngừng hoạt động) — bấm để gỡ",
@@ -226,8 +228,15 @@
         "noConsult": "Không có nhãn tư vấn — không xử lý được chat",
         "people": "Cá nhân",
         "needOne": "Chọn ít nhất một người hoặc một nhóm — quy tắc không có nhân viên sẽ không được lưu",
-        "manageLink": "Quản lý nhãn & đội →"
-      }
+        "manageLink": "Quản lý nhãn & đội →",
+        "byRegion": "Giao cho người phụ trách khu vực",
+        "byRegionHint": "Gọi những người đang hoạt động có nhóm hoặc nhãn phụ trách tỉnh/thành (ưu tiên) hoặc vùng của cuộc trò chuyện. Nhóm/nhãn bên dưới dùng để thu hẹp.",
+        "byRegionFilters": "Thu hẹp theo (tùy chọn)",
+        "byRegionPreview": "Ứng viên theo vùng:",
+        "byRegionNoneWarn": "không có ai → quy tắc tiếp theo",
+        "byRegionScopeLink": "Đặt khu vực cho nhóm/nhãn"
+      },
+      "regionOther": "Khác"
     },
     "reAlert": {
       "title": "Nhắc lại khi chưa ai nhận",

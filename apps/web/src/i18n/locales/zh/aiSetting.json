@@ -178,7 +178,9 @@
       "add": "添加规则",
       "region": {
         "north": "北部",
+        "north_center": "中北部",
         "central": "中部",
+        "south_center": "中南部",
         "south": "南部"
       },
       "unlisted": "不在客服列表中(无咨询标签或已停用) — 点击移除",
@@ -226,8 +228,15 @@
         "noConsult": "无咨询标签 — 无法处理实时聊天",
         "people": "指定个人",
         "needOne": "请至少选择一人或一个分组 — 没有客服的规则不会保存",
-        "manageLink": "管理标签与团队 →"
-      }
+        "manageLink": "管理标签与团队 →",
+        "byRegion": "分配给区域负责人",
+        "byRegionHint": "呼叫其团队或标签负责该对话省/市（优先）或大区的在岗客服。下方的团队/标签用于缩小范围。",
+        "byRegionFilters": "缩小范围（可选）",
+        "byRegionPreview": "各大区候选人:",
+        "byRegionNoneWarn": "无人 → 下一条规则",
+        "byRegionScopeLink": "设置团队/标签负责区域"
+      },
+      "regionOther": "其他"
     },
     "reAlert": {
       "title": "无人接手时再次提醒",

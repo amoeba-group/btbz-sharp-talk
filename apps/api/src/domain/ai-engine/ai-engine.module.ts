@@ -10,6 +10,7 @@ import { Tenant } from '../tenant/entity/tenant.entity';
 import { User } from '../user/entity/user.entity';
 import { JobLabel } from '../user/entity/job-label.entity';
 import { UserJobLabel } from '../user/entity/user-job-label.entity';
+import { Unit } from '../user/entity/unit.entity';
 import { SessionModule } from '../session/session.module';
 import { AuditModule } from '../audit/audit.module';
 import { AiEngineService } from './ai-engine.service';
@@ -41,6 +42,7 @@ import { AiAgentController } from './ai-agent.controller';
       User,
       JobLabel,
       UserJobLabel,
+      Unit,
     ]),
     SessionModule,
     AuditModule,

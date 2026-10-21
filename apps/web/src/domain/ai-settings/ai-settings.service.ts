@@ -132,6 +132,8 @@ export interface HandoffConfig {
   routingRules?: RoutingRule[];
   /** Unanswered-alarm reminder (PLN-261015 D4); 0/absent = off. */
   reAlert?: { afterMinutes?: number; escalateToUserIds?: number[] };
+  /** Province → region code, fills a signed identity's missing region (PLN-261022). */
+  provinceRegions?: Record<string, string>;
   /** Kept as-is: edited elsewhere, so the console must not drop it on save. */
   handbackNotice?: Partial<Record<ScenarioLang, string>>;
 }
@@ -149,6 +151,8 @@ export interface RoutingRule {
   /** Unit/label group resolved at handoff time (PLN-261019-Routing-Assignee-Groups). */
   assigneeUnitIds?: number[];
   assigneeLabelCodes?: string[];
+  /** Page whoever's unit/labels cover the session's province or region (PLN-261022). */
+  assigneeByRegion?: boolean;
   mode?: RoutingMode;
 }
 
