@@ -7,8 +7,9 @@ import { bigintTransformer } from '../../../global/util/transformers';
  * One user belongs to at most one unit (`users.unit_id`). Unlike job labels the
  * code carries no permission: a unit is an organisational tag (CS, MKT, a region
  * team) the console shows and that later features may route on. Codes are fixed
- * once created; only the name is editable, and nothing is deleted (a deleted
- * unit would orphan its members).
+ * once created; only the name is editable. Deleting a unit unassigns its
+ * members in the same transaction and is refused while a routing rule names it
+ * (PLN-261021-Users-Labels-Units-Delete).
  */
 @Entity('units')
 @Unique('uk_unit_tenant_code', ['tenantId', 'code'])

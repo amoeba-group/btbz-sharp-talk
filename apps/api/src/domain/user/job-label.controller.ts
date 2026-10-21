@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CAPABILITY, Principal } from '@sharptalk/types';
 import { UserService } from './user.service';
@@ -40,5 +40,13 @@ export class JobLabelController {
     @Body() body: UpdateJobLabelRequest,
   ) {
     return this.userService.updateLabel(asTenantUser(user).tenantId, id, body.name);
+  }
+
+  @Delete(':id')
+  @RequireCapability(CAPABILITY.LABEL_EDIT)
+  @ApiOperation({ summary: 'Delete a job label (refused while a routing rule uses it)' })
+  remove(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    const actor = asTenantUser(user);
+    return this.userService.deleteLabel(actor.tenantId, actor.userId, id);
   }
 }

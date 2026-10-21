@@ -5,6 +5,7 @@ import { JobLabel } from './entity/job-label.entity';
 import { UserJobLabel } from './entity/user-job-label.entity';
 import { Invitation } from './entity/invitation.entity';
 import { Unit } from './entity/unit.entity';
+import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { JobLabelController } from './job-label.controller';
@@ -16,7 +17,7 @@ import { TenantModule } from '../tenant/tenant.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, JobLabel, UserJobLabel, Invitation, Unit]),
+    TypeOrmModule.forFeature([User, JobLabel, UserJobLabel, Invitation, Unit, TenantAiConfig]),
     AuditModule,
     AuthModule, // MfaService (mfa-reset endpoints)
     TenantModule,

@@ -50,7 +50,9 @@ export function useOrgMutations() {
     mutationFn: ({ id, name }: { id: string; name: string }) => usersService.renameUnit(id, name),
     onSuccess: refresh,
   });
-  return { createLabel, renameLabel, createUnit, renameUnit };
+  const deleteLabel = useMutation({ mutationFn: (id: string) => usersService.deleteJobLabel(id), onSuccess: refresh });
+  const deleteUnit = useMutation({ mutationFn: (id: string) => usersService.deleteUnit(id), onSuccess: refresh });
+  return { createLabel, renameLabel, createUnit, renameUnit, deleteLabel, deleteUnit };
 }
 
 export function useInviteUser() {

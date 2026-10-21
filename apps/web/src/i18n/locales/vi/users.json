@@ -43,7 +43,7 @@
   "add": "Thêm",
   "codePlaceholder": "vd: north",
   "namePlaceholder": "vd: Miền Bắc",
-  "codeHint": "Mã gồm 1–24 ký tự chữ thường, số hoặc _ và không thể đổi sau khi tạo. Không xóa được — hãy đổi tên.",
+  "codeHint": "Mã gồm 1–24 ký tự chữ thường, số hoặc _ và không thể đổi sau khi tạo. Xóa một dòng sẽ gỡ các thành viên khỏi dòng đó.",
   "codeInvalid": "Chỉ dùng chữ thường, số và _ (1–24 ký tự).",
   "codeTaken": "Mã này đã tồn tại.",
   "permissionLinked": "Quyền",
@@ -51,5 +51,16 @@
   "orgCreated": "Đã thêm \"{{name}}\".",
   "orgRenamed": "Đã đổi tên thành \"{{name}}\".",
   "orgSaveError": "Lưu thất bại.",
-  "manageLink": "Quản lý nhãn & đội →"
+  "manageLink": "Quản lý nhãn & đội →",
+  "orgMembers": "{{count}} thành viên",
+  "orgDeleteTitle": "Xóa \"{{name}}\"?",
+  "orgDeleteBodyLabel": "Nhãn này sẽ bị xóa.",
+  "orgDeleteBodyUnit": "Nhóm này sẽ bị xóa.",
+  "orgDeleteReleaseLabel": "Nhãn sẽ được gỡ khỏi {{count}} thành viên.",
+  "orgDeleteReleaseUnit": "{{count}} thành viên sẽ không còn thuộc nhóm nào.",
+  "orgDeleteIrreversible": "Không thể hoàn tác.",
+  "orgDeleted": "Đã xóa \"{{name}}\".",
+  "orgDeleteError": "Xóa thất bại.",
+  "permissionLabelNoDelete": "Không thể xóa nhãn gắn với quyền.",
+  "orgInUseByRule": "Đang được dùng trong quy tắc phân công: {{rules}}. Hãy gỡ khỏi quy tắc trước (Chuyển cho nhân viên › Quy tắc phân công)."
 }

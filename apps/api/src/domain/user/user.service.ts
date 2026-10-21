@@ -3,11 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { generateToken } from '@sharptalk/common';
+import { JOB_LABEL } from '@sharptalk/types';
 import { User } from './entity/user.entity';
 import { JobLabel } from './entity/job-label.entity';
 import { UserJobLabel } from './entity/user-job-label.entity';
 import { Unit } from './entity/unit.entity';
 import { Invitation } from './entity/invitation.entity';
+import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import {
@@ -51,6 +53,8 @@ export class UserService {
     private readonly config: ConfigService,
     // Last on purpose: existing specs construct the service positionally.
     @InjectRepository(Unit) private readonly unitRepo: Repository<Unit>,
+    // Read-only: delete refuses a unit/label a routing or deny rule still names.
+    @InjectRepository(TenantAiConfig) private readonly aiConfigRepo: Repository<TenantAiConfig>,
   ) {}
 
   // ---- Users ----
@@ -281,7 +285,12 @@ export class UserService {
 
   async listLabels(tenantId: number): Promise<JobLabelResponse[]> {
     const labels = await this.labelRepo.find({ where: { tenantId }, order: { id: 'ASC' } });
-    return labels.map((l) => JobLabelMapper.toResponse(l));
+    const counts = new Map<string, number>();
+    if (labels.length) {
+      const links = await this.userLabelRepo.find({ where: { jobLabelId: In(labels.map((l) => l.id)) } });
+      for (const l of links) counts.set(String(l.jobLabelId), (counts.get(String(l.jobLabelId)) ?? 0) + 1);
+    }
+    return labels.map((l) => JobLabelMapper.toResponse(l, counts.get(String(l.id)) ?? 0));
   }
 
   async createLabel(tenantId: number, code: string, name: string): Promise<JobLabelResponse> {
@@ -303,11 +312,48 @@ export class UserService {
     return JobLabelMapper.toResponse(label);
   }
 
+  /**
+   * Delete a job label and release its holders (PLN-261021-Users-Labels-Units-Delete).
+   * The permission codes are refused (D1), as is a label a rule still routes on (D2) —
+   * the rule's group would resolve to nobody and hand off to the next rule silently.
+   */
+  async deleteLabel(tenantId: number, actorId: number, id: number): Promise<{ released: number }> {
+    const label = await this.labelRepo.findOne({ where: { id, tenantId } });
+    if (!label) {
+      this.logger.warn(`deleteLabel tenant=${tenantId}: label ${id} not found`);
+      throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+    if ((Object.values(JOB_LABEL) as string[]).includes(label.code)) {
+      this.logger.warn(`deleteLabel tenant=${tenantId}: '${label.code}' is permission-linked`);
+      throw new BusinessException(ERROR_CODE.LABEL_PROTECTED, HttpStatus.CONFLICT);
+    }
+    await this.refuseIfRuleUses(tenantId, { labelCode: label.code });
+    const released = await this.labelRepo.manager.transaction(async (m) => {
+      const links = await m.delete(UserJobLabel, { jobLabelId: label.id });
+      await m.delete(JobLabel, { id: label.id, tenantId });
+      return links.affected ?? 0;
+    });
+    await this.audit.write({
+      tenantId,
+      actorType: 'user',
+      actorId,
+      action: 'label.deleted',
+      target: `label:${label.id} ${label.code}`,
+      metadata: { name: label.name, released },
+    });
+    return { released };
+  }
+
   // ---- Units (teams) — PLN-261019 P1 ----
 
   async listUnits(tenantId: number): Promise<UnitResponse[]> {
     const units = await this.unitRepo.find({ where: { tenantId }, order: { sortOrder: 'ASC', id: 'ASC' } });
-    return units.map((u) => UnitMapper.toResponse(u));
+    const counts = new Map<string, number>();
+    if (units.length) {
+      const members = await this.userRepo.find({ where: { tenantId, unitId: In(units.map((u) => u.id)) } });
+      for (const u of members) counts.set(String(u.unitId), (counts.get(String(u.unitId)) ?? 0) + 1);
+    }
+    return units.map((u) => UnitMapper.toResponse(u, counts.get(String(u.id)) ?? 0));
   }
 
   async createUnit(tenantId: number, actorId: number, code: string, name: string): Promise<UnitResponse> {
@@ -346,7 +392,55 @@ export class UserService {
     return UnitMapper.toResponse(unit);
   }
 
+  /** Delete a unit; its members become unassigned (PLN-261021 D3). Refused while a rule names it (D2). */
+  async deleteUnit(tenantId: number, actorId: number, id: number): Promise<{ released: number }> {
+    const unit = await this.getTenantUnit(tenantId, id);
+    await this.refuseIfRuleUses(tenantId, { unitId: unit.id });
+    const released = await this.unitRepo.manager.transaction(async (m) => {
+      const moved = await m.update(User, { tenantId, unitId: unit.id }, { unitId: null });
+      await m.delete(Unit, { id: unit.id, tenantId });
+      return moved.affected ?? 0;
+    });
+    await this.audit.write({
+      tenantId,
+      actorType: 'user',
+      actorId,
+      action: 'unit.deleted',
+      target: `unit:${unit.id} ${unit.code}`,
+      metadata: { name: unit.name, released },
+    });
+    return { released };
+  }
+
   // ---- helpers ----
+
+  /**
+   * 409 E2007 when a routing rule's group or label filter, or a deny rule's label,
+   * names this unit/label. `details.rules` carries the rule names for the console.
+   */
+  private async refuseIfRuleUses(tenantId: number, ref: { unitId?: number; labelCode?: string }): Promise<void> {
+    const config = await this.aiConfigRepo.findOne({ where: { tenantId } });
+    const handoff = config?.handoffConfig;
+    const rules: string[] = [];
+    (handoff?.routingRules ?? []).forEach((r, i) => {
+      const byUnit = ref.unitId != null && (r.assigneeUnitIds ?? []).some((u) => String(u) === String(ref.unitId));
+      const byLabel =
+        ref.labelCode != null &&
+        ((r.assigneeLabelCodes ?? []).includes(ref.labelCode) || (r.labels ?? []).includes(ref.labelCode));
+      if (byUnit || byLabel) rules.push(r.name?.trim() || `Routing rule ${i + 1}`);
+    });
+    if (ref.labelCode != null) {
+      (handoff?.denyRules ?? []).forEach((d, i) => {
+        if (d.label === ref.labelCode) rules.push(`Deny rule ${i + 1} (${(d.keywords ?? []).slice(0, 3).join(', ')})`);
+      });
+    }
+    if (rules.length) {
+      this.logger.warn(
+        `delete refused tenant=${tenantId} ${ref.unitId != null ? `unit:${ref.unitId}` : `label:${ref.labelCode}`}: used by [${rules.join(' | ')}]`,
+      );
+      throw new BusinessException(ERROR_CODE.ORG_IN_USE_BY_RULE, HttpStatus.CONFLICT, { rules });
+    }
+  }
 
   /** The tenant's unit by id; a foreign tenant's id reads as not found (never leaks). */
   private async getTenantUnit(tenantId: number, unitId: number): Promise<Unit> {

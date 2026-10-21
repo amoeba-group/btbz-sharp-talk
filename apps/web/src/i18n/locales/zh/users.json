@@ -43,7 +43,7 @@
   "add": "添加",
   "codePlaceholder": "例如 north",
   "namePlaceholder": "例如 北区",
-  "codeHint": "代码为 1–24 位小写字母、数字或 _，创建后不可更改。不能删除，只能重命名。",
+  "codeHint": "代码为 1–24 位小写字母、数字或 _，创建后不可更改。删除后，所属用户将被解除。",
   "codeInvalid": "仅可使用小写字母、数字和 _（1–24 个字符）。",
   "codeTaken": "该代码已存在。",
   "permissionLinked": "权限关联",
@@ -51,5 +51,16 @@
   "orgCreated": "已添加“{{name}}”。",
   "orgRenamed": "已重命名为“{{name}}”。",
   "orgSaveError": "保存失败。",
-  "manageLink": "管理标签与团队 →"
+  "manageLink": "管理标签与团队 →",
+  "orgMembers": "{{count}} 人",
+  "orgDeleteTitle": "删除“{{name}}”？",
+  "orgDeleteBodyLabel": "将删除此标签。",
+  "orgDeleteBodyUnit": "将删除此团队。",
+  "orgDeleteReleaseLabel": "将从 {{count}} 名成员处移除该标签。",
+  "orgDeleteReleaseUnit": "{{count}} 名成员将不再属于任何团队。",
+  "orgDeleteIrreversible": "此操作无法撤销。",
+  "orgDeleted": "已删除“{{name}}”。",
+  "orgDeleteError": "删除失败。",
+  "permissionLabelNoDelete": "与权限关联的标签无法删除。",
+  "orgInUseByRule": "正在被分配规则使用：{{rules}}。请先从规则中移除（转接人工客服 › 分配规则）。"
 }

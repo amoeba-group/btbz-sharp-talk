@@ -43,7 +43,7 @@
   "add": "Add",
   "codePlaceholder": "e.g. north",
   "namePlaceholder": "e.g. North",
-  "codeHint": "A code is 1–24 lowercase letters, digits or _ and cannot be changed once created. Rows cannot be deleted — rename them instead.",
+  "codeHint": "A code is 1–24 lowercase letters, digits or _ and cannot be changed once created. Deleting a row releases its members.",
   "codeInvalid": "Use only lowercase letters, digits and _ (1–24 characters).",
   "codeTaken": "This code already exists.",
   "permissionLinked": "Permission",
@@ -51,5 +51,16 @@
   "orgCreated": "\"{{name}}\" added.",
   "orgRenamed": "Renamed to \"{{name}}\".",
   "orgSaveError": "Save failed.",
-  "manageLink": "Manage labels & units →"
+  "manageLink": "Manage labels & units →",
+  "orgMembers": "{{count}} member(s)",
+  "orgDeleteTitle": "Delete \"{{name}}\"?",
+  "orgDeleteBodyLabel": "This label will be deleted.",
+  "orgDeleteBodyUnit": "This unit will be deleted.",
+  "orgDeleteReleaseLabel": "It will be removed from {{count}} member(s).",
+  "orgDeleteReleaseUnit": "{{count}} member(s) will be left without a unit.",
+  "orgDeleteIrreversible": "This cannot be undone.",
+  "orgDeleted": "\"{{name}}\" deleted.",
+  "orgDeleteError": "Delete failed.",
+  "permissionLabelNoDelete": "Permission-linked labels cannot be deleted.",
+  "orgInUseByRule": "Used by routing rules: {{rules}}. Remove it from the rule first (Agent handoff › Routing rules)."
 }
