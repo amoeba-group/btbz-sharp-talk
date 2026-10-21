@@ -23,13 +23,24 @@ describe('SourceSyncService.sync', () => {
   let saved: KbDocument[];
   let recorded: string[];
 
-  const build = (opts: { items?: SourceItem[]; existing?: Partial<KbDocument>[]; dropped?: number } = {}) => {
+  const build = (
+    opts: {
+      items?: SourceItem[];
+      existing?: Partial<KbDocument>[];
+      dropped?: number;
+      /** A row of another (or deleted) source holding the same key. */
+      holder?: Partial<KbDocument>;
+      /** Source ids that still exist. */
+      liveSources?: number[];
+    } = {},
+  ) => {
     saved = [];
     recorded = [];
     let nextId = 700;
 
     const docRepo = {
       find: jest.fn(async () => (opts.existing ?? []) as KbDocument[]),
+      findOne: jest.fn(async () => (opts.holder ? ({ ...opts.holder } as KbDocument) : null)),
       create: (d: Partial<KbDocument>) => d as KbDocument,
       save: jest.fn(async (d: KbDocument) => {
         const withId = { ...d, id: d.id ?? nextId++ } as KbDocument;
@@ -38,7 +49,12 @@ describe('SourceSyncService.sync', () => {
       }),
     } as unknown as Repository<KbDocument>;
 
-    const sourceRepo = { save: jest.fn(async (s: KnowledgeSource) => s) } as unknown as Repository<KnowledgeSource>;
+    const sourceRepo = {
+      save: jest.fn(async (s: KnowledgeSource) => s),
+      findOne: jest.fn(async ({ where }: { where: { id: number } }) =>
+        (opts.liveSources ?? []).includes(Number(where.id)) ? ({ id: where.id } as KnowledgeSource) : null,
+      ),
+    } as unknown as Repository<KnowledgeSource>;
     const revisions = {
       record: jest.fn(async (_t: number, _d: unknown, _b: unknown, kind: string) => {
         recorded.push(kind);
@@ -238,6 +254,60 @@ describe('SourceSyncService.sync', () => {
     expect(touchedIds).toHaveLength(2);
     expect(saved.every((d) => d.status === 'pending')).toBe(true);
   });
+
+  describe('a page another source used to hold (FIX-261021-Notion-Resync)', () => {
+    const page = item({ externalKey: 'page:8968', title: 'Hotel Admin guide', content: 'new text' });
+
+    it('adopts the hidden row of a deleted source instead of failing on the unique key', async () => {
+      const svc = build({
+        items: [page],
+        holder: { id: 2501, tenantId: 1, sourceId: 7, externalKey: 'page:8968', active: 0, title: 'old', content: 'old' },
+      });
+      const { result, touchedIds } = await svc.sync(1, source({ id: 18 }), 22);
+      expect(result).toMatchObject({ created: 0, updated: 1, adopted: 1, failed: 0 });
+      expect(result.error).toBeUndefined();
+      expect(saved[0]).toMatchObject({ id: 2501, sourceId: 18, active: 1, content: 'new text', status: 'pending' });
+      expect(touchedIds).toEqual([2501]);
+      expect(recorded).toEqual(['update']);
+    });
+
+    it('adopts a still-active row whose source no longer exists', async () => {
+      const svc = build({
+        items: [page],
+        holder: { id: 2501, tenantId: 1, sourceId: 7, externalKey: 'page:8968', active: 1, title: 'old', content: 'old' },
+        liveSources: [],
+      });
+      const { result } = await svc.sync(1, source({ id: 18 }), 22);
+      expect(result).toMatchObject({ adopted: 1, updated: 1, failed: 0 });
+    });
+
+    it('leaves a live document of another source alone and says why, without failing the rest', async () => {
+      const svc = build({
+        items: [page, item({ externalKey: 'page:other' })],
+        holder: { id: 2501, tenantId: 1, sourceId: 7, externalKey: 'page:8968', active: 1 },
+        liveSources: [7],
+      });
+      // findOne answers for every key in this double; only the first item collides.
+      const repo = (svc as unknown as { docRepo: { findOne: jest.Mock } }).docRepo;
+      repo.findOne.mockImplementation(async ({ where }: { where: { externalKey: string } }) =>
+        where.externalKey === 'page:8968' ? { id: 2501, sourceId: 7, active: 1 } : null,
+      );
+      const { result } = await svc.sync(1, source({ id: 18 }), 22);
+      expect(result).toMatchObject({ created: 1, failed: 1 });
+      expect(result.error).toContain('page:8968 (source #7 #2501)');
+      expect(saved.some((d) => Number(d.id) === 2501)).toBe(false);
+    });
+
+    it('never takes over a live hand-written document', async () => {
+      const svc = build({
+        items: [page],
+        holder: { id: 3580, tenantId: 1, sourceId: null, externalKey: 'page:8968', active: 1 },
+      });
+      const { result } = await svc.sync(1, source({ id: 18 }), 22);
+      expect(result).toMatchObject({ failed: 1, updated: 0, created: 0 });
+      expect(result.error).toContain('manual document');
+    });
+  });
 });
 
 describe('SourceSyncService — empty-listing guard for external sources', () => {
@@ -251,6 +321,7 @@ describe('SourceSyncService — empty-listing guard for external sources', () =>
     const saved: KbDocument[] = [];
     const docRepo = {
       find: jest.fn(async () => existing as KbDocument[]),
+      findOne: jest.fn(async () => null),
       create: (d: Partial<KbDocument>) => d as KbDocument,
       save: jest.fn(async (d: KbDocument) => {
         saved.push(d);
@@ -338,6 +409,7 @@ describe('SourceSyncService — adapters that hold work back', () => {
   const build = (fetched: unknown) => {
     const docRepo = {
       find: jest.fn(async () => [] as KbDocument[]),
+      findOne: jest.fn(async () => null),
       create: (d: Partial<KbDocument>) => d as KbDocument,
       save: jest.fn(async (d: KbDocument) => ({ ...d, id: 1 }) as KbDocument),
     } as unknown as Repository<KbDocument>;
