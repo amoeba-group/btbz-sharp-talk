@@ -15,7 +15,11 @@
 -- AUTO_INCREMENT seeds are stripped on purpose — a schema with no rows has no
 -- sequence to carry, and leaving them in makes every regeneration a diff.
 --
--- Regenerated 2026-10-15 from the live staging DB (94 tables, `*_bak_*` backup tables excluded) —
+-- Regenerated 2026-10-22 from the live staging DB (97 tables, `*_bak_*` backup tables excluded;
+-- identical to production after its 10/22 deploy apart from charset notation) — the 10-15 copy was
+-- behind by units/users.unit_id, tenants.csat_mode, tenants.widget_languages (261019), the unit/label
+-- region scopes and companies/company_contacts/thread columns (261022) and every column added since 10-15.
+-- Previously: regenerated 2026-10-15 (94 tables) —
 -- the 2026-09-13 copy was behind by answer_ratings, sessions.identity_attributes,
 -- agent_alerts.reminded_at (PLN-261015) and every column added since 09-13.
 -- Previously: regenerated 2026-09-13 (90 tables; FIX-260913).
@@ -597,6 +601,40 @@ CREATE TABLE `cjm_events` (
   KEY `idx_cjm_tenant_created` (`tenant_id`,`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `companies`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `companies` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `external_key` varchar(120) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `province` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `region` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_seen_at` datetime DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_companies_tenant_key` (`tenant_id`,`external_key`),
+  KEY `idx_companies_tenant_region` (`tenant_id`,`region`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `company_contacts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `company_contacts` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `company_id` bigint NOT NULL,
+  `customer_id` bigint NOT NULL,
+  `role` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_seen_at` datetime DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_company_contacts` (`company_id`,`customer_id`),
+  KEY `idx_company_contacts_customer` (`customer_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `content_filter_rules`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -650,6 +688,12 @@ CREATE TABLE `conversations` (
   `csat_rated_at` datetime DEFAULT NULL,
   `pinned_at` datetime(6) DEFAULT NULL,
   `pinned_by` bigint DEFAULT NULL,
+  `csat_resolved` tinyint(1) DEFAULT NULL,
+  `csat_reason` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `csat_comment` varchar(80) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `customer_id` bigint DEFAULT NULL,
+  `company_id` bigint DEFAULT NULL,
+  `prev_conversation_id` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `idx_conv_tenant` (`tenant_id`),
   KEY `idx_conv_session` (`session_id`),
@@ -658,7 +702,9 @@ CREATE TABLE `conversations` (
   KEY `idx_conv_tenant_status_id` (`tenant_id`,`status`,`id`),
   KEY `idx_conv_idle` (`status`,`idle_prompt_at`),
   KEY `idx_conv_tenant_pinned` (`tenant_id`,`pinned_at`),
-  KEY `idx_conv_tenant_ended` (`tenant_id`,`ended_at`)
+  KEY `idx_conv_tenant_ended` (`tenant_id`,`ended_at`),
+  KEY `idx_conv_tenant_company` (`tenant_id`,`company_id`,`id`),
+  KEY `idx_conv_tenant_customer` (`tenant_id`,`customer_id`,`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `customers`;
@@ -679,6 +725,7 @@ CREATE TABLE `customers` (
   `email` varbinary(512) DEFAULT NULL,
   `name` varbinary(512) DEFAULT NULL,
   `phone` varbinary(256) DEFAULT NULL,
+  `customer_type` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'b2c',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_customers_tenant_shopify` (`tenant_id`,`shopify_customer_id`),
   UNIQUE KEY `uq_customers_tenant_cafe24_uid` (`tenant_id`,`cafe24_user_identifier`),
@@ -871,6 +918,7 @@ CREATE TABLE `integration_credentials` (
   `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6),
   `last_tested_at` datetime DEFAULT NULL,
   `detail` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `last_synced_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_cred_tenant_provider` (`tenant_id`,`provider`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -962,6 +1010,8 @@ CREATE TABLE `job_labels` (
   `tenant_id` bigint NOT NULL,
   `code` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL,
   `name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `regions` json DEFAULT NULL,
+  `provinces` json DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_label_tenant_code` (`tenant_id`,`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1655,12 +1705,14 @@ CREATE TABLE `sessions` (
   `consent_at` datetime DEFAULT NULL,
   `consent_version` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `identity_attributes` json DEFAULT NULL,
+  `company_id` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_sessions_token` (`session_token`),
   KEY `idx_sessions_tenant` (`tenant_id`),
   KEY `idx_sessions_customer` (`customer_id`),
   KEY `idx_sessions_tenant_agent` (`tenant_id`,`ai_agent_id`),
-  KEY `idx_sessions_tenant_path` (`tenant_id`,`landing_path`)
+  KEY `idx_sessions_tenant_path` (`tenant_id`,`landing_path`),
+  KEY `idx_sessions_company` (`company_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `subscriptions`;
@@ -1840,10 +1892,30 @@ CREATE TABLE `tenants` (
   `storefront_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'customer-facing shop origin, e.g. https://ivyusa.com',
   `commerce_enabled` tinyint(1) NOT NULL DEFAULT '1',
   `consent_source` varchar(16) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'widget',
+  `terms_url` varchar(512) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `csat_mode` varchar(8) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'rating',
+  `widget_languages` json DEFAULT NULL,
+  `thread_continuity` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_tenant_shop` (`shop_domain`),
   UNIQUE KEY `uk_tenant_slug` (`slug`),
   UNIQUE KEY `uk_tenant_uuid` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `units`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `units` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `tenant_id` bigint NOT NULL,
+  `code` varchar(24) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sort_order` int NOT NULL DEFAULT '0',
+  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+  `regions` json DEFAULT NULL,
+  `provinces` json DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_unit_tenant_code` (`tenant_id`,`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `usage_types`;
@@ -1888,6 +1960,7 @@ CREATE TABLE `users` (
   `invited_at` datetime DEFAULT NULL,
   `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
   `password_changed_at` datetime DEFAULT NULL,
+  `unit_id` bigint DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_user_tenant_email` (`tenant_id`,`email`),
   KEY `idx_user_tenant` (`tenant_id`)

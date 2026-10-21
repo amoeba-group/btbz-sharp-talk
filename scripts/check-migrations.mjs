@@ -61,6 +61,9 @@ function artefacts(text) {
   const out = [];
 
   for (const m of sql.matchAll(new RegExp(`CREATE TABLE (?:IF NOT EXISTS )?${ident}`, 'gi'))) {
+    // `*_bak_*` is a data snapshot taken before a backfill (rollback aid), not
+    // schema: init-sql leaves it out, so a fresh install would never "apply" it.
+    if (/_bak_/i.test(m[1])) continue;
     out.push({ kind: 'table', table: m[1] });
   }
 
