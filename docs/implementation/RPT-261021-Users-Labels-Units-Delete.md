@@ -29,5 +29,9 @@ jest user 도메인 21/21, tsc(api·web), i18n:check, radius:check 통과. 로�
 
 ## 배포 상태
 - 스키마 변경 없음 → SQL 선적용 불필요
-- PR: #685 · 커밋: 72a29a4a (머지 SHA는 머지 후 기입)
-- 스테이징: 대기 · 프로덕션: 대기
+- PR: #685 · main 스쿼시 커밋 `f194834e` (CI typecheck·test·build 통과)
+- **스테이징 (10/22 02:18 KST)**: `deploy-staging.sh` — api/web/widget/pwa 재생성, `Nest application successfully started`, `DELETE /units/0`·`/job-labels/0` → 401(배포됨), 번들에 신규 i18n 키 확인.
+  실측(ivyusa, dev@): 라벨 목록 memberCount(consult 12·accounting 9·operations 8), consult 삭제 → 409 E2006, 임시 팀·라벨 생성→삭제 200 `released:0`, 잔여 0건.
+  규칙 참조 거부(E2007)는 스테이징 규칙이 go2joy(테넌트 4, 팀 64·65)에만 있어 로컬 HTTP 실측(TCR I8·I9)으로 대체.
+- **프로덕션 (10/22 02:20 KST)**: 백업 `~/backups/sharptalk-production/20261022-0218/db_sharptalk.sql`(3.1MB) → `production` ff `cb553c47..f194834e` → `deploy-self-hosted.sh`.
+  API healthy·부팅 로그·신규 라우트 401·콘솔 번들 신규 키 확인. 실데이터 변경 테스트는 하지 않음(로그인 실측 생략).
