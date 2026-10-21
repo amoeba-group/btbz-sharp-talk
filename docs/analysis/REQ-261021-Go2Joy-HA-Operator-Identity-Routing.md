@@ -9,7 +9,57 @@
   https://dev.go2joy.vn/api-integration-document-support-assistant-api (2026-10-21 수집, GitBook `llms-full.txt`)
 - 조사 기준: main `713af2f` · HA UAT 공개 페이지/번들 `app-v24.3.0`(로그인 없이 볼 수 있는 범위) ·
   PLN-261015 D2/D3/D9 · PLN-261019 배정 조건/담당자 그룹 · GUIDE-261019-Go2Joy-HA-Identify
-- 상태: **1차 정리(분석)** — PLN 전에 Go2Joy 확인(§7)과 결정(§8)이 필요함
+- 상태: **1차 정리(분석) → v2(2026-10-21)**: SharpTalk이 10/20 Go2Joy HA 개발팀에 보낸 기술 협의 문서
+  `go2joy-guide-1.pdf`(v1.0, 이하 **가이드**)를 반영했다. **최신 역할 분담은 §0**이다. §3의 "Partner API 보강"
+  권장안은 실측 결과(T15~T17)에 따라 **보조 수단으로 내렸다**.
+
+## 0. 역할 분담 (v2 — 가이드 v1.0 + 실측 반영)
+
+### 0-1. 결론
+- **주 경로 = 가이드 방식**: HA 서버가 식별 패키지(`userId`·`name`·`email`·`phone` + 서명 속성 `hotel_id`·`hotel_name`·`province`·`region`·`role`)를 **서명**하고, HA FE가 `SharpTalk.identify()`로 넘기며, SharpTalk이 검증한다. SharpTalk 쪽 수신·검증·동의 생략·헤더 이름·콘솔 표시·배정은 **이미 구현돼 있고**, 스테이징에서 검증까지 마쳤다(가이드 6.1·6.2).
+- **Partner API로 지역을 채우는 방식(§3)은 지금은 쓸 수 없다**: HA 테스트 호텔 1721이 Hotel Feed에 없고, 일치하는 호텔이 없으면 피드가 **전체 목록을 돌려준다**(T15~T17). → region·province는 **HA가 자기 DB에서 서명해 보내는 것**이 원천이다. Partner API는 호텔 정책을 AI 답변에 쓰는 용도(별도 REQ)와, Go2Joy가 피드 범위를 넓힌 뒤의 교차 검증용으로 남긴다.
+- **배정 시점**: AI 이관(`handoff()`)과 직원 요청(`escalate()`) 두 경로가 이미 같은 규칙으로 배정한다(§2-5). 따라서 HA가 로그인 직후 identify만 해 두면 두 트리거 모두 지역 팀으로 간다.
+- **가이드 v1.0에서 고칠 것**: ① `region` 값이 `north·central·south` 3종으로 적혀 있지만 Go2Joy 자체 지역 체계는 VN 4종이다(South·North·North Central·South Center, T2). ② 가이드의 UAT 체크리스트에는 "AI가 답하지 못해 이관"하는 경우가 없다. ③ 베트남어 값의 유니코드 정규화(NFC) 주의 문구가 없다.
+
+### 0-2. Go2Joy(HA 개발팀)가 할 일
+| # | 작업 | 상세 | 근거 |
+|---|---|---|---|
+| G1 | **서명 패키지 반환 서버 엔드포인트** | 로그인 세션에만 응답(예: `GET /api/v1/staff/sharptalkIdentity`). 값은 브라우저가 아니라 **HA 서버의 세션·DB**에서 가져온다. PHP 약 30줄 | 가이드 5.2 |
+| G2 | **`region` 값을 Go2Joy 지역 체계로** | 성 테이블의 region(Partner API Province Feed와 같은 값)을 그대로 쓴다: `1→south` · `2→north` · `4→north_central` · `5→south_center` (3→`central`은 현재 없음). 가이드의 `north·central·south` 3종 대신 이 4종으로 합의 | T2, §5-1 |
+| G3 | **FE 임베드 스크립트 교체** | `locale`(HA 언어 vi/en) + 큐 추가, 로그인 확정 시(로그인 직후·새로고침) `identify` 1회, **선택 호텔 변경 시 재호출**, **로그아웃 시 `logout()`**. JS 약 15줄 | 가이드 5.3 |
+| G4 | 테스트 벡터 실행·결과 전달 | 가이드 5.4의 T1·T2 해시가 정확히 일치하는지(SharpTalk에서 재계산해 일치 확인함) | 가이드 5.4 |
+| G5 | **서명 키 방안 선택** | A(SharpTalk이 발급한 embed secret, 권장) / B(Go2Joy client secret 공용) | 가이드 7절 |
+| G6 | **지역 → 상담팀 매핑과 담당자 명단** | 4개 지역을 하노이 팀 / 호찌민 팀(+ CS / Sale Admin 업무)에 어떻게 나눌지. 예: north·north_central → 하노이, south·south_center → 호찌민(다낭 포함 여부 확인). 팀별 상담원 계정, 업무 구분 기준(어떤 문의가 Sale Admin인가), 폴백 담당 | §5-5 |
+| G7 | HA 약관 URL + 버전 | host_terms 동의를 기록할 때 근거로 남긴다 | 가이드 8절 |
+| G8 | 선택 필드 결정 | 이메일·휴대폰을 보낼지(업무 시간 밖 메일 회신 D11), 사업자 상호·주소가 필요한지(필요하면 SharpTalk이 허용 키를 먼저 추가) | 가이드 4절 |
+| G9 | 체인·"전체 호텔" 상태 처리 | 호텔이 선택되지 않은 상태라면 `hotel_id`·`hotel_name`·`province`·`region`을 빼고 보낸다(→ 폴백 규칙) | §5-2 |
+| G10 | UAT 체크리스트 수행 | 가이드 8절 + 이 문서 §0-4 추가 항목 | — |
+| G11 | (Partner API) | SharpTalk 서버 IP 화이트리스트 등록, 운영 자격증명 발급, **피드 범위**(HA 호텔 전체가 Hotel Feed에 있는지), "일치하는 호텔이 없으면 전체 반환"(T15) 동작 수정 또는 확인, 서명을 검증하는 테스트 환경 | §2-1-1, §7 |
+
+### 0-3. SharpTalk이 할 일
+| # | 작업 | 상태 | 규모 |
+|---|---|---|---|
+| S1 | identify 수신·서명 검증·세션 저장·host_terms 동의·헤더 이름·콘솔 배지 | **완료**(#637·#642·#656, 가이드 6.2 실측) | — |
+| S2 | 두 이관 트리거가 세션 속성으로 배정 | **완료**(`handoff()`·`escalate()` → `routingContext()`) | — |
+| S3 | **스테이징 embed secret을 보안 채널로 전달**(방안 A) / 방안 B를 고르면 "파트너가 준 secret 입력" 기능 추가 | 대기(G5) | A: 없음 · B: 소 |
+| S4 | **go2joy 테넌트 설정 점검**: `consent_source=host_terms`, 약관 URL·버전(G7 수령 후), `widget_languages=vi,en`, `headerGreeting={name}` | 일부 완료 — 스테이징 값 재확인 필요 | 설정 |
+| S5 | **배정 규칙 입력**: 팀(하노이·호찌민) × 라벨(CS·Sale Admin), 지역 4종 규칙 + 폴백, 업무 키워드. 스테이징 go2joy `handoff_config`가 테스트 뒤 NULL로 원복된 상태 | G6 수령 후 | 설정 |
+| S6 | **속성 NFC 정규화(신규, 코드)**: 서명 검증은 받은 그대로 하고, 저장·규칙 비교 직전에 `normalize('NFC')`. Go2Joy 데이터에는 분해형(NFD) 베트남어가 섞여 있어(Hotel Feed 주소의 `Thành phố`) 규칙 조건 `province contains "Hồ Chí Minh"`이 어긋날 수 있다. 같은 글자라도 NFD면 해시가 다르게 나오므로(실측) 서명 문자열은 건드리지 않는다 | 신규 | 소 |
+| S7 | **region 코드 카탈로그(4+1종)와 콘솔 선택형 입력**: 규칙 `regions`를 자유 입력 대신 선택으로 받아 오타로 규칙이 안 맞는 일을 막는다(D8) | 신규(선택) | 소 |
+| S8 | **가이드 v1.1 발행**: region 4종, UAT 체크리스트에 "AI 이관" 추가, NFC·PHP `trim` 주의(PHP `trim`은 NBSP를 지우지 않음), "호텔 미선택 시 속성 제외" | 신규 | 문서 |
+| S9 | UAT 공동 점검 지원 → TCR/RPT | G1~G3 후 | 검증 |
+| S10 | (선택) 서명 유효기간 필드(`ts`) — 패키지 재사용 방지. Go2Joy가 원하면 프로토콜에 추가(가이드 7절) | 보류 | 소(양쪽) |
+| S11 | (후속 REQ) Partner API 연동: 자격증명 저장, `getHotelInfo`로 호텔 체크인·취소 정책을 AI 답변 근거로 사용, 피드가 넓어지면 region 교차 검증. **응답 `sn`을 요청값과 반드시 대조(T15)** | 후속 | 중 |
+| S12 | 운영(프로덕션) go2joy 테넌트·전용 배포 | Go2Joy 서버 준비 대기 | — |
+
+### 0-4. UAT 체크리스트 추가 항목 (가이드 8절 보완)
+| 점검 | 기대 결과 |
+|---|---|
+| 로그인 상태에서 **AI가 답할 수 없는 질문** → AI가 이관 | 지역 팀 상담원에게 배정(콘솔 로그 `handoff routed by rule …`, 사유 `low_confidence`) |
+| 로그인 상태에서 **"상담원 연결" 버튼** | 같은 팀에 배정(사유 `user_request`) |
+| north_central·south_center 호텔(예: 다낭)로 로그인 | G6에서 합의한 팀으로 배정 |
+| 호텔 미선택(체인 "전체 호텔") 상태 | 폴백 담당자에게 배정 |
+| 성·호텔 이름에 분해형(NFD) 문자가 있는 호텔 | 401이 나지 않고(서명 일치), 콘솔 표시·`province` 조건이 정상 |
 
 ## 1. 요약
 | 구분 | 결론 |
@@ -17,7 +67,7 @@
 | Go2Joy API가 주는 것 | 서버 간 HMAC 인증(Partner API). **Province Feed에 `region`(1 South · 2 North · 3 Central · 4 North Central · 5 South Center)** 이 있고, Hotel Feed는 호텔 → `provinceSn`·`districtSn`·이름·주소를 준다. → **"호텔 이름·호텔 지역"은 Go2Joy API로 해결된다** |
 | Go2Joy API가 주지 않는 것 | **로그인한 운영자**(누구인지, 이름, 역할, HA 언어, 지금 보고 있는 호텔)를 조회하는 API가 없다. 문서 개요에는 "identify the hotel and role of the user who is chatting", "reply in the language the user selected on HA"라고 적혀 있지만 해당 엔드포인트는 없다 → **Go2Joy에 확인할 1순위 항목** |
 | 배정(handoff) 쪽 | **대부분 이미 있음**: 서명 속성 `hotel_id·hotel_name·region·province·role` → `sessions.identity_attributes` → 규칙 `regions` + 조건 8종 + 담당자 팀×라벨(#637·#638·#664~#667). go2joy 팀에 North/North Center/South/South Center가 있다 — **Go2Joy region enum과 거의 1:1**(Central이 없으므로 확인 필요) |
-| 권장 방식 | **HA 페이지가 "누가·어느 호텔"을 서명해서 보내고(identify, 현행 방식을 축소해 사용) → SharpTalk 서버가 Partner API로 호텔 이름·성·지역을 채운다(enrich)**. Go2Joy가 운영자 API를 추가하면 운영자 정보도 서버에서 가져오도록 확장한다 |
+| 권장 방식 | ~~HA는 userSn·hotel_id·role만 서명하고 SharpTalk이 Partner API로 지역을 채운다~~ → **v2: 가이드 방식(HA가 지역까지 서명)이 주 경로**. Partner API로는 HA 호텔의 지역을 얻을 수 없다(T15~T17). §0 참고 |
 | 배정 시점 | 두 경로 모두 **이미 있고 같은 배정 규칙을 탄다**: AI 자동 이관 `handoff()`(신뢰도 미달·모더레이션 차단·정책) / 직원의 연결 요청 `escalate()`(`user_request`). 필요한 것은 **두 경로가 실행되기 전에 운영자·호텔·지역이 세션에 들어가 있는 것**이다 |
 | API 접속 테스트(10/21) | 스테이징 `staging-partner.go2joy.vn` **접속 성공**(Province·District·Hotel Feed·Hotel Info, 140~250ms). 성 80개(VN 63 + PH 17), VN 성마다 region이 붙어 있다. `provinceSn=0, districtSn=0, hotelSnList=[sn]`이면 **hotelSn만으로 호텔 조회가 된다**(문서에 없는 동작). ⚠️ 스테이징은 **서명·timestamp·IP를 검증하지 않는다**(clientId만 확인) → 서명 구현 검증은 운영 전 별도로 필요 |
 | 선행 조건 | Go2Joy: 운영자 정보 전달 방식 합의, 운영 자격증명·**IP 화이트리스트**, 서명 검증이 켜진 환경 제공(§7) |
@@ -47,9 +97,12 @@
 | T2 | 성 → region 분포 | `1` South **19**(HCM·Bình Dương·Cần Thơ…) · `2` North **25**(Hà Nội·Hải Phòng…) · `4` North Central **6**(Thanh Hóa~Thừa Thiên Huế) · `5` South Center **13**(Đà Nẵng·Khánh Hòa·Lâm Đồng·Tây Nguyên…) · **`3` Central 0개** · **`10` 17개 = 필리핀 Metro Manila**(`countrySn 2`, 문서에 없는 값) | VN은 **4개 지역**으로 나뉘고 go2joy 팀 North / North Center / South / South Center와 정확히 맞는다. 성 체계는 **통폐합 전 63개** |
 | T3 | District Feed `provinceSn 1` | HCM 군 24개 | — |
 | T4 | Hotel Feed `hotelSnList:[227]`만 | HTTP 400 · `code 4` "provinceSn / districtSn field is required" | 문서대로 필수 |
-| T5 | Hotel Feed `provinceSn:0, districtSn:0, hotelSnList:[227]` | `code 1` · Khôi Hotel(성 1, 군 2) | **0이 와일드카드로 동작 → hotelSn 단독 조회 가능**(문서에 없는 동작, Go2Joy 보증 필요) |
+| T5 | Hotel Feed `provinceSn:0, districtSn:0, hotelSnList:[227]` | `code 1` · Khôi Hotel(성 1, 군 2) | 피드에 있는 호텔이면 hotelSn으로 조회된다(문서에 없는 동작). ⚠️ T15 참고 |
 | T6 | Hotel Feed `0,0,[227,110,467]` | 2건(467은 결과 없음) | 여러 건을 한 번에 조회 가능, 없는 호텔은 빠짐(오류 아님) |
-| T7 | Hotel Feed `0,0` 전체 | **13개 호텔** | 스테이징 데이터가 아주 적다 — HA UAT의 hotelSn과 같은 DB인지 확인 필요 |
+| T7 | Hotel Feed `0,0` 전체 | **13개 호텔** | 이 clientId에 열린 피드 호텔은 13개뿐이다 |
+| **T15** | Hotel Feed `0,0,[1721]`(HA UAT 테스트 호텔) / `0,0,[999999]` | `code 1` · **13개 전부 반환** | ⚠️ **목록의 호텔이 하나도 피드에 없으면 필터가 무시되고 전체가 온다.** 응답의 `sn`을 요청값과 대조하지 않으면 **엉뚱한 호텔·지역**을 쓰게 된다 |
+| **T16** | Hotel Feed `1,0,[1721]` | 3건(성 1의 호텔 전부) | 같은 현상 — 필터 무시 |
+| **T17** | Hotel Info v2 `hotelSn 1721` | `code 1` · "A In Hotel Del Luna", 시간·취소 정책 | 1721은 Go2Joy DB에 있지만 **Hotel Feed에는 없고, Hotel Info에는 성·지역 필드가 없다** → **현재 Partner API로는 HA 호텔의 지역을 얻을 수 없다** |
 | T8 | Hotel Feed `1,3,[227]`(군 불일치) | `code 1` · `data: null` | 조건이 맞지 않으면 **성공 코드에 data null** → 클라이언트가 null을 "없음"으로 처리해야 한다 |
 | T9 | Hotel Info v2 `hotelSn 227` | `code 1` · 시간 정책 + `cancellationPolicy`(문서에 없는 필드) | 경로는 v2 `getHotelInfo`가 맞다 |
 | T10 | **틀린 secret으로 서명** | `code 1` 성공 | ⚠️ **스테이징은 서명을 검증하지 않는다** |
@@ -107,7 +160,9 @@
 - 업무 시간 밖이면 현행대로 메일로 넘어간다(`route.mode = email`). HA 직원은 연락처 메일이 필요할 수 있으므로, Go2Joy가 운영자 이메일도 넘길지 결정해야 한다(D11).
 - 배정이 실행되지 **않는** 경우: AI가 답을 마친 대화, 미리보기(`channel=preview`) 세션.
 
-## 3. TO-BE (권장안: 서명 identify 축소 + Partner API 보강)
+## 3. TO-BE (1차안: 서명 identify 축소 + Partner API 보강) — ⚠️ v2에서 보조안으로 내림
+> 실측(T15~T17)으로 보면 HA 호텔(1721)은 Hotel Feed에 없고, 일치하는 호텔이 없으면 피드가 전체 목록을 돌려준다. 따라서 아래 흐름의 ③ 보강은 현재 쓸 수 없다. 주 경로는 §0(가이드 방식)이다. 이 절은 Go2Joy가 피드 범위를 넓히거나 운영자 API를 제공할 때를 대비해 남긴다.
+
 ```
 [HA 브라우저]                          [HA 서버]                [SharpTalk API]                         [Go2Joy Partner API]
  로그인 + 현재 호텔 선택
