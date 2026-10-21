@@ -1,20 +1,25 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Trash2 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { MapPin, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Field';
 import { Modal } from '@/components/Modal';
 import { cn } from '@/lib/cn';
 import { toast } from '@/store/toast-store';
+import { useTenantKey } from '@/lib/use-tenant-key';
+import { aiSettingsService } from '../ai-settings/ai-settings.service';
 import { useJobLabels, useOrgMutations, useUnits } from './users.hooks';
+import { RegionScopeEditor, RegionScopeSummary } from './RegionScopeEditor';
+import type { RegionScopeBody } from './users.service';
 
 /** The three label codes the permission matrix keys on (permission-matrix.ts). */
 const PERMISSION_LABEL_CODES = new Set(['consult', 'accounting', 'operations']);
 const CODE_PATTERN = /^[a-z0-9_]{1,24}$/;
 
 type Tab = 'labels' | 'units';
-type Row = { id: string; code: string; name: string; memberCount: number };
+type Row = { id: string; code: string; name: string; memberCount: number; regions: string[]; provinces: string[] };
 
 /**
  * Per-tenant job labels and units: rename in place, add at the bottom
@@ -29,13 +34,19 @@ export function LabelsUnitsModal({ open, onClose }: { open: boolean; onClose: ()
   const [tab, setTab] = useState<Tab>('labels');
   const labels = useJobLabels();
   const units = useUnits();
-  const { createLabel, renameLabel, createUnit, renameUnit, deleteLabel, deleteUnit } = useOrgMutations();
+  const { createLabel, renameLabel, createUnit, renameUnit, deleteLabel, deleteUnit, setLabelScope, setUnitScope } =
+    useOrgMutations();
+  // Province suggestions = the tenant's province → region map (PLN-261022); empty is fine (free entry).
+  const tenantKey = useTenantKey();
+  const aiConfig = useQuery({ queryKey: ['ai-config', tenantKey], queryFn: aiSettingsService.getConfig, enabled: open });
+  const provinceOptions = Object.keys(aiConfig.data?.handoffConfig?.provinceRegions ?? {});
 
   const rows: Row[] = tab === 'labels' ? (labels.data ?? []) : (units.data ?? []);
   const loading = tab === 'labels' ? labels.isLoading : units.isLoading;
   const rename = tab === 'labels' ? renameLabel : renameUnit;
   const create = tab === 'labels' ? createLabel : createUnit;
   const remove = tab === 'labels' ? deleteLabel : deleteUnit;
+  const setScope = tab === 'labels' ? setLabelScope : setUnitScope;
 
   // Draft names keyed by row id; a row is "dirty" when its draft differs.
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -43,13 +54,26 @@ export function LabelsUnitsModal({ open, onClose }: { open: boolean; onClose: ()
   const [newName, setNewName] = useState('');
   // The row awaiting delete confirmation; the modal body shows the confirm panel meanwhile.
   const [pendingDelete, setPendingDelete] = useState<Row | null>(null);
+  // The row whose covered places are being edited (one at a time).
+  const [scopeRowId, setScopeRowId] = useState<string | null>(null);
   useEffect(() => {
     if (!open) return;
     setDrafts({});
     setNewCode('');
     setNewName('');
     setPendingDelete(null);
+    setScopeRowId(null);
   }, [open, tab]);
+
+  const onSaveScope = async (r: Row, next: RegionScopeBody) => {
+    try {
+      await setScope.mutateAsync({ id: r.id, ...next });
+      setScopeRowId(null);
+      toast.success(t('scopeSaved', { name: r.name }));
+    } catch (e) {
+      toast.error((e as Error).message || t('scopeSaveError'), { sticky: true });
+    }
+  };
 
   const draftOf = (r: Row) => drafts[r.id] ?? r.name;
   const dirty = (r: Row) => draftOf(r).trim() !== r.name && draftOf(r).trim().length > 0;
@@ -191,8 +215,9 @@ export function LabelsUnitsModal({ open, onClose }: { open: boolean; onClose: ()
                   </tr>
                 )}
                 {rows.map((r) => (
-                  <tr key={r.id} className="border-t border-gray-100">
-                    <td className="px-3 py-2 font-mono text-xs text-gray-600">{r.code}</td>
+                  <Fragment key={r.id}>
+                  <tr className="border-t border-gray-100">
+                    <td className="px-3 py-2 align-top font-mono text-xs text-gray-600">{r.code}</td>
                     <td className="px-3 py-2">
                       <Input
                         value={draftOf(r)}
@@ -202,6 +227,10 @@ export function LabelsUnitsModal({ open, onClose }: { open: boolean; onClose: ()
                           if (e.key === 'Enter' && dirty(r)) void onRename(r);
                         }}
                       />
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <MapPin className="h-3 w-3 text-gray-400" aria-hidden />
+                        <RegionScopeSummary regions={r.regions ?? []} provinces={r.provinces ?? []} />
+                      </div>
                     </td>
                     <td className="px-3 py-2">
                       <div className="flex items-center justify-end gap-2">
@@ -221,6 +250,14 @@ export function LabelsUnitsModal({ open, onClose }: { open: boolean; onClose: ()
                         >
                           {tc('save')}
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          aria-expanded={scopeRowId === r.id}
+                          onClick={() => setScopeRowId(scopeRowId === r.id ? null : r.id)}
+                        >
+                          {t('scopeEdit')}
+                        </Button>
                         <button
                           type="button"
                           aria-label={deleteHint(r)}
@@ -234,6 +271,20 @@ export function LabelsUnitsModal({ open, onClose }: { open: boolean; onClose: ()
                       </div>
                     </td>
                   </tr>
+                  {scopeRowId === r.id && (
+                    <tr className="bg-gray-50/60">
+                      <td colSpan={3} className="px-3 pb-3">
+                        <RegionScopeEditor
+                          initial={{ regions: r.regions ?? [], provinces: r.provinces ?? [] }}
+                          provinceOptions={provinceOptions}
+                          saving={setScope.isPending}
+                          onSave={(next) => void onSaveScope(r, next)}
+                          onCancel={() => setScopeRowId(null)}
+                        />
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 ))}
                 <tr className="border-t border-gray-200 bg-gray-50/60">
                   <td className="px-3 py-2">

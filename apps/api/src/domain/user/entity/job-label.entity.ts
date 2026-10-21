@@ -21,4 +21,16 @@ export class JobLabel {
 
   @Column({ type: 'varchar', length: 64 })
   name: string;
+
+  /**
+   * Places this label covers (PLN-261022 stage 1): canonical region codes and
+   * province names. A routing rule set to "assign by region" pages the users
+   * whose unit or labels cover the session's province (first) or region.
+   * NULL = covers nothing in particular (still usable as an explicit group).
+   */
+  @Column({ type: 'json', nullable: true })
+  regions: string[] | null;
+
+  @Column({ type: 'json', nullable: true })
+  provinces: string[] | null;
 }

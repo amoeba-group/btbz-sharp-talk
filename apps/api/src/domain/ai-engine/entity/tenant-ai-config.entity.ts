@@ -115,6 +115,13 @@ export interface HandoffConfig {
    * Absent or 0 = off.
    */
   reAlert?: { afterMinutes?: number; escalateToUserIds?: number[] };
+  /**
+   * Province → region code (PLN-261022 stage 1), e.g. { "Hồ Chí Minh": "south" }.
+   * When a signed identify carries a province but no region, the region is filled
+   * from here before the session is saved. Keys compare NFC + case-insensitively.
+   * Go2Joy: its own 63-province table (= Partner API Province Feed).
+   */
+  provinceRegions?: Record<string, string>;
 }
 
 export const ROUTING_MODE = {
@@ -151,6 +158,13 @@ export interface RoutingRule {
    */
   assigneeUnitIds?: number[];
   assigneeLabelCodes?: string[];
+  /**
+   * Assign by region (PLN-261022 stage 1): page the active users whose unit or
+   * labels cover the session's province (first) or region. The unit/label lists
+   * above, when set, narrow that pool (e.g. label `sales`). Nobody covering the
+   * place → the rule is skipped for the next one.
+   */
+  assigneeByRegion?: boolean;
   mode?: RoutingMode;
 }
 

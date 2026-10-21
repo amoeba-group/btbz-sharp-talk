@@ -226,3 +226,44 @@ describe('EmbedService.rotateSecret', () => {
     expect(a).not.toEqual(b);
   });
 });
+
+/** Stored form (PLN-261022 stage 1): verified on the raw values, saved normalised. */
+describe('EmbedService.identify — region normalisation', () => {
+  const config = {
+    handoffConfig: { provinceRegions: { 'Hồ Chí Minh': 'south', 'Đà Nẵng': 'south_center' } },
+  };
+  const withMap = () => {
+    const h = build();
+    const aiConfigRepo = { findOne: jest.fn(async () => config) };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const svc = new EmbedService(
+      (h.service as any).tenantRepo,
+      (h.service as any).customerRepo,
+      (h.service as any).sessionRepo,
+      (h.service as any).redis,
+      aiConfigRepo as any,
+    );
+    return { svc, aiConfigRepo };
+  };
+
+  it('fills the region from the province map when only the province is signed', async () => {
+    const { svc } = withMap();
+    const attrs = { hotel_id: '3001', province: 'Đà Nẵng' };
+    const session = await svc.identify({ sessionToken: 'tok', userId: USER, hash: EmbedService.sign(SECRET, USER, attrs), attributes: attrs });
+    expect(session.identityAttributes).toEqual({ hotel_id: '3001', province: 'Đà Nẵng', region: 'south_center' });
+  });
+
+  it('verifies a decomposed value as sent, then stores it composed with a canonical region', async () => {
+    const { svc } = withMap();
+    const attrs = { province: 'Hồ Chí Minh'.normalize('NFD'), region: 'South' };
+    const session = await svc.identify({ sessionToken: 'tok', userId: USER, hash: EmbedService.sign(SECRET, USER, attrs), attributes: attrs });
+    expect(session.identityAttributes).toEqual({ province: 'Hồ Chí Minh', region: 'south' });
+  });
+
+  it('does not read the map when no province arrived', async () => {
+    const { svc, aiConfigRepo } = withMap();
+    const attrs = { hotel_id: '1', region: 'north' };
+    await svc.identify({ sessionToken: 'tok', userId: USER, hash: EmbedService.sign(SECRET, USER, attrs), attributes: attrs });
+    expect(aiConfigRepo.findOne).not.toHaveBeenCalled();
+  });
+});

@@ -1,4 +1,4 @@
-import { UserService } from './user.service';
+import { UserService, applyRegionScope } from './user.service';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 
 /**
@@ -114,5 +114,48 @@ describe('UserService units', () => {
     const unitRepo = repo({ findOne: jest.fn(async () => unit) });
     const res = await service({ unitRepo }).renameUnit(1, 1, 3, 'Miền Bắc');
     expect(res).toMatchObject({ code: 'north', name: 'Miền Bắc' });
+  });
+});
+
+/** Covered places (PLN-261022 stage 1). */
+describe('UserService — unit/label region scope', () => {
+  it('renameUnit with only a scope keeps the name, stores canonical codes and NFC provinces, audits the change', async () => {
+    const unit = { id: '3', tenantId: 1, code: 'hn', name: 'Hanoi', sortOrder: 10, regions: null, provinces: null };
+    const unitRepo = repo({ findOne: jest.fn(async () => unit) });
+    const auditSvc = audit();
+    const res = await service({ unitRepo, auditSvc }).renameUnit(1, 9, 3, undefined, {
+      regions: ['north', 'north_center', 'north'],
+      provinces: ['Đà Nẵng'.normalize('NFD'), ' đà  nẵng ', 'Quảng Nam'],
+    });
+    expect(res).toMatchObject({ name: 'Hanoi', regions: ['north', 'north_center'], provinces: ['Đà Nẵng', 'Quảng Nam'] });
+    const writes = (auditSvc as unknown as { write: jest.Mock }).write.mock.calls.map((c) => c[0].action);
+    expect(writes).toEqual(['unit.scope_changed']);
+  });
+
+  it('an empty list clears the scope to NULL; an omitted field is untouched', () => {
+    const row = { regions: ['south'] as string[] | null, provinces: ['Cần Thơ'] as string[] | null };
+    expect(applyRegionScope(row, { regions: [] })).toBe(true);
+    expect(row).toEqual({ regions: null, provinces: ['Cần Thơ'] });
+    expect(applyRegionScope(row, { provinces: ['Cần Thơ'] })).toBe(false);
+    expect(applyRegionScope(row, undefined)).toBe(false);
+  });
+
+  it('updateLabel sets a scope without renaming and returns it', async () => {
+    const label = { id: '8', tenantId: 1, code: 'backup_nc', name: 'Backup', regions: null, provinces: null };
+    const labelRepo = repo({ findOne: jest.fn(async () => label) });
+    const svc = new UserService(
+      repo(),
+      labelRepo,
+      repo(),
+      repo(),
+      audit(),
+      { clearAccountLock: jest.fn() } as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      repo(),
+    );
+    const res = await svc.updateLabel(1, 8, undefined, { regions: ['North Center' as string] }, 9);
+    expect(res).toMatchObject({ name: 'Backup', regions: ['north_center'], provinces: [] });
   });
 });

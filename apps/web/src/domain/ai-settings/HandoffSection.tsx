@@ -12,7 +12,8 @@ import { routingConditionDef } from '../../../../../packages/types/src/common/ro
 import { offeredLanguageCodes } from '../../../../../packages/types/src/common/language';
 import { useAiConfig, useUpdateAiConfig } from './ai-settings.hooks';
 import { LanguageTabs } from './LanguageTabs';
-import { RoutingRulesEditor, ROUTING_REGIONS } from './RoutingRulesEditor';
+import { RoutingRulesEditor } from './RoutingRulesEditor';
+import { canonicalRegion } from '../../../../../packages/types/src/common/region';
 import type { RoutingRuleRow } from './RoutingRulesEditor';
 import { DENY_MODE, ROUTING_MODE } from './ai-settings.service';
 import type { DenyMode, HandoffConfig, ScenarioLang } from './ai-settings.service';
@@ -121,7 +122,8 @@ export function HandoffSection() {
     setRoutingRows(
       (h.routingRules ?? []).map((r) => ({
         name: r.name ?? '',
-        regions: (r.regions ?? []).filter((x) => (ROUTING_REGIONS as readonly string[]).includes(x)),
+        // Canonical codes (PLN-261022); a value outside the catalogue is kept and shown as "other".
+        regions: [...new Set((r.regions ?? []).map(canonicalRegion).filter(Boolean))],
         keywords: (r.keywords ?? []).join(', '),
         labels: r.labels ?? [],
         // Enum fields keep their values; text fields are edited as one comma-joined line.
@@ -134,6 +136,7 @@ export function HandoffSection() {
         assignees: (r.assigneeUserIds ?? []).map(String),
         assigneeUnits: (r.assigneeUnitIds ?? []).map(String),
         assigneeLabels: r.assigneeLabelCodes ?? [],
+        byRegion: r.assigneeByRegion === true,
         mode: r.mode === ROUTING_MODE.BROADCAST ? ROUTING_MODE.BROADCAST : ROUTING_MODE.LEAST_LOADED,
       })),
     );
@@ -143,18 +146,27 @@ export function HandoffSection() {
   // Assignee candidates = active users (PLN-261019 groups, G5: the old
   // `status !== 'inactive'` never excluded anyone — statuses are
   // invited/active/suspended). Consult-less users are flagged in the editor.
+  const unitRows = useUnits();
+  // Covered places per user = unit scope ∪ held labels' scopes (PLN-261022) — the by-region preview.
+  const unitScope = new Map((unitRows.data ?? []).map((u) => [String(u.id), u]));
+  const labelScope = new Map((jobLabels.data ?? []).map((l) => [l.code, l]));
   const agents = (users.data ?? [])
     .filter((u) => u.status === 'active')
-    .map((u) => ({
-      id: u.id,
-      email: u.email,
-      name: u.name,
-      status: u.status,
-      unitId: u.unitId != null ? String(u.unitId) : null,
-      unitName: u.unitName ?? null,
-      labelCodes: u.labelCodes ?? [],
-    }));
-  const unitRows = useUnits();
+    .map((u) => {
+      const unit = u.unitId != null ? unitScope.get(String(u.unitId)) : undefined;
+      const held = (u.labelCodes ?? []).map((c) => labelScope.get(c)).filter((l) => !!l);
+      return {
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        status: u.status,
+        unitId: u.unitId != null ? String(u.unitId) : null,
+        unitName: u.unitName ?? null,
+        labelCodes: u.labelCodes ?? [],
+        regions: [...(unit?.regions ?? []), ...held.flatMap((l) => l!.regions ?? [])],
+        provinces: [...(unit?.provinces ?? []), ...held.flatMap((l) => l!.provinces ?? [])],
+      };
+    });
   const unitOptions = (unitRows.data ?? []).map((u) => ({ id: String(u.id), name: u.name }));
   const isMaster = useAuthStore((s) => s.principal?.rank) === 'master';
 
@@ -224,10 +236,17 @@ export function HandoffSection() {
         assigneeUserIds: r.assignees.map(Number).filter(Number.isFinite),
         assigneeUnitIds: r.assigneeUnits.map(Number).filter(Number.isFinite),
         assigneeLabelCodes: r.assigneeLabels,
+        assigneeByRegion: r.byRegion || undefined,
         mode: r.mode,
       }))
-      // Same rule as the server: an agent or a group, else the rule pages nobody.
-      .filter((r) => r.assigneeUserIds.length > 0 || r.assigneeUnitIds.length > 0 || r.assigneeLabelCodes.length > 0);
+      // Same rule as the server: an agent, a group or region assignment, else the rule pages nobody.
+      .filter(
+        (r) =>
+          r.assigneeByRegion ||
+          r.assigneeUserIds.length > 0 ||
+          r.assigneeUnitIds.length > 0 ||
+          r.assigneeLabelCodes.length > 0,
+      );
     if (routingRules.length) handoff.routingRules = routingRules;
     const reMin = Math.round(Number(reAlertMin));
     if (Number.isFinite(reMin) && reMin >= 1 && reMin <= 240) {

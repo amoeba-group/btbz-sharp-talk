@@ -62,5 +62,22 @@
   "orgDeleted": "Đã xóa \"{{name}}\".",
   "orgDeleteError": "Xóa thất bại.",
   "permissionLabelNoDelete": "Không thể xóa nhãn gắn với quyền.",
-  "orgInUseByRule": "Đang được dùng trong quy tắc phân công: {{rules}}. Hãy gỡ khỏi quy tắc trước (Chuyển cho nhân viên › Quy tắc phân công)."
+  "orgInUseByRule": "Đang được dùng trong quy tắc phân công: {{rules}}. Hãy gỡ khỏi quy tắc trước (Chuyển cho nhân viên › Quy tắc phân công).",
+  "scopeTitle": "Khu vực phụ trách",
+  "scopeNone": "Chưa có khu vực",
+  "scopeEdit": "Đặt khu vực",
+  "scopeRegions": "Vùng",
+  "scopeProvinces": "Tỉnh / thành phố",
+  "scopeProvincePh": "Nhập hoặc chọn tỉnh/thành",
+  "scopeAdd": "Thêm",
+  "scopeSaved": "Đã lưu khu vực phụ trách của {{name}}",
+  "scopeSaveError": "Không lưu được khu vực",
+  "scopeHint": "Quy tắc phân công \"theo khu vực\" sẽ gọi những người có nhóm hoặc nhãn phụ trách tỉnh/thành (ưu tiên) hoặc vùng của cuộc trò chuyện.",
+  "region": {
+    "north": "Miền Bắc",
+    "north_center": "Bắc Trung Bộ",
+    "central": "Miền Trung",
+    "south_center": "Nam Trung Bộ",
+    "south": "Miền Nam"
+  }
 }

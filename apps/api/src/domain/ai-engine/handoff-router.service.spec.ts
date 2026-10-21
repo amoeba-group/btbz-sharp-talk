@@ -1,4 +1,4 @@
-import { HandoffRouterService, describeConditions, matchRoutingRule } from './handoff-router.service';
+import { HandoffRouterService, describeConditions, matchRoutingRule, matchRoutingRules } from './handoff-router.service';
 import type { AiConfigService } from './ai-config.service';
 import type { HandoffConfig } from './entity/tenant-ai-config.entity';
 
@@ -354,13 +354,21 @@ describe('HandoffRouterService — assignee groups (PLN-261019-Routing-Assignee-
       { name: 'nobody', regions: ['east'], assigneeUserIds: [], assigneeUnitIds: [] },
     ],
   };
+  // The router calls resolveDetailed; `resolve` here returns just the ids.
   const service = (resolve: jest.Mock) =>
-    new HandoffRouterService({ getHandoffConfig: async () => config } as unknown as AiConfigService, { resolve } as never);
+    new HandoffRouterService(
+      { getHandoffConfig: async () => config } as unknown as AiConfigService,
+      { resolveDetailed: async (...args: unknown[]) => ({ ids: await resolve(...args) }) } as never,
+    );
 
   it('resolves the group at handoff time and pages its members', async () => {
     const resolve = jest.fn(async () => [10, 12]);
     const r = await service(resolve).route(4, 'VI', { region: 'north' });
-    expect(resolve).toHaveBeenCalledWith(4, { unitIds: [7], labelCodes: ['consult'] });
+    expect(resolve).toHaveBeenCalledWith(
+      4,
+      { unitIds: [7], labelCodes: ['consult'], byRegion: false },
+      { region: 'north', province: null },
+    );
     expect(r).toMatchObject({ mode: 'agents', targetUserIds: [10, 12], ruleName: 'north-team' });
   });
 
@@ -386,3 +394,45 @@ describe('HandoffRouterService — assignee groups (PLN-261019-Routing-Assignee-
     expect(r).toMatchObject({ targetUserIds: [5], ruleName: 'north-person' });
   });
 });
+
+describe('HandoffRouterService — region match (PLN-261022 stage 1)', () => {
+  const config: HandoffConfig = {
+    assigneeUserIds: [99],
+    routingRules: [
+      { name: 'sales', keywords: ['hoa hồng'], assigneeUserIds: [], assigneeByRegion: true, assigneeLabelCodes: ['sales'] },
+      { name: 'cs', assigneeUserIds: [], assigneeByRegion: true, assigneeLabelCodes: ['cs'] },
+      { name: 'fallback', assigneeUserIds: [7] },
+    ],
+  };
+  const svc = (resolveDetailed: jest.Mock) =>
+    new HandoffRouterService({ getHandoffConfig: async () => config } as unknown as AiConfigService, { resolveDetailed } as never);
+  const attrs = { province: 'Đà Nẵng', region: 'south_center' };
+
+  it('a region rule passes the session place and pages who covers it', async () => {
+    const resolveDetailed = jest.fn(async () => ({ ids: [30], match: 'province' }));
+    const r = await svc(resolveDetailed).route(4, 'VI', { region: 'south_center', identityAttributes: attrs, text: 'phòng trống' });
+    expect(resolveDetailed).toHaveBeenCalledWith(
+      4,
+      { unitIds: undefined, labelCodes: ['cs'], byRegion: true },
+      { region: 'south_center', province: 'Đà Nẵng' },
+    );
+    expect(r).toMatchObject({ targetUserIds: [30], ruleName: 'cs' });
+  });
+
+  it('nobody covering the place falls through to the next rule', async () => {
+    const r = await svc(jest.fn(async () => ({ ids: [], match: 'none' }))).route(4, 'VI', { region: 'central' });
+    expect(r).toMatchObject({ targetUserIds: [7], ruleName: 'fallback' });
+  });
+
+  it('a byRegion-only rule counts as having an assignee', () => {
+    expect(matchRoutingRules(config.routingRules, { text: 'x' }).map((h) => h.rule.name)).toEqual(['cs', 'fallback']);
+  });
+
+  it('rule regions and the session region compare in canonical form', () => {
+    const rules = [{ name: 'nc', regions: ['north_center'], assigneeUserIds: [1] }];
+    expect(matchRoutingRules(rules, { region: 'North Center' })).toHaveLength(1);
+    expect(matchRoutingRules([{ name: 'txt', regions: ['North Central'], assigneeUserIds: [1] }], { region: 'north_center' })).toHaveLength(1);
+    expect(matchRoutingRules(rules, { region: 'south' })).toHaveLength(0);
+  });
+});
+

@@ -27,6 +27,9 @@ export interface UnitResponse {
   sortOrder: number;
   /** Members in this unit — the delete confirmation's release count (PLN-261021). */
   memberCount: number;
+  /** Covered regions / provinces (PLN-261022 stage 1); [] = none. */
+  regions: string[];
+  provinces: string[];
 }
 
 export interface JobLabelResponse {
@@ -36,6 +39,9 @@ export interface JobLabelResponse {
   name: string;
   /** Users holding this label (PLN-261021). */
   memberCount: number;
+  /** Covered regions / provinces (PLN-261022 stage 1); [] = none. */
+  regions: string[];
+  provinces: string[];
 }
 
 export interface InviteUserResponse {
@@ -72,6 +78,8 @@ export class JobLabelMapper {
       code: label.code,
       name: label.name,
       memberCount,
+      regions: label.regions ?? [],
+      provinces: label.provinces ?? [],
     };
   }
 }
@@ -85,6 +93,8 @@ export class UnitMapper {
       name: unit.name,
       sortOrder: unit.sortOrder,
       memberCount,
+      regions: unit.regions ?? [],
+      provinces: unit.provinces ?? [],
     };
   }
 }

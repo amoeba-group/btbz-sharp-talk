@@ -6,6 +6,9 @@ export interface JobLabel {
   name: string;
   /** Users holding the label — the delete confirmation's release count. */
   memberCount: number;
+  /** Covered regions (codes) / provinces (PLN-261022); [] = none. */
+  regions: string[];
+  provinces: string[];
 }
 
 /** Team (PLN-261019 P1) — code is fixed, name editable. */
@@ -15,6 +18,14 @@ export interface Unit {
   name: string;
   sortOrder: number;
   memberCount: number;
+  regions: string[];
+  provinces: string[];
+}
+
+/** Places a unit/label covers (PLN-261022). */
+export interface RegionScopeBody {
+  regions: string[];
+  provinces: string[];
 }
 
 export interface OrgItemBody {
@@ -68,10 +79,12 @@ export const usersService = {
   jobLabels: () => apiGet<JobLabel[]>('/job-labels'),
   createJobLabel: (body: OrgItemBody) => apiPost<JobLabel>('/job-labels', body),
   renameJobLabel: (id: string, name: string) => apiPatch<JobLabel>(`/job-labels/${id}`, { name }),
+  setJobLabelScope: (id: string, body: RegionScopeBody) => apiPatch<JobLabel>(`/job-labels/${id}`, body),
   deleteJobLabel: (id: string) => apiDelete<{ released: number }>(`/job-labels/${id}`),
   units: () => apiGet<Unit[]>('/units'),
   createUnit: (body: OrgItemBody) => apiPost<Unit>('/units', body),
   renameUnit: (id: string, name: string) => apiPatch<Unit>(`/units/${id}`, { name }),
+  setUnitScope: (id: string, body: RegionScopeBody) => apiPatch<Unit>(`/units/${id}`, body),
   deleteUnit: (id: string) => apiDelete<{ released: number }>(`/units/${id}`),
   invite: (body: InviteUserBody) => apiPost<InviteResult>('/users/invite', body),
   // The API exposes per-field endpoints with distinct RBAC (rank/labels/status),

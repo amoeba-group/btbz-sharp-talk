@@ -399,7 +399,9 @@
     "hotel": "Khách sạn",
     "region": {
       "north": "Miền Bắc",
+      "north_center": "Bắc Trung Bộ",
       "central": "Miền Trung",
+      "south_center": "Nam Trung Bộ",
       "south": "Miền Nam"
     },
     "role": {

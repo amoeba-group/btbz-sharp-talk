@@ -399,7 +399,9 @@
     "hotel": "ホテル",
     "region": {
       "north": "北部",
+      "north_center": "北中部",
       "central": "中部",
+      "south_center": "南中部",
       "south": "南部"
     },
     "role": {

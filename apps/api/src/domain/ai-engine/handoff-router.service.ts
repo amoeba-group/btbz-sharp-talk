@@ -1,6 +1,7 @@
 import { Injectable, Logger, Optional } from '@nestjs/common';
-import { hasAssigneeGroup, localized, routingConditionDef } from '@sharptalk/types';
+import { canonicalRegion, hasAssigneeGroup, localized, routingConditionDef } from '@sharptalk/types';
 import { RoutingAssigneeService } from './routing-assignee.service';
+import type { ResolvedAssignees } from './routing-assignee.service';
 import type { LocalizedText, RoutingCondition, RoutingConditionField } from '@sharptalk/types';
 import { AiConfigService } from './ai-config.service';
 import { DENY_MODE, ROUTING_MODE } from './entity/tenant-ai-config.entity';
@@ -111,15 +112,21 @@ export interface RoutingRuleHit {
  * fallback. Pure — tested directly.
  */
 export function matchRoutingRules(rules: RoutingRule[] | undefined, ctx: RoutingContext): RoutingRuleHit[] {
-  const region = norm(ctx.region);
+  // Canonical on both sides (PLN-261022): "North Center", "north_central" and
+  // `north_center` are one region, so a rule written once matches every spelling.
+  const region = canonicalRegion(ctx.region);
   const text = norm(ctx.text);
   const label = norm(ctx.label);
   const hits: RoutingRuleHit[] = [];
   for (const [index, rule] of (rules ?? []).entries()) {
     const assigneeUserIds = (rule?.assigneeUserIds ?? []).map(Number).filter((id) => Number.isFinite(id) && id > 0);
-    const hasGroup = hasAssigneeGroup({ unitIds: rule?.assigneeUnitIds, labelCodes: rule?.assigneeLabelCodes });
+    const hasGroup = hasAssigneeGroup({
+      unitIds: rule?.assigneeUnitIds,
+      labelCodes: rule?.assigneeLabelCodes,
+      byRegion: rule?.assigneeByRegion === true,
+    });
     if (!assigneeUserIds.length && !hasGroup) continue;
-    const regions = (rule.regions ?? []).map(norm).filter(Boolean);
+    const regions = (rule.regions ?? []).map(canonicalRegion).filter(Boolean);
     if (regions.length && !regions.includes(region)) continue;
     const keywords = (rule.keywords ?? []).map(norm).filter(Boolean);
     if (keywords.length && !keywords.some((k) => text.includes(k))) continue;
@@ -220,7 +227,8 @@ export class HandoffRouterService {
     // (team all suspended) is skipped for the next one (PLN-261019 groups D4).
     for (const hit of matchRoutingRules(config?.routingRules, ctx)) {
       const ruleName = hit.rule.name?.trim() || `#${hit.index + 1}`;
-      const group = hit.hasGroup && tenantId != null ? await this.resolveGroup(tenantId, hit.rule) : [];
+      const resolved = hit.hasGroup && tenantId != null ? await this.resolveGroup(tenantId, hit.rule, ctx) : { ids: [] };
+      const group = resolved.ids;
       const targets = [...new Set([...hit.assigneeUserIds, ...group])];
       if (!targets.length) {
         this.logger.warn(`routing rule ${ruleName} (tenant ${tenantId}) resolved to no active agent — skipped`);
@@ -228,7 +236,8 @@ export class HandoffRouterService {
       }
       const conds = describeConditions(hit.rule.conditions);
       const groupDesc = hit.hasGroup
-        ? `, group(unit:${(hit.rule.assigneeUnitIds ?? []).join('|') || '*'}×label:${(hit.rule.assigneeLabelCodes ?? []).join('|') || '*'}) ${group.length}`
+        ? `, group(unit:${(hit.rule.assigneeUnitIds ?? []).join('|') || '*'}×label:${(hit.rule.assigneeLabelCodes ?? []).join('|') || '*'}` +
+          `${hit.rule.assigneeByRegion ? `×byRegion match=${resolved.match ?? 'none'}` : ''}) ${group.length}`
         : '';
       this.logger.log(
         `handoff routed by rule ${ruleName} (tenant ${tenantId}, region ${ctx.region ?? '-'}${conds ? `, ${conds}` : ''}, explicit ${hit.assigneeUserIds.length}${groupDesc} → ${targets.length} agent(s))`,
@@ -243,13 +252,17 @@ export class HandoffRouterService {
     return { mode: 'agents', targetUserIds };
   }
 
-  private async resolveGroup(tenantId: number, rule: RoutingRule): Promise<number[]> {
-    if (!this.assignees) return [];
+  private async resolveGroup(tenantId: number, rule: RoutingRule, ctx: RoutingContext): Promise<ResolvedAssignees> {
+    if (!this.assignees) return { ids: [] };
     try {
-      return await this.assignees.resolve(tenantId, { unitIds: rule.assigneeUnitIds, labelCodes: rule.assigneeLabelCodes });
+      return await this.assignees.resolveDetailed(
+        tenantId,
+        { unitIds: rule.assigneeUnitIds, labelCodes: rule.assigneeLabelCodes, byRegion: rule.assigneeByRegion === true },
+        { region: ctx.region ?? null, province: ctx.identityAttributes?.province ?? null },
+      );
     } catch (err) {
       this.logger.warn(`assignee group resolution failed (tenant ${tenantId}): ${(err as Error).message}`);
-      return [];
+      return { ids: [] };
     }
   }
 

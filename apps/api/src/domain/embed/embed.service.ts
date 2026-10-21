@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { Repository } from 'typeorm';
@@ -10,7 +10,13 @@ import { CONSENT_NOTICE_VERSION, sessionCacheKey } from '../session/session.serv
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
-import { IdentityAttributes, identitySigningString, normalizeIdentityAttributes } from './identity-attributes';
+import {
+  IdentityAttributes,
+  identitySigningString,
+  normalizeIdentityAttributes,
+  storedIdentityAttributes,
+} from './identity-attributes';
+import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 
 /** What the customer's own server signs, and what the SDK forwards. */
 export interface IdentifyInput {
@@ -49,6 +55,9 @@ export class EmbedService {
     @InjectRepository(Customer) private readonly customerRepo: Repository<Customer>,
     @InjectRepository(Session) private readonly sessionRepo: Repository<Session>,
     private readonly redis: RedisService,
+    // Last + optional: specs build the service positionally. Read-only — the
+    // province → region map (handoff_config.provinceRegions, PLN-261022).
+    @Optional() @InjectRepository(TenantAiConfig) private readonly aiConfigRepo?: Repository<TenantAiConfig>,
   ) {}
 
   /** New secret, stored encrypted. Returned in full exactly once, to the caller. */
@@ -105,8 +114,15 @@ export class EmbedService {
     session.customerId = Number(customer.id);
     session.identityLevel = SESSION_IDENTITY.VERIFIED;
     // Replaced, never merged: a re-identify for a different hotel must not keep
-    // the previous hotel's region.
-    session.identityAttributes = attributes;
+    // the previous hotel's region. Stored form (PLN-261022): NFC, canonical
+    // region, region filled from the province map — AFTER the signature check.
+    const stored = storedIdentityAttributes(attributes, await this.provinceRegions(Number(session.tenantId), attributes));
+    if (stored.mismatch) {
+      this.logger.warn(
+        `identify region '${stored.attributes?.region}' differs from the province map ('${stored.mismatch}') — signed value kept (tenant ${session.tenantId})`,
+      );
+    }
+    session.identityAttributes = stored.attributes;
     // Consent via the host's own terms (PLN-261015 D9). Only a SIGNED user
     // reaches this line, so only users the host vouches for are covered; an
     // explicit decline in the widget is never overridden.
@@ -125,10 +141,25 @@ export class EmbedService {
     await this.redis.del(sessionCacheKey(input.sessionToken));
     this.logger.log(
       `identify ok (tenant ${session.tenantId}, customer ${customer.id}, user ${maskId(input.userId)}` +
-        `${attributes ? `, attrs ${Object.keys(attributes).sort().join(',')}` : ''}` +
+        `${attributes ? `, attrs ${Object.keys(attributes).sort().join(',')}, region ${stored.regionSource}` : ''}` +
         `${consentFromHost ? `, consent via host terms v${saved.consentVersion}` : ''})`,
     );
     return saved;
+  }
+
+  /** The tenant's province → region map; only read when a province arrived. Never throws. */
+  private async provinceRegions(
+    tenantId: number,
+    attributes: IdentityAttributes | null,
+  ): Promise<Record<string, string> | null> {
+    if (!attributes?.province || !this.aiConfigRepo) return null;
+    try {
+      const config = await this.aiConfigRepo.findOne({ where: { tenantId } });
+      return config?.handoffConfig?.provinceRegions ?? null;
+    } catch (err) {
+      this.logger.warn(`province map unavailable (tenant ${tenantId}): ${(err as Error).message}`);
+      return null;
+    }
   }
 
   /**

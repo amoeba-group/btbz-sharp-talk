@@ -33,13 +33,20 @@ export class JobLabelController {
 
   @Patch(':id')
   @RequireCapability(CAPABILITY.LABEL_EDIT)
-  @ApiOperation({ summary: 'Rename a job label' })
+  @ApiOperation({ summary: 'Rename a job label and/or set the regions/provinces it covers' })
   update(
     @CurrentUser() user: Principal,
     @Param('id', ParseIntPipe) id: number,
     @Body() body: UpdateJobLabelRequest,
   ) {
-    return this.userService.updateLabel(asTenantUser(user).tenantId, id, body.name);
+    const actor = asTenantUser(user);
+    return this.userService.updateLabel(
+      actor.tenantId,
+      id,
+      body.name,
+      { regions: body.regions, provinces: body.provinces },
+      actor.userId,
+    );
   }
 
   @Delete(':id')

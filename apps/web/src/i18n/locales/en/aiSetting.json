@@ -178,7 +178,9 @@
       "add": "Add rule",
       "region": {
         "north": "North",
+        "north_center": "North Center",
         "central": "Central",
+        "south_center": "South Center",
         "south": "South"
       },
       "unlisted": "Not in the agent list (no consult label or inactive) — click to remove",
@@ -226,8 +228,15 @@
         "noConsult": "No consult label — cannot handle live chat",
         "people": "People",
         "needOne": "Pick a person or a group — rules without agents are not saved",
-        "manageLink": "Manage labels & units →"
-      }
+        "manageLink": "Manage labels & units →",
+        "byRegion": "Assign to region owners",
+        "byRegionHint": "Pages active people whose team or labels cover the conversation's province (first) or region. Units/labels below narrow the pool.",
+        "byRegionFilters": "Narrow by (optional)",
+        "byRegionPreview": "Candidates by region:",
+        "byRegionNoneWarn": "no one → next rule",
+        "byRegionScopeLink": "Set team/label places"
+      },
+      "regionOther": "Other"
     },
     "reAlert": {
       "title": "Reminder when nobody picks up",

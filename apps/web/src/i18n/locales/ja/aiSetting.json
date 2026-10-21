@@ -178,7 +178,9 @@
       "add": "ルールを追加",
       "region": {
         "north": "北部",
+        "north_center": "北中部",
         "central": "中部",
+        "south_center": "南中部",
         "south": "南部"
       },
       "unlisted": "担当者一覧にないユーザー(相談ラベルなし・無効) — クリックで削除",
@@ -226,8 +228,15 @@
         "noConsult": "相談ラベルなし — ライブチャット対応不可",
         "people": "個人指定",
         "needOne": "個人またはグループを1つ以上選んでください — 担当者のないルールは保存されません",
-        "manageLink": "ラベル・チーム管理 →"
-      }
+        "manageLink": "ラベル・チーム管理 →",
+        "byRegion": "地域担当者に割り当て",
+        "byRegionHint": "チーム・ラベルの担当地域が会話の省・市（優先）または地域区分と一致する有効な担当者を呼び出します。下のチーム・ラベルは候補を絞り込むフィルターです。",
+        "byRegionFilters": "絞り込み（任意）",
+        "byRegionPreview": "地域別の候補:",
+        "byRegionNoneWarn": "担当者なし → 次のルール",
+        "byRegionScopeLink": "チーム・ラベルの担当地域を設定"
+      },
+      "regionOther": "その他"
     },
     "reAlert": {
       "title": "未対応時の再通知",

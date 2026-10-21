@@ -62,5 +62,22 @@
   "orgDeleted": "\"{{name}}\" eliminado.",
   "orgDeleteError": "No se pudo eliminar.",
   "permissionLabelNoDelete": "Las etiquetas vinculadas a permisos no se pueden eliminar.",
-  "orgInUseByRule": "En uso por reglas de asignación: {{rules}}. Quítelo primero de la regla (Transferencia a agente › Reglas de asignación)."
+  "orgInUseByRule": "En uso por reglas de asignación: {{rules}}. Quítelo primero de la regla (Transferencia a agente › Reglas de asignación).",
+  "scopeTitle": "Zonas atendidas",
+  "scopeNone": "Sin zonas",
+  "scopeEdit": "Definir zonas",
+  "scopeRegions": "Regiones",
+  "scopeProvinces": "Provincias / ciudades",
+  "scopeProvincePh": "Escribe o elige una provincia",
+  "scopeAdd": "Añadir",
+  "scopeSaved": "Zonas de {{name}} guardadas",
+  "scopeSaveError": "No se pudieron guardar las zonas",
+  "scopeHint": "Las reglas de asignación «por región» avisan a quienes, por su equipo o etiquetas, atienden la provincia (primero) o la región de la conversación.",
+  "region": {
+    "north": "Norte",
+    "north_center": "Centro-Norte",
+    "central": "Centro",
+    "south_center": "Centro-Sur",
+    "south": "Sur"
+  }
 }

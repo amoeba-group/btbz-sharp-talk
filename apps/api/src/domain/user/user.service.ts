@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { generateToken } from '@sharptalk/common';
-import { JOB_LABEL } from '@sharptalk/types';
+import { JOB_LABEL, canonicalRegion, isRegionCode, provinceKey } from '@sharptalk/types';
 import { User } from './entity/user.entity';
 import { JobLabel } from './entity/job-label.entity';
 import { UserJobLabel } from './entity/user-job-label.entity';
@@ -302,13 +302,31 @@ export class UserService {
     return JobLabelMapper.toResponse(label);
   }
 
-  async updateLabel(tenantId: number, id: number, name: string): Promise<JobLabelResponse> {
+  /** Rename a label and/or set the places it covers (PLN-261022 stage 1); an omitted field is left alone. */
+  async updateLabel(
+    tenantId: number,
+    id: number,
+    name?: string,
+    scope?: RegionScopeInput,
+    actorId?: number,
+  ): Promise<JobLabelResponse> {
     const label = await this.labelRepo.findOne({ where: { id, tenantId } });
     if (!label) {
       throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
-    label.name = name;
+    if (name !== undefined) label.name = name;
+    const scopeChanged = applyRegionScope(label, scope);
     await this.labelRepo.save(label);
+    if (scopeChanged && actorId != null) {
+      await this.audit.write({
+        tenantId,
+        actorType: 'user',
+        actorId,
+        action: 'label.scope_changed',
+        target: `label:${label.id} ${label.code}`,
+        metadata: { regions: label.regions, provinces: label.provinces },
+      });
+    }
     return JobLabelMapper.toResponse(label);
   }
 
@@ -376,19 +394,39 @@ export class UserService {
     return UnitMapper.toResponse(unit);
   }
 
-  async renameUnit(tenantId: number, actorId: number, id: number, name: string): Promise<UnitResponse> {
+  /** Rename a unit and/or set the places it covers (PLN-261022 stage 1); an omitted field is left alone. */
+  async renameUnit(
+    tenantId: number,
+    actorId: number,
+    id: number,
+    name?: string,
+    scope?: RegionScopeInput,
+  ): Promise<UnitResponse> {
     const unit = await this.getTenantUnit(tenantId, id);
     const before = unit.name;
-    unit.name = name;
+    if (name !== undefined) unit.name = name;
+    const scopeChanged = applyRegionScope(unit, scope);
     await this.unitRepo.save(unit);
-    await this.audit.write({
-      tenantId,
-      actorType: 'user',
-      actorId,
-      action: 'unit.renamed',
-      target: `unit:${unit.id} ${unit.code}`,
-      metadata: { before, after: name },
-    });
+    if (name !== undefined && name !== before) {
+      await this.audit.write({
+        tenantId,
+        actorType: 'user',
+        actorId,
+        action: 'unit.renamed',
+        target: `unit:${unit.id} ${unit.code}`,
+        metadata: { before, after: name },
+      });
+    }
+    if (scopeChanged) {
+      await this.audit.write({
+        tenantId,
+        actorType: 'user',
+        actorId,
+        action: 'unit.scope_changed',
+        target: `unit:${unit.id} ${unit.code}`,
+        metadata: { regions: unit.regions, provinces: unit.provinces },
+      });
+    }
     return UnitMapper.toResponse(unit);
   }
 
@@ -535,4 +573,40 @@ export class UserService {
     }
     return result;
   }
+}
+
+/** Places a unit/label covers, as the API accepts them (PLN-261022 stage 1). */
+export interface RegionScopeInput {
+  regions?: string[];
+  provinces?: string[];
+}
+
+/**
+ * Write the covered places onto a unit/label row; returns whether anything
+ * changed. Regions are folded to catalogue codes (unknown dropped — the DTO
+ * already refused them), provinces NFC-normalised and de-duplicated by their
+ * comparison key keeping the first spelling. An empty list stores NULL.
+ */
+export function applyRegionScope(
+  row: { regions: string[] | null; provinces: string[] | null },
+  scope: RegionScopeInput | undefined,
+): boolean {
+  if (!scope) return false;
+  const before = JSON.stringify([row.regions ?? [], row.provinces ?? []]);
+  if (scope.regions !== undefined) {
+    const regions = [...new Set(scope.regions.map(canonicalRegion).filter(isRegionCode))];
+    row.regions = regions.length ? regions : null;
+  }
+  if (scope.provinces !== undefined) {
+    const seen = new Set<string>();
+    const provinces: string[] = [];
+    for (const p of scope.provinces) {
+      const key = provinceKey(p);
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      provinces.push(p.normalize('NFC').replace(/\s+/g, ' ').trim());
+    }
+    row.provinces = provinces.length ? provinces : null;
+  }
+  return JSON.stringify([row.regions ?? [], row.provinces ?? []]) !== before;
 }

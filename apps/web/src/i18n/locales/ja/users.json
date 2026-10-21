@@ -62,5 +62,22 @@
   "orgDeleted": "「{{name}}」を削除しました。",
   "orgDeleteError": "削除に失敗しました。",
   "permissionLabelNoDelete": "権限に連動するラベルは削除できません。",
-  "orgInUseByRule": "振り分けルールで使用中です: {{rules}}。先にルールから外してください（担当者への引き継ぎ › 割り当てルール）。"
+  "orgInUseByRule": "振り分けルールで使用中です: {{rules}}。先にルールから外してください（担当者への引き継ぎ › 割り当てルール）。",
+  "scopeTitle": "担当地域",
+  "scopeNone": "担当地域なし",
+  "scopeEdit": "地域を設定",
+  "scopeRegions": "地域区分",
+  "scopeProvinces": "省・市",
+  "scopeProvincePh": "省・市を入力または選択",
+  "scopeAdd": "追加",
+  "scopeSaved": "{{name}} の担当地域を保存しました",
+  "scopeSaveError": "担当地域を保存できませんでした",
+  "scopeHint": "振り分けルールの「地域担当者に割り当て」は、チーム・ラベルの担当地域が会話の省・市（優先）または地域区分と一致する担当者を選びます。",
+  "region": {
+    "north": "北部",
+    "north_center": "北中部",
+    "central": "中部",
+    "south_center": "南中部",
+    "south": "南部"
+  }
 }
