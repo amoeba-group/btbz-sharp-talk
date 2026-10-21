@@ -90,7 +90,7 @@ SharpTalk identify: 서명 검증(받은 그대로) → NFC 정규화 → 저장
 **값 규약(합의안)**
 | 항목 | 규약 |
 |---|---|
-| `region` | `REGIONS_TEXT` 문자열 그대로: `North` · `North Center` · `South Center` · `South`. 숫자 코드나 가이드의 `north/central/south`는 쓰지 않는다. 규칙 비교는 `trim().toLowerCase()`라서 대소문자가 달라도 맞지만, 서명은 보낸 그대로 검증하므로 **표의 표기를 그대로** 쓴다 |
+| `region` | **v1.2(10/22) 변경**: 권역 코드 `north` · `north_center` · `south_center` · `south`(채널 구조 문서 기준)를 권장한다. 지역표 텍스트(`North Center`)를 보내도 SharpTalk이 서명 검증 뒤 같은 코드로 정규화해 저장한다(S20). 서명은 **보낸 그대로** 검증하므로 HA는 한 가지 표기를 일관되게 써야 한다 |
 | `province` | `NAME` 그대로(예: `Thừa Thiên Huế`, `Bà Rịa - Vũng Tàu`). 규칙 조건 `province contains`에 쓴다 |
 | 표 갱신 | 성 통폐합(2025-07, 63→34) 등으로 Go2Joy가 표를 바꾸면, HA는 DB를 따라가고 SharpTalk 대체 매핑(S13)은 Province Feed 재동기화나 표 재수령으로 갱신한다. HA가 `region`을 보내는 한 SharpTalk 매핑은 보조 수단일 뿐이다 |
 | 필리핀(`REGIONS 10`) | 이 표에는 없다(VN만). PH HA를 대상으로 하면 별도 협의 |
@@ -112,6 +112,67 @@ SharpTalk identify: 서명 검증(받은 그대로) → NFC 정규화 → 저장
 - identify 처리: 서명 검증 → 속성 NFC 정규화 → `region`이 비어 있으면 매핑으로 채운다(출처를 `region_source: map`으로 로그에 남김) → 저장.
 - 콘솔 규칙 편집기: region을 4종 중에서 선택(S7).
 - 테스트: 63행 전부 매핑, NFD로 들어온 성 이름, 서명 region과 매핑이 다를 때(서명 값 유지 + warn), 미등록 성(region 없음 → 폴백).
+
+### 0-6. 추가 요구 (2026-10-22) — 고객 등록 · 대화 연속성 · B2B/B2C 구분
+근거: 사용자 요구(10/22) + `SharpTalk × Go2Joy 채널 구조.pdf`(2026-10-21, 에이전트 3개 구조: B2B `#Talk-4-Hotel` / B2C 예약 전 `Go2Joy-#Talk-4-BookingClient` / B2C 예약 후 `Hotel-#Talk-4-BookingClient`).
+
+**요구**
+| # | 요구 | 채널 구조 문서의 정의 |
+|---|---|---|
+| R1 | HA에 로그인한 호텔 직원이 위젯 채팅을 시작하면 그 정보를 **SharpTalk 고객정보에 등록**한다 | 고객 단위는 **소속 호텔(회사)**. 로그인하면 호텔과 직원을 찾아 매칭하고, 없으면 새로 등록. 모델 = 고객회사(Company, 키 `hotelSn`) · 지역(Region) · 직원(Contact, 키 `userSn`/`userId`) |
+| R2 | **대화 세션이 끝나도 대화는 그 고객 계정의 대화로 이어진다** | 대화 스레드를 **`hotelSn` 기준**으로 묶는다. 세션이 끊기거나 같은 호텔의 다른 직원이 문의해도 같은 회사 이력으로 이어진다 |
+| R3 | B2B이므로 **회사(호텔) 기업고객과 일반 부킹고객을 구분**한다 | 구분 B2B(파트너 호텔 직원) / B2C 예약 전 / B2C 예약 후(예약별 스레드, `bookingSn`·`hotelSn`) |
+
+**AS-IS(코드 확인, 2026-10-22)**
+| 항목 | 현재 | 근거 |
+|---|---|---|
+| 고객 등록 | identify 시 `customers`에 (tenant, `external_customer_id`=userId)로 upsert, 이름 갱신·이메일/전화는 빈 칸만. **회사 개념·고객 유형 없음**(`tier`=guest/subscriber/regular뿐) | `embed.service.ts` `upsertCustomer`, `customer.entity.ts` |
+| 세션 | 임베드에서는 저장된 토큰으로 이어가지 않음(공용 PC 보호) → **페이지를 로드할 때마다 새 게스트 세션**. identify는 현재 세션에 customer만 붙이고, 기존 세션으로 갈아타지 않음(24시간 재사용 창은 Shopify/Cafe24 경로에만 있음) | `useSession.ts:265`, `session.service.ts:415` |
+| 대화 | `conversations`에 `session_id`만 있고 **customer_id 없음**. 위젯은 **그 세션의 마지막 대화 1건**만 보여줌. 종료 후 다시 쓰면 같은 세션 안에 새 대화가 생기고 이전 대화는 화면에서 사라짐 | `chat.service.ts:270, 321`, `chat.controller.ts:83` |
+| 콘솔 | 고객·회사 단위 대화 목록 없음. "동일인 제안"(같은 customer_id·email 세션 제안, 자동 병합 없음)과 수동 그룹(`chat_groups`, kind `project`=회사 라벨)만 있음 | `chat-group.service.ts:405` |
+| AI 맥락 | 현재 대화의 최근 12개 메시지만. 이전 대화·세션은 안 봄 | `conversation-history.util.ts` |
+| 외부 ID 충돌 | 고유 키가 (tenant, userId)라서 B2C 앱 사용자 ID와 HA 직원 ID가 같은 문자열이면 **같은 고객으로 합쳐짐** | `uq_customers_tenant_external` |
+
+→ R1~R3는 **SharpTalk 코드·스키마 변경이 필요**하다(설정만으로는 불가).
+
+**TO-BE(제안)**
+```
+identify(서명 검증) ─┬─ Contact  customers(customer_type='b2b_contact', external_customer_id='ha:{userSn}')
+                    ├─ Company  companies(tenant, external_key='hotel:{hotelSn}', name, address, province, district, region)
+                    ├─ 연결     company_contacts(company_id, customer_id, role, last_seen_at)
+                    └─ 세션     sessions.company_id = Company, customer_id = Contact
+대화 생성 ─ conversations.customer_id / company_id 기록 → "계정 스레드" = B2B: company_id, B2C: customer_id
+위젯 ─ identify 후 계정 스레드의 이전 대화를 이어서 표시(구분선 "이전 대화 · 날짜")
+      최근 대화가 재개 창(예: 24h) 안에서 종료됐다면 그 대화를 다시 열어 같은 상담원 유지(sticky)
+콘솔 ─ 기업고객(회사) 화면: 연락처(직원) 목록·전체 대화·지역 / 라이브챗 배지 "기업 · 호텔명"
+AI ─ 계정 스레드의 직전 대화 요약(또는 마지막 N개 메시지)을 맥락에 추가
+```
+- **B2B 판정 규칙**: **서명된 `hotel_id`가 있는 identify만 B2B**로 등록한다. 위젯 설정의 `agent: "hotel-partner"`는 브라우저 값이라 근거로 쓰지 않는다. B2C 부킹 고객은 이후 Go2Joy 앱·웹 연동(별도 REQ)에서 `customer_type='b2c'`로 등록한다.
+- **외부 ID 네임스페이스**: HA 직원은 `userId = "ha:" + userSn`(변하지 않는 번호)으로 보낸다. 로그인 ID(`go2joysupport`)는 바뀔 수 있고 B2C ID와 겹칠 수 있다. → 가이드 v1.2에서 변경(테스트 벡터 갱신).
+- **회사 단위 연속성의 범위**: 같은 호텔의 다른 직원이 문의해도 **상담원·AI는 회사 이력을 본다**. 위젯 화면에 다른 직원의 대화까지 보여줄지는 결정이 필요하다(D12). 기본안은 상담원·AI는 회사 전체, 위젯은 본인 대화 + 회사 스레드 요약이다.
+- **체인 운영자**: 직원 1명이 여러 호텔에 연결될 수 있다(`company_contacts` N:M). 세션의 회사는 identify 때 서명된 현재 `hotel_id`로 정한다. 호텔을 바꿔 다시 identify하면 이후 대화는 새 회사 스레드로 간다.
+- **지역 코드 정규화**: 채널 구조 문서의 권역 코드(`north`·`north_center`·`south_center`·`south`)를 SharpTalk의 기준 코드로 삼는다. HA가 지역표 텍스트(`North Center`)를 보내도 서명 검증 뒤 `trim → 소문자 → 공백을 _로` 정규화해 같은 코드로 저장한다(§0-5 갱신).
+
+**추가 미결 결정**
+| # | 결정 | 선택지 | 제안 |
+|---|---|---|---|
+| D12 | 위젯에 같은 호텔 다른 직원의 대화를 보일지 | 본인만 / **본인 + 회사 요약** / 회사 전체 | 본인 + 회사 요약(직원 간 개인정보 노출 최소화). 상담원·AI는 회사 전체 |
+| D13 | 종료된 대화 재개(sticky) 창 | 없음 / **24시간** / 7일 | 24시간 안이면 같은 대화를 다시 열어 같은 상담원, 넘으면 같은 스레드에 새 대화 |
+| D14 | AI에 이전 대화를 어떻게 줄지 | 없음 / **직전 대화 요약** / 마지막 N개 원문 | 요약(토큰·개인정보 최소화) |
+| D15 | 회사 주소·군(district) 수신 | 받지 않음 / **서명 없는 표시용으로 받음** | 주소는 표시용(`company.address`), district는 서명 속성으로 추가 |
+| D16 | 기업고객 화면 위치 | 고객 메뉴 하위 탭 / 별도 메뉴 | 고객 메뉴에 "기업고객" 탭(B2B/B2C 필터) |
+
+**SharpTalk 작업 추가(S14~S21)**
+| # | 작업 | 규모 | 스키마 |
+|---|---|---|---|
+| S14 | `companies` · `company_contacts` 테이블, `customers.customer_type`(`b2c`·`b2b_contact`, 기본 `b2c`), `sessions.company_id` | 중 | **SQL** |
+| S15 | identify → Contact·Company upsert(동시 요청 레이스는 고유 키로 처리, 기존 패턴), 서명된 `hotel_id`가 있을 때만 B2B | 소~중 | — |
+| S16 | `conversations.customer_id`·`company_id`(생성 시 기록) + 계정 스레드 조회 API(위젯·콘솔) | 중 | **SQL** |
+| S17 | 위젯: identify 후 이전 대화 이어 보기(구분선, 페이지네이션), 재개 창 안이면 직전 대화 재개(D13) | 중 | — |
+| S18 | AI 맥락: 계정 스레드 직전 대화 요약(D14) | 소~중 | — |
+| S19 | 콘솔: 기업고객(회사) 화면·필터, 라이브챗 배지·회사 이력 패널, 배정 조건 `customer_type` 추가 | 중 | — |
+| S20 | 지역 코드 정규화(`North Center` → `north_center`), 허용 키에 `district` 추가, 표시용 `company.address` 수신 | 소 | — |
+| S21 | 통계·대화 이력에 B2B/B2C 구분 축 | 소 | — |
 
 ## 1. 요약
 | 구분 | 결론 |
