@@ -25,6 +25,8 @@ export interface UnitResponse {
   code: string;
   name: string;
   sortOrder: number;
+  /** Members in this unit — the delete confirmation's release count (PLN-261021). */
+  memberCount: number;
 }
 
 export interface JobLabelResponse {
@@ -32,6 +34,8 @@ export interface JobLabelResponse {
   tenantId: number;
   code: string;
   name: string;
+  /** Users holding this label (PLN-261021). */
+  memberCount: number;
 }
 
 export interface InviteUserResponse {
@@ -61,24 +65,26 @@ export class UserMapper {
 }
 
 export class JobLabelMapper {
-  static toResponse(label: JobLabel): JobLabelResponse {
+  static toResponse(label: JobLabel, memberCount = 0): JobLabelResponse {
     return {
       id: label.id,
       tenantId: label.tenantId,
       code: label.code,
       name: label.name,
+      memberCount,
     };
   }
 }
 
 export class UnitMapper {
-  static toResponse(unit: Unit): UnitResponse {
+  static toResponse(unit: Unit, memberCount = 0): UnitResponse {
     return {
       id: unit.id,
       tenantId: unit.tenantId,
       code: unit.code,
       name: unit.name,
       sortOrder: unit.sortOrder,
+      memberCount,
     };
   }
 }

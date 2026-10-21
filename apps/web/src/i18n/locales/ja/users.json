@@ -43,7 +43,7 @@
   "add": "追加",
   "codePlaceholder": "例: north",
   "namePlaceholder": "例: 北部",
-  "codeHint": "コードは英小文字・数字・_ の1〜24文字で、作成後は変更できません。削除はなく、名前のみ変更できます。",
+  "codeHint": "コードは英小文字・数字・_ の1〜24文字で、作成後は変更できません。削除すると所属ユーザーは解除されます。",
   "codeInvalid": "英小文字・数字・_ のみ1〜24文字で入力してください。",
   "codeTaken": "このコードは既に存在します。",
   "permissionLinked": "権限連動",
@@ -51,5 +51,16 @@
   "orgCreated": "「{{name}}」を追加しました。",
   "orgRenamed": "「{{name}}」に変更しました。",
   "orgSaveError": "保存に失敗しました。",
-  "manageLink": "ラベル・チーム管理 →"
+  "manageLink": "ラベル・チーム管理 →",
+  "orgMembers": "{{count}}名",
+  "orgDeleteTitle": "「{{name}}」を削除",
+  "orgDeleteBodyLabel": "このラベルを削除します。",
+  "orgDeleteBodyUnit": "このチームを削除します。",
+  "orgDeleteReleaseLabel": "保有者{{count}}名からラベルが外れます。",
+  "orgDeleteReleaseUnit": "所属メンバー{{count}}名はチーム未設定になります。",
+  "orgDeleteIrreversible": "元に戻せません。",
+  "orgDeleted": "「{{name}}」を削除しました。",
+  "orgDeleteError": "削除に失敗しました。",
+  "permissionLabelNoDelete": "権限に連動するラベルは削除できません。",
+  "orgInUseByRule": "振り分けルールで使用中です: {{rules}}。先にルールから外してください（担当者への引き継ぎ › 割り当てルール）。"
 }

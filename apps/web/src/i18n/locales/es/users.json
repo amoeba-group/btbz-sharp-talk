@@ -43,7 +43,7 @@
   "add": "Añadir",
   "codePlaceholder": "p. ej. north",
   "namePlaceholder": "p. ej. Norte",
-  "codeHint": "El código tiene 1–24 letras minúsculas, dígitos o _ y no se puede cambiar después. No se elimina nada; cambie el nombre.",
+  "codeHint": "El código tiene 1–24 letras minúsculas, dígitos o _ y no se puede cambiar después. Al eliminar una fila se liberan sus miembros.",
   "codeInvalid": "Use solo minúsculas, dígitos y _ (1–24 caracteres).",
   "codeTaken": "Este código ya existe.",
   "permissionLinked": "Permiso",
@@ -51,5 +51,16 @@
   "orgCreated": "\"{{name}}\" añadido.",
   "orgRenamed": "Renombrado a \"{{name}}\".",
   "orgSaveError": "No se pudo guardar.",
-  "manageLink": "Gestionar etiquetas y equipos →"
+  "manageLink": "Gestionar etiquetas y equipos →",
+  "orgMembers": "{{count}} miembro(s)",
+  "orgDeleteTitle": "¿Eliminar \"{{name}}\"?",
+  "orgDeleteBodyLabel": "Se eliminará esta etiqueta.",
+  "orgDeleteBodyUnit": "Se eliminará este equipo.",
+  "orgDeleteReleaseLabel": "Se quitará a {{count}} miembro(s).",
+  "orgDeleteReleaseUnit": "{{count}} miembro(s) quedarán sin equipo.",
+  "orgDeleteIrreversible": "Esta acción no se puede deshacer.",
+  "orgDeleted": "\"{{name}}\" eliminado.",
+  "orgDeleteError": "No se pudo eliminar.",
+  "permissionLabelNoDelete": "Las etiquetas vinculadas a permisos no se pueden eliminar.",
+  "orgInUseByRule": "En uso por reglas de asignación: {{rules}}. Quítelo primero de la regla (Transferencia a agente › Reglas de asignación)."
 }

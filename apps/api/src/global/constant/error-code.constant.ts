@@ -34,6 +34,10 @@ export const ERROR_CODE = {
   },
   /** Unit (team) id not in this tenant (PLN-261019-Users-Unit-Labels-Routing-Conditions). */
   UNIT_NOT_FOUND: { code: 'E2005', message: 'Unit not found' },
+  /** consult/accounting/operations carry permissions — never deleted (PLN-261021-Users-Labels-Units-Delete D1). */
+  LABEL_PROTECTED: { code: 'E2006', message: 'A permission-linked label cannot be deleted' },
+  /** A routing/deny rule still names the unit or label; `details.rules` lists them (PLN-261021 D2). */
+  ORG_IN_USE_BY_RULE: { code: 'E2007', message: 'Used by a routing rule' },
 
   // E3xxx — chat / conversation
   SESSION_NOT_FOUND: { code: 'E3001', message: 'Session not found' },

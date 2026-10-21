@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CAPABILITY, Principal } from '@sharptalk/types';
 import { UserService } from './user.service';
@@ -10,7 +10,7 @@ import { CreateUnitRequest, UpdateUnitRequest } from './dto/request/unit.request
 /**
  * Tenant units (teams) — PLN-261019-Users-Unit-Labels-Routing-Conditions P1.
  * Same gates as job labels: edited from the user-management screen by whoever
- * may edit labels (master). No delete — see Unit entity.
+ * may edit labels (master). Delete releases members (PLN-261021-Users-Labels-Units-Delete).
  */
 @ApiTags('Units')
 @Controller('units')
@@ -43,5 +43,13 @@ export class UnitController {
   ) {
     const actor = asTenantUser(user);
     return this.userService.renameUnit(actor.tenantId, actor.userId, id, body.name);
+  }
+
+  @Delete(':id')
+  @RequireCapability(CAPABILITY.LABEL_EDIT)
+  @ApiOperation({ summary: 'Delete a unit (refused while a routing rule uses it)' })
+  remove(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    const actor = asTenantUser(user);
+    return this.userService.deleteUnit(actor.tenantId, actor.userId, id);
   }
 }

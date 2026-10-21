@@ -43,7 +43,7 @@
   "add": "추가",
   "codePlaceholder": "예: north",
   "namePlaceholder": "예: 북부팀",
-  "codeHint": "코드는 영문 소문자·숫자·_ 1~24자이며 만든 뒤 바꿀 수 없습니다. 삭제는 없고 이름만 변경합니다.",
+  "codeHint": "코드는 영문 소문자·숫자·_ 1~24자이며 만든 뒤 바꿀 수 없습니다. 삭제하면 소속된 사용자는 해제됩니다.",
   "codeInvalid": "영문 소문자·숫자·_만 1~24자로 입력하세요.",
   "codeTaken": "이미 있는 코드입니다.",
   "permissionLinked": "권한 연결",
@@ -51,5 +51,16 @@
   "orgCreated": "\"{{name}}\"을(를) 추가했습니다.",
   "orgRenamed": "\"{{name}}\"(으)로 변경했습니다.",
   "orgSaveError": "저장에 실패했습니다.",
-  "manageLink": "라벨·팀 관리 →"
+  "manageLink": "라벨·팀 관리 →",
+  "orgMembers": "{{count}}명",
+  "orgDeleteTitle": "\"{{name}}\" 삭제",
+  "orgDeleteBodyLabel": "이 라벨을 삭제합니다.",
+  "orgDeleteBodyUnit": "이 팀을 삭제합니다.",
+  "orgDeleteReleaseLabel": "보유자 {{count}}명에게서 라벨이 해제됩니다.",
+  "orgDeleteReleaseUnit": "소속원 {{count}}명은 팀 미지정이 됩니다.",
+  "orgDeleteIrreversible": "되돌릴 수 없습니다.",
+  "orgDeleted": "\"{{name}}\"을(를) 삭제했습니다.",
+  "orgDeleteError": "삭제에 실패했습니다.",
+  "permissionLabelNoDelete": "권한과 연결된 라벨은 삭제할 수 없습니다.",
+  "orgInUseByRule": "배정 규칙에서 사용 중입니다: {{rules}}. 규칙에서 먼저 제거하세요(상담원 연결 › 배정 규칙)."
 }

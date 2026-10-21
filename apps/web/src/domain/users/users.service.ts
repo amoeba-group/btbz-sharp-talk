@@ -1,9 +1,11 @@
-import { apiGet, apiPost, apiPatch } from '@/lib/api-client';
+import { apiDelete, apiGet, apiPost, apiPatch } from '@/lib/api-client';
 
 export interface JobLabel {
   id: string;
   code: string;
   name: string;
+  /** Users holding the label — the delete confirmation's release count. */
+  memberCount: number;
 }
 
 /** Team (PLN-261019 P1) — code is fixed, name editable. */
@@ -12,6 +14,7 @@ export interface Unit {
   code: string;
   name: string;
   sortOrder: number;
+  memberCount: number;
 }
 
 export interface OrgItemBody {
@@ -65,9 +68,11 @@ export const usersService = {
   jobLabels: () => apiGet<JobLabel[]>('/job-labels'),
   createJobLabel: (body: OrgItemBody) => apiPost<JobLabel>('/job-labels', body),
   renameJobLabel: (id: string, name: string) => apiPatch<JobLabel>(`/job-labels/${id}`, { name }),
+  deleteJobLabel: (id: string) => apiDelete<{ released: number }>(`/job-labels/${id}`),
   units: () => apiGet<Unit[]>('/units'),
   createUnit: (body: OrgItemBody) => apiPost<Unit>('/units', body),
   renameUnit: (id: string, name: string) => apiPatch<Unit>(`/units/${id}`, { name }),
+  deleteUnit: (id: string) => apiDelete<{ released: number }>(`/units/${id}`),
   invite: (body: InviteUserBody) => apiPost<InviteResult>('/users/invite', body),
   // The API exposes per-field endpoints with distinct RBAC (rank/labels/status),
   // so fan out and only touch the fields that were provided.
