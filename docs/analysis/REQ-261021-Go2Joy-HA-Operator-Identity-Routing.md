@@ -25,11 +25,11 @@
 | # | 작업 | 상세 | 근거 |
 |---|---|---|---|
 | G1 | **서명 패키지 반환 서버 엔드포인트** | 로그인 세션에만 응답(예: `GET /api/v1/staff/sharptalkIdentity`). 값은 브라우저가 아니라 **HA 서버의 세션·DB**에서 가져온다. PHP 약 30줄 | 가이드 5.2 |
-| G2 | **`region` 값을 Go2Joy 지역 체계로** | 성 테이블의 region(Partner API Province Feed와 같은 값)을 그대로 쓴다: `1→south` · `2→north` · `4→north_central` · `5→south_center` (3→`central`은 현재 없음). 가이드의 `north·central·south` 3종 대신 이 4종으로 합의 | T2, §5-1 |
+| G2 | **`region` 값 = Go2Joy 지역표의 `REGIONS_TEXT` 그대로** | Go2Joy가 준 지역표(`Khu vực và Tỉnh_ Thành phố.xlsx`, 63개 성)의 텍스트 값 `South` · `North` · `North Center` · `South Center`를 그대로 서명해 보낸다. `province`는 같은 표의 `NAME`(예: `Hồ Chí Minh`). 가이드의 `north·central·south` 3종은 쓰지 않는다 | §0-5 |
 | G3 | **FE 임베드 스크립트 교체** | `locale`(HA 언어 vi/en) + 큐 추가, 로그인 확정 시(로그인 직후·새로고침) `identify` 1회, **선택 호텔 변경 시 재호출**, **로그아웃 시 `logout()`**. JS 약 15줄 | 가이드 5.3 |
 | G4 | 테스트 벡터 실행·결과 전달 | 가이드 5.4의 T1·T2 해시가 정확히 일치하는지(SharpTalk에서 재계산해 일치 확인함) | 가이드 5.4 |
 | G5 | **서명 키 방안 선택** | A(SharpTalk이 발급한 embed secret, 권장) / B(Go2Joy client secret 공용) | 가이드 7절 |
-| G6 | **지역 → 상담팀 매핑과 담당자 명단** | 4개 지역을 하노이 팀 / 호찌민 팀(+ CS / Sale Admin 업무)에 어떻게 나눌지. 예: north·north_central → 하노이, south·south_center → 호찌민(다낭 포함 여부 확인). 팀별 상담원 계정, 업무 구분 기준(어떤 문의가 Sale Admin인가), 폴백 담당 | §5-5 |
+| G6 | **지역 → 상담팀 매핑과 담당자 명단** | 4개 지역(North·North Center·South·South Center)을 하노이 팀 / 호찌민 팀(+ CS / Sale Admin 업무)에 어떻게 나눌지. 제안: North·North Center → 하노이, South·South Center → 호찌민(다낭·중부 고원 13개 성 포함 여부 확인). 팀별 상담원 계정, 업무 구분 기준(어떤 문의가 Sale Admin인가), 폴백 담당 | §0-5 |
 | G7 | HA 약관 URL + 버전 | host_terms 동의를 기록할 때 근거로 남긴다 | 가이드 8절 |
 | G8 | 선택 필드 결정 | 이메일·휴대폰을 보낼지(업무 시간 밖 메일 회신 D11), 사업자 상호·주소가 필요한지(필요하면 SharpTalk이 허용 키를 먼저 추가) | 가이드 4절 |
 | G9 | 체인·"전체 호텔" 상태 처리 | 호텔이 선택되지 않은 상태라면 `hotel_id`·`hotel_name`·`province`·`region`을 빼고 보낸다(→ 폴백 규칙) | §5-2 |
@@ -45,21 +45,73 @@
 | S4 | **go2joy 테넌트 설정 점검**: `consent_source=host_terms`, 약관 URL·버전(G7 수령 후), `widget_languages=vi,en`, `headerGreeting={name}` | 일부 완료 — 스테이징 값 재확인 필요 | 설정 |
 | S5 | **배정 규칙 입력**: 팀(하노이·호찌민) × 라벨(CS·Sale Admin), 지역 4종 규칙 + 폴백, 업무 키워드. 스테이징 go2joy `handoff_config`가 테스트 뒤 NULL로 원복된 상태 | G6 수령 후 | 설정 |
 | S6 | **속성 NFC 정규화(신규, 코드)**: 서명 검증은 받은 그대로 하고, 저장·규칙 비교 직전에 `normalize('NFC')`. Go2Joy 데이터에는 분해형(NFD) 베트남어가 섞여 있어(실측: Hotel Feed 호텔 227의 설명에 분해형으로 들어 있는 `Thành phố`) 규칙 조건 `province contains "Hồ Chí Minh"`이 어긋날 수 있다. 같은 글자라도 NFD면 해시가 다르게 나오므로(실측) 서명 문자열은 건드리지 않는다 | 신규 | 소 |
-| S7 | **region 코드 카탈로그(4+1종)와 콘솔 선택형 입력**: 규칙 `regions`를 자유 입력 대신 선택으로 받아 오타로 규칙이 안 맞는 일을 막는다(D8) | 신규(선택) | 소 |
+| S7 | **region 카탈로그(Go2Joy 4종 `South`·`North`·`North Center`·`South Center`)와 콘솔 선택형 입력**: 규칙 `regions`를 자유 입력 대신 선택으로 받아 오타로 규칙이 안 맞는 일을 막는다(D8) | 신규(선택) | 소 |
 | S8 | **가이드 v1.1 발행**: region 4종, UAT 체크리스트에 "AI 이관" 추가, NFC·PHP `trim` 주의(PHP `trim`은 NBSP를 지우지 않음), "호텔 미선택 시 속성 제외" | 신규 | 문서 |
 | S9 | UAT 공동 점검 지원 → TCR/RPT | G1~G3 후 | 검증 |
 | S10 | (선택) 서명 유효기간 필드(`ts`) — 패키지 재사용 방지. Go2Joy가 원하면 프로토콜에 추가(가이드 7절) | 보류 | 소(양쪽) |
 | S11 | (후속 REQ) Partner API 연동: 자격증명 저장, `getHotelInfo`로 호텔 체크인·취소 정책을 AI 답변 근거로 사용, 피드가 넓어지면 region 교차 검증. **응답 `sn`을 요청값과 반드시 대조(T15)** | 후속 | 중 |
 | S12 | 운영(프로덕션) go2joy 테넌트·전용 배포 | Go2Joy 서버 준비 대기 | — |
+| S13 | **성 → 지역 대체 매핑(go2joy 테넌트)**: 지역표 63행을 테넌트 설정으로 등록한다. 서명에 `region`이 없고 `province`만 있으면 매핑으로 `region`을 채우고, 둘 다 있는데 서로 다르면 서명 값을 유지하고 경고 로그를 남긴다(§0-5) | 신규 | 소 |
 
 ### 0-4. UAT 체크리스트 추가 항목 (가이드 8절 보완)
 | 점검 | 기대 결과 |
 |---|---|
 | 로그인 상태에서 **AI가 답할 수 없는 질문** → AI가 이관 | 지역 팀 상담원에게 배정(콘솔 로그 `handoff routed by rule …`, 사유 `low_confidence`) |
 | 로그인 상태에서 **"상담원 연결" 버튼** | 같은 팀에 배정(사유 `user_request`) |
-| north_central·south_center 호텔(예: 다낭)로 로그인 | G6에서 합의한 팀으로 배정 |
+| North Center·South Center 지역 호텔(예: 후에·다낭)로 로그인 | G6에서 합의한 팀으로 배정 |
 | 호텔 미선택(체인 "전체 호텔") 상태 | 폴백 담당자에게 배정 |
 | 성·호텔 이름에 분해형(NFD) 문자가 있는 호텔 | 401이 나지 않고(서명 일치), 콘솔 표시·`province` 조건이 정상 |
+
+### 0-5. 지역(region) 연동 방안 — Go2Joy 지역표 기준
+근거: Go2Joy가 준 `Khu vực và Tỉnh_ Thành phố.xlsx`(시트 `Result 1`, 열 `NAME · REGIONS · REGIONS_TEXT`, 63행). Go2Joy DB 성 테이블을 내보낸 것으로 보인다.
+
+**대조 결과(2026-10-21)**: 63개 성 이름이 Partner API Province Feed(VN 63개)와 **모두 일치**하고, region 코드도 **63/63 일치**한다. 분해형(NFD) 이름은 없다. 따라서 이 표 = Province Feed = HA DB의 지역 체계로 본다.
+
+| REGIONS | REGIONS_TEXT | 성 수 | 성·시 (NAME) |
+|---|---|---|---|
+| 2 | **North** | 25 | Hà Nội, Hà Giang, Cao Bằng, Bắc Kạn, Tuyên Quang, Lào Cai, Điện Biên, Lai Châu, Sơn La, Yên Bái, Hoà Bình, Thái Nguyên, Lạng Sơn, Quảng Ninh, Bắc Giang, Phú Thọ, Vĩnh Phúc, Bắc Ninh, Hải Dương, Hải Phòng, Hưng Yên, Thái Bình, Hà Nam, Nam Định, Ninh Bình |
+| 4 | **North Center** | 6 | Thanh Hóa, Nghệ An, Hà Tĩnh, Quảng Bình, Quảng Trị, Thừa Thiên Huế |
+| 5 | **South Center** | 13 | Đà Nẵng, Quảng Nam, Quảng Ngãi, Bình Định, Phú Yên, Khánh Hòa, Ninh Thuận, Bình Thuận, Kon Tum, Gia Lai, Đắk Lắk, Đắk Nông, Lâm Đồng |
+| 1 | **South** | 19 | Hồ Chí Minh, Bình Phước, Tây Ninh, Bình Dương, Đồng Nai, Bà Rịa - Vũng Tàu, Long An, Tiền Giang, Bến Tre, Trà Vinh, Vĩnh Long, Đồng Tháp, An Giang, Kiên Giang, Cần Thơ, Hậu Giang, Sóc Trăng, Bạc Liêu, Cà Mau |
+
+**연동 흐름(3단)**
+```
+HA 서버: hotel → province(NAME) → region(REGIONS_TEXT)   ← Go2Joy DB 성 테이블(= 이 표)
+   서명 속성: province="Hồ Chí Minh", region="South"
+        │
+SharpTalk identify: 서명 검증(받은 그대로) → NFC 정규화 → 저장
+   ├ region 있음 → 그대로 사용 (province와 지역표가 어긋나면 서명 값 유지 + warn)
+   ├ region 없음, province 있음 → 지역표(S13)로 region 채움
+   └ 둘 다 없음(호텔 미선택 등) → region 없음 → 폴백 규칙
+        │
+이관(AI handoff / 직원 escalate) → routingRules.regions (대소문자 무시 일치)
+```
+
+**값 규약(합의안)**
+| 항목 | 규약 |
+|---|---|
+| `region` | `REGIONS_TEXT` 문자열 그대로: `North` · `North Center` · `South Center` · `South`. 숫자 코드나 가이드의 `north/central/south`는 쓰지 않는다. 규칙 비교는 `trim().toLowerCase()`라서 대소문자가 달라도 맞지만, 서명은 보낸 그대로 검증하므로 **표의 표기를 그대로** 쓴다 |
+| `province` | `NAME` 그대로(예: `Thừa Thiên Huế`, `Bà Rịa - Vũng Tàu`). 규칙 조건 `province contains`에 쓴다 |
+| 표 갱신 | 성 통폐합(2025-07, 63→34) 등으로 Go2Joy가 표를 바꾸면, HA는 DB를 따라가고 SharpTalk 대체 매핑(S13)은 Province Feed 재동기화나 표 재수령으로 갱신한다. HA가 `region`을 보내는 한 SharpTalk 매핑은 보조 수단일 뿐이다 |
+| 필리핀(`REGIONS 10`) | 이 표에는 없다(VN만). PH HA를 대상으로 하면 별도 협의 |
+
+**배정 규칙 예시(제안, G6 확정 전)**
+| 순서 | 규칙 | regions | 업무 조건 | 담당 |
+|---|---|---|---|---|
+| 1 | 하노이 Sale Admin | North, North Center | 정산·계약·수수료 키워드(D-12) | 팀 Hanoi × 라벨 Sale Admin |
+| 2 | 하노이 CS | North, North Center | — | 팀 Hanoi × 라벨 CS |
+| 3 | 호찌민 Sale Admin | South, South Center | 정산·계약·수수료 키워드 | 팀 HCM × 라벨 Sale Admin |
+| 4 | 호찌민 CS | South, South Center | — | 팀 HCM × 라벨 CS |
+| 5 | 폴백 | (없음) | — | 지정 담당자(지역 미상·호텔 미선택) |
+
+- 현재 go2joy 팀(units)은 North / North Center / South / South Center 4개다. Go2Joy가 **지역별 4팀**을 원하면 규칙을 지역마다 하나씩 두고, **하노이·호찌민 2팀**이면 위 표처럼 묶는다(G6).
+- 규칙 순서가 곧 우선순위이므로, 업무 조건이 있는 규칙(Sale Admin)을 위에 둔다.
+
+**SharpTalk 구현 범위(S13·S6·S7)**
+- 지역표 63행을 go2joy 테넌트 설정(배정 설정 JSON 안의 `provinceRegions`, 스키마 변경 없음)으로 등록한다. 키는 NFC로 정규화하고 대소문자를 무시한다.
+- identify 처리: 서명 검증 → 속성 NFC 정규화 → `region`이 비어 있으면 매핑으로 채운다(출처를 `region_source: map`으로 로그에 남김) → 저장.
+- 콘솔 규칙 편집기: region을 4종 중에서 선택(S7).
+- 테스트: 63행 전부 매핑, NFD로 들어온 성 이름, 서명 region과 매핑이 다를 때(서명 값 유지 + warn), 미등록 성(region 없음 → 폴백).
 
 ## 1. 요약
 | 구분 | 결론 |
@@ -205,7 +257,7 @@
 | `identity_attributes.hotel_name` | Hotel Feed `name` | Partner API | 캐시(TTL 1일 제안) |
 | `identity_attributes.province` | Province Feed `name`(`Localization`=vi 원문) | Partner API | `provinceSn`도 저장(신규 키 `province_id`) |
 | `identity_attributes.district` | District Feed `name` | Partner API | 신규 키(선택, D6) |
-| **`identity_attributes.region`** | Province Feed **`region` enum** | Partner API | 1→`south`, 2→`north`, 3→`central`(실측 0개), 4→`north_central`, 5→`south_center`, 10→`ph_metro_manila`(문서에 없음). 코드값을 고정 저장하고, 표시명은 i18n으로 처리 |
+| **`identity_attributes.region`** | Province Feed **`region` enum** | Partner API | v2: Go2Joy 지역표의 텍스트 값 그대로 — 1 `South` · 2 `North` · 4 `North Center` · 5 `South Center`(3 Central은 실측 0개, 10은 필리핀). 규칙 비교는 대소문자를 무시한다 |
 | 세션 언어 | HA 언어(vi/en/ph) | `identify`/config `locale` | 문서 목적 ③. go2joy `widget_languages`=vi/en, ph는 미제공 → EN |
 
 ## 5. 세부 요구·이슈
