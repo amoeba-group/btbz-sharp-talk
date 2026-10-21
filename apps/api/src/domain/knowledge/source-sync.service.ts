@@ -42,6 +42,11 @@ export interface SyncResult {
    * server log — the go2joy case exactly.
    */
   error?: string;
+  /**
+   * Documents taken over from a deleted or hidden source that held the same
+   * page (FIX-261021). Counted in `updated` as well.
+   */
+  adopted?: number;
 }
 
 /**
@@ -132,6 +137,7 @@ export class SourceSyncService {
     const existing = await this.docRepo.find({ where: { tenantId, sourceId: source.id } });
     const byKey = new Map(existing.filter((d) => d.externalKey).map((d) => [d.externalKey!, d]));
     const seen = new Set<string>();
+    const conflicts: string[] = [];
 
     for (const item of items) {
       if (!item.externalKey || !item.title) {
@@ -145,7 +151,27 @@ export class SourceSyncService {
       }
       seen.add(item.externalKey);
 
-      const found = byKey.get(item.externalKey);
+      let found = byKey.get(item.externalKey);
+      if (!found) {
+        // The document key is unique per tenant, not per source. A page that
+        // another source used to hold keeps its (hidden) row after that source
+        // is deleted, so inserting again failed the whole sync with a
+        // duplicate-key error — go2joy re-created its Hotel Admin source and
+        // could never sync it (FIX-261021-Notion-Resync).
+        const holder = await this.docRepo.findOne({
+          where: { tenantId, docGroup: DOC_GROUP.COUNSEL, externalKey: item.externalKey },
+        });
+        if (holder) {
+          if (!(await this.isAdoptable(tenantId, holder))) {
+            conflicts.push(`${item.externalKey} (${holder.sourceId ? `source #${holder.sourceId}` : 'manual document'} #${holder.id})`);
+            result.failed += 1;
+            continue;
+          }
+          holder.sourceId = source.id;
+          found = holder;
+          result.adopted = (result.adopted ?? 0) + 1;
+        }
+      }
       if (!found) {
         const saved = await this.docRepo.save(
           this.docRepo.create({
@@ -197,6 +223,13 @@ export class SourceSyncService {
       result.updated += 1;
     }
 
+    if (conflicts.length) {
+      result.error = `Already synced by another live source, skipped: ${conflicts.slice(0, 3).join(', ')}${
+        conflicts.length > 3 ? ` (+${conflicts.length - 3} more)` : ''
+      }`.slice(0, 500);
+      this.logger.warn(`source ${source.id}: ${conflicts.length} page(s) held by another source — ${conflicts.join(', ')}`);
+    }
+
     // An external source that returned nothing, while documents still exist, is
     // far more likely to have lost access than to have been emptied. Hiding
     // here would take the whole source out of retrieval on a transient
@@ -216,6 +249,19 @@ export class SourceSyncService {
     result.hidden = await this.hideMissing(tenantId, existing, seen, actorUserId);
     result.elapsedMs = Date.now() - startedAt;
     return { result, touchedIds };
+  }
+
+  /**
+   * A row holding the same page key may be taken over when nothing live owns
+   * it: it is hidden, or the source that created it no longer exists. A live
+   * document of another source or one written by hand is left alone — two
+   * sources syncing one page would overwrite each other on every run.
+   */
+  private async isAdoptable(tenantId: number, holder: KbDocument): Promise<boolean> {
+    if (holder.active !== 1) return true;
+    if (holder.sourceId == null) return false;
+    const owner = await this.sourceRepo.findOne({ where: { id: holder.sourceId, tenantId } });
+    return !owner;
   }
 
   /**
