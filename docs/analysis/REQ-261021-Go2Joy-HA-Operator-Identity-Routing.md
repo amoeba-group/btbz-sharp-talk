@@ -44,7 +44,7 @@
 | S3 | **스테이징 embed secret을 보안 채널로 전달**(방안 A) / 방안 B를 고르면 "파트너가 준 secret 입력" 기능 추가 | 대기(G5) | A: 없음 · B: 소 |
 | S4 | **go2joy 테넌트 설정 점검**: `consent_source=host_terms`, 약관 URL·버전(G7 수령 후), `widget_languages=vi,en`, `headerGreeting={name}` | 일부 완료 — 스테이징 값 재확인 필요 | 설정 |
 | S5 | **배정 규칙 입력**: 팀(하노이·호찌민) × 라벨(CS·Sale Admin), 지역 4종 규칙 + 폴백, 업무 키워드. 스테이징 go2joy `handoff_config`가 테스트 뒤 NULL로 원복된 상태 | G6 수령 후 | 설정 |
-| S6 | **속성 NFC 정규화(신규, 코드)**: 서명 검증은 받은 그대로 하고, 저장·규칙 비교 직전에 `normalize('NFC')`. Go2Joy 데이터에는 분해형(NFD) 베트남어가 섞여 있어(Hotel Feed 주소의 `Thành phố`) 규칙 조건 `province contains "Hồ Chí Minh"`이 어긋날 수 있다. 같은 글자라도 NFD면 해시가 다르게 나오므로(실측) 서명 문자열은 건드리지 않는다 | 신규 | 소 |
+| S6 | **속성 NFC 정규화(신규, 코드)**: 서명 검증은 받은 그대로 하고, 저장·규칙 비교 직전에 `normalize('NFC')`. Go2Joy 데이터에는 분해형(NFD) 베트남어가 섞여 있어(실측: Hotel Feed 호텔 227의 설명에 분해형으로 들어 있는 `Thành phố`) 규칙 조건 `province contains "Hồ Chí Minh"`이 어긋날 수 있다. 같은 글자라도 NFD면 해시가 다르게 나오므로(실측) 서명 문자열은 건드리지 않는다 | 신규 | 소 |
 | S7 | **region 코드 카탈로그(4+1종)와 콘솔 선택형 입력**: 규칙 `regions`를 자유 입력 대신 선택으로 받아 오타로 규칙이 안 맞는 일을 막는다(D8) | 신규(선택) | 소 |
 | S8 | **가이드 v1.1 발행**: region 4종, UAT 체크리스트에 "AI 이관" 추가, NFC·PHP `trim` 주의(PHP `trim`은 NBSP를 지우지 않음), "호텔 미선택 시 속성 제외" | 신규 | 문서 |
 | S9 | UAT 공동 점검 지원 → TCR/RPT | G1~G3 후 | 검증 |
