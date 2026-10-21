@@ -8,7 +8,7 @@
 ## 0. 요약
 | 단계 | 목표 | 스키마 | 규모 | 선행 |
 |---|---|---|---|---|
-| **1단계** | 서명된 지역·성 값을 **정규화**해 저장하고, 권역 코드 4종으로 **배정 규칙을 만들 수 있게** 한다 | 없음(JSON 설정) | 소 (약 1일) | 없음 — HA 서명보다 먼저 배포 |
+| **1단계** | 서명된 지역·성 값을 **정규화**해 저장하고, 상담원의 **유닛·라벨에 담당 지역·성을 지정**(테넌트별)해 `/settings/basic` 배정 규칙이 **세션 지역 ↔ 담당 지역으로 매칭**하게 한다 | **있음**(컬럼 4개) | 소~중 (약 2~2.5일) | 없음 — HA 서명보다 먼저 배포 |
 | **2단계** | HA 직원을 **기업고객(호텔)·연락처(직원)** 로 등록하고, 대화를 **계정 단위로 이어 보며**, B2B / B2C를 구분한다 | **있음**(테이블 2 + 컬럼 5) | 중~대 (약 5~6일) | 1단계, Go2Joy 결정 Q2·Q3(기본값으로 진행 가능) |
 
 ## 1. 현재 상태 (코드 확인)
@@ -28,7 +28,9 @@
 
 ---
 
-## 2. 1단계 — 지역·성 정규화와 권역 코드 (스키마 변경 없음)
+## 2. 1단계 — 지역·성 정규화 · 유닛/라벨 담당 지역 · 지역 매칭 배정
+
+> 2026-10-22 추가 요구: 지역·성은 **사용자 정보(상담원 등록)의 라벨과 유닛에 지정**하고(라벨·유닛은 테넌트별 설정), `/settings/basic`의 **Agent handoff 배정 규칙**으로 매칭한다. → 2.3~2.6 추가. 이 추가로 1단계에도 스키마 변경(컬럼 4개)이 생긴다.
 
 ### 2.1 작업
 | # | 작업 | 파일 |
@@ -54,7 +56,79 @@ AS-IS                                              TO-BE
 ```
 콘솔 대화 헤더 배지(기존 `IdentityBadges`): `🏨 A In Hotel Del Luna · 남부(South) · Lễ tân` — 새 코드에 i18n 표시명만 추가한다.
 
-### 2.3 부작용 분석
+### 2.3 유닛·라벨 담당 지역 — 현재 구조와 갭
+| 항목 | 현재 | 위치 |
+|---|---|---|
+| 유닛(팀) | 테넌트별 `units(code, name, sort_order)`, 사용자 1명 = 유닛 1개(`users.unit_id`) | `apps/api/src/domain/user/entity/unit.entity.ts` |
+| 라벨(직무) | 테넌트별 `job_labels(code, name)`, 사용자 1명 = 라벨 여러 개(`user_job_labels`). `consult·accounting·operations` 3개 코드만 권한과 연결되고 나머지는 분류용 | `job-label.entity.ts`, `user-job-label.entity.ts` |
+| 관리 화면 | `/users` › [라벨·팀 관리] 모달(master): 이름 변경·추가만, 코드 불변·삭제 없음 | `apps/web/src/domain/users/LabelsUnitsModal.tsx` |
+| 배정 규칙 | `/settings/basic` › Agent handoff › 배정 규칙: `regions`(세션 지역 필터), `conditions`, 담당 = 개별 상담원 / **고정 유닛 × 라벨 그룹**(`assigneeUnitIds`·`assigneeLabelCodes`) | `HandoffSection.tsx` → `RoutingRulesEditor.tsx`, `tenant-ai-config.entity.ts:128` |
+| 담당 해석 | `resolveAssigneeGroup(users, {unitIds, labelCodes})` — 활성 사용자 중 유닛 AND 라벨(콘솔 미리보기와 공용) | `packages/types/src/common/routing-assignee.ts`, `routing-assignee.service.ts` |
+| **갭** | 유닛·라벨에 **담당 지역·성이 없다** → 지역마다 규칙을 따로 만들고 유닛을 고정해야 한다(4권역 × CS/Sales = 8개 + 폴백). 상담원 소속이 바뀌면 규칙도 고쳐야 한다 | — |
+
+### 2.4 설계 — "담당 지역"을 유닛·라벨에, 매칭은 배정 규칙에서
+**(1) 유닛·라벨에 담당 지역 지정(테넌트별)**
+- 유닛과 라벨 각각에 `regions`(권역 코드 목록)와 `provinces`(성·시 이름 목록)를 둔다. 비어 있으면 "지역 담당 없음".
+- 유닛 예: `HN` 하노이팀 = `north, north_center` / `HCM` 호찌민팀 = `south, south_center` / `DN` 다낭팀 = 성 `Đà Nẵng, Quảng Nam`(권역보다 좁게).
+- 라벨 예: `cs`·`sales`는 업무 구분이라 지역 없음. 지원 인력처럼 **여러 지역을 겸하는 상담원**은 지역이 지정된 라벨(예: `backup_central` = `north_center, south_center`)로 표현한다(사용자 1명은 유닛 1개지만 라벨은 여러 개).
+- 성 목록은 테넌트의 성 → 권역 매핑(1-3, `provinceRegions` 키)에서 고른다. 권역 코드는 카탈로그(1-1)에서 고른다.
+
+**(2) 배정 규칙에 "지역 매칭" 담당 방식 추가**
+- 규칙의 담당 방식에 **`지역 담당자에게 배정`**(`assigneeByRegion: true`)을 추가한다. 이관 시점에 세션의 `province`·`region`과 **담당 지역이 일치하는 유닛·라벨에 속한 활성 상담원**을 후보로 삼는다.
+- 기존 라벨·유닛 선택은 **추가 필터**로 함께 쓴다. 예: 지역 매칭 + 라벨 `sales` = "세션 지역 담당자 중 Sales 라벨 보유자".
+- **매칭 우선순위**: ① 성(province) 일치(더 좁은 담당) → ② 권역(region) 일치 → ③ 둘 다 0명이면 기존 규칙과 같이 **다음 규칙**으로 넘어간다(폴백 규칙이 받음).
+- 상담원 1명의 담당 지역 = 유닛의 지역 ∪ 보유 라벨들의 지역.
+- 비교는 NFC·소문자(성), `canonicalRegion`(권역)으로 한다.
+
+**(3) go2joy 설정 예 — 8개 규칙이 3개로**
+| 순서 | 규칙 | 조건 | 담당 |
+|---|---|---|---|
+| 1 | Sales 문의 | 키워드(정산·계약·수수료 …) | **지역 담당자** × 라벨 `sales` |
+| 2 | CS 문의 | — | **지역 담당자** × 라벨 `cs` |
+| 3 | 폴백 | — | 지정 상담원(지역 미상·담당자 없음) |
+
+권역 → 팀 매핑(Go2Joy Q1)이 바뀌면 **유닛의 담당 지역만** 고치면 되고 규칙은 그대로다.
+
+### 2.5 작업 추가 (1-8 ~ 1-14)
+| # | 작업 | 파일 |
+|---|---|---|
+| 1-8 | 스키마: `units.regions JSON NULL`, `units.provinces JSON NULL`, `job_labels.regions JSON NULL`, `job_labels.provinces JSON NULL` — `sql/261022-unit-label-regions.sql`, 매니페스트·init-sql 동기화 | `sql/`, `unit.entity.ts`, `job-label.entity.ts`(nullable `type: 'json'` 명시) |
+| 1-9 | API: 유닛·라벨 생성·수정 요청에 `regions`·`provinces`(snake_case DTO, 권역은 카탈로그 값만, 성은 120자·최대 100개, 중복 제거·NFC), 응답에 포함 | 유닛·라벨 컨트롤러·DTO·매퍼(`/units`, `/job-labels`) |
+| 1-10 | 공용 해석기: `resolveAssigneeGroup`에 `byRegion` + 세션 `{region, province}`를 받는 경로 추가 — 성 일치 → 권역 일치 순서. `AssigneeCandidate`에 `regions`·`provinces`(유닛 ∪ 라벨) | `packages/types/src/common/routing-assignee.ts` + spec |
+| 1-11 | 서버 배정: `RoutingRule.assigneeByRegion`, `RoutingAssigneeService`가 사용자·유닛·라벨 담당 지역을 읽어 해석, 라우터 로그에 `match=province|region|none` | `tenant-ai-config.entity.ts`, `routing-assignee.service.ts`, `handoff-router.service.ts:160-240` |
+| 1-12 | 콘솔 — 라벨·팀 관리 모달: 행마다 **담당 지역**(권역 칩 5개 + 성 다중 선택, 검색) | `LabelsUnitsModal.tsx`, `users.service.ts`·`users.hooks.ts` |
+| 1-13 | 콘솔 — 배정 규칙 편집기: 담당 방식에 **[지역 담당자에게 배정]** 토글, 라벨·유닛은 추가 필터로 표시, 미리보기는 **권역별 후보 수**(north 3명 · north_center 3명 · south_center 0명 ⚠ …) | `RoutingRulesEditor.tsx:83-330` |
+| 1-14 | i18n(콘솔 6개 언어) + 저장 성공·실패 토스트(기존 관례) + `npm run i18n:check`, 테스트(해석기 우선순위·0명 → 다음 규칙·라벨 필터 교집합·카탈로그 밖 권역 거부) | `apps/web/src/i18n/locales/*`, spec |
+
+### 2.6 화면 (1-12, 1-13)
+**사용자 › [라벨·팀 관리] › 팀 탭**
+```
+┌ 라벨·팀 관리 ───────────────────────────────────────────────────────── ✕ ┐
+│ [라벨] [■ 팀]                                                           │
+│ 코드   이름           담당 권역                         담당 성·시      │
+│ HN     하노이팀       [■North][■North Center][□Central]  (없음)  [편집] │
+│                       [□South Center][□South]                           │
+│ HCM    호찌민팀       [□North][□North Center][□Central]  (없음)  [편집] │
+│                       [■South Center][■South]                           │
+│ DN     다낭팀         (없음)                    Đà Nẵng, Quảng Nam [편집]│
+│ + 팀 추가                                                    [저장]     │
+└─────────────────────────────────────────────────────────────────────────┘
+  성·시 편집: [ 🔍 성·시 검색 ...      ]  ☑ Đà Nẵng ☑ Quảng Nam ☐ Quảng Ngãi …
+```
+**설정 › 기본 › Agent handoff › 배정 규칙**
+```
+┌ 규칙 #2  CS 문의 ─────────────────────────────────────────────────────┐
+│ 지역(세션 필터)  [□North][□North Center][□Central][□South Center][□South]│
+│ 조건             + 조건 추가                                            │
+│ 담당 방식        ( ) 지정 상담원   (●) 지역 담당자에게 배정              │
+│   추가 필터      라벨 [cs ▾]   팀 [전체 ▾]                              │
+│   미리보기       north 3명 · north_center 3명 · south_center 2명 ·      │
+│                  south 4명 · central 0명 ⚠(→ 다음 규칙)                 │
+│ 배정 모드        [least_loaded ▾]                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### 2.7 부작용 분석
 | 대상 | 영향 | 대응 |
 |---|---|---|
 | 서명 검증 | 없음 — 정규화는 검증 **뒤**, 저장할 값에만 | T1~T5 해시 고정 테스트 |
@@ -62,6 +136,12 @@ AS-IS                                              TO-BE
 | 기존 세션의 `identity_attributes` | 소급 변경 없음. 새 identify부터 정규화 값 | — |
 | 다른 테넌트 | `provinceRegions` 없으면 매핑 단계 생략. NFC는 무해(대부분 이미 NFC) | — |
 | 콘솔 배지 | 미등록 코드는 원문 표시(기존 동작) | — |
+| 유닛·라벨 권한 | 담당 지역은 **배정 후보 계산에만** 쓴다. 메뉴·capability 권한(`consult·accounting·operations`)과 무관 | 권한 매트릭스 회귀 테스트 |
+| 기존 규칙(고정 유닛 × 라벨, 개별 상담원) | `assigneeByRegion`이 없으면 기존 해석 그대로 | 해석기 회귀 테스트 |
+| 담당 지역이 없는 유닛·라벨 | 지역 매칭 후보가 되지 않음(고정 선택으로는 계속 사용 가능) | — |
+| 지역 매칭 0명 | 기존과 같이 **다음 규칙** → 폴백. 편집기 미리보기에 0명 경고 | — |
+| 다른 테넌트 | 컬럼 기본 NULL → 동작 불변. 지역 매칭은 쓰는 규칙에서만 | — |
+| 스키마 | 컬럼 4개 추가(NULL 허용) → 스테이징·프로덕션 **SQL 선적용 후 배포**, PR `## Migration` | 3.6 |
 
 ---
 
@@ -215,14 +295,15 @@ UPDATE conversations c JOIN sessions s ON s.id = c.session_id
 | 마이그레이션 | 스테이징 `DB_SYNCHRONIZE=false` → **SQL 선적용 후 코드 배포**, 프로덕션도 동일(go2joy 테넌트는 없지만 스키마는 필요) | PR `## Migration` |
 
 ### 3.6 배포 순서
-1. **1단계 PR**(스키마 없음) → 스테이징 배포 → go2joy `provinceRegions` 설정 → 규칙 편집기로 권역 규칙 작성 확인
+1. **1단계 PR**: 스테이징 SQL 선적용(`sql/261022-unit-label-regions.sql`) → 배포 → go2joy `provinceRegions` 설정 → 팀(HN·HCM) 담당 권역 지정 → 지역 매칭 규칙 3개 작성 → 권역별 이관 실측
 2. **2단계 PR**: 스테이징 백업 → `sql/261022-b2b-company-thread.sql` 선적용(`--default-character-set=utf8mb4`) → `check-migrations.sh` → 코드 배포 → 부팅 로그 `successfully started`·새 라우트 401 확인 → go2joy `thread_continuity=1`
 3. 프로덕션: SQL 선적용 → `production` ff → `deploy-self-hosted.sh`(스위치는 꺼진 채)
 
 ## 4. 테스트 계획 (TCR-261022에서 상세화)
 | 구분 | 케이스 |
 |---|---|
-| 단위(1단계) | NFC·별칭·`North Center`→`north_center`, 매핑 채움·불일치 warn, 라우터 정규화 비교, **T1~T5 서명 해시 고정** |
+| 단위(1단계) | NFC·별칭·`North Center`→`north_center`, 매핑 채움·불일치 warn, 라우터 정규화 비교, **T1~T5 서명 해시 고정**, 지역 매칭(성 우선 → 권역 → 0명이면 다음 규칙, 유닛 ∪ 라벨 담당, 라벨 필터 교집합), 유닛·라벨 API 검증(카탈로그 밖 권역 400) |
+| 통합(1단계) | 스테이징 go2joy: HN·HCM·DN 팀 담당 지역 지정 → 서명 identify(T2 south / T3 north_center / 다낭 성) → AI 이관·"상담원 연결" 각각 → 기대 팀 배정, 로그 `match=province|region` |
 | 단위(2단계) | 회사 upsert 동시성(고유 키 재조회), 서명된 hotel_id 없으면 B2B 아님, 호텔 미선택=연락처만, 게스트 채팅 후 identify 시 열린 대화에 계정 기록, 스레드 키(B2B=회사/B2C=고객), `thread_scope` self/company, 재개 창 안·밖 sticky, 스위치 꺼짐=403·UI 없음, AI 블록 PII 치환·길이 상한 |
 | 통합(스테이징) | 서명 identify(T2 데이터) → 콘솔 기업고객 1건·연락처 1건 → 종료 → 재질문 sticky → 다른 브라우저 로그인 시 이전 대화 → 같은 호텔 다른 직원(`ha:1002`) → 상담원 화면 회사 이력 → 로그아웃 후 이전 대화 안 보임 → 권역별 배정(4권역) |
 | 회귀 | 기존 `embed.service.spec`·`chat.service.*.spec`·idle·라우터, 다른 테넌트 위젯 |
@@ -230,7 +311,7 @@ UPDATE conversations c JOIN sessions s ON s.id = c.session_id
 ## 5. 일정(제안)
 | 단계 | 기간 | 산출물 |
 |---|---|---|
-| 1단계 | 1일 | PR + 스테이징 + go2joy 매핑 설정 |
+| 1단계 | 2~2.5일 | 정규화(0.5일) + 유닛·라벨 담당 지역·지역 매칭 배정(1.5~2일), PR + 스테이징 + go2joy 설정 |
 | 2-A·2-B(API·스키마) | 2일 | 엔티티·서비스·스펙 |
 | 2-C(위젯)·2-D(콘솔) | 2~3일 | 화면·i18n |
 | 통합 검증·문서 | 1일 | TCR·RPT, GUIDE 상태 갱신 |
