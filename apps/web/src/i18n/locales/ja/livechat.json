@@ -431,5 +431,16 @@
     "savedAccurate": "評価を保存しました。",
     "savedGap": "評価を保存しました。正確でないAI回答はナレッジ › ギャップ提案に追加されます。",
     "saveError": "評価を保存できませんでした。"
+  },
+  "company": {
+    "badge": "法人",
+    "earlier": "この法人の以前の会話 {{count}} 件",
+    "earlierTitle": "この法人の以前の会話",
+    "status": {
+      "ai_active": "AI対応",
+      "waiting": "待機中",
+      "agent": "対応中",
+      "ended": "終了"
+    }
   }
 }

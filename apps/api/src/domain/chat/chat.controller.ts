@@ -4,6 +4,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import { ChatService } from './chat.service';
 import { ScenarioService } from './scenario.service';
 import { ChatMapper } from './chat.mapper';
+import { ThreadService } from './thread.service';
 import {
   SendMessageRequest,
   EndChatRequest,
@@ -28,6 +29,7 @@ export class ChatController {
     private readonly scenarioService: ScenarioService,
     private readonly sessionService: SessionService,
     private readonly attachmentService: AttachmentService,
+    private readonly threadService: ThreadService,
   ) {}
 
   @Post('scenario')
@@ -105,6 +107,32 @@ export class ChatController {
       messages.map((m) => Number(m.id)),
     );
     return ChatMapper.toConversationResponse(conversation, messages, senderNames, attachments);
+  }
+
+  /**
+   * Earlier conversations of the signed-in account (PLN-261022 stage 2), newest
+   * first, `limit` (1–5) at a time before `before`. Only a host-verified session
+   * of a tenant that switched continuity on — a guest, or a tenant without it,
+   * gets 403 E5099 (the widget never shows the button then).
+   */
+  @Get('thread')
+  @Public()
+  @ApiOperation({ summary: "Earlier conversations of the signed-in user's account" })
+  async thread(@SessionToken() token: string, @Query('before') before?: string, @Query('limit') limit?: string) {
+    const session = await this.sessionService.findByToken(token);
+    const verified = session.identityLevel === 'verified' && session.customerId != null;
+    if (!verified || !(await this.threadService.enabled(session.tenantId))) {
+      throw new BusinessException(ERROR_CODE.THREAD_NOT_AVAILABLE, HttpStatus.FORBIDDEN);
+    }
+    // Default "before" = the conversation the widget is showing, so the page starts behind it.
+    const beforeId =
+      before != null && before !== '' && Number.isFinite(Number(before))
+        ? Number(before)
+        : Number((await this.chatService.findLatestConversation(session.id))?.id ?? 0) || null;
+    const size = Math.min(5, Math.max(1, Number(limit) || 3));
+    const page = await this.threadService.listForWidget(session, beforeId, size);
+    const senderNames = await this.chatService.resolveSenderNames(page.conversations.flatMap((c) => c.messages));
+    return ChatMapper.toThreadResponse(page, senderNames);
   }
 
   @Post('escalate')

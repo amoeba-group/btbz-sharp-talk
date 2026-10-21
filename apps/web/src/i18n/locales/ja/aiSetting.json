@@ -201,7 +201,8 @@
           "hotel_name": "ホテル名",
           "province": "省",
           "role": "役割",
-          "landing_path": "流入パス"
+          "landing_path": "流入パス",
+          "customer_type": "顧客種別"
         },
         "value": {
           "identity_level": {
@@ -212,6 +213,10 @@
             "guest": "ゲスト",
             "subscriber": "購読者",
             "regular": "常連"
+          },
+          "customer_type": {
+            "b2c": "一般顧客",
+            "b2b_contact": "法人の連絡先"
           }
         }
       },

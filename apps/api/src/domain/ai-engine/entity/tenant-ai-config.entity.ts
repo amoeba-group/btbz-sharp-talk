@@ -122,6 +122,15 @@ export interface HandoffConfig {
    * Go2Joy: its own 63-province table (= Partner API Province Feed).
    */
   provinceRegions?: Record<string, string>;
+  /**
+   * Account conversation threads (PLN-261022 stage 2; the tenant switch is
+   * `tenants.thread_continuity`). `scope` — what the WIDGET shows a B2B contact:
+   * 'self' (their own earlier conversations in full + a count of colleagues')
+   * or 'company' (every conversation of the company). Agents and the AI always
+   * see the company. `stickyHours` — a new conversation within this many hours
+   * of the previous one's end prefers that conversation's agent (0 = off).
+   */
+  thread?: { scope?: 'self' | 'company'; stickyHours?: number };
 }
 
 export const ROUTING_MODE = {

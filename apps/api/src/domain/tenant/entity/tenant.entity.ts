@@ -239,6 +239,14 @@ export class Tenant {
   @Column({ name: 'commerce_enabled', type: 'tinyint', width: 1, default: 1 })
   commerceEnabled: number;
 
+  /**
+   * Account-level conversation continuity (PLN-261022 stage 2). 1 = a signed-in
+   * user's widget can show the account's earlier conversations and the AI sees
+   * the previous one. Default 0 — no tenant's widget changes until switched on.
+   */
+  @Column({ name: 'thread_continuity', type: 'tinyint', width: 1, default: 0 })
+  threadContinuity: number;
+
   /** Live custom widget (widget_designs.id); NULL = the basic widget (PLN-260910 P3). */
   @Column({ name: 'active_widget_design_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
   activeWidgetDesignId: number | null;

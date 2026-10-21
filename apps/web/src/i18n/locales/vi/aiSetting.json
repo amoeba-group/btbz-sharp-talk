@@ -201,7 +201,8 @@
           "hotel_name": "Tên khách sạn",
           "province": "Tỉnh",
           "role": "Vai trò",
-          "landing_path": "Đường dẫn vào"
+          "landing_path": "Đường dẫn vào",
+          "customer_type": "Loại khách hàng"
         },
         "value": {
           "identity_level": {
@@ -212,6 +213,10 @@
             "guest": "Khách",
             "subscriber": "Người đăng ký",
             "regular": "Khách quen"
+          },
+          "customer_type": {
+            "b2c": "Khách cá nhân",
+            "b2b_contact": "Liên hệ doanh nghiệp"
           }
         }
       },

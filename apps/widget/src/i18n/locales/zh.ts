@@ -134,6 +134,13 @@ export const zh: Translation = {
       restock: '这款商品到货后请通知我。',
     },
     endedTitle: '会话已结束',
+    // Earlier conversations of the signed-in account (PLN-261022 stage 2).
+    threadLoadPrevious: '查看之前的对话',
+    threadLoading: '加载中…',
+    threadDivider: '之前的对话 · {{date}}',
+    threadColleagues: '同公司同事之前的 {{count}} 条咨询，客服可以一并查看。',
+    threadLoadError: '无法加载之前的对话',
+    threadNone: '没有之前的对话',
     endedThanks: '感谢您的使用！',
     csatLevel: {
       1: '非常不满意',

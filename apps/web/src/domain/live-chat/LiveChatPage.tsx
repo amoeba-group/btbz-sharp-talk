@@ -30,6 +30,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { ChannelBadge, CHANNEL_FILTERS, RECEIVE_ONLY_CHANNELS } from './ChannelBadge';
 import { SessionAlias } from './SessionAlias';
 import { IdentityBadges } from './IdentityBadges';
+import { CompanyThreadButton } from './CompanyThreadButton';
 import { AnswerRatingControl } from './AnswerRatingControl';
 import { AutoReplyControl } from './AutoReplyControl';
 import { DraftPanel } from './DraftPanel';
@@ -839,6 +840,9 @@ export function LiveChatPage() {
                     <Badge tone="info">AI: {convo.aiAgentName}</Badge>
                   )}
                   <IdentityBadges identity={convo?.identity} />
+                  {selected && (
+                    <CompanyThreadButton conversationId={selected} company={convo?.company} onOpen={setSelected} />
+                  )}
                   {convo?.assignedTo && (
                     <Badge tone="primary">
                       {t('agentControls.assignedTo')}: {convo.assignedTo}

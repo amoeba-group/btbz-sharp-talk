@@ -15,5 +15,40 @@
   "reveal": "전체 정보 보기",
   "revealAudited": "고객 정보를 열람했습니다. 열람 기록이 남습니다.",
   "maskedHint": "고객 식별정보는 가려져 표시됩니다. 전체 정보 열람 권한은 마스터·디렉터에게 있습니다.",
-  "maskedHintWithReveal": "고객 식별정보는 가려져 표시됩니다. 눈 아이콘으로 열람하면 5분간 표시되고 열람 기록이 남습니다."
+  "maskedHintWithReveal": "고객 식별정보는 가려져 표시됩니다. 눈 아이콘으로 열람하면 5분간 표시되고 열람 기록이 남습니다.",
+  "tab_all": "전체",
+  "tab_b2b": "기업고객",
+  "tab_b2c": "부킹고객",
+  "customerType": "유형",
+  "typeB2b": "기업",
+  "typeB2c": "일반",
+  "companyName": "기업(호텔)",
+  "companyRegion": "권역",
+  "companyProvince": "성·시",
+  "companyContacts": "연락처",
+  "companyConversations": "대화",
+  "companyLastActivity": "최근 활동",
+  "companyOpen": "보기",
+  "companySearchPlaceholder": "기업(호텔) 이름 검색",
+  "allRegions": "전체 권역",
+  "companyHint": "호스트 앱에 로그인한 사용자(예: Go2Joy 호텔 어드민 직원)가 채팅을 시작하면 기업고객으로 등록됩니다. 연락처 이름은 일반 고객 목록처럼 가려서 표시합니다.",
+  "companyEmpty": "등록된 기업고객이 없습니다",
+  "companyDetail": "기업고객",
+  "companyBack": "뒤로",
+  "companyLoading": "불러오는 중…",
+  "companyContactsTitle": "연락처 ({{count}})",
+  "companyConversationsTitle": "대화 ({{count}})",
+  "region": {
+    "north": "북부",
+    "north_center": "중북부",
+    "central": "중부",
+    "south_center": "중남부",
+    "south": "남부"
+  },
+  "status": {
+    "ai_active": "AI 응대",
+    "waiting": "대기",
+    "agent": "상담 중",
+    "ended": "종료"
+  }
 }

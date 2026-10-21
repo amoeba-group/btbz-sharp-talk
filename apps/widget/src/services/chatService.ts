@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/api-client';
-import type { ChatAttachment, ChatReply, Conversation, ScenarioReply } from '../lib/types';
+import type { ChatAttachment, ChatReply, Conversation, ScenarioReply, Thread } from '../lib/types';
 
 export function getConversation(
   sessionToken: string,
@@ -9,6 +9,18 @@ export function getConversation(
   return apiClient.get<Conversation>('/chat/conversation', {
     session_token: sessionToken,
     after_id: afterId ?? undefined,
+  });
+}
+
+/**
+ * Earlier conversations of the signed-in account (PLN-261022 stage 2), newest
+ * first. `before` = the oldest conversation already shown (omit for the first page).
+ */
+export function getThread(sessionToken: string, before?: string | null, limit = 3): Promise<Thread> {
+  return apiClient.get<Thread>('/chat/thread', {
+    session_token: sessionToken,
+    before: before ?? undefined,
+    limit,
   });
 }
 

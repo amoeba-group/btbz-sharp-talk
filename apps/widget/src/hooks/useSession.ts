@@ -191,6 +191,8 @@ export function adoptTenantConfig(res: SessionResponse): void {
   s.setWidgetTheme(res.widgetTheme ?? null);
   if (res.widgetCopy) s.setWidgetCopy(res.widgetCopy);
   s.setIssueFeed(!!res.issueFeed);
+  // Per session, not per tenant: a guest (or a fresh session after logout) reads false.
+  s.setThreadAvailable(!!res.threadAvailable);
   // Absent (older API) reads as a store — the behaviour before the flag existed.
   s.setCommerceEnabled(res.commerceEnabled !== false);
   // Deployment-level: where inference runs, named in the AI disclosure (G7).

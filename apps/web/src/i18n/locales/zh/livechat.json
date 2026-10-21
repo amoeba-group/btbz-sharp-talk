@@ -431,5 +431,16 @@
     "savedAccurate": "评价已保存。",
     "savedGap": "评价已保存。不准确的 AI 回答会进入 知识 › 知识缺口建议。",
     "saveError": "无法保存评价。"
+  },
+  "company": {
+    "badge": "企业",
+    "earlier": "该企业之前的 {{count}} 个对话",
+    "earlierTitle": "该企业之前的对话",
+    "status": {
+      "ai_active": "AI",
+      "waiting": "等待中",
+      "agent": "人工处理中",
+      "ended": "已结束"
+    }
   }
 }

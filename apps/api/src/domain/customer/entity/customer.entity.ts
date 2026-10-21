@@ -86,6 +86,14 @@ export class Customer {
   @Column({ type: 'varbinary', length: 256, nullable: true, transformer: piiTransformer })
   phone: string | null;
 
+  /**
+   * b2c (default — every pre-existing row) | b2b_contact (PLN-261022 stage 2):
+   * set by a signed identify that names a company (`hotel_id`); never reverted
+   * by a later identify without one.
+   */
+  @Column({ name: 'customer_type', type: 'varchar', length: 16, default: 'b2c' })
+  customerType: string;
+
   @Column({ type: 'varchar', length: 16, default: 'guest' })
   tier: string; // guest/subscriber/regular
 

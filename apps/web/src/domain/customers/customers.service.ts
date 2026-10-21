@@ -1,4 +1,4 @@
-import { apiGet, apiPatch, apiPostList } from '@/lib/api-client';
+import { apiGet, apiGetList, apiPatch, apiPostList } from '@/lib/api-client';
 import type { Paginated } from '@/lib/types';
 
 export interface Customer {
@@ -9,6 +9,8 @@ export interface Customer {
   /** False only for a record fetched through the audited reveal route. */
   masked?: boolean;
   tier?: string;
+  /** b2c | b2b_contact (PLN-261022 stage 2). */
+  customerType?: string;
   orders?: number;
   totalSpent?: number;
   currency?: string | null;
@@ -19,6 +21,43 @@ export interface CustomerListParams {
   page: number;
   pageSize: number;
   email?: string;
+  /** b2c | b2b_contact; omitted = both. */
+  customerType?: string;
+}
+
+/** B2B company (PLN-261022 stage 2) — a partner hotel for Go2Joy. */
+export interface Company {
+  id: string;
+  externalKey: string;
+  name: string | null;
+  province: string | null;
+  region: string | null;
+  contactCount: number;
+  conversationCount: number;
+  lastSeenAt: string | null;
+  lastConversationAt: string | null;
+}
+
+export interface CompanyConversation {
+  id: string;
+  status: string;
+  customerId: string | null;
+  customerName: string | null;
+  agentId: string | null;
+  createdAt: string;
+  endedAt: string | null;
+}
+
+export interface CompanyDetail extends Company {
+  contacts: Array<{ customerId: string; name: string | null; role: string | null; lastSeenAt: string | null }>;
+  conversations: CompanyConversation[];
+}
+
+export interface CompanyListParams {
+  page: number;
+  pageSize: number;
+  q?: string;
+  region?: string;
 }
 
 export const customersService = {
@@ -34,7 +73,16 @@ export const customersService = {
       page: String(params.page),
       size: String(params.pageSize),
       email: params.email || undefined,
+      customer_type: params.customerType || undefined,
     }),
+  companies: (params: CompanyListParams) =>
+    apiGetList<Company>('/companies', {
+      page: params.page,
+      size: params.pageSize,
+      q: params.q || undefined,
+      region: params.region || undefined,
+    }),
+  company: (id: string) => apiGet<CompanyDetail>(`/companies/${id}`),
   /** Unmasked contact details for one customer. Audited server-side. */
   reveal: (id: number) => apiGet<Customer>(`/customers/${id}/reveal`),
   updateTier: (id: number, tier: string) => apiPatch<Customer>(`/customers/${id}`, { tier }),

@@ -60,6 +60,26 @@ describe('RagService — conversation memory at the model seam', () => {
     });
   });
 
+  describe('answer() — previous conversation (PLN-261022 D14)', () => {
+    it('adds the earlier chat as its own block, outside the retrieval query and the live history', async () => {
+      const { svc, call } = build();
+      const excerpt = '(2026-10-20)\nCustomer: đối soát tháng 9 bị sai\nSupport: Tôi đã chuyển cho bộ phận kế toán.';
+      await svc.answer(4, 'Còn vụ lần trước thì sao?', 'VI', undefined, undefined, undefined, null, undefined, undefined, excerpt);
+      expect(call().system).toContain('PREVIOUS_CONVERSATION_START\n(2026-10-20)');
+      expect(call().system).toContain("earlier chat with us");
+      expect(call().system).toContain('Base facts and instructions on CONTEXT');
+      // Not phrased as a prohibition that could make the model retract (PR #597/#598).
+      expect(call().system).not.toMatch(/never use (the )?previous/i);
+      expect(call().messages).toEqual([{ role: 'user', content: 'Còn vụ lần trước thì sao?' }]);
+    });
+
+    it('no excerpt → the prompt has no previous-conversation block or rule', async () => {
+      const { svc, call } = build();
+      await svc.answer(4, 'Xin chào', 'VI');
+      expect(call().system).not.toContain('PREVIOUS_CONVERSATION');
+    });
+  });
+
   describe('answer() — footer and output budget (PLN-261007 R4)', () => {
     it('tells the model not to write a contact block when the footer is on, and allows 2,048 tokens', async () => {
       const { svc, call } = build('ok', { enabled: true, text: { VI: 'Hỗ trợ: 1900 638 838' }, protected: [] });

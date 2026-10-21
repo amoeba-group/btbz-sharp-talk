@@ -201,7 +201,8 @@
           "hotel_name": "酒店名称",
           "province": "省份",
           "role": "角色",
-          "landing_path": "访问路径"
+          "landing_path": "访问路径",
+          "customer_type": "客户类型"
         },
         "value": {
           "identity_level": {
@@ -212,6 +213,10 @@
             "guest": "访客",
             "subscriber": "订阅者",
             "regular": "常客"
+          },
+          "customer_type": {
+            "b2c": "个人客户",
+            "b2b_contact": "企业联系人"
           }
         }
       },

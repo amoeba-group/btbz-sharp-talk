@@ -136,6 +136,13 @@ export const vi: Translation = {
       restock: 'Hãy báo cho tôi khi sản phẩm này có hàng trở lại.',
     },
     endedTitle: 'Cuộc trò chuyện đã kết thúc',
+    // Earlier conversations of the signed-in account (PLN-261022 stage 2).
+    threadLoadPrevious: 'Xem các cuộc trò chuyện trước',
+    threadLoading: 'Đang tải…',
+    threadDivider: 'Cuộc trò chuyện trước · {{date}}',
+    threadColleagues: '{{count}} cuộc trò chuyện trước của đồng nghiệp cùng công ty — nhân viên hỗ trợ có thể xem.',
+    threadLoadError: 'Không tải được các cuộc trò chuyện trước',
+    threadNone: 'Chưa có cuộc trò chuyện trước',
     endedThanks: 'Cảm ơn bạn đã liên hệ!',
     csatLevel: {
       1: 'Rất không hài lòng',

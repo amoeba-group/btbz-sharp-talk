@@ -144,7 +144,7 @@ export class ScenarioService {
       };
     }
 
-    const conversation = await this.chatService.getOrCreateConversation(session.id);
+    const conversation = await this.chatService.getOrCreateConversation(session.id, session);
 
     await this.msgRepo.save(
       this.msgRepo.create({

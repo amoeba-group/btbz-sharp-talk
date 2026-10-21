@@ -8,6 +8,7 @@ import { User } from '../user/entity/user.entity';
 import { KbDocument } from '../knowledge/entity/kb-document.entity';
 import { Assignment } from '../agent/entity/assignment.entity';
 import { AgentDailyStat } from '../agent/entity/agent-daily-stat.entity';
+import { ThreadService } from './thread.service';
 import { ChatService } from './chat.service';
 import { IdleConversationService } from './idle-conversation.service';
 import { RagService } from './rag.service';
@@ -59,7 +60,7 @@ import { IssueModule } from '../issue/issue.module';
     IssueModule,
   ],
   controllers: [ChatController],
-  providers: [ChatService, RagService, ScenarioService, IdleConversationService],
-  exports: [ChatService, RagService, ScenarioService, IdleConversationService],
+  providers: [ChatService, RagService, ScenarioService, IdleConversationService, ThreadService],
+  exports: [ChatService, RagService, ScenarioService, IdleConversationService, ThreadService],
 })
 export class ChatModule {}

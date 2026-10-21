@@ -16,6 +16,7 @@ import type {
   ScenarioPostAction,
 } from '../../lib/types';
 import { MessageBubble } from './MessageBubble';
+import { EarlierConversations } from './EarlierConversations';
 import { TypingBubble } from './TypingBubble';
 import { CsatCard } from './CsatCard';
 import { ContactEmailCard } from './ContactEmailCard';
@@ -386,6 +387,9 @@ export function ChatTab() {
             onOpenPrivacySettings={() => setSettingsOpen(true)}
           />
         )}
+
+        {/* The signed-in account's earlier conversations (PLN-261022 stage 2). */}
+        <EarlierConversations />
 
         {/* Welcome bubble — tenant-configured copy; greets by name when known. */}
         <MessageBubble

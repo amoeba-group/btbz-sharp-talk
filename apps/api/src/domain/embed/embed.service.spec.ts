@@ -267,3 +267,61 @@ describe('EmbedService.identify — region normalisation', () => {
     expect(aiConfigRepo.findOne).not.toHaveBeenCalled();
   });
 });
+
+/** B2B account registration (PLN-261022 stage 2). */
+describe('EmbedService.identify — company contact', () => {
+  const withCompanies = (company: object | null = { id: '3' }) => {
+    const h = build();
+    const companies = {
+      upsertFromIdentity: jest.fn(async () => company),
+      linkContact: jest.fn(async () => undefined),
+    };
+    const convRepo = { update: jest.fn(async () => ({ affected: 1 })) };
+    const customerRepo = (h.service as any).customerRepo;
+    customerRepo.update = jest.fn(async () => ({ affected: 1 }));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const svc = new EmbedService(
+      (h.service as any).tenantRepo,
+      customerRepo,
+      (h.service as any).sessionRepo,
+      (h.service as any).redis,
+      undefined,
+      companies as any,
+      convRepo as any,
+    );
+    return { svc, companies, convRepo, customerRepo, h };
+  };
+
+  it('a signed hotel_id makes the user a contact of that company', async () => {
+    const { svc, companies, convRepo, customerRepo } = withCompanies();
+    const attrs = { hotel_id: '1721', hotel_name: 'A In Hotel Del Luna', role: 'Lễ tân' };
+    const session = await svc.identify({ sessionToken: 'tok', userId: 'ha:1001', hash: EmbedService.sign(SECRET, 'ha:1001', attrs), attributes: attrs });
+    expect(session.companyId).toBe(3);
+    expect(customerRepo.update).toHaveBeenCalledWith({ id: 100 }, { customerType: 'b2b_contact' });
+    expect(companies.upsertFromIdentity).toHaveBeenCalledWith(1, expect.objectContaining({ hotel_id: '1721' }));
+    expect(companies.linkContact).toHaveBeenCalledWith(1, 3, 100, 'Lễ tân');
+    // A thread opened before signing in now belongs to the account.
+    expect(convRepo.update).toHaveBeenCalledWith(
+      expect.objectContaining({ sessionId: 5 }),
+      { customerId: 100, companyId: 3 },
+    );
+  });
+
+  it('without a hotel_id: no company, the customer type is left alone', async () => {
+    const { svc, companies, customerRepo } = withCompanies();
+    const attrs = { role: 'Quản lý' };
+    const session = await svc.identify({ sessionToken: 'tok', userId: 'ha:1001', hash: EmbedService.sign(SECRET, 'ha:1001', attrs), attributes: attrs });
+    expect(session.companyId).toBeNull();
+    expect(companies.upsertFromIdentity).not.toHaveBeenCalled();
+    expect(customerRepo.update).not.toHaveBeenCalled();
+  });
+
+  it('a registration failure never fails the identify', async () => {
+    const { svc, companies } = withCompanies();
+    companies.upsertFromIdentity.mockRejectedValueOnce(new Error('db down'));
+    const attrs = { hotel_id: '1721' };
+    const session = await svc.identify({ sessionToken: 'tok', userId: 'ha:1001', hash: EmbedService.sign(SECRET, 'ha:1001', attrs), attributes: attrs });
+    expect(session.identityLevel).toBe('verified');
+    expect(session.companyId).toBeNull();
+  });
+});

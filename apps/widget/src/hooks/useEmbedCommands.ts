@@ -47,6 +47,8 @@ export function useEmbedCommands(): void {
       try {
         const res = await identifyRequest(token, user);
         store.setAuthenticated(res.authenticated);
+        // Earlier conversations of this account (PLN-261022 stage 2).
+        store.setThreadAvailable(!!res.threadAvailable);
         // A tenant whose host terms cover AI support records a signed user as
         // consented on identify (PLN-261015 D9) — drop the banner right away.
         if (res.consentState === 'granted') adoptSessionConsent(res);

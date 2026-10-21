@@ -15,5 +15,40 @@
   "reveal": "Ver datos completos",
   "revealAudited": "Datos de contacto mostrados. Esta consulta queda registrada en la auditoría.",
   "maskedHint": "Los identificadores del cliente están enmascarados. Las cuentas máster y director pueden mostrarlos.",
-  "maskedHintWithReveal": "Los identificadores del cliente están enmascarados. Al mostrarlos se ven durante 5 minutos y queda registro en la auditoría."
+  "maskedHintWithReveal": "Los identificadores del cliente están enmascarados. Al mostrarlos se ven durante 5 minutos y queda registro en la auditoría.",
+  "tab_all": "Todos",
+  "tab_b2b": "Clientes empresa",
+  "tab_b2c": "Clientes de reservas",
+  "customerType": "Tipo",
+  "typeB2b": "Empresa",
+  "typeB2c": "Consumidor",
+  "companyName": "Empresa",
+  "companyRegion": "Región",
+  "companyProvince": "Provincia / ciudad",
+  "companyContacts": "Contactos",
+  "companyConversations": "Conversaciones",
+  "companyLastActivity": "Última actividad",
+  "companyOpen": "Abrir",
+  "companySearchPlaceholder": "Buscar por nombre de empresa",
+  "allRegions": "Todas las regiones",
+  "companyHint": "Un cliente empresa se registra cuando un usuario autenticado de la plataforma anfitriona (p. ej. personal de Go2Joy Hotel Admin) inicia un chat. Los contactos se enmascaran como en la lista de consumidores.",
+  "companyEmpty": "Aún no hay clientes empresa",
+  "companyDetail": "Cliente empresa",
+  "companyBack": "Volver",
+  "companyLoading": "Cargando…",
+  "companyContactsTitle": "Contactos ({{count}})",
+  "companyConversationsTitle": "Conversaciones ({{count}})",
+  "region": {
+    "north": "Norte",
+    "north_center": "Centro-Norte",
+    "central": "Centro",
+    "south_center": "Centro-Sur",
+    "south": "Sur"
+  },
+  "status": {
+    "ai_active": "IA",
+    "waiting": "En espera",
+    "agent": "Con agente",
+    "ended": "Finalizada"
+  }
 }

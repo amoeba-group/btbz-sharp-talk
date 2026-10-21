@@ -15,5 +15,40 @@
   "reveal": "Xem đầy đủ",
   "revealAudited": "Đã hiển thị thông tin liên hệ. Lần xem này được ghi vào nhật ký kiểm toán.",
   "maskedHint": "Thông tin nhận dạng khách hàng được che. Tài khoản master và director có thể hiển thị đầy đủ.",
-  "maskedHintWithReveal": "Thông tin nhận dạng khách hàng được che. Khi hiển thị, thông tin hiện trong 5 phút và được ghi vào nhật ký kiểm toán."
+  "maskedHintWithReveal": "Thông tin nhận dạng khách hàng được che. Khi hiển thị, thông tin hiện trong 5 phút và được ghi vào nhật ký kiểm toán.",
+  "tab_all": "Tất cả",
+  "tab_b2b": "Khách hàng doanh nghiệp",
+  "tab_b2c": "Khách đặt phòng",
+  "customerType": "Loại",
+  "typeB2b": "Doanh nghiệp",
+  "typeB2c": "Cá nhân",
+  "companyName": "Doanh nghiệp",
+  "companyRegion": "Vùng",
+  "companyProvince": "Tỉnh / thành phố",
+  "companyContacts": "Liên hệ",
+  "companyConversations": "Cuộc trò chuyện",
+  "companyLastActivity": "Hoạt động gần nhất",
+  "companyOpen": "Xem",
+  "companySearchPlaceholder": "Tìm theo tên doanh nghiệp",
+  "allRegions": "Tất cả vùng",
+  "companyHint": "Khách hàng doanh nghiệp được tạo khi người dùng đã đăng nhập ở ứng dụng chủ (ví dụ nhân viên Go2Joy Hotel Admin) bắt đầu trò chuyện. Tên liên hệ được che như danh sách khách cá nhân.",
+  "companyEmpty": "Chưa có khách hàng doanh nghiệp",
+  "companyDetail": "Khách hàng doanh nghiệp",
+  "companyBack": "Quay lại",
+  "companyLoading": "Đang tải…",
+  "companyContactsTitle": "Liên hệ ({{count}})",
+  "companyConversationsTitle": "Cuộc trò chuyện ({{count}})",
+  "region": {
+    "north": "Miền Bắc",
+    "north_center": "Bắc Trung Bộ",
+    "central": "Miền Trung",
+    "south_center": "Nam Trung Bộ",
+    "south": "Miền Nam"
+  },
+  "status": {
+    "ai_active": "AI",
+    "waiting": "Đang chờ",
+    "agent": "Đang tư vấn",
+    "ended": "Đã kết thúc"
+  }
 }

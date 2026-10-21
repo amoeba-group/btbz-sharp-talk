@@ -55,6 +55,8 @@ export interface HistoryListParams {
   agentId?: string;
   q?: string;
   includePreview?: boolean;
+  /** b2b = a B2B company's conversations, b2c = the rest (PLN-261022 stage 2). */
+  segment?: 'b2b' | 'b2c';
 }
 
 export const historyService = {
@@ -69,6 +71,7 @@ export const historyService = {
       agent_id: params.agentId,
       q: params.q,
       include_preview: params.includePreview ? 'true' : undefined,
+      segment: params.segment,
     }),
   detail: (id: string) => apiGet<ConversationDetail>(`/analytics/conversations/${id}`),
 };

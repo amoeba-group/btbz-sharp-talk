@@ -192,6 +192,14 @@ export const CONVERSATION_STATUS = {
 export type ConversationStatus = (typeof CONVERSATION_STATUS)[keyof typeof CONVERSATION_STATUS];
 
 export const SENDER_TYPE = { USER: 'user', AI: 'ai', AGENT: 'agent', SYSTEM: 'system' } as const;
+
+/**
+ * Customer type (PLN-261022 stage 2): a business contact (a partner hotel's
+ * staff, identified by a signed `hotel_id`) or an ordinary consumer. Every row
+ * that existed before is a consumer.
+ */
+export const CUSTOMER_TYPE = { B2C: 'b2c', B2B_CONTACT: 'b2b_contact' } as const;
+export type CustomerType = (typeof CUSTOMER_TYPE)[keyof typeof CUSTOMER_TYPE];
 export type SenderType = (typeof SENDER_TYPE)[keyof typeof SENDER_TYPE];
 
 // ---- Orders (POL-014 taxonomy) ----

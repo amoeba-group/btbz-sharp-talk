@@ -45,8 +45,11 @@ export class CustomerService {
     page: number,
     size: number,
     email?: string,
+    customerType?: string,
   ): Promise<{ items: Customer[]; total: number; stats: Map<string, CustomerOrderStats> }> {
     const where: FindOptionsWhere<Customer> = { tenantId };
+    // Business contacts vs consumers (PLN-261022 stage 2).
+    if (customerType) where.customerType = customerType;
     // Email is encrypted — partial LIKE is impossible; match the exact address
     // via the blind index (PRV-M6). Blank/garbage search returns nothing.
     if (email) where.emailHash = blindIndex(email) ?? '__none__';

@@ -431,5 +431,16 @@
     "savedAccurate": "Rating saved.",
     "savedGap": "Rating saved. AI answers rated below accurate go to Knowledge › gap proposals.",
     "saveError": "Could not save the rating."
+  },
+  "company": {
+    "badge": "Business",
+    "earlier": "{{count}} earlier conversation(s) of this company",
+    "earlierTitle": "Earlier conversations of this company",
+    "status": {
+      "ai_active": "AI",
+      "waiting": "Waiting",
+      "agent": "With agent",
+      "ended": "Ended"
+    }
   }
 }

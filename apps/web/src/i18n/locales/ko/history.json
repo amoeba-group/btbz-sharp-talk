@@ -35,5 +35,8 @@
     "ai": "AI",
     "agent": "상담원",
     "system": "시스템"
-  }
+  },
+  "segment": "고객 구분",
+  "segmentB2b": "기업 (B2B)",
+  "segmentB2c": "일반 (B2C)"
 }

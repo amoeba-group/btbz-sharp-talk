@@ -1,8 +1,8 @@
 import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
-import { Repository } from 'typeorm';
-import { CONSENT_STATE, SESSION_IDENTITY } from '@sharptalk/types';
+import { In, Repository } from 'typeorm';
+import { CONSENT_STATE, CONVERSATION_STATUS, CUSTOMER_TYPE, SESSION_IDENTITY } from '@sharptalk/types';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { Session } from '../session/entity/session.entity';
@@ -17,6 +17,9 @@ import {
   storedIdentityAttributes,
 } from './identity-attributes';
 import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
+import { Conversation } from '../chat/entity/conversation.entity';
+import { CompanyService } from '../company/company.service';
+import type { Company } from '../company/entity/company.entity';
 
 /** What the customer's own server signs, and what the SDK forwards. */
 export interface IdentifyInput {
@@ -58,6 +61,9 @@ export class EmbedService {
     // Last + optional: specs build the service positionally. Read-only — the
     // province → region map (handoff_config.provinceRegions, PLN-261022).
     @Optional() @InjectRepository(TenantAiConfig) private readonly aiConfigRepo?: Repository<TenantAiConfig>,
+    // B2B account registration + attaching an already-open thread (PLN-261022 stage 2).
+    @Optional() private readonly companies?: CompanyService,
+    @Optional() @InjectRepository(Conversation) private readonly convRepo?: Repository<Conversation>,
   ) {}
 
   /** New secret, stored encrypted. Returned in full exactly once, to the caller. */
@@ -123,6 +129,11 @@ export class EmbedService {
       );
     }
     session.identityAttributes = stored.attributes;
+    // B2B account (PLN-261022 stage 2): a signed hotel_id makes this user a
+    // contact of that company. Re-identifying without one (chain operator on
+    // "all hotels") clears the session's company but never demotes the contact.
+    const company = await this.registerAccount(Number(session.tenantId), customer, stored.attributes);
+    session.companyId = company ? Number(company.id) : null;
     // Consent via the host's own terms (PLN-261015 D9). Only a SIGNED user
     // reaches this line, so only users the host vouches for are covered; an
     // explicit decline in the widget is never overridden.
@@ -139,12 +150,56 @@ export class EmbedService {
     const saved = await this.sessionRepo.save(session);
     // The token→session cache would keep serving the guest view otherwise.
     await this.redis.del(sessionCacheKey(input.sessionToken));
+    // A guest who chatted before signing in: that open thread is now this account's.
+    await this.attachOpenConversation(saved);
     this.logger.log(
       `identify ok (tenant ${session.tenantId}, customer ${customer.id}, user ${maskId(input.userId)}` +
         `${attributes ? `, attrs ${Object.keys(attributes).sort().join(',')}, region ${stored.regionSource}` : ''}` +
-        `${consentFromHost ? `, consent via host terms v${saved.consentVersion}` : ''})`,
+        `${consentFromHost ? `, consent via host terms v${saved.consentVersion}` : ''}` +
+        `${company ? `, company ${company.id}` : ''})`,
     );
     return saved;
+  }
+
+  /**
+   * Company + contact link for a signed identify that names a hotel. Never
+   * fails the identify: a registration problem is logged and the user simply
+   * proceeds without a company (routing still has the signed attributes).
+   */
+  private async registerAccount(
+    tenantId: number,
+    customer: Customer,
+    attributes: IdentityAttributes | null,
+  ): Promise<Company | null> {
+    if (!this.companies || !attributes?.hotel_id) return null;
+    try {
+      if (customer.customerType !== CUSTOMER_TYPE.B2B_CONTACT) {
+        await this.customerRepo.update({ id: customer.id }, { customerType: CUSTOMER_TYPE.B2B_CONTACT });
+        customer.customerType = CUSTOMER_TYPE.B2B_CONTACT;
+      }
+      const company = await this.companies.upsertFromIdentity(tenantId, attributes);
+      if (company) await this.companies.linkContact(tenantId, Number(company.id), Number(customer.id), attributes.role ?? null);
+      return company;
+    } catch (err) {
+      this.logger.warn(`company registration failed (tenant ${tenantId}, customer ${customer.id}): ${(err as Error).message}`);
+      return null;
+    }
+  }
+
+  /** Stamp the session's open conversation with the account it now belongs to. Never throws. */
+  private async attachOpenConversation(session: Session): Promise<void> {
+    if (!this.convRepo) return;
+    try {
+      await this.convRepo.update(
+        {
+          sessionId: session.id,
+          status: In([CONVERSATION_STATUS.AI_ACTIVE, CONVERSATION_STATUS.WAITING, CONVERSATION_STATUS.AGENT]),
+        },
+        { customerId: session.customerId, companyId: session.companyId ?? null },
+      );
+    } catch (err) {
+      this.logger.warn(`open conversation not re-attributed (session ${session.id}): ${(err as Error).message}`);
+    }
   }
 
   /** The tenant's province → region map; only read when a province arrived. Never throws. */

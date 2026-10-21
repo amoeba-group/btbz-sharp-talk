@@ -201,7 +201,8 @@
           "hotel_name": "Nombre del hotel",
           "province": "Provincia",
           "role": "Rol",
-          "landing_path": "Ruta de entrada"
+          "landing_path": "Ruta de entrada",
+          "customer_type": "Tipo de cliente"
         },
         "value": {
           "identity_level": {
@@ -212,6 +213,10 @@
             "guest": "Invitado",
             "subscriber": "Suscriptor",
             "regular": "Habitual"
+          },
+          "customer_type": {
+            "b2c": "Consumidor",
+            "b2b_contact": "Contacto de empresa"
           }
         }
       },

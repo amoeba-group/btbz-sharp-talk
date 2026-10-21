@@ -36,6 +36,9 @@ export class SessionMapper {
       widgetCopy: notice.widgetCopy,
       aiProcessingRegion: notice.aiProcessingRegion ?? 'US',
       issueFeed: notice.issueFeed ?? false,
+      // Earlier conversations (PLN-261022 stage 2): only a host-signed user of a
+      // tenant that switched continuity on — never a guest or a lookup-only session.
+      threadAvailable: !!notice.threadContinuity && s.identityLevel === 'verified' && s.customerId != null,
     };
   }
 }

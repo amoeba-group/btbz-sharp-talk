@@ -65,6 +65,11 @@ export class Session {
   @Index('idx_sessions_customer')
   customerId: number | null;
 
+  /** The company the signed identify named (PLN-261022 stage 2); NULL = none (guest, B2C, no hotel selected). */
+  @Column({ name: 'company_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
+  @Index('idx_sessions_company')
+  companyId: number | null;
+
   // Identity assurance for the bound customer. 'verified' is minted only by the
   // Shopify App Proxy (Shopify-signed customer identity); 'guest' covers the
   // order-number+email lookup. DSAR export/erasure require 'verified' (SEC-C3) —

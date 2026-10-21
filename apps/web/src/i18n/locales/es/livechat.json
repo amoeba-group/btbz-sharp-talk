@@ -431,5 +431,16 @@
     "savedAccurate": "Valoración guardada.",
     "savedGap": "Valoración guardada. Las respuestas de la IA no correctas pasan a Conocimiento › propuestas de vacíos.",
     "saveError": "No se pudo guardar la valoración."
+  },
+  "company": {
+    "badge": "Empresa",
+    "earlier": "{{count}} conversación(es) anteriores de esta empresa",
+    "earlierTitle": "Conversaciones anteriores de esta empresa",
+    "status": {
+      "ai_active": "IA",
+      "waiting": "En espera",
+      "agent": "Con agente",
+      "ended": "Finalizada"
+    }
   }
 }

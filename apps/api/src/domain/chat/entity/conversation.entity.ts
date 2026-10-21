@@ -10,6 +10,9 @@ import { bigintTransformer } from '../../../global/util/transformers';
 // Queue pinning (PLN-260826) — mirrors sql/260826-conversation-pin.sql.
 @Index('idx_conv_tenant_pinned', ['tenantId', 'pinnedAt'])
 @Index('idx_conv_tenant_ended', ['tenantId', 'endedAt'])
+// Account threads (PLN-261022 stage 2) — mirrors sql/261022-b2b-company-thread.sql.
+@Index('idx_conv_tenant_company', ['tenantId', 'companyId', 'id'])
+@Index('idx_conv_tenant_customer', ['tenantId', 'customerId', 'id'])
 @Entity('conversations')
 export class Conversation {
   @PrimaryGeneratedColumn({ type: 'bigint' })
@@ -91,4 +94,20 @@ export class Conversation {
 
   @Column({ name: 'ended_at', type: 'datetime', nullable: true })
   endedAt: Date | null;
+
+  /**
+   * The account this thread belongs to (PLN-261022 stage 2): the session's
+   * customer and, for a B2B contact, the company. Written at creation and when
+   * a signed identify lands on an already-open thread. The account thread =
+   * company (B2B) or customer (otherwise) across sessions.
+   */
+  @Column({ name: 'customer_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
+  customerId: number | null;
+
+  @Column({ name: 'company_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
+  companyId: number | null;
+
+  /** The account thread's previous conversation — its agent is preferred on handoff (sticky). */
+  @Column({ name: 'prev_conversation_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
+  prevConversationId: number | null;
 }

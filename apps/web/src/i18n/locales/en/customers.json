@@ -15,5 +15,40 @@
   "reveal": "Show full details",
   "revealAudited": "Contact details revealed. This read is recorded in the audit log.",
   "maskedHint": "Customer identifiers are masked. Master and director accounts can reveal them.",
-  "maskedHintWithReveal": "Customer identifiers are masked. Revealing one shows it for 5 minutes and is recorded in the audit log."
+  "maskedHintWithReveal": "Customer identifiers are masked. Revealing one shows it for 5 minutes and is recorded in the audit log.",
+  "tab_all": "All",
+  "tab_b2b": "Business customers",
+  "tab_b2c": "Booking customers",
+  "customerType": "Type",
+  "typeB2b": "Business",
+  "typeB2c": "Consumer",
+  "companyName": "Company",
+  "companyRegion": "Region",
+  "companyProvince": "Province / city",
+  "companyContacts": "Contacts",
+  "companyConversations": "Conversations",
+  "companyLastActivity": "Last activity",
+  "companyOpen": "Open",
+  "companySearchPlaceholder": "Search by company name",
+  "allRegions": "All regions",
+  "companyHint": "A business customer is registered when a signed-in host user (e.g. a Go2Joy Hotel Admin staff member) starts a chat. Contacts are masked like the consumer list.",
+  "companyEmpty": "No business customers yet",
+  "companyDetail": "Business customer",
+  "companyBack": "Back",
+  "companyLoading": "Loading…",
+  "companyContactsTitle": "Contacts ({{count}})",
+  "companyConversationsTitle": "Conversations ({{count}})",
+  "region": {
+    "north": "North",
+    "north_center": "North Center",
+    "central": "Central",
+    "south_center": "South Center",
+    "south": "South"
+  },
+  "status": {
+    "ai_active": "AI",
+    "waiting": "Waiting",
+    "agent": "With agent",
+    "ended": "Ended"
+  }
 }
