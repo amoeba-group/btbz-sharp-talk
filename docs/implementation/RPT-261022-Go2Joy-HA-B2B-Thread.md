@@ -40,11 +40,11 @@
 | 환경 | SQL | 코드 | 설정 | 비고 |
 |---|---|---|---|---|
 | **스테이징** | ✅ 2026-10-22 03:46 선적용(전체 백업 `~/backups/pre-261022-b2b-thread-20261022-0346.sql.gz`), `check-migrations` 누락 0, 백필 64건 | ✅ `053810ec` 배포. 컨테이너 재생성, 부팅 로그 정상, `/companies`·`/chat/thread` 401, dist에 company 모듈 확인 | ✅ go2joy(테넌트 4) `thread_continuity=1` | HA 서명이 붙기 전에는 화면 변화 없음(게스트는 대상 아님) |
-| 프로덕션 | ⬜ 미적용 | ⬜ 미배포 | — | 1단계 SQL(261022-unit-label-regions)과 함께 선적용 필요 |
+| 프로덕션 | ✅ 2026-10-22 07:12 KST 1단계 SQL과 함께 선적용(백업 `~/backups/sharptalk-production/20261022-0712-pre-261022/db_sharptalk.sql`, 3.1MB). 백필 대상 0건(대화 1건, 세션 고객 없음) | ✅ `production` ff `f194834e..23c0a2b1` → `deploy-self-hosted.sh`. API healthy·부팅 로그 1회·마이그레이션 누락 0·`/companies`·`/chat/thread`·`/agent/conversations/:id/company-conversations` 401, web·widget 번들 신규 키 확인 | `thread_continuity=0`(ivyusa) | 스위치 꺼짐 → 동작 변화 없음. 실데이터 변경 테스트는 하지 않음 |
 | init-sql | ⬜ | — | — | 261019 3건 + 261022 2건 밀림 → 스테이징 실스키마로 재생성 필요 |
 
 ## 5. 남은 일
-- 프로덕션: SQL 2건(1·2단계) 선적용 → 배포. 스위치는 꺼진 채 둔다
+- ~~프로덕션: SQL 2건 선적용 → 배포~~(10/22 07:12 완료, 스위치 꺼짐)
 - init-sql 재생성
 - GUIDE v1.2 문구 맞추기: "24시간 안이면 직전 대화를 다시 열어" → "새 대화로 이어지며 직전 상담원이 우선 배정"
 - Go2Joy 회신 반영: 위젯 노출 범위(Q2, 현재 `self`), 재개 창(Q3, 24h), 팀 매핑(G6) → 팀 담당 지역·배정 규칙 입력

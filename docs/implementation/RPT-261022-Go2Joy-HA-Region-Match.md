@@ -33,7 +33,7 @@
 | 환경 | SQL | 코드 | 설정 | 비고 |
 |---|---|---|---|---|
 | **스테이징** | ✅ 2026-10-22 03:15(KST) 선적용(백업 `~/backups/pre-261022-unit-label-regions-20261022-0315.sql`), `check-migrations` 누락 0 | ✅ `d971556c` 배포. 컨테이너 재생성, 부팅 로그 `successfully started`, `PATCH /units/1` 401, 컨테이너 안 API·웹 번들에 새 코드 확인 | ✅ go2joy(테넌트 4) `provinceRegions` 63개 등록(이전 설정 백업 `~/backups/pre-261022-go2joy-handoff-config.tsv`) | 팀 담당 지역·지역 매칭 규칙은 **Go2Joy 팀 매핑 확정(G6) 후** 입력 |
-| 프로덕션 | ⬜ 미적용 | ⬜ 미배포 | — | go2joy 테넌트 없음. 다음 프로덕션 배포 전에 SQL 선적용 필요 |
+| 프로덕션 | ✅ 2026-10-22 07:12 KST 선적용(백업 `~/backups/sharptalk-production/20261022-0712-pre-261022/db_sharptalk.sql`) | ✅ `production` ff `f194834e..23c0a2b1` → `deploy-self-hosted.sh`. API healthy·부팅 로그·마이그레이션 누락 0·`/units` 401 | — | go2joy 테넌트 없음(ivyusa만). 동작 변화 없음 |
 | init-sql | ⬜ | — | — | `docker/init-sql/01-schema.sql`이 261019 마이그레이션 3건과 이번 건 뒤처짐 → 스테이징 실스키마로 재생성 필요 |
 
 ## 5. 남은 일
@@ -43,5 +43,5 @@
   - 서명 identify(T2·T3·성만)로 AI 이관·직원 요청 배정 실측
 
   실제 상담원에게 알림·메일이 가므로 Go2Joy 팀·상담원 확정 뒤 진행한다.
-- 프로덕션 SQL 선적용·배포, init-sql 재생성
+- ~~프로덕션 SQL 선적용·배포~~(10/22 완료), init-sql 재생성
 - 2단계(기업고객·대화 연속성) 구현
