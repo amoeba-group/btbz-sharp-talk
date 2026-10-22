@@ -7,7 +7,7 @@
 |---|---|
 | Người nhận | Go2Joy PM · Nhóm phát triển HA (backend·FE) · Hạ tầng · Nhóm vận hành (CS) · Pháp chế |
 | Người gửi | SharpTalk (Amoeba) |
-| Ngày / Phiên bản | 2026-10-22 · v1.0 |
+| Ngày / Phiên bản | 2026-10-22 · v1.1 (giai đoạn khớp với kế hoạch v1.2) |
 | Tham khảo | Cấu trúc kênh SharpTalk × Go2Joy (2026-10-21) · Chiến lược vận hành AI Go2Joy-SharpTalk Level 1·2·3 (2026-10-22) · Danh sách kiểm tra và lịch trình kết nối (2026-10-12) · Kế hoạch dự án PLN-261015 · Hướng dẫn kết nối HA v1.3 (gửi kèm) |
 
 ## Tóm tắt
@@ -19,7 +19,7 @@
   - **G4·G5 Điều khoản·thông báo dữ liệu cá nhân**: chưa nhận được.
 
   Trong kế hoạch dự án (PLN-261015), hạn của các mục này là 10/22; nếu quá hạn, mốc 10/31 sẽ đổi **từ mở vận hành chính thức thành mở trên staging** (mục 4).
-- **Giai đoạn 2 (B2C trước·sau đặt phòng, menu iframe trong HA, Webhook hoàn tất đặt phòng, tính phí theo điểm)** hiện chỉ tổng hợp các mục cần thảo luận (2.5). Khi nhận được phản hồi, chúng tôi sẽ bắt đầu bằng một tài liệu yêu cầu riêng.
+- **Giai đoạn 2·3 (B2C trước·sau đặt phòng, menu iframe trong HA, Webhook hoàn tất đặt phòng, tính phí theo điểm)** hiện chỉ tổng hợp các mục cần thảo luận (2.5). Theo kế hoạch v1.2, **giai đoạn 2 là Go2Joy Philippines** (tư vấn khách đặt phòng + tư vấn HA, do Go2Joy vận hành) và **giai đoạn 3 là tư vấn viên AI theo khách sạn** (khách sạn tự phản hồi — menu HA, tính phí theo điểm). Khi nhận được phản hồi, chúng tôi sẽ bắt đầu bằng một tài liệu yêu cầu riêng.
 - **Vận hành AI**: hiện ở Level 1 (AI bên ngoài + RAG). Theo hợp đồng, Go2Joy chịu chi phí hạ tầng và AI API, nên **khóa AI dùng cho vận hành phải đứng tên Go2Joy** (G2). Trong 5 hạng mục cần chuẩn bị ở Level 1 thì đã có 4; chỉ cần bổ sung nhật ký AI theo từng tin nhắn (3.2 S30).
 
 ## 1. Toàn bộ cấu trúc kết nối
@@ -32,7 +32,7 @@
 |---|---|---|---|---|
 | B2B | `#Talk-4-Hotel` (HA Support) | Widget sau khi đăng nhập HA + identify có chữ ký | Nhân viên tư vấn Go2Joy thuộc nhóm khu vực × nghiệp vụ (CS / Sales) theo vùng của khách sạn | **SharpTalk đã triển khai xong** · chờ chữ ký HA·danh sách phụ trách |
 | B2C trước đặt phòng | `Go2Joy-#Talk-4-BookingClient` | Ứng dụng·web Go2Joy (widget web / SDK di động) | Nhân viên tư vấn Go2Joy thuộc nhóm khu vực × CS | Đã có tư vấn viên AI·SDK di động · đang thảo luận tích hợp ứng dụng·công cụ đặt phòng |
-| B2C sau đặt phòng | `Hotel-#Talk-4-BookingClient` | Tự động chuyển khi có sự kiện hoàn tất đặt phòng | Nhân viên khách sạn (menu HA #Talk) hoặc CS Go2Joy — cần xác nhận | Giai đoạn 2 · chưa triển khai |
+| B2C sau đặt phòng | `Hotel-#Talk-4-BookingClient` | Tự động chuyển khi có sự kiện hoàn tất đặt phòng | Nhân viên khách sạn (menu HA #Talk) hoặc CS Go2Joy — cần xác nhận | Giai đoạn 3 · chưa triển khai |
 
 ### 1.1 Luồng chi tiết B2B `#Talk-4-Hotel`
 
@@ -105,7 +105,9 @@ Trạng thái là theo kiểm tra của SharpTalk ngày 2026-10-22.
 | G33 | Nhãn chất lượng trong vận hành | Nhân viên tư vấn đánh giá câu trả lời AI là đúng/sai và chấp nhận câu trả lời đã sửa thành tri thức. Đây là dữ liệu cho cổng chuyển sang Level 2 (câu trả lời mẫu) | Vận hành | P1 | Sau khi mở |
 | G34 | Partner API (giai đoạn sau) | Client key vận hành, whitelist IP máy chủ SharpTalk, phạm vi Hotel Feed (toàn bộ khách sạn HA), sửa hành vi trả về tất cả khi không có khách sạn khớp, môi trường kiểm thử có xác minh chữ ký (hướng dẫn 7.1) | Backend HA | P2 | Mới nhận khóa thử (10/21) |
 
-### 2.5 Giai đoạn 2 — B2C trước·sau đặt phòng (các mục cần thảo luận)
+### 2.5 Giai đoạn 2·3 — B2C trước·sau đặt phòng (các mục cần thảo luận)
+G40~G43·G47 cần cho giai đoạn 2 (tư vấn khách đặt phòng tại Philippines), G44~G46 cần cho giai đoạn 3 (tư vấn viên AI theo khách sạn).
+
 | # | Yêu cầu | Chi tiết | Ưu tiên |
 |---|---|---|---|
 | G40 | Webhook sự kiện hoàn tất đặt phòng | Thời điểm chuyển tiếp. `bookingSn`·`hotelSn`·định danh khách·chữ ký, liên kết với phiên hội thoại trước đó, mỗi lượt đặt (khách sạn) một luồng hội thoại riêng khi đặt nhiều khách sạn | P2 |
@@ -152,7 +154,7 @@ Trạng thái là theo kiểm tra của SharpTalk ngày 2026-10-22.
 - [ ] G24 Zalo OA · G25 tên tỉnh mới trong bảng khu vực
 - [ ] G31 Quyết định chỉnh lý xung đột tri thức · G32 rà soát bộ đánh giá chuẩn · G33 vận hành đánh giá của nhân viên tư vấn·chấp nhận câu trả lời
 
-**Thảo luận giai đoạn 2 (P2)**
+**Thảo luận giai đoạn 2·3 (P2)**
 
 - [ ] Phản hồi G40~G47 (Webhook hoàn tất đặt phòng, nhúng ứng dụng·web, tiêu chí khu vực, chuyển tiếp·phạm vi·lưu trữ sau đặt phòng, menu HA iframe·SSO, vận hành lễ tân, tính phí, Zalo)
 - [ ] G7 Điều khoản hợp đồng dịch vụ · G17 khác biệt vai trò·địa chỉ·quận/huyện · G26 ngôn ngữ · G34 Partner API
@@ -188,7 +190,7 @@ Trạng thái là theo kiểm tra của SharpTalk ngày 2026-10-22.
 - [ ] S28 Hiển thị lý do chuyển tiếp trên bảng điều khiển, kiểm tra xung đột trước khi chấp nhận tri thức (PLN-261015 D5 · D6)
 - [ ] S29 Thời hạn hiệu lực chữ ký (`ts`), nhận địa chỉ·quận/huyện khách sạn — sau khi quyết định G16 · G17
 - [ ] S30 **Bổ sung AI Level 1**: nhật ký AI theo từng tin nhắn (mô hình · token · độ trễ · câu hỏi đã viết lại · kết quả). Hiện chỉ có tổng hợp sử dụng theo ngày. Khi nhận được định dạng mã đặt phòng của Go2Joy, chúng tôi sẽ thêm vào phần che thông tin. Đồng thời mở rộng bộ chuẩn cho từng tư vấn viên AI
-- [ ] S31 Tài liệu yêu cầu giai đoạn 2 (tích hợp B2C trước đặt phòng, mẫu tư vấn viên lễ tân, menu HA iframe·SSO, nhận Webhook đặt phòng, tính phí theo điểm) — sau khi có phản hồi mục 2.5
+- [ ] S31 Tài liệu yêu cầu giai đoạn 2 (Philippines) · giai đoạn 3 (tư vấn viên AI theo khách sạn) (tích hợp B2C trước đặt phòng, mẫu tư vấn viên lễ tân, menu HA iframe·SSO, nhận Webhook đặt phòng, tính phí theo điểm) — sau khi có phản hồi mục 2.5
 
 ### 3.3 Vận hành AI Level 1 — đối chiếu điều kiện tiên quyết
 Chiến lược vận hành AI quy định cần chuẩn bị 5 hạng mục sau ở Level 1 trước khi chuyển sang Level 2·3.

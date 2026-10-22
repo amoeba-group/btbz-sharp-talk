@@ -1,9 +1,9 @@
 ---
-document_id: SHARPTALK-G2J-PLN-1.1.0
-version: 1.1.0
+document_id: SHARPTALK-G2J-PLN-1.2.0
+version: 1.2.0
 status: Đang triển khai — các hạng mục phát triển của Amoeba đã lên staging, đang chờ các hạng mục tiên quyết từ Go2Joy
 created: 2026-10-15
-updated: 2026-10-15
+updated: 2026-10-22
 author: Amoeba(BitBiz)
 reviewers: [Go2Joy]
 ---
@@ -17,25 +17,27 @@ reviewers: [Go2Joy]
 | Hạng mục | Nội dung |
 |---|---|
 | Phạm vi giai đoạn 1 | Tư vấn AI tuyến đầu cho người dùng đăng nhập Hotel Admin (nhân viên khách sạn) + phân công nhân viên tư vấn theo khu vực và nghiệp vụ + vòng tuần hoàn tri thức |
-| Phạm vi giai đoạn 2 | Tư vấn viên AI riêng cho từng khách sạn — mỗi khách sạn tự phản hồi câu hỏi của khách đặt phòng |
-| Phạm vi giai đoạn 3 | Go2Joy Philippines — tư vấn Hotel Admin + tư vấn khách đặt phòng theo từng khách sạn |
+| Phạm vi giai đoạn 2 | Go2Joy Philippines — tư vấn khách đặt phòng theo từng khách sạn (khách booking) + tư vấn Hotel Admin |
+| Phạm vi giai đoạn 3 | Tư vấn viên AI riêng cho từng khách sạn — mỗi khách sạn tự phản hồi câu hỏi của khách đặt phòng |
 | Tài liệu căn cứ | [REQ-260831 Yêu cầu](../analysis/REQ-260831-SharpTalk-Go2Joy-Requirements.md) · [AN-260907 Tác động phụ](../analysis/AN-260907-SharpTalk-Go2Joy-Side-Impact.md) · [REQ-260825 Mô hình kinh doanh](../analysis/REQ-260825-Go2Joy-ChatAgent-BizModel.md) · [Hướng dẫn thiết lập VN-Go2Joy](../guide/GUIDE-260913-SharpTalk-VN-Go2Joy-Staging.md) |
+| Yêu cầu tích hợp & checklist | [Yêu cầu tích hợp Go2Joy và danh sách công việc](../../apps/web/public/manual/go2joy/integration.vi.md) (2026-10-22) — cấu trúc kênh, yêu cầu gửi Go2Joy G1~G47, danh sách công việc của hai bên |
 | Nguồn ảnh màn hình | Màn hình thật của tenant go2joy trên staging Hàn Quốc (chụp ngày 2026-10-15). Email của phụ trách đã được che. Hình 9~12 là màn hình lúc kiểm thử thực tế nên có tên dùng để test (`E2E`, `example.com`) |
 
-### Tiến độ hiện tại (tính đến 2026-10-15)
+### Tiến độ hiện tại (tính đến 2026-10-22)
 
 | Phân loại | Trạng thái |
 |---|---|
-| Phát triển phía Amoeba | **Đã xong D2·D3·D4·D5·D7·D9** — đã triển khai lên staging và đạt kiểm thử thực tế (PR #637~#643), đã áp dụng cả lên production Hàn Quốc (10/15, không có tenant go2joy → không thay đổi hành vi) |
-| Chỉnh lý tri thức (D8) | Đã thiết lập ngôn ngữ mặc định `vi` và múi giờ `Asia/Ho_Chi_Minh` cho go2joy. Đã phân loại xong 78 xung đột tri thức — 3 mục cần sửa thật, 35 mục cần dọn dẹp đang chờ Go2Joy quyết định ([RPT-261015 Phân loại xung đột](../report/RPT-261015-Go2Joy-KB-Conflict-Triage.md)) |
-| Chờ Go2Joy chuẩn bị trước | Máy chủ·SSH·DNS (chưa có bản ghi `sharptalk.go2joy.vn`), chữ ký phía máy chủ Hotel Admin, danh sách khu vực·nghiệp vụ·phụ trách, Zalo OA, nội dung điều khoản — **trước 10/22** |
-| Việc còn lại của Amoeba | Cài đặt D1 (sau khi nhận máy chủ), thông báo Zalo (sau khi nhận OA), D6 kiểm tra xung đột trước khi chấp nhận, D5 hiển thị lý do chuyển cho nhân viên, D10 kết nối cổng chất lượng |
+| Phát triển phía Amoeba | **Đã xong D2·D3·D4·D5·D7·D9** (PR #637~#643, 10/15). Bổ sung 10/19~22 — thiết kế widget·khảo sát mức độ hài lòng·cố định ngôn ngữ (#650~#662), mã vùng và phân công "khớp khu vực" (#687), đăng ký khách sạn = khách hàng doanh nghiệp·liên tục hội thoại theo tài khoản khách sạn·phân biệt B2B/B2C (#689), schema cho cài đặt máy chủ mới (#692). Đã đạt kiểm thử thực tế trên staging, đã áp dụng lên production Hàn Quốc (không có tenant go2joy → không thay đổi hành vi) |
+| Chỉnh lý tri thức (D8) | Đã thiết lập ngôn ngữ mặc định `vi` và múi giờ `Asia/Ho_Chi_Minh` cho go2joy. Đã phân loại xong 78 xung đột tri thức — 3 mục cần sửa thật, 35 mục cần dọn dẹp đang chờ Go2Joy quyết định ([RPT-261015 Phân loại xung đột](../report/RPT-261015-Go2Joy-KB-Conflict-Triage.md)) Ngày 10/21 nguồn Notion bị xóa nên hướng dẫn HA·FAQ đang ngừng hoạt động — chờ đăng ký lại (G30) |
+| Chờ Go2Joy chuẩn bị trước | **Chưa nhận được trước hạn 10/22** — máy chủ·DNS (G1), chữ ký·nhúng HA (G10·G11), danh sách nhóm·nhân viên tư vấn·tiêu chí nghiệp vụ·thứ tự xử lý khi vắng (G20~G23), điều khoản·thông báo quyền riêng tư (G4·G5). Theo quyết định ở §8, mốc 10/31 được thay bằng **mở trên staging**. Trạng thái từng mục xem tại [Yêu cầu tích hợp & checklist](../../apps/web/public/manual/go2joy/integration.vi.md) |
+| Việc còn lại của Amoeba | Cài đặt D1 (sau khi nhận máy chủ), thông báo Zalo (sau khi nhận OA), D6 kiểm tra xung đột trước khi chấp nhận, D5 hiển thị lý do chuyển cho nhân viên, D10 kết nối cổng chất lượng, nhật ký AI theo từng tin nhắn (bổ sung cho vận hành AI Level 1) |
 
 ### Lịch sử thay đổi
 | Phiên bản | Ngày | Nội dung |
 |---|---|---|
 | 1.0.0 | 2026-10-15 | Soạn lần đầu, phản ánh quyết định hoàn thành giai đoạn 1 vào 10/31 |
 | 1.1.0 | 2026-10-15 | Phản ánh kết quả triển khai — chốt khóa thuộc tính chữ ký và chuỗi ký (§6.3), chốt cách xác định nghiệp vụ theo từ khóa·nhãn (§6.5.2), nhắc lại là thiết lập chung của tenant (§6.6), màn hình đánh giá độ chính xác (§6.9), kết quả phân loại 78 xung đột (§6.10), trạng thái từng hạng mục (§7), tiến độ (§8), bổ sung các mục cần quyết định (§12) |
+| 1.2.0 | 2026-10-22 | Đổi thứ tự giai đoạn 2 và 3 — giai đoạn 2 = Go2Joy Philippines (tư vấn khách đặt phòng + tư vấn Hotel Admin), giai đoạn 3 = tư vấn viên AI theo từng khách sạn (§1.4·§11). Bổ sung cấu trúc kênh và các mục thảo luận G40~G47 từ tài liệu yêu cầu tích hợp & checklist (10/22), cập nhật tiến độ tính đến 10/22 |
 
 ---
 
@@ -85,16 +87,16 @@ reviewers: [Go2Joy]
 ### 1.4 Phạm vi
 ```mermaid
 flowchart LR
-  S1["Giai đoạn 1<br/>Tư vấn AI Hotel Admin<br/>(cho nhân viên khách sạn, VN)"] --> S2["Giai đoạn 2<br/>Tư vấn viên AI theo khách sạn<br/>(cho khách đặt phòng, VN)"] --> S3["Giai đoạn 3<br/>Go2Joy Philippines<br/>(Hotel Admin + khách đặt phòng)"]
+  S1["Giai đoạn 1<br/>Tư vấn AI Hotel Admin<br/>(cho nhân viên khách sạn, VN)"] --> S2["Giai đoạn 2<br/>Go2Joy Philippines<br/>(khách đặt phòng + Hotel Admin)"] --> S3["Giai đoạn 3<br/>Tư vấn viên AI theo khách sạn<br/>(khách sạn tự phục vụ khách đặt phòng)"]
   style S1 fill:#ffe8d6,stroke:#ff7a00
 ```
 
 | Bao gồm (giai đoạn 1) | Không bao gồm (giai đoạn sau) |
 |---|---|
-| Cài đặt tự lưu trữ `sharptalk.go2joy.vn` và chuyển giao vận hành | Tenant theo khách sạn·kênh khách đặt phòng (giai đoạn 2) |
+| Cài đặt tự lưu trữ `sharptalk.go2joy.vn` và chuyển giao vận hành | Kênh khách đặt phòng (B2C)·triển khai tại Philippines (giai đoạn 2), tư vấn viên AI theo khách sạn (giai đoạn 3) |
 | Nhúng widget vào Hotel Admin + thông tin người dùng đăng nhập có chữ ký (khách sạn·khu vực·quyền) | Kết nối API để AI tự tra cứu dữ liệu đặt phòng·đối soát (sau khi có thỏa thuận riêng) |
 | AI trả lời tuyến đầu (vi/en), đánh giá phạm vi tri thức, phân công khu vực × nghiệp vụ | Tính năng để AI thao tác Hotel Admin thay người dùng (bị cấm theo thiết kế) |
-| Thông báo cho nhân viên tư vấn (email·Zalo·cảnh báo SharpTalk), nhân viên tư vấn trả lời | Triển khai tại Philippines (giai đoạn 3) |
+| Thông báo cho nhân viên tư vấn (email·Zalo·cảnh báo SharpTalk), nhân viên tư vấn trả lời | Chuyển sang vận hành AI Level 2·3 (câu trả lời mẫu·mô hình riêng) |
 | Câu trả lời → lưu tri thức, đánh giá độ chính xác, kiểm tra xung đột tri thức | Kênh thoại |
 
 ---
@@ -349,7 +351,7 @@ sequenceDiagram
 | Thuộc tính nhận được (đã chốt khi triển khai) | Mục đích | Ghi chú |
 |---|---|---|
 | `userId` | Định danh người dùng | Đã nằm trong nội dung ký từ trước |
-| `hotel_id`, `hotel_name` | Huy hiệu trên màn hình hội thoại, khóa mở rộng theo khách sạn ở giai đoạn 2 | Mới |
+| `hotel_id`, `hotel_name` | Huy hiệu trên màn hình hội thoại, khóa mở rộng theo khách sạn ở giai đoạn 3 | Mới |
 | `region` (`north`/`central`/`south`) | **Căn cứ phân công phụ trách** | Mới — Go2Joy tính từ địa chỉ khách sạn rồi gửi sang |
 | `province` | Tỉnh/thành để hiển thị·thống kê | Mới |
 | `role` (`manager`/`reception`) | Huy hiệu trên màn hình hội thoại | Mới |
@@ -722,45 +724,68 @@ Tài khoản bảng điều khiển staging được cấp riêng cho từng ph�
 
 ## 11. Nhiệm vụ tiếp theo — Giai đoạn 2·3
 
-### 11.1 Giai đoạn 2 — Tư vấn viên AI theo khách sạn (phục vụ khách đặt phòng)
-Mỗi khách sạn dùng tư vấn viên AI để trả lời câu hỏi của khách đặt phòng của mình (người dùng ứng dụng Go2Joy). Trên nền tri thức chung của Go2Joy tích lũy ở giai đoạn 1, bổ sung **tri thức riêng của từng khách sạn (tiện nghi·check-in·đỗ xe·sản phẩm bổ sung)**.
+> **Đổi thứ tự ở v1.2 (2026-10-22)** — giai đoạn 2 là Go2Joy Philippines, giai đoạn 3 là tư vấn viên AI theo từng khách sạn. Giai đoạn 2 mở `#Talk-4-Hotel` của giai đoạn 1 và tư vấn viên cho khách đặt phòng tại Philippines **dưới hình thức Go2Joy vận hành**. Tư vấn viên do chính khách sạn vận hành (menu HA·mẫu lễ tân·tính phí theo điểm) thuộc giai đoạn 3.
+
+### 11.0 Cấu trúc kênh theo giai đoạn
+Ba tư vấn viên AI ở mục 1 của [Yêu cầu tích hợp & checklist](../../apps/web/public/manual/go2joy/integration.vi.md) được chia theo giai đoạn như sau.
+
+| Giai đoạn | Đối tượng | Tư vấn viên AI | Điểm vào | Chuyển cho người |
+|---|---|---|---|---|
+| Giai đoạn 1 (VN) | Nhân viên khách sạn (B2B) | `#Talk-4-Hotel` (HA Support) | Widget sau khi đăng nhập HA + identify có chữ ký | Khu vực khách sạn → nhóm khu vực × nghiệp vụ (CS / Sales) của Go2Joy |
+| Giai đoạn 2 (PH) | Nhân viên khách sạn (B2B) | `#Talk-4-Hotel` (bản triển khai Philippines) | Giống giai đoạn 1 | Khu vực Philippines → nhóm khu vực × nghiệp vụ |
+| Giai đoạn 2 (PH) | Khách đặt phòng (B2C, khách booking) | `Go2Joy-#Talk-4-BookingClient` | Ứng dụng·web Go2Joy (widget web / SDK di động) | Nhân viên tư vấn Go2Joy của nhóm khu vực × CS |
+| Giai đoạn 3 | Khách đặt phòng (sau khi đặt) | `Hotel-#Talk-4-BookingClient` (theo khách sạn) | Tự động chuyển khi có sự kiện hoàn tất đặt phòng | Nhân viên khách sạn (menu HA #Talk) → CS Go2Joy |
+
+### 11.1 Giai đoạn 2 — Go2Joy Philippines (tư vấn khách đặt phòng + tư vấn Hotel Admin)
+Cài đặt SharpTalk riêng trên máy chủ Go2Joy Philippines và mở hai loại tư vấn. ① **Tư vấn Hotel Admin** dùng nguyên các chức năng của giai đoạn 1. ② **Tư vấn khách đặt phòng (khách booking)** là tư vấn cho câu hỏi của khách về khách sạn và đặt phòng trên ứng dụng·web Go2Joy. Hội thoại gắn theo khách sạn đã đặt, và do tư vấn viên AI cùng nhân viên tư vấn của Go2Joy phản hồi.
+
+| Nhiệm vụ | Nội dung |
+|---|---|
+| Triển khai | Triển khai riêng cho Philippines (nguyên tắc mỗi quốc gia = 1 bản triển khai). Hồ sơ mới `SharpTalk-PH-Go2Joy`, máy chủ·tên miền tại Philippines. Quy trình cài đặt giống cài đặt máy chủ Go2Joy Việt Nam (schema cho máy chủ mới #692) |
+| Tư vấn Hotel Admin (B2B) | Giữ nguyên `#Talk-4-Hotel` của giai đoạn 1 — identify có chữ ký HA, đăng ký khách sạn = khách hàng doanh nghiệp, liên tục hội thoại theo tài khoản khách sạn, phân công khu vực → nhóm (#687·#689). Mã vùng và cách ghép nhóm cho Philippines sẽ được xác định mới |
+| Tư vấn khách đặt phòng (B2C) | `Go2Joy-#Talk-4-BookingClient`. Nhúng vào ứng dụng·web Go2Joy bằng widget web / Android SDK (đã kiểm chứng trên máy thật) / iOS. Khách đã đăng nhập được nhận diện bằng chữ ký và tách khỏi nhân viên HA bằng tiền tố `userId`. Phân biệt B2B / B2C đã có từ #689 (G41) |
+| Hội thoại theo khách sạn | Webhook sự kiện hoàn tất đặt phòng (`bookingSn`·`hotelSn`·định danh khách·chữ ký) nối vào hội thoại trước đó; nếu đặt nhiều khách sạn thì tách luồng theo từng đặt phòng (khách sạn) (G40) |
+| Tra cứu số tiền·đặt phòng | Đặt phòng·giá chỉ chuyển giá trị từ API tra cứu đặt phòng của Go2Joy (cấm LLM tự tính toán) (G41) |
+| Chuyển cho người | Nhân viên tư vấn Go2Joy của nhóm khu vực × CS. Cần quyết định: tiêu chí khu vực của khách đặt phòng (khu vực của khách sạn đang tìm·đặt / vị trí của khách) (G42), có chuyển việc đổi·hủy·hoàn tiền sang CS Go2Joy không, thời điểm kết thúc hội thoại và thời hạn lưu sau khi trả phòng (G43) |
+| Ngôn ngữ | Ưu tiên tiếng Anh. **Tiếng Philippines (Filipino/Tagalog) chưa nằm trong 6 ngôn ngữ đang hỗ trợ** → cần bổ sung ngôn ngữ (1 chỗ danh sách ngôn ngữ dùng chung + tài nguyên dịch) |
+| Tri thức | Chính sách chung trong tri thức Việt Nam dùng lại bản tiếng Anh; chính sách·giá·phương thức thanh toán của Philippines soạn riêng. Tri thức cho Hotel Admin và cho khách đặt phòng được tách bằng phạm vi tri thức theo từng tư vấn viên AI (cùng tiêu chí với D-10) |
+| Quyền riêng tư·quy định | Data Privacy Act Philippines (RA 10173)·quy định NPC — chính sách xử lý·thông báo chuyển dữ liệu ra nước ngoài·thông báo vi phạm (72 giờ). Mã khóa cửa·tên thật·liên hệ chỉ hiển thị trong phiên đã xác thực. Bổ sung định dạng mã đặt phòng Go2Joy vào che dữ liệu |
+| Vận hành | Múi giờ `Asia/Manila`, quy tắc phân công phụ trách khu vực Philippines (Luzon/Visayas/Mindanao…), giờ làm việc·thứ tự xử lý khi vắng |
+| Vận hành AI | Giữ Level 1 (AI bên ngoài + RAG). Khóa AI vận hành đứng tên Go2Joy. Bổ sung nhật ký AI theo từng tin nhắn và bộ đánh giá chuẩn (golden set) cho từng tư vấn viên AI (checklist tích hợp S30) |
+| Thỏa thuận với Go2Joy | G40~G43 (Webhook·nhúng ứng dụng·tiêu chí khu vực·phạm vi chuyển sau đặt phòng và thời hạn lưu), G47 (tư vấn qua kênh Zalo). Có mở tư vấn khách đặt phòng tại Việt Nam không, nếu có thì khi nào |
+
+### 11.2 Giai đoạn 3 — Tư vấn viên AI theo khách sạn (khách sạn tự phục vụ khách đặt phòng)
+Mỗi khách sạn trực tiếp phản hồi câu hỏi của khách đặt phòng của mình (người dùng ứng dụng Go2Joy) bằng tư vấn viên AI. Đặt **tri thức riêng của từng khách sạn (cơ sở vật chất·nhận phòng·bãi đỗ xe·sản phẩm bổ sung)** lên trên tri thức chung của Go2Joy tích lũy đến giai đoạn 2, và nhân viên khách sạn phản hồi từ menu SharpTalk trong HA.
 
 ```mermaid
 flowchart TB
   subgraph Platform["Tầng chung Go2Joy"]
-    PK["Tri thức chung<br/>chính sách đặt phòng·hủy·thanh toán·coupon"]
+    PK["Tri thức chung<br/>Chính sách đặt phòng·hủy·thanh toán·coupon"]
   end
   subgraph Hotels["Tầng khách sạn (theo số lượng khách sạn)"]
-    H1["Tri thức·agent khách sạn A"]
-    H2["Tri thức·agent khách sạn B"]
+    H1["Tri thức·tư vấn viên AI khách sạn A"]
+    H2["Tri thức·tư vấn viên AI khách sạn B"]
     H3["…"]
   end
-  G["Khách đặt phòng<br/>ứng dụng Go2Joy"] -->|"Trước khi đặt: tư vấn nền tảng"| PK
+  G["Khách đặt phòng<br/>Ứng dụng Go2Joy"] -->|"Trước khi đặt: tư vấn của nền tảng"| PK
   G -->|"Sau khi đặt: tư vấn của khách sạn đó"| H1
-  H1 -->|"Yêu cầu cần chấp thuận (gia hạn·check-in sớm)"| FD["Lễ tân khách sạn<br/>(bảng điều khiển Hotel Admin)"]
+  H1 -->|"Yêu cầu cần chấp thuận (gia hạn·nhận phòng sớm)"| FD["Lễ tân khách sạn<br/>(menu HA #Talk)"]
   H1 -->|"Lỗi phía nền tảng (thanh toán·hoàn tiền)"| CS["CS Go2Joy"]
   PK --- H1 & H2 & H3
 ```
 
 | Nhiệm vụ | Nội dung |
 |---|---|
-| Trục theo khách sạn | Hiện tại tenant = chỉ một Go2Joy. Cần quyết định tạo 5.500 khách sạn thành tenant, hay đặt **phạm vi khách sạn** bên trong tenant (AN-260907 §2.1 — khuyến nghị phạm vi khách sạn) |
-| Chuyển quyền sở hữu phiên | Trước khi đặt thuộc nền tảng, sau khi đặt chuyển quyền sở hữu hội thoại sang khách sạn tương ứng |
-| Chuyển cho nhân viên 3 cấp | AI → lễ tân khách sạn (L1) → CS Go2Joy (L2) → bộ phận chuyên môn (L3), khung giờ không có người thì bỏ qua L1 |
-| Đưa tri thức khách sạn vào | Tự động chuyển thông tin khách sạn·phòng·sản phẩm bổ sung trong Hotel Admin thành tri thức, khách sạn tự bổ sung |
-| Tra cứu số tiền·đặt phòng | Đặt phòng·giá chỉ truyền giá trị tra cứu từ hệ thống (cấm LLM tự tính toán) — kết nối API đặt phòng Go2Joy |
-| Dữ liệu cá nhân | Mã khóa cửa·họ tên thật·liên hệ chỉ hiển thị trong phiên đã xác thực |
-| Mô hình kinh doanh | Cân nhắc dịch vụ bổ sung có phí theo khách sạn (B2B2C) — REQ-260825 Option 2 |
-
-### 11.2 Giai đoạn 3 — Go2Joy Philippines
-| Nhiệm vụ | Nội dung |
-|---|---|
-| Triển khai | Triển khai riêng cho Philippines (nguyên tắc mỗi quốc gia = 1 bản triển khai). Hồ sơ mới `SharpTalk-PH-Go2Joy`, máy chủ·tên miền tại Philippines |
-| Dịch vụ | Giai đoạn 1 (tư vấn Hotel Admin) + giai đoạn 2 (tư vấn khách đặt phòng theo khách sạn) theo cùng thứ tự |
-| Ngôn ngữ | Ưu tiên tiếng Anh. **Tiếng Philippines (Filipino/Tagalog) chưa nằm trong 6 ngôn ngữ đang hỗ trợ** → cần bổ sung ngôn ngữ (1 chỗ danh sách ngôn ngữ dùng chung + tài nguyên dịch) |
-| Tri thức | Chính sách chung trong tri thức Việt Nam dùng lại bản tiếng Anh; chính sách·giá·phương thức thanh toán của Philippines soạn riêng |
-| Quy định pháp lý | Data Privacy Act Philippines (RA 10173)·quy định NPC — chính sách xử lý·thông báo chuyển dữ liệu ra nước ngoài·thông báo vi phạm (72 giờ) |
-| Vận hành | Múi giờ `Asia/Manila`, quy tắc phân công phụ trách khu vực Philippines (Luzon/Visayas/Mindanao…) |
+| Trục đơn vị khách sạn | Hiện tại tenant = chỉ một Go2Joy. Quyết định biến khoảng 5.000 khách sạn thành tenant, hay đặt **phạm vi khách sạn** bên trong tenant (AN-260907 §2.1 — khuyến nghị phạm vi khách sạn) |
+| Chuyển quyền sở hữu phiên | Trước khi đặt phòng thuộc nền tảng, sau khi đặt chuyển quyền sở hữu hội thoại sang khách sạn tương ứng. Dùng lại luồng theo từng đặt phòng (khách sạn) của giai đoạn 2 |
+| Chuyển 3 cấp | AI → lễ tân khách sạn (L1) → CS Go2Joy (L2) → bộ phận chuyên môn (L3), bỏ qua L1 trong khung giờ không có người trực |
+| Menu HA (iframe) | Thêm menu SharpTalk vào HA (đăng ký·persona·tri thức·Inbox). **Token SSO ngắn hạn** do máy chủ cấp (không chuyển nguyên token HA), liên kết quyền (`Quản lý` thiết lập / `Lễ tân` Inbox) (G44) |
+| Vận hành tư vấn viên lễ tân | Mẫu chung (Go2Joy quản lý), quy trình duyệt đăng ký, thứ tự đưa khách sạn vào sử dụng (G45) |
+| Đưa tri thức khách sạn vào hệ thống | Tự động chuyển thông tin khách sạn·phòng·sản phẩm bổ sung trên Hotel Admin thành tri thức, khách sạn tự bổ sung |
+| Thông tin cá nhân | Mã khóa cửa·tên thật·liên hệ chỉ hiển thị trong phiên đã xác thực (cùng tiêu chí với giai đoạn 2) |
+| Mô hình kinh doanh·tính phí | Dịch vụ bổ sung có phí theo từng khách sạn (B2B2C) — REQ-260825 Option 2. Tiêu chí quy đổi token → điểm, xử lý khi hết điểm (dừng / kết nối nhân viên), vị trí màn hình nạp·số dư (G46) |
+| Vận hành AI | Xem xét chuyển sang Level 2 bằng câu trả lời mẫu tích lũy từ đánh giá của nhân viên tư vấn và câu trả lời được chấp nhận. Quyền sở hữu kết quả học được quy định trong hợp đồng dịch vụ (G7) |
+| Quốc gia áp dụng | Áp dụng lên các bản triển khai Việt Nam·Philippines đã mở đến giai đoạn 2. Thứ tự theo quốc gia thỏa thuận với Go2Joy |
 
 ---
 
@@ -802,8 +827,11 @@ flowchart TB
 - Triển khai: [Hướng dẫn thiết lập VN-Go2Joy](../guide/GUIDE-260913-SharpTalk-VN-Go2Joy-Staging.md), [Hướng dẫn cài đặt tự lưu trữ](../guide/자체호스팅설치가이드_Self-Hosted-Install.ko.md), `deploy/profiles/SharpTalk-VN-Go2Joy/`
 - Dữ liệu cá nhân: [PROCESSOR-REGISTER](../guide/PROCESSOR-REGISTER.md), [INCIDENT-RESPONSE](../guide/INCIDENT-RESPONSE.md)
 - Hồ sơ triển khai giai đoạn 1: [TCR-261015 Kiểm thử](../test/TCR-261015-Go2Joy-Phase1-D2-D7.md), [RPT-261015 Triển khai·phát hành](../implementation/RPT-261015-Go2Joy-Phase1-D2-D7.md), [RPT-261015 Phân loại xung đột tri thức](../report/RPT-261015-Go2Joy-KB-Conflict-Triage.md)
+- Tích hợp: [Yêu cầu tích hợp Go2Joy và danh sách công việc](../../apps/web/public/manual/go2joy/integration.vi.md) (2026-10-22) — cấu trúc kênh, yêu cầu G1~G47, checklist
 
 ## Phụ lục B. Các bước tiếp theo
 Ngày 2026-10-15 người dùng đã phê duyệt ("Giai đoạn 1 hoàn thành vào cuối tháng 10, tiến hành"). Vì lịch chỉ có 2,5 tuần, không lập REQ/PLN riêng cho từng hạng mục phát triển mà **dùng tài liệu này làm PLN cho D2~D9** (thay đổi màn hình xem wireframe ở §6). TCR·RPT theo từng hạng mục vẫn được giữ nguyên.
 
 2026-10-15 v1.1: Các hạng mục phát triển của Amoeba (D2·D3·D4·huy hiệu D5·D7·D9) đã được triển khai lên staging trong cùng ngày và áp dụng cả lên production Hàn Quốc. Các bước tiếp theo: ① Go2Joy phản hồi §12 D-1~D-5·D-10~D-12 trước 10/22 ② cài đặt D1 ngay khi nhận máy chủ ③ UAT (M4) khi đã gắn chữ ký Hotel Admin.
+
+2026-10-22 v1.2: Theo quyết định của người dùng, đổi thứ tự giai đoạn 2 và 3 — giai đoạn 2 = Go2Joy Philippines (tư vấn khách đặt phòng + tư vấn Hotel Admin), giai đoạn 3 = tư vấn viên AI theo từng khách sạn. Giai đoạn 2 sẽ bắt đầu bằng một REQ riêng sau khi Go2Joy phản hồi các mục thảo luận ở §11.1.

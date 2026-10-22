@@ -123,7 +123,7 @@ Tài liệu này gom các yêu cầu đang rải rác thành một danh sách, m
 </tr>
 <tr>
 <td>Ngày / Phiên bản</td>
-<td>2026-10-22 · v1.0</td>
+<td>2026-10-22 · v1.1 (giai đoạn khớp với kế hoạch v1.2)</td>
 </tr>
 <tr>
 <td>Tham khảo</td>
@@ -143,7 +143,7 @@ Tài liệu này gom các yêu cầu đang rải rác thành một danh sách, m
 </ul>
 <p>Trong kế hoạch dự án (PLN-261015), hạn của các mục này là 10/22; nếu quá hạn, mốc 10/31 sẽ đổi <strong>từ mở vận hành chính thức thành mở trên staging</strong> (mục 4).</p>
 </li>
-<li><p><strong>Giai đoạn 2 (B2C trước·sau đặt phòng, menu iframe trong HA, Webhook hoàn tất đặt phòng, tính phí theo điểm)</strong> hiện chỉ tổng hợp các mục cần thảo luận (2.5). Khi nhận được phản hồi, chúng tôi sẽ bắt đầu bằng một tài liệu yêu cầu riêng.</p>
+<li><p><strong>Giai đoạn 2·3 (B2C trước·sau đặt phòng, menu iframe trong HA, Webhook hoàn tất đặt phòng, tính phí theo điểm)</strong> hiện chỉ tổng hợp các mục cần thảo luận (2.5). Theo kế hoạch v1.2, <strong>giai đoạn 2 là Go2Joy Philippines</strong> (tư vấn khách đặt phòng + tư vấn HA, do Go2Joy vận hành) và <strong>giai đoạn 3 là tư vấn viên AI theo khách sạn</strong> (khách sạn tự phản hồi — menu HA, tính phí theo điểm). Khi nhận được phản hồi, chúng tôi sẽ bắt đầu bằng một tài liệu yêu cầu riêng.</p>
 </li>
 <li><p><strong>Vận hành AI</strong>: hiện ở Level 1 (AI bên ngoài + RAG). Theo hợp đồng, Go2Joy chịu chi phí hạ tầng và AI API, nên <strong>khóa AI dùng cho vận hành phải đứng tên Go2Joy</strong> (G2). Trong 5 hạng mục cần chuẩn bị ở Level 1 thì đã có 4; chỉ cần bổ sung nhật ký AI theo từng tin nhắn (3.2 S30).</p>
 </li>
@@ -176,7 +176,7 @@ Tài liệu này gom các yêu cầu đang rải rác thành một danh sách, m
 <td><code>Hotel-#Talk-4-BookingClient</code></td>
 <td>Tự động chuyển khi có sự kiện hoàn tất đặt phòng</td>
 <td>Nhân viên khách sạn (menu HA #Talk) hoặc CS Go2Joy — cần xác nhận</td>
-<td>Giai đoạn 2 · chưa triển khai</td>
+<td>Giai đoạn 3 · chưa triển khai</td>
 </tr>
 </tbody></table></div>
 <h3 id="11-luồng-chi-tiết-b2b-talk-4-hotel">1.1 Luồng chi tiết B2B <code>#Talk-4-Hotel</code></h3>
@@ -495,7 +495,8 @@ Tài liệu này gom các yêu cầu đang rải rác thành một danh sách, m
 <td>Mới nhận khóa thử (10/21)</td>
 </tr>
 </tbody></table></div>
-<h3 id="25-giai-đoạn-2--b2c-trướcsau-đặt-phòng-các-mục-cần-thảo-luận">2.5 Giai đoạn 2 — B2C trước·sau đặt phòng (các mục cần thảo luận)</h3>
+<h3 id="25-giai-đoạn-23--b2c-trướcsau-đặt-phòng-các-mục-cần-thảo-luận">2.5 Giai đoạn 2·3 — B2C trước·sau đặt phòng (các mục cần thảo luận)</h3>
+<p>G40<del>G43·G47 cần cho giai đoạn 2 (tư vấn khách đặt phòng tại Philippines), G44</del>G46 cần cho giai đoạn 3 (tư vấn viên AI theo khách sạn).</p>
 <div class="scroll"><table><thead><tr>
 <th>#</th>
 <th>Yêu cầu</th>
@@ -586,7 +587,7 @@ Tài liệu này gom các yêu cầu đang rải rác thành một danh sách, m
 <li><input disabled="" type="checkbox"> G24 Zalo OA · G25 tên tỉnh mới trong bảng khu vực</li>
 <li><input disabled="" type="checkbox"> G31 Quyết định chỉnh lý xung đột tri thức · G32 rà soát bộ đánh giá chuẩn · G33 vận hành đánh giá của nhân viên tư vấn·chấp nhận câu trả lời</li>
 </ul>
-<p><strong>Thảo luận giai đoạn 2 (P2)</strong></p>
+<p><strong>Thảo luận giai đoạn 2·3 (P2)</strong></p>
 <ul>
 <li><input disabled="" type="checkbox"> Phản hồi G40~G47 (Webhook hoàn tất đặt phòng, nhúng ứng dụng·web, tiêu chí khu vực, chuyển tiếp·phạm vi·lưu trữ sau đặt phòng, menu HA iframe·SSO, vận hành lễ tân, tính phí, Zalo)</li>
 <li><input disabled="" type="checkbox"> G7 Điều khoản hợp đồng dịch vụ · G17 khác biệt vai trò·địa chỉ·quận/huyện · G26 ngôn ngữ · G34 Partner API</li>
@@ -665,7 +666,7 @@ Tài liệu này gom các yêu cầu đang rải rác thành một danh sách, m
 <li><input disabled="" type="checkbox"> S28 Hiển thị lý do chuyển tiếp trên bảng điều khiển, kiểm tra xung đột trước khi chấp nhận tri thức (PLN-261015 D5 · D6)</li>
 <li><input disabled="" type="checkbox"> S29 Thời hạn hiệu lực chữ ký (<code>ts</code>), nhận địa chỉ·quận/huyện khách sạn — sau khi quyết định G16 · G17</li>
 <li><input disabled="" type="checkbox"> S30 <strong>Bổ sung AI Level 1</strong>: nhật ký AI theo từng tin nhắn (mô hình · token · độ trễ · câu hỏi đã viết lại · kết quả). Hiện chỉ có tổng hợp sử dụng theo ngày. Khi nhận được định dạng mã đặt phòng của Go2Joy, chúng tôi sẽ thêm vào phần che thông tin. Đồng thời mở rộng bộ chuẩn cho từng tư vấn viên AI</li>
-<li><input disabled="" type="checkbox"> S31 Tài liệu yêu cầu giai đoạn 2 (tích hợp B2C trước đặt phòng, mẫu tư vấn viên lễ tân, menu HA iframe·SSO, nhận Webhook đặt phòng, tính phí theo điểm) — sau khi có phản hồi mục 2.5</li>
+<li><input disabled="" type="checkbox"> S31 Tài liệu yêu cầu giai đoạn 2 (Philippines) · giai đoạn 3 (tư vấn viên AI theo khách sạn) (tích hợp B2C trước đặt phòng, mẫu tư vấn viên lễ tân, menu HA iframe·SSO, nhận Webhook đặt phòng, tính phí theo điểm) — sau khi có phản hồi mục 2.5</li>
 </ul>
 <h3 id="33-vận-hành-ai-level-1--đối-chiếu-điều-kiện-tiên-quyết">3.3 Vận hành AI Level 1 — đối chiếu điều kiện tiên quyết</h3>
 <p>Chiến lược vận hành AI quy định cần chuẩn bị 5 hạng mục sau ở Level 1 trước khi chuyển sang Level 2·3.</p>
