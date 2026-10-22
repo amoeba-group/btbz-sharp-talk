@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Go2Joy Integration Requests and Checklist</title>
+<meta name="description" content="Integration architecture diagrams, requests to Go2Joy G1–G47 (priority, status), Go2Joy and SharpTalk checklists, schedule impact, decisions">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>/* Layout: single reading column (~72ch) under a slim masthead; tables/diagrams/figures break wider inside their own scrollers. */
+:root {
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --fg: #1d1f24;
+  --muted: #5d6270;
+  --line: #e4e1dc;
+  --tint: #fff1e6;
+  --accent: #e8650a;
+  --accent-ink: #b44c04;
+  --ink2: #2b3a67;
+  --f-display: "Be Vietnam Pro", "Noto Sans KR", system-ui, sans-serif;
+  --f-body: "Noto Sans KR", "Be Vietnam Pro", system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+    --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+  --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15.5px; line-height: 1.72; word-break: keep-all; overflow-wrap: anywhere; }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.masthead { border-bottom: 1px solid var(--line); background: var(--surface); }
+.masthead .wrap { padding-block: 40px 28px; display: grid; gap: 6px; }
+.eyebrow { margin: 0; font-size: 12px; letter-spacing: .06em; color: var(--muted); }
+.brand { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; }
+.brand .g2j { color: var(--accent); }
+.domain { margin: 0; font-family: var(--f-mono); font-size: 13px; color: var(--accent-ink); }
+.doc { padding-block: 24px 64px; }
+.doc > * { max-width: 72ch; }
+.doc > .scroll, .doc > .diagram, .doc > figure, .doc > blockquote.lead { max-width: 100%; }
+h1 { display: none; }
+h2 { font-family: var(--f-display); font-size: 25px; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--fg); text-wrap: balance; }
+h3 { font-size: 18.5px; margin: 34px 0 8px; text-wrap: balance; }
+h4 { font-size: 16px; margin: 24px 0 6px; color: var(--ink2); }
+p, ul, ol { margin: 0 0 14px; }
+li { margin-bottom: 4px; }
+a { color: var(--accent-ink); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+strong { font-weight: 700; }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--tint); color: var(--accent-ink); padding: 1px 5px; border-radius: 4px; }
+.docref { color: var(--ink2); font-weight: 500; }
+hr { border: 0; height: 0; margin: 8px 0; }
+blockquote { margin: 0 0 16px; padding: 10px 16px; border-left: 3px solid var(--line); color: var(--muted); }
+blockquote p:last-child { margin-bottom: 0; }
+blockquote.lead { background: var(--tint); border-left: 0; border-radius: 10px; color: var(--fg); padding: 18px 22px; font-size: 16.5px; }
+.scroll { overflow-x: auto; margin: 0 0 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.55; background: var(--surface); font-variant-numeric: tabular-nums; }
+th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; min-width: 5.5em; }
+th { font-weight: 700; font-size: 12.5px; letter-spacing: .03em; color: var(--muted); border-bottom: 1.5px solid var(--fg); white-space: nowrap; }
+pre.code { margin: 0; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.5; }
+pre.code code { background: none; color: var(--fg); padding: 0; font-size: inherit; }
+.diagram { overflow-x: auto; margin: 6px 0 22px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.diagram pre.mermaid { margin: 0; display: flex; justify-content: center; background: none; }
+figure { margin: 8px 0 26px; display: grid; gap: 8px; justify-items: start; }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; max-height: 720px; width: auto; }
+figcaption { font-size: 13px; color: var(--muted); max-width: 72ch; }
+.foot { padding-block: 20px 40px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+@media (max-width: 520px) { body { font-size: 15px; } h2 { font-size: 21px; } .masthead .wrap { padding-block: 28px 20px; } }
+
+/* Diagrams are pre-rendered in mermaid's light theme: keep their card light in both themes. */
+.diagram { background: #fbfaf8; border-color: #e3ddd4; }
+.diagram svg { max-width: 100%; height: auto; }
+@media (max-width: 700px) { .diagram svg { min-width: 620px; } }
+/* Drawn SVG figures (fixed-size boxes): scroll sideways on phones rather than shrink the labels. */
+figure:has(> img[src$=".svg"]) { overflow-x: auto; justify-items: stretch; }
+figure > img[src$=".svg"] { width: 100%; max-height: none; background: #ffffff; }
+@media (max-width: 700px) { figure > img[src$=".svg"] { min-width: 760px; max-width: none; } }
+/* Labels were measured with browser defaults; inherit nothing that changes their size. */
+.diagram { font-size: 16px; line-height: normal; word-break: normal; overflow-wrap: normal; letter-spacing: normal; }
+.topnav { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 13px; }
+.topnav a { color: var(--accent-ink); text-decoration: none; }
+.topnav a:hover { text-decoration: underline; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-block; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--fg) !important; }
+.chip[aria-current="page"] { border-color: var(--accent); color: var(--accent-ink) !important; font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 18px 0 30px; }
+.card { display: grid; gap: 6px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); text-decoration: none; color: var(--fg); }
+.card:hover { border-color: var(--accent); }
+.card b { font-size: 16px; }
+.card span { font-size: 13px; color: var(--muted); }
+.langblock h2 { margin-top: 28px; }
+</style>
+</head>
+<body>
+<header class="masthead"><div class="wrap">
+  <nav class="topnav"><a href="./">← Go2Joy documents</a><span class="chips" aria-label="Documents"><a class="chip" href="integration.en.html" aria-current="page">Requests &amp; checklist</a><a class="chip" href="plan.en.html">Project plan</a><a class="chip" href="kb-conflicts.en.html">Knowledge conflict triage</a><a class="chip" href="notion-setup.en.html">Notion setup</a></span><span class="chips" aria-label="Language"><a class="chip" href="integration.ko.html" hreflang="ko">한국어</a><a class="chip" href="integration.en.html" aria-current="page" hreflang="en">English</a><a class="chip" href="integration.vi.html" hreflang="vi">Tiếng Việt</a></span></nav>
+  <p class="eyebrow">Documents for Go2Joy · 2026-10-22</p>
+  <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
+  <p class="domain">Go2Joy Integration Requests and Checklist</p>
+</div></header>
+<main class="wrap doc"><h1 id="sharptalk--go2joy--integration-structure--requests-to-go2joy--work-checklist">SharpTalk × Go2Joy — Integration Structure · Requests to Go2Joy · Work Checklist</h1>
+<blockquote class="lead">
+<p>All SharpTalk-side Phase 1 (#Talk-4-Hotel) features work on staging. Most of what remains is <strong>what Go2Joy needs to provide</strong> (servers, HA signing, the assigned teams and agent roster, terms of use).
+This document gathers the scattered requests into one list, shows the overall integration structure as diagrams, and splits the work of each side into checklists.</p>
+</blockquote>
+<div class="scroll"><table><thead><tr>
+<th>Item</th>
+<th>Details</th>
+</tr>
+</thead><tbody><tr>
+<td>To</td>
+<td>Go2Joy PM · HA dev team (back end · FE) · Infrastructure · Operations (CS) · Legal</td>
+</tr>
+<tr>
+<td>From</td>
+<td>SharpTalk (Amoeba)</td>
+</tr>
+<tr>
+<td>Date / version</td>
+<td>2026-10-22 · v1.0</td>
+</tr>
+<tr>
+<td>References</td>
+<td>SharpTalk × Go2Joy channel structure (2026-10-21) · Go2Joy-SharpTalk AI operating strategy Level 1·2·3 (2026-10-22) · Integration checklist &amp; schedule (2026-10-12) · Project plan PLN-261015 · HA integration guide v1.3 (sent together)</td>
+</tr>
+</tbody></table></div>
+<h2 id="summary">Summary</h2>
+<ul>
+<li><p><strong>Phase 1 scope is B2B <code>#Talk-4-Hotel</code> (HA Support).</strong> SharpTalk has deployed and verified on staging: signature verification, registering the hotel as a business customer, conversation continuity per hotel account, hotel region → team assignment, agent notifications, answer rating and the golden evaluation set (3.2).</p>
+</li>
+<li><p><strong>What is blocking is Go2Joy input.</strong></p>
+<ul>
+<li><strong>G1 production server · DNS</strong>: as of 10/22 there is no DNS record for <code>sharptalk.go2joy.vn</code>.</li>
+<li><strong>G10·G11 HA signing · embed</strong>: not built yet.</li>
+<li><strong>G20~G23 teams · roster · task rules · absence order</strong>: not received yet.</li>
+<li><strong>G4·G5 terms · privacy notice</strong>: not received yet.</li>
+</ul>
+<p>In the project plan (PLN-261015) the deadline for these items was 10/22. Past it, 10/31 becomes a <strong>staging opening instead of a production opening</strong> (section 4).</p>
+</li>
+<li><p><strong>Phase 2 (B2C pre-/post-booking, HA menu iframe, booking-confirmed webhook, point billing)</strong> is listed as discussion items only (2.5). Once we get answers, it starts as a separate requirements document.</p>
+</li>
+<li><p><strong>AI operation</strong>: we are at Level 1 (external AI + RAG). Under the contract Go2Joy bears infrastructure and AI API costs, so <strong>the production AI key must be in Go2Joy's name</strong> (G2). Of the 5 things Level 1 must build, 4 already exist; only per-message AI logging needs to be added (3.2 S30).</p>
+</li>
+</ul>
+<h2 id="1-overall-integration-structure">1. Overall integration structure</h2>
+<figure><img src="img/integration-overview.en.svg" alt="SharpTalk × Go2Joy overall integration structure" loading="lazy"><figcaption>Figure 1. Three AI agents, split by user and booking stage, answer first; people join only on handoff. The three agents share a common foundation (identity · assignment · knowledge · AI gateway). All of SharpTalk is installed on the Go2Joy server, and the only things sent out are masked questions and search evidence.</figcaption></figure>
+<div class="scroll"><table><thead><tr>
+<th>Type</th>
+<th>Agent</th>
+<th>Entry</th>
+<th>Human handoff</th>
+<th>Status</th>
+</tr>
+</thead><tbody><tr>
+<td>B2B</td>
+<td><code>#Talk-4-Hotel</code> (HA Support)</td>
+<td>Widget after HA login + signed identify</td>
+<td>Go2Joy agent of hotel region → region team × task (CS / Sales)</td>
+<td><strong>Built on SharpTalk</strong> · waiting for HA signing and agent roster</td>
+</tr>
+<tr>
+<td>B2C pre-booking</td>
+<td><code>Go2Joy-#Talk-4-BookingClient</code></td>
+<td>Go2Joy app · web (web widget / mobile SDK)</td>
+<td>Go2Joy agent of region team × CS</td>
+<td>Agent and mobile SDK exist · app integration and booking tools under discussion</td>
+</tr>
+<tr>
+<td>B2C post-booking</td>
+<td><code>Hotel-#Talk-4-BookingClient</code></td>
+<td>Automatic handoff on the booking-confirmed event</td>
+<td>Hotel staff (HA #Talk menu) or Go2Joy CS — to be confirmed</td>
+<td>Phase 2 · not built</td>
+</tr>
+</tbody></table></div>
+<h3 id="11-b2b-talk-4-hotel-detailed-flow">1.1 B2B <code>#Talk-4-Hotel</code> detailed flow</h3>
+<figure><img src="img/integration-ha-flow.en.svg" alt="Go2Joy HA × SharpTalk integration structure" loading="lazy"><figcaption>Figure 2. ①<del>③ HA signs the logged-in staff member's information on its server. ④</del>⑦ When the widget passes it on, SharpTalk verifies it, registers the hotel as a business customer and links the conversation to the hotel account. ⑧~⑩ AI answers first; if it cannot answer or the staff member asks, the conversation is assigned to an agent of the team that matches the hotel's region. The specification is in HA integration guide v1.3.</figcaption></figure>
+<h3 id="12-responsibility-boundaries">1.2 Responsibility boundaries</h3>
+<div class="scroll"><table><thead><tr>
+<th>Work</th>
+<th>Go2Joy</th>
+<th>SharpTalk (Amoeba)</th>
+</tr>
+</thead><tbody><tr>
+<td>Servers · domain · TLS · backups, AI API accounts · costs</td>
+<td><strong>Owner</strong> (owns infrastructure and bears costs under the contract)</td>
+<td>Provides specs and procedures</td>
+</tr>
+<tr>
+<td>SharpTalk installation · updates</td>
+<td>Approval · runtime environment</td>
+<td><strong>Owner</strong> (remote support, provides releases)</td>
+</tr>
+<tr>
+<td>HA signing endpoint · widget embed</td>
+<td><strong>Owner</strong> (server signing code)</td>
+<td>Guide · test vectors · verification</td>
+</tr>
+<tr>
+<td>Terms · privacy notice, PDPL judgment</td>
+<td><strong>Owner</strong> (Legal)</td>
+<td>Draft notice wording, masking implementation</td>
+</tr>
+<tr>
+<td>Region teams · task rules · agent roster · working hours</td>
+<td><strong>Owner</strong> (decision)</td>
+<td>Provides settings screens and input support</td>
+</tr>
+<tr>
+<td>Knowledge content (policies · guides · FAQ)</td>
+<td><strong>Owner</strong> (final content)</td>
+<td>Conversion · registration · conflict-check tools</td>
+</tr>
+<tr>
+<td>AI settings · quality measurement · tuning</td>
+<td>Review</td>
+<td><strong>Owner</strong></td>
+</tr>
+<tr>
+<td>First-line incident response</td>
+<td>Infrastructure</td>
+<td>Application</td>
+</tr>
+</tbody></table></div>
+<h2 id="2-requests-to-go2joy">2. Requests to Go2Joy</h2>
+<p>Priorities:</p>
+<ul>
+<li><strong>P0</strong>: Phase 1 cannot open in production without it.</li>
+<li><strong>P1</strong>: needed for Phase 1 operating quality.</li>
+<li><strong>P2</strong>: needed from Phase 2 onward.</li>
+</ul>
+<p>Status is as checked by SharpTalk on 2026-10-22.</p>
+<h3 id="21-infrastructure--contract--privacy">2.1 Infrastructure · contract · privacy</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Request</th>
+<th>Details</th>
+<th>Owner</th>
+<th>Priority</th>
+<th>Status</th>
+</tr>
+</thead><tbody><tr>
+<td>G1</td>
+<td><strong>Production server + SSH + DNS</strong></td>
+<td><code>sharptalk.go2joy.vn</code>, TLS, Vietnam region. Specs: pilot 4 vCPU / 8 GB / 80 GB, production 8 vCPU / 16 GB / 200 GB or more. Storage for daily backups</td>
+<td>Infrastructure</td>
+<td>P0</td>
+<td><strong>Not received</strong> — no DNS record on 10/22</td>
+</tr>
+<tr>
+<td>G2</td>
+<td><strong>AI API accounts · keys (in Go2Joy's name and billing)</strong></td>
+<td>Answer LLM (Anthropic Claude recommended, OpenAI possible) and embeddings (Voyage). A person to receive monthly usage limits and exhaustion alerts</td>
+<td>Infrastructure · Finance</td>
+<td>P0</td>
+<td>Production keys not received</td>
+</tr>
+<tr>
+<td>G3</td>
+<td>Mail sending account</td>
+<td>Go2Joy SMTP for agent notification email</td>
+<td>Infrastructure</td>
+<td>P1</td>
+<td>Not received</td>
+</tr>
+<tr>
+<td>G4</td>
+<td><strong>Privacy · PDPL review</strong></td>
+<td>Cross-border transfer notice (processors Anthropic · Voyage, processing location), whether an impact assessment (TIA) is needed, masking scope, conversation retention (draft 180 days), breach notification procedure</td>
+<td>Legal</td>
+<td>P0</td>
+<td>No reply</td>
+</tr>
+<tr>
+<td>G5</td>
+<td><strong>HA terms URL + version, AI use notice wording</strong></td>
+<td>Basis for recording HA terms consent as widget consent (consent banner skipped)</td>
+<td>Legal · HA</td>
+<td>P0</td>
+<td>Not received</td>
+</tr>
+<tr>
+<td>G6</td>
+<td>Confirm contacts · channel</td>
+<td>PM, HA back end · FE, infrastructure, operations (CS lead), legal, daily check-in channel (10/12 request R13)</td>
+<td>PM</td>
+<td>P0</td>
+<td>To be confirmed</td>
+</tr>
+<tr>
+<td>G7</td>
+<td>Service contract clauses</td>
+<td>Ownership of trained assets: curated answers are Go2Joy data; Jev, the training pipeline and the generic base model are Amoeba IP; ownership of weights fine-tuned on Go2Joy data. How cost savings are shared, who runs Level 3 (MLOps)</td>
+<td>Management · Legal</td>
+<td>P2</td>
+<td>Under discussion</td>
+</tr>
+</tbody></table></div>
+<h3 id="22-ha-integration-talk-4-hotel--specification-in-guide-v13">2.2 HA integration (<code>#Talk-4-Hotel</code>) — specification in guide v1.3</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Request</th>
+<th>Details</th>
+<th>Owner</th>
+<th>Priority</th>
+<th>Status</th>
+</tr>
+</thead><tbody><tr>
+<td>G10</td>
+<td><strong>HA server signing endpoint</strong></td>
+<td><code>userId = "ha:" + userSn</code>. 5 attributes <code>hotel_id</code>·<code>hotel_name</code>·<code>province</code>·<code>region</code> (region code)·<code>role</code>, signed with HMAC-SHA256 after NFC normalization. <strong>Send back the results of test vectors T1~T5</strong> (guide 5.2·5.4)</td>
+<td>HA back end</td>
+<td>P0</td>
+<td>Not built</td>
+</tr>
+<tr>
+<td>G11</td>
+<td><strong>HA FE embed</strong></td>
+<td>embed.js + <code>locale</code>. Call <code>identify</code> once login is confirmed and whenever the hotel changes; call <code>logout</code> on sign-out. Allow SharpTalk domains in CSP (<code>script-src</code>·<code>frame-src</code>·<code>connect-src</code>) and CORS (guide 5.3)</td>
+<td>HA FE</td>
+<td>P0</td>
+<td>Not built</td>
+</tr>
+<tr>
+<td>G12</td>
+<td><strong>Signing key option</strong></td>
+<td>A: embed secret issued by SharpTalk (recommended, issued on staging) / B: shared Go2Joy client secret</td>
+<td>HA back end</td>
+<td>P0</td>
+<td>Decision pending</td>
+</tr>
+<tr>
+<td>G13</td>
+<td>UAT test accounts</td>
+<td>1 <code>Quản lý</code> (multi-hotel) + 1 <code>Lễ tân</code> (single hotel). Include at least 2 hotels in different regions</td>
+<td>HA</td>
+<td>P0</td>
+<td>To be confirmed</td>
+</tr>
+<tr>
+<td>G14</td>
+<td>Widget visibility (Q2)</td>
+<td>Whether to show other staff of the same hotel's conversations in the widget. <strong>Current default: own conversations + "n earlier inquiries from this hotel" count.</strong> Agents and AI see the whole hotel</td>
+<td>Operations</td>
+<td>P1</td>
+<td>Default applied, awaiting confirmation</td>
+</tr>
+<tr>
+<td>G15</td>
+<td>Resume window (Q3)</td>
+<td>How long after a conversation ends the same agent is assigned first. <strong>Current default 24 hours</strong></td>
+<td>Operations</td>
+<td>P1</td>
+<td>Default applied, awaiting confirmation</td>
+</tr>
+<tr>
+<td>G16</td>
+<td>Signature expiry (<code>ts</code>)</td>
+<td>Prevents package reuse. If adopted, both sides change the spec together (guide section 7)</td>
+<td>HA back end</td>
+<td>P1</td>
+<td>Decision pending</td>
+</tr>
+<tr>
+<td>G17</td>
+<td>Role differences (Q5) · hotel address · district (Q6)</td>
+<td>Is different handling for <code>Quản lý</code> / <code>Lễ tân</code> needed? Address (<code>settingList.address</code>) · district (<code>districtName</code>) are Phase 3</td>
+<td>Operations</td>
+<td>P2</td>
+<td>Decision pending</td>
+</tr>
+</tbody></table></div>
+<h3 id="23-assignment--operations-go2joy-operations-team">2.3 Assignment · operations (Go2Joy operations team)</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Request</th>
+<th>Details</th>
+<th>Owner</th>
+<th>Priority</th>
+<th>Status</th>
+</tr>
+</thead><tbody><tr>
+<td>G20</td>
+<td><strong>Region → team mapping, assignment region unit</strong></td>
+<td>Are teams split by region (4) · province · district? Proposal: <code>north</code>·<code>north_center</code> → Hanoi team, <code>south</code>·<code>south_center</code> → Ho Chi Minh team. Da Nang · Central Highlands (13 provinces of <code>south_center</code>) need confirmation</td>
+<td>Operations</td>
+<td>P0</td>
+<td>No reply</td>
+</tr>
+<tr>
+<td>G21</td>
+<td><strong>Agent roster</strong></td>
+<td>Name · email · team · task label (CS / Sales) · rank. We issue console accounts once received</td>
+<td>Operations</td>
+<td>P0</td>
+<td>Not received</td>
+</tr>
+<tr>
+<td>G22</td>
+<td><strong>Sales inquiry rules</strong></td>
+<td>Which inquiries are Sales (e.g. settlement · contract · commission). Keywords and 5~10 example inquiries. Without them everything goes to CS</td>
+<td>Operations</td>
+<td>P0</td>
+<td>Not received</td>
+</tr>
+<tr>
+<td>G23</td>
+<td><strong>Working hours · absence order · fallback owner</strong></td>
+<td>Proposal: backup owner → team queue → offline message. Who receives when the region is unknown (no hotel selected)</td>
+<td>Operations</td>
+<td>P0</td>
+<td>No reply</td>
+</tr>
+<tr>
+<td>G24</td>
+<td>Zalo OA + ZNS template approval</td>
+<td>For sending agent notifications via Zalo as well</td>
+<td>Operations</td>
+<td>P1</td>
+<td>Not received</td>
+</tr>
+<tr>
+<td>G25</td>
+<td>New province names in the region table</td>
+<td>Send a new table once names after the 2025-07 merger (63 → 34 provinces) come into use</td>
+<td>Operations</td>
+<td>P1</td>
+<td>Waiting</td>
+</tr>
+<tr>
+<td>G26</td>
+<td>Supported languages</td>
+<td>Any languages beyond Vietnamese and English</td>
+<td>Operations</td>
+<td>P2</td>
+<td>Decision pending</td>
+</tr>
+</tbody></table></div>
+<blockquote>
+<p>Go2Joy's master account can also enter team regions and assignment rules directly in the SharpTalk console. The places are <strong>Users › Labels &amp; teams › Regions</strong> and <strong>Settings › Basic › Agent handoff › Region match</strong>. If the region → team mapping changes, only the team's regions need editing; the rules stay as they are.</p>
+</blockquote>
+<h3 id="24-knowledge--ai-quality">2.4 Knowledge · AI quality</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Request</th>
+<th>Details</th>
+<th>Owner</th>
+<th>Priority</th>
+<th>Status</th>
+</tr>
+</thead><tbody><tr>
+<td>G30</td>
+<td><strong>Re-register the Notion knowledge source</strong></td>
+<td>On 10/21 the source and token were deleted together, so the HA guide (#2501) · FAQ (#3599) are inactive. Reconnecting the same pages restores them automatically (fix deployed)</td>
+<td>Operations</td>
+<td>P0</td>
+<td>Waiting</td>
+</tr>
+<tr>
+<td>G31</td>
+<td>Decide on knowledge conflict cleanup</td>
+<td>78 pairs classified on 10/15: 3 real fixes, 3 duplicated policy documents, 32 FAQ copies. Decide which to keep</td>
+<td>Operations</td>
+<td>P1</td>
+<td>Decision pending</td>
+</tr>
+<tr>
+<td>G32</td>
+<td>Review the golden evaluation set</td>
+<td>Confirm the correct answers of the 44 <code>#Talk-4-Hotel</code> questions. Provide representative questions when building the pre-booking agent's set. This is the regression baseline for engine changes and level transitions</td>
+<td>Operations</td>
+<td>P1</td>
+<td>Review pending</td>
+</tr>
+<tr>
+<td>G33</td>
+<td>Quality labels in operation</td>
+<td>Agents rate AI answers as accurate/inaccurate and adopt corrected answers as knowledge. This is the data for the Level 2 (curated answers) transition gate</td>
+<td>Operations</td>
+<td>P1</td>
+<td>After opening</td>
+</tr>
+<tr>
+<td>G34</td>
+<td>Partner API (follow-up)</td>
+<td>Production client key, SharpTalk server IP allowlist, Hotel Feed coverage (all HA hotels), fix the behavior that returns everything when no hotel matches, a test environment that verifies signatures (guide 7.1)</td>
+<td>HA back end</td>
+<td>P2</td>
+<td>Only test key received (10/21)</td>
+</tr>
+</tbody></table></div>
+<h3 id="25-phase-2--b2c-pre-post-booking-discussion-items">2.5 Phase 2 — B2C pre-/post-booking (discussion items)</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Request</th>
+<th>Details</th>
+<th>Priority</th>
+</tr>
+</thead><tbody><tr>
+<td>G40</td>
+<td>Booking-confirmed event webhook</td>
+<td>Handoff point. <code>bookingSn</code>·<code>hotelSn</code>·guest identity·signature, link to the earlier conversation session, a thread per booking (hotel) when several hotels are booked</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G41</td>
+<td>Go2Joy app · web embed</td>
+<td>Web widget / Android SDK (verified on device) / iOS. Signed identity for logged-in guests (separated from HA staff by a <code>userId</code> prefix), booking lookup tool API</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G42</td>
+<td>Region basis for pre-booking guests</td>
+<td>The region of the hotel being searched or booked, or the guest's location</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G43</td>
+<td>Post-booking handoff · scope · retention</td>
+<td>Human handoff target (hotel staff / Go2Joy CS / split rule), whether booking changes · cancellations · refunds go to Go2Joy, when to close conversations after check-out and how long to keep them</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G44</td>
+<td>HA menu (iframe)</td>
+<td>Add a SharpTalk menu to HA (apply · persona · knowledge · Inbox), a <strong>short-lived SSO token</strong> issued by the server (never passing the HA token as is), permission link (<code>Quản lý</code> settings / <code>Lễ tân</code> Inbox)</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G45</td>
+<td>Reception agent operation</td>
+<td>Common template content (managed by Go2Joy), application approval process, onboarding order for about 5,000 hotels</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G46</td>
+<td>Billing</td>
+<td>Token → point conversion rate, what happens when points run out (pause / connect to staff), where top-ups and balance are shown</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G47</td>
+<td>Zalo channel support</td>
+<td>Scope of receiving and answering Zalo conversations in the console</td>
+<td>P2</td>
+</tr>
+</tbody></table></div>
+<blockquote>
+<p>Items from the 10/12 request (R1~R16) not repeated in this document (staging access, existing API list, operational data samples, pilot hotels, release · incident process) will be checked for receipt at the next meeting.</p>
+</blockquote>
+<h2 id="3-work-checklist">3. Work checklist</h2>
+<h3 id="31-go2joy">3.1 Go2Joy</h3>
+<p><strong>Before Phase 1 production opening (P0)</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> G1 Production server · SSH · DNS <code>sharptalk.go2joy.vn</code> · TLS · backup storage</li>
+<li><input disabled="" type="checkbox"> G2 Production AI API keys (in Go2Joy's name) — answer LLM + embeddings</li>
+<li><input disabled="" type="checkbox"> G4 PDPL review (cross-border transfer notice · TIA · retention) and G5 HA terms URL · version · AI notice wording</li>
+<li><input disabled="" type="checkbox"> G6 Confirm contacts · daily check-in channel</li>
+<li><input disabled="" type="checkbox"> G10 HA server signing endpoint (v1.2 spec) + send back T1~T5 results</li>
+<li><input disabled="" type="checkbox"> G11 HA FE embed (identify / call again on hotel change / logout, CSP · CORS)</li>
+<li><input disabled="" type="checkbox"> G12 Decide signing key option (A recommended)</li>
+<li><input disabled="" type="checkbox"> G13 UAT test accounts (<code>Quản lý</code> · <code>Lễ tân</code>, including hotels in different regions)</li>
+<li><input disabled="" type="checkbox"> G20 Region → team mapping and assignment region unit</li>
+<li><input disabled="" type="checkbox"> G21 Agent roster (name · email · team · task label · rank)</li>
+<li><input disabled="" type="checkbox"> G22 Sales inquiry rules</li>
+<li><input disabled="" type="checkbox"> G23 Working hours · absence order · fallback owner</li>
+<li><input disabled="" type="checkbox"> G30 Re-register the Notion knowledge source</li>
+</ul>
+<p><strong>UAT (guide v1.3 §8.2)</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Not logged in · logged in · logged out · no hotel selected · value tampered without re-signing</li>
+<li><input disabled="" type="checkbox"> Business customer registration · same staff logs in again · other staff of the same hotel</li>
+<li><input disabled="" type="checkbox"> Ask again after a conversation ends · another PC · next day</li>
+<li><input disabled="" type="checkbox"> AI handoff · "Connect to an agent" · assignment results for hotels in all 4 regions</li>
+<li><input disabled="" type="checkbox"> UAT sign-off and production opening approval</li>
+</ul>
+<p><strong>Operating quality (P1)</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Confirm G14 widget visibility · G15 resume window · G16 signature expiry</li>
+<li><input disabled="" type="checkbox"> G24 Zalo OA · G25 new province names in the region table</li>
+<li><input disabled="" type="checkbox"> G31 knowledge conflict decision · G32 golden set review · G33 agent rating and answer adoption in operation</li>
+</ul>
+<p><strong>Phase 2 discussion (P2)</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Answers to G40~G47 (booking-confirmed webhook, app · web embed, region basis, post-booking handoff · scope · retention, HA menu iframe · SSO, reception operation, billing, Zalo)</li>
+<li><input disabled="" type="checkbox"> G7 service contract clauses · G17 role differences · address · district · G26 languages · G34 Partner API</li>
+</ul>
+<h3 id="32-sharptalk">3.2 SharpTalk</h3>
+<p><strong>Done (working on the staging go2joy tenant)</strong></p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> S1 Signed identify verification, session "verified", HA terms consent mode, staff name in header (#637 · #642 · #656)</li>
+<li><input checked="" disabled="" type="checkbox"> S2 Assignment rules: region × task, two triggers — AI handoff and "Connect to an agent" (#638)</li>
+<li><input checked="" disabled="" type="checkbox"> S3 Agent personal email · re-alert when not accepted (#639)</li>
+<li><input checked="" disabled="" type="checkbox"> S4 Answer accuracy rating (#640), automatic scoring of the 44-question HA golden set (#611)</li>
+<li><input checked="" disabled="" type="checkbox"> S5 Widget design, satisfaction survey, languages fixed to vi / en (#650 ~ #662)</li>
+<li><input checked="" disabled="" type="checkbox"> S6 Region code · NFC normalization, region fill-in from 63 provinces of the region table, team · label regions, "Region match" assignment rule (#687)</li>
+<li><input checked="" disabled="" type="checkbox"> S7 Business customer (hotel) · contact (staff) registration, B2B / B2C split, conversation continuity per hotel account, previous agent assigned first, previous conversation summary for AI (#689)</li>
+<li><input checked="" disabled="" type="checkbox"> S8 Updated schema for new server installs (#692) — ready for the Go2Joy server install</li>
+<li><input checked="" disabled="" type="checkbox"> S9 HA integration guide v1.3, this document</li>
+</ul>
+<p><strong>Once Go2Joy input arrives</strong></p>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Work</th>
+<th>Input needed</th>
+<th>Effort (est.)</th>
+</tr>
+</thead><tbody><tr>
+<td>S20</td>
+<td>Send the staging embed secret over a secure channel</td>
+<td>G12 (A)</td>
+<td>Same day</td>
+</tr>
+<tr>
+<td>S21</td>
+<td>Issue agent console accounts, set teams · task labels</td>
+<td>G21</td>
+<td>Same day</td>
+</tr>
+<tr>
+<td>S22</td>
+<td>Enter team regions · "Region match" rules · Sales keywords · fallback · working hours, check with the rule preview</td>
+<td>G20 · G22 · G23</td>
+<td>Half a day</td>
+</tr>
+<tr>
+<td>S23</td>
+<td>Enter HA terms URL · version (consent mode is already HA terms)</td>
+<td>G5</td>
+<td>Same day</td>
+</tr>
+<tr>
+<td>S24</td>
+<td><strong>Install on the Go2Joy server</strong> (VN profile), migrate staging knowledge · settings (region table · conversation continuity · rules), reindex, connect the golden-set deploy gate</td>
+<td>G1 · G2 · G3</td>
+<td>4 days</td>
+</tr>
+<tr>
+<td>S25</td>
+<td>Confirm Notion resync, run knowledge conflict cleanup</td>
+<td>G30 · G31</td>
+<td>1~2 days</td>
+</tr>
+<tr>
+<td>S26</td>
+<td>Zalo agent notifications</td>
+<td>G24</td>
+<td>4 days</td>
+</tr>
+<tr>
+<td>S27</td>
+<td>Joint UAT → test result report</td>
+<td>G10 · G11 · G13</td>
+<td>3 days</td>
+</tr>
+</tbody></table></div>
+<p><strong>What SharpTalk keeps working on</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> S28 Show the handoff reason in the console, conflict check before adopting knowledge (PLN-261015 D5 · D6)</li>
+<li><input disabled="" type="checkbox"> S29 Signature expiry (<code>ts</code>), receiving hotel address · district — after G16 · G17 decisions</li>
+<li><input disabled="" type="checkbox"> S30 <strong>AI Level 1 additions</strong>: per-message AI log (model · tokens · latency · rewritten question · outcome). Today there is only a daily usage total. Add Go2Joy booking numbers to masking once we get their format. Extend golden sets per agent</li>
+<li><input disabled="" type="checkbox"> S31 Phase 2 requirements document (B2C pre-booking integration, reception agent template, HA menu iframe · SSO, receiving the booking webhook, point billing) — after the 2.5 answers</li>
+</ul>
+<h3 id="33-ai-operation-level-1--prerequisite-check">3.3 AI operation Level 1 — prerequisite check</h3>
+<p>The AI operating strategy says Level 1 must build these 5 things before moving to Level 2·3.</p>
+<div class="scroll"><table><thead><tr>
+<th>Prerequisite</th>
+<th>SharpTalk today</th>
+<th>Remaining</th>
+</tr>
+</thead><tbody><tr>
+<td>① LLM · embedding ports</td>
+<td>Exists — engine adapters (Anthropic · OpenAI · Voyage · stub), per-tenant engine selection. Changing engines is a settings change</td>
+<td>—</td>
+</tr>
+<tr>
+<td>② Conversation log schema</td>
+<td>Partial — message text · language · intent · search evidence, conversation outcome (resolved · handed off), daily token usage</td>
+<td>Per-message model · tokens · latency · rewritten question (S30)</td>
+</tr>
+<tr>
+<td>③ Quality labels</td>
+<td>Exists — answer accuracy rating, handoff flag, agent answer → knowledge adoption</td>
+<td>Accumulate in operation (G33)</td>
+</tr>
+<tr>
+<td>④ PII masking</td>
+<td>Exists — phone · email · order numbers etc. masked before sending to AI and in logs</td>
+<td>Add the Go2Joy booking number format (S30)</td>
+</tr>
+<tr>
+<td>⑤ Golden evaluation set</td>
+<td>Exists — 44 <code>#Talk-4-Hotel</code> questions scored automatically</td>
+<td>Go2Joy review (G32), extend to other agents</td>
+</tr>
+</tbody></table></div>
+<h2 id="4-schedule-impact">4. Schedule impact</h2>
+<p>The PLN-261015 decision: <strong>if Go2Joy's prerequisites (server · DNS, HA embed · signing, agent roster) are not ready by 10/22, 10/31 becomes a "staging opening"</strong>. As of 10/22 these items have not been received.</p>
+<div class="scroll"><table><thead><tr>
+<th>Path</th>
+<th>Conditions</th>
+<th>Result</th>
+</tr>
+</thead><tbody><tr>
+<td>Staging opening (10/31)</td>
+<td>G10 · G11 · G13 · G20 ~ G23</td>
+<td>HA UAT points at SharpTalk staging and real agents respond. Operating data is still outside the Go2Joy server (on staging)</td>
+</tr>
+<tr>
+<td>Production opening</td>
+<td>Above + G1 · G2 · G4 · G5</td>
+<td>Install on the Go2Joy server (S24, 4 days) → UAT (S27, 3 days) → opening. <strong>About 7 business days from the day G1 arrives</strong></td>
+</tr>
+</tbody></table></div>
+<h2 id="5-decisions-needed--meeting-summary">5. Decisions needed — meeting summary</h2>
+<div class="scroll"><table><thead><tr>
+<th>Decision</th>
+<th>SharpTalk proposal / current default</th>
+<th>Related</th>
+</tr>
+</thead><tbody><tr>
+<td>Signing key</td>
+<td>A — embed secret issued by SharpTalk</td>
+<td>G12</td>
+</tr>
+<tr>
+<td>Region → team</td>
+<td><code>north</code>·<code>north_center</code> → Hanoi, <code>south</code>·<code>south_center</code> → Ho Chi Minh</td>
+<td>G20</td>
+</tr>
+<tr>
+<td>Absence order</td>
+<td>Backup owner → team queue → offline message</td>
+<td>G23</td>
+</tr>
+<tr>
+<td>Widget visibility</td>
+<td>Own conversations + count of the hotel's earlier inquiries (applied)</td>
+<td>G14</td>
+</tr>
+<tr>
+<td>Resume window</td>
+<td>24 hours (applied)</td>
+<td>G15</td>
+</tr>
+<tr>
+<td>Signature expiry</td>
+<td>Recommended</td>
+<td>G16</td>
+</tr>
+<tr>
+<td>Post-booking handoff target</td>
+<td>Hotel staff first, Go2Joy CS if no response (proposal)</td>
+<td>G43</td>
+</tr>
+<tr>
+<td>Ownership of trained assets</td>
+<td>Curated answers = Go2Joy, Jev · pipeline · generic model = Amoeba, fine-tuned weights stated in the contract</td>
+<td>G7</td>
+</tr>
+</tbody></table></div>
+</main>
+<footer class="wrap foot">Amoeba(BitBiz) · SharpTalk for Go2Joy</footer>
+</body>
+</html>

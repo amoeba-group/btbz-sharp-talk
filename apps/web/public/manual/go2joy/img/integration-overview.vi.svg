@@ -1,0 +1,191 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 920" width="1120" height="920" font-family="'Helvetica Neue','Segoe UI',Arial,sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <style>
+      .t  { font-size: 14px; font-weight: 700; fill: #111827; }
+      .s  { font-size: 11.5px; fill: #374151; }
+      .m  { font-size: 10.5px; fill: #6b7280; font-family: 'SF Mono', Menlo, Consolas, monospace; }
+      .z  { font-size: 15px; font-weight: 800; }
+      .zl { font-size: 11px; fill: #475569; }
+      .el { font-size: 11px; font-weight: 700; fill: #334155; }
+      .box { fill: #ffffff; stroke-width: 1.5; }
+      .go  { stroke: #fb923c; }
+      .sh  { stroke: #60a5fa; }
+      .hu  { stroke: #94a3b8; }
+      .todo { stroke-dasharray: 5 4; }
+      .e  { stroke: #475569; stroke-width: 1.6; fill: none; }
+      .b-ok  { fill: #dcfce7; } .tb-ok  { fill: #15803d; font-size: 10.5px; font-weight: 700; }
+      .b-part{ fill: #fef3c7; } .tb-part{ fill: #b45309; font-size: 10.5px; font-weight: 700; }
+      .b-no  { fill: #e5e7eb; } .tb-no  { fill: #374151; font-size: 10.5px; font-weight: 700; }
+      .b-g2j { fill: #ffedd5; } .tb-g2j { fill: #c2410c; font-size: 10.5px; font-weight: 700; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="920" fill="#ffffff"/>
+  <text x="16" y="30" font-size="18" font-weight="700" fill="#111827">Kết nối tổng thể SharpTalk × Go2Joy — 3 tư vấn viên AI · nền tảng chung · AI bên ngoài</text>
+
+  <!-- legend -->
+  <rect class="b-ok" x="520" y="40" width="46" height="18" rx="9"/><text class="tb-ok" x="543" y="53" text-anchor="middle">Đã có</text>
+  <text class="zl" x="572" y="53">chạy trên staging</text>
+  <rect class="b-part" x="680" y="40" width="62" height="18" rx="9"/><text class="tb-part" x="711" y="53" text-anchor="middle">Một phần</text>
+  <text class="zl" x="748" y="53">chờ đầu vào·thiết lập</text>
+  <rect class="b-no" x="872" y="40" width="54" height="18" rx="9"/><text class="tb-no" x="899" y="53" text-anchor="middle">Chưa có</text>
+  <text class="zl" x="932" y="53">thảo luận · GĐ 2</text>
+  <text class="zl" x="1104" y="74" text-anchor="end">Viền nét đứt = kết nối chưa có</text>
+
+  <!-- ===== Go2Joy zone ===== -->
+  <rect x="16" y="80" width="1088" height="216" rx="12" fill="#fff7ed" stroke="#fdba74"/>
+  <text class="z" x="32" y="104" fill="#c2410c">Go2Joy</text>
+  <text class="zl" x="98" y="104">Người dùng · hệ thống Go2Joy (Go2Joy phát triển·vận hành)</text>
+
+  <!-- users -->
+  <rect class="box go" x="40" y="116" width="320" height="50" rx="8"/>
+  <text class="t" x="56" y="138">Nhân viên khách sạn (B2B)</text>
+  <text class="s" x="56" y="156">Khách sạn đối tác · đăng nhập Hotel Admin (HA)</text>
+
+  <rect class="box go" x="400" y="116" width="320" height="50" rx="8"/>
+  <text class="t" x="416" y="138">Khách đặt phòng — trước đặt (B2C)</text>
+  <text class="s" x="416" y="156">Ứng dụng · web Go2Joy</text>
+
+  <rect class="box go" x="760" y="116" width="320" height="50" rx="8"/>
+  <text class="t" x="776" y="138">Khách đặt phòng — sau đặt (B2C)</text>
+  <text class="s" x="776" y="156">Tự động chuyển khi đặt phòng xong</text>
+
+  <path class="e" d="M720,141 L758,141" marker-end="url(#a)"/>
+  <text class="el" x="739" y="110" text-anchor="middle">Đặt xong</text>
+
+  <!-- Go2Joy systems -->
+  <rect class="box go" x="40" y="186" width="320" height="96" rx="8"/>
+  <text class="t" x="56" y="210">Web HA + máy chủ HA</text>
+  <text class="s" x="56" y="230">Máy chủ ký: nhân viên·KS·tỉnh·vùng·vai trò</text>
+  <text class="s" x="56" y="248">FE gọi identify() / đăng xuất: logout()</text>
+  <text class="m" x="56" y="268">userId = ha:{userSn} · HMAC-SHA256</text>
+  <rect class="b-g2j" x="272" y="194" width="80" height="18" rx="9"/><text class="tb-g2j" x="312" y="207" text-anchor="middle">Go2Joy làm</text>
+
+  <rect class="box go todo" x="400" y="186" width="320" height="96" rx="8"/>
+  <text class="t" x="416" y="210">Ứng dụng · web Go2Joy</text>
+  <text class="s" x="416" y="230">Widget web embed.js · SDK di động (Android)</text>
+  <text class="s" x="416" y="248">Định danh khách (ký) · tra cứu đặt phòng</text>
+  <text class="s" x="416" y="266">Thảo luận vị trí · cách cài đặt</text>
+  <rect class="b-no" x="639" y="194" width="73" height="18" rx="9"/><text class="tb-no" x="675.5" y="207" text-anchor="middle">Thảo luận</text>
+
+  <rect class="box go todo" x="760" y="186" width="320" height="96" rx="8"/>
+  <text class="t" x="776" y="210">Hệ thống đặt phòng</text>
+  <text class="s" x="776" y="230">Webhook sự kiện đặt phòng xong</text>
+  <text class="m" x="776" y="250">bookingSn · hotelSn · khách</text>
+  <text class="s" x="776" y="268">Gửi kèm hội thoại trước·thông tin đặt</text>
+  <rect class="b-no" x="999" y="194" width="73" height="18" rx="9"/><text class="tb-no" x="1035.5" y="207" text-anchor="middle">Thảo luận</text>
+
+  <!-- ===== SharpTalk zone ===== -->
+  <rect x="16" y="312" width="1088" height="482" rx="12" fill="#eff6ff" stroke="#93c5fd"/>
+  <text class="z" x="32" y="336" fill="#1d4ed8">SharpTalk</text>
+  <text class="zl" x="212" y="336">Tự host trên máy chủ Go2Joy · sharptalk.go2joy.vn (chờ DNS)</text>
+  <text class="zl" x="584" y="336">Hiện tại: staging shoptalk.amoeba.site</text>
+
+  <!-- system → agent arrows -->
+  <path class="e" d="M200,282 L200,350" marker-end="url(#a)"/>
+  <text class="el" x="208" y="304">identify có ký</text>
+  <path class="e" d="M560,282 L560,350" marker-end="url(#a)"/>
+  <text class="el" x="568" y="304">Widget · SDK</text>
+  <path class="e" d="M920,282 L920,350" marker-end="url(#a)"/>
+  <text class="el" x="928" y="304">Webhook</text>
+
+  <!-- agents -->
+  <rect class="box sh" x="40" y="352" width="320" height="92" rx="8"/>
+  <text class="t" x="56" y="376">#Talk-4-Hotel (HA Support)</text>
+  <text class="s" x="56" y="396">Trả lời câu hỏi về Go2Joy · tri thức chung</text>
+  <text class="s" x="56" y="414">KS = khách hàng doanh nghiệp, nhân viên = liên hệ</text>
+  <text class="s" x="56" y="432">Hội thoại nối theo tài khoản khách sạn</text>
+  <rect class="b-ok" x="305" y="360" width="47" height="18" rx="9"/><text class="tb-ok" x="328.5" y="373" text-anchor="middle">Đã có</text>
+
+  <rect class="box sh" x="400" y="352" width="320" height="92" rx="8"/>
+  <text class="t" x="416" y="376">Go2Joy-#Talk-4-BookingClient</text>
+  <text class="s" x="416" y="396">Trước đặt — tìm KS, hướng dẫn đặt·thanh toán</text>
+  <text class="s" x="416" y="414">Tri thức chung Go2Joy</text>
+  <text class="s" x="416" y="432">Đã có AI·SDK, chờ tích hợp app·công cụ đặt</text>
+  <rect class="b-part" x="645" y="360" width="67" height="18" rx="9"/><text class="tb-part" x="678.5" y="373" text-anchor="middle">Một phần</text>
+
+  <rect class="box sh todo" x="760" y="352" width="320" height="92" rx="8"/>
+  <text class="t" x="776" y="376">Hotel-#Talk-4-BookingClient</text>
+  <text class="s" x="776" y="396">Sau đặt — lễ tân riêng từng KS (~5.000)</text>
+  <text class="s" x="776" y="414">Mẫu chung + persona KS + tri thức KS</text>
+  <text class="s" x="776" y="432">Kế thừa mẫu · chỉ ghi đè thiết lập KS</text>
+  <rect class="b-no" x="1012" y="360" width="60" height="18" rx="9"/><text class="tb-no" x="1042" y="373" text-anchor="middle">Chưa có</text>
+
+  <!-- handoff arrows -->
+  <path class="e" d="M200,444 L200,480" marker-end="url(#a)"/>
+  <text class="el" x="208" y="467">Chuyển · gọi tư vấn viên</text>
+  <path class="e" d="M560,444 L560,480" marker-end="url(#a)"/>
+  <text class="el" x="568" y="467">Ngoài phạm vi AI · yêu cầu</text>
+  <path class="e" d="M920,444 L920,480" marker-end="url(#a)"/>
+  <text class="el" x="928" y="467">AI không giải quyết được</text>
+
+  <!-- humans -->
+  <rect class="box hu" x="40" y="482" width="320" height="72" rx="8"/>
+  <text class="t" x="56" y="506">Tư vấn viên Go2Joy</text>
+  <text class="s" x="56" y="526">Vùng KS → nhóm khu vực × nghiệp vụ (CS / Sales)</text>
+  <text class="s" x="56" y="544">Trả lời trên bảng điều khiển SharpTalk</text>
+  <rect class="b-part" x="285" y="490" width="67" height="18" rx="9"/><text class="tb-part" x="318.5" y="503" text-anchor="middle">Một phần</text>
+
+  <rect class="box hu" x="400" y="482" width="320" height="72" rx="8"/>
+  <text class="t" x="416" y="506">Tư vấn viên Go2Joy</text>
+  <text class="s" x="416" y="526">Nhóm khu vực × CS (tiêu chí vùng: thảo luận)</text>
+  <text class="s" x="416" y="544">Trả lời trên bảng điều khiển SharpTalk</text>
+  <rect class="b-part" x="645" y="490" width="67" height="18" rx="9"/><text class="tb-part" x="678.5" y="503" text-anchor="middle">Một phần</text>
+
+  <rect class="box hu todo" x="760" y="482" width="320" height="72" rx="8"/>
+  <text class="t" x="776" y="506">Nhân viên KS — menu HA #Talk</text>
+  <text class="s" x="776" y="526">Đăng ký · persona · tri thức · trả lời Inbox</text>
+  <text class="s" x="776" y="544">iframe · token SSO ngắn hạn · quyền HA</text>
+  <rect class="b-no" x="1012" y="490" width="60" height="18" rx="9"/><text class="tb-no" x="1042" y="503" text-anchor="middle">Chưa có</text>
+
+  <!-- foundation -->
+  <rect x="32" y="574" width="1056" height="206" rx="10" fill="#dbeafe" stroke="#60a5fa"/>
+  <text class="t" x="48" y="598" fill="#1d4ed8">Nền tảng chung — cả 3 tư vấn viên AI cùng dùng</text>
+
+  <rect class="box sh" x="48" y="610" width="248" height="156" rx="8"/>
+  <text class="t" x="62" y="634">Định danh · khách hàng</text>
+  <text class="s" x="62" y="656">Xác minh ký (sai → khách vãng lai)</text>
+  <text class="s" x="62" y="674">KH doanh nghiệp · liên hệ · khách đặt</text>
+  <text class="s" x="62" y="692">Phân biệt loại B2B / B2C</text>
+  <text class="s" x="62" y="710">Hội thoại liên tục theo tài khoản</text>
+  <text class="s" x="62" y="728">Đồng ý = điều khoản HA (host_terms)</text>
+  <rect class="b-ok" x="241" y="618" width="47" height="18" rx="9"/><text class="tb-ok" x="264.5" y="631" text-anchor="middle">Đã có</text>
+
+  <rect class="box sh" x="306" y="610" width="248" height="156" rx="8"/>
+  <text class="t" x="320" y="634">Phân công · thông báo</text>
+  <text class="s" x="320" y="656">Khớp khu vực (tỉnh → vùng → nhóm)</text>
+  <text class="s" x="320" y="674">Nhãn nghiệp vụ CS / Sales</text>
+  <text class="s" x="320" y="692">Báo trên console · mail · nhắc lại</text>
+  <text class="s" x="320" y="710">Thông báo Zalo (chờ OA)</text>
+  <text class="s" x="320" y="728">Thứ tự khi vắng (cần chốt)</text>
+  <rect class="b-part" x="479" y="618" width="67" height="18" rx="9"/><text class="tb-part" x="512.5" y="631" text-anchor="middle">Một phần</text>
+
+  <rect class="box sh" x="564" y="610" width="248" height="156" rx="8"/>
+  <text class="t" x="578" y="634">Tri thức</text>
+  <text class="s" x="578" y="656">Chung Go2Joy: hướng dẫn·video·FAQ</text>
+  <text class="s" x="578" y="674">Đồng bộ Notion (chờ đăng ký lại)</text>
+  <text class="s" x="578" y="692">Trả lời của TVV → thành tri thức</text>
+  <text class="s" x="578" y="710">Kiểm tra xung đột (chờ quyết định)</text>
+  <text class="s" x="578" y="728">Tri thức riêng KS (GĐ 2)</text>
+  <rect class="b-part" x="737" y="618" width="67" height="18" rx="9"/><text class="tb-part" x="770.5" y="631" text-anchor="middle">Một phần</text>
+
+  <rect class="box sh" x="822" y="610" width="250" height="156" rx="8"/>
+  <text class="t" x="836" y="634">Cổng AI (Level 1)</text>
+  <text class="s" x="836" y="656">Adapter LLM · embedding (đổi = cấu hình)</text>
+  <text class="s" x="836" y="674">Che dữ liệu cá nhân trước khi gửi AI</text>
+  <text class="s" x="836" y="692">Kiểm duyệt mọi tin gửi đi</text>
+  <text class="s" x="836" y="710">Đo lượng dùng · đánh giá trả lời</text>
+  <text class="s" x="836" y="728">Bộ đánh giá chuẩn (HA 44 câu)</text>
+  <rect class="b-ok" x="1017" y="618" width="47" height="18" rx="9"/><text class="tb-ok" x="1040.5" y="631" text-anchor="middle">Đã có</text>
+
+  <!-- ===== external AI ===== -->
+  <path class="e" d="M946,766 L946,818" marker-end="url(#a)"/>
+  <text class="el" x="954" y="800">Gửi sau khi che</text>
+  <rect x="16" y="820" width="1088" height="86" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text class="t" x="32" y="846">AI bên ngoài — Level 1 (tài khoản · chi phí Go2Joy)</text>
+  <text class="s" x="32" y="868">Trả lời Claude · GPT, embedding Voyage — chỉ gửi câu hỏi và căn cứ tìm kiếm, ủy thác xử lý không lưu = chuyển ra nước ngoài (PDPL: thông báo · TIA)</text>
+  <text class="s" x="32" y="888">Sau đó: Level 2 cổng Jev + câu trả lời mẫu (từ #Talk-4-Hotel) → Level 3 LLM nội bộ — chuyển theo cổng chỉ số, không theo ngày</text>
+</svg>

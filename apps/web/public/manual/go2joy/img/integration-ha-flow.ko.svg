@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 800" width="1120" height="800" font-family="'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#ea580c"/>
+    </marker>
+    <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/>
+    </marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <style>
+      .t  { font-size: 14px; font-weight: 700; fill: #111827; }
+      .s  { font-size: 11.5px; fill: #374151; }
+      .m  { font-size: 11px; fill: #6b7280; font-family: 'SF Mono', Menlo, Consolas, monospace; }
+      .lo { font-size: 11.5px; font-weight: 700; fill: #c2410c; }
+      .lb { font-size: 11.5px; font-weight: 700; fill: #1d4ed8; }
+      .lg { font-size: 11px; fill: #475569; }
+      .go { fill: #ffffff; stroke: #fb923c; stroke-width: 1.5; }
+      .sh { fill: #ffffff; stroke: #60a5fa; stroke-width: 1.5; }
+      .hl { fill: #dbeafe; stroke: #1d4ed8; stroke-width: 1.8; }
+      .eo { stroke: #ea580c; stroke-width: 1.8; fill: none; }
+      .eb { stroke: #1d4ed8; stroke-width: 1.8; fill: none; }
+      .eg { stroke: #475569; stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="800" fill="#ffffff"/>
+  <text x="16" y="30" font-size="18" font-weight="700" fill="#111827">Go2Joy HA × SharpTalk 연동 구조 — B2B #Talk-4-Hotel (HA Support)</text>
+  <text x="1104" y="30" text-anchor="end" class="lg">실선 = 운영 흐름 · 점선 = 설정/후속 · ①~⑩ = 순서</text>
+
+  <!-- zones -->
+  <rect x="16" y="48" width="360" height="736" rx="12" fill="#fff7ed" stroke="#fdba74"/>
+  <text x="32" y="74" font-size="15" font-weight="800" fill="#c2410c">Go2Joy</text>
+  <text x="96" y="74" class="lg">HA 개발팀 · 운영팀</text>
+
+  <rect x="404" y="48" width="700" height="736" rx="12" fill="#eff6ff" stroke="#93c5fd"/>
+  <text x="420" y="74" font-size="15" font-weight="800" fill="#1d4ed8">SharpTalk</text>
+  <text x="510" y="74" class="lg">위젯 · API · 콘솔 (go2joy 테넌트)</text>
+
+  <!-- Go2Joy boxes -->
+  <rect class="go" x="40" y="92" width="312" height="58" rx="8"/>
+  <text class="t" x="56" y="116">호텔 직원</text>
+  <text class="s" x="56" y="136">HA에 로그인 (프런트 데스크 · 매니저 · 체인 운영자)</text>
+
+  <rect class="go" x="40" y="196" width="312" height="86" rx="8"/>
+  <text class="t" x="56" y="220">HA 웹 (브라우저)</text>
+  <text class="m" x="56" y="239">go2joy-ha-uat.go2joy.io</text>
+  <text class="s" x="56" y="258">embed.js 설치 · 로그인/호텔 변경 시 identify()</text>
+  <text class="s" x="56" y="274">로그아웃 시 logout()</text>
+
+  <rect class="go" x="40" y="330" width="312" height="112" rx="8"/>
+  <text class="t" x="56" y="354">HA 서버 — 서명 엔드포인트</text>
+  <text class="m" x="56" y="373">GET /staff/sharptalkIdentity</text>
+  <text class="s" x="56" y="392">세션·DB에서 직원·호텔·성·권역·역할 조회</text>
+  <text class="s" x="56" y="410">NFC 정규화 → HMAC-SHA256 서명</text>
+  <text class="s" x="56" y="428">secret은 서버 환경변수에만</text>
+
+  <rect x="40" y="484" width="312" height="62" rx="8" fill="#ffffff" stroke="#fb923c" stroke-width="1.3" stroke-dasharray="5 4"/>
+  <text class="t" x="56" y="508">Partner API (호텔 데이터)</text>
+  <text class="s" x="56" y="528">후속: 호텔 정책을 AI 답변에 · 권역 교차 검증</text>
+
+  <rect class="go" x="40" y="604" width="312" height="148" rx="8"/>
+  <text class="t" x="56" y="628">Go2Joy 상담원</text>
+  <text class="s" x="56" y="650">하노이 팀 · 호찌민 팀 (권역 → 팀, 확정 필요)</text>
+  <text class="s" x="56" y="668">× 업무 라벨 CS / Sales</text>
+  <text class="s" x="56" y="686">SharpTalk 콘솔 계정으로 응대</text>
+  <text class="s" x="56" y="704">운영팀: 팀 담당 지역 · 배정 규칙 결정</text>
+  <text class="s" x="56" y="722">(콘솔에서 직접 입력하거나 SharpTalk에 전달)</text>
+
+  <!-- SharpTalk boxes -->
+  <rect class="sh" x="428" y="196" width="220" height="86" rx="8"/>
+  <text class="t" x="444" y="220">위젯 (iframe)</text>
+  <text class="s" x="444" y="240">HA 페이지 안에 표시</text>
+  <text class="s" x="444" y="258">제목에 직원 이름 · 동의 생략</text>
+  <text class="s" x="444" y="274">"이전 대화 보기"</text>
+
+  <rect class="sh" x="684" y="92" width="396" height="80" rx="8"/>
+  <text class="t" x="700" y="116">identify — 서명 검증</text>
+  <text class="s" x="700" y="136">일치 → 세션 '검증됨' / 불일치 → 401 E5048, 게스트 유지</text>
+  <text class="s" x="700" y="154">검증 뒤 NFC·권역 코드 정규화, 성 → 권역 보정(지역표)</text>
+
+  <rect class="sh" x="684" y="196" width="396" height="96" rx="8"/>
+  <text class="t" x="700" y="220">고객 등록 (B2B)</text>
+  <text class="s" x="700" y="240">기업고객 = 호텔 · 키 <tspan class="m">hotel:{hotel_id}</tspan></text>
+  <text class="s" x="700" y="258">연락처 = 직원 · 키 <tspan class="m">ha:{userSn}</tspan> · 역할</text>
+  <text class="s" x="700" y="276">고객 유형 b2b_contact ↔ 부킹 고객 b2c</text>
+
+  <rect class="sh" x="684" y="316" width="396" height="96" rx="8"/>
+  <text class="t" x="700" y="340">계정(호텔) 대화 연속성</text>
+  <text class="s" x="700" y="360">새 대화를 같은 계정의 직전 대화에 연결</text>
+  <text class="s" x="700" y="378">24시간 안이면 직전 상담원 우선 배정</text>
+  <text class="s" x="700" y="396">AI에 직전 대화 요약(개인정보 가림)</text>
+
+  <rect class="sh" x="428" y="316" width="220" height="96" rx="8"/>
+  <text class="t" x="444" y="340">AI 에이전트</text>
+  <text class="m" x="444" y="358">#Talk-4-Hotel</text>
+  <text class="s" x="444" y="378">HA 지식으로 1차 응대</text>
+  <text class="s" x="444" y="396">답할 수 없으면 이관</text>
+
+  <rect class="hl" x="428" y="458" width="652" height="96" rx="8"/>
+  <text class="t" x="444" y="482">상담원 배정 — Agent handoff 규칙</text>
+  <text class="s" x="444" y="502">트리거: ⓐ AI가 답하지 못해 이관   ⓑ 직원이 "상담원 연결" 요청</text>
+  <text class="s" x="444" y="520">호텔 성·권역 ↔ 팀·라벨 담당 지역 매칭 (성 우선, 다음 권역) × 업무(CS / Sales)</text>
+  <text class="s" x="444" y="538">후보 0명 → 다음 규칙 → 폴백 담당자</text>
+
+  <rect class="sh" x="428" y="604" width="220" height="148" rx="8"/>
+  <text class="t" x="444" y="628">상담원 콘솔</text>
+  <text class="s" x="444" y="650">라이브챗: 기업·호텔·권역 배지</text>
+  <text class="s" x="444" y="668">이 호텔의 이전 대화 n건</text>
+  <text class="s" x="444" y="686">고객: 기업고객 / 부킹고객</text>
+  <text class="s" x="444" y="704">대화 이력: B2B / B2C 필터</text>
+
+  <rect x="684" y="604" width="396" height="148" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.3" stroke-dasharray="5 4"/>
+  <text class="t" x="700" y="628">go2joy 테넌트 설정</text>
+  <text class="s" x="700" y="650">지역표 63개 성 → 권역 (provinceRegions)</text>
+  <text class="s" x="700" y="668">팀·라벨 담당 지역 (사용자 › 라벨·팀 관리)</text>
+  <text class="s" x="700" y="686">배정 규칙 "지역 매칭" (설정 › 기본 › Agent handoff)</text>
+  <text class="s" x="700" y="704">대화 연속성 · 위젯 공개 범위 · 재개 창</text>
+  <text class="s" x="700" y="722">동의 = HA 약관(host_terms) · 언어 vi / en</text>
+  <text class="s" x="700" y="740">embed secret (환경별 1개)</text>
+
+  <!-- ① login -->
+  <path class="eo" d="M196,150 L196,194" marker-end="url(#ao)"/>
+  <text class="lo" x="204" y="178">① 로그인</text>
+
+  <!-- ② request / ③ signed package -->
+  <path class="eo" d="M120,282 L120,328" marker-end="url(#ao)"/>
+  <text class="lo" x="128" y="310">② 패키지 요청</text>
+  <path class="eo" d="M276,330 L276,284" marker-end="url(#ao)"/>
+  <text class="lo" x="210" y="310" text-anchor="end"></text>
+  <text class="lo" x="284" y="310">③ 서명 패키지</text>
+
+  <!-- ④ identify -->
+  <path class="eb" d="M352,238 L426,238" marker-end="url(#ab)"/>
+  <text class="lb" x="358" y="230">④ identify</text>
+
+  <!-- ⑤ verify -->
+  <path class="eb" d="M648,214 L666,214 L666,132 L682,132" marker-end="url(#ab)"/>
+  <text class="lb" x="606" y="188">⑤ 검증</text>
+  <path class="eb" d="M882,172 L882,194" marker-end="url(#ab)"/>
+  <text class="lb" x="890" y="188">⑥ 등록</text>
+  <path class="eb" d="M882,292 L882,314" marker-end="url(#ab)"/>
+  <text class="lb" x="890" y="308">⑦ 계정 연결</text>
+
+  <!-- ⑧ chat -->
+  <path class="eb" d="M538,284 L538,314" marker-start="url(#ab)" marker-end="url(#ab)"/>
+  <text class="lb" x="546" y="304">⑧ 질문 · 답변</text>
+
+  <!-- ⑨ handoff -->
+  <path class="eb" d="M538,412 L538,456" marker-end="url(#ab)"/>
+  <text class="lb" x="546" y="438">⑨ 이관 / 상담원 연결</text>
+  <path class="eg" d="M882,412 L882,456" marker-end="url(#ag)"/>
+  <text class="lg" x="890" y="438">직전 상담원</text>
+
+  <!-- settings → router -->
+  <path class="eg" d="M882,604 L882,556" marker-end="url(#ag)"/>
+  <text class="lg" x="890" y="584">규칙 · 담당 지역</text>
+
+  <!-- ⑩ assign -->
+  <path class="eb" d="M538,554 L538,602" marker-end="url(#ab)"/>
+  <text class="lb" x="546" y="584">⑩ 배정</text>
+  <path class="eb" d="M354,678 L426,678" marker-start="url(#ab)" marker-end="url(#ab)"/>
+  <text class="lb" x="362" y="670">응대</text>
+
+  <!-- ops config (dashed) -->
+  <path class="eg" d="M352,740 L372,740 L372,772 L882,772 L882,754" marker-end="url(#ag)"/>
+  <text class="lg" x="560" y="766">Go2Joy 운영팀 결정 → 팀 담당 지역 · 배정 규칙 입력</text>
+</svg>

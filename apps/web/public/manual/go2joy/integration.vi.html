@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Yêu cầu tích hợp Go2Joy và danh sách công việc</title>
+<meta name="description" content="Sơ đồ kiến trúc tích hợp, yêu cầu gửi Go2Joy G1–G47 (ưu tiên, trạng thái), checklist của Go2Joy và SharpTalk, ảnh hưởng tiến độ, các quyết định">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>/* Layout: single reading column (~72ch) under a slim masthead; tables/diagrams/figures break wider inside their own scrollers. */
+:root {
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --fg: #1d1f24;
+  --muted: #5d6270;
+  --line: #e4e1dc;
+  --tint: #fff1e6;
+  --accent: #e8650a;
+  --accent-ink: #b44c04;
+  --ink2: #2b3a67;
+  --f-display: "Be Vietnam Pro", "Noto Sans KR", system-ui, sans-serif;
+  --f-body: "Noto Sans KR", "Be Vietnam Pro", system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+    --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+  --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15.5px; line-height: 1.72; word-break: keep-all; overflow-wrap: anywhere; }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.masthead { border-bottom: 1px solid var(--line); background: var(--surface); }
+.masthead .wrap { padding-block: 40px 28px; display: grid; gap: 6px; }
+.eyebrow { margin: 0; font-size: 12px; letter-spacing: .06em; color: var(--muted); }
+.brand { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; }
+.brand .g2j { color: var(--accent); }
+.domain { margin: 0; font-family: var(--f-mono); font-size: 13px; color: var(--accent-ink); }
+.doc { padding-block: 24px 64px; }
+.doc > * { max-width: 72ch; }
+.doc > .scroll, .doc > .diagram, .doc > figure, .doc > blockquote.lead { max-width: 100%; }
+h1 { display: none; }
+h2 { font-family: var(--f-display); font-size: 25px; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--fg); text-wrap: balance; }
+h3 { font-size: 18.5px; margin: 34px 0 8px; text-wrap: balance; }
+h4 { font-size: 16px; margin: 24px 0 6px; color: var(--ink2); }
+p, ul, ol { margin: 0 0 14px; }
+li { margin-bottom: 4px; }
+a { color: var(--accent-ink); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+strong { font-weight: 700; }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--tint); color: var(--accent-ink); padding: 1px 5px; border-radius: 4px; }
+.docref { color: var(--ink2); font-weight: 500; }
+hr { border: 0; height: 0; margin: 8px 0; }
+blockquote { margin: 0 0 16px; padding: 10px 16px; border-left: 3px solid var(--line); color: var(--muted); }
+blockquote p:last-child { margin-bottom: 0; }
+blockquote.lead { background: var(--tint); border-left: 0; border-radius: 10px; color: var(--fg); padding: 18px 22px; font-size: 16.5px; }
+.scroll { overflow-x: auto; margin: 0 0 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.55; background: var(--surface); font-variant-numeric: tabular-nums; }
+th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; min-width: 5.5em; }
+th { font-weight: 700; font-size: 12.5px; letter-spacing: .03em; color: var(--muted); border-bottom: 1.5px solid var(--fg); white-space: nowrap; }
+pre.code { margin: 0; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.5; }
+pre.code code { background: none; color: var(--fg); padding: 0; font-size: inherit; }
+.diagram { overflow-x: auto; margin: 6px 0 22px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.diagram pre.mermaid { margin: 0; display: flex; justify-content: center; background: none; }
+figure { margin: 8px 0 26px; display: grid; gap: 8px; justify-items: start; }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; max-height: 720px; width: auto; }
+figcaption { font-size: 13px; color: var(--muted); max-width: 72ch; }
+.foot { padding-block: 20px 40px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+@media (max-width: 520px) { body { font-size: 15px; } h2 { font-size: 21px; } .masthead .wrap { padding-block: 28px 20px; } }
+
+/* Diagrams are pre-rendered in mermaid's light theme: keep their card light in both themes. */
+.diagram { background: #fbfaf8; border-color: #e3ddd4; }
+.diagram svg { max-width: 100%; height: auto; }
+@media (max-width: 700px) { .diagram svg { min-width: 620px; } }
+/* Drawn SVG figures (fixed-size boxes): scroll sideways on phones rather than shrink the labels. */
+figure:has(> img[src$=".svg"]) { overflow-x: auto; justify-items: stretch; }
+figure > img[src$=".svg"] { width: 100%; max-height: none; background: #ffffff; }
+@media (max-width: 700px) { figure > img[src$=".svg"] { min-width: 760px; max-width: none; } }
+/* Labels were measured with browser defaults; inherit nothing that changes their size. */
+.diagram { font-size: 16px; line-height: normal; word-break: normal; overflow-wrap: normal; letter-spacing: normal; }
+.topnav { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 13px; }
+.topnav a { color: var(--accent-ink); text-decoration: none; }
+.topnav a:hover { text-decoration: underline; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-block; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--fg) !important; }
+.chip[aria-current="page"] { border-color: var(--accent); color: var(--accent-ink) !important; font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 18px 0 30px; }
+.card { display: grid; gap: 6px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); text-decoration: none; color: var(--fg); }
+.card:hover { border-color: var(--accent); }
+.card b { font-size: 16px; }
+.card span { font-size: 13px; color: var(--muted); }
+.langblock h2 { margin-top: 28px; }
+</style>
+</head>
+<body>
+<header class="masthead"><div class="wrap">
+  <nav class="topnav"><a href="./">← Tài liệu Go2Joy</a><span class="chips" aria-label="Tài liệu"><a class="chip" href="integration.vi.html" aria-current="page">Yêu cầu &amp; checklist</a><a class="chip" href="plan.vi.html">Kế hoạch dự án</a><a class="chip" href="kb-conflicts.vi.html">Phân loại xung đột tri thức</a><a class="chip" href="notion-setup.vi.html">Kết nối Notion</a></span><span class="chips" aria-label="Ngôn ngữ"><a class="chip" href="integration.ko.html" hreflang="ko">한국어</a><a class="chip" href="integration.en.html" hreflang="en">English</a><a class="chip" href="integration.vi.html" aria-current="page" hreflang="vi">Tiếng Việt</a></span></nav>
+  <p class="eyebrow">Tài liệu dành cho Go2Joy · 2026-10-22</p>
+  <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
+  <p class="domain">Yêu cầu tích hợp Go2Joy và danh sách công việc</p>
+</div></header>
+<main class="wrap doc"><h1 id="sharptalk--go2joy--cấu-trúc-kết-nối--yêu-cầu-gửi-go2joy--danh-sách-công-việc">SharpTalk × Go2Joy — Cấu trúc kết nối · Yêu cầu gửi Go2Joy · Danh sách công việc</h1>
+<blockquote class="lead">
+<p>Các chức năng giai đoạn 1 (#Talk-4-Hotel) phía SharpTalk đều đã chạy trên staging. Phần còn lại chủ yếu là <strong>những thứ Go2Joy cần cung cấp</strong> (máy chủ, chữ ký HA, danh sách nhóm phụ trách và nhân viên tư vấn, điều khoản).
+Tài liệu này gom các yêu cầu đang rải rác thành một danh sách, minh họa toàn bộ cấu trúc kết nối bằng hình vẽ, và chia việc của hai bên thành danh sách kiểm tra.</p>
+</blockquote>
+<div class="scroll"><table><thead><tr>
+<th>Hạng mục</th>
+<th>Nội dung</th>
+</tr>
+</thead><tbody><tr>
+<td>Người nhận</td>
+<td>Go2Joy PM · Nhóm phát triển HA (backend·FE) · Hạ tầng · Nhóm vận hành (CS) · Pháp chế</td>
+</tr>
+<tr>
+<td>Người gửi</td>
+<td>SharpTalk (Amoeba)</td>
+</tr>
+<tr>
+<td>Ngày / Phiên bản</td>
+<td>2026-10-22 · v1.0</td>
+</tr>
+<tr>
+<td>Tham khảo</td>
+<td>Cấu trúc kênh SharpTalk × Go2Joy (2026-10-21) · Chiến lược vận hành AI Go2Joy-SharpTalk Level 1·2·3 (2026-10-22) · Danh sách kiểm tra và lịch trình kết nối (2026-10-12) · Kế hoạch dự án PLN-261015 · Hướng dẫn kết nối HA v1.3 (gửi kèm)</td>
+</tr>
+</tbody></table></div>
+<h2 id="tóm-tắt">Tóm tắt</h2>
+<ul>
+<li><p><strong>Phạm vi giai đoạn 1 là B2B <code>#Talk-4-Hotel</code> (HA Support).</strong> SharpTalk đã triển khai lên staging và kiểm chứng: xác minh chữ ký, đăng ký khách sạn = khách hàng doanh nghiệp, hội thoại liên tục theo tài khoản khách sạn, phân công theo khu vực khách sạn → nhóm, thông báo cho phụ trách, đánh giá câu trả lời, bộ đánh giá chuẩn (golden set) (3.2).</p>
+</li>
+<li><p><strong>Điểm đang bị chặn là đầu vào từ Go2Joy.</strong></p>
+<ul>
+<li><strong>G1 Máy chủ vận hành·DNS</strong>: tính đến 10/22, <code>sharptalk.go2joy.vn</code> vẫn chưa có bản ghi DNS.</li>
+<li><strong>G10·G11 Chữ ký·nhúng widget HA</strong>: chưa được triển khai.</li>
+<li><strong>G20~G23 Nhóm·danh sách·tiêu chí nghiệp vụ·thứ tự xử lý khi vắng mặt</strong>: chưa nhận được.</li>
+<li><strong>G4·G5 Điều khoản·thông báo dữ liệu cá nhân</strong>: chưa nhận được.</li>
+</ul>
+<p>Trong kế hoạch dự án (PLN-261015), hạn của các mục này là 10/22; nếu quá hạn, mốc 10/31 sẽ đổi <strong>từ mở vận hành chính thức thành mở trên staging</strong> (mục 4).</p>
+</li>
+<li><p><strong>Giai đoạn 2 (B2C trước·sau đặt phòng, menu iframe trong HA, Webhook hoàn tất đặt phòng, tính phí theo điểm)</strong> hiện chỉ tổng hợp các mục cần thảo luận (2.5). Khi nhận được phản hồi, chúng tôi sẽ bắt đầu bằng một tài liệu yêu cầu riêng.</p>
+</li>
+<li><p><strong>Vận hành AI</strong>: hiện ở Level 1 (AI bên ngoài + RAG). Theo hợp đồng, Go2Joy chịu chi phí hạ tầng và AI API, nên <strong>khóa AI dùng cho vận hành phải đứng tên Go2Joy</strong> (G2). Trong 5 hạng mục cần chuẩn bị ở Level 1 thì đã có 4; chỉ cần bổ sung nhật ký AI theo từng tin nhắn (3.2 S30).</p>
+</li>
+</ul>
+<h2 id="1-toàn-bộ-cấu-trúc-kết-nối">1. Toàn bộ cấu trúc kết nối</h2>
+<figure><img src="img/integration-overview.vi.svg" alt="Toàn bộ cấu trúc kết nối SharpTalk × Go2Joy" loading="lazy"><figcaption>Hình 1. Ba tư vấn viên AI được chia theo người dùng và giai đoạn đặt phòng, trả lời trước; con người chỉ tham gia khi được chuyển tiếp. Cả ba dùng chung nền tảng (định danh·phân công·tri thức·cổng AI). Toàn bộ SharpTalk được cài trên máy chủ Go2Joy; thứ duy nhất đi ra bên ngoài là câu hỏi đã che thông tin và căn cứ tìm kiếm.</figcaption></figure>
+<div class="scroll"><table><thead><tr>
+<th>Loại</th>
+<th>Tư vấn viên AI</th>
+<th>Điểm vào</th>
+<th>Chuyển cho người</th>
+<th>Trạng thái</th>
+</tr>
+</thead><tbody><tr>
+<td>B2B</td>
+<td><code>#Talk-4-Hotel</code> (HA Support)</td>
+<td>Widget sau khi đăng nhập HA + identify có chữ ký</td>
+<td>Nhân viên tư vấn Go2Joy thuộc nhóm khu vực × nghiệp vụ (CS / Sales) theo vùng của khách sạn</td>
+<td><strong>SharpTalk đã triển khai xong</strong> · chờ chữ ký HA·danh sách phụ trách</td>
+</tr>
+<tr>
+<td>B2C trước đặt phòng</td>
+<td><code>Go2Joy-#Talk-4-BookingClient</code></td>
+<td>Ứng dụng·web Go2Joy (widget web / SDK di động)</td>
+<td>Nhân viên tư vấn Go2Joy thuộc nhóm khu vực × CS</td>
+<td>Đã có tư vấn viên AI·SDK di động · đang thảo luận tích hợp ứng dụng·công cụ đặt phòng</td>
+</tr>
+<tr>
+<td>B2C sau đặt phòng</td>
+<td><code>Hotel-#Talk-4-BookingClient</code></td>
+<td>Tự động chuyển khi có sự kiện hoàn tất đặt phòng</td>
+<td>Nhân viên khách sạn (menu HA #Talk) hoặc CS Go2Joy — cần xác nhận</td>
+<td>Giai đoạn 2 · chưa triển khai</td>
+</tr>
+</tbody></table></div>
+<h3 id="11-luồng-chi-tiết-b2b-talk-4-hotel">1.1 Luồng chi tiết B2B <code>#Talk-4-Hotel</code></h3>
+<figure><img src="img/integration-ha-flow.vi.svg" alt="Cấu trúc kết nối Go2Joy HA × SharpTalk" loading="lazy"><figcaption>Hình 2. ①<del>③ Máy chủ HA ký thông tin của nhân viên đang đăng nhập. ④</del>⑦ Widget chuyển gói này đi, SharpTalk xác minh, đăng ký khách sạn thành khách hàng doanh nghiệp rồi nối hội thoại vào tài khoản khách sạn. ⑧~⑩ AI trả lời trước; nếu không trả lời được hoặc nhân viên yêu cầu, hội thoại được phân công cho nhân viên tư vấn của nhóm phù hợp với vùng của khách sạn. Đặc tả nằm trong Hướng dẫn kết nối HA v1.3.</figcaption></figure>
+<h3 id="12-phân-định-trách-nhiệm">1.2 Phân định trách nhiệm</h3>
+<div class="scroll"><table><thead><tr>
+<th>Công việc</th>
+<th>Go2Joy</th>
+<th>SharpTalk (Amoeba)</th>
+</tr>
+</thead><tbody><tr>
+<td>Máy chủ·tên miền·TLS·sao lưu, tài khoản·chi phí AI API</td>
+<td><strong>Chịu trách nhiệm</strong> (theo hợp đồng sở hữu hạ tầng·chịu chi phí)</td>
+<td>Cung cấp cấu hình·quy trình</td>
+</tr>
+<tr>
+<td>Cài đặt·cập nhật SharpTalk</td>
+<td>Phê duyệt·môi trường chạy</td>
+<td><strong>Chịu trách nhiệm</strong> (hỗ trợ từ xa, cung cấp bản phát hành)</td>
+</tr>
+<tr>
+<td>Endpoint ký HA·nhúng widget</td>
+<td><strong>Chịu trách nhiệm</strong> (mã ký phía máy chủ)</td>
+<td>Hướng dẫn·vector kiểm thử·xác minh</td>
+</tr>
+<tr>
+<td>Điều khoản·thông báo dữ liệu cá nhân, đánh giá PDPL</td>
+<td><strong>Chịu trách nhiệm</strong> (pháp chế)</td>
+<td>Bản nháp nội dung thông báo, triển khai che thông tin</td>
+</tr>
+<tr>
+<td>Nhóm khu vực·tiêu chí nghiệp vụ·danh sách nhân viên tư vấn·giờ làm việc</td>
+<td><strong>Chịu trách nhiệm</strong> (quyết định)</td>
+<td>Cung cấp màn hình thiết lập·hỗ trợ nhập</td>
+</tr>
+<tr>
+<td>Nội dung tri thức (chính sách·hướng dẫn·FAQ)</td>
+<td><strong>Chịu trách nhiệm</strong> (chốt nội dung)</td>
+<td>Công cụ chuyển đổi·đăng ký·kiểm tra xung đột</td>
+</tr>
+<tr>
+<td>Thiết lập AI·đo chất lượng·tinh chỉnh</td>
+<td>Xem xét</td>
+<td><strong>Chịu trách nhiệm</strong></td>
+</tr>
+<tr>
+<td>Xử lý sự cố cấp 1</td>
+<td>Hạ tầng</td>
+<td>Ứng dụng</td>
+</tr>
+</tbody></table></div>
+<h2 id="2-yêu-cầu-gửi-go2joy">2. Yêu cầu gửi Go2Joy</h2>
+<p>Mức ưu tiên như sau.</p>
+<ul>
+<li><strong>P0</strong>: Thiếu thì không thể mở vận hành giai đoạn 1.</li>
+<li><strong>P1</strong>: Cần cho chất lượng vận hành giai đoạn 1.</li>
+<li><strong>P2</strong>: Cần từ giai đoạn 2 trở đi.</li>
+</ul>
+<p>Trạng thái là theo kiểm tra của SharpTalk ngày 2026-10-22.</p>
+<h3 id="21-hạ-tầnghợp-đồngdữ-liệu-cá-nhân">2.1 Hạ tầng·hợp đồng·dữ liệu cá nhân</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Yêu cầu</th>
+<th>Chi tiết</th>
+<th>Phụ trách</th>
+<th>Ưu tiên</th>
+<th>Trạng thái</th>
+</tr>
+</thead><tbody><tr>
+<td>G1</td>
+<td><strong>Máy chủ vận hành + SSH + DNS</strong></td>
+<td><code>sharptalk.go2joy.vn</code>, TLS, region Việt Nam. Cấu hình: thử nghiệm 4 vCPU / 8 GB / 80 GB, vận hành từ 8 vCPU / 16 GB / 200 GB trở lên. Kho lưu sao lưu mỗi ngày 1 lần</td>
+<td>Hạ tầng</td>
+<td>P0</td>
+<td><strong>Chưa nhận</strong> — 10/22 chưa có bản ghi DNS</td>
+</tr>
+<tr>
+<td>G2</td>
+<td><strong>Tài khoản·khóa AI API (đứng tên·thanh toán bởi Go2Joy)</strong></td>
+<td>LLM trả lời (khuyến nghị Anthropic Claude, có thể dùng OpenAI) và embedding (Voyage). Người nhận thông báo về hạn mức sử dụng hằng tháng và khi sắp hết</td>
+<td>Hạ tầng·Tài chính</td>
+<td>P0</td>
+<td>Chưa nhận khóa vận hành</td>
+</tr>
+<tr>
+<td>G3</td>
+<td>Tài khoản gửi mail</td>
+<td>SMTP của Go2Joy để gửi mail thông báo cho phụ trách</td>
+<td>Hạ tầng</td>
+<td>P1</td>
+<td>Chưa nhận</td>
+</tr>
+<tr>
+<td>G4</td>
+<td><strong>Xác nhận dữ liệu cá nhân·PDPL</strong></td>
+<td>Thông báo chuyển dữ liệu ra nước ngoài (bên nhận xử lý Anthropic·Voyage, khu vực xử lý), có cần đánh giá tác động (TIA) không, phạm vi che thông tin, thời hạn lưu hội thoại (dự thảo 180 ngày), quy trình thông báo khi có sự cố rò rỉ</td>
+<td>Pháp chế</td>
+<td>P0</td>
+<td>Chưa phản hồi</td>
+</tr>
+<tr>
+<td>G5</td>
+<td><strong>URL + phiên bản điều khoản HA, nội dung thông báo sử dụng AI</strong></td>
+<td>Căn cứ để ghi nhận đồng ý điều khoản HA thành đồng ý trên widget (bỏ banner đồng ý)</td>
+<td>Pháp chế·HA</td>
+<td>P0</td>
+<td>Chưa nhận</td>
+</tr>
+<tr>
+<td>G6</td>
+<td>Xác nhận đầu mối·kênh liên lạc</td>
+<td>PM, backend·FE HA, hạ tầng, vận hành (trưởng CS), pháp chế, kênh kiểm tra hằng ngày (yêu cầu R13 ngày 10/12)</td>
+<td>PM</td>
+<td>P0</td>
+<td>Cần xác nhận</td>
+</tr>
+<tr>
+<td>G7</td>
+<td>Điều khoản hợp đồng dịch vụ</td>
+<td>Quyền sở hữu kết quả huấn luyện: câu trả lời mẫu là dữ liệu của Go2Joy; Jev·pipeline huấn luyện·mô hình nền đa dụng là IP của Amoeba; quy định quyền sở hữu trọng số fine-tune tạo từ dữ liệu Go2Joy. Cách thu hồi phần chi phí tiết kiệm được, bên vận hành Level 3 (MLOps)</td>
+<td>Ban điều hành·Pháp chế</td>
+<td>P2</td>
+<td>Đang thảo luận</td>
+</tr>
+</tbody></table></div>
+<h3 id="22-kết-nối-ha-talk-4-hotel--đặc-tả-trong-hướng-dẫn-v13">2.2 Kết nối HA (<code>#Talk-4-Hotel</code>) — đặc tả trong hướng dẫn v1.3</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Yêu cầu</th>
+<th>Chi tiết</th>
+<th>Phụ trách</th>
+<th>Ưu tiên</th>
+<th>Trạng thái</th>
+</tr>
+</thead><tbody><tr>
+<td>G10</td>
+<td><strong>Endpoint ký phía máy chủ HA</strong></td>
+<td><code>userId = "ha:" + userSn</code>. 5 thuộc tính <code>hotel_id</code>·<code>hotel_name</code>·<code>province</code>·<code>region</code> (mã vùng)·<code>role</code>, chuẩn hóa NFC rồi ký HMAC-SHA256. <strong>Gửi lại kết quả vector kiểm thử T1~T5</strong> (hướng dẫn 5.2·5.4)</td>
+<td>Backend HA</td>
+<td>P0</td>
+<td>Chưa triển khai</td>
+</tr>
+<tr>
+<td>G11</td>
+<td><strong>Nhúng widget ở FE HA</strong></td>
+<td>embed.js + <code>locale</code>. Gọi <code>identify</code> khi đã xác nhận đăng nhập và khi đổi khách sạn, gọi <code>logout</code> khi đăng xuất. Cho phép tên miền SharpTalk trong CSP (<code>script-src</code>·<code>frame-src</code>·<code>connect-src</code>) và CORS (hướng dẫn 5.3)</td>
+<td>FE HA</td>
+<td>P0</td>
+<td>Chưa triển khai</td>
+</tr>
+<tr>
+<td>G12</td>
+<td><strong>Phương án khóa ký</strong></td>
+<td>A: embed secret do SharpTalk cấp (khuyến nghị, đã cấp cho staging) / B: dùng chung client secret của Go2Joy</td>
+<td>Backend HA</td>
+<td>P0</td>
+<td>Chờ quyết định</td>
+</tr>
+<tr>
+<td>G13</td>
+<td>Tài khoản kiểm thử UAT</td>
+<td>1 tài khoản <code>Quản lý</code> (nhiều khách sạn) + 1 tài khoản <code>Lễ tân</code> (một khách sạn). Gồm ít nhất 2 khách sạn ở các vùng khác nhau</td>
+<td>HA</td>
+<td>P0</td>
+<td>Cần xác nhận</td>
+</tr>
+<tr>
+<td>G14</td>
+<td>Phạm vi hiển thị trên widget (Q2)</td>
+<td>Có hiển thị hội thoại của nhân viên khác cùng khách sạn trên widget không. <strong>Mặc định hiện tại: hội thoại của chính mình + số lượng "n câu hỏi trước đây của khách sạn này".</strong> Nhân viên tư vấn và AI thấy toàn bộ của khách sạn</td>
+<td>Vận hành</td>
+<td>P1</td>
+<td>Đã áp dụng mặc định, chờ xác nhận</td>
+</tr>
+<tr>
+<td>G15</td>
+<td>Khung thời gian nối lại (Q3)</td>
+<td>Khoảng thời gian sau khi hội thoại kết thúc mà cùng nhân viên tư vấn được ưu tiên phân công. <strong>Mặc định hiện tại 24 giờ</strong></td>
+<td>Vận hành</td>
+<td>P1</td>
+<td>Đã áp dụng mặc định, chờ xác nhận</td>
+</tr>
+<tr>
+<td>G16</td>
+<td>Thời hạn hiệu lực chữ ký (<code>ts</code>)</td>
+<td>Chống dùng lại gói. Nếu áp dụng, hai bên cùng đổi đặc tả (hướng dẫn mục 7)</td>
+<td>Backend HA</td>
+<td>P1</td>
+<td>Chờ quyết định</td>
+</tr>
+<tr>
+<td>G17</td>
+<td>Khác biệt theo vai trò (Q5) · địa chỉ·quận/huyện khách sạn (Q6)</td>
+<td>Có cần phản hồi khác nhau giữa <code>Quản lý</code> / <code>Lễ tân</code> không. Địa chỉ (<code>settingList.address</code>)·quận/huyện (<code>districtName</code>) thuộc giai đoạn 3</td>
+<td>Vận hành</td>
+<td>P2</td>
+<td>Chờ quyết định</td>
+</tr>
+</tbody></table></div>
+<h3 id="23-phân-côngvận-hành-nhóm-vận-hành-go2joy">2.3 Phân công·vận hành (Nhóm vận hành Go2Joy)</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Yêu cầu</th>
+<th>Chi tiết</th>
+<th>Phụ trách</th>
+<th>Ưu tiên</th>
+<th>Trạng thái</th>
+</tr>
+</thead><tbody><tr>
+<td>G20</td>
+<td><strong>Ánh xạ vùng → nhóm, đơn vị khu vực phân công</strong></td>
+<td>Nhóm được chia theo đơn vị nào: vùng (4)·tỉnh·quận/huyện. Đề xuất: <code>north</code>·<code>north_center</code> → nhóm Hà Nội, <code>south</code>·<code>south_center</code> → nhóm Hồ Chí Minh. Đà Nẵng·Tây Nguyên (13 tỉnh <code>south_center</code>) cần xác nhận</td>
+<td>Vận hành</td>
+<td>P0</td>
+<td>Chưa phản hồi</td>
+</tr>
+<tr>
+<td>G21</td>
+<td><strong>Danh sách nhân viên tư vấn</strong></td>
+<td>Họ tên · email · nhóm · nhãn nghiệp vụ (CS / Sales) · cấp bậc. Khi nhận được, chúng tôi cấp tài khoản bảng điều khiển</td>
+<td>Vận hành</td>
+<td>P0</td>
+<td>Chưa nhận</td>
+</tr>
+<tr>
+<td>G22</td>
+<td><strong>Tiêu chí câu hỏi Sales</strong></td>
+<td>Câu hỏi nào là Sales (ví dụ: đối soát·hợp đồng·hoa hồng). Từ khóa và 5~10 câu hỏi mẫu. Nếu không có, mọi câu hỏi sẽ đi vào CS</td>
+<td>Vận hành</td>
+<td>P0</td>
+<td>Chưa nhận</td>
+</tr>
+<tr>
+<td>G23</td>
+<td><strong>Giờ làm việc·thứ tự xử lý khi vắng mặt·phụ trách dự phòng</strong></td>
+<td>Đề xuất: phụ trách thay thế → hàng chờ của nhóm → tin nhắn ngoài giờ. Người nhận khi không biết vùng (chưa chọn khách sạn)</td>
+<td>Vận hành</td>
+<td>P0</td>
+<td>Chưa phản hồi</td>
+</tr>
+<tr>
+<td>G24</td>
+<td>Zalo OA + phê duyệt mẫu ZNS</td>
+<td>Khi muốn gửi thông báo cho nhân viên tư vấn qua cả Zalo</td>
+<td>Vận hành</td>
+<td>P1</td>
+<td>Chưa nhận</td>
+</tr>
+<tr>
+<td>G25</td>
+<td>Tên tỉnh mới trong bảng khu vực</td>
+<td>Gửi bảng mới khi bắt đầu dùng tên sau sáp nhập 2025-07 (63 → 34 tỉnh)</td>
+<td>Vận hành</td>
+<td>P1</td>
+<td>Đang chờ</td>
+</tr>
+<tr>
+<td>G26</td>
+<td>Ngôn ngữ hỗ trợ</td>
+<td>Có thêm ngôn ngữ ngoài tiếng Việt·tiếng Anh không</td>
+<td>Vận hành</td>
+<td>P2</td>
+<td>Chờ quyết định</td>
+</tr>
+</tbody></table></div>
+<blockquote>
+<p>Tài khoản master của Go2Joy cũng có thể tự nhập khu vực phụ trách của nhóm và quy tắc phân công trên bảng điều khiển SharpTalk. Vị trí: <strong>Người dùng › Quản lý nhãn·nhóm › Khu vực phụ trách</strong> và <strong>Cài đặt › Cơ bản › Agent handoff › Khớp khu vực</strong>. Khi ánh xạ vùng → nhóm thay đổi, chỉ cần sửa khu vực phụ trách của nhóm, quy tắc giữ nguyên.</p>
+</blockquote>
+<h3 id="24-tri-thứcchất-lượng-ai">2.4 Tri thức·chất lượng AI</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Yêu cầu</th>
+<th>Chi tiết</th>
+<th>Phụ trách</th>
+<th>Ưu tiên</th>
+<th>Trạng thái</th>
+</tr>
+</thead><tbody><tr>
+<td>G30</td>
+<td><strong>Đăng ký lại nguồn tri thức Notion</strong></td>
+<td>Ngày 10/21 nguồn và token bị xóa cùng lúc nên hướng dẫn HA (#2501)·FAQ (#3599) đang ở trạng thái không hoạt động. Kết nối lại cùng trang sẽ tự khôi phục (bản sửa đã triển khai)</td>
+<td>Vận hành</td>
+<td>P0</td>
+<td>Đang chờ</td>
+</tr>
+<tr>
+<td>G31</td>
+<td>Quyết định chỉnh lý xung đột tri thức</td>
+<td>78 cặp phân loại ngày 10/15: 3 cần sửa thật, 3 tài liệu chính sách có 2 bản, 32 FAQ trùng lặp. Quyết định giữ bên nào</td>
+<td>Vận hành</td>
+<td>P1</td>
+<td>Chờ quyết định</td>
+</tr>
+<tr>
+<td>G32</td>
+<td>Rà soát bộ đánh giá chuẩn</td>
+<td>Xác nhận đáp án 44 câu của <code>#Talk-4-Hotel</code>. Cung cấp câu hỏi tiêu biểu khi xây bộ cho tư vấn viên AI trước đặt phòng. Đây là chuẩn hồi quy khi đổi engine·chuyển level</td>
+<td>Vận hành</td>
+<td>P1</td>
+<td>Chờ rà soát</td>
+</tr>
+<tr>
+<td>G33</td>
+<td>Nhãn chất lượng trong vận hành</td>
+<td>Nhân viên tư vấn đánh giá câu trả lời AI là đúng/sai và chấp nhận câu trả lời đã sửa thành tri thức. Đây là dữ liệu cho cổng chuyển sang Level 2 (câu trả lời mẫu)</td>
+<td>Vận hành</td>
+<td>P1</td>
+<td>Sau khi mở</td>
+</tr>
+<tr>
+<td>G34</td>
+<td>Partner API (giai đoạn sau)</td>
+<td>Client key vận hành, whitelist IP máy chủ SharpTalk, phạm vi Hotel Feed (toàn bộ khách sạn HA), sửa hành vi trả về tất cả khi không có khách sạn khớp, môi trường kiểm thử có xác minh chữ ký (hướng dẫn 7.1)</td>
+<td>Backend HA</td>
+<td>P2</td>
+<td>Mới nhận khóa thử (10/21)</td>
+</tr>
+</tbody></table></div>
+<h3 id="25-giai-đoạn-2--b2c-trướcsau-đặt-phòng-các-mục-cần-thảo-luận">2.5 Giai đoạn 2 — B2C trước·sau đặt phòng (các mục cần thảo luận)</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Yêu cầu</th>
+<th>Chi tiết</th>
+<th>Ưu tiên</th>
+</tr>
+</thead><tbody><tr>
+<td>G40</td>
+<td>Webhook sự kiện hoàn tất đặt phòng</td>
+<td>Thời điểm chuyển tiếp. <code>bookingSn</code>·<code>hotelSn</code>·định danh khách·chữ ký, liên kết với phiên hội thoại trước đó, mỗi lượt đặt (khách sạn) một luồng hội thoại riêng khi đặt nhiều khách sạn</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G41</td>
+<td>Nhúng vào ứng dụng·web Go2Joy</td>
+<td>Widget web / Android SDK (đã kiểm chứng trên máy thật) / iOS. Định danh có chữ ký cho khách đã đăng nhập (tách khỏi nhân viên HA bằng tiền tố <code>userId</code>), API công cụ tra cứu đặt phòng</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G42</td>
+<td>Tiêu chí khu vực của khách trước đặt phòng</td>
+<td>Là khu vực của khách sạn đang tìm·đặt, hay vị trí của khách</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G43</td>
+<td>Chuyển tiếp·phạm vi·lưu trữ sau đặt phòng</td>
+<td>Đối tượng nhận khi chuyển cho người (nhân viên khách sạn / CS Go2Joy / tiêu chí phân chia), có chuyển đổi·hủy·hoàn tiền về Go2Joy không, thời điểm kết thúc hội thoại sau check-out·thời hạn lưu</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G44</td>
+<td>Menu HA (iframe)</td>
+<td>Thêm menu SharpTalk vào HA (đăng ký·persona·tri thức·Inbox), <strong>token SSO ngắn hạn</strong> do máy chủ cấp (không chuyển nguyên token HA), liên kết quyền (<code>Quản lý</code> thiết lập / <code>Lễ tân</code> Inbox)</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G45</td>
+<td>Vận hành tư vấn viên lễ tân</td>
+<td>Nội dung mẫu chung (Go2Joy quản lý), quy trình duyệt đăng ký, thứ tự onboarding khoảng 5.000 khách sạn</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G46</td>
+<td>Tính phí</td>
+<td>Tỷ lệ quy đổi token → điểm, xử lý khi hết điểm (dừng / chuyển cho nhân viên), vị trí màn hình nạp·số dư</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G47</td>
+<td>Tư vấn qua kênh Zalo</td>
+<td>Phạm vi nhận và trả lời hội thoại Zalo trên bảng điều khiển</td>
+<td>P2</td>
+</tr>
+</tbody></table></div>
+<blockquote>
+<p>Trong yêu cầu ngày 10/12 (R1~R16), các mục không được đưa lại vào tài liệu này (truy cập staging, danh sách API hiện có, mẫu dữ liệu vận hành, khách sạn thí điểm, quy trình triển khai·xử lý sự cố) sẽ được xác nhận đã nhận hay chưa trong cuộc họp tới.</p>
+</blockquote>
+<h2 id="3-danh-sách-công-việc">3. Danh sách công việc</h2>
+<h3 id="31-go2joy">3.1 Go2Joy</h3>
+<p><strong>Trước khi mở vận hành giai đoạn 1 (P0)</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> G1 Máy chủ vận hành·SSH·DNS <code>sharptalk.go2joy.vn</code>·TLS·kho sao lưu</li>
+<li><input disabled="" type="checkbox"> G2 Khóa AI API cho vận hành (đứng tên Go2Joy) — LLM trả lời + embedding</li>
+<li><input disabled="" type="checkbox"> G4 Xác nhận PDPL (thông báo chuyển dữ liệu ra nước ngoài·TIA·thời hạn lưu) và G5 URL·phiên bản điều khoản HA·nội dung thông báo AI</li>
+<li><input disabled="" type="checkbox"> G6 Xác nhận đầu mối·kênh kiểm tra hằng ngày</li>
+<li><input disabled="" type="checkbox"> G10 Endpoint ký phía máy chủ HA (đặc tả v1.2) + gửi lại kết quả T1~T5</li>
+<li><input disabled="" type="checkbox"> G11 Nhúng widget ở FE HA (identify / gọi lại khi đổi khách sạn / logout, CSP·CORS)</li>
+<li><input disabled="" type="checkbox"> G12 Quyết định phương án khóa ký (khuyến nghị A)</li>
+<li><input disabled="" type="checkbox"> G13 Tài khoản kiểm thử UAT (<code>Quản lý</code> · <code>Lễ tân</code>, gồm khách sạn ở các vùng khác nhau)</li>
+<li><input disabled="" type="checkbox"> G20 Ánh xạ vùng → nhóm và đơn vị khu vực phân công</li>
+<li><input disabled="" type="checkbox"> G21 Danh sách nhân viên tư vấn (họ tên·email·nhóm·nhãn nghiệp vụ·cấp bậc)</li>
+<li><input disabled="" type="checkbox"> G22 Tiêu chí câu hỏi Sales</li>
+<li><input disabled="" type="checkbox"> G23 Giờ làm việc·thứ tự xử lý khi vắng mặt·phụ trách dự phòng</li>
+<li><input disabled="" type="checkbox"> G30 Đăng ký lại nguồn tri thức Notion</li>
+</ul>
+<p><strong>UAT (hướng dẫn v1.3 §8.2)</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Chưa đăng nhập · đăng nhập · đăng xuất · chưa chọn khách sạn · sửa giá trị mà không ký lại</li>
+<li><input disabled="" type="checkbox"> Đăng ký khách hàng doanh nghiệp · cùng nhân viên đăng nhập lại · nhân viên khác cùng khách sạn</li>
+<li><input disabled="" type="checkbox"> Hỏi lại sau khi kết thúc hội thoại · máy tính khác · ngày hôm sau</li>
+<li><input disabled="" type="checkbox"> AI chuyển tiếp · "Kết nối nhân viên tư vấn" · kết quả phân công cho 4 khách sạn ở 4 vùng</li>
+<li><input disabled="" type="checkbox"> Phê duyệt UAT và phê duyệt mở vận hành</li>
+</ul>
+<p><strong>Chất lượng vận hành (P1)</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Xác nhận G14 phạm vi hiển thị widget · G15 khung thời gian nối lại · G16 thời hạn hiệu lực chữ ký</li>
+<li><input disabled="" type="checkbox"> G24 Zalo OA · G25 tên tỉnh mới trong bảng khu vực</li>
+<li><input disabled="" type="checkbox"> G31 Quyết định chỉnh lý xung đột tri thức · G32 rà soát bộ đánh giá chuẩn · G33 vận hành đánh giá của nhân viên tư vấn·chấp nhận câu trả lời</li>
+</ul>
+<p><strong>Thảo luận giai đoạn 2 (P2)</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> Phản hồi G40~G47 (Webhook hoàn tất đặt phòng, nhúng ứng dụng·web, tiêu chí khu vực, chuyển tiếp·phạm vi·lưu trữ sau đặt phòng, menu HA iframe·SSO, vận hành lễ tân, tính phí, Zalo)</li>
+<li><input disabled="" type="checkbox"> G7 Điều khoản hợp đồng dịch vụ · G17 khác biệt vai trò·địa chỉ·quận/huyện · G26 ngôn ngữ · G34 Partner API</li>
+</ul>
+<h3 id="32-sharptalk">3.2 SharpTalk</h3>
+<p><strong>Đã xong (đang chạy trên tenant go2joy ở staging)</strong></p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> S1 Xác minh identify có chữ ký, phiên 'đã xác minh', chế độ đồng ý theo điều khoản HA, tên nhân viên trên tiêu đề (#637 · #642 · #656)</li>
+<li><input checked="" disabled="" type="checkbox"> S2 Quy tắc phân công: khu vực × nghiệp vụ, hai điểm kích hoạt là AI chuyển tiếp và "Kết nối nhân viên tư vấn" (#638)</li>
+<li><input checked="" disabled="" type="checkbox"> S3 Mail cá nhân cho phụ trách · nhắc lại khi chưa nhận (#639)</li>
+<li><input checked="" disabled="" type="checkbox"> S4 Đánh giá độ chính xác câu trả lời (#640), chấm tự động bộ chuẩn HA 44 câu (#611)</li>
+<li><input checked="" disabled="" type="checkbox"> S5 Thiết kế widget, khảo sát mức độ hài lòng, cố định ngôn ngữ vi / en (#650 ~ #662)</li>
+<li><input checked="" disabled="" type="checkbox"> S6 Chuẩn hóa mã vùng·NFC, bổ sung vùng từ 63 tỉnh trong bảng khu vực, khu vực phụ trách theo nhóm·nhãn, quy tắc phân công "Khớp khu vực" (#687)</li>
+<li><input checked="" disabled="" type="checkbox"> S7 Đăng ký khách hàng doanh nghiệp (khách sạn) · liên hệ (nhân viên), phân biệt B2B / B2C, hội thoại liên tục theo tài khoản khách sạn, ưu tiên nhân viên tư vấn trước đó, tóm tắt hội thoại trước cho AI (#689)</li>
+<li><input checked="" disabled="" type="checkbox"> S8 Cập nhật schema dùng cho cài đặt máy chủ mới (#692) — chuẩn bị cài đặt trên máy chủ Go2Joy</li>
+<li><input checked="" disabled="" type="checkbox"> S9 Hướng dẫn kết nối HA v1.3, tài liệu này</li>
+</ul>
+<p><strong>Khi nhận được đầu vào từ Go2Joy</strong></p>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Công việc</th>
+<th>Đầu vào cần có</th>
+<th>Thời gian (dự kiến)</th>
+</tr>
+</thead><tbody><tr>
+<td>S20</td>
+<td>Gửi embed secret của staging qua kênh bảo mật</td>
+<td>G12 (A)</td>
+<td>Trong ngày</td>
+</tr>
+<tr>
+<td>S21</td>
+<td>Cấp tài khoản bảng điều khiển cho nhân viên tư vấn, gán nhóm·nhãn nghiệp vụ</td>
+<td>G21</td>
+<td>Trong ngày</td>
+</tr>
+<tr>
+<td>S22</td>
+<td>Nhập khu vực phụ trách của nhóm·quy tắc "Khớp khu vực"·từ khóa Sales·dự phòng·giờ làm việc, kiểm tra bằng xem trước quy tắc</td>
+<td>G20 · G22 · G23</td>
+<td>Nửa ngày</td>
+</tr>
+<tr>
+<td>S23</td>
+<td>Nhập URL·phiên bản điều khoản HA (cách đồng ý đã là điều khoản HA)</td>
+<td>G5</td>
+<td>Trong ngày</td>
+</tr>
+<tr>
+<td>S24</td>
+<td><strong>Cài đặt trên máy chủ Go2Joy</strong> (profile VN), chuyển tri thức·thiết lập từ staging (bảng khu vực·hội thoại liên tục·quy tắc), lập chỉ mục lại, kết nối cổng triển khai bằng bộ chuẩn</td>
+<td>G1 · G2 · G3</td>
+<td>4 ngày</td>
+</tr>
+<tr>
+<td>S25</td>
+<td>Xác nhận đồng bộ lại Notion, thực hiện chỉnh lý xung đột tri thức</td>
+<td>G30 · G31</td>
+<td>1~2 ngày</td>
+</tr>
+<tr>
+<td>S26</td>
+<td>Thông báo Zalo cho phụ trách</td>
+<td>G24</td>
+<td>4 ngày</td>
+</tr>
+<tr>
+<td>S27</td>
+<td>Cùng kiểm tra UAT → báo cáo kết quả kiểm thử</td>
+<td>G10 · G11 · G13</td>
+<td>3 ngày</td>
+</tr>
+</tbody></table></div>
+<p><strong>SharpTalk tiếp tục thực hiện</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> S28 Hiển thị lý do chuyển tiếp trên bảng điều khiển, kiểm tra xung đột trước khi chấp nhận tri thức (PLN-261015 D5 · D6)</li>
+<li><input disabled="" type="checkbox"> S29 Thời hạn hiệu lực chữ ký (<code>ts</code>), nhận địa chỉ·quận/huyện khách sạn — sau khi quyết định G16 · G17</li>
+<li><input disabled="" type="checkbox"> S30 <strong>Bổ sung AI Level 1</strong>: nhật ký AI theo từng tin nhắn (mô hình · token · độ trễ · câu hỏi đã viết lại · kết quả). Hiện chỉ có tổng hợp sử dụng theo ngày. Khi nhận được định dạng mã đặt phòng của Go2Joy, chúng tôi sẽ thêm vào phần che thông tin. Đồng thời mở rộng bộ chuẩn cho từng tư vấn viên AI</li>
+<li><input disabled="" type="checkbox"> S31 Tài liệu yêu cầu giai đoạn 2 (tích hợp B2C trước đặt phòng, mẫu tư vấn viên lễ tân, menu HA iframe·SSO, nhận Webhook đặt phòng, tính phí theo điểm) — sau khi có phản hồi mục 2.5</li>
+</ul>
+<h3 id="33-vận-hành-ai-level-1--đối-chiếu-điều-kiện-tiên-quyết">3.3 Vận hành AI Level 1 — đối chiếu điều kiện tiên quyết</h3>
+<p>Chiến lược vận hành AI quy định cần chuẩn bị 5 hạng mục sau ở Level 1 trước khi chuyển sang Level 2·3.</p>
+<div class="scroll"><table><thead><tr>
+<th>Điều kiện tiên quyết</th>
+<th>SharpTalk hiện tại</th>
+<th>Việc còn lại</th>
+</tr>
+</thead><tbody><tr>
+<td>① Port LLM · embedding</td>
+<td>Đã có — adapter engine (Anthropic · OpenAI · Voyage · stub), chỉ định engine theo tenant. Đổi engine chỉ là thay đổi thiết lập</td>
+<td>—</td>
+</tr>
+<tr>
+<td>② Schema nhật ký hội thoại</td>
+<td>Một phần — nội dung gốc·ngôn ngữ·ý định·căn cứ tìm kiếm của tin nhắn, kết quả hội thoại (giải quyết·chuyển tiếp), lượng token theo ngày</td>
+<td>Mô hình · token · độ trễ · câu hỏi đã viết lại theo từng tin nhắn (S30)</td>
+</tr>
+<tr>
+<td>③ Nhãn chất lượng</td>
+<td>Đã có — đánh giá độ chính xác câu trả lời, có chuyển tiếp hay không, câu trả lời của nhân viên tư vấn → chấp nhận thành tri thức</td>
+<td>Tích lũy trong vận hành (G33)</td>
+</tr>
+<tr>
+<td>④ Che thông tin cá nhân (PII)</td>
+<td>Đã có — che điện thoại · email · mã đơn hàng v.v. trước khi gửi cho AI và trong nhật ký</td>
+<td>Thêm định dạng mã đặt phòng Go2Joy (S30)</td>
+</tr>
+<tr>
+<td>⑤ Bộ đánh giá chuẩn</td>
+<td>Đã có — chấm tự động 44 câu của <code>#Talk-4-Hotel</code></td>
+<td>Go2Joy rà soát (G32), mở rộng sang tư vấn viên AI khác</td>
+</tr>
+</tbody></table></div>
+<h2 id="4-ảnh-hưởng-đến-lịch-trình">4. Ảnh hưởng đến lịch trình</h2>
+<p>Quyết định trong PLN-261015 như sau: <strong>nếu các mục tiên quyết của Go2Joy (máy chủ·DNS, nhúng·ký HA, danh sách phụ trách) chưa sẵn sàng trước 10/22 thì mốc 10/31 được thay bằng "mở trên staging"</strong>. Tính đến 10/22, chúng tôi chưa nhận được các mục này.</p>
+<div class="scroll"><table><thead><tr>
+<th>Lộ trình</th>
+<th>Điều kiện</th>
+<th>Kết quả</th>
+</tr>
+</thead><tbody><tr>
+<td>Mở trên staging (10/31)</td>
+<td>G10 · G11 · G13 · G20 ~ G23</td>
+<td>HA UAT trỏ tới staging SharpTalk và nhân viên tư vấn thật trả lời. Dữ liệu vận hành vẫn nằm ngoài máy chủ Go2Joy (trên staging)</td>
+</tr>
+<tr>
+<td>Mở vận hành</td>
+<td>Các điều kiện trên + G1 · G2 · G4 · G5</td>
+<td>Cài đặt trên máy chủ Go2Joy (S24, 4 ngày) → UAT (S27, 3 ngày) → mở. <strong>Khoảng 7 ngày làm việc kể từ ngày nhận G1</strong></td>
+</tr>
+</tbody></table></div>
+<h2 id="5-các-quyết-định-cần-đưa-ra--tóm-tắt-cho-cuộc-họp">5. Các quyết định cần đưa ra — tóm tắt cho cuộc họp</h2>
+<div class="scroll"><table><thead><tr>
+<th>Quyết định</th>
+<th>Đề xuất của SharpTalk / mặc định hiện tại</th>
+<th>Liên quan</th>
+</tr>
+</thead><tbody><tr>
+<td>Khóa ký</td>
+<td>A — embed secret do SharpTalk cấp</td>
+<td>G12</td>
+</tr>
+<tr>
+<td>Vùng → nhóm</td>
+<td><code>north</code>·<code>north_center</code> → Hà Nội, <code>south</code>·<code>south_center</code> → Hồ Chí Minh</td>
+<td>G20</td>
+</tr>
+<tr>
+<td>Thứ tự xử lý khi vắng mặt</td>
+<td>Phụ trách thay thế → hàng chờ của nhóm → tin nhắn ngoài giờ</td>
+<td>G23</td>
+</tr>
+<tr>
+<td>Phạm vi hiển thị widget</td>
+<td>Hội thoại của chính mình + số câu hỏi trước đây của khách sạn (đã áp dụng)</td>
+<td>G14</td>
+</tr>
+<tr>
+<td>Khung thời gian nối lại</td>
+<td>24 giờ (đã áp dụng)</td>
+<td>G15</td>
+</tr>
+<tr>
+<td>Thời hạn hiệu lực chữ ký</td>
+<td>Khuyến nghị áp dụng</td>
+<td>G16</td>
+</tr>
+<tr>
+<td>Đối tượng chuyển tiếp sau đặt phòng</td>
+<td>Trước tiên là nhân viên khách sạn, nếu không phản hồi thì CS Go2Joy (đề xuất)</td>
+<td>G43</td>
+</tr>
+<tr>
+<td>Quyền sở hữu kết quả huấn luyện</td>
+<td>Câu trả lời mẫu = Go2Joy, Jev·pipeline·mô hình đa dụng = Amoeba, trọng số fine-tune ghi rõ trong hợp đồng</td>
+<td>G7</td>
+</tr>
+</tbody></table></div>
+</main>
+<footer class="wrap foot">Amoeba(BitBiz) · SharpTalk for Go2Joy</footer>
+</body>
+</html>

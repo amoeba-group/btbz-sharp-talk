@@ -1,0 +1,191 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 920" width="1120" height="920" font-family="'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <style>
+      .t  { font-size: 14px; font-weight: 700; fill: #111827; }
+      .s  { font-size: 11.5px; fill: #374151; }
+      .m  { font-size: 10.5px; fill: #6b7280; font-family: 'SF Mono', Menlo, Consolas, monospace; }
+      .z  { font-size: 15px; font-weight: 800; }
+      .zl { font-size: 11px; fill: #475569; }
+      .el { font-size: 11px; font-weight: 700; fill: #334155; }
+      .box { fill: #ffffff; stroke-width: 1.5; }
+      .go  { stroke: #fb923c; }
+      .sh  { stroke: #60a5fa; }
+      .hu  { stroke: #94a3b8; }
+      .todo { stroke-dasharray: 5 4; }
+      .e  { stroke: #475569; stroke-width: 1.6; fill: none; }
+      .b-ok  { fill: #dcfce7; } .tb-ok  { fill: #15803d; font-size: 10.5px; font-weight: 700; }
+      .b-part{ fill: #fef3c7; } .tb-part{ fill: #b45309; font-size: 10.5px; font-weight: 700; }
+      .b-no  { fill: #e5e7eb; } .tb-no  { fill: #374151; font-size: 10.5px; font-weight: 700; }
+      .b-g2j { fill: #ffedd5; } .tb-g2j { fill: #c2410c; font-size: 10.5px; font-weight: 700; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="920" fill="#ffffff"/>
+  <text x="16" y="30" font-size="18" font-weight="700" fill="#111827">SharpTalk × Go2Joy overall integration — 3 AI agents · common foundation · external AI</text>
+
+  <!-- legend -->
+  <rect class="b-ok" x="560" y="40" width="40" height="18" rx="9"/><text class="tb-ok" x="580" y="53" text-anchor="middle">Built</text>
+  <text class="zl" x="606" y="53">Works on staging</text>
+  <rect class="b-part" x="712" y="40" width="50" height="18" rx="9"/><text class="tb-part" x="737" y="53" text-anchor="middle">Partial</text>
+  <text class="zl" x="768" y="53">Waiting for input</text>
+  <rect class="b-no" x="878" y="40" width="64" height="18" rx="9"/><text class="tb-no" x="910" y="53" text-anchor="middle">Not built</text>
+  <text class="zl" x="948" y="53">TBD · Phase 2</text>
+  <text class="zl" x="1104" y="74" text-anchor="end">Dashed border = integration not built yet</text>
+
+  <!-- ===== Go2Joy zone ===== -->
+  <rect x="16" y="80" width="1088" height="216" rx="12" fill="#fff7ed" stroke="#fdba74"/>
+  <text class="z" x="32" y="104" fill="#c2410c">Go2Joy</text>
+  <text class="zl" x="98" y="104">Users · Go2Joy systems (built and run by Go2Joy)</text>
+
+  <!-- users -->
+  <rect class="box go" x="40" y="116" width="320" height="50" rx="8"/>
+  <text class="t" x="56" y="138">Hotel staff (B2B)</text>
+  <text class="s" x="56" y="156">Partner hotels · Hotel Admin (HA) login</text>
+
+  <rect class="box go" x="400" y="116" width="320" height="50" rx="8"/>
+  <text class="t" x="416" y="138">Booking guest — pre-booking (B2C)</text>
+  <text class="s" x="416" y="156">Go2Joy app · web</text>
+
+  <rect class="box go" x="760" y="116" width="320" height="50" rx="8"/>
+  <text class="t" x="776" y="138">Booking guest — post-booking (B2C)</text>
+  <text class="s" x="776" y="156">Automatic handoff on booking</text>
+
+  <path class="e" d="M720,141 L758,141" marker-end="url(#a)"/>
+  <text class="el" x="724" y="133">Booked</text>
+
+  <!-- Go2Joy systems -->
+  <rect class="box go" x="40" y="186" width="320" height="96" rx="8"/>
+  <text class="t" x="56" y="210">HA web + HA server</text>
+  <text class="s" x="56" y="230">Server signs staff · hotel · region · role</text>
+  <text class="s" x="56" y="248">FE calls identify() / logout() on sign-out</text>
+  <text class="m" x="56" y="268">userId = ha:{userSn} · HMAC-SHA256</text>
+  <rect class="b-g2j" x="268" y="194" width="84" height="18" rx="9"/><text class="tb-g2j" x="310" y="207" text-anchor="middle">Go2Joy builds</text>
+
+  <rect class="box go todo" x="400" y="186" width="320" height="96" rx="8"/>
+  <text class="t" x="416" y="210">Go2Joy app · web</text>
+  <text class="s" x="416" y="230">Web widget embed.js · mobile SDK (Android)</text>
+  <text class="s" x="416" y="248">Signed guest identity · booking lookup tool</text>
+  <text class="s" x="416" y="266">Placement and method under discussion</text>
+  <rect class="b-no" x="674" y="194" width="38" height="18" rx="9"/><text class="tb-no" x="693" y="207" text-anchor="middle">TBD</text>
+
+  <rect class="box go todo" x="760" y="186" width="320" height="96" rx="8"/>
+  <text class="t" x="776" y="210">Booking system</text>
+  <text class="s" x="776" y="230">Booking-confirmed event webhook</text>
+  <text class="m" x="776" y="250">bookingSn · hotelSn · guest</text>
+  <text class="s" x="776" y="268">Passes prior chat and booking details</text>
+  <rect class="b-no" x="1034" y="194" width="38" height="18" rx="9"/><text class="tb-no" x="1053" y="207" text-anchor="middle">TBD</text>
+
+  <!-- ===== SharpTalk zone ===== -->
+  <rect x="16" y="312" width="1088" height="482" rx="12" fill="#eff6ff" stroke="#93c5fd"/>
+  <text class="z" x="32" y="336" fill="#1d4ed8">SharpTalk</text>
+  <text class="zl" x="122" y="336">Self-hosted on Go2Joy server · sharptalk.go2joy.vn (DNS pending)</text>
+  <text class="zl" x="584" y="336">Now on staging shoptalk.amoeba.site</text>
+
+  <!-- system → agent arrows -->
+  <path class="e" d="M200,282 L200,350" marker-end="url(#a)"/>
+  <text class="el" x="208" y="304">Signed identify</text>
+  <path class="e" d="M560,282 L560,350" marker-end="url(#a)"/>
+  <text class="el" x="568" y="304">Widget · SDK</text>
+  <path class="e" d="M920,282 L920,350" marker-end="url(#a)"/>
+  <text class="el" x="928" y="304">Webhook</text>
+
+  <!-- agents -->
+  <rect class="box sh" x="40" y="352" width="320" height="92" rx="8"/>
+  <text class="t" x="56" y="376">#Talk-4-Hotel (HA Support)</text>
+  <text class="s" x="56" y="396">Answers Go2Joy questions · common knowledge</text>
+  <text class="s" x="56" y="414">Hotel = business customer, staff = contact</text>
+  <text class="s" x="56" y="432">Conversations continue per hotel account</text>
+  <rect class="b-ok" x="312" y="360" width="40" height="18" rx="9"/><text class="tb-ok" x="332" y="373" text-anchor="middle">Built</text>
+
+  <rect class="box sh" x="400" y="352" width="320" height="92" rx="8"/>
+  <text class="t" x="416" y="376">Go2Joy-#Talk-4-BookingClient</text>
+  <text class="s" x="416" y="396">Pre-booking: hotel search, booking, payment</text>
+  <text class="s" x="416" y="414">Go2Joy common knowledge</text>
+  <text class="s" x="416" y="432">Agent and SDK exist; app and tools pending</text>
+  <rect class="b-part" x="662" y="360" width="50" height="18" rx="9"/><text class="tb-part" x="687" y="373" text-anchor="middle">Partial</text>
+
+  <rect class="box sh todo" x="760" y="352" width="320" height="92" rx="8"/>
+  <text class="t" x="776" y="376">Hotel-#Talk-4-BookingClient</text>
+  <text class="s" x="776" y="396">Post-booking: per-hotel reception (~5,000)</text>
+  <text class="s" x="776" y="414">Common template + hotel persona + knowledge</text>
+  <text class="s" x="776" y="432">Inherits template, overrides hotel settings</text>
+  <rect class="b-no" x="1008" y="360" width="64" height="18" rx="9"/><text class="tb-no" x="1040" y="373" text-anchor="middle">Not built</text>
+
+  <!-- handoff arrows -->
+  <path class="e" d="M200,444 L200,480" marker-end="url(#a)"/>
+  <text class="el" x="208" y="467">Handoff · agent request</text>
+  <path class="e" d="M560,444 L560,480" marker-end="url(#a)"/>
+  <text class="el" x="568" y="467">Out of AI scope · request</text>
+  <path class="e" d="M920,444 L920,480" marker-end="url(#a)"/>
+  <text class="el" x="928" y="467">AI unresolved</text>
+
+  <!-- humans -->
+  <rect class="box hu" x="40" y="482" width="320" height="72" rx="8"/>
+  <text class="t" x="56" y="506">Go2Joy agent</text>
+  <text class="s" x="56" y="526">Region → region team × task (CS / Sales)</text>
+  <text class="s" x="56" y="544">Replies in the SharpTalk console</text>
+  <rect class="b-part" x="302" y="490" width="50" height="18" rx="9"/><text class="tb-part" x="327" y="503" text-anchor="middle">Partial</text>
+
+  <rect class="box hu" x="400" y="482" width="320" height="72" rx="8"/>
+  <text class="t" x="416" y="506">Go2Joy agent</text>
+  <text class="s" x="416" y="526">Region team × CS (region basis TBD)</text>
+  <text class="s" x="416" y="544">Replies in the SharpTalk console</text>
+  <rect class="b-part" x="662" y="490" width="50" height="18" rx="9"/><text class="tb-part" x="687" y="503" text-anchor="middle">Partial</text>
+
+  <rect class="box hu todo" x="760" y="482" width="320" height="72" rx="8"/>
+  <text class="t" x="776" y="506">Hotel staff — HA #Talk menu</text>
+  <text class="s" x="776" y="526">Apply · persona · knowledge · Inbox replies</text>
+  <text class="s" x="776" y="544">Short-lived SSO token · HA permissions (iframe)</text>
+  <rect class="b-no" x="1008" y="490" width="64" height="18" rx="9"/><text class="tb-no" x="1040" y="503" text-anchor="middle">Not built</text>
+
+  <!-- foundation -->
+  <rect x="32" y="574" width="1056" height="206" rx="10" fill="#dbeafe" stroke="#60a5fa"/>
+  <text class="t" x="48" y="598" fill="#1d4ed8">Common foundation — shared by all three agents</text>
+
+  <rect class="box sh" x="48" y="610" width="248" height="156" rx="8"/>
+  <text class="t" x="62" y="634">Identity · customers</text>
+  <text class="s" x="62" y="656">Signature check (mismatch → guest)</text>
+  <text class="s" x="62" y="674">Business customer · contact · guest</text>
+  <text class="s" x="62" y="692">B2B / B2C customer types</text>
+  <text class="s" x="62" y="710">Account conversation continuity</text>
+  <text class="s" x="62" y="728">Consent = HA terms (host_terms)</text>
+  <rect class="b-ok" x="248" y="618" width="40" height="18" rx="9"/><text class="tb-ok" x="268" y="631" text-anchor="middle">Built</text>
+
+  <rect class="box sh" x="306" y="610" width="248" height="156" rx="8"/>
+  <text class="t" x="320" y="634">Assignment · alerts</text>
+  <text class="s" x="320" y="656">Team match: province, then region</text>
+  <text class="s" x="320" y="674">Task labels CS / Sales</text>
+  <text class="s" x="320" y="692">Console alarm · email · re-alert</text>
+  <text class="s" x="320" y="710">Zalo alerts (waiting for OA)</text>
+  <text class="s" x="320" y="728">Absence order (to be confirmed)</text>
+  <rect class="b-part" x="496" y="618" width="50" height="18" rx="9"/><text class="tb-part" x="521" y="631" text-anchor="middle">Partial</text>
+
+  <rect class="box sh" x="564" y="610" width="248" height="156" rx="8"/>
+  <text class="t" x="578" y="634">Knowledge</text>
+  <text class="s" x="578" y="656">Go2Joy common: guides · videos · FAQ</text>
+  <text class="s" x="578" y="674">Notion sync (token re-registration)</text>
+  <text class="s" x="578" y="692">Agent answer → adopted as knowledge</text>
+  <text class="s" x="578" y="710">Conflict check (cleanup decision)</text>
+  <text class="s" x="578" y="728">Per-hotel knowledge (Phase 2)</text>
+  <rect class="b-part" x="754" y="618" width="50" height="18" rx="9"/><text class="tb-part" x="779" y="631" text-anchor="middle">Partial</text>
+
+  <rect class="box sh" x="822" y="610" width="250" height="156" rx="8"/>
+  <text class="t" x="836" y="634">AI gateway (Level 1)</text>
+  <text class="s" x="836" y="656">LLM · embedding adapters (swappable)</text>
+  <text class="s" x="836" y="674">PII masked before sending to AI</text>
+  <text class="s" x="836" y="692">Moderation on every outgoing reply</text>
+  <text class="s" x="836" y="710">Usage metering · answer rating</text>
+  <text class="s" x="836" y="728">Golden set (HA, 44 questions)</text>
+  <rect class="b-ok" x="1024" y="618" width="40" height="18" rx="9"/><text class="tb-ok" x="1044" y="631" text-anchor="middle">Built</text>
+
+  <!-- ===== external AI ===== -->
+  <path class="e" d="M946,766 L946,818" marker-end="url(#a)"/>
+  <text class="el" x="954" y="800">Sent after masking</text>
+  <rect x="16" y="820" width="1088" height="86" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text class="t" x="32" y="846">External AI — Level 1 (Go2Joy account · Go2Joy cost)</text>
+  <text class="s" x="32" y="868">Answers: Claude · GPT, embeddings: Voyage — only questions and search evidence are sent; processing without storage = cross-border transfer (PDPL: notice · TIA)</text>
+  <text class="s" x="32" y="888">Next: Level 2 Jev gateway + curated answers (#Talk-4-Hotel first) → Level 3 local LLM — switched by metric gates, not dates</text>
+</svg>

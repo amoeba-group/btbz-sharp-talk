@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Go2Joy 연동 요청 사항과 작업 체크리스트</title>
+<meta name="description" content="전체 연동 구조 그림, Go2Joy 요청 G1~G47(우선순위·상태), Go2Joy·SharpTalk 체크리스트, 일정 영향, 결정 요약">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>/* Layout: single reading column (~72ch) under a slim masthead; tables/diagrams/figures break wider inside their own scrollers. */
+:root {
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --fg: #1d1f24;
+  --muted: #5d6270;
+  --line: #e4e1dc;
+  --tint: #fff1e6;
+  --accent: #e8650a;
+  --accent-ink: #b44c04;
+  --ink2: #2b3a67;
+  --f-display: "Be Vietnam Pro", "Noto Sans KR", system-ui, sans-serif;
+  --f-body: "Noto Sans KR", "Be Vietnam Pro", system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+    --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+  --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15.5px; line-height: 1.72; word-break: keep-all; overflow-wrap: anywhere; }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.masthead { border-bottom: 1px solid var(--line); background: var(--surface); }
+.masthead .wrap { padding-block: 40px 28px; display: grid; gap: 6px; }
+.eyebrow { margin: 0; font-size: 12px; letter-spacing: .06em; color: var(--muted); }
+.brand { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; }
+.brand .g2j { color: var(--accent); }
+.domain { margin: 0; font-family: var(--f-mono); font-size: 13px; color: var(--accent-ink); }
+.doc { padding-block: 24px 64px; }
+.doc > * { max-width: 72ch; }
+.doc > .scroll, .doc > .diagram, .doc > figure, .doc > blockquote.lead { max-width: 100%; }
+h1 { display: none; }
+h2 { font-family: var(--f-display); font-size: 25px; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--fg); text-wrap: balance; }
+h3 { font-size: 18.5px; margin: 34px 0 8px; text-wrap: balance; }
+h4 { font-size: 16px; margin: 24px 0 6px; color: var(--ink2); }
+p, ul, ol { margin: 0 0 14px; }
+li { margin-bottom: 4px; }
+a { color: var(--accent-ink); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+strong { font-weight: 700; }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--tint); color: var(--accent-ink); padding: 1px 5px; border-radius: 4px; }
+.docref { color: var(--ink2); font-weight: 500; }
+hr { border: 0; height: 0; margin: 8px 0; }
+blockquote { margin: 0 0 16px; padding: 10px 16px; border-left: 3px solid var(--line); color: var(--muted); }
+blockquote p:last-child { margin-bottom: 0; }
+blockquote.lead { background: var(--tint); border-left: 0; border-radius: 10px; color: var(--fg); padding: 18px 22px; font-size: 16.5px; }
+.scroll { overflow-x: auto; margin: 0 0 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.55; background: var(--surface); font-variant-numeric: tabular-nums; }
+th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; min-width: 5.5em; }
+th { font-weight: 700; font-size: 12.5px; letter-spacing: .03em; color: var(--muted); border-bottom: 1.5px solid var(--fg); white-space: nowrap; }
+pre.code { margin: 0; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.5; }
+pre.code code { background: none; color: var(--fg); padding: 0; font-size: inherit; }
+.diagram { overflow-x: auto; margin: 6px 0 22px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.diagram pre.mermaid { margin: 0; display: flex; justify-content: center; background: none; }
+figure { margin: 8px 0 26px; display: grid; gap: 8px; justify-items: start; }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; max-height: 720px; width: auto; }
+figcaption { font-size: 13px; color: var(--muted); max-width: 72ch; }
+.foot { padding-block: 20px 40px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+@media (max-width: 520px) { body { font-size: 15px; } h2 { font-size: 21px; } .masthead .wrap { padding-block: 28px 20px; } }
+
+/* Diagrams are pre-rendered in mermaid's light theme: keep their card light in both themes. */
+.diagram { background: #fbfaf8; border-color: #e3ddd4; }
+.diagram svg { max-width: 100%; height: auto; }
+@media (max-width: 700px) { .diagram svg { min-width: 620px; } }
+/* Drawn SVG figures (fixed-size boxes): scroll sideways on phones rather than shrink the labels. */
+figure:has(> img[src$=".svg"]) { overflow-x: auto; justify-items: stretch; }
+figure > img[src$=".svg"] { width: 100%; max-height: none; background: #ffffff; }
+@media (max-width: 700px) { figure > img[src$=".svg"] { min-width: 760px; max-width: none; } }
+/* Labels were measured with browser defaults; inherit nothing that changes their size. */
+.diagram { font-size: 16px; line-height: normal; word-break: normal; overflow-wrap: normal; letter-spacing: normal; }
+.topnav { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 13px; }
+.topnav a { color: var(--accent-ink); text-decoration: none; }
+.topnav a:hover { text-decoration: underline; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-block; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--fg) !important; }
+.chip[aria-current="page"] { border-color: var(--accent); color: var(--accent-ink) !important; font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 18px 0 30px; }
+.card { display: grid; gap: 6px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); text-decoration: none; color: var(--fg); }
+.card:hover { border-color: var(--accent); }
+.card b { font-size: 16px; }
+.card span { font-size: 13px; color: var(--muted); }
+.langblock h2 { margin-top: 28px; }
+</style>
+</head>
+<body>
+<header class="masthead"><div class="wrap">
+  <nav class="topnav"><a href="./">← Go2Joy 문서 목록</a><span class="chips" aria-label="문서"><a class="chip" href="integration.ko.html" aria-current="page">요청 사항·체크리스트</a><a class="chip" href="plan.ko.html">프로젝트 계획서</a><a class="chip" href="kb-conflicts.ko.html">지식 충돌 분류</a><a class="chip" href="notion-setup.ko.html">노션 연동 설정</a></span><span class="chips" aria-label="언어"><a class="chip" href="integration.ko.html" aria-current="page" hreflang="ko">한국어</a><a class="chip" href="integration.en.html" hreflang="en">English</a><a class="chip" href="integration.vi.html" hreflang="vi">Tiếng Việt</a></span></nav>
+  <p class="eyebrow">Go2Joy 전용 문서 · 2026-10-22</p>
+  <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
+  <p class="domain">Go2Joy 연동 요청 사항과 작업 체크리스트</p>
+</div></header>
+<main class="wrap doc"><h1 id="sharptalk--go2joy--연동-구조--go2joy-요청-사항--작업-체크리스트">SharpTalk × Go2Joy — 연동 구조 · Go2Joy 요청 사항 · 작업 체크리스트</h1>
+<blockquote class="lead">
+<p>SharpTalk 쪽 1단계(#Talk-4-Hotel) 기능은 스테이징에서 모두 동작합니다. 남은 것은 대부분 <strong>Go2Joy가 주어야 하는 것</strong>(서버, HA 서명, 담당 팀과 상담원 명단, 약관)입니다.
+이 문서는 흩어져 있던 요청을 한 목록으로 다시 정리하고, 전체 연동 구조를 그림으로 보이며, 양쪽이 할 일을 체크리스트로 나눕니다.</p>
+</blockquote>
+<div class="scroll"><table><thead><tr>
+<th>항목</th>
+<th>내용</th>
+</tr>
+</thead><tbody><tr>
+<td>수신</td>
+<td>Go2Joy PM · HA 개발팀(백엔드·FE) · 인프라 · 운영팀(CS) · 법무</td>
+</tr>
+<tr>
+<td>발신</td>
+<td>SharpTalk (Amoeba)</td>
+</tr>
+<tr>
+<td>일자 / 버전</td>
+<td>2026-10-22 · v1.0</td>
+</tr>
+<tr>
+<td>참고</td>
+<td>SharpTalk × Go2Joy 채널 구조(2026-10-21) · Go2Joy-SharpTalk AI 운용 전략 Level 1·2·3(2026-10-22) · 연동 체크리스트 및 일정표(2026-10-12) · 프로젝트 계획서 PLN-261015 · HA 연동 가이드 v1.3(함께 전달)</td>
+</tr>
+</tbody></table></div>
+<h2 id="요약">요약</h2>
+<ul>
+<li><p><strong>1단계 범위는 B2B <code>#Talk-4-Hotel</code>(HA Support)입니다.</strong> SharpTalk은 서명 검증, 호텔 = 기업고객 등록, 호텔 계정 단위 대화 연속성, 호텔 지역 → 팀 배정, 담당자 알림, 답변 평가, 골든 평가셋을 스테이징에 배포해 검증했습니다(3.2).</p>
+</li>
+<li><p><strong>막힌 곳은 Go2Joy 입력입니다.</strong></p>
+<ul>
+<li><strong>G1 운영 서버·DNS</strong>: 10/22 현재 <code>sharptalk.go2joy.vn</code>에 DNS 레코드가 없습니다.</li>
+<li><strong>G10·G11 HA 서명·임베드</strong>: 아직 구현되지 않았습니다.</li>
+<li><strong>G20~G23 팀·명단·업무 기준·부재 순서</strong>: 아직 받지 못했습니다.</li>
+<li><strong>G4·G5 약관·개인정보 고지</strong>: 아직 받지 못했습니다.</li>
+</ul>
+<p>프로젝트 계획(PLN-261015)에서 이 항목들의 기한은 10/22였고, 넘기면 10/31은 <strong>운영 오픈이 아니라 스테이징 오픈</strong>으로 바뀝니다(4절).</p>
+</li>
+<li><p><strong>2단계(B2C 예약 전·후, HA 메뉴 iframe, 예약 완료 Webhook, 포인트 과금)</strong> 는 협의 항목만 정리했습니다(2.5). 회신을 받으면 별도 요구사항 문서로 시작합니다.</p>
+</li>
+<li><p><strong>AI 운용</strong>: 지금은 Level 1(외부 AI + RAG)입니다. 계약상 인프라와 AI API 비용은 Go2Joy가 부담하므로 <strong>운영용 AI 키는 Go2Joy 명의</strong>여야 합니다(G2). Level 1에서 만들어 둘 5가지 중 4가지는 이미 있고, 메시지 단위 AI 로그만 보강하면 됩니다(3.2 S30).</p>
+</li>
+</ul>
+<h2 id="1-전체-연동-구조">1. 전체 연동 구조</h2>
+<figure><img src="img/integration-overview.ko.svg" alt="SharpTalk × Go2Joy 전체 연동 구조" loading="lazy"><figcaption>그림 1. AI 에이전트 3개가 사용자와 예약 단계로 나뉘어 먼저 응대하고, 사람은 이관할 때만 들어옵니다. 세 에이전트는 공통 기반(식별·배정·지식·AI 게이트웨이)을 함께 씁니다. SharpTalk 전체는 Go2Joy 서버에 설치되고, 외부로 나가는 것은 마스킹한 질문과 검색 근거뿐입니다.</figcaption></figure>
+<div class="scroll"><table><thead><tr>
+<th>구분</th>
+<th>에이전트</th>
+<th>진입</th>
+<th>사람 이관</th>
+<th>상태</th>
+</tr>
+</thead><tbody><tr>
+<td>B2B</td>
+<td><code>#Talk-4-Hotel</code> (HA Support)</td>
+<td>HA 로그인 후 위젯 + 서명 identify</td>
+<td>호텔 권역 → 지역 팀 × 업무(CS / Sales)의 Go2Joy 상담원</td>
+<td><strong>SharpTalk 구현 완료</strong> · HA 서명·담당자 명단 대기</td>
+</tr>
+<tr>
+<td>B2C 예약 전</td>
+<td><code>Go2Joy-#Talk-4-BookingClient</code></td>
+<td>Go2Joy 앱·웹(웹 위젯 / 모바일 SDK)</td>
+<td>지역 팀 × CS의 Go2Joy 상담원</td>
+<td>에이전트·모바일 SDK 있음 · 앱 연동·예약 도구 협의</td>
+</tr>
+<tr>
+<td>B2C 예약 후</td>
+<td><code>Hotel-#Talk-4-BookingClient</code></td>
+<td>예약 완료 이벤트로 자동 이관</td>
+<td>호텔 직원(HA #Talk 메뉴) 또는 Go2Joy CS — 확인 필요</td>
+<td>2단계 · 미구현</td>
+</tr>
+</tbody></table></div>
+<h3 id="11-b2b-talk-4-hotel-상세-흐름">1.1 B2B <code>#Talk-4-Hotel</code> 상세 흐름</h3>
+<figure><img src="img/integration-ha-flow.ko.svg" alt="Go2Joy HA × SharpTalk 연동 구조" loading="lazy"><figcaption>그림 2. ①<del>③ HA가 로그인 직원의 정보를 서버에서 서명합니다. ④</del>⑦ 위젯이 넘기면 SharpTalk이 검증하고, 호텔을 기업고객으로 등록한 뒤 대화를 호텔 계정에 잇습니다. ⑧~⑩ AI가 먼저 답하고, 답하지 못하거나 직원이 요청하면 호텔 권역에 맞는 팀의 상담원에게 배정합니다. 규격은 HA 연동 가이드 v1.3에 있습니다.</figcaption></figure>
+<h3 id="12-책임-경계">1.2 책임 경계</h3>
+<div class="scroll"><table><thead><tr>
+<th>업무</th>
+<th>Go2Joy</th>
+<th>SharpTalk (Amoeba)</th>
+</tr>
+</thead><tbody><tr>
+<td>서버·도메인·TLS·백업, AI API 계정·비용</td>
+<td><strong>책임</strong>(계약상 인프라 소유·비용 부담)</td>
+<td>사양·절차 제공</td>
+</tr>
+<tr>
+<td>SharpTalk 설치·업데이트</td>
+<td>승인·실행 환경</td>
+<td><strong>책임</strong>(원격 지원, 릴리스 제공)</td>
+</tr>
+<tr>
+<td>HA 서명 엔드포인트·위젯 임베드</td>
+<td><strong>책임</strong>(서버 서명 코드)</td>
+<td>가이드·테스트 벡터·검증</td>
+</tr>
+<tr>
+<td>약관·개인정보 고지, PDPL 판단</td>
+<td><strong>책임</strong>(법무)</td>
+<td>고지 문구 초안, 마스킹 구현</td>
+</tr>
+<tr>
+<td>지역 팀·업무 기준·상담원 명단·근무시간</td>
+<td><strong>책임</strong>(결정)</td>
+<td>설정 화면 제공·입력 지원</td>
+</tr>
+<tr>
+<td>지식 내용(정책·가이드·FAQ)</td>
+<td><strong>책임</strong>(내용 확정)</td>
+<td>변환·등록·충돌 점검 도구</td>
+</tr>
+<tr>
+<td>AI 설정·품질 측정·튜닝</td>
+<td>검토</td>
+<td><strong>책임</strong></td>
+</tr>
+<tr>
+<td>장애 1차 대응</td>
+<td>인프라</td>
+<td>애플리케이션</td>
+</tr>
+</tbody></table></div>
+<h2 id="2-go2joy-요청-사항">2. Go2Joy 요청 사항</h2>
+<p>우선순위는 다음과 같습니다.</p>
+<ul>
+<li><strong>P0</strong>: 없으면 1단계를 운영 오픈할 수 없습니다.</li>
+<li><strong>P1</strong>: 1단계 운영 품질에 필요합니다.</li>
+<li><strong>P2</strong>: 2단계 이후에 필요합니다.</li>
+</ul>
+<p>상태는 2026-10-22에 SharpTalk이 확인한 기준입니다.</p>
+<h3 id="21-인프라계약개인정보">2.1 인프라·계약·개인정보</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>요청</th>
+<th>상세</th>
+<th>담당</th>
+<th>우선</th>
+<th>상태</th>
+</tr>
+</thead><tbody><tr>
+<td>G1</td>
+<td><strong>운영 서버 + SSH + DNS</strong></td>
+<td><code>sharptalk.go2joy.vn</code>, TLS, 베트남 리전. 사양: 시범 4 vCPU / 8 GB / 80 GB, 운영 8 vCPU / 16 GB / 200 GB 이상. 일 1회 백업 저장소</td>
+<td>인프라</td>
+<td>P0</td>
+<td><strong>미수령</strong> — 10/22 DNS 레코드 없음</td>
+</tr>
+<tr>
+<td>G2</td>
+<td><strong>AI API 계정·키(Go2Joy 명의·결제)</strong></td>
+<td>답변 LLM(Anthropic Claude 권장, OpenAI 가능)과 임베딩(Voyage). 월 사용 한도와 소진 알림을 받을 담당자</td>
+<td>인프라·재무</td>
+<td>P0</td>
+<td>운영용 미수령</td>
+</tr>
+<tr>
+<td>G3</td>
+<td>메일 발신 계정</td>
+<td>담당자 알림 메일용 Go2Joy SMTP</td>
+<td>인프라</td>
+<td>P1</td>
+<td>미수령</td>
+</tr>
+<tr>
+<td>G4</td>
+<td><strong>개인정보·PDPL 확인</strong></td>
+<td>국외 이전 고지(수탁자 Anthropic·Voyage, 처리 지역), 영향평가(TIA) 필요 여부, 마스킹 범위, 대화 보존 기간(초안 180일), 침해 통지 절차</td>
+<td>법무</td>
+<td>P0</td>
+<td>미회신</td>
+</tr>
+<tr>
+<td>G5</td>
+<td><strong>HA 약관 URL + 버전, AI 이용 고지 문구</strong></td>
+<td>HA 약관 동의를 위젯 동의로 기록하는 근거(동의 배너 생략)</td>
+<td>법무·HA</td>
+<td>P0</td>
+<td>미수령</td>
+</tr>
+<tr>
+<td>G6</td>
+<td>담당자·채널 확인</td>
+<td>PM, HA 백엔드·FE, 인프라, 운영(CS 리드), 법무, 일일 점검 채널(10/12 요청 R13)</td>
+<td>PM</td>
+<td>P0</td>
+<td>확인 필요</td>
+</tr>
+<tr>
+<td>G7</td>
+<td>서비스 계약 조항</td>
+<td>학습 결과물 소유권: 모범답안은 Go2Joy 데이터, Jev·학습 파이프라인·범용 기본 모델은 Amoeba IP, Go2Joy 데이터로 만든 파인튜닝 가중치의 귀속. 비용 절감분 회수 방식, Level 3 운영 주체(MLOps)</td>
+<td>경영·법무</td>
+<td>P2</td>
+<td>협의</td>
+</tr>
+</tbody></table></div>
+<h3 id="22-ha-연동-talk-4-hotel--규격은-가이드-v13">2.2 HA 연동 (<code>#Talk-4-Hotel</code>) — 규격은 가이드 v1.3</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>요청</th>
+<th>상세</th>
+<th>담당</th>
+<th>우선</th>
+<th>상태</th>
+</tr>
+</thead><tbody><tr>
+<td>G10</td>
+<td><strong>HA 서버 서명 엔드포인트</strong></td>
+<td><code>userId = "ha:" + userSn</code>. 속성은 <code>hotel_id</code>·<code>hotel_name</code>·<code>province</code>·<code>region</code>(권역 코드)·<code>role</code> 5개, NFC 정규화 후 HMAC-SHA256 서명. <strong>테스트 벡터 T1~T5 결과 회신</strong>(가이드 5.2·5.4)</td>
+<td>HA 백엔드</td>
+<td>P0</td>
+<td>미구현</td>
+</tr>
+<tr>
+<td>G11</td>
+<td><strong>HA FE 임베드</strong></td>
+<td>embed.js + <code>locale</code>. 로그인이 확정되면, 그리고 호텔을 바꾸면 <code>identify</code>, 로그아웃하면 <code>logout</code>. CSP(<code>script-src</code>·<code>frame-src</code>·<code>connect-src</code>)와 CORS에 SharpTalk 도메인 허용(가이드 5.3)</td>
+<td>HA FE</td>
+<td>P0</td>
+<td>미구현</td>
+</tr>
+<tr>
+<td>G12</td>
+<td><strong>서명 키 방안</strong></td>
+<td>A: SharpTalk이 발급한 embed secret(권장, 스테이징 발급됨) / B: Go2Joy client secret 공용</td>
+<td>HA 백엔드</td>
+<td>P0</td>
+<td>결정 대기</td>
+</tr>
+<tr>
+<td>G13</td>
+<td>UAT 테스트 계정</td>
+<td><code>Quản lý</code>(다중 호텔) 1개 + <code>Lễ tân</code>(단일 호텔) 1개. 권역이 다른 호텔 2곳 이상 포함</td>
+<td>HA</td>
+<td>P0</td>
+<td>확인 필요</td>
+</tr>
+<tr>
+<td>G14</td>
+<td>위젯 공개 범위(Q2)</td>
+<td>같은 호텔 다른 직원의 대화를 위젯에 보여줄지. <strong>현재 기본값: 본인 대화 + "이 호텔의 이전 문의 n건" 건수.</strong> 상담원과 AI는 호텔 전체를 봅니다</td>
+<td>운영</td>
+<td>P1</td>
+<td>기본값 적용, 확인 대기</td>
+</tr>
+<tr>
+<td>G15</td>
+<td>재개 창(Q3)</td>
+<td>끝난 대화 뒤 같은 상담원을 먼저 배정하는 시간. <strong>현재 기본값 24시간</strong></td>
+<td>운영</td>
+<td>P1</td>
+<td>기본값 적용, 확인 대기</td>
+</tr>
+<tr>
+<td>G16</td>
+<td>서명 유효기간(<code>ts</code>)</td>
+<td>패키지 재사용 방지. 적용하면 양쪽 규격을 함께 바꿈(가이드 7절)</td>
+<td>HA 백엔드</td>
+<td>P1</td>
+<td>결정 대기</td>
+</tr>
+<tr>
+<td>G17</td>
+<td>역할별 차이(Q5) · 호텔 주소·군(Q6)</td>
+<td><code>Quản lý</code> / <code>Lễ tân</code> 응대 차이가 필요한가. 주소(<code>settingList.address</code>)·군(<code>districtName</code>)은 3단계</td>
+<td>운영</td>
+<td>P2</td>
+<td>결정 대기</td>
+</tr>
+</tbody></table></div>
+<h3 id="23-배정운영-go2joy-운영팀">2.3 배정·운영 (Go2Joy 운영팀)</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>요청</th>
+<th>상세</th>
+<th>담당</th>
+<th>우선</th>
+<th>상태</th>
+</tr>
+</thead><tbody><tr>
+<td>G20</td>
+<td><strong>권역 → 팀 매핑, 배정 지역 단위</strong></td>
+<td>팀은 권역(4개)·성·군 중 어느 단위로 나누는가. 제안: <code>north</code>·<code>north_center</code> → 하노이 팀, <code>south</code>·<code>south_center</code> → 호찌민 팀. 다낭·중부 고원(<code>south_center</code> 13개 성)은 확인 필요</td>
+<td>운영</td>
+<td>P0</td>
+<td>미회신</td>
+</tr>
+<tr>
+<td>G21</td>
+<td><strong>상담원 명단</strong></td>
+<td>이름 · 이메일 · 팀 · 업무 라벨(CS / Sales) · 직급. 받으면 콘솔 계정을 발급합니다</td>
+<td>운영</td>
+<td>P0</td>
+<td>미수령</td>
+</tr>
+<tr>
+<td>G22</td>
+<td><strong>Sales 문의 기준</strong></td>
+<td>어떤 문의가 Sales인가(예: 정산·계약·수수료). 키워드와 예시 문의 5~10개. 없으면 모두 CS로 갑니다</td>
+<td>운영</td>
+<td>P0</td>
+<td>미수령</td>
+</tr>
+<tr>
+<td>G23</td>
+<td><strong>근무시간·부재 처리 순서·폴백 담당자</strong></td>
+<td>제안: 대체 담당자 → 팀 큐 → 오프라인 메시지. 권역을 모를 때(호텔 미선택) 받을 담당자</td>
+<td>운영</td>
+<td>P0</td>
+<td>미회신</td>
+</tr>
+<tr>
+<td>G24</td>
+<td>Zalo OA + ZNS 템플릿 승인</td>
+<td>상담원 알림을 Zalo로도 보낼 때</td>
+<td>운영</td>
+<td>P1</td>
+<td>미수령</td>
+</tr>
+<tr>
+<td>G25</td>
+<td>지역표 신 명칭</td>
+<td>2025-07 통폐합(63 → 34개 성) 이후 이름을 쓰기 시작하면 새 표 전달</td>
+<td>운영</td>
+<td>P1</td>
+<td>대기</td>
+</tr>
+<tr>
+<td>G26</td>
+<td>지원 언어</td>
+<td>베트남어·영어 외 추가 여부</td>
+<td>운영</td>
+<td>P2</td>
+<td>결정 대기</td>
+</tr>
+</tbody></table></div>
+<blockquote>
+<p>팀 담당 지역과 배정 규칙은 SharpTalk 콘솔에서 Go2Joy 마스터 계정이 직접 입력할 수도 있습니다. 위치는 <strong>사용자 › 라벨·팀 관리 › 담당 지역</strong>과 <strong>설정 › 기본 › Agent handoff › 지역 매칭</strong>입니다. 권역 → 팀 매핑이 바뀌면 팀의 담당 지역만 고치면 되고, 규칙은 그대로 둡니다.</p>
+</blockquote>
+<h3 id="24-지식ai-품질">2.4 지식·AI 품질</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>요청</th>
+<th>상세</th>
+<th>담당</th>
+<th>우선</th>
+<th>상태</th>
+</tr>
+</thead><tbody><tr>
+<td>G30</td>
+<td><strong>Notion 지식 소스 재등록</strong></td>
+<td>10/21 소스와 토큰이 함께 삭제되어 HA 가이드(#2501)·FAQ(#3599)가 비활성입니다. 같은 페이지를 다시 연결하면 자동 복구됩니다(수정 배포 완료)</td>
+<td>운영</td>
+<td>P0</td>
+<td>대기</td>
+</tr>
+<tr>
+<td>G31</td>
+<td>지식 충돌 정리 결정</td>
+<td>10/15 분류 78건: 실제 수정 3, 정책 문서 2벌 3, FAQ 복제 32. 어느 쪽을 남길지 결정</td>
+<td>운영</td>
+<td>P1</td>
+<td>결정 대기</td>
+</tr>
+<tr>
+<td>G32</td>
+<td>골든 평가셋 검수</td>
+<td><code>#Talk-4-Hotel</code> 44문항의 정답 확인. 예약 전 에이전트 세트를 만들 때 대표 질문 제공. 엔진 교체·레벨 전환의 회귀 기준입니다</td>
+<td>운영</td>
+<td>P1</td>
+<td>검수 대기</td>
+</tr>
+<tr>
+<td>G33</td>
+<td>운영 중 품질 라벨</td>
+<td>상담원이 AI 답변을 정확/부정확으로 평가하고, 고친 답변을 지식으로 채택. Level 2(모범답안) 전환 게이트의 데이터입니다</td>
+<td>운영</td>
+<td>P1</td>
+<td>오픈 후</td>
+</tr>
+<tr>
+<td>G34</td>
+<td>Partner API(후속)</td>
+<td>운영 client key, SharpTalk 서버 IP 화이트리스트, Hotel Feed 범위(HA 호텔 전체), 일치하는 호텔이 없을 때 전체를 돌려주는 동작 수정, 서명을 검증하는 테스트 환경(가이드 7.1)</td>
+<td>HA 백엔드</td>
+<td>P2</td>
+<td>테스트 키만 수령(10/21)</td>
+</tr>
+</tbody></table></div>
+<h3 id="25-2단계--b2c-예약-전후-협의-항목">2.5 2단계 — B2C 예약 전·후 (협의 항목)</h3>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>요청</th>
+<th>상세</th>
+<th>우선</th>
+</tr>
+</thead><tbody><tr>
+<td>G40</td>
+<td>예약 완료 이벤트 Webhook</td>
+<td>이관 시점. <code>bookingSn</code>·<code>hotelSn</code>·고객 식별·서명, 앞선 대화 세션과의 연결, 여러 호텔 예약 시 예약(호텔)별 스레드</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G41</td>
+<td>Go2Joy 앱·웹 임베드</td>
+<td>웹 위젯 / Android SDK(실기기 검증됨) / iOS. 로그인 고객의 서명 식별(<code>userId</code> 접두어로 HA 직원과 분리), 예약 조회 도구 API</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G42</td>
+<td>예약 전 고객의 지역 기준</td>
+<td>검색·예약 중인 호텔의 지역인가, 고객 위치인가</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G43</td>
+<td>예약 후 이관·범위·보관</td>
+<td>사람 이관 대상(호텔 직원 / Go2Joy CS / 분담 기준), 예약 변경·취소·환불을 Go2Joy로 넘길지, 체크아웃 후 대화 종료 시점·보관 기간</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G44</td>
+<td>HA 메뉴(iframe)</td>
+<td>HA에 SharpTalk 메뉴(신청·페르소나·지식·Inbox) 추가, 서버가 발급하는 <strong>단기 SSO 토큰</strong>(HA 토큰을 그대로 넘기지 않음), 권한 연동(<code>Quản lý</code> 설정 / <code>Lễ tân</code> Inbox)</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G45</td>
+<td>리셉션 에이전트 운영</td>
+<td>공통 템플릿 내용(Go2Joy 관리), 신청 승인 절차, 약 5,000개 호텔 온보딩 순서</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G46</td>
+<td>과금</td>
+<td>토큰 → 포인트 환산 기준, 포인트 소진 시 처리(중지 / 직원 연결), 충전·잔액 화면 위치</td>
+<td>P2</td>
+</tr>
+<tr>
+<td>G47</td>
+<td>Zalo 채널 상담</td>
+<td>콘솔에서 Zalo 대화를 받고 답하는 범위</td>
+<td>P2</td>
+</tr>
+</tbody></table></div>
+<blockquote>
+<p>10/12 요청서(R1~R16) 가운데 이 문서에 다시 넣지 않은 항목(스테이징 접속, 기존 API 목록, 운영 데이터 샘플, 파일럿 호텔, 배포·장애 절차)은 수령 여부를 다음 회의에서 확인합니다.</p>
+</blockquote>
+<h2 id="3-작업-체크리스트">3. 작업 체크리스트</h2>
+<h3 id="31-go2joy">3.1 Go2Joy</h3>
+<p><strong>1단계 운영 오픈 전 (P0)</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> G1 운영 서버·SSH·DNS <code>sharptalk.go2joy.vn</code>·TLS·백업 저장소</li>
+<li><input disabled="" type="checkbox"> G2 운영용 AI API 키(Go2Joy 명의) — 답변 LLM + 임베딩</li>
+<li><input disabled="" type="checkbox"> G4 PDPL 확인(국외 이전 고지·TIA·보존 기간)과 G5 HA 약관 URL·버전·AI 고지 문구</li>
+<li><input disabled="" type="checkbox"> G6 담당자·일일 점검 채널 확인</li>
+<li><input disabled="" type="checkbox"> G10 HA 서버 서명 엔드포인트(v1.2 규격) + T1~T5 결과 회신</li>
+<li><input disabled="" type="checkbox"> G11 HA FE 임베드(identify / 호텔 변경 시 재호출 / logout, CSP·CORS)</li>
+<li><input disabled="" type="checkbox"> G12 서명 키 방안 결정(A 권장)</li>
+<li><input disabled="" type="checkbox"> G13 UAT 테스트 계정(<code>Quản lý</code> · <code>Lễ tân</code>, 권역이 다른 호텔 포함)</li>
+<li><input disabled="" type="checkbox"> G20 권역 → 팀 매핑과 배정 지역 단위</li>
+<li><input disabled="" type="checkbox"> G21 상담원 명단(이름·이메일·팀·업무 라벨·직급)</li>
+<li><input disabled="" type="checkbox"> G22 Sales 문의 기준</li>
+<li><input disabled="" type="checkbox"> G23 근무시간·부재 처리 순서·폴백 담당자</li>
+<li><input disabled="" type="checkbox"> G30 Notion 지식 소스 재등록</li>
+</ul>
+<p><strong>UAT (가이드 v1.3 §8.2)</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> 미로그인 · 로그인 · 로그아웃 · 호텔 미선택 · 재서명 없이 값 변조</li>
+<li><input disabled="" type="checkbox"> 기업고객 등록 · 같은 직원 재로그인 · 같은 호텔 다른 직원</li>
+<li><input disabled="" type="checkbox"> 대화 종료 후 재질문 · 다른 PC · 다음 날</li>
+<li><input disabled="" type="checkbox"> AI 이관 · "상담원 연결" · 권역별 호텔 4곳의 배정 결과</li>
+<li><input disabled="" type="checkbox"> UAT 승인과 운영 오픈 승인</li>
+</ul>
+<p><strong>운영 품질 (P1)</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> G14 위젯 공개 범위 · G15 재개 창 · G16 서명 유효기간 확인</li>
+<li><input disabled="" type="checkbox"> G24 Zalo OA · G25 지역표 신 명칭</li>
+<li><input disabled="" type="checkbox"> G31 지식 충돌 정리 결정 · G32 골든셋 검수 · G33 상담원 평가·답변 채택 운영</li>
+</ul>
+<p><strong>2단계 협의 (P2)</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> G40~G47 회신(예약 완료 Webhook, 앱·웹 임베드, 지역 기준, 예약 후 이관·범위·보관, HA 메뉴 iframe·SSO, 리셉션 운영, 과금, Zalo)</li>
+<li><input disabled="" type="checkbox"> G7 서비스 계약 조항 · G17 역할 차이·주소·군 · G26 언어 · G34 Partner API</li>
+</ul>
+<h3 id="32-sharptalk">3.2 SharpTalk</h3>
+<p><strong>완료 (스테이징 go2joy 테넌트에서 동작)</strong></p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> S1 서명 identify 검증, 세션 '검증됨', HA 약관 동의 모드, 헤더에 직원 이름 (#637 · #642 · #656)</li>
+<li><input checked="" disabled="" type="checkbox"> S2 배정 규칙: 지역 × 업무, AI 이관과 "상담원 연결" 두 트리거 (#638)</li>
+<li><input checked="" disabled="" type="checkbox"> S3 담당자 개인 메일 · 미수락 재알림 (#639)</li>
+<li><input checked="" disabled="" type="checkbox"> S4 답변 정확성 평가 (#640), HA 골든셋 44문항 자동 채점 (#611)</li>
+<li><input checked="" disabled="" type="checkbox"> S5 위젯 디자인, 만족도 설문, 언어 vi / en 고정 (#650 ~ #662)</li>
+<li><input checked="" disabled="" type="checkbox"> S6 권역 코드·NFC 정규화, 지역표 63개 성 → 권역 보정, 팀·라벨 담당 지역, "지역 매칭" 배정 규칙 (#687)</li>
+<li><input checked="" disabled="" type="checkbox"> S7 기업고객(호텔) · 연락처(직원) 등록, B2B / B2C 구분, 호텔 계정 대화 연속성, 직전 상담원 우선 배정, AI에 직전 대화 요약 (#689)</li>
+<li><input checked="" disabled="" type="checkbox"> S8 새 서버 설치용 스키마 최신화 (#692) — Go2Joy 서버 설치 준비</li>
+<li><input checked="" disabled="" type="checkbox"> S9 HA 연동 가이드 v1.3, 이 문서</li>
+</ul>
+<p><strong>Go2Joy 입력을 받으면</strong></p>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>작업</th>
+<th>필요한 입력</th>
+<th>소요(안)</th>
+</tr>
+</thead><tbody><tr>
+<td>S20</td>
+<td>스테이징 embed secret을 보안 채널로 전달</td>
+<td>G12 (A)</td>
+<td>당일</td>
+</tr>
+<tr>
+<td>S21</td>
+<td>상담원 콘솔 계정 발급, 팀·업무 라벨 지정</td>
+<td>G21</td>
+<td>당일</td>
+</tr>
+<tr>
+<td>S22</td>
+<td>팀 담당 지역·"지역 매칭" 규칙·Sales 키워드·폴백·근무시간 입력, 규칙 미리보기로 확인</td>
+<td>G20 · G22 · G23</td>
+<td>반나절</td>
+</tr>
+<tr>
+<td>S23</td>
+<td>HA 약관 URL·버전 입력(동의 방식은 이미 HA 약관)</td>
+<td>G5</td>
+<td>당일</td>
+</tr>
+<tr>
+<td>S24</td>
+<td><strong>Go2Joy 서버 설치</strong>(VN 프로필), 스테이징 지식·설정 이관(지역표·대화 연속성·규칙), 재색인, 골든셋 배포 게이트 연결</td>
+<td>G1 · G2 · G3</td>
+<td>4일</td>
+</tr>
+<tr>
+<td>S25</td>
+<td>Notion 재동기화 확인, 지식 충돌 정리 실행</td>
+<td>G30 · G31</td>
+<td>1~2일</td>
+</tr>
+<tr>
+<td>S26</td>
+<td>Zalo 담당자 알림</td>
+<td>G24</td>
+<td>4일</td>
+</tr>
+<tr>
+<td>S27</td>
+<td>UAT 공동 점검 → 테스트 결과 보고</td>
+<td>G10 · G11 · G13</td>
+<td>3일</td>
+</tr>
+</tbody></table></div>
+<p><strong>SharpTalk이 계속 진행할 것</strong></p>
+<ul>
+<li><input disabled="" type="checkbox"> S28 이관 사유를 콘솔에 표시, 지식 채택 전 충돌 점검 (PLN-261015 D5 · D6)</li>
+<li><input disabled="" type="checkbox"> S29 서명 유효기간(<code>ts</code>), 호텔 주소·군 수신 — G16 · G17 결정 후</li>
+<li><input disabled="" type="checkbox"> S30 <strong>AI Level 1 보강</strong>: 메시지 단위 AI 로그(모델 · 토큰 · 지연 · 재작성 질문 · 결과). 지금은 일별 사용량 집계뿐입니다. Go2Joy 예약번호 형식을 받으면 마스킹에 추가합니다. 에이전트별 골든셋도 늘립니다</li>
+<li><input disabled="" type="checkbox"> S31 2단계 요구사항 문서(B2C 예약 전 연동, 리셉션 에이전트 템플릿, HA 메뉴 iframe·SSO, 예약 Webhook 수신, 포인트 과금) — 2.5 회신 후</li>
+</ul>
+<h3 id="33-ai-운용-level-1--선행-조건-대조">3.3 AI 운용 Level 1 — 선행 조건 대조</h3>
+<p>AI 운용 전략은 Level 2·3으로 넘어가기 전에 Level 1에서 다음 5가지를 만들어 두라고 정합니다.</p>
+<div class="scroll"><table><thead><tr>
+<th>선행 조건</th>
+<th>SharpTalk 현재</th>
+<th>남은 일</th>
+</tr>
+</thead><tbody><tr>
+<td>① LLM · 임베딩 포트</td>
+<td>있음 — 엔진 어댑터(Anthropic · OpenAI · Voyage · stub), 테넌트별 엔진 지정. 엔진 교체는 설정 변경</td>
+<td>—</td>
+</tr>
+<tr>
+<td>② 대화 로그 스키마</td>
+<td>일부 — 메시지 원문·언어·의도·검색 근거, 대화 결과(해결·이관), 일별 토큰 사용량</td>
+<td>메시지 단위 모델 · 토큰 · 지연 · 재작성 질문 (S30)</td>
+</tr>
+<tr>
+<td>③ 품질 라벨</td>
+<td>있음 — 답변 정확성 평가, 이관 여부, 상담원 답변 → 지식 채택</td>
+<td>운영 중 쌓기 (G33)</td>
+</tr>
+<tr>
+<td>④ PII 마스킹</td>
+<td>있음 — AI 전송 전과 로그에서 전화 · 이메일 · 주문번호 등 마스킹</td>
+<td>Go2Joy 예약번호 형식 추가 (S30)</td>
+</tr>
+<tr>
+<td>⑤ 골든 평가셋</td>
+<td>있음 — <code>#Talk-4-Hotel</code> 44문항 자동 채점</td>
+<td>Go2Joy 검수 (G32), 다른 에이전트로 확장</td>
+</tr>
+</tbody></table></div>
+<h2 id="4-일정-영향">4. 일정 영향</h2>
+<p>PLN-261015의 결정은 다음과 같습니다. <strong>Go2Joy 선행 항목(서버·DNS, HA 임베드·서명, 담당자 명단)이 10/22까지 준비되지 않으면 10/31은 "스테이징 오픈"으로 대체</strong>합니다. 10/22 현재 이 항목들은 받지 못했습니다.</p>
+<div class="scroll"><table><thead><tr>
+<th>경로</th>
+<th>조건</th>
+<th>결과</th>
+</tr>
+</thead><tbody><tr>
+<td>스테이징 오픈(10/31)</td>
+<td>G10 · G11 · G13 · G20 ~ G23</td>
+<td>HA UAT가 SharpTalk 스테이징을 바라보고 실제 상담원이 응대합니다. 운영 데이터는 아직 Go2Joy 서버 밖(스테이징)에 있습니다</td>
+</tr>
+<tr>
+<td>운영 오픈</td>
+<td>위 조건 + G1 · G2 · G4 · G5</td>
+<td>Go2Joy 서버 설치(S24, 4일) → UAT(S27, 3일) → 오픈. <strong>G1을 받은 날로부터 약 7영업일</strong></td>
+</tr>
+</tbody></table></div>
+<h2 id="5-결정-요청--회의용-요약">5. 결정 요청 — 회의용 요약</h2>
+<div class="scroll"><table><thead><tr>
+<th>결정</th>
+<th>SharpTalk 제안 / 현재 기본값</th>
+<th>관련</th>
+</tr>
+</thead><tbody><tr>
+<td>서명 키</td>
+<td>A — SharpTalk 발급 embed secret</td>
+<td>G12</td>
+</tr>
+<tr>
+<td>권역 → 팀</td>
+<td><code>north</code>·<code>north_center</code> → 하노이, <code>south</code>·<code>south_center</code> → 호찌민</td>
+<td>G20</td>
+</tr>
+<tr>
+<td>부재 처리 순서</td>
+<td>대체 담당자 → 팀 큐 → 오프라인 메시지</td>
+<td>G23</td>
+</tr>
+<tr>
+<td>위젯 공개 범위</td>
+<td>본인 대화 + 호텔 이전 문의 건수 (적용됨)</td>
+<td>G14</td>
+</tr>
+<tr>
+<td>재개 창</td>
+<td>24시간 (적용됨)</td>
+<td>G15</td>
+</tr>
+<tr>
+<td>서명 유효기간</td>
+<td>적용 권장</td>
+<td>G16</td>
+</tr>
+<tr>
+<td>예약 후 이관 대상</td>
+<td>1차 호텔 직원, 미응답 시 Go2Joy CS (제안)</td>
+<td>G43</td>
+</tr>
+<tr>
+<td>학습 결과물 소유권</td>
+<td>모범답안 = Go2Joy, Jev·파이프라인·범용 모델 = Amoeba, 파인튜닝 가중치는 계약에 명시</td>
+<td>G7</td>
+</tr>
+</tbody></table></div>
+</main>
+<footer class="wrap foot">Amoeba(BitBiz) · SharpTalk for Go2Joy</footer>
+</body>
+</html>
