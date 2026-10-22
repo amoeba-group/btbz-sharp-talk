@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 800" width="1120" height="800" font-family="'Helvetica Neue','Segoe UI',Arial,sans-serif">
+  <defs>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#ea580c"/>
+    </marker>
+    <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/>
+    </marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <style>
+      .t  { font-size: 14px; font-weight: 700; fill: #111827; }
+      .s  { font-size: 11.5px; fill: #374151; }
+      .m  { font-size: 11px; fill: #6b7280; font-family: 'SF Mono', Menlo, Consolas, monospace; }
+      .lo { font-size: 11.5px; font-weight: 700; fill: #c2410c; }
+      .lb { font-size: 11.5px; font-weight: 700; fill: #1d4ed8; }
+      .lg { font-size: 11px; fill: #475569; }
+      .go { fill: #ffffff; stroke: #fb923c; stroke-width: 1.5; }
+      .sh { fill: #ffffff; stroke: #60a5fa; stroke-width: 1.5; }
+      .hl { fill: #dbeafe; stroke: #1d4ed8; stroke-width: 1.8; }
+      .eo { stroke: #ea580c; stroke-width: 1.8; fill: none; }
+      .eb { stroke: #1d4ed8; stroke-width: 1.8; fill: none; }
+      .eg { stroke: #475569; stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="800" fill="#ffffff"/>
+  <text x="16" y="30" font-size="18" font-weight="700" fill="#111827">Kết nối Go2Joy HA × SharpTalk — B2B #Talk-4-Hotel (HA Support)</text>
+  <text x="1104" y="30" text-anchor="end" class="lg">Nét liền = luồng vận hành · nét đứt = thiết lập/sau này · ①~⑩ = thứ tự</text>
+
+  <!-- zones -->
+  <rect x="16" y="48" width="360" height="736" rx="12" fill="#fff7ed" stroke="#fdba74"/>
+  <text x="32" y="74" font-size="15" font-weight="800" fill="#c2410c">Go2Joy</text>
+  <text x="96" y="74" class="lg">Nhóm phát triển HA · vận hành</text>
+
+  <rect x="404" y="48" width="700" height="736" rx="12" fill="#eff6ff" stroke="#93c5fd"/>
+  <text x="420" y="74" font-size="15" font-weight="800" fill="#1d4ed8">SharpTalk</text>
+  <text x="510" y="74" class="lg">Widget · API · bảng điều khiển (tenant go2joy)</text>
+
+  <!-- Go2Joy boxes -->
+  <rect class="go" x="40" y="92" width="312" height="58" rx="8"/>
+  <text class="t" x="56" y="116">Nhân viên khách sạn</text>
+  <text class="s" x="56" y="136">Đăng nhập HA (lễ tân · quản lý · vận hành chuỗi)</text>
+
+  <rect class="go" x="40" y="196" width="312" height="86" rx="8"/>
+  <text class="t" x="56" y="220">Web HA (trình duyệt)</text>
+  <text class="m" x="56" y="239">go2joy-ha-uat.go2joy.io</text>
+  <text class="s" x="56" y="258">Cài embed.js · identify() khi đăng nhập/đổi KS</text>
+  <text class="s" x="56" y="274">logout() khi đăng xuất</text>
+
+  <rect class="go" x="40" y="330" width="312" height="112" rx="8"/>
+  <text class="t" x="56" y="354">Máy chủ HA — endpoint ký</text>
+  <text class="m" x="56" y="373">GET /staff/sharptalkIdentity</text>
+  <text class="s" x="56" y="392">Lấy NV·KS·tỉnh·vùng·vai trò từ phiên·DB</text>
+  <text class="s" x="56" y="410">Chuẩn hóa NFC → ký HMAC-SHA256</text>
+  <text class="s" x="56" y="428">secret chỉ trong biến môi trường máy chủ</text>
+
+  <rect x="40" y="484" width="312" height="62" rx="8" fill="#ffffff" stroke="#fb923c" stroke-width="1.3" stroke-dasharray="5 4"/>
+  <text class="t" x="56" y="508">Partner API (dữ liệu khách sạn)</text>
+  <text class="s" x="56" y="528">Sau này: chính sách KS cho AI · đối chiếu vùng</text>
+
+  <rect class="go" x="40" y="604" width="312" height="148" rx="8"/>
+  <text class="t" x="56" y="628">Tư vấn viên Go2Joy</text>
+  <text class="s" x="56" y="650">Nhóm Hà Nội · nhóm HCM (vùng → nhóm, cần chốt)</text>
+  <text class="s" x="56" y="668">× nhãn nghiệp vụ CS / Sales</text>
+  <text class="s" x="56" y="686">Trả lời bằng tài khoản console SharpTalk</text>
+  <text class="s" x="56" y="704">Vận hành: chốt khu vực nhóm · quy tắc phân công</text>
+  <text class="s" x="56" y="722">(tự nhập trên console hoặc gửi SharpTalk)</text>
+
+  <!-- SharpTalk boxes -->
+  <rect class="sh" x="428" y="196" width="220" height="86" rx="8"/>
+  <text class="t" x="444" y="220">Widget (iframe)</text>
+  <text class="s" x="444" y="240">Hiển thị trong trang HA</text>
+  <text class="s" x="444" y="258">Tên NV trên tiêu đề · bỏ đồng ý</text>
+  <text class="s" x="444" y="274">"Xem hội thoại trước"</text>
+
+  <rect class="sh" x="684" y="92" width="396" height="80" rx="8"/>
+  <text class="t" x="700" y="116">identify — xác minh chữ ký</text>
+  <text class="s" x="700" y="136">Khớp → phiên 'đã xác minh' / sai → 401 E5048, giữ khách</text>
+  <text class="s" x="700" y="154">Sau đó chuẩn hóa NFC·mã vùng, tỉnh → vùng (bảng khu vực)</text>
+
+  <rect class="sh" x="684" y="196" width="396" height="96" rx="8"/>
+  <text class="t" x="700" y="220">Đăng ký khách hàng (B2B)</text>
+  <text class="s" x="700" y="240">KH doanh nghiệp = khách sạn · khóa <tspan class="m">hotel:{hotel_id}</tspan></text>
+  <text class="s" x="700" y="258">Liên hệ = nhân viên · khóa <tspan class="m">ha:{userSn}</tspan> · vai trò</text>
+  <text class="s" x="700" y="276">Loại khách b2b_contact ↔ khách đặt phòng b2c</text>
+
+  <rect class="sh" x="684" y="316" width="396" height="96" rx="8"/>
+  <text class="t" x="700" y="340">Hội thoại liên tục theo tài khoản (KS)</text>
+  <text class="s" x="700" y="360">Nối hội thoại mới vào hội thoại trước của tài khoản</text>
+  <text class="s" x="700" y="378">Trong 24 giờ: ưu tiên tư vấn viên trước đó</text>
+  <text class="s" x="700" y="396">AI nhận tóm tắt hội thoại trước (đã che PII)</text>
+
+  <rect class="sh" x="428" y="316" width="220" height="96" rx="8"/>
+  <text class="t" x="444" y="340">Tư vấn viên AI</text>
+  <text class="m" x="444" y="358">#Talk-4-Hotel</text>
+  <text class="s" x="444" y="378">Trả lời trước bằng tri thức HA</text>
+  <text class="s" x="444" y="396">Không trả lời được → chuyển</text>
+
+  <rect class="hl" x="428" y="458" width="652" height="96" rx="8"/>
+  <text class="t" x="444" y="482">Phân công tư vấn viên — quy tắc Agent handoff</text>
+  <text class="s" x="444" y="502">Kích hoạt: ⓐ AI không trả lời được nên chuyển   ⓑ nhân viên bấm "Kết nối tư vấn viên"</text>
+  <text class="s" x="444" y="520">Khớp tỉnh·vùng của KS ↔ khu vực của nhóm·nhãn (tỉnh trước, rồi vùng) × nghiệp vụ (CS / Sales)</text>
+  <text class="s" x="444" y="538">0 ứng viên → quy tắc tiếp theo → phụ trách dự phòng</text>
+
+  <rect class="sh" x="428" y="604" width="220" height="148" rx="8"/>
+  <text class="t" x="444" y="628">Console tư vấn viên</text>
+  <text class="s" x="444" y="650">Live chat: nhãn DN·KS·vùng</text>
+  <text class="s" x="444" y="668">n hội thoại trước của KS này</text>
+  <text class="s" x="444" y="686">Khách: doanh nghiệp / đặt phòng</text>
+  <text class="s" x="444" y="704">Lịch sử: lọc B2B / B2C</text>
+
+  <rect x="684" y="604" width="396" height="148" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.3" stroke-dasharray="5 4"/>
+  <text class="t" x="700" y="628">Thiết lập tenant go2joy</text>
+  <text class="s" x="700" y="650">Bảng 63 tỉnh → vùng (provinceRegions)</text>
+  <text class="s" x="700" y="668">Khu vực của nhóm·nhãn (Người dùng › Nhãn·nhóm)</text>
+  <text class="s" x="700" y="686">Quy tắc "Khớp khu vực" (Cài đặt › Cơ bản › Agent handoff)</text>
+  <text class="s" x="700" y="704">Hội thoại liên tục · phạm vi widget · khung nối lại</text>
+  <text class="s" x="700" y="722">Đồng ý = điều khoản HA (host_terms) · ngôn ngữ vi / en</text>
+  <text class="s" x="700" y="740">embed secret (mỗi môi trường 1 khóa)</text>
+
+  <!-- ① login -->
+  <path class="eo" d="M196,150 L196,194" marker-end="url(#ao)"/>
+  <text class="lo" x="204" y="178">① Đăng nhập</text>
+
+  <!-- ② request / ③ signed package -->
+  <path class="eo" d="M120,282 L120,328" marker-end="url(#ao)"/>
+  <text class="lo" x="128" y="310">② Yêu cầu gói</text>
+  <path class="eo" d="M276,330 L276,284" marker-end="url(#ao)"/>
+  <text class="lo" x="210" y="310" text-anchor="end"></text>
+  <text class="lo" x="284" y="310">③ Gói đã ký</text>
+
+  <!-- ④ identify -->
+  <path class="eb" d="M352,238 L426,238" marker-end="url(#ab)"/>
+  <text class="lb" x="358" y="230">④ identify</text>
+
+  <!-- ⑤ verify -->
+  <path class="eb" d="M648,214 L666,214 L666,132 L682,132" marker-end="url(#ab)"/>
+  <text class="lb" x="584" y="188">⑤ Xác minh</text>
+  <path class="eb" d="M882,172 L882,194" marker-end="url(#ab)"/>
+  <text class="lb" x="890" y="188">⑥ Đăng ký</text>
+  <path class="eb" d="M882,292 L882,314" marker-end="url(#ab)"/>
+  <text class="lb" x="890" y="308">⑦ Nối tài khoản</text>
+
+  <!-- ⑧ chat -->
+  <path class="eb" d="M538,284 L538,314" marker-start="url(#ab)" marker-end="url(#ab)"/>
+  <text class="lb" x="546" y="304">⑧ Hỏi · đáp</text>
+
+  <!-- ⑨ handoff -->
+  <path class="eb" d="M538,412 L538,456" marker-end="url(#ab)"/>
+  <text class="lb" x="546" y="438">⑨ Chuyển / gọi tư vấn viên</text>
+  <path class="eg" d="M882,412 L882,456" marker-end="url(#ag)"/>
+  <text class="lg" x="890" y="438">TVV trước đó</text>
+
+  <!-- settings → router -->
+  <path class="eg" d="M882,604 L882,556" marker-end="url(#ag)"/>
+  <text class="lg" x="890" y="584">Quy tắc · khu vực</text>
+
+  <!-- ⑩ assign -->
+  <path class="eb" d="M538,554 L538,602" marker-end="url(#ab)"/>
+  <text class="lb" x="546" y="584">⑩ Phân công</text>
+  <path class="eb" d="M354,678 L426,678" marker-start="url(#ab)" marker-end="url(#ab)"/>
+  <text class="lb" x="362" y="670">Trả lời</text>
+
+  <!-- ops config (dashed) -->
+  <path class="eg" d="M352,740 L372,740 L372,772 L882,772 L882,754" marker-end="url(#ag)"/>
+  <text class="lg" x="488" y="766">Vận hành Go2Joy quyết định → nhập khu vực nhóm · quy tắc phân công</text>
+</svg>

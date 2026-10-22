@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 800" width="1120" height="800" font-family="'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#ea580c"/>
+    </marker>
+    <marker id="ab" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1d4ed8"/>
+    </marker>
+    <marker id="ag" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <style>
+      .t  { font-size: 14px; font-weight: 700; fill: #111827; }
+      .s  { font-size: 11.5px; fill: #374151; }
+      .m  { font-size: 11px; fill: #6b7280; font-family: 'SF Mono', Menlo, Consolas, monospace; }
+      .lo { font-size: 11.5px; font-weight: 700; fill: #c2410c; }
+      .lb { font-size: 11.5px; font-weight: 700; fill: #1d4ed8; }
+      .lg { font-size: 11px; fill: #475569; }
+      .go { fill: #ffffff; stroke: #fb923c; stroke-width: 1.5; }
+      .sh { fill: #ffffff; stroke: #60a5fa; stroke-width: 1.5; }
+      .hl { fill: #dbeafe; stroke: #1d4ed8; stroke-width: 1.8; }
+      .eo { stroke: #ea580c; stroke-width: 1.8; fill: none; }
+      .eb { stroke: #1d4ed8; stroke-width: 1.8; fill: none; }
+      .eg { stroke: #475569; stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="800" fill="#ffffff"/>
+  <text x="16" y="30" font-size="18" font-weight="700" fill="#111827">Go2Joy HA × SharpTalk integration — B2B #Talk-4-Hotel (HA Support)</text>
+  <text x="1104" y="30" text-anchor="end" class="lg">Solid = runtime flow · dashed = settings/follow-up · ①~⑩ = order</text>
+
+  <!-- zones -->
+  <rect x="16" y="48" width="360" height="736" rx="12" fill="#fff7ed" stroke="#fdba74"/>
+  <text x="32" y="74" font-size="15" font-weight="800" fill="#c2410c">Go2Joy</text>
+  <text x="96" y="74" class="lg">HA dev team · operations</text>
+
+  <rect x="404" y="48" width="700" height="736" rx="12" fill="#eff6ff" stroke="#93c5fd"/>
+  <text x="420" y="74" font-size="15" font-weight="800" fill="#1d4ed8">SharpTalk</text>
+  <text x="510" y="74" class="lg">Widget · API · console (go2joy tenant)</text>
+
+  <!-- Go2Joy boxes -->
+  <rect class="go" x="40" y="92" width="312" height="58" rx="8"/>
+  <text class="t" x="56" y="116">Hotel staff</text>
+  <text class="s" x="56" y="136">Logs in to HA (front desk, manager, chain)</text>
+
+  <rect class="go" x="40" y="196" width="312" height="86" rx="8"/>
+  <text class="t" x="56" y="220">HA web (browser)</text>
+  <text class="m" x="56" y="239">go2joy-ha-uat.go2joy.io</text>
+  <text class="s" x="56" y="258">embed.js · identify() on login / hotel change</text>
+  <text class="s" x="56" y="274">logout() on sign-out</text>
+
+  <rect class="go" x="40" y="330" width="312" height="112" rx="8"/>
+  <text class="t" x="56" y="354">HA server — signing endpoint</text>
+  <text class="m" x="56" y="373">GET /staff/sharptalkIdentity</text>
+  <text class="s" x="56" y="392">Reads staff, hotel, province, region, role</text>
+  <text class="s" x="56" y="410">NFC normalize → HMAC-SHA256 signature</text>
+  <text class="s" x="56" y="428">Secret only in a server env variable</text>
+
+  <rect x="40" y="484" width="312" height="62" rx="8" fill="#ffffff" stroke="#fb923c" stroke-width="1.3" stroke-dasharray="5 4"/>
+  <text class="t" x="56" y="508">Partner API (hotel data)</text>
+  <text class="s" x="56" y="528">Later: policies for AI · region cross-check</text>
+
+  <rect class="go" x="40" y="604" width="312" height="148" rx="8"/>
+  <text class="t" x="56" y="628">Go2Joy agents</text>
+  <text class="s" x="56" y="650">Hanoi team · HCM team (region → team, TBD)</text>
+  <text class="s" x="56" y="668">× task label CS / Sales</text>
+  <text class="s" x="56" y="686">Reply with SharpTalk console accounts</text>
+  <text class="s" x="56" y="704">Ops team decides team regions · rules</text>
+  <text class="s" x="56" y="722">(enter in the console or send to SharpTalk)</text>
+
+  <!-- SharpTalk boxes -->
+  <rect class="sh" x="428" y="196" width="220" height="86" rx="8"/>
+  <text class="t" x="444" y="220">Widget (iframe)</text>
+  <text class="s" x="444" y="240">Shown inside HA pages</text>
+  <text class="s" x="444" y="258">Staff name in header, no banner</text>
+  <text class="s" x="444" y="274">"Earlier conversations"</text>
+
+  <rect class="sh" x="684" y="92" width="396" height="80" rx="8"/>
+  <text class="t" x="700" y="116">identify — signature check</text>
+  <text class="s" x="700" y="136">Match → 'verified'; mismatch → 401 E5048, stays guest</text>
+  <text class="s" x="700" y="154">Then NFC + region code; province → region fill-in</text>
+
+  <rect class="sh" x="684" y="196" width="396" height="96" rx="8"/>
+  <text class="t" x="700" y="220">Customer registration (B2B)</text>
+  <text class="s" x="700" y="240">Business customer = hotel · key <tspan class="m">hotel:{hotel_id}</tspan></text>
+  <text class="s" x="700" y="258">Contact = staff · key <tspan class="m">ha:{userSn}</tspan> · role</text>
+  <text class="s" x="700" y="276">Customer type b2b_contact ↔ booking guest b2c</text>
+
+  <rect class="sh" x="684" y="316" width="396" height="96" rx="8"/>
+  <text class="t" x="700" y="340">Account (hotel) conversation continuity</text>
+  <text class="s" x="700" y="360">New conversation links to the account's last one</text>
+  <text class="s" x="700" y="378">Within 24 h, the previous agent goes first</text>
+  <text class="s" x="700" y="396">AI gets the last conversation (PII masked)</text>
+
+  <rect class="sh" x="428" y="316" width="220" height="96" rx="8"/>
+  <text class="t" x="444" y="340">AI agent</text>
+  <text class="m" x="444" y="358">#Talk-4-Hotel</text>
+  <text class="s" x="444" y="378">Answers first from HA knowledge</text>
+  <text class="s" x="444" y="396">Hands off if it cannot answer</text>
+
+  <rect class="hl" x="428" y="458" width="652" height="96" rx="8"/>
+  <text class="t" x="444" y="482">Agent assignment — Agent handoff rules</text>
+  <text class="s" x="444" y="502">Triggers: ⓐ AI cannot answer and hands off   ⓑ staff asks to "Connect to an agent"</text>
+  <text class="s" x="444" y="520">Hotel province/region ↔ team/label regions (province first, then region) × task (CS / Sales)</text>
+  <text class="s" x="444" y="538">0 candidates → next rule → fallback owner</text>
+
+  <rect class="sh" x="428" y="604" width="220" height="148" rx="8"/>
+  <text class="t" x="444" y="628">Agent console</text>
+  <text class="s" x="444" y="650">Live chat: hotel · region badge</text>
+  <text class="s" x="444" y="668">n earlier chats at this hotel</text>
+  <text class="s" x="444" y="686">Customers: business / guests</text>
+  <text class="s" x="444" y="704">History: B2B / B2C filter</text>
+
+  <rect x="684" y="604" width="396" height="148" rx="8" fill="#ffffff" stroke="#60a5fa" stroke-width="1.3" stroke-dasharray="5 4"/>
+  <text class="t" x="700" y="628">go2joy tenant settings</text>
+  <text class="s" x="700" y="650">Region table, 63 provinces (provinceRegions)</text>
+  <text class="s" x="700" y="668">Team/label regions (Users › Labels &amp; teams)</text>
+  <text class="s" x="700" y="686">Rule "Region match" (Settings › Basic › Handoff)</text>
+  <text class="s" x="700" y="704">Continuity · widget visibility · resume window</text>
+  <text class="s" x="700" y="722">Consent = HA terms (host_terms) · vi / en</text>
+  <text class="s" x="700" y="740">embed secret (one per environment)</text>
+
+  <!-- ① login -->
+  <path class="eo" d="M196,150 L196,194" marker-end="url(#ao)"/>
+  <text class="lo" x="204" y="178">① Login</text>
+
+  <!-- ② request / ③ signed package -->
+  <path class="eo" d="M120,282 L120,328" marker-end="url(#ao)"/>
+  <text class="lo" x="128" y="310">② Request package</text>
+  <path class="eo" d="M276,330 L276,284" marker-end="url(#ao)"/>
+  <text class="lo" x="210" y="310" text-anchor="end"></text>
+  <text class="lo" x="284" y="310">③ Signed package</text>
+
+  <!-- ④ identify -->
+  <path class="eb" d="M352,238 L426,238" marker-end="url(#ab)"/>
+  <text class="lb" x="358" y="230">④ identify</text>
+
+  <!-- ⑤ verify -->
+  <path class="eb" d="M648,214 L666,214 L666,132 L682,132" marker-end="url(#ab)"/>
+  <text class="lb" x="606" y="188">⑤ Verify</text>
+  <path class="eb" d="M882,172 L882,194" marker-end="url(#ab)"/>
+  <text class="lb" x="890" y="188">⑥ Register</text>
+  <path class="eb" d="M882,292 L882,314" marker-end="url(#ab)"/>
+  <text class="lb" x="890" y="308">⑦ Link account</text>
+
+  <!-- ⑧ chat -->
+  <path class="eb" d="M538,284 L538,314" marker-start="url(#ab)" marker-end="url(#ab)"/>
+  <text class="lb" x="546" y="304">⑧ Ask · answer</text>
+
+  <!-- ⑨ handoff -->
+  <path class="eb" d="M538,412 L538,456" marker-end="url(#ab)"/>
+  <text class="lb" x="546" y="438">⑨ Handoff / agent request</text>
+  <path class="eg" d="M882,412 L882,456" marker-end="url(#ag)"/>
+  <text class="lg" x="890" y="438">Previous agent</text>
+
+  <!-- settings → router -->
+  <path class="eg" d="M882,604 L882,556" marker-end="url(#ag)"/>
+  <text class="lg" x="890" y="584">Rules · regions</text>
+
+  <!-- ⑩ assign -->
+  <path class="eb" d="M538,554 L538,602" marker-end="url(#ab)"/>
+  <text class="lb" x="546" y="584">⑩ Assign</text>
+  <path class="eb" d="M354,678 L426,678" marker-start="url(#ab)" marker-end="url(#ab)"/>
+  <text class="lb" x="362" y="670">Reply</text>
+
+  <!-- ops config (dashed) -->
+  <path class="eg" d="M352,740 L372,740 L372,772 L882,772 L882,754" marker-end="url(#ag)"/>
+  <text class="lg" x="560" y="766">Go2Joy ops decision → enter team regions · rules</text>
+</svg>

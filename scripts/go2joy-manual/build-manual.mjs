@@ -13,6 +13,12 @@ const HERE = path.dirname(new URL(import.meta.url).pathname);
 const LANGS = ['ko', 'en', 'vi'];
 const LANG_NAME = { ko: '한국어', en: 'English', vi: 'Tiếng Việt' };
 const DOCS = {
+  integration: {
+    date: '2026-10-22',
+    ko: { title: 'Go2Joy 연동 요청 사항과 작업 체크리스트', short: '요청 사항·체크리스트', desc: '전체 연동 구조 그림, Go2Joy 요청 G1~G47(우선순위·상태), Go2Joy·SharpTalk 체크리스트, 일정 영향, 결정 요약' },
+    en: { title: 'Go2Joy Integration Requests and Checklist', short: 'Requests & checklist', desc: 'Integration architecture diagrams, requests to Go2Joy G1–G47 (priority, status), Go2Joy and SharpTalk checklists, schedule impact, decisions' },
+    vi: { title: 'Yêu cầu tích hợp Go2Joy và danh sách công việc', short: 'Yêu cầu & checklist', desc: 'Sơ đồ kiến trúc tích hợp, yêu cầu gửi Go2Joy G1–G47 (ưu tiên, trạng thái), checklist của Go2Joy và SharpTalk, ảnh hưởng tiến độ, các quyết định' },
+  },
   plan: {
     ko: { title: 'SharpTalk for Go2Joy 프로젝트 계획서', short: '프로젝트 계획서', desc: '1단계 범위·이용 시나리오·시퀀스 다이어그램·일정·진행 현황·결정 사항' },
     en: { title: 'SharpTalk for Go2Joy Project Plan', short: 'Project plan', desc: 'Phase 1 scope, user scenarios, sequence diagrams, schedule, progress and open decisions' },
@@ -43,6 +49,10 @@ const css = fs.readFileSync(path.join(HERE, 'page.css'), 'utf8') + `
 .diagram { background: #fbfaf8; border-color: #e3ddd4; }
 .diagram svg { max-width: 100%; height: auto; }
 @media (max-width: 700px) { .diagram svg { min-width: 620px; } }
+/* Drawn SVG figures (fixed-size boxes): scroll sideways on phones rather than shrink the labels. */
+figure:has(> img[src$=".svg"]) { overflow-x: auto; justify-items: stretch; }
+figure > img[src$=".svg"] { width: 100%; max-height: none; background: #ffffff; }
+@media (max-width: 700px) { figure > img[src$=".svg"] { min-width: 760px; max-width: none; } }
 /* Labels were measured with browser defaults; inherit nothing that changes their size. */
 .diagram { font-size: 16px; line-height: normal; word-break: normal; overflow-wrap: normal; letter-spacing: normal; }
 .topnav { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 13px; }

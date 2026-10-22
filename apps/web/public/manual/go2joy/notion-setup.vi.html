@@ -77,6 +77,10 @@ figcaption { font-size: 13px; color: var(--muted); max-width: 72ch; }
 .diagram { background: #fbfaf8; border-color: #e3ddd4; }
 .diagram svg { max-width: 100%; height: auto; }
 @media (max-width: 700px) { .diagram svg { min-width: 620px; } }
+/* Drawn SVG figures (fixed-size boxes): scroll sideways on phones rather than shrink the labels. */
+figure:has(> img[src$=".svg"]) { overflow-x: auto; justify-items: stretch; }
+figure > img[src$=".svg"] { width: 100%; max-height: none; background: #ffffff; }
+@media (max-width: 700px) { figure > img[src$=".svg"] { min-width: 760px; max-width: none; } }
 /* Labels were measured with browser defaults; inherit nothing that changes their size. */
 .diagram { font-size: 16px; line-height: normal; word-break: normal; overflow-wrap: normal; letter-spacing: normal; }
 .topnav { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 13px; }
@@ -95,7 +99,7 @@ figcaption { font-size: 13px; color: var(--muted); max-width: 72ch; }
 </head>
 <body>
 <header class="masthead"><div class="wrap">
-  <nav class="topnav"><a href="./">← Tài liệu Go2Joy</a><span class="chips" aria-label="Tài liệu"><a class="chip" href="plan.vi.html">Kế hoạch dự án</a><a class="chip" href="kb-conflicts.vi.html">Phân loại xung đột tri thức</a><a class="chip" href="notion-setup.vi.html" aria-current="page">Kết nối Notion</a></span><span class="chips" aria-label="Ngôn ngữ"><a class="chip" href="notion-setup.ko.html" hreflang="ko">한국어</a><a class="chip" href="notion-setup.en.html" hreflang="en">English</a><a class="chip" href="notion-setup.vi.html" aria-current="page" hreflang="vi">Tiếng Việt</a></span></nav>
+  <nav class="topnav"><a href="./">← Tài liệu Go2Joy</a><span class="chips" aria-label="Tài liệu"><a class="chip" href="integration.vi.html">Yêu cầu &amp; checklist</a><a class="chip" href="plan.vi.html">Kế hoạch dự án</a><a class="chip" href="kb-conflicts.vi.html">Phân loại xung đột tri thức</a><a class="chip" href="notion-setup.vi.html" aria-current="page">Kết nối Notion</a></span><span class="chips" aria-label="Ngôn ngữ"><a class="chip" href="notion-setup.ko.html" hreflang="ko">한국어</a><a class="chip" href="notion-setup.en.html" hreflang="en">English</a><a class="chip" href="notion-setup.vi.html" aria-current="page" hreflang="vi">Tiếng Việt</a></span></nav>
   <p class="eyebrow">Tài liệu dành cho Go2Joy · 2026-10-19</p>
   <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
   <p class="domain">Hướng dẫn kết nối Notion với SharpTalk cho Go2Joy</p>
