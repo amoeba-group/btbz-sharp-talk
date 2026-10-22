@@ -20,6 +20,7 @@ const DOCS = {
     vi: { title: 'Yêu cầu tích hợp Go2Joy và danh sách công việc', short: 'Yêu cầu & checklist', desc: 'Sơ đồ kiến trúc tích hợp, yêu cầu gửi Go2Joy G1–G47 (ưu tiên, trạng thái), checklist của Go2Joy và SharpTalk, ảnh hưởng tiến độ, các quyết định' },
   },
   plan: {
+    date: '2026-10-22',
     ko: { title: 'SharpTalk for Go2Joy 프로젝트 계획서', short: '프로젝트 계획서', desc: '1단계 범위·이용 시나리오·시퀀스 다이어그램·일정·진행 현황·결정 사항' },
     en: { title: 'SharpTalk for Go2Joy Project Plan', short: 'Project plan', desc: 'Phase 1 scope, user scenarios, sequence diagrams, schedule, progress and open decisions' },
     vi: { title: 'Kế hoạch dự án SharpTalk for Go2Joy', short: 'Kế hoạch dự án', desc: 'Phạm vi giai đoạn 1, kịch bản sử dụng, sơ đồ tuần tự, lịch trình, tiến độ và các quyết định cần đưa ra' },
@@ -99,6 +100,7 @@ function render(md, lang) {
     if (href.startsWith('#') || href.startsWith('http')) return `<a href="${href}">${text}</a>`;
     if (/RPT-261015-Go2Joy-KB-Conflict-Triage/.test(href)) return `<a href="kb-conflicts.${lang}.html">${text}</a>`;
     if (/PLN-261015-SharpTalk-for-Go2Joy/.test(href)) return `<a href="plan.${lang}.html">${text}</a>`;
+    if (/manual\/go2joy\/integration\./.test(href)) return `<a href="integration.${lang}.html">${text}</a>`;
     return `<span class="docref">${text}</span>`;
   };
   let body = marked.parse(md, { renderer: r, gfm: true });

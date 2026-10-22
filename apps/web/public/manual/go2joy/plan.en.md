@@ -1,9 +1,9 @@
 ---
-document_id: SHARPTALK-G2J-PLN-1.1.0
-version: 1.1.0
+document_id: SHARPTALK-G2J-PLN-1.2.0
+version: 1.2.0
 status: In progress — Amoeba development items done on staging, waiting on Go2Joy prerequisites
 created: 2026-10-15
-updated: 2026-10-15
+updated: 2026-10-22
 author: Amoeba(BitBiz)
 reviewers: [Go2Joy]
 ---
@@ -17,25 +17,27 @@ reviewers: [Go2Joy]
 | Item | Details |
 |---|---|
 | Phase 1 scope | AI first-line support for logged-in Hotel Admin users (hotel staff) + human agent assignment by region and inquiry type + knowledge loop |
-| Phase 2 scope | Per-hotel AI agents — each hotel answers inquiries from its booking guests |
-| Phase 3 scope | Go2Joy Philippines — Hotel Admin support + per-hotel booking guest support |
+| Phase 2 scope | Go2Joy Philippines — per-hotel booking guest support (booking clients) + Hotel Admin support |
+| Phase 3 scope | Per-hotel AI agents — each hotel answers inquiries from its booking guests |
 | Source documents | [REQ-260831 Requirements](../analysis/REQ-260831-SharpTalk-Go2Joy-Requirements.md) · [AN-260907 Side impact](../analysis/AN-260907-SharpTalk-Go2Joy-Side-Impact.md) · [REQ-260825 Business model](../analysis/REQ-260825-Go2Joy-ChatAgent-BizModel.md) · [VN-Go2Joy setup guide](../guide/GUIDE-260913-SharpTalk-VN-Go2Joy-Staging.md) |
+| Integration requests and checklist | [Go2Joy integration requests and checklist](../../apps/web/public/manual/go2joy/integration.en.md) (2026-10-22) — channel structure, requests to Go2Joy G1–G47, task lists for both sides |
 | Screenshot source | Real screens of the go2joy tenant on Korean staging (captured 2026-10-15). Staff emails are hidden. Figures 9–12 come from live tests, so test names (`E2E`, `example.com`) are visible |
 
-### Progress (as of 2026-10-15)
+### Progress (as of 2026-10-22)
 
 | Area | Status |
 |---|---|
-| Amoeba development | **D2·D3·D4·D5·D7·D9 done** — deployed to staging and passed live tests (PR #637–#643). Also released to Korean production (10/15; no go2joy tenant there → no behavior change) |
-| Knowledge cleanup (D8) | go2joy default language `vi` and time zone `Asia/Ho_Chi_Minh` set. 78 knowledge conflicts classified — 3 need real fixes, 35 cleanups wait for a Go2Joy decision ([RPT-261015 Conflict triage](../report/RPT-261015-Go2Joy-KB-Conflict-Triage.md)) |
-| Waiting on Go2Joy | Server, SSH, DNS (no record for `sharptalk.go2joy.vn`), Hotel Admin server signing, region/inquiry type/staff list, Zalo OA, terms wording — **by 10/22** |
-| Remaining Amoeba work | D1 install (after server is provided), Zalo notifications (after OA is provided), D6 conflict check before adoption, D5 handoff reason display, D10 quality gate hookup |
+| Amoeba development | **D2·D3·D4·D5·D7·D9 done** (PR #637–#643, 10/15). Added 10/19–22 — widget design, satisfaction survey and fixed languages (#650–#662), region codes and "region match" routing (#687), hotel = business customer registration, conversation continuity per hotel account and B2B/B2C split (#689), schema for new server installs (#692). Passed live tests on staging, released to Korean production (no go2joy tenant there → no behavior change) |
+| Knowledge cleanup (D8) | go2joy default language `vi` and time zone `Asia/Ho_Chi_Minh` set. 78 knowledge conflicts classified — 3 need real fixes, 35 cleanups wait for a Go2Joy decision ([RPT-261015 Conflict triage](../report/RPT-261015-Go2Joy-KB-Conflict-Triage.md)) On 10/21 the Notion source was deleted, so the HA guide and FAQ are inactive — waiting for re-registration (G30) |
+| Waiting on Go2Joy | **Not received by the 10/22 deadline** — server and DNS (G1), HA signing and embed (G10, G11), team and agent list, inquiry type rules, absence order (G20–G23), terms and privacy notice (G4, G5). Per the §8 decision, 10/31 becomes a **staging opening**. Item-by-item status is in [Integration requests and checklist](../../apps/web/public/manual/go2joy/integration.en.md) |
+| Remaining Amoeba work | D1 install (after server is provided), Zalo notifications (after OA is provided), D6 conflict check before adoption, D5 handoff reason display, D10 quality gate hookup, per-message AI log (AI operations Level 1 follow-up) |
 
 ### Change history
 | Version | Date | Details |
 |---|---|---|
 | 1.0.0 | 2026-10-15 | First draft, reflects the decision to finish Phase 1 by 10/31 |
 | 1.1.0 | 2026-10-15 | Implementation results added — signed attribute keys and signing string finalized (§6.3), inquiry type detection finalized as keyword/label based (§6.5.2), re-notification is a tenant-wide setting (§6.6), accuracy rating screen (§6.9), triage of 78 conflicts (§6.10), per-item status (§7), progress (§8), new decision items (§12) |
+| 1.2.0 | 2026-10-22 | Phase 2 and Phase 3 swapped — Phase 2 = Go2Joy Philippines (booking guest support + Hotel Admin support), Phase 3 = per-hotel AI agents (§1.4, §11). Channel structure and discussion items G40–G47 from the integration requests and checklist (10/22) added, progress updated as of 10/22 |
 
 ---
 
@@ -85,16 +87,16 @@ reviewers: [Go2Joy]
 ### 1.4 Scope
 ```mermaid
 flowchart LR
-  S1["Phase 1<br/>Hotel Admin AI support<br/>(hotel staff, VN)"] --> S2["Phase 2<br/>Per-hotel AI agents<br/>(booking guests, VN)"] --> S3["Phase 3<br/>Go2Joy Philippines<br/>(Hotel Admin + booking guests)"]
+  S1["Phase 1<br/>Hotel Admin AI support<br/>(hotel staff, VN)"] --> S2["Phase 2<br/>Go2Joy Philippines<br/>(booking guests + Hotel Admin)"] --> S3["Phase 3<br/>Per-hotel AI agents<br/>(hotels answer booking guests)"]
   style S1 fill:#ffe8d6,stroke:#ff7a00
 ```
 
 | In scope (Phase 1) | Out of scope (later) |
 |---|---|
-| Self-hosted install of `sharptalk.go2joy.vn` and handover to operations | Per-hotel tenants and booking guest channels (Phase 2) |
+| Self-hosted install of `sharptalk.go2joy.vn` and handover to operations | Booking guest (B2C) channels and Philippines deployment (Phase 2), per-hotel AI agents (Phase 3) |
 | Hotel Admin widget embed + signed logged-in user data (hotel, region, role) | API integration for the AI to read booking/settlement data directly (after separate agreement) |
 | AI first response (vi/en), knowledge scope check, region × inquiry type assignment | AI performing Hotel Admin actions on the user's behalf (forbidden by design) |
-| Human agent notifications (email, Zalo, SharpTalk alarm), human agent replies | Philippines deployment (Phase 3) |
+| Human agent notifications (email, Zalo, SharpTalk alarm), human agent replies | Move to AI operations Level 2 and 3 (model answers, own model) |
 | Answer → knowledge, accuracy rating, knowledge conflict check | Voice channel |
 
 ---
@@ -349,7 +351,7 @@ sequenceDiagram
 | Received attributes (final) | Purpose | Notes |
 |---|---|---|
 | `userId` | User identification | Already signed |
-| `hotel_id`, `hotel_name` | Conversation screen badge, key for hotel-level expansion in Phase 2 | New |
+| `hotel_id`, `hotel_name` | Conversation screen badge, key for hotel-level expansion in Phase 3 | New |
 | `region` (`north`/`central`/`south`) | **Basis for staff assignment** | New — Go2Joy derives it from the hotel address |
 | `province` | Province/city for display and statistics | New |
 | `role` (`manager`/`reception`) | Conversation screen badge | New |
@@ -722,8 +724,38 @@ Staging console accounts are issued per Go2Joy staff member (after the list arri
 
 ## 11. Future work — Phase 2 and Phase 3
 
-### 11.1 Phase 2 — Per-hotel AI agents (booking guest support)
-Each hotel answers inquiries from its own booking guests (Go2Joy app users) with an AI agent. **Per-hotel knowledge (facilities, check-in, parking, add-ons)** is layered on top of the Go2Joy shared knowledge built in Phase 1.
+> **Order changed in v1.2 (2026-10-22)** — Phase 2 is Go2Joy Philippines and Phase 3 is per-hotel AI agents. Phase 2 opens the Phase 1 `#Talk-4-Hotel` agent and the booking guest agent in the Philippines, **run by Go2Joy**. Agents run by the hotels themselves (HA menu, reception template, point billing) come in Phase 3.
+
+### 11.0 Channel structure by phase
+The three agents in section 1 of the [integration requests and checklist](../../apps/web/public/manual/go2joy/integration.en.md) split across phases as follows.
+
+| Phase | Audience | Agent | Entry | Human handoff |
+|---|---|---|---|---|
+| Phase 1 (VN) | Hotel staff (B2B) | `#Talk-4-Hotel` (HA Support) | Widget after HA login + signed identify | Hotel region → regional team × inquiry type (CS / Sales) Go2Joy agent |
+| Phase 2 (PH) | Hotel staff (B2B) | `#Talk-4-Hotel` (Philippines deployment) | Same as Phase 1 | Philippine region → regional team × inquiry type |
+| Phase 2 (PH) | Booking guests (B2C, booking clients) | `Go2Joy-#Talk-4-BookingClient` | Go2Joy app and web (web widget / mobile SDK) | Regional team × CS Go2Joy agent |
+| Phase 3 | Booking guests (after booking) | `Hotel-#Talk-4-BookingClient` (per hotel) | Automatic handoff on the booking-confirmed event | Hotel staff (HA #Talk menu) → Go2Joy CS |
+
+### 11.1 Phase 2 — Go2Joy Philippines (booking guest support + Hotel Admin support)
+SharpTalk is installed separately on a Go2Joy Philippines server and opens two kinds of support. ① **Hotel Admin support** uses the Phase 1 features as they are. ② **Booking guest (booking client) support** covers questions guests ask about hotels and bookings in the Go2Joy app and web. Conversations follow the booked hotel, and Go2Joy's AI agent and Go2Joy human agents answer them.
+
+| Task | Details |
+|---|---|
+| Deployment | Separate deployment for the Philippines (one deployment per country rule). New profile `SharpTalk-PH-Go2Joy`, Philippine server and domain. Install steps are the same as the Vietnam Go2Joy server install (schema for new servers, #692) |
+| Hotel Admin support (B2B) | Phase 1 `#Talk-4-Hotel` as is — HA signed identify, hotel = business customer registration, conversation continuity per hotel account, region → team routing (#687, #689). Philippine region codes and team mapping are defined anew |
+| Booking guest support (B2C) | `Go2Joy-#Talk-4-BookingClient`. Embedded in the Go2Joy app and web via web widget / Android SDK (tested on a real device) / iOS. Logged-in guests are identified by signature and separated from HA staff by a `userId` prefix. The B2B / B2C split exists since #689 (G41) |
+| Per-hotel conversations | The booking-confirmed webhook (`bookingSn`, `hotelSn`, guest identity, signature) links to the earlier conversation; bookings at several hotels get one thread per booking (hotel) (G40) |
+| Amount and booking lookup | Bookings and rates only pass values from the Go2Joy booking lookup API (no LLM arithmetic) (G41) |
+| Human handoff | Regional team × CS Go2Joy agents. To decide: the region basis for booking guests (region of the hotel being searched or booked / guest location) (G42), whether booking changes, cancellations and refunds go to Go2Joy CS, and when conversations close and how long they are kept after checkout (G43) |
+| Language | English first. **Filipino (Filipino/Tagalog) is not among the 6 supported languages** → language addition work (shared language list in one place + translation resources) |
+| Knowledge | Reuse English versions of shared policies from Vietnam knowledge; write Philippine policies, rates and payment methods separately. Hotel Admin knowledge and booking guest knowledge are split by per-agent knowledge scope (same basis as D-10) |
+| Privacy and regulation | Philippine Data Privacy Act (RA 10173) and NPC rules — privacy policy, cross-border transfer notice, breach notice (72 hours). Door lock codes, real names and contacts shown only in authenticated sessions. Add the Go2Joy booking number format to masking |
+| Operations | Time zone `Asia/Manila`, routing rules for Philippine regional staff (Luzon/Visayas/Mindanao, etc.), working hours and absence order |
+| AI operations | Stay on Level 1 (external AI + RAG). Production AI keys in Go2Joy's name. Add a per-message AI log and per-agent golden evaluation sets (integration checklist S30) |
+| To agree with Go2Joy | G40–G43 (webhook, app embed, region basis, post-booking handoff scope and retention), G47 (Zalo channel support). Whether, and when, booking guest support also opens in Vietnam |
+
+### 11.2 Phase 3 — Per-hotel AI agents (hotels answer booking guests)
+Each hotel answers inquiries from its own booking guests (Go2Joy app users) directly with an AI agent. **Per-hotel knowledge (facilities, check-in, parking, add-ons)** is layered on top of the Go2Joy shared knowledge built through Phase 2, and hotel staff respond from a SharpTalk menu inside HA.
 
 ```mermaid
 flowchart TB
@@ -737,30 +769,23 @@ flowchart TB
   end
   G["Booking guest<br/>Go2Joy app"] -->|"Before booking: platform support"| PK
   G -->|"After booking: that hotel's support"| H1
-  H1 -->|"Requests needing approval (extension, early check-in)"| FD["Hotel reception<br/>(Hotel Admin console)"]
+  H1 -->|"Requests needing approval (extension, early check-in)"| FD["Hotel reception<br/>(HA #Talk menu)"]
   H1 -->|"Platform-caused issues (payment, refund)"| CS["Go2Joy CS"]
   PK --- H1 & H2 & H3
 ```
 
 | Task | Details |
 |---|---|
-| Hotel-level axis | Today there is one tenant = Go2Joy. Decide whether to make 5,500 hotels into tenants, or add a **hotel scope** inside the tenant (AN-260907 §2.1 — hotel scope recommended) |
-| Session ownership transfer | Before booking the platform owns the conversation; after booking ownership moves to that hotel |
+| Hotel-level axis | Today there is one tenant = Go2Joy. Decide whether to make about 5,000 hotels into tenants, or add a **hotel scope** inside the tenant (AN-260907 §2.1 — hotel scope recommended) |
+| Session ownership transfer | Before booking the platform owns the conversation; after booking ownership moves to that hotel. Reuses the per-booking (hotel) threads from Phase 2 |
 | 3-tier handoff | AI → hotel reception (L1) → Go2Joy CS (L2) → specialist team (L3), skip L1 during unstaffed hours |
+| HA menu (iframe) | Add a SharpTalk menu to HA (sign-up, persona, knowledge, Inbox). A **short-lived SSO token** issued by the server (the HA token is never passed as is), role mapping (`Quản lý` settings / `Lễ tân` Inbox) (G44) |
+| Reception agent operations | Shared template (managed by Go2Joy), sign-up approval, hotel onboarding order (G45) |
 | Hotel knowledge onboarding | Turn Hotel Admin hotel info, rooms and add-ons into knowledge automatically; hotels fill in the rest |
-| Amount and booking lookup | Bookings and rates only pass system-looked-up values (no LLM arithmetic) — Go2Joy booking API integration |
-| Personal data | Door lock codes, real names and contacts shown only in authenticated sessions |
-| Business model | Consider a paid add-on per hotel (B2B2C) — REQ-260825 Option 2 |
-
-### 11.2 Phase 3 — Go2Joy Philippines
-| Task | Details |
-|---|---|
-| Deployment | Separate deployment for the Philippines (one deployment per country rule). New profile `SharpTalk-PH-Go2Joy`, Philippine server and domain |
-| Services | Phase 1 (Hotel Admin support) + Phase 2 (per-hotel booking guest support), in the same order |
-| Language | English first. **Filipino (Filipino/Tagalog) is not among the 6 supported languages** → language addition work (shared language list in one place + translation resources) |
-| Knowledge | Reuse English versions of shared policies from Vietnam knowledge; write Philippine policies, rates and payment methods separately |
-| Regulation | Philippine Data Privacy Act (RA 10173) and NPC rules — privacy policy, cross-border transfer notice, breach notice (72 hours) |
-| Operations | Time zone `Asia/Manila`, routing rules for Philippine regional staff (Luzon/Visayas/Mindanao, etc.) |
+| Personal data | Door lock codes, real names and contacts shown only in authenticated sessions (same rule as Phase 2) |
+| Business model and billing | Paid add-on per hotel (B2B2C) — REQ-260825 Option 2. Token → point conversion, what happens when points run out (stop / connect staff), where top-up and balance screens live (G46) |
+| AI operations | Consider moving to Level 2 with model answers built from agent ratings and adopted answers. Ownership of training outputs is set in the service contract (G7) |
+| Countries | Added on top of the Vietnam and Philippines deployments opened through Phase 2. Order by country to be agreed with Go2Joy |
 
 ---
 
@@ -802,8 +827,11 @@ flowchart TB
 - Deployment: [VN-Go2Joy setup guide](../guide/GUIDE-260913-SharpTalk-VN-Go2Joy-Staging.md), [Self-hosted install guide](../guide/자체호스팅설치가이드_Self-Hosted-Install.ko.md), `deploy/profiles/SharpTalk-VN-Go2Joy/`
 - Privacy: [PROCESSOR-REGISTER](../guide/PROCESSOR-REGISTER.md), [INCIDENT-RESPONSE](../guide/INCIDENT-RESPONSE.md)
 - Phase 1 implementation records: [TCR-261015 Tests](../test/TCR-261015-Go2Joy-Phase1-D2-D7.md), [RPT-261015 Implementation and deployment](../implementation/RPT-261015-Go2Joy-Phase1-D2-D7.md), [RPT-261015 Knowledge conflict triage](../report/RPT-261015-Go2Joy-KB-Conflict-Triage.md)
+- Integration: [Go2Joy integration requests and checklist](../../apps/web/public/manual/go2joy/integration.en.md) (2026-10-22) — channel structure, requests G1–G47, checklists
 
 ## Appendix B. Next steps
 2026-10-15 user approval ("Finish Phase 1 by end of October, go ahead"). Because the schedule is 2.5 weeks, no separate REQ/PLN is written per development item. **This document serves as the PLN for D2–D9** (screen changes are the §6 wireframes). Per-item TCR and RPT documents are still kept.
 
 2026-10-15 v1.1: Amoeba development items (D2, D3, D4, D5 badges, D7, D9) were deployed to staging the same day and also released to Korean production. Next steps: ① Go2Joy replies to §12 D-1–D-5 and D-10–D-12 by 10/22 ② install D1 as soon as the server is provided ③ UAT (M4) once Hotel Admin signing is in place.
+
+2026-10-22 v1.2: By user decision, Phase 2 and Phase 3 were swapped — Phase 2 = Go2Joy Philippines (booking guest support + Hotel Admin support), Phase 3 = per-hotel AI agents. Phase 2 starts as a separate REQ once Go2Joy answers the discussion items in §11.1.

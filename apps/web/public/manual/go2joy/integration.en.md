@@ -7,7 +7,7 @@
 |---|---|
 | To | Go2Joy PM · HA dev team (back end · FE) · Infrastructure · Operations (CS) · Legal |
 | From | SharpTalk (Amoeba) |
-| Date / version | 2026-10-22 · v1.0 |
+| Date / version | 2026-10-22 · v1.1 (phases aligned with plan v1.2) |
 | References | SharpTalk × Go2Joy channel structure (2026-10-21) · Go2Joy-SharpTalk AI operating strategy Level 1·2·3 (2026-10-22) · Integration checklist & schedule (2026-10-12) · Project plan PLN-261015 · HA integration guide v1.3 (sent together) |
 
 ## Summary
@@ -19,7 +19,7 @@
   - **G4·G5 terms · privacy notice**: not received yet.
 
   In the project plan (PLN-261015) the deadline for these items was 10/22. Past it, 10/31 becomes a **staging opening instead of a production opening** (section 4).
-- **Phase 2 (B2C pre-/post-booking, HA menu iframe, booking-confirmed webhook, point billing)** is listed as discussion items only (2.5). Once we get answers, it starts as a separate requirements document.
+- **Phases 2 and 3 (B2C pre-/post-booking, HA menu iframe, booking-confirmed webhook, point billing)** are listed as discussion items only (2.5). Per plan v1.2, **Phase 2 is Go2Joy Philippines** (booking guest support + HA support, run by Go2Joy) and **Phase 3 is per-hotel AI agents** (hotels answer directly — HA menu, point billing). Once we get answers, it starts as a separate requirements document.
 - **AI operation**: we are at Level 1 (external AI + RAG). Under the contract Go2Joy bears infrastructure and AI API costs, so **the production AI key must be in Go2Joy's name** (G2). Of the 5 things Level 1 must build, 4 already exist; only per-message AI logging needs to be added (3.2 S30).
 
 ## 1. Overall integration structure
@@ -32,7 +32,7 @@
 |---|---|---|---|---|
 | B2B | `#Talk-4-Hotel` (HA Support) | Widget after HA login + signed identify | Go2Joy agent of hotel region → region team × task (CS / Sales) | **Built on SharpTalk** · waiting for HA signing and agent roster |
 | B2C pre-booking | `Go2Joy-#Talk-4-BookingClient` | Go2Joy app · web (web widget / mobile SDK) | Go2Joy agent of region team × CS | Agent and mobile SDK exist · app integration and booking tools under discussion |
-| B2C post-booking | `Hotel-#Talk-4-BookingClient` | Automatic handoff on the booking-confirmed event | Hotel staff (HA #Talk menu) or Go2Joy CS — to be confirmed | Phase 2 · not built |
+| B2C post-booking | `Hotel-#Talk-4-BookingClient` | Automatic handoff on the booking-confirmed event | Hotel staff (HA #Talk menu) or Go2Joy CS — to be confirmed | Phase 3 · not built |
 
 ### 1.1 B2B `#Talk-4-Hotel` detailed flow
 
@@ -105,7 +105,9 @@ Status is as checked by SharpTalk on 2026-10-22.
 | G33 | Quality labels in operation | Agents rate AI answers as accurate/inaccurate and adopt corrected answers as knowledge. This is the data for the Level 2 (curated answers) transition gate | Operations | P1 | After opening |
 | G34 | Partner API (follow-up) | Production client key, SharpTalk server IP allowlist, Hotel Feed coverage (all HA hotels), fix the behavior that returns everything when no hotel matches, a test environment that verifies signatures (guide 7.1) | HA back end | P2 | Only test key received (10/21) |
 
-### 2.5 Phase 2 — B2C pre-/post-booking (discussion items)
+### 2.5 Phases 2 and 3 — B2C pre-/post-booking (discussion items)
+G40–G43 and G47 are needed for Phase 2 (Philippines booking guest support); G44–G46 for Phase 3 (per-hotel AI agents).
+
 | # | Request | Details | Priority |
 |---|---|---|---|
 | G40 | Booking-confirmed event webhook | Handoff point. `bookingSn`·`hotelSn`·guest identity·signature, link to the earlier conversation session, a thread per booking (hotel) when several hotels are booked | P2 |
@@ -152,7 +154,7 @@ Status is as checked by SharpTalk on 2026-10-22.
 - [ ] G24 Zalo OA · G25 new province names in the region table
 - [ ] G31 knowledge conflict decision · G32 golden set review · G33 agent rating and answer adoption in operation
 
-**Phase 2 discussion (P2)**
+**Phase 2 and 3 discussion (P2)**
 
 - [ ] Answers to G40~G47 (booking-confirmed webhook, app · web embed, region basis, post-booking handoff · scope · retention, HA menu iframe · SSO, reception operation, billing, Zalo)
 - [ ] G7 service contract clauses · G17 role differences · address · district · G26 languages · G34 Partner API
@@ -188,7 +190,7 @@ Status is as checked by SharpTalk on 2026-10-22.
 - [ ] S28 Show the handoff reason in the console, conflict check before adopting knowledge (PLN-261015 D5 · D6)
 - [ ] S29 Signature expiry (`ts`), receiving hotel address · district — after G16 · G17 decisions
 - [ ] S30 **AI Level 1 additions**: per-message AI log (model · tokens · latency · rewritten question · outcome). Today there is only a daily usage total. Add Go2Joy booking numbers to masking once we get their format. Extend golden sets per agent
-- [ ] S31 Phase 2 requirements document (B2C pre-booking integration, reception agent template, HA menu iframe · SSO, receiving the booking webhook, point billing) — after the 2.5 answers
+- [ ] S31 Requirements documents for Phase 2 (Philippines) and Phase 3 (per-hotel AI agents) (B2C pre-booking integration, reception agent template, HA menu iframe · SSO, receiving the booking webhook, point billing) — after the 2.5 answers
 
 ### 3.3 AI operation Level 1 — prerequisite check
 The AI operating strategy says Level 1 must build these 5 things before moving to Level 2·3.
