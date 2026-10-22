@@ -1,0 +1,191 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 920" width="1120" height="920" font-family="'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic','Helvetica Neue',Arial,sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <style>
+      .t  { font-size: 14px; font-weight: 700; fill: #111827; }
+      .s  { font-size: 11.5px; fill: #374151; }
+      .m  { font-size: 10.5px; fill: #6b7280; font-family: 'SF Mono', Menlo, Consolas, monospace; }
+      .z  { font-size: 15px; font-weight: 800; }
+      .zl { font-size: 11px; fill: #475569; }
+      .el { font-size: 11px; font-weight: 700; fill: #334155; }
+      .box { fill: #ffffff; stroke-width: 1.5; }
+      .go  { stroke: #fb923c; }
+      .sh  { stroke: #60a5fa; }
+      .hu  { stroke: #94a3b8; }
+      .todo { stroke-dasharray: 5 4; }
+      .e  { stroke: #475569; stroke-width: 1.6; fill: none; }
+      .b-ok  { fill: #dcfce7; } .tb-ok  { fill: #15803d; font-size: 10.5px; font-weight: 700; }
+      .b-part{ fill: #fef3c7; } .tb-part{ fill: #b45309; font-size: 10.5px; font-weight: 700; }
+      .b-no  { fill: #e5e7eb; } .tb-no  { fill: #374151; font-size: 10.5px; font-weight: 700; }
+      .b-g2j { fill: #ffedd5; } .tb-g2j { fill: #c2410c; font-size: 10.5px; font-weight: 700; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1120" height="920" fill="#ffffff"/>
+  <text x="16" y="30" font-size="18" font-weight="700" fill="#111827">SharpTalk × Go2Joy 전체 연동 구조 — AI 에이전트 3개 · 공통 기반 · 외부 AI</text>
+
+  <!-- legend -->
+  <rect class="b-ok" x="640" y="40" width="40" height="18" rx="9"/><text class="tb-ok" x="660" y="53" text-anchor="middle">구현</text>
+  <text class="zl" x="686" y="53">스테이징 동작</text>
+  <rect class="b-part" x="768" y="40" width="40" height="18" rx="9"/><text class="tb-part" x="788" y="53" text-anchor="middle">일부</text>
+  <text class="zl" x="814" y="53">입력·설정 대기</text>
+  <rect class="b-no" x="902" y="40" width="52" height="18" rx="9"/><text class="tb-no" x="928" y="53" text-anchor="middle">미구현</text>
+  <text class="zl" x="960" y="53">협의·2단계</text>
+  <text class="zl" x="1104" y="74" text-anchor="end">점선 테두리 = 아직 없는 연동</text>
+
+  <!-- ===== Go2Joy zone ===== -->
+  <rect x="16" y="80" width="1088" height="216" rx="12" fill="#fff7ed" stroke="#fdba74"/>
+  <text class="z" x="32" y="104" fill="#c2410c">Go2Joy</text>
+  <text class="zl" x="98" y="104">사용자 · Go2Joy 시스템 (Go2Joy 개발·운영)</text>
+
+  <!-- users -->
+  <rect class="box go" x="40" y="116" width="320" height="50" rx="8"/>
+  <text class="t" x="56" y="138">호텔 직원 (B2B)</text>
+  <text class="s" x="56" y="156">파트너 호텔 · Hotel Admin(HA) 로그인</text>
+
+  <rect class="box go" x="400" y="116" width="320" height="50" rx="8"/>
+  <text class="t" x="416" y="138">부킹 고객 — 예약 전 (B2C)</text>
+  <text class="s" x="416" y="156">Go2Joy 앱 · 웹</text>
+
+  <rect class="box go" x="760" y="116" width="320" height="50" rx="8"/>
+  <text class="t" x="776" y="138">부킹 고객 — 예약 후 (B2C)</text>
+  <text class="s" x="776" y="156">예약 완료 시 자동 이관</text>
+
+  <path class="e" d="M720,141 L758,141" marker-end="url(#a)"/>
+  <text class="el" x="724" y="133">예약 완료</text>
+
+  <!-- Go2Joy systems -->
+  <rect class="box go" x="40" y="186" width="320" height="96" rx="8"/>
+  <text class="t" x="56" y="210">HA 웹 + HA 서버</text>
+  <text class="s" x="56" y="230">서버가 직원·호텔·성·권역·역할을 서명</text>
+  <text class="s" x="56" y="248">FE가 identify() / 로그아웃 시 logout()</text>
+  <text class="m" x="56" y="268">userId = ha:{userSn} · HMAC-SHA256</text>
+  <rect class="b-g2j" x="278" y="194" width="74" height="18" rx="9"/><text class="tb-g2j" x="315" y="207" text-anchor="middle">Go2Joy 개발</text>
+
+  <rect class="box go todo" x="400" y="186" width="320" height="96" rx="8"/>
+  <text class="t" x="416" y="210">Go2Joy 앱 · 웹</text>
+  <text class="s" x="416" y="230">웹 위젯 embed.js · 모바일 SDK(Android)</text>
+  <text class="s" x="416" y="248">고객 식별(서명) · 예약 조회 도구</text>
+  <text class="s" x="416" y="266">설치 위치 · 방식 협의</text>
+  <rect class="b-no" x="674" y="194" width="38" height="18" rx="9"/><text class="tb-no" x="693" y="207" text-anchor="middle">협의</text>
+
+  <rect class="box go todo" x="760" y="186" width="320" height="96" rx="8"/>
+  <text class="t" x="776" y="210">예약 시스템</text>
+  <text class="s" x="776" y="230">예약 완료 이벤트 Webhook</text>
+  <text class="m" x="776" y="250">bookingSn · hotelSn · 고객</text>
+  <text class="s" x="776" y="268">이전 대화·예약 정보를 함께 넘김</text>
+  <rect class="b-no" x="1034" y="194" width="38" height="18" rx="9"/><text class="tb-no" x="1053" y="207" text-anchor="middle">협의</text>
+
+  <!-- ===== SharpTalk zone ===== -->
+  <rect x="16" y="312" width="1088" height="482" rx="12" fill="#eff6ff" stroke="#93c5fd"/>
+  <text class="z" x="32" y="336" fill="#1d4ed8">SharpTalk</text>
+  <text class="zl" x="122" y="336">Go2Joy 서버 자체 호스팅 · sharptalk.go2joy.vn (DNS 대기)</text>
+  <text class="zl" x="584" y="336">지금은 스테이징 shoptalk.amoeba.site</text>
+
+  <!-- system → agent arrows -->
+  <path class="e" d="M200,282 L200,350" marker-end="url(#a)"/>
+  <text class="el" x="208" y="304">서명 identify</text>
+  <path class="e" d="M560,282 L560,350" marker-end="url(#a)"/>
+  <text class="el" x="568" y="304">위젯 · SDK</text>
+  <path class="e" d="M920,282 L920,350" marker-end="url(#a)"/>
+  <text class="el" x="928" y="304">Webhook</text>
+
+  <!-- agents -->
+  <rect class="box sh" x="40" y="352" width="320" height="92" rx="8"/>
+  <text class="t" x="56" y="376">#Talk-4-Hotel (HA Support)</text>
+  <text class="s" x="56" y="396">Go2Joy 문의 응대 · Go2Joy 공통 지식</text>
+  <text class="s" x="56" y="414">호텔 = 기업고객, 직원 = 연락처</text>
+  <text class="s" x="56" y="432">대화는 호텔 계정 단위로 이어짐</text>
+  <rect class="b-ok" x="312" y="360" width="40" height="18" rx="9"/><text class="tb-ok" x="332" y="373" text-anchor="middle">구현</text>
+
+  <rect class="box sh" x="400" y="352" width="320" height="92" rx="8"/>
+  <text class="t" x="416" y="376">Go2Joy-#Talk-4-BookingClient</text>
+  <text class="s" x="416" y="396">예약 전 — 호텔 검색·추천, 예약·결제 안내</text>
+  <text class="s" x="416" y="414">Go2Joy 공통 지식</text>
+  <text class="s" x="416" y="432">에이전트·SDK 있음, 앱 연동·예약 도구 대기</text>
+  <rect class="b-part" x="672" y="360" width="40" height="18" rx="9"/><text class="tb-part" x="692" y="373" text-anchor="middle">일부</text>
+
+  <rect class="box sh todo" x="760" y="352" width="320" height="92" rx="8"/>
+  <text class="t" x="776" y="376">Hotel-#Talk-4-BookingClient</text>
+  <text class="s" x="776" y="396">예약 후 — 호텔별 리셉션 (약 5,000곳)</text>
+  <text class="s" x="776" y="414">공통 템플릿 + 호텔 페르소나 + 호텔 지식</text>
+  <text class="s" x="776" y="432">템플릿 상속 · 호텔 설정만 덮어씀</text>
+  <rect class="b-no" x="1020" y="360" width="52" height="18" rx="9"/><text class="tb-no" x="1046" y="373" text-anchor="middle">미구현</text>
+
+  <!-- handoff arrows -->
+  <path class="e" d="M200,444 L200,480" marker-end="url(#a)"/>
+  <text class="el" x="208" y="467">이관 · 상담원 연결</text>
+  <path class="e" d="M560,444 L560,480" marker-end="url(#a)"/>
+  <text class="el" x="568" y="467">AI 범위 밖 · 요청</text>
+  <path class="e" d="M920,444 L920,480" marker-end="url(#a)"/>
+  <text class="el" x="928" y="467">AI 미해결</text>
+
+  <!-- humans -->
+  <rect class="box hu" x="40" y="482" width="320" height="72" rx="8"/>
+  <text class="t" x="56" y="506">Go2Joy 상담원</text>
+  <text class="s" x="56" y="526">호텔 권역 → 지역 팀 × 업무(CS / Sales)</text>
+  <text class="s" x="56" y="544">SharpTalk 콘솔에서 응대</text>
+  <rect class="b-part" x="312" y="490" width="40" height="18" rx="9"/><text class="tb-part" x="332" y="503" text-anchor="middle">일부</text>
+
+  <rect class="box hu" x="400" y="482" width="320" height="72" rx="8"/>
+  <text class="t" x="416" y="506">Go2Joy 상담원</text>
+  <text class="s" x="416" y="526">지역 팀 × CS (지역 기준 협의)</text>
+  <text class="s" x="416" y="544">SharpTalk 콘솔에서 응대</text>
+  <rect class="b-part" x="672" y="490" width="40" height="18" rx="9"/><text class="tb-part" x="692" y="503" text-anchor="middle">일부</text>
+
+  <rect class="box hu todo" x="760" y="482" width="320" height="72" rx="8"/>
+  <text class="t" x="776" y="506">호텔 직원 — HA #Talk 메뉴(iframe)</text>
+  <text class="s" x="776" y="526">신청 · 페르소나 · 지식 · Inbox 응대</text>
+  <text class="s" x="776" y="544">단기 SSO 토큰 · HA 권한 연동</text>
+  <rect class="b-no" x="1020" y="490" width="52" height="18" rx="9"/><text class="tb-no" x="1046" y="503" text-anchor="middle">미구현</text>
+
+  <!-- foundation -->
+  <rect x="32" y="574" width="1056" height="206" rx="10" fill="#dbeafe" stroke="#60a5fa"/>
+  <text class="t" x="48" y="598" fill="#1d4ed8">공통 기반 — 세 에이전트가 함께 사용</text>
+
+  <rect class="box sh" x="48" y="610" width="248" height="156" rx="8"/>
+  <text class="t" x="62" y="634">식별 · 고객</text>
+  <text class="s" x="62" y="656">서명 검증 (불일치 → 게스트)</text>
+  <text class="s" x="62" y="674">기업고객 · 연락처 · 부킹고객</text>
+  <text class="s" x="62" y="692">B2B / B2C 유형 구분</text>
+  <text class="s" x="62" y="710">계정 대화 연속성</text>
+  <text class="s" x="62" y="728">동의 = HA 약관(host_terms)</text>
+  <rect class="b-ok" x="248" y="618" width="40" height="18" rx="9"/><text class="tb-ok" x="268" y="631" text-anchor="middle">구현</text>
+
+  <rect class="box sh" x="306" y="610" width="248" height="156" rx="8"/>
+  <text class="t" x="320" y="634">배정 · 알림</text>
+  <text class="s" x="320" y="656">지역 매칭 (성 → 권역 → 팀)</text>
+  <text class="s" x="320" y="674">업무 라벨 CS / Sales</text>
+  <text class="s" x="320" y="692">콘솔 알람 · 개인 메일 · 재알림</text>
+  <text class="s" x="320" y="710">Zalo 알림 (OA 대기)</text>
+  <text class="s" x="320" y="728">부재 시 순서 (확정 필요)</text>
+  <rect class="b-part" x="506" y="618" width="40" height="18" rx="9"/><text class="tb-part" x="526" y="631" text-anchor="middle">일부</text>
+
+  <rect class="box sh" x="564" y="610" width="248" height="156" rx="8"/>
+  <text class="t" x="578" y="634">지식</text>
+  <text class="s" x="578" y="656">Go2Joy 공통: 가이드·영상·FAQ</text>
+  <text class="s" x="578" y="674">Notion 동기화 (토큰 재등록 대기)</text>
+  <text class="s" x="578" y="692">상담원 답변 → 지식 채택</text>
+  <text class="s" x="578" y="710">충돌 점검 (정리 결정 대기)</text>
+  <text class="s" x="578" y="728">호텔별 지식 (2단계)</text>
+  <rect class="b-part" x="764" y="618" width="40" height="18" rx="9"/><text class="tb-part" x="784" y="631" text-anchor="middle">일부</text>
+
+  <rect class="box sh" x="822" y="610" width="250" height="156" rx="8"/>
+  <text class="t" x="836" y="634">AI 게이트웨이 (Level 1)</text>
+  <text class="s" x="836" y="656">LLM · 임베딩 어댑터 (엔진 교체 = 설정)</text>
+  <text class="s" x="836" y="674">AI 전송 전 개인정보 마스킹</text>
+  <text class="s" x="836" y="692">모든 발신 모더레이션</text>
+  <text class="s" x="836" y="710">사용량 계측 · 답변 평가</text>
+  <text class="s" x="836" y="728">골든 평가셋 (HA 44문항)</text>
+  <rect class="b-ok" x="1024" y="618" width="40" height="18" rx="9"/><text class="tb-ok" x="1044" y="631" text-anchor="middle">구현</text>
+
+  <!-- ===== external AI ===== -->
+  <path class="e" d="M946,766 L946,818" marker-end="url(#a)"/>
+  <text class="el" x="954" y="800">마스킹 후 전송</text>
+  <rect x="16" y="820" width="1088" height="86" rx="12" fill="#f8fafc" stroke="#cbd5e1"/>
+  <text class="t" x="32" y="846">외부 AI — Level 1 (Go2Joy 계정 · Go2Joy 비용)</text>
+  <text class="s" x="32" y="868">답변 Claude · GPT, 임베딩 Voyage — 질문과 검색 근거만 전송, 저장하지 않는 처리 위탁 = 국외 이전 (PDPL: 고지 · TIA)</text>
+  <text class="s" x="32" y="888">이후: Level 2 Jev 게이트웨이 + 모범답안 (#Talk-4-Hotel부터) → Level 3 로컬 LLM — 날짜가 아니라 지표 게이트로 전환</text>
+</svg>
