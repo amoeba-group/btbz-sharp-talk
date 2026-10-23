@@ -3,6 +3,8 @@
 //   npm i --no-save marked@12 playwright  (once)
 //   node scripts/go2joy-manual/build-manual.mjs apps/web/public/manual/go2joy apps/web/public/manual/go2joy
 //   EXE=<chromium path> is optional (defaults to the playwright browser).
+//   ONLY=work-request,ha-identify limits the rebuild to those documents.
+//   PDFs ({doc}.{lang}.pdf for docs with `pdf: true`): scripts/go2joy-manual/build-pdf.mjs
 import fs from 'node:fs';
 import path from 'node:path';
 import { marked } from 'marked';
@@ -13,6 +15,20 @@ const HERE = path.dirname(new URL(import.meta.url).pathname);
 const LANGS = ['ko', 'en', 'vi'];
 const LANG_NAME = { ko: '한국어', en: 'English', vi: 'Tiếng Việt' };
 const DOCS = {
+  'work-request': {
+    date: '2026-10-24',
+    pdf: true,
+    ko: { title: '작업요청서 — Go2Joy 수행 작업', short: '작업요청서', desc: 'HA 체크리스트, 연동 규격 v1.4, HA UAT 점검 결과, 스테이징 배정 설정 현황, 담당별 작업(WR)·상태·기한·완료 기준, SharpTalk 작업, 일정, 회신표' },
+    en: { title: 'Work Request — tasks for Go2Joy', short: 'Work request', desc: 'HA checklist, integration spec v1.4, HA UAT findings, staging routing set-up, tasks by owner (WR) with status, due date and done criteria, SharpTalk work, timeline, reply table' },
+    vi: { title: 'Yêu cầu công việc — việc Go2Joy cần làm', short: 'Yêu cầu công việc', desc: 'Checklist HA, đặc tả tích hợp v1.4, kết quả kiểm tra HA UAT, cấu hình phân công trên staging, công việc theo bộ phận (WR) kèm trạng thái, hạn và tiêu chí hoàn thành, công việc của SharpTalk, lịch trình, bảng phản hồi' },
+  },
+  'ha-identify': {
+    date: '2026-10-24',
+    pdf: true,
+    ko: { title: 'HA 로그인 사용자 연동 규격 v1.4', short: 'HA 연동 v1.4', desc: 'HA 개발팀 체크리스트(백엔드·FE·UAT·운영), province_sn·역할 코드, PHP·JS 예제, 테스트 벡터 T1~T6, UAT 체크리스트' },
+    en: { title: 'HA sign-in integration spec v1.4', short: 'HA integration v1.4', desc: 'Checklist for the HA dev team (backend, FE, UAT, production), province_sn and role codes, PHP and JS samples, test vectors T1–T6, UAT checklist' },
+    vi: { title: 'Đặc tả tích hợp đăng nhập HA v1.4', short: 'Tích hợp HA v1.4', desc: 'Checklist cho đội phát triển HA (backend, FE, UAT, vận hành), province_sn và mã vai trò, ví dụ PHP và JS, test vector T1–T6, checklist UAT' },
+  },
   integration: {
     date: '2026-10-22',
     ko: { title: 'Go2Joy 연동 요청 사항과 작업 체크리스트', short: '요청 사항·체크리스트', desc: '전체 연동 구조 그림, Go2Joy 요청 G1~G47(우선순위·상태), Go2Joy·SharpTalk 체크리스트, 일정 영향, 결정 요약' },
@@ -97,6 +113,11 @@ function render(md, lang) {
   r.table = (h, b) => `<div class="scroll"><table><thead>${h}</thead><tbody>${b}</tbody></table></div>\n`;
   r.image = (href, t, text) => `<figure><img src="${href.replace(/^img\/[^/]+\//, 'img/')}" alt="${esc(text)}" loading="lazy"></figure>`;
   r.link = (href, t, text) => {
+    // Shared (private) claude.ai pages → their public copies here.
+    if (/claude\.ai\/artifact\/YXajSxYLdmHLgXnUQdVShz/.test(href) || /GUIDE-261023-Go2Joy-Work-Request/.test(href)) return `<a href="work-request.${lang}.html">${text}</a>`;
+    if (/claude\.ai\/artifact\/2An9WPgY9oCcs3PugiqXf8/.test(href) || /GUIDE-261024-Go2Joy-HA-Identify-v1\.4/.test(href)) return `<a href="ha-identify.${lang}.html">${text}</a>`;
+    if (/\.pdf$/.test(href)) return `<a href="${href}">${text}</a>`;
+    if (/^(work-request|ha-identify)\.(ko|en|vi)\.html$/.test(href) || /^files\//.test(href)) return `<a href="${href}">${text}</a>`;
     if (href.startsWith('#') || href.startsWith('http')) return `<a href="${href}">${text}</a>`;
     if (/RPT-261015-Go2Joy-KB-Conflict-Triage/.test(href)) return `<a href="kb-conflicts.${lang}.html">${text}</a>`;
     if (/PLN-261015-SharpTalk-for-Go2Joy/.test(href)) return `<a href="plan.${lang}.html">${text}</a>`;
@@ -111,9 +132,10 @@ function render(md, lang) {
 function page(doc, lang, body) {
   const m = DOCS[doc][lang], u = UI[lang];
   const langChips = LANGS.map((l) => `<a class="chip" href="${doc}.${l}.html"${l === lang ? ' aria-current="page"' : ''} hreflang="${l}">${LANG_NAME[l]}</a>`).join('');
+  const pdf = DOCS[doc].pdf ? `<a class="chip" href="${doc}.${lang}.pdf" download>PDF</a>` : '';
   const docChips = Object.keys(DOCS).map((d) => `<a class="chip" href="${d}.${lang}.html"${d === doc ? ' aria-current="page"' : ''}>${esc(DOCS[d][lang].short)}</a>`).join('');
   return shell(lang, m.title, m.desc, `<header class="masthead"><div class="wrap">
-  <nav class="topnav"><a href="./">${u.home}</a><span class="chips" aria-label="${u.docs}">${docChips}</span><span class="chips" aria-label="${u.lang}">${langChips}</span></nav>
+  <nav class="topnav"><a href="./">${u.home}</a><span class="chips" aria-label="${u.docs}">${docChips}</span><span class="chips" aria-label="${u.lang}">${langChips}${pdf}</span></nav>
   <p class="eyebrow">${u.eyebrow} · ${DOCS[doc].date || '2026-10-15'}</p>
   <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
   <p class="domain">${esc(m.title)}</p>
@@ -140,7 +162,10 @@ ${script}`);
 fs.mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch({ executablePath: process.env.EXE });
 const mermaidJs = await (await fetch('https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js')).text();
+// ONLY=doc1,doc2 rebuilds just those pages (the index is always rebuilt).
+const ONLY = (process.env.ONLY || '').split(',').filter(Boolean);
 for (const doc of Object.keys(DOCS)) for (const lang of LANGS) {
+  if (ONLY.length && !ONLY.includes(doc)) continue;
   const src = path.join(SRC, `${doc}.${lang}.md`);
   if (!fs.existsSync(src)) { console.log('skip', src); continue; }
   const body = render(fs.readFileSync(src, 'utf8'), lang);
