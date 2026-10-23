@@ -27,6 +27,7 @@ import { AuditService } from '../audit/audit.service';
 import { RedisService } from '../../infrastructure/cache/redis.service';
 import { SessionService, sessionCacheKey } from '../session/session.service';
 import { AnswerReuseService } from '../answer-reuse/answer-reuse.service';
+import { MergedRoomService } from '../merged-room/merged-room.service';
 import { AttachmentService } from '../attachment/attachment.service';
 import { TenantService } from '../tenant/tenant.service';
 import { ShopifyAdminClient } from '../order/shopify-admin.client';
@@ -83,6 +84,8 @@ export class PrivacyService {
     private readonly answerReuse?: AnswerReuseService,
     /** Attachments carry the same personal data as the text (PLN-260814 SI-5). */
     private readonly attachments?: AttachmentService,
+    /** Merged rooms keyed on the customer (PLN-261023). */
+    private readonly mergedRooms?: MergedRoomService,
   ) {}
 
   // ---- session resolution (widget DSAR/CCPA) ----
@@ -616,6 +619,9 @@ export class PrivacyService {
 
     // CJM events: unlink from the customer.
     await this.cjmRepo.update({ customerId }, { customerId: null });
+
+    // Merged rooms keyed on this customer: the room is about the person — it goes.
+    if (customer.tenantId != null) await this.mergedRooms?.eraseCustomer(Number(customer.tenantId), Number(customerId));
 
     // Orders: keep operational record but unlink PII association.
     await this.orderRepo.update({ customerId }, { customerId: null });

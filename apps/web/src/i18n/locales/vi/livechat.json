@@ -484,5 +484,40 @@
     "revealFailed": "Không hiển thị được IP.",
     "changed": "Đã thay đổi kể từ đầu phiên",
     "firstWas": "Lần đầu truy cập từ {{ip}}"
+  },
+  "merge": {
+    "badge": "Đã gộp {{count}}",
+    "open": "Gộp cùng khách hàng ({{count}})",
+    "title": "Gộp hội thoại của khách hàng này",
+    "hint": "Các phiên được xác nhận là cùng một khách hàng (cùng tài khoản, cùng email hoặc đăng nhập từ ứng dụng). Hiển thị thành một phòng; từng hội thoại vẫn giữ nguyên.",
+    "submit": "Gộp {{count}} phiên",
+    "matchedBy": {
+      "customer": "Cùng tài khoản",
+      "email": "Cùng email",
+      "claimed": "Đăng nhập ứng dụng"
+    },
+    "inProgress": "Đang diễn ra",
+    "lastAt": "Lần cuối {{when}}",
+    "current": "Phiên này",
+    "alreadyMerged": "Đã gộp",
+    "excluded": "Đã tách",
+    "autoJoin": "Tự động thêm các phiên mới của khách hàng này",
+    "autoJoinHint": "Phiên mới được thêm khi khách hàng gửi tin nhắn tiếp theo. Phiên đã tách sẽ không được thêm lại.",
+    "manage": "Phòng đã gộp",
+    "dissolve": "Bỏ gộp",
+    "autoJoined": "Tự động",
+    "remove": "Tách ra",
+    "removeHint": "Tách phiên này — sẽ không tự động thêm lại",
+    "addMore": "Gộp thêm {{count}} phiên",
+    "rowHint": "Một phòng gồm {{count}} phiên của cùng khách hàng",
+    "openCount": "{{count}} đang mở",
+    "replyHere": "đang trả lời ở đây",
+    "replyTarget": "Trả lời vào",
+    "merged": "Đã gộp {{count}} phiên thành một phòng",
+    "error": "Không thể cập nhật phòng đã gộp",
+    "autoJoinOn": "Các phiên mới của khách hàng này sẽ được thêm",
+    "autoJoinOff": "Sẽ không thêm phiên mới nữa",
+    "removed": "Đã tách phiên khỏi phòng",
+    "dissolved": "Đã bỏ gộp — các hội thoại trở lại như cũ"
   }
 }

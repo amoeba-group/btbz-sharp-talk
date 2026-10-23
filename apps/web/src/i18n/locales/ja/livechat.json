@@ -484,5 +484,40 @@
     "revealFailed": "IPを表示できませんでした。",
     "changed": "セッション開始後に変更",
     "firstWas": "最初の接続元 {{ip}}"
+  },
+  "merge": {
+    "badge": "統合 {{count}}",
+    "open": "同じ顧客の会話を統合 ({{count}})",
+    "title": "この顧客の会話を統合",
+    "hint": "同じ顧客と確認されたセッションです(同じアカウント・同じメール・ホストログイン)。1つのルームとして表示され、各会話はそのまま残ります。",
+    "submit": "{{count}}件のセッションを統合",
+    "matchedBy": {
+      "customer": "同じアカウント",
+      "email": "同じメール",
+      "claimed": "ホストログイン"
+    },
+    "inProgress": "進行中",
+    "lastAt": "最終 {{when}}",
+    "current": "現在",
+    "alreadyMerged": "統合済み",
+    "excluded": "除外済み",
+    "autoJoin": "この顧客の新しいセッションを自動で追加",
+    "autoJoinHint": "新しいセッションは顧客の次のメッセージで追加されます。除外したセッションは再追加されません。",
+    "manage": "統合ルーム",
+    "dissolve": "統合を解除",
+    "autoJoined": "自動",
+    "remove": "除外",
+    "removeHint": "このセッションを除外します — 自動で再追加されません",
+    "addMore": "さらに{{count}}件を統合",
+    "rowHint": "同じ顧客の{{count}}件のセッションをまとめたルーム",
+    "openCount": "進行中 {{count}}",
+    "replyHere": "返信先",
+    "replyTarget": "返信先",
+    "merged": "{{count}}件のセッションを1つのルームに統合しました",
+    "error": "統合ルームを更新できませんでした",
+    "autoJoinOn": "この顧客の新しいセッションを追加します",
+    "autoJoinOff": "新しいセッションは追加されなくなります",
+    "removed": "セッションをルームから除外しました",
+    "dissolved": "統合を解除しました — 会話は元に戻ります"
   }
 }

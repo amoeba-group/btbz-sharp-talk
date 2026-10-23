@@ -33,6 +33,7 @@ import { CustomerService } from '../customer/customer.service';
 import { HandoffRouterService } from '../ai-engine/handoff-router.service';
 import type { HandoffRoute } from '../ai-engine/handoff-router.service';
 import { ROUTING_MODE } from '../ai-engine/entity/tenant-ai-config.entity';
+import { MergedRoomService } from '../merged-room/merged-room.service';
 import { ThreadService } from './thread.service';
 import type { RoutingContext } from '../ai-engine/handoff-router.service';
 import { EventBusService, EVENTS, RedisService } from '../../infrastructure/infrastructure.module';
@@ -254,6 +255,8 @@ export class ChatService {
     private readonly attachments?: AttachmentService,
     /** Account threads (PLN-261022 stage 2): previous conversation link, sticky agent, AI excerpt. */
     private readonly threads?: ThreadService,
+    /** Same-customer merged rooms: auto-join on the customer's message (PLN-261023 D4). */
+    private readonly mergedRooms?: MergedRoomService,
   ) {}
 
   /**
@@ -288,7 +291,13 @@ export class ChatService {
       },
       order: { id: 'DESC' },
     });
-    if (open) return open;
+    const tenantOfSession = session?.tenantId != null ? Number(session.tenantId) : null;
+    if (open) {
+      // Every customer message passes here, so a session identified mid-way
+      // (login, identify) joins its customer's room on the next message.
+      await this.mergedRooms?.autoJoin(tenantOfSession, sessionId);
+      return open;
+    }
     // The account the new thread belongs to (PLN-261022 stage 2) and, when the
     // account already has conversations, the newest one — the sticky agent and
     // the AI's previous-conversation excerpt start from it.
@@ -304,7 +313,7 @@ export class ChatService {
       linkable && account!.claimedUserId && tenantId != null && session && this.threads
         ? await this.threads.claimedAttribution(tenantId, session)
         : null;
-    return this.convRepo.save(
+    const created = await this.convRepo.save(
       this.convRepo.create({
         sessionId,
         ...(tenantId != null ? { tenantId } : {}),
@@ -317,6 +326,9 @@ export class ChatService {
         prevConversationId: prev ? Number(prev.id) : null,
       }),
     );
+    // After the save: a claimed customer is on the new row only (PLN-261023 S4).
+    await this.mergedRooms?.autoJoin(tenantId, sessionId);
+    return created;
   }
 
   /**

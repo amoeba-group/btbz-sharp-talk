@@ -63,7 +63,9 @@ describe('AgentService.listSessions', () => {
     const res = await svc.listSessions(1, 1, 20);
     expect(res.total).toBe(2);
     expect(customerService.searchByEmailOrName).not.toHaveBeenCalled();
-    expect(convRepo.wheres.some((w: string) => w.includes('session_id'))).toBe(false);
+    // No customer filter — only the merged-room fold (PLN-261023) touches session_id.
+    expect(convRepo.wheres.some((w: string) => w.includes('c.session_id IN'))).toBe(false);
+    expect(convRepo.wheres.some((w: string) => w.includes('merged_room_sessions'))).toBe(true);
   });
 
   it('with q, filters by the matched customers sessions', async () => {
@@ -77,6 +79,20 @@ describe('AgentService.listSessions', () => {
     expect(sessionRepo.find).toHaveBeenCalled();
     expect(convRepo.wheres.some((w: string) => w.includes('session_id'))).toBe(true);
     expect(res.total).toBe(1);
+  });
+
+  it('a customer search lists the exact conversations — merged rooms are not folded (PLN-261023)', async () => {
+    const { svc, convRepo } = build({ conversations: [conv(3, 30)], customers: [{ id: 7 }], sessions: [{ id: 30 }] });
+    await svc.listSessions(1, 1, 20, 'kim');
+    expect(convRepo.wheres.some((w: string) => w.includes('merged_room_sessions'))).toBe(false);
+  });
+
+  it('the fold repeats the channel filter on the newer conversation', async () => {
+    const { svc, convRepo } = build({ conversations: [] });
+    await svc.listSessions(1, 1, 20, undefined, 'all', 'zalo');
+    const fold = convRepo.wheres.find((w: string) => w.includes('merged_room_sessions'))!;
+    expect(fold).toContain('c2.status IN (:...statuses)');
+    expect(fold).toContain('c2.channel = :channel');
   });
 
   it('with q matching no customer, returns an empty page without touching conversations', async () => {

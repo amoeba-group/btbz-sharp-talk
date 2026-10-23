@@ -24,6 +24,7 @@ describe('ChatService — account threads', () => {
       stickyAgent: jest.fn(async () => opts.sticky ?? null),
       claimedAttribution: jest.fn(async () => opts.attribution ?? null),
     };
+    const mergedRooms = { autoJoin: jest.fn(async () => undefined) };
     const svc = new ChatService(
       { findOne: convFindOne, create: (x: object) => x, save, update: jest.fn() } as never,
       { findOne: jest.fn(async () => ({ body: 'help' })) } as never, // Message repo
@@ -47,8 +48,9 @@ describe('ChatService — account threads', () => {
       undefined,
       undefined,
       threads as never,
+      mergedRooms as never,
     );
-    return { svc, save, publish, threads };
+    return { svc, save, publish, threads, mergedRooms };
   }
   const b2b = { id: 5, tenantId: 4, customerId: 9, companyId: 3, language: 'VI', identityLevel: 'verified' } as unknown as Session;
 
@@ -101,6 +103,15 @@ describe('ChatService — account threads', () => {
     await svc.getOrCreateConversation(5, { id: 5, tenantId: 4, customerId: null, companyId: null } as unknown as Session);
     expect(threads.previousOf).not.toHaveBeenCalled();
     expect(save).toHaveBeenCalledWith(expect.objectContaining({ customerId: null, companyId: null, prevConversationId: null }));
+  });
+
+  it('every customer message offers the session to its merged room (PLN-261023 auto-join)', async () => {
+    const created = build({});
+    await created.svc.getOrCreateConversation(5, b2b);
+    expect(created.mergedRooms.autoJoin).toHaveBeenCalledWith(4, 5);
+    const reused = build({ open: { id: '60', status: 'ai_active' } });
+    await reused.svc.getOrCreateConversation(5, b2b);
+    expect(reused.mergedRooms.autoJoin).toHaveBeenCalledWith(4, 5);
   });
 
   it('an open conversation is reused untouched', async () => {

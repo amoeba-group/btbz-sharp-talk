@@ -484,5 +484,40 @@
     "revealFailed": "无法显示 IP。",
     "changed": "会话开始后已变更",
     "firstWas": "首次访问自 {{ip}}"
+  },
+  "merge": {
+    "badge": "已合并 {{count}}",
+    "open": "合并同一客户 ({{count}})",
+    "title": "合并该客户的会话",
+    "hint": "已确认为同一客户的会话(同一账户、同一邮箱或宿主应用登录)。显示为一个会话室;每个会话保持不变。",
+    "submit": "合并 {{count}} 个会话",
+    "matchedBy": {
+      "customer": "同一账户",
+      "email": "同一邮箱",
+      "claimed": "宿主应用登录"
+    },
+    "inProgress": "进行中",
+    "lastAt": "最近 {{when}}",
+    "current": "当前",
+    "alreadyMerged": "已合并",
+    "excluded": "已移出",
+    "autoJoin": "自动加入该客户的新会话",
+    "autoJoinHint": "新会话在客户发送下一条消息时加入。已移出的会话不会再加入。",
+    "manage": "合并会话室",
+    "dissolve": "取消合并",
+    "autoJoined": "自动",
+    "remove": "移出",
+    "removeHint": "移出此会话 — 不会自动重新加入",
+    "addMore": "再合并 {{count}} 个会话",
+    "rowHint": "同一客户 {{count}} 个会话合成的会话室",
+    "openCount": "进行中 {{count}}",
+    "replyHere": "回复至此",
+    "replyTarget": "回复到",
+    "merged": "已将 {{count}} 个会话合并为一个会话室",
+    "error": "无法更新合并会话室",
+    "autoJoinOn": "将自动加入该客户的新会话",
+    "autoJoinOff": "不再加入新会话",
+    "removed": "已将会话移出会话室",
+    "dissolved": "已取消合并 — 会话恢复原状"
   }
 }

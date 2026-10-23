@@ -1,7 +1,7 @@
 # PLN-261023 라이브챗 — 같은 고객 세션 통합 대화방 · 자동 추가
 
 - REQ: `docs/analysis/REQ-261023-LiveChat-Merge-Same-Customer-Sessions.md`
-- 상태: **승인 대기** — 아래 결정 D1~D6 확인 후 구현
+- 상태: **승인됨** (2026-10-23, 권장안 D1~D6)
 
 ## 1. 결정 사항 (권장안 ★)
 

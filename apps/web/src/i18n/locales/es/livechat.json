@@ -484,5 +484,40 @@
     "revealFailed": "No se pudo mostrar la IP.",
     "changed": "Cambió desde el inicio de la sesión",
     "firstWas": "Primera conexión desde {{ip}}"
+  },
+  "merge": {
+    "badge": "Unificada {{count}}",
+    "open": "Unificar mismo cliente ({{count}})",
+    "title": "Unificar las conversaciones de este cliente",
+    "hint": "Sesiones confirmadas como el mismo cliente (misma cuenta, mismo correo o inicio de sesión del host). Se ven como una sola sala; cada conversación se mantiene.",
+    "submit": "Unificar {{count}} sesiones",
+    "matchedBy": {
+      "customer": "Misma cuenta",
+      "email": "Mismo correo",
+      "claimed": "Inicio de sesión del host"
+    },
+    "inProgress": "En curso",
+    "lastAt": "Última {{when}}",
+    "current": "Esta",
+    "alreadyMerged": "Unificada",
+    "excluded": "Retirada",
+    "autoJoin": "Añadir automáticamente las nuevas sesiones de este cliente",
+    "autoJoinHint": "Una sesión nueva se une con el siguiente mensaje del cliente. Las sesiones retiradas no vuelven.",
+    "manage": "Sala unificada",
+    "dissolve": "Deshacer unificación",
+    "autoJoined": "Auto",
+    "remove": "Retirar",
+    "removeHint": "Retirar esta sesión — no volverá automáticamente",
+    "addMore": "Unificar {{count}} sesiones más",
+    "rowHint": "Una sala con {{count}} sesiones del mismo cliente",
+    "openCount": "{{count}} en curso",
+    "replyHere": "respondes aquí",
+    "replyTarget": "Responder a",
+    "merged": "{{count}} sesiones unificadas en una sala",
+    "error": "No se pudo actualizar la sala unificada",
+    "autoJoinOn": "Se añadirán las nuevas sesiones de este cliente",
+    "autoJoinOff": "Ya no se añadirán sesiones nuevas",
+    "removed": "Sesión retirada de la sala",
+    "dissolved": "Unificación deshecha — las conversaciones vuelven a estar como antes"
   }
 }

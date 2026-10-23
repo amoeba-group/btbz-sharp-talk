@@ -340,12 +340,17 @@ export class AgentService {
     // Channel filter (PLN-260810 PR-M4). 'widget' also covers the pre-channel
     // rows: conversations created before external channels existed default to
     // 'widget', and NULL would otherwise vanish from the widget view.
+    // The same filters on `c2`, the newer conversation a merged room folds
+    // this row into (PLN-261023 D2) — a room shows its newest row that passes.
+    const foldFilters = ['c2.status IN (:...statuses)'];
     const channelFilter = channel?.trim();
     if (channelFilter && channelFilter !== 'all') {
       if (channelFilter === 'widget') {
         qb.andWhere("(c.channel = 'widget' OR c.channel IS NULL)");
+        foldFilters.push("(c2.channel = 'widget' OR c2.channel IS NULL)");
       } else {
         qb.andWhere('c.channel = :channel', { channel: channelFilter });
+        foldFilters.push('c2.channel = :channel');
       }
     }
 
@@ -354,12 +359,11 @@ export class AgentService {
     if (aiAgentId != null) {
       const display = await this.aiAgentDisplay(tenantId);
       const isDefaultFilter = display.defaultId != null && display.defaultId === Number(aiAgentId);
-      qb.andWhere(
-        isDefaultFilter
-          ? 'c.session_id IN (SELECT s.id FROM sessions s WHERE s.tenant_id = :tenantId AND (s.ai_agent_id = :aiAgentId OR s.ai_agent_id IS NULL))'
-          : 'c.session_id IN (SELECT s.id FROM sessions s WHERE s.tenant_id = :tenantId AND s.ai_agent_id = :aiAgentId)',
-        { aiAgentId: Number(aiAgentId) },
-      );
+      const agentSessions = isDefaultFilter
+        ? 'IN (SELECT s.id FROM sessions s WHERE s.tenant_id = :tenantId AND (s.ai_agent_id = :aiAgentId OR s.ai_agent_id IS NULL))'
+        : 'IN (SELECT s.id FROM sessions s WHERE s.tenant_id = :tenantId AND s.ai_agent_id = :aiAgentId)';
+      qb.andWhere(`c.session_id ${agentSessions}`, { aiAgentId: Number(aiAgentId) });
+      foldFilters.push(`c2.session_id ${agentSessions}`);
     }
 
     if (q?.trim()) {
@@ -381,6 +385,20 @@ export class AgentService {
     const term = contentQ !== undefined ? searchTerm(contentQ) : null;
     if (contentQ !== undefined && !term) {
       throw new BusinessException(ERROR_CODE.SEARCH_TERM_TOO_SHORT, HttpStatus.BAD_REQUEST);
+    }
+    if (!q?.trim() && !term) {
+      // Merged room (PLN-261023 D2): one row per room — drop a member
+      // session's conversation when the room has a newer one that passes the
+      // same filters. A search lists the exact matching conversations instead.
+      // A tenant with no rooms never matches mr1, so the probe stays an
+      // index lookup on uq_mrs_tenant_session.
+      qb.andWhere(
+        `NOT EXISTS (SELECT 1 FROM merged_room_sessions mr1
+           JOIN merged_room_sessions mr2 ON mr2.room_id = mr1.room_id AND mr2.state = 'member'
+           JOIN conversations c2 ON c2.session_id = mr2.session_id AND c2.tenant_id = :tenantId
+           WHERE mr1.tenant_id = :tenantId AND mr1.session_id = c.session_id AND mr1.state = 'member'
+             AND c2.id > c.id AND ${foldFilters.join(' AND ')})`,
+      );
     }
     if (term) {
       // Bodies are plain text, so a tenant-scoped LIKE over a bounded window
@@ -802,16 +820,19 @@ export class AgentService {
     conversationId: number,
     tenantId: number,
     q: string,
+    /** A merged room's conversations (PLN-261023): find across the whole room. */
+    roomConversationIds?: number[] | null,
   ): Promise<{ items: Array<{ id: string; senderType: string; createdAt: Date; snippet: string }>; total: number }> {
     const term = searchTerm(q);
     if (!term) throw new BusinessException(ERROR_CODE.SEARCH_TERM_TOO_SHORT, HttpStatus.BAD_REQUEST);
     await this.requireConversation(conversationId, tenantId);
+    const scope = roomConversationIds?.length ? roomConversationIds : [conversationId];
     const qb = this.msgRepo
       .createQueryBuilder('m')
       .select(['m.id', 'm.senderType', 'm.body', 'm.createdAt'])
-      .where('m.tenant_id = :tenantId AND m.conversation_id = :conversationId AND m.body LIKE :pattern', {
+      .where('m.tenant_id = :tenantId AND m.conversation_id IN (:...scope) AND m.body LIKE :pattern', {
         tenantId,
-        conversationId,
+        scope,
         pattern: likePattern(term),
       })
       // Newest first for the cap (a long room keeps its recent matches), then
@@ -886,10 +907,15 @@ export class AgentService {
     conversationId: number,
     tenantId: number,
     opts: { limit?: number; beforeId?: number } = {},
+    /** A merged room's conversations (PLN-261023): one transcript over all of them. */
+    roomConversationIds?: number[] | null,
   ): Promise<{ messages: Message[]; hasMore: boolean }> {
     await this.requireConversation(conversationId, tenantId);
     const limit = Math.min(Math.max(opts.limit ?? MESSAGE_PAGE_SIZE, 1), 200);
-    const where: FindOptionsWhere<Message> = { conversationId };
+    // messages.id is global, so one id cursor pages the merged transcript too.
+    const where: FindOptionsWhere<Message> = roomConversationIds?.length
+      ? { conversationId: In(roomConversationIds) }
+      : { conversationId };
     if (opts.beforeId != null) where.id = LessThan(opts.beforeId);
     // limit + 1 is the cheapest "is there another page" probe.
     const rows = await this.msgRepo.find({

@@ -67,6 +67,7 @@ import { JourneyCard } from '../journey/JourneyCard';
 import { CommentCard } from './CommentCard';
 import { GroupCreateModal } from './GroupCreateModal';
 import { RelatedSessionsBanner } from './RelatedSessionsBanner';
+import { MergeRoomControl } from './MergeRoomControl';
 import { GroupRoom } from './GroupRoom';
 import { useGroups } from './live-chat.hooks';
 import { KnowledgeCaptureModal } from './KnowledgeCaptureModal';
@@ -362,6 +363,7 @@ export function LiveChatPage() {
   }, [selected]);
 
   const messages = [...older, ...(convo?.messages ?? [])];
+  const roomConversationById = new Map((convo?.mergedRoom?.conversations ?? []).map((c) => [c.id, c]));
   const hasOlder = older.length ? olderHasMore : !!convo?.hasMore;
 
   const loadOlder = async () => {
@@ -861,6 +863,16 @@ export function LiveChatPage() {
                       <span className="shrink-0 text-[11px] text-gray-400">
                         {t('sessionLabel', { id: s.id })}
                       </span>
+                      {/* One row stands for the whole merged room (PLN-261023 D2). */}
+                      {s.mergedRoom && (
+                        <span
+                          className="shrink-0 rounded-full bg-primary-50 px-1.5 py-0.5 text-[10px] font-medium text-primary-700"
+                          title={t('merge.rowHint', { count: s.mergedRoom.sessionCount })}
+                        >
+                          {t('merge.badge', { count: s.mergedRoom.sessionCount })}
+                          {s.mergedRoom.openCount > 1 && ` · ${t('merge.openCount', { count: s.mergedRoom.openCount })}`}
+                        </span>
+                      )}
                       <IdentityBadges identity={s.identity} compact />
                     </span>
                     <div className="flex shrink-0 items-center gap-1">
@@ -1003,6 +1015,10 @@ export function LiveChatPage() {
                   <IdentityBadges identity={convo?.identity} />
                   {selected && (
                     <CompanyThreadButton conversationId={selected} company={convo?.company} onOpen={setSelected} />
+                  )}
+                  {/* Same-customer merged room (PLN-261023). */}
+                  {selected && (
+                    <MergeRoomControl conversationId={selected} room={convo?.mergedRoom} onOpenConversation={setSelected} />
                   )}
                   {convo?.assignedTo && (
                     <Badge tone="primary">
@@ -1148,8 +1164,27 @@ export function LiveChatPage() {
                   const outbound = m.senderType === 'agent' || m.senderType === 'ai';
                   const day = dayKey(m.createdAt);
                   const showDay = day && day !== dayKey(messages[i - 1]?.createdAt);
+                  // Merged room (PLN-261023): a divider where the transcript
+                  // moves into another conversation of the room.
+                  const roomConv =
+                    convo?.mergedRoom && m.conversationId && m.conversationId !== messages[i - 1]?.conversationId
+                      ? roomConversationById.get(m.conversationId)
+                      : undefined;
                   return (
                     <div key={m.id} id={`msg-${m.id}`}>
+                      {roomConv && (
+                        <div className="my-3 flex items-center gap-2" data-testid="merged-divider">
+                          <span className="h-px flex-1 bg-primary-100" />
+                          <span className="flex items-center gap-1 text-[11px] font-medium text-primary-600">
+                            {t('sessionLabel', { id: roomConv.id })}
+                            <ChannelBadge channel={roomConv.channel} />
+                            {absTime(roomConv.createdAt)}
+                            {roomConv.status !== 'ended' && ` · ${t('merge.inProgress')}`}
+                            {roomConv.id === selected && ` · ${t('merge.replyHere')}`}
+                          </span>
+                          <span className="h-px flex-1 bg-primary-100" />
+                        </div>
+                      )}
                       {showDay && (
                         <div className="my-2 flex items-center gap-2">
                           <span className="h-px flex-1 bg-gray-100" />
@@ -1434,6 +1469,37 @@ export function LiveChatPage() {
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
+                </div>
+              )}
+              {/* Merged room (PLN-261023 D3): replies, status and the panel follow
+                  THIS conversation — picking another member opens it here. */}
+              {convo?.mergedRoom && convo.mergedRoom.sessions.length > 1 && (
+                <div className="flex items-center gap-2 border-t border-gray-100 px-3 pt-2 text-xs text-gray-600">
+                  <label htmlFor="merged-reply-target" className="shrink-0 text-gray-500">
+                    {t('merge.replyTarget')}
+                  </label>
+                  <select
+                    id="merged-reply-target"
+                    value={selected ?? ''}
+                    onChange={(e) => setSelected(e.target.value)}
+                    className="min-w-0 rounded-md border border-gray-300 bg-white px-2 py-1 text-xs outline-none focus:border-primary-500"
+                  >
+                    {convo.mergedRoom.sessions.map((ms) => (
+                      <option
+                        key={ms.sessionId}
+                        value={ms.conversationId}
+                        disabled={RECEIVE_ONLY_CHANNELS.has(ms.channel)}
+                      >
+                        {t('sessionLabel', { id: ms.conversationId })} ·{' '}
+                        {t(`channel.${ms.channel}`, { defaultValue: ms.channel })}
+                        {ms.open ? ` · ${t('merge.inProgress')}` : ''}
+                      </option>
+                    ))}
+                    {/* The open row may be an older conversation of a member session. */}
+                    {selected && !convo.mergedRoom.sessions.some((ms) => ms.conversationId === selected) && (
+                      <option value={selected}>{t('sessionLabel', { id: selected })}</option>
+                    )}
+                  </select>
                 </div>
               )}
               <div className="flex items-center gap-2 border-t border-gray-100 p-3">

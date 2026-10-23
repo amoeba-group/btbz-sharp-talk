@@ -1,4 +1,5 @@
 import {
+  ArrayMaxSize,
   ArrayMinSize,
   IsArray,
   IsBoolean,
@@ -188,4 +189,16 @@ export class RateAnswerRequest {
 export class RatingSummaryQuery {
   @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) from?: string;
   @IsOptional() @Matches(/^\d{4}-\d{2}-\d{2}$/) to?: string;
+}
+
+/** Merge sessions of this conversation's customer (PLN-261023-LiveChat-Merge-Same-Customer-Sessions). */
+export class MergeSessionsRequest {
+  @IsInt() @Min(1) conversation_id: number;
+  /** Other sessions to merge; this conversation's own session is always included. */
+  @IsArray() @ArrayMaxSize(50) @IsInt({ each: true }) session_ids: number[];
+  @IsBoolean() auto_join: boolean;
+}
+
+export class MergedRoomAutoJoinRequest {
+  @IsBoolean() auto_join: boolean;
 }
