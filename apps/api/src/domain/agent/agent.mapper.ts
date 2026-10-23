@@ -36,6 +36,7 @@ export function toSessionResponse(
   aiAgent: { id: number | null; name: string | null } = { id: null, name: null },
   identityAttributes: Record<string, string> | null = null,
   identityLevel: string | null = null,
+  companyName: string | null = null,
 ) {
   return {
     id: c.id,
@@ -47,6 +48,8 @@ export function toSessionResponse(
     identity: toIdentityResponse(identityAttributes, identityLevel),
     /** B2B company of the thread (PLN-261022 stage 2); null for consumers/guests. */
     companyId: c.companyId != null ? String(c.companyId) : null,
+    /** That company's name — the title reads "customer / company" (PLN-261023). Not PII. */
+    companyName,
     status: c.status,
     /** Effective AI agent of the session (REQ-260825 R6) — NULL pin = default. */
     aiAgentId: aiAgent.id != null ? String(aiAgent.id) : null,

@@ -365,6 +365,10 @@ export class AgentConsoleController {
       query.channel,
       Number.isFinite(agentFilter) ? agentFilter : undefined,
     );
+    const companyNames = await this.companyService.namesByIds(
+      tenantOf(user),
+      items.map((i) => Number(i.conversation.companyId)),
+    );
     return new Paginated(
       items.map(
         ({
@@ -388,6 +392,7 @@ export class AgentConsoleController {
             { id: aiAgentId, name: aiAgentName },
             identityAttributes,
             identityLevel,
+            conversation.companyId != null ? (companyNames.get(String(conversation.companyId)) ?? null) : null,
           ),
       ),
       buildPagination(page, size, total),
@@ -600,6 +605,10 @@ export class AgentConsoleController {
         conversation.companyId != null
           ? {
               id: String(conversation.companyId),
+              name:
+                (await this.companyService.namesByIds(tenantId, [Number(conversation.companyId)])).get(
+                  String(conversation.companyId),
+                ) ?? null,
               otherConversations: (await this.companyService.conversationsOf(tenantId, Number(conversation.companyId), id, 0)).total,
             }
           : null,

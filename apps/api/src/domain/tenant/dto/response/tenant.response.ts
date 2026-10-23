@@ -69,6 +69,8 @@ export interface PrivacyNoticeResponse {
   privacyProfile: string | null;
   /** widget | host_terms (PLN-261015 D9). */
   consentSource: string;
+  /** signed | claimed (PLN-261023). */
+  hostTermsTrust: string;
   /** Terms link for the widget disclosure line (PLN-261019); null → privacy URL. */
   termsUrl: string | null;
   /** The profile actually in force right now — what the console previews. */

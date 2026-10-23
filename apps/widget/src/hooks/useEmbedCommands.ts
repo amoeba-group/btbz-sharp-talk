@@ -47,6 +47,10 @@ export function useEmbedCommands(): void {
       try {
         const res = await identifyRequest(token, user);
         store.setAuthenticated(res.authenticated);
+        // The host's name for its user, signed or claimed (PLN-261023): a
+        // claimed session never becomes `authenticated`, so useSessionProfile
+        // would not fetch it — take it from the identify answer itself.
+        if (res.customerName) store.setCustomerName(res.customerName);
         // Earlier conversations of this account (PLN-261022 stage 2).
         store.setThreadAvailable(!!res.threadAvailable);
         // A tenant whose host terms cover AI support records a signed user as

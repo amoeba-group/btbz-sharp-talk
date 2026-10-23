@@ -45,6 +45,8 @@ export interface AgentSession {
   identity?: SessionIdentity | null;
   /** B2B company of the thread (PLN-261022 stage 2); null for consumers/guests. */
   companyId?: string | null;
+  /** That company's name — title "customer / company" (PLN-261023). */
+  companyName?: string | null;
   /** Team pin (PLN-260826) — pinned rows arrive first from the server. */
   pinned?: boolean;
   pinnedAt?: string | null;
@@ -143,7 +145,7 @@ export interface ConversationDetail {
   aiAgentName?: string | null;
   identity?: SessionIdentity | null;
   /** B2B company + how many of its other conversations exist (PLN-261022 stage 2). */
-  company?: { id: string; otherConversations: number } | null;
+  company?: { id: string; name?: string | null; otherConversations: number } | null;
   messages: ChatMessage[];
   /** Older messages exist before the first one returned (PLN-260807). */
   hasMore?: boolean;

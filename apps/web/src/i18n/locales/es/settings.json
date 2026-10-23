@@ -55,6 +55,8 @@
     "consentSource_host_terms": "Términos de la app anfitriona — los usuarios con sesión aceptaron los términos",
     "consentSourceWidgetHint": "Todos los visitantes ven el banner y deben aceptarlo antes de chatear.",
     "consentSourceHostHint": "Los usuarios que tu app firma (embed identify) quedan registrados como consentidos —hora y versión del aviso— sin banner. Tus términos deben cubrir el soporte con IA y su región de procesamiento. Los visitantes sin firma siguen viendo el banner.",
+    "hostTermsTrustClaimed": "Contar también los inicios de sesión sin firma como consentimiento",
+    "hostTermsTrustClaimedHint": "Para pruebas antes de que la app anfitriona firme los inicios de sesión. Los registros de cliente/empresa y las conversaciones anteriores siguen requiriendo un inicio de sesión firmado.",
     "termsUrl": "URL de los términos del servicio",
     "termsUrlHint": "Enlazada desde la línea de aviso inferior del widget (widget personalizado › posición del aviso de IA). Vacío = la URL de la política de privacidad."
   },

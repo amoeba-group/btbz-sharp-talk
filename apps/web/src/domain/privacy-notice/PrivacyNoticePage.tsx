@@ -46,6 +46,7 @@ export function PrivacyNoticePage() {
   const [version, setVersion] = useState('');
   const [profile, setProfile] = useState<string>('');
   const [consentSource, setConsentSource] = useState<'widget' | 'host_terms'>('widget');
+  const [trustClaimed, setTrustClaimed] = useState(false);
   const [copy, setCopy] = useState<Record<string, NoticeLines>>({});
   const [copyLang, setCopyLang] = useState<string>('KO');
   const [bumpVersion, setBumpVersion] = useState(false);
@@ -60,6 +61,7 @@ export function PrivacyNoticePage() {
       setVersion(data.consentNoticeVersion ?? '');
       setProfile(data.privacyProfile ?? '');
       setConsentSource(data.consentSource === 'host_terms' ? 'host_terms' : 'widget');
+      setTrustClaimed(data.hostTermsTrust === 'claimed');
       setCopy(data.privacyNoticeCopy ?? {});
       setBumpVersion(false);
     }
@@ -91,6 +93,7 @@ export function PrivacyNoticePage() {
       // tenant starts in — never store it as a profile name.
       privacy_profile: profile || null,
       consent_source: consentSource,
+      host_terms_trust: trustClaimed ? 'claimed' : 'signed',
       privacy_notice_copy: Object.keys(copy).length ? copy : null,
       ...(bumpVersion ? { bump_version: true } : {}),
     });
@@ -184,6 +187,22 @@ export function PrivacyNoticePage() {
                 <p className="mt-1 text-xs text-gray-400">
                   {t(consentSource === 'host_terms' ? 'privacyNotice.consentSourceHostHint' : 'privacyNotice.consentSourceWidgetHint')}
                 </p>
+                {/* PLN-261023: a UAT aid while the host cannot sign yet —
+                    banner only; records and earlier chats stay signed-only. */}
+                {consentSource === 'host_terms' && (
+                  <label className="mt-2 flex items-start gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5"
+                      checked={trustClaimed}
+                      onChange={(e) => setTrustClaimed(e.target.checked)}
+                    />
+                    <span>
+                      {t('privacyNotice.hostTermsTrustClaimed')}
+                      <span className="mt-0.5 block text-xs text-amber-600">{t('privacyNotice.hostTermsTrustClaimedHint')}</span>
+                    </span>
+                  </label>
+                )}
               </FormRow>
 
               <FormRow label={t('privacyNotice.profile')}>

@@ -102,8 +102,10 @@ export class AiConfigController {
   // findOne({ sessionToken: undefined }) — TypeORM drops the predicate and
   // returns an ARBITRARY session, so the widget rendered another tenant's
   // unscoped buttons (FIX-260825-Scenario-Token-Guard).
-  scenario(@SessionToken() sessionToken: string) {
-    return this.aiConfig.getScenarioForSession(sessionToken);
+  // `language` = the widget's display language (PLN-261023): labels follow the
+  // screen even before a language switch has reached the session row.
+  scenario(@SessionToken() sessionToken: string, @Query('language') language?: string) {
+    return this.aiConfig.getScenarioForSession(sessionToken, language);
   }
 
   private tenantId(user: Principal): number {

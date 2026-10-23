@@ -27,7 +27,7 @@ import { ContactCard } from './ContactCard';
 import { AffiliateCard } from './AffiliateCard';
 import { InlineOrdersAnswer } from './InlineOrderCard';
 import { replyChips } from './reply-chips';
-import { fill, pickCopy } from '../../lib/copy';
+import { pickCopy, welcomeGreeting } from '../../lib/copy';
 
 type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'orders' | null;
 
@@ -112,13 +112,13 @@ export function ChatTab() {
     (WIDGET_COPY_DEFAULTS[field] as Record<string, string>)[language.toUpperCase()] ??
     WIDGET_COPY_DEFAULTS[field].EN;
 
-  const greetingFor = (name: string | null): string => {
-    const template = name
-      ? (pickCopy(widgetCopy?.loginGreeting, language) ?? defaultCopy('loginGreeting'))
-      : (pickCopy(widgetCopy?.firstVisit, language) ?? defaultCopy('firstVisit'));
-    const withShop = fill(template, '{shop}', shopName);
-    return name ? fill(withShop, '{name}', name) : withShop;
-  };
+  const greetingFor = (name: string | null): string =>
+    welcomeGreeting({
+      firstVisit: pickCopy(widgetCopy?.firstVisit, language) ?? defaultCopy('firstVisit'),
+      loginGreeting: pickCopy(widgetCopy?.loginGreeting, language) ?? defaultCopy('loginGreeting'),
+      name,
+      shop: shopName,
+    });
 
   // Requirement 4 (PLN-260808-Widget-Greetings): when the shopper signs in
   // mid-conversation, greet them by name once. Render-only — never persisted.

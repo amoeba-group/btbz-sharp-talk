@@ -425,7 +425,7 @@
     "displayNameHint": "在小部件中向顾客展示。留空=店铺显示名。",
     "greeting": "首条回复消息",
     "greetingPlaceholder": "你好！我是 Livy，有什么可以帮你？",
-    "greetingHint": "分配到此客服的会话的第一条气泡。留空的语言使用店铺通用首条消息。"
+    "greetingHint": "分配到此客服的会话的第一条气泡。留空的语言使用店铺通用首条消息。 {name} = 登录用户的姓名(例如 \"{name} 您好, …\")。"
   },
   "agentScope": {
     "button": "客服",

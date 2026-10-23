@@ -117,7 +117,7 @@ export class EmbedService {
       // customer. A verified session is never downgraded by an unsigned call.
       if (unsignedIdentifyAllowed(Number(session.tenantId))) {
         if (session.identityLevel !== SESSION_IDENTITY.VERIFIED) {
-          const claimed = await this.claimIdentity(session, input, attributes);
+          const claimed = await this.claimIdentity(session, input, attributes, tenant);
           await this.recordSignIn(claimed, signedInBefore);
           return claimed;
         }
@@ -152,19 +152,9 @@ export class EmbedService {
     // "all hotels") clears the session's company but never demotes the contact.
     const company = await this.registerAccount(Number(session.tenantId), customer, stored.attributes);
     session.companyId = company ? Number(company.id) : null;
-    // Consent via the host's own terms (PLN-261015 D9). Only a SIGNED user
-    // reaches this line, so only users the host vouches for are covered; an
-    // explicit decline in the widget is never overridden.
-    let consentFromHost = false;
-    if (tenant?.consentSource === 'host_terms' && session.consentState !== CONSENT_STATE.DECLINED) {
-      const version = tenant.consentNoticeVersion ?? CONSENT_NOTICE_VERSION;
-      if (session.consentState !== CONSENT_STATE.GRANTED || session.consentVersion !== version) {
-        session.consentState = CONSENT_STATE.GRANTED;
-        session.consentAt = new Date();
-        session.consentVersion = version;
-        consentFromHost = true;
-      }
-    }
+    // Consent via the host's own terms (PLN-261015 D9) — a SIGNED user, so one
+    // the host vouches for.
+    const consentFromHost = grantHostTermsConsent(session, tenant);
     const saved = await this.sessionRepo.save(session);
     // The token→session cache would keep serving the guest view otherwise.
     await this.redis.del(sessionCacheKey(input.sessionToken));
@@ -220,17 +210,23 @@ export class EmbedService {
     session: Session,
     input: IdentifyInput,
     attributes: IdentityAttributes | null,
+    tenant: Tenant | null,
   ): Promise<Session> {
     const tenantId = Number(session.tenantId);
     const stored = storedIdentityAttributes(attributes, await this.provinceRegions(tenantId, attributes));
     session.identityLevel = SESSION_IDENTITY.CLAIMED;
     // Replaced, never merged — same rule as a signed identify.
     session.identityAttributes = claimedIdentityAttributes(input.userId, input.name, stored.attributes);
+    // Host-terms consent for an unsigned user only where the tenant opted in
+    // (PLN-261023 host_terms_trust=claimed, a UAT aid): skipping the banner
+    // affects only this browser, unlike a customer record or thread.
+    const consentFromHost = tenant?.hostTermsTrust === 'claimed' && grantHostTermsConsent(session, tenant);
     const saved = await this.sessionRepo.save(session);
     await this.redis.del(sessionCacheKey(input.sessionToken));
     this.logger.warn(
       `identify claimed — unsigned (tenant ${tenantId}, user ${maskId(input.userId)}` +
-        `${attributes ? `, attrs ${Object.keys(attributes).sort().join(',')}, region ${stored.regionSource}` : ''})`,
+        `${attributes ? `, attrs ${Object.keys(attributes).sort().join(',')}, region ${stored.regionSource}` : ''}` +
+        `${consentFromHost ? `, consent via host terms v${saved.consentVersion} (claimed)` : ''})`,
     );
     return saved;
   }
@@ -363,6 +359,21 @@ function signInKey(session: Session): string | null {
   }
   const claimed = session.identityLevel === SESSION_IDENTITY.CLAIMED ? session.identityAttributes?.user_id : null;
   return claimed ? `claimed:${claimed}` : null;
+}
+
+/**
+ * Record consent through the host's own terms (PLN-261015 D9) when the tenant
+ * uses them. An explicit decline in the widget is never overridden. Returns
+ * whether the session changed (so the caller can log it).
+ */
+function grantHostTermsConsent(session: Session, tenant: Tenant | null): boolean {
+  if (tenant?.consentSource !== 'host_terms' || session.consentState === CONSENT_STATE.DECLINED) return false;
+  const version = tenant.consentNoticeVersion ?? CONSENT_NOTICE_VERSION;
+  if (session.consentState === CONSENT_STATE.GRANTED && session.consentVersion === version) return false;
+  session.consentState = CONSENT_STATE.GRANTED;
+  session.consentAt = new Date();
+  session.consentVersion = version;
+  return true;
 }
 
 /** Never log a full external user id — it is the customer's own identifier. */

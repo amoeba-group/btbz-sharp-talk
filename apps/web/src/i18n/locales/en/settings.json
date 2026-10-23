@@ -55,6 +55,8 @@
     "consentSource_host_terms": "Host app terms — signed-in users agreed to our terms",
     "consentSourceWidgetHint": "Every visitor sees the consent banner and accepts it before chatting.",
     "consentSourceHostHint": "Users your app signs (embed identify) are recorded as consented — time and notice version — without a banner. Make sure your terms cover AI support and its processing region. Unsigned visitors still see the banner.",
+    "hostTermsTrustClaimed": "Also count unsigned sign-ins as consent",
+    "hostTermsTrustClaimedHint": "For testing before the host app signs sign-ins. Customer/company records and earlier conversations still require a signed sign-in.",
     "termsUrl": "Terms of service URL",
     "termsUrlHint": "Linked from the widget's bottom disclosure line (custom widget › AI disclosure placement). Empty = the privacy policy URL."
   },

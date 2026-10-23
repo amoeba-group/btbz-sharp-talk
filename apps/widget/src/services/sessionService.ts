@@ -9,10 +9,14 @@ export function ensureSession(
   agentCode?: string,
   landingPath?: string,
   accessKey?: string,
+  languageChosen?: boolean,
 ): Promise<SessionResponse> {
   return apiClient.post<SessionResponse>('/session/ensure', {
     session_token: sessionToken ?? undefined,
     locale,
+    // `locale` is a choice (host page or the visitor's own pick), not a browser
+    // guess — the server then keeps it even when it is English (PLN-261023).
+    language_chosen: languageChosen || undefined,
     shop_domain: shopDomain ?? undefined,
     parent_origin: parentOrigin ?? undefined,
     // AI agent for sessions born on this page (PLN-260820); server falls back

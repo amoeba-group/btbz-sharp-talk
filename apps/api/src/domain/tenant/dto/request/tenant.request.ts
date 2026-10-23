@@ -145,6 +145,9 @@ export class UpdatePrivacyNoticeRequest {
   /** widget (banner) | host_terms (signed host users consented via host terms) — PLN-261015 D9. */
   @IsOptional() @IsIn(['widget', 'host_terms']) consent_source?: string;
 
+  /** signed | claimed — which host sign-ins count as consent under host_terms (PLN-261023). */
+  @IsOptional() @IsIn(['signed', 'claimed']) host_terms_trust?: string;
+
   /** Terms-of-service link for the widget's disclosure line (PLN-261019); null clears. */
   @IsOptional()
   @IsUrl({ protocols: ['http', 'https'], require_protocol: true })

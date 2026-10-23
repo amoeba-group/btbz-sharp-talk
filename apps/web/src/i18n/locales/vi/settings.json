@@ -55,6 +55,8 @@
     "consentSource_host_terms": "Điều khoản ứng dụng chủ — người dùng đăng nhập đã đồng ý điều khoản",
     "consentSourceWidgetHint": "Mọi khách đều thấy biểu ngữ đồng ý và phải đồng ý trước khi trò chuyện.",
     "consentSourceHostHint": "Người dùng được ứng dụng của bạn ký xác thực (embed identify) được ghi nhận là đã đồng ý — thời điểm và phiên bản thông báo — mà không hiện biểu ngữ. Điều khoản phải bao gồm hỗ trợ AI và khu vực xử lý. Khách chưa ký xác thực vẫn thấy biểu ngữ.",
+    "hostTermsTrustClaimed": "Cũng tính đăng nhập chưa ký là đã đồng ý",
+    "hostTermsTrustClaimedHint": "Dùng để kiểm thử trước khi ứng dụng chủ ký xác thực đăng nhập. Hồ sơ khách hàng/công ty và hội thoại trước đó vẫn chỉ áp dụng cho đăng nhập đã ký.",
     "termsUrl": "URL điều khoản dịch vụ",
     "termsUrlHint": "Được liên kết từ dòng thông báo dưới cùng của widget (widget tùy chỉnh › vị trí thông báo AI). Trống = URL chính sách bảo mật."
   },

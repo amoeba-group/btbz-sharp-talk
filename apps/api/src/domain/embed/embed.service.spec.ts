@@ -336,8 +336,8 @@ describe('EmbedService.identify — unsigned host, claimed', () => {
   const ATTRS = { hotel_id: '1721', hotel_name: 'A In Hotel Del Luna', province: 'Hồ Chí Minh', region: 'South', role: 'Lễ tân' };
   const pending = () => ({ id: 5, sessionToken: 'tok', tenantId: 1, customerId: null, identityLevel: 'guest', consentState: 'pending', consentVersion: null });
 
-  const harness = (opts: { secret?: string | null; session?: Record<string, unknown> } = {}) => {
-    const h = build({ secret: opts.secret, session: opts.session ?? pending(), tenant: { consentSource: 'host_terms' } });
+  const harness = (opts: { secret?: string | null; session?: Record<string, unknown>; tenant?: Record<string, unknown> } = {}) => {
+    const h = build({ secret: opts.secret, session: opts.session ?? pending(), tenant: { consentSource: 'host_terms', ...opts.tenant } });
     const companies = { upsertFromIdentity: jest.fn(async () => ({ id: '3' })), linkContact: jest.fn(async () => undefined) };
     const convRepo = { update: jest.fn(async () => ({ affected: 1 })) };
     const aiConfigRepo = { findOne: jest.fn(async () => ({ handoffConfig: { provinceRegions: { 'Đà Nẵng': 'south_center' } } })) };
@@ -384,6 +384,49 @@ describe('EmbedService.identify — unsigned host, claimed', () => {
     expect(convRepo.update).not.toHaveBeenCalled();
     expect(s.consentState).toBe('pending');
     expect(h.redis.del).toHaveBeenCalled();
+  });
+
+  describe('host-terms consent for a claimed user (PLN-261023)', () => {
+    it('is granted when the tenant trusts claimed sign-ins — still no customer or company', async () => {
+      process.env[ENV] = '1';
+      const { svc, h, companies } = harness({ tenant: { hostTermsTrust: 'claimed', consentNoticeVersion: '2026-07' } });
+      const s = await svc.identify({ sessionToken: 'tok', userId: 'laquan10', hash: 'testing', name: 'ADMIN123', attributes: ATTRS });
+      expect(s.identityLevel).toBe('claimed');
+      expect(s.consentState).toBe('granted');
+      expect(s.consentVersion).toBe('2026-07');
+      expect(s.consentAt).toBeInstanceOf(Date);
+      expect(s.customerId).toBeNull();
+      expect(h.customers).toHaveLength(0);
+      expect(companies.upsertFromIdentity).not.toHaveBeenCalled();
+    });
+
+    it('is not granted under the default trust (signed only)', async () => {
+      process.env[ENV] = '1';
+      const { svc } = harness({ tenant: { hostTermsTrust: 'signed' } });
+      const s = await svc.identify({ sessionToken: 'tok', userId: 'laquan10', hash: 'testing' });
+      expect(s.consentState).toBe('pending');
+    });
+
+    it('never overrides an explicit decline', async () => {
+      process.env[ENV] = '1';
+      const { svc } = harness({ tenant: { hostTermsTrust: 'claimed' }, session: { ...pending(), consentState: 'declined' } });
+      const s = await svc.identify({ sessionToken: 'tok', userId: 'laquan10', hash: 'testing' });
+      expect(s.consentState).toBe('declined');
+    });
+
+    it('does nothing for a widget-consent tenant', async () => {
+      process.env[ENV] = '1';
+      const { svc } = harness({ tenant: { consentSource: 'widget', hostTermsTrust: 'claimed' } });
+      const s = await svc.identify({ sessionToken: 'tok', userId: 'laquan10', hash: 'testing' });
+      expect(s.consentState).toBe('pending');
+    });
+
+    it('is still rejected (401) when the tenant is not allowed unsigned identify', async () => {
+      const { svc } = harness({ tenant: { hostTermsTrust: 'claimed' } });
+      await expect(svc.identify({ sessionToken: 'tok', userId: 'laquan10', hash: 'testing' })).rejects.toMatchObject({
+        status: 401,
+      });
+    });
   });
 
   it('claims when the tenant has no secret at all', async () => {

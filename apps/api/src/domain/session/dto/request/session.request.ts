@@ -4,6 +4,12 @@ import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
 export class EnsureSessionRequest {
   @IsOptional() @IsString() session_token?: string;
   @IsOptional() @IsString() locale?: string;
+  /**
+   * `locale` is a choice — the host page set it, or the visitor picked it —
+   * not a browser guess (PLN-261023). The session then takes it as is, English
+   * included, and locks it; otherwise English means "no preference".
+   */
+  @IsOptional() @IsBoolean() language_chosen?: boolean;
   @IsOptional() @IsString() shop_domain?: string;
   /**
    * Origin of the page hosting the widget (PLN-260819 S1). Optional: loaders

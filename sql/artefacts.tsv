@@ -100,6 +100,7 @@
 261022-unit-label-regions.sql	column	units	provinces
 261022-unit-label-regions.sql	column	job_labels	regions
 261022-unit-label-regions.sql	column	job_labels	provinces
+261023-tenant-host-terms-trust.sql	column	tenants	host_terms_trust
 migration_agent_coaching.sql	table	agent_coaching_threads	-
 migration_agent_coaching.sql	table	agent_coaching_messages	-
 migration_agent_coaching.sql	table	agent_coaching_proposals	-

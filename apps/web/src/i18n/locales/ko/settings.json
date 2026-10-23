@@ -55,6 +55,8 @@
     "consentSource_host_terms": "호스트 앱 약관 — 로그인 사용자가 약관에 동의함",
     "consentSourceWidgetHint": "모든 방문자에게 동의 배너가 보이고, 동의해야 대화할 수 있습니다.",
     "consentSourceHostHint": "호스트 앱이 서명한 로그인 사용자(임베드 identify)는 배너 없이 동의로 기록됩니다(시각·고지 버전). 약관에 AI 상담과 처리 지역이 포함돼 있어야 합니다. 서명되지 않은 방문자에게는 배너가 그대로 보입니다.",
+    "hostTermsTrustClaimed": "서명 없는 로그인도 약관 동의로 인정",
+    "hostTermsTrustClaimedHint": "호스트 앱이 서명을 붙이기 전 테스트용입니다. 고객·고객사 등록과 이전 대화 연결은 서명된 로그인에만 적용됩니다.",
     "termsUrl": "이용약관 URL",
     "termsUrlHint": "위젯 하단 고지 줄(커스텀 위젯 › AI 고지 위치)에서 링크됩니다. 비우면 개인정보 처리방침 URL을 씁니다."
   },

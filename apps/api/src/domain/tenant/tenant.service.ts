@@ -389,6 +389,7 @@ export class TenantService {
       tenant.privacyProfile = profile;
     }
     if (dto.consent_source !== undefined) tenant.consentSource = dto.consent_source;
+    if (dto.host_terms_trust !== undefined) tenant.hostTermsTrust = dto.host_terms_trust;
     if (dto.terms_url !== undefined) tenant.termsUrl = dto.terms_url?.trim() || null;
     if (dto.privacy_notice_copy !== undefined) {
       tenant.privacyNoticeCopy = normalizePrivacyNoticeCopy(dto.privacy_notice_copy);

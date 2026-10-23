@@ -102,6 +102,16 @@ export class Tenant {
   @Column({ name: 'consent_source', type: 'varchar', length: 16, default: 'widget' })
   consentSource: string;
 
+  /**
+   * Which host sign-ins count as consent under 'host_terms' (PLN-261023).
+   * 'signed' (default) — only a verified identify. 'claimed' — an unsigned
+   * identify the tenant is allowed to make (EMBED_UNSIGNED_IDENTIFY_TENANT_IDS)
+   * counts too: a UAT aid before the host signs. Customer/company records and
+   * thread continuity stay signed-only either way.
+   */
+  @Column({ name: 'host_terms_trust', type: 'varchar', length: 16, default: 'signed' })
+  hostTermsTrust: string;
+
   /** 'rating' (one-question emoji card, default) | 'survey' (resolved? + rating + reason) — PLN-261019. */
   @Column({ name: 'csat_mode', type: 'varchar', length: 8, default: 'rating' })
   csatMode: string;

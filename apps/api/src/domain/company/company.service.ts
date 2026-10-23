@@ -104,6 +104,17 @@ export class CompanyService {
     return { items: rows.map((r) => CompanyMapper.toResponse(r, stats.get(String(r.id)))), total };
   }
 
+  /**
+   * Company names by id, tenant-scoped — the live-chat title "customer /
+   * company" (PLN-261023). A foreign or missing id is simply absent.
+   */
+  async namesByIds(tenantId: number, ids: number[]): Promise<Map<string, string | null>> {
+    const unique = [...new Set(ids.filter((n) => Number.isFinite(n) && n > 0))];
+    if (!unique.length) return new Map();
+    const rows = await this.companyRepo.find({ where: { tenantId, id: In(unique) }, select: ['id', 'name'] });
+    return new Map(rows.map((r) => [String(r.id), r.name ?? null]));
+  }
+
   async detail(tenantId: number, id: number): Promise<CompanyDetailResponse> {
     const company = await this.companyRepo.findOne({ where: { id, tenantId } });
     if (!company) {
