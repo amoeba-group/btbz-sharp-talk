@@ -119,6 +119,37 @@ export interface RoutingRuleHit {
   hasGroup: boolean;
 }
 
+/** Why a rule was passed over (PLN-261024 simulator) — `null` = it matches. */
+export type RuleSkipReason = 'no_assignee' | 'category' | 'keywords' | 'label' | `condition:${string}`;
+
+/**
+ * Does one rule match, and if not, the first filter that failed — the same
+ * order the router checks. Pure; shared by routing and the console simulator
+ * so the preview can never disagree with what really happens.
+ */
+export function ruleVerdict(rule: RoutingRule, ctx: RoutingContext): { reason: RuleSkipReason | null; assigneeUserIds: number[]; hasGroup: boolean } {
+  const assigneeUserIds = (rule?.assigneeUserIds ?? []).map(Number).filter((id) => Number.isFinite(id) && id > 0);
+  const hasGroup = hasAssigneeGroup({
+    unitIds: rule?.assigneeUnitIds,
+    labelCodes: rule?.assigneeLabelCodes,
+    byRegion: rule?.assigneeByRegion === true,
+  });
+  const verdict = (reason: RuleSkipReason | null) => ({ reason, assigneeUserIds, hasGroup });
+  if (!assigneeUserIds.length && !hasGroup) return verdict('no_assignee');
+  // The category filter matches the shopper's pick only (PLN-261024 D3), folded
+  // the same way on both sides so a rule written once matches every spelling.
+  const categories = (rule.regions ?? []).map(canonicalRegion).filter(Boolean);
+  if (categories.length && !categories.includes(canonicalRegion(ctx.consultCategory))) return verdict('category');
+  const keywords = (rule.keywords ?? []).map(norm).filter(Boolean);
+  if (keywords.length && !keywords.some((k) => norm(ctx.text).includes(k))) return verdict('keywords');
+  const labels = (rule.labels ?? []).map(norm).filter(Boolean);
+  if (labels.length && !labels.includes(norm(ctx.label))) return verdict('label');
+  // Customer-information conditions (PLN-261019 P4): all must hold.
+  const failed = (rule.conditions ?? []).find((c) => !conditionHolds(c, ctx));
+  if (failed) return verdict(`condition:${String(failed.field)}`);
+  return verdict(null);
+}
+
 /**
  * Every rule whose filters all match, in rule order (PLN-261015 D3). An empty
  * filter list matches anything. A rule with neither an explicit agent nor a
@@ -126,29 +157,10 @@ export interface RoutingRuleHit {
  * fallback. Pure — tested directly.
  */
 export function matchRoutingRules(rules: RoutingRule[] | undefined, ctx: RoutingContext): RoutingRuleHit[] {
-  // The category filter matches the shopper's pick only (PLN-261024 D3), folded
-  // the same way on both sides so a rule written once matches every spelling.
-  const category = canonicalRegion(ctx.consultCategory);
-  const text = norm(ctx.text);
-  const label = norm(ctx.label);
   const hits: RoutingRuleHit[] = [];
   for (const [index, rule] of (rules ?? []).entries()) {
-    const assigneeUserIds = (rule?.assigneeUserIds ?? []).map(Number).filter((id) => Number.isFinite(id) && id > 0);
-    const hasGroup = hasAssigneeGroup({
-      unitIds: rule?.assigneeUnitIds,
-      labelCodes: rule?.assigneeLabelCodes,
-      byRegion: rule?.assigneeByRegion === true,
-    });
-    if (!assigneeUserIds.length && !hasGroup) continue;
-    const categories = (rule.regions ?? []).map(canonicalRegion).filter(Boolean);
-    if (categories.length && !categories.includes(category)) continue;
-    const keywords = (rule.keywords ?? []).map(norm).filter(Boolean);
-    if (keywords.length && !keywords.some((k) => text.includes(k))) continue;
-    const labels = (rule.labels ?? []).map(norm).filter(Boolean);
-    if (labels.length && !labels.includes(label)) continue;
-    // Customer-information conditions (PLN-261019 P4): all must hold.
-    if ((rule.conditions ?? []).some((c) => !conditionHolds(c, ctx))) continue;
-    hits.push({ rule, index, assigneeUserIds, hasGroup });
+    const v = ruleVerdict(rule, ctx);
+    if (v.reason === null) hits.push({ rule, index, assigneeUserIds: v.assigneeUserIds, hasGroup: v.hasGroup });
   }
   return hits;
 }
@@ -266,6 +278,42 @@ export class HandoffRouterService {
       };
     }
     return { mode: 'agents', targetUserIds };
+  }
+
+  /**
+   * Dry run for the console (PLN-261024 D6): which rule would take this
+   * context and who would be paged, with the reason every earlier rule was
+   * passed over. Uses the rules being edited (not yet saved) and the same
+   * matching and group resolution as `route`. Business hours are ignored — the
+   * question is "who", not "now". Pages nobody.
+   */
+  async simulate(
+    tenantId: number,
+    rules: RoutingRule[],
+    fallbackUserIds: number[],
+    ctx: RoutingContext,
+  ): Promise<{
+    steps: Array<{ index: number; name: string; outcome: 'matched' | 'skipped'; reason?: RuleSkipReason | 'nobody_active'; targetUserIds?: number[] }>;
+    result: { ruleIndex: number | null; ruleName: string | null; targetUserIds: number[] };
+  }> {
+    const steps: Array<{ index: number; name: string; outcome: 'matched' | 'skipped'; reason?: RuleSkipReason | 'nobody_active'; targetUserIds?: number[] }> = [];
+    for (const [index, rule] of (rules ?? []).entries()) {
+      const name = rule?.name?.trim() || `#${index + 1}`;
+      const v = ruleVerdict(rule, ctx);
+      if (v.reason) {
+        steps.push({ index, name, outcome: 'skipped', reason: v.reason });
+        continue;
+      }
+      const group = v.hasGroup ? (await this.resolveGroup(tenantId, rule, ctx)).ids : [];
+      const targets = [...new Set([...v.assigneeUserIds, ...group].map(Number))];
+      if (!targets.length) {
+        steps.push({ index, name, outcome: 'skipped', reason: 'nobody_active' });
+        continue;
+      }
+      steps.push({ index, name, outcome: 'matched', targetUserIds: targets });
+      return { steps, result: { ruleIndex: index, ruleName: name, targetUserIds: targets } };
+    }
+    return { steps, result: { ruleIndex: null, ruleName: null, targetUserIds: fallbackUserIds.filter(Number.isFinite) } };
   }
 
   private async resolveGroup(tenantId: number, rule: RoutingRule, ctx: RoutingContext): Promise<ResolvedAssignees> {

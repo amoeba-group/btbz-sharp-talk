@@ -4,7 +4,9 @@ import { Button } from '@/components/Button';
 import { Input, Label, Select } from '@/components/Field';
 import { cn } from '@/lib/cn';
 import { ROUTING_MODE } from './ai-settings.service';
-import type { RoutingMode } from './ai-settings.service';
+import type { RoutingMode, RoutingRule } from './ai-settings.service';
+import type { RoutingCondition } from '@sharptalk/types';
+import { RoutingSimulator } from './RoutingSimulator';
 import {
   ROUTING_CONDITION_ENUM_VALUES,
   ROUTING_CONDITION_FIELDS,
@@ -76,6 +78,51 @@ export const emptyRoutingRow = (): RoutingRuleRow => ({
 
 const isEnumField = (field: string) => routingConditionDef(field)?.kind === 'enum';
 
+/** Editor rows → stored rules (the save path and the simulator share it, PLN-261024 D6). */
+export function routingRowsToRules(rows: RoutingRuleRow[]): RoutingRule[] {
+  return (
+    rows
+      .map((r) => ({
+        name: r.name.trim() || undefined,
+        regions: r.regions,
+        keywords: r.keywords
+          .split(',')
+          .map((k) => k.trim())
+          .filter(Boolean),
+        labels: r.labels,
+        conditions: r.conditions
+          .map((c) => ({
+            field: c.field as RoutingCondition['field'],
+            values:
+              routingConditionDef(c.field)?.kind === 'enum'
+                ? c.values
+                : c.text
+                    .split(',')
+                    .map((v) => v.trim())
+                    .filter(Boolean),
+          }))
+          // Nothing chosen = nothing asked; dropping it keeps the stored rule honest.
+          .filter((c) => c.values.length > 0),
+        assigneeUserIds: r.assignees.map(Number).filter(Number.isFinite),
+        assigneeUnitIds: r.assigneeUnits.map(Number).filter(Number.isFinite),
+        assigneeLabelCodes: r.assigneeLabels,
+        assigneeByRegion: r.byRegion || undefined,
+        mode: r.mode,
+      }))
+      // Same rule as the server: an agent, a group or region assignment, else the rule pages nobody.
+      .filter(
+        (r) =>
+          r.assigneeByRegion ||
+          r.assigneeUserIds.length > 0 ||
+          r.assigneeUnitIds.length > 0 ||
+          r.assigneeLabelCodes.length > 0,
+      )
+  );
+}
+
+/** A rule named after a place (North, Miền Nam, 남부 …) — PLN-261024 D7 warns when it has no region condition. */
+const PLACE_NAME = /(^|[^a-z])(north|south|central|center)([^a-z]|$)|miền|bắc|nam bộ|trung|북부|남부|중부|중북부|중남부/i;
+
 /**
  * Region × topic routing rules (PLN-261015 D3, wireframe §6.5.2).
  *
@@ -93,6 +140,8 @@ export function RoutingRulesEditor({
   manageHref,
   categories,
   onManageCategories,
+  pendingAgents = [],
+  fallbackAssignees = [],
 }: {
   rows: RoutingRuleRow[];
   onChange: (rows: RoutingRuleRow[]) => void;
@@ -113,6 +162,10 @@ export function RoutingRulesEditor({
   categories: Array<{ code: string; name: string; visible?: boolean }>;
   /** Opens category management (undefined = button hidden — no permission). */
   onManageCategories?: () => void;
+  /** Invited (not yet active) users — counted in the "nobody to page" warning (PLN-261024 D7). */
+  pendingAgents?: AssigneeAgent[];
+  /** The handoff's own assignee list — where a handoff goes when no rule matches (simulator). */
+  fallbackAssignees?: string[];
 }) {
   const { t } = useTranslation('aiSetting');
   const { t: tc } = useTranslation('common');
@@ -198,6 +251,15 @@ export function RoutingRulesEditor({
         )}
       </div>
       <p className="mb-2 mt-0.5 text-[11px] text-gray-400">{t('handoff.routing.hint')}</p>
+      {/* Who would this reach? — the rules as edited, before saving (PLN-261024 D6). */}
+      <RoutingSimulator
+        rules={routingRowsToRules(rows)}
+        fallbackAssignees={fallbackAssignees}
+        // Invited users included for names only — an explicit assignee may still be one.
+        agents={[...agents, ...pendingAgents]}
+        categories={categories}
+        languages={languages}
+      />
       <div className="space-y-3">
         {rows.map((row, i) => (
           <div key={i} className="space-y-2 rounded-lg border border-gray-200 p-3">
@@ -237,6 +299,26 @@ export function RoutingRulesEditor({
                 {tc('delete')}
               </button>
             </div>
+
+            {/* Misconfiguration hints (PLN-261024 D7) — advisory, saving is never blocked. */}
+            {(() => {
+              const warns: string[] = [];
+              if (row.labels.length) warns.push(t('handoff.routing.warn.denyLabel', { labels: row.labels.map(labelName).join(', ') }));
+              if (PLACE_NAME.test(row.name) && !row.conditions.some((c) => c.field === 'region' || c.field === 'province'))
+                warns.push(t('handoff.routing.warn.placeName'));
+              const hasGroupSel = row.assigneeUnits.length > 0 || row.assigneeLabels.length > 0;
+              if (!row.byRegion && hasGroupSel && !row.assignees.length && groupMembers(row).length === 0) {
+                const waiting = resolveAssigneeGroup(pendingAgents, { unitIds: row.assigneeUnits, labelCodes: row.assigneeLabels }).length;
+                warns.push(waiting ? t('handoff.routing.warn.nobodyPending', { count: waiting }) : t('handoff.routing.warn.nobody'));
+              }
+              return warns.length ? (
+                <ul className="space-y-0.5 rounded-md bg-amber-50 px-2 py-1.5 text-[11px] text-amber-800" data-testid="rule-warnings">
+                  {warns.map((w) => (
+                    <li key={w}>⚠ {w}</li>
+                  ))}
+                </ul>
+              ) : null;
+            })()}
 
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="w-16 shrink-0 text-xs text-gray-500">{t('handoff.routing.regions')}</span>

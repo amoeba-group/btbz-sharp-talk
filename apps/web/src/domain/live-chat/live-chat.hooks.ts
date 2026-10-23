@@ -520,7 +520,10 @@ export const useAckAlert = () => {
   const tenantKey = useTenantKey();
   return useMutation({
     mutationFn: (id: string) => liveChatService.ackAlert(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'alerts'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'alerts'] });
+      qc.invalidateQueries({ queryKey: ['agent', tenantKey, 'alarm-center'] });
+    },
   });
 };
 

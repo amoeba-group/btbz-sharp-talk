@@ -9,6 +9,9 @@ import { AgentProfile } from './entity/agent-profile.entity';
 import { Assignment } from './entity/assignment.entity';
 import { AgentDailyStat } from './entity/agent-daily-stat.entity';
 import { AgentAlert } from './entity/agent-alert.entity';
+import { AgentAlertRead } from './entity/agent-alert-read.entity';
+import { AlertCenterService } from './alert-center.service';
+import { UserAlertSettings } from './entity/user-alert-settings.entity';
 import { AiAgent } from '../ai-engine/entity/ai-agent.entity';
 import { ChatComment } from './entity/chat-comment.entity';
 import { ChatGroup } from './entity/chat-group.entity';
@@ -50,6 +53,8 @@ import { MergedRoomModule } from '../merged-room/merged-room.module';
       Assignment,
       AgentDailyStat,
       AgentAlert,
+      AgentAlertRead,
+      UserAlertSettings,
       AnswerRating,
       // Read-only: AI-agent names for queue rows/filter (REQ-260825 R6/R7).
       AiAgent,
@@ -98,6 +103,7 @@ import { MergedRoomModule } from '../merged-room/merged-room.module';
   providers: [
     AgentService,
     AgentAlertService,
+    AlertCenterService,
     AgentAlertReminderService,
     AnswerRatingService,
     BriefingService,

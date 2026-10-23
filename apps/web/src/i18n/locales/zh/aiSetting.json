@@ -283,6 +283,29 @@
         "newVisible": "向客户显示",
         "names": "各语言名称",
         "visibleHint": "在客户小部件中显示的咨询类别"
+      },
+      "warn": {
+        "denyLabel": "业务标签（{{labels}}）条件只匹配由政策（deny）规则转接的对话 — 请在下方“负责人”中选择客服组标签",
+        "placeName": "名称中包含地区，但没有区域/省份条件 — 所有地区的客户都会匹配此规则",
+        "nobody": "当前没有可分配的客服 — 转接时将跳过此规则",
+        "nobodyPending": "当前没有可分配的客服（{{count}} 人已邀请但未激活）— 转接时将跳过此规则"
+      },
+      "sim": {
+        "title": "分配检查 — 查看编辑中的规则会转接给谁（不发送提醒）",
+        "none": "（无）",
+        "run": "检查",
+        "error": "无法检查分配",
+        "fallback": "无匹配规则 → 负责客服 {{names}}",
+        "broadcast": "无匹配规则 → 通知全部",
+        "skipped": "跳过：#{{n}} {{name}} — {{reason}}",
+        "reason": {
+          "no_assignee": "没有负责人",
+          "category": "咨询类别不符",
+          "keywords": "业务关键词不符",
+          "label": "业务标签不符（仅限政策规则）",
+          "nobody_active": "没有可分配的在线客服",
+          "condition": "{{field}} 条件不符"
+        }
       }
     },
     "reAlert": {

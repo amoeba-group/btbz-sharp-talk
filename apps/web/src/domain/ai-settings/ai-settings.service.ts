@@ -237,6 +237,12 @@ export const aiSettingsService = {
       ...(body.params !== undefined ? { params: body.params } : {}),
     }),
   getConfig: () => apiGet<AiConfig>('/ai-config'),
+  /** Routing dry run over the rules being edited (PLN-261024 D6) — pages nobody. */
+  simulateRouting: (body: {
+    rules: RoutingRule[];
+    assignee_user_ids: number[];
+    context: { consult_category?: string; region?: string; province?: string; language?: string; text?: string };
+  }) => apiPost<RoutingSimulation>('/ai-config/routing/simulate', body),
   getDefaults: () => apiGet<AiConfigDefaults>('/ai-config/defaults'),
   updateConfig: (body: {
     persona?: string;
@@ -255,3 +261,11 @@ export const aiSettingsService = {
   createRule: (body: CreateModerationRule) => apiPost<ModerationRule>('/moderation/rules', body),
   deleteRule: (id: string) => apiDelete<{ ok: true }>(`/moderation/rules/${id}`),
 };
+
+/** Why a rule was passed over in the routing dry run (PLN-261024 D6). */
+export type RoutingSkipReason = 'no_assignee' | 'category' | 'keywords' | 'label' | 'nobody_active' | `condition:${string}`;
+
+export interface RoutingSimulation {
+  steps: Array<{ index: number; name: string; outcome: 'matched' | 'skipped'; reason?: RoutingSkipReason; targetUserIds?: number[] }>;
+  result: { ruleIndex: number | null; ruleName: string | null; targetUserIds: number[] };
+}

@@ -1,4 +1,3 @@
-import type { RoutingCondition } from '@sharptalk/types';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '@/components/Card';
@@ -15,7 +14,7 @@ import { routingConditionDef } from '../../../../../packages/types/src/common/ro
 import { offeredLanguageCodes } from '../../../../../packages/types/src/common/language';
 import { useAiConfig, useUpdateAiConfig } from './ai-settings.hooks';
 import { LanguageTabs } from './LanguageTabs';
-import { RoutingRulesEditor } from './RoutingRulesEditor';
+import { RoutingRulesEditor, routingRowsToRules } from './RoutingRulesEditor';
 import { canonicalRegion } from '../../../../../packages/types/src/common/region';
 import type { RoutingRuleRow } from './RoutingRulesEditor';
 import { DENY_MODE, ROUTING_MODE } from './ai-settings.service';
@@ -171,6 +170,10 @@ export function HandoffSection() {
       };
     });
   const unitOptions = (unitRows.data ?? []).map((u) => ({ id: String(u.id), name: u.name }));
+  // Invited but not yet active (PLN-261024 D7): never paged, but the editor says how many a group is waiting on.
+  const pendingAgents = (users.data ?? [])
+    .filter((u) => u.status === 'invited')
+    .map((u) => ({ id: u.id, email: u.email, status: 'active', unitId: u.unitId != null ? String(u.unitId) : null, labelCodes: u.labelCodes ?? [] }));
   const isMaster = useAuthStore((s) => s.principal?.rank) === 'master';
   // Consult categories (PLN-261024): the tenant's list; 👁 marks the ones shoppers pick from.
   const principal = useAuthStore((s) => s.principal);
@@ -224,42 +227,7 @@ export function HandoffSection() {
       }))
       .filter((r) => r.keywords.length > 0);
     if (denyRules.length) handoff.denyRules = denyRules;
-    const routingRules = routingRows
-      .map((r) => ({
-        name: r.name.trim() || undefined,
-        regions: r.regions,
-        keywords: r.keywords
-          .split(',')
-          .map((k) => k.trim())
-          .filter(Boolean),
-        labels: r.labels,
-        conditions: r.conditions
-          .map((c) => ({
-            field: c.field as RoutingCondition['field'],
-            values:
-              routingConditionDef(c.field)?.kind === 'enum'
-                ? c.values
-                : c.text
-                    .split(',')
-                    .map((v) => v.trim())
-                    .filter(Boolean),
-          }))
-          // Nothing chosen = nothing asked; dropping it keeps the stored rule honest.
-          .filter((c) => c.values.length > 0),
-        assigneeUserIds: r.assignees.map(Number).filter(Number.isFinite),
-        assigneeUnitIds: r.assigneeUnits.map(Number).filter(Number.isFinite),
-        assigneeLabelCodes: r.assigneeLabels,
-        assigneeByRegion: r.byRegion || undefined,
-        mode: r.mode,
-      }))
-      // Same rule as the server: an agent, a group or region assignment, else the rule pages nobody.
-      .filter(
-        (r) =>
-          r.assigneeByRegion ||
-          r.assigneeUserIds.length > 0 ||
-          r.assigneeUnitIds.length > 0 ||
-          r.assigneeLabelCodes.length > 0,
-      );
+    const routingRules = routingRowsToRules(routingRows);
     if (routingRules.length) handoff.routingRules = routingRules;
     const reMin = Math.round(Number(reAlertMin));
     if (Number.isFinite(reMin) && reMin >= 1 && reMin <= 240) {
@@ -320,6 +288,8 @@ export function HandoffSection() {
             languages={languages}
             manageHref={isMaster ? '/users?manage=1' : undefined}
             categories={categories}
+            pendingAgents={pendingAgents}
+            fallbackAssignees={assignees}
             onManageCategories={canManageCategories ? () => setCategoriesOpen(true) : undefined}
           />
           <RoutingCategoriesModal open={categoriesOpen} onClose={() => setCategoriesOpen(false)} />

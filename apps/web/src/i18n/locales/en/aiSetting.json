@@ -283,6 +283,29 @@
         "newVisible": "Show to customers",
         "names": "Per-language names",
         "visibleHint": "Shown to customers in the widget"
+      },
+      "warn": {
+        "denyLabel": "The topic label ({{labels}}) filter only matches conversations handed off by a policy (deny) rule — pick agent-group labels under 'Assignees' below",
+        "placeName": "The name mentions a region but there is no region/province condition — customers from every region match this rule",
+        "nobody": "Nobody can be paged right now — a handoff skips this rule",
+        "nobodyPending": "Nobody can be paged right now ({{count}} invited, not yet active) — a handoff skips this rule"
+      },
+      "sim": {
+        "title": "Check routing — who the rules as edited would reach (no alarm is sent)",
+        "none": "(none)",
+        "run": "Check",
+        "error": "Could not check routing",
+        "fallback": "No rule matched → assignees {{names}}",
+        "broadcast": "No rule matched → everyone is alerted",
+        "skipped": "Skipped: #{{n}} {{name}} — {{reason}}",
+        "reason": {
+          "no_assignee": "no assignee",
+          "category": "consult category differs",
+          "keywords": "topic keywords differ",
+          "label": "topic label differs (policy rules only)",
+          "nobody_active": "nobody active to page",
+          "condition": "{{field}} condition differs"
+        }
       }
     },
     "reAlert": {

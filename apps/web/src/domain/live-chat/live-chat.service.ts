@@ -350,14 +350,31 @@ export interface GroupMessage extends ChatMessage {
 }
 
 /** Escalation alert row (FR-S3) shown in the console alarm modal. */
+/**
+ * One alarm as the console shows it (PLN-261024 alarm center): the per-agent
+ * rows of one escalation folded, with whom it was addressed to.
+ */
 export interface AgentAlert {
+  /** The escalation's first row id — what read/ack carry. */
   id: string;
   conversationId: string;
-  sessionId?: string | null;
-  reason: 'low_confidence' | 'moderation_blocked' | 'user_request' | string;
+  reason: 'low_confidence' | 'moderation_blocked' | 'user_request' | 'category_selected' | 'policy' | string;
   preview?: string | null;
   status: 'new' | 'acked' | string;
   createdAt?: string;
+  ruleName?: string | null;
+  consultCategory?: string | null;
+  assignees?: Array<{ id: string; name: string }>;
+  /** Addressed to everyone (no rule / no assignee list). */
+  broadcast?: boolean;
+  assignedToMe?: boolean;
+  /** The caller may stop the page (assignee, or anyone for a broadcast). */
+  canAck?: boolean;
+  readByMe?: boolean;
+  ackedBy?: { id: string; name: string } | null;
+  ackedAt?: string | null;
+  hotel?: string | null;
+  region?: string | null;
 }
 
 /** Slim AI-agent row for the filter/picker (staff-readable, REQ-260825 R7). */

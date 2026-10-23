@@ -283,6 +283,29 @@
         "newVisible": "Mostrar a clientes",
         "names": "Nombres por idioma",
         "visibleHint": "Visible para los clientes en el widget"
+      },
+      "warn": {
+        "denyLabel": "El filtro de etiqueta de tema ({{labels}}) solo coincide con conversaciones traspasadas por una regla de política (deny); elige las etiquetas del grupo en 'Responsables' abajo",
+        "placeName": "El nombre menciona una región pero no hay condición de región/provincia: coinciden clientes de todas las regiones",
+        "nobody": "Ahora mismo no hay nadie a quien avisar: el traspaso omite esta regla",
+        "nobodyPending": "Ahora mismo no hay nadie a quien avisar ({{count}} invitados aún sin activar): el traspaso omite esta regla"
+      },
+      "sim": {
+        "title": "Comprobar asignación: a quién llegarían las reglas editadas (no se envía alarma)",
+        "none": "(ninguno)",
+        "run": "Comprobar",
+        "error": "No se pudo comprobar la asignación",
+        "fallback": "Ninguna regla coincidió → responsables {{names}}",
+        "broadcast": "Ninguna regla coincidió → se avisa a todos",
+        "skipped": "Omitida: #{{n}} {{name}} — {{reason}}",
+        "reason": {
+          "no_assignee": "sin responsable",
+          "category": "la categoría de consulta no coincide",
+          "keywords": "las palabras clave no coinciden",
+          "label": "la etiqueta de tema no coincide (solo reglas de política)",
+          "nobody_active": "nadie activo a quien avisar",
+          "condition": "la condición {{field}} no coincide"
+        }
       }
     },
     "reAlert": {
