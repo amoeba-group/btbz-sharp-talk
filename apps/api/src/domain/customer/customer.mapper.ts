@@ -18,7 +18,8 @@ export interface CustomerOrderStats {
  * it. Masking at the edge of the API is what keeps plaintext off the wire, out
  * of the browser's memory and network tab, and out of any screen capture.
  *
- * `reveal: true` is reachable only from the audited reveal route.
+ * `reveal: true` comes from the audited reveal route (single record, phone
+ * included) and from the list (name + e-mail, no phone — 2026-10-23).
  */
 export class CustomerMapper {
   static toCustomer(
@@ -57,8 +58,11 @@ export class CustomerMapper {
   ): CustomerResponse[] {
     // Keyed by String(id): bigint ids arrive as strings from the driver, so
     // normalize on both sides to avoid a number-vs-string Map miss.
+    // Names and e-mails in the clear (2026-10-23 decision): the console lists
+    // are where an operator finds a customer; masking applies inside a
+    // conversation and to anything sent to an external AI, not here.
     return customers.map((c) => {
-      const row = this.toCustomer(c, statsById?.get(String(c.id)));
+      const row = this.toCustomer(c, statsById?.get(String(c.id)), { reveal: true });
       delete row.phone;
       return row;
     });

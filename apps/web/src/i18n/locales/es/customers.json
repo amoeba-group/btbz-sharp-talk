@@ -31,7 +31,7 @@
   "companyOpen": "Abrir",
   "companySearchPlaceholder": "Buscar por nombre de empresa",
   "allRegions": "Todas las regiones",
-  "companyHint": "Un cliente empresa se registra cuando un usuario autenticado de la plataforma anfitriona (p. ej. personal de Go2Joy Hotel Admin) inicia un chat. Los contactos se enmascaran como en la lista de consumidores.",
+  "companyHint": "Un cliente empresa se registra cuando un usuario autenticado de la plataforma anfitriona (p. ej. personal de Go2Joy Hotel Admin) inicia un chat.",
   "companyEmpty": "Aún no hay clientes empresa",
   "companyDetail": "Cliente empresa",
   "companyBack": "Volver",

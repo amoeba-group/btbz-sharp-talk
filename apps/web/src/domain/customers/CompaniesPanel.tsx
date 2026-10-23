@@ -23,8 +23,8 @@ function fmtDateTime(value?: string | null): string {
 /**
  * Customers › Business customers tab (PLN-261022 stage 2, wireframe 3.4): one
  * row per company (a partner hotel), its contacts and every conversation of
- * the company across sessions and staff. Contact names stay masked like the
- * consumer list; a conversation opens read-only in place.
+ * the company across sessions and staff. Contact names are shown in the
+ * clear like the consumer list (2026-10-23); a conversation opens read-only in place.
  */
 export function CompaniesPanel() {
   const { t } = useTranslation('customers');

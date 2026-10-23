@@ -31,7 +31,7 @@
   "companyOpen": "表示",
   "companySearchPlaceholder": "法人名で検索",
   "allRegions": "すべての地域",
-  "companyHint": "ホストアプリにログインしたユーザー（例: Go2Joy ホテル管理画面のスタッフ）がチャットを開始すると法人顧客として登録されます。連絡先の氏名は一般顧客リストと同様にマスクされます。",
+  "companyHint": "ホストアプリにログインしたユーザー（例: Go2Joy ホテル管理画面のスタッフ）がチャットを開始すると法人顧客として登録されます。",
   "companyEmpty": "法人顧客はまだありません",
   "companyDetail": "法人顧客",
   "companyBack": "戻る",
