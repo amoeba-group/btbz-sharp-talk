@@ -76,3 +76,21 @@ export function maskIdentityLabel(
 ): string | null {
   return maskName(name) ?? maskEmail(email);
 }
+
+/**
+ * `203.0.113.45` -> `203.0.113.***`, `2001:db8:85a3:0:0:8a2e:370:7334` ->
+ * `2001:db8:85a3:0:***` (PLN-261023 S2). Keeps the network part — enough to
+ * see that two sessions come from the same place, or that a visitor moved —
+ * and drops the host part that points at one connection.
+ */
+export function maskIp(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  const raw = String(value).trim();
+  if (!raw) return null;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(raw)) return `${raw.slice(0, raw.lastIndexOf('.'))}.***`;
+  if (raw.includes(':')) {
+    const groups = raw.split(':');
+    return `${groups.slice(0, 4).join(':')}:***`;
+  }
+  return '***';
+}

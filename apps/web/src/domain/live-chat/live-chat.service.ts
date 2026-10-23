@@ -54,6 +54,24 @@ export interface AgentSession {
   lastMessagePreview?: string | null;
   lastMessageAt?: string | null;
   createdAt?: string;
+  /** Transcript search hit (PLN-261023 S1) — only on rows from a content search. */
+  match?: { snippet: string; count: number; messageId: string } | null;
+}
+
+/** One message of the open conversation that contains the searched term (PLN-261023 S1). */
+export interface MessageSearchHit {
+  id: string;
+  senderType: MessageSenderType;
+  createdAt?: string;
+  snippet: string;
+}
+
+/** Visitor address, masked (PLN-261023 S2); the unmasked one is the audited reveal. */
+export interface VisitorIp {
+  masked: string | null;
+  at?: string | null;
+  /** The visitor's address changed since the session began. */
+  changed: boolean;
 }
 
 export type MessageSenderType = 'user' | 'agent' | 'ai' | 'system';
@@ -117,6 +135,8 @@ export interface CustomerContext {
   phone?: string | null;
   /** False only for a panel fetched through the audited reveal route. */
   masked?: boolean;
+  /** Filed under this customer by an unsigned (claimed) host sign-in (PLN-261023 S4). */
+  unverified?: boolean;
   tier?: string | null;
   recentOrders?: { id: number; status?: string | null; total?: number | null; createdAt?: string }[];
 }
@@ -148,6 +168,8 @@ export interface ConversationDetail {
   company?: { id: string; name?: string | null; otherConversations: number } | null;
   /** The hotel this business thread belongs to (PLN-261023 hotel profile); null for consumers/guests. */
   hotel?: ConversationHotel | null;
+  /** Visitor address, masked (PLN-261023 S2); null when none was recorded. */
+  visitorIp?: VisitorIp | null;
   messages: ChatMessage[];
   /** Older messages exist before the first one returned (PLN-260807). */
   hasMore?: boolean;
@@ -255,6 +277,10 @@ export interface ChatGroupMemberView {
   channel: string;
   receiveOnly: boolean;
   targetConversationId?: string | null;
+  /** Name parts the queue row uses (PLN-261023 S3). */
+  companyName?: string | null;
+  identityName?: string | null;
+  identityHotelName?: string | null;
 }
 
 export interface ChatGroupDetail extends ChatGroupSummary {
@@ -295,6 +321,22 @@ export const liveChatService = {
       ...(channel && channel !== 'all' ? { channel } : {}),
       ...(aiAgentId && aiAgentId !== 'all' ? { ai_agent_id: aiAgentId } : {}),
     }),
+  /** The list narrowed to conversations whose transcript contains `q` — term in the body (PLN-261023 S1). */
+  searchSessions: (q: string, status?: string, channel?: string, aiAgentId?: string) =>
+    apiPost<AgentSession[]>('/agent/sessions/search', {
+      q: q.trim(),
+      ...(status && status !== 'all' ? { status } : {}),
+      ...(channel && channel !== 'all' ? { channel } : {}),
+      ...(aiAgentId && aiAgentId !== 'all' ? { ai_agent_id: aiAgentId } : {}),
+    }),
+  /** Find in one conversation (PLN-261023 S1). */
+  searchMessages: (id: string, q: string) =>
+    apiPost<{ items: MessageSearchHit[]; total: number }>(`/agent/conversations/${id}/messages/search`, { q: q.trim() }),
+  /** Unmasked visitor IP — customer.pii_reveal holders, audited (PLN-261023 S2). */
+  revealVisitorIp: (id: string) =>
+    apiGet<{ firstIp: string | null; lastIp: string | null; lastIpAt: string | null }>(
+      `/agent/conversations/${id}/ip/reveal`,
+    ),
   aiAgents: () => apiGet<AiAgentOption[]>('/agent/ai-agents'),
   setAiAgent: (id: string, aiAgentId: number) =>
     apiPatch<{ sessionId: string; aiAgentId: number; aiAgentName: string }>(

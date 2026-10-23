@@ -85,14 +85,38 @@ export function useDraftActions(id: string | null) {
   return { approve, discard };
 }
 
-export const useSessions = (q = '', status = 'all', channel = 'all', aiAgentId = 'all') => {
+export const useSessions = (
+  q = '',
+  status = 'all',
+  channel = 'all',
+  aiAgentId = 'all',
+  searchIn: 'customer' | 'content' = 'customer',
+) => {
   const tenantKey = useTenantKey();
+  // A content search needs two characters (E5103); below that the plain list shows.
+  const content = searchIn === 'content' && q.trim().length >= 2;
   return useQuery({
-    queryKey: ['agent', tenantKey, 'sessions', q, status, channel, aiAgentId],
-    queryFn: () => liveChatService.sessions(q, status, channel, aiAgentId),
+    queryKey: ['agent', tenantKey, 'sessions', content ? 'content' : 'customer', q, status, channel, aiAgentId],
+    queryFn: () =>
+      content
+        ? liveChatService.searchSessions(q, status, channel, aiAgentId)
+        : liveChatService.sessions(searchIn === 'content' ? '' : q, status, channel, aiAgentId),
     // 5s (was 15s): a new escalation should surface within a beat, not a
-    // quarter-minute — the endpoint is a few ms (PLN-260804).
-    refetchInterval: 5000,
+    // quarter-minute — the endpoint is a few ms (PLN-260804). A transcript
+    // search scans messages, so it refreshes at a calmer pace (PLN-261023 S1).
+    refetchInterval: content ? 15000 : 5000,
+  });
+};
+
+/** Find in the open conversation (PLN-261023 S1); idle until the term has two characters. */
+export const useMessageSearch = (id: string | null, q: string) => {
+  const tenantKey = useTenantKey();
+  const term = q.trim();
+  return useQuery({
+    queryKey: ['agent', tenantKey, 'message-search', id, term],
+    queryFn: () => liveChatService.searchMessages(id as string, term),
+    enabled: !!id && term.length >= 2,
+    staleTime: 10_000,
   });
 };
 

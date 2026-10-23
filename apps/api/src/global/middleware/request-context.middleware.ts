@@ -13,6 +13,40 @@ import { NextFunction, Request, Response } from 'express';
 export interface RequestContext {
   requestId: string;
   ip: string | null;
+  /**
+   * The visitor's address as our own proxies recorded it (PLN-261023 S2) —
+   * see `trustedClientIp`. Kept apart from `ip`, whose first-hop reading the
+   * throttler and audit trail already depend on.
+   */
+  clientIp?: string | null;
+}
+
+/**
+ * Proxies of ours that append to X-Forwarded-For in front of the API: the host
+ * nginx (TLS) and the stack's nginx — staging and production alike.
+ */
+export const TRUSTED_PROXY_HOPS = 2;
+
+/**
+ * The client address from an X-Forwarded-For chain, counted from the RIGHT.
+ * Each proxy appends the address it received from, so the entries our own
+ * proxies wrote are the last `hops`; anything left of them came from the
+ * client and can be made up (`X-Forwarded-For: 1.2.3.4` sent by the browser
+ * would otherwise be "the IP"). A shorter chain (fewer proxies, e.g. a
+ * single-nginx install) falls back to its leftmost entry; no header at all
+ * (local dev) to the socket address.
+ */
+export function trustedClientIp(
+  xff: string | string[] | undefined,
+  socketIp: string | null | undefined,
+  hops = TRUSTED_PROXY_HOPS,
+): string | null {
+  const chain = (Array.isArray(xff) ? xff.join(',') : (xff ?? ''))
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+  const picked = chain.length === 0 ? socketIp : chain[Math.max(0, chain.length - hops)];
+  return picked ? picked.replace(/^::ffff:/, '').slice(0, 45) : null;
 }
 
 const als = new AsyncLocalStorage<RequestContext>();
@@ -52,6 +86,8 @@ export class RequestContextMiddleware implements NestMiddleware {
     // ip column is VARCHAR(45) (IPv6 max) — clamp defensively as well.
     const ip = (firstHop || req.ip || null)?.slice(0, 45) ?? null;
 
-    runWithRequestContext({ requestId, ip }, () => next());
+    const clientIp = trustedClientIp(xff, req.ip);
+
+    runWithRequestContext({ requestId, ip, clientIp }, () => next());
   }
 }

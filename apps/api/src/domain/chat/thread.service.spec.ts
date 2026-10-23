@@ -96,7 +96,7 @@ describe('ThreadService', () => {
       expect(ThreadService.accountOf({ ...claimed, customerId: 5 } as never)).toEqual({ companyId: null, customerId: 5 });
     });
 
-    it("previousOf reads only that user's claimed sessions, and only rows with no customer", async () => {
+    it("previousOf reads only that user's claimed sessions (rows may carry their own filed customer)", async () => {
       const sessionFind = jest.fn(async () => [{ id: '11' }, { id: '12' }]);
       const findOne = jest.fn(async () => ({ id: '40' }));
       const svc = new ThreadService(repo({ findOne }), repo(), tenantOn(), repo(), aiConfig(), repo({ find: sessionFind }));
@@ -107,7 +107,9 @@ describe('ThreadService', () => {
       expect(sessionWhere.where.identityAttributes).toBeDefined(); // JSON user_id match
       const convWhere = ((findOne.mock.calls[0] as unknown[])[0] as { where: Record<string, { _type?: string; _value?: unknown }> }).where;
       expect(convWhere.tenantId).toBe(4);
-      expect(convWhere.customerId._type).toBe('isNull');
+      // PLN-261023 S4 files claimed rows under a customer; the claimed-session
+      // filter is what keeps verified conversations out.
+      expect(convWhere.customerId).toBeUndefined();
       expect(convWhere.sessionId._value).toEqual([11, 12]);
     });
 
@@ -125,8 +127,8 @@ describe('ThreadService', () => {
       const page = await svc.listForWidget(claimed as never, 60, 3);
       expect(page).toMatchObject({ hasMore: false, colleagueCount: 0 });
       expect(page.conversations[0]).toMatchObject({ own: true, messages: [{ body: 'Làm sao đổi giá phòng?' }] });
-      const convWhere = ((find.mock.calls[0] as unknown[])[0] as { where: Record<string, { _type?: string }> }).where;
-      expect(convWhere.customerId._type).toBe('isNull');
+      const convWhere = ((find.mock.calls[0] as unknown[])[0] as { where: Record<string, { _type?: string; _value?: unknown }> }).where;
+      expect(convWhere.sessionId._value).toEqual([11]);
     });
   });
 

@@ -7,6 +7,8 @@ import { Message } from './entity/message.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { User } from '../user/entity/user.entity';
 import { Session } from '../session/entity/session.entity';
+import { Customer } from '../customer/entity/customer.entity';
+import { Company } from '../company/entity/company.entity';
 import { AiConfigService } from '../ai-engine/ai-config.service';
 import { buildHistory } from './conversation-history.util';
 import { claimedUserId } from '../embed/unsigned-identify';
@@ -69,7 +71,45 @@ export class ThreadService {
     // Last + optional: specs build the service positionally. Resolves a claimed
     // user id to its sessions (PLN-261022 P7).
     @Optional() @InjectRepository(Session) private readonly sessionRepo?: Repository<Session>,
+    // Claimed-account attribution (PLN-261023 S4) — same reason, last + optional.
+    @Optional() @InjectRepository(Customer) private readonly customerRepo?: Repository<Customer>,
+    @Optional() @InjectRepository(Company) private readonly companyRepo?: Repository<Company>,
   ) {}
+
+  /**
+   * Who a CLAIMED session's conversation is filed under in the console
+   * (PLN-261023 S4): the customer row the claimed identify registered for its
+   * user id, and the hotel's EXISTING company. Written on the conversation
+   * only — the session keeps no customer or company, so nothing the widget
+   * opens by account (orders, the thread view) changes. Null when neither is
+   * known. Never throws.
+   */
+  async claimedAttribution(
+    tenantId: number,
+    session: Pick<Session, 'identityLevel' | 'identityAttributes'>,
+  ): Promise<{ customerId: number | null; companyId: number | null } | null> {
+    const userId = claimedUserId(session);
+    if (!userId || !this.customerRepo) return null;
+    try {
+      const customer = await this.customerRepo.findOne({
+        where: { tenantId, externalCustomerId: userId },
+        select: ['id'],
+      });
+      const hotelId = session.identityAttributes?.hotel_id?.trim();
+      const company =
+        hotelId && this.companyRepo
+          ? await this.companyRepo.findOne({ where: { tenantId, externalKey: `hotel:${hotelId}` }, select: ['id'] })
+          : null;
+      if (!customer && !company) return null;
+      return {
+        customerId: customer ? Number(customer.id) : null,
+        companyId: company ? Number(company.id) : null,
+      };
+    } catch (err) {
+      this.logger.warn(`claimed attribution failed (tenant ${tenantId}): ${(err as Error).message}`);
+      return null;
+    }
+  }
 
   /** The account a session's conversations belong to; null for a guest. */
   static accountOf(
@@ -137,7 +177,10 @@ export class ThreadService {
       select: ['id'],
     });
     if (!sessions.length) return null;
-    return { tenantId, customerId: IsNull(), sessionId: In(sessions.map((s) => Number(s.id))) };
+    // The session filter alone keeps this off verified conversations: a
+    // verified session is never downgraded, so it is never in this list. The
+    // rows here may carry the claimed user's own customer (PLN-261023 S4).
+    return { tenantId, sessionId: In(sessions.map((s) => Number(s.id))) };
   }
 
   /**

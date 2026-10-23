@@ -456,5 +456,32 @@
       "overnight": "Qua đêm",
       "daily": "Theo ngày"
     }
+  },
+  "search": {
+    "inLabel": "Tìm trong",
+    "inCustomer": "Khách hàng",
+    "inContent": "Nội dung hội thoại",
+    "contentPlaceholder": "Tìm nội dung đã trao đổi (từ 2 ký tự)",
+    "contentScope": "Tìm trong tin nhắn 180 ngày gần nhất",
+    "matchCount": "{{count}} kết quả",
+    "inRoom": "Tìm",
+    "inRoomPlaceholder": "Tìm trong hội thoại này",
+    "minChars": "Từ 2 ký tự",
+    "noHits": "Không có kết quả",
+    "position": "{{n}} / {{total}}",
+    "older": "Kết quả trước (Enter)",
+    "newer": "Kết quả sau (Shift+Enter)",
+    "close": "Đóng (Esc)",
+    "failed": "Không tìm được."
+  },
+  "unverifiedCustomer": "Chưa xác minh — đăng nhập từ host không có chữ ký",
+  "hostUserId": "ID người dùng host",
+  "hostRole": "Vai trò",
+  "visitorIp": {
+    "label": "IP",
+    "reveal": "Xem IP đầy đủ (có ghi nhật ký)",
+    "revealFailed": "Không hiển thị được IP.",
+    "changed": "Đã thay đổi kể từ đầu phiên",
+    "firstWas": "Lần đầu truy cập từ {{ip}}"
   }
 }

@@ -23,6 +23,8 @@ import { OrderModule } from '../order/order.module';
 import { CustomerModule } from '../customer/customer.module';
 import { AnswerReuseModule } from '../answer-reuse/answer-reuse.module';
 import { IssueModule } from '../issue/issue.module';
+import { Customer } from '../customer/entity/customer.entity';
+import { Company } from '../company/entity/company.entity';
 
 @Module({
   imports: [
@@ -38,6 +40,9 @@ import { IssueModule } from '../issue/issue.module';
       Assignment,
       // Satisfaction ratings roll up into the agent's daily row.
       AgentDailyStat,
+      // Claimed-account attribution on new conversations (PLN-261023 S4).
+      Customer,
+      Company,
     ]),
     SessionModule,
     // Files a customer sent with a turn (PLN-260814). Attachment does not

@@ -329,16 +329,24 @@ describe('EmbedService.identify — company contact', () => {
 /**
  * Unsigned host (PLN-261022 unsigned). A tenant on the allow-list may identify
  * a user before its server can sign: the call is kept as 'claimed' — facts on
- * the session for agents and routing, and nothing a customer would own.
+ * the session for agents and routing, and nothing a customer would own. The
+ * console still files its conversations under a customer row and the hotel's
+ * EXISTING company (PLN-261023 S4) — on the conversation, never the session.
  */
 describe('EmbedService.identify — unsigned host, claimed', () => {
   const ENV = 'EMBED_UNSIGNED_IDENTIFY_TENANT_IDS';
   const ATTRS = { hotel_id: '1721', hotel_name: 'A In Hotel Del Luna', province: 'Hồ Chí Minh', region: 'South', role: 'Lễ tân' };
   const pending = () => ({ id: 5, sessionToken: 'tok', tenantId: 1, customerId: null, identityLevel: 'guest', consentState: 'pending', consentVersion: null });
 
-  const harness = (opts: { secret?: string | null; session?: Record<string, unknown>; tenant?: Record<string, unknown> } = {}) => {
+  const harness = (
+    opts: { secret?: string | null; session?: Record<string, unknown>; tenant?: Record<string, unknown>; hotel?: Record<string, unknown> | null } = {},
+  ) => {
     const h = build({ secret: opts.secret, session: opts.session ?? pending(), tenant: { consentSource: 'host_terms', ...opts.tenant } });
-    const companies = { upsertFromIdentity: jest.fn(async () => ({ id: '3' })), linkContact: jest.fn(async () => undefined) };
+    const companies = {
+      upsertFromIdentity: jest.fn(async () => ({ id: '3' })),
+      linkContact: jest.fn(async () => undefined),
+      findHotel: jest.fn(async () => opts.hotel ?? null),
+    };
     const convRepo = { update: jest.fn(async () => ({ affected: 1 })) };
     const aiConfigRepo = { findOne: jest.fn(async () => ({ handoffConfig: { provinceRegions: { 'Đà Nẵng': 'south_center' } } })) };
     const customerRepo = (h.service as any).customerRepo;
@@ -377,17 +385,47 @@ describe('EmbedService.identify — unsigned host, claimed', () => {
       user_id: 'ha:8818',
       name: 'G2J SUPPORT',
     });
-    // Nothing a customer would own: no customer, no company, no thread, no consent.
+    // Nothing on the SESSION a customer would own: no customer, no company, no consent.
     expect(s.customerId).toBeNull();
-    expect(h.customers).toHaveLength(0);
+    expect(s.companyId ?? null).toBeNull();
     expect(companies.upsertFromIdentity).not.toHaveBeenCalled();
-    expect(convRepo.update).not.toHaveBeenCalled();
     expect(s.consentState).toBe('pending');
     expect(h.redis.del).toHaveBeenCalled();
+    // The console record (PLN-261023 S4): a customer row for the claimed id, and
+    // the open conversation filed under it. No hotel company exists → none linked.
+    expect(h.customers).toEqual([expect.objectContaining({ externalCustomerId: 'ha:8818', name: 'G2J SUPPORT' })]);
+    expect(companies.linkContact).not.toHaveBeenCalled();
+    expect(convRepo.update).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 5 }), { customerId: 100, companyId: null });
+  });
+
+  describe('console record of a claimed user (PLN-261023 S4)', () => {
+    it("links the contact to the hotel's existing company and files the conversation under both", async () => {
+      process.env[ENV] = '1';
+      const { svc, h, companies, convRepo } = harness({ hotel: { id: '4' } });
+      const s = await svc.identify({ sessionToken: 'tok', userId: 'laquan10', hash: 'x', name: 'ADMIN123', attributes: ATTRS });
+      expect(companies.findHotel).toHaveBeenCalledWith(1, 1721);
+      expect(companies.linkContact).toHaveBeenCalledWith(1, 4, 100, 'Lễ tân');
+      // A row this call created becomes a B2B contact.
+      expect((h.service as any).customerRepo.update).toHaveBeenCalledWith({ id: 100 }, { customerType: 'b2b_contact' });
+      expect(convRepo.update).toHaveBeenCalledWith(expect.anything(), { customerId: 100, companyId: 4 });
+      // Still nothing on the session, and an unsigned call never creates or edits a company.
+      expect(s.customerId).toBeNull();
+      expect(s.companyId ?? null).toBeNull();
+      expect(companies.upsertFromIdentity).not.toHaveBeenCalled();
+    });
+
+    it('never renames a customer row that already has a name, nor changes its type', async () => {
+      process.env[ENV] = '1';
+      const { svc, h } = harness({ hotel: { id: '4' } });
+      h.customers.push({ id: 100, tenantId: 1, externalCustomerId: 'laquan10', name: 'Signed Name', customerType: 'b2c' });
+      await svc.identify({ sessionToken: 'tok', userId: 'laquan10', hash: 'x', name: 'Spoofed', attributes: ATTRS });
+      expect(h.customers[0]).toMatchObject({ name: 'Signed Name' });
+      expect((h.service as any).customerRepo.update).not.toHaveBeenCalled();
+    });
   });
 
   describe('host-terms consent for a claimed user (PLN-261023)', () => {
-    it('is granted when the tenant trusts claimed sign-ins — still no customer or company', async () => {
+    it('is granted when the tenant trusts claimed sign-ins — still no customer or company on the session', async () => {
       process.env[ENV] = '1';
       const { svc, h, companies } = harness({ tenant: { hostTermsTrust: 'claimed', consentNoticeVersion: '2026-07' } });
       const s = await svc.identify({ sessionToken: 'tok', userId: 'laquan10', hash: 'testing', name: 'ADMIN123', attributes: ATTRS });
@@ -396,7 +434,7 @@ describe('EmbedService.identify — unsigned host, claimed', () => {
       expect(s.consentVersion).toBe('2026-07');
       expect(s.consentAt).toBeInstanceOf(Date);
       expect(s.customerId).toBeNull();
-      expect(h.customers).toHaveLength(0);
+      expect(h.customers).toHaveLength(1);
       expect(companies.upsertFromIdentity).not.toHaveBeenCalled();
     });
 
@@ -442,7 +480,8 @@ describe('EmbedService.identify — unsigned host, claimed', () => {
     const { svc, h } = harness();
     const s = await svc.identify({ sessionToken: 'tok', userId: 'ha:8818', hash: 'x', email: 'a@x.vn', phone: '0123', name: 'A' });
     expect(JSON.stringify(s.identityAttributes)).not.toMatch(/a@x\.vn|0123/);
-    expect(h.customers).toHaveLength(0);
+    // The customer row it files conversations under holds the name only.
+    expect(h.customers).toEqual([expect.objectContaining({ name: 'A', email: null, phone: null })]);
   });
 
   it('fills the region from the province map, like a signed identify', async () => {

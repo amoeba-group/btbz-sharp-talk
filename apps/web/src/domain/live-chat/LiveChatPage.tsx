@@ -29,6 +29,9 @@ import { Button } from '@/components/Button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ChannelBadge, CHANNEL_FILTERS, RECEIVE_ONLY_CHANNELS } from './ChannelBadge';
 import { sessionTitle } from './session-title';
+import { ThreadSearchBar } from './ThreadSearchBar';
+import { SearchHighlight } from './SearchHighlight';
+import { VisitorIpRow } from './VisitorIpRow';
 import { SessionAlias } from './SessionAlias';
 import { IdentityBadges } from './IdentityBadges';
 import { CompanyThreadButton } from './CompanyThreadButton';
@@ -223,7 +226,9 @@ export function LiveChatPage() {
   const setPin = useSetPin();
   const kbInputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Queue search box (customer name/email) — debounced into the list query.
+  // Queue search box — customer name/email, or transcript text (PLN-261023 S1) —
+  // debounced into the list query.
+  const [searchIn, setSearchIn] = useState<'customer' | 'content'>('customer');
   const [listQuery, setListQuery] = useState('');
   const [listSearch, setListSearch] = useState('');
   useEffect(() => {
@@ -251,7 +256,9 @@ export function LiveChatPage() {
     scope === 'groups' ? 'all' : scope,
     channel,
     agentFilter,
+    searchIn,
   );
+  const contentSearch = searchIn === 'content' && listSearch.trim().length >= 2;
   const { data: groups, isLoading: groupsLoading } = useGroups(scope === 'groups');
   const { data: convo, isLoading: convoLoading, isFetching: convoFetching, refetch: refetchConvo } =
     useConversation(selected);
@@ -309,6 +316,40 @@ export function LiveChatPage() {
   const [older, setOlder] = useState<ChatMessage[]>([]);
   const [olderHasMore, setOlderHasMore] = useState(true);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  // Find in the open conversation (PLN-261023 S1). A room opened from a content
+  // search arrives with the list's term, carried through `pendingFind` because
+  // the per-thread reset below runs after the click that set it.
+  const pendingFind = useRef<string | null>(null);
+  const [findOpen, setFindOpen] = useState(false);
+  const [findSeed, setFindSeed] = useState('');
+  const [findHits, setFindHits] = useState<{ ids: Set<string>; active: string | null }>({
+    ids: new Set(),
+    active: null,
+  });
+  const [scrollTarget, setScrollTarget] = useState<string | null>(null);
+  useEffect(() => {
+    const seed = pendingFind.current;
+    pendingFind.current = null;
+    setFindOpen(!!seed);
+    setFindSeed(seed ?? '');
+    setFindHits({ ids: new Set(), active: null });
+    setScrollTarget(null);
+  }, [selected]);
+  const openConversation = (id: string) => {
+    const seed = contentSearch ? listSearch.trim() : null;
+    setSelectedGroup(null);
+    if (id === selected) {
+      // Same room: the reset effect will not run, so open the finder here.
+      if (seed) {
+        setFindSeed(seed);
+        setFindOpen(true);
+      }
+      return;
+    }
+    pendingFind.current = seed;
+    setSelected(id);
+  };
+
   useEffect(() => {
     setOlder([]);
     setOlderHasMore(true);
@@ -337,6 +378,42 @@ export function LiveChatPage() {
       setLoadingOlder(false);
     }
   };
+  // Bring a search hit into view: page back until the transcript holds it
+  // (the server found it, possibly far above what is loaded), then scroll.
+  const revealMessage = async (id: string) => {
+    if (!selected) return;
+    if (!messages.some((m) => m.id === id) && hasOlder) {
+      let acc = older;
+      let more: boolean = hasOlder;
+      let oldest = messages[0]?.id;
+      setLoadingOlder(true);
+      try {
+        // Bounded: a hit is never more than a few hundred pages back in practice.
+        for (let guard = 0; more && oldest && guard < 50; guard += 1) {
+          const res = await liveChatService.conversation(selected, oldest);
+          acc = [...res.messages, ...acc];
+          more = !!res.hasMore;
+          oldest = res.messages[0]?.id;
+          if (res.messages.some((m) => m.id === id)) break;
+        }
+        setOlder(acc);
+        setOlderHasMore(more);
+      } catch (e) {
+        toast.error((e as Error).message || t('search.failed'));
+      } finally {
+        setLoadingOlder(false);
+      }
+    }
+    setScrollTarget(id);
+  };
+  useEffect(() => {
+    if (findHits.active) void revealMessage(findHits.active);
+  }, [findHits.active]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!scrollTarget) return;
+    document.getElementById(`msg-${scrollTarget}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [scrollTarget, messages.length]);
+
   const { accept, end, send, handBack } = useConversationActions(selected);
   const [handBackOpen, setHandBackOpen] = useState(false);
 
@@ -627,13 +704,30 @@ export function LiveChatPage() {
             </select>
           </div>
           <div className="border-b border-gray-100 p-2">
+            {/* What the box searches (PLN-261023 S1): customers, or what was said. */}
+            <div className="mb-1.5 flex gap-1" role="group" aria-label={t('search.inLabel')}>
+              {(['customer', 'content'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  aria-pressed={searchIn === mode}
+                  onClick={() => setSearchIn(mode)}
+                  className={cn(
+                    'rounded-full px-2 py-0.5 text-[11px] font-medium',
+                    searchIn === mode ? 'bg-primary-500/10 text-primary-700' : 'text-gray-500 hover:bg-gray-100',
+                  )}
+                >
+                  {t(mode === 'customer' ? 'search.inCustomer' : 'search.inContent')}
+                </button>
+              ))}
+            </div>
             <div className="relative">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
               <input
                 value={listQuery}
                 onChange={(e) => setListQuery(e.target.value)}
-                placeholder={t('listSearchPlaceholder')}
-                title={t('listSearchScope')}
+                placeholder={t(searchIn === 'content' ? 'search.contentPlaceholder' : 'listSearchPlaceholder')}
+                title={t(searchIn === 'content' ? 'search.contentScope' : 'listSearchScope')}
                 className="w-full rounded-lg border border-gray-200 py-1.5 pl-8 pr-2 text-xs text-gray-700 outline-none focus:border-primary-400 focus:ring-1 focus:ring-primary-400"
               />
             </div>
@@ -709,8 +803,7 @@ export function LiveChatPage() {
                     if (selectMode) {
                       toggleChecked(s);
                     } else {
-                      setSelected(s.id);
-                      setSelectedGroup(null);
+                      openConversation(s.id);
                     }
                   }}
                   onKeyDown={(e) => {
@@ -720,8 +813,7 @@ export function LiveChatPage() {
                       if (selectMode) {
                         toggleChecked(s);
                       } else {
-                        setSelected(s.id);
-                        setSelectedGroup(null);
+                        openConversation(s.id);
                       }
                     }
                   }}
@@ -754,7 +846,7 @@ export function LiveChatPage() {
                         // customer and hotel, else what the host claimed.
                         sessionTitle(s.customerName || s.identity?.name, s.companyName || s.identity?.hotelName) ||
                         s.customerEmail ||
-                        t('sessionLabel', { id: s.id.slice(0, 6) })
+                        t('sessionLabel', { id: s.id })
                       }
                       compact
                     />
@@ -767,7 +859,7 @@ export function LiveChatPage() {
                   <div className="mt-0.5 flex items-center justify-between gap-2">
                     <span className="flex min-w-0 items-center gap-1.5">
                       <span className="shrink-0 text-[11px] text-gray-400">
-                        {t('sessionLabel', { id: s.id.slice(0, 6) })}
+                        {t('sessionLabel', { id: s.id })}
                       </span>
                       <IdentityBadges identity={s.identity} compact />
                     </span>
@@ -812,10 +904,22 @@ export function LiveChatPage() {
                       />
                     </div>
                   </div>
-                  <p className="mt-1 truncate text-xs text-gray-500">
-                    {/* One line, markers removed (PLN-261008 S4). */}
-                    {s.lastMessagePreview ? stripLiteMarkdown(s.lastMessagePreview).replace(/\s+/g, ' ') : '—'}
-                  </p>
+                  {contentSearch && s.match ? (
+                    // The matching line instead of the last one (PLN-261023 S1).
+                    <p className="mt-1 truncate text-xs text-gray-600" title={t('search.matchCount', { count: s.match.count })}>
+                      {s.match.count > 1 && (
+                        <span className="mr-1 rounded bg-amber-50 px-1 text-[10px] font-medium text-gray-600">
+                          {t('search.matchCount', { count: s.match.count })}
+                        </span>
+                      )}
+                      <SearchHighlight text={stripLiteMarkdown(s.match.snippet)} term={listSearch} />
+                    </p>
+                  ) : (
+                    <p className="mt-1 truncate text-xs text-gray-500">
+                      {/* One line, markers removed (PLN-261008 S4). */}
+                      {s.lastMessagePreview ? stripLiteMarkdown(s.lastMessagePreview).replace(/\s+/g, ' ') : '—'}
+                    </p>
+                  )}
                   <p
                     className="mt-0.5 text-[11px] text-gray-400"
                     title={`${t('createdShort')} ${absTime(s.createdAt)}${
@@ -875,7 +979,7 @@ export function LiveChatPage() {
                         convo?.company?.name || convo?.identity?.hotelName,
                       ) || t('conversation')
                     }
-                    sessionLabel={t('sessionLabel', { id: selected.slice(0, 6) })}
+                    sessionLabel={t('sessionLabel', { id: selected })}
                   />
                   <StatusBadge
                     status={convo?.status}
@@ -907,6 +1011,15 @@ export function LiveChatPage() {
                   )}
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant={findOpen ? 'primary' : 'secondary'}
+                    onClick={() => setFindOpen((v) => !v)}
+                    aria-pressed={findOpen}
+                    title={t('search.inRoom')}
+                  >
+                    <Search className="h-4 w-4" /> {t('search.inRoom')}
+                  </Button>
                   <Button
                     size="sm"
                     variant="secondary"
@@ -984,6 +1097,19 @@ export function LiveChatPage() {
                 </div>
               </div>
 
+              {findOpen && (
+                <ThreadSearchBar
+                  key={`${selected}:${findSeed}`}
+                  conversationId={selected}
+                  initialTerm={findSeed}
+                  onClose={() => {
+                    setFindOpen(false);
+                    setFindHits({ ids: new Set(), active: null });
+                  }}
+                  onChange={({ ids, active }) => setFindHits({ ids: new Set(ids), active })}
+                />
+              )}
+
               {/* Issue P1 (native tenants only — renders nothing when no issue). */}
               <IssuePanel conversationId={selected} />
               {/* Same-person suggestion (PLN-261006 P1) — nothing for guests. */}
@@ -1023,7 +1149,7 @@ export function LiveChatPage() {
                   const day = dayKey(m.createdAt);
                   const showDay = day && day !== dayKey(messages[i - 1]?.createdAt);
                   return (
-                    <div key={m.id}>
+                    <div key={m.id} id={`msg-${m.id}`}>
                       {showDay && (
                         <div className="my-2 flex items-center gap-2">
                           <span className="h-px flex-1 bg-gray-100" />
@@ -1051,6 +1177,9 @@ export function LiveChatPage() {
                       <div
                         className={cn(
                           'max-w-[75%] rounded-lg px-3 py-2 text-sm',
+                          // Search hits (PLN-261023 S1): every match outlined, the current one stronger.
+                          findHits.ids.has(m.id) &&
+                            (findHits.active === m.id ? 'ring-2 ring-amber-400' : 'ring-1 ring-amber-200'),
                           m.senderType === 'agent'
                             ? 'bg-primary-500 text-white'
                             : m.senderType === 'ai'
@@ -1496,6 +1625,12 @@ export function LiveChatPage() {
             <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-800">
               <User className="h-4 w-4 text-gray-500" /> {t('customer')}
             </div>
+            {convo?.customer?.unverified && (
+              // Filed under this customer by an unsigned host sign-in (PLN-261023 S4).
+              <p className="mb-2">
+                <Badge tone="warning">{t('unverifiedCustomer')}</Badge>
+              </p>
+            )}
             {convo?.customer ? (
               <dl className="space-y-2 text-sm">
                 <Row label={t('name')} value={customerPanel.name} />
@@ -1506,9 +1641,17 @@ export function LiveChatPage() {
                   <dd>{convo.customer.tier ? <Badge tone="primary">{convo.customer.tier}</Badge> : '—'}</dd>
                 </div>
               </dl>
+            ) : convo?.identity?.name || convo?.identity?.userId ? (
+              // No customer on record, but the host said who this is (claimed).
+              <dl className="space-y-2 text-sm">
+                <Row label={t('name')} value={convo.identity.name ?? '—'} />
+                <Row label={t('hostUserId')} value={convo.identity.userId ?? '—'} />
+                {convo.identity.role && <Row label={t('hostRole')} value={convo.identity.role} />}
+              </dl>
             ) : (
               <p className="text-sm text-gray-400">{t('noCustomerContext')}</p>
             )}
+            {selected && <VisitorIpRow conversationId={selected} ip={convo?.visitorIp ?? null} canReveal={canRevealCustomer} />}
             {convo?.customer && canRevealCustomer && customerPanel.masked !== false && (
               <Button
                 size="sm"

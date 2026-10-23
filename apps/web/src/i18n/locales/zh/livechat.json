@@ -456,5 +456,32 @@
       "overnight": "过夜",
       "daily": "全天"
     }
+  },
+  "search": {
+    "inLabel": "搜索范围",
+    "inCustomer": "客户",
+    "inContent": "对话内容",
+    "contentPlaceholder": "搜索对话内容（至少 2 个字符）",
+    "contentScope": "在最近 180 天的消息中查找",
+    "matchCount": "{{count}} 处匹配",
+    "inRoom": "查找",
+    "inRoomPlaceholder": "在此对话中查找",
+    "minChars": "至少 2 个字符",
+    "noHits": "无匹配",
+    "position": "{{n}} / {{total}}",
+    "older": "上一处匹配 (Enter)",
+    "newer": "下一处匹配 (Shift+Enter)",
+    "close": "关闭 (Esc)",
+    "failed": "搜索失败。"
+  },
+  "unverifiedCustomer": "未验证 — 宿主未签名登录",
+  "hostUserId": "宿主用户 ID",
+  "hostRole": "角色",
+  "visitorIp": {
+    "label": "IP",
+    "reveal": "显示完整 IP（将被记录）",
+    "revealFailed": "无法显示 IP。",
+    "changed": "会话开始后已变更",
+    "firstWas": "首次访问自 {{ip}}"
   }
 }

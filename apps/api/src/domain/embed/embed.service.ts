@@ -240,10 +240,13 @@ export class EmbedService {
     const consentFromHost = tenant?.hostTermsTrust === 'claimed' && grantHostTermsConsent(session, tenant);
     const saved = await this.sessionRepo.save(session);
     await this.redis.del(sessionCacheKey(input.sessionToken));
+    const account = await this.registerClaimedAccount(tenantId, input, stored.attributes);
+    if (account) await this.attributeOpenConversations(saved, account);
     this.logger.warn(
       `identify claimed — unsigned (tenant ${tenantId}, user ${maskId(input.userId)}` +
         `${attributes ? `, attrs ${Object.keys(attributes).sort().join(',')}, region ${stored.regionSource}` : ''}` +
-        `${consentFromHost ? `, consent via host terms v${saved.consentVersion} (claimed)` : ''})`,
+        `${consentFromHost ? `, consent via host terms v${saved.consentVersion} (claimed)` : ''}` +
+        `${account ? `, filed under customer ${account.customerId ?? '-'} company ${account.companyId ?? '-'}` : ''})`,
     );
     return saved;
   }
@@ -270,6 +273,63 @@ export class EmbedService {
     } catch (err) {
       this.logger.warn(`company registration failed (tenant ${tenantId}, customer ${customer.id}): ${(err as Error).message}`);
       return null;
+    }
+  }
+
+  /**
+   * The console-side record of a claimed user (PLN-261023 S4, tenants on the
+   * unsigned list only): a customer row for the claimed user id — created, or
+   * gaps filled, never overwritten — and a contact link to the hotel's
+   * company when that company ALREADY exists (partner feed or a signed
+   * identify). An unsigned call never creates or edits a company. The SESSION
+   * stays without customer and company; only conversations are filed under
+   * them. Never throws.
+   */
+  private async registerClaimedAccount(
+    tenantId: number,
+    input: IdentifyInput,
+    attributes: IdentityAttributes | null,
+  ): Promise<{ customerId: number | null; companyId: number | null } | null> {
+    try {
+      const existing = await this.customerRepo.findOne({ where: { tenantId, externalCustomerId: input.userId } });
+      // Name only: an unsigned call never leaves contact details behind.
+      const customer = await this.upsertCustomer(tenantId, { ...input, email: undefined, phone: undefined }, true);
+      const hotelId = attributes?.hotel_id?.trim();
+      const company =
+        this.companies && hotelId && /^\d{1,10}$/.test(hotelId)
+          ? await this.companies.findHotel(tenantId, Number(hotelId))
+          : null;
+      if (company && this.companies) {
+        // A row this call created becomes a B2B contact; an existing one keeps its type.
+        if (!existing && customer.customerType !== CUSTOMER_TYPE.B2B_CONTACT) {
+          await this.customerRepo.update({ id: customer.id }, { customerType: CUSTOMER_TYPE.B2B_CONTACT });
+          customer.customerType = CUSTOMER_TYPE.B2B_CONTACT;
+        }
+        await this.companies.linkContact(tenantId, Number(company.id), Number(customer.id), attributes?.role ?? null);
+      }
+      return { customerId: Number(customer.id), companyId: company ? Number(company.id) : null };
+    } catch (err) {
+      this.logger.warn(`claimed account not registered (tenant ${tenantId}, user ${maskId(input.userId)}): ${(err as Error).message}`);
+      return null;
+    }
+  }
+
+  /** File a claimed session's open conversations under its account (conversation rows only). Never throws. */
+  private async attributeOpenConversations(
+    session: Session,
+    account: { customerId: number | null; companyId: number | null },
+  ): Promise<void> {
+    if (!this.convRepo) return;
+    try {
+      await this.convRepo.update(
+        {
+          sessionId: session.id,
+          status: In([CONVERSATION_STATUS.AI_ACTIVE, CONVERSATION_STATUS.WAITING, CONVERSATION_STATUS.AGENT]),
+        },
+        { customerId: account.customerId, companyId: account.companyId },
+      );
+    } catch (err) {
+      this.logger.warn(`claimed conversation not attributed (session ${session.id}): ${(err as Error).message}`);
     }
   }
 
@@ -309,7 +369,7 @@ export class EmbedService {
    * identify() converge instead of growing a row per sign-in, the same rule the
    * Shopify and Cafe24 identity paths already follow.
    */
-  private async upsertCustomer(tenantId: number, input: IdentifyInput): Promise<Customer> {
+  private async upsertCustomer(tenantId: number, input: IdentifyInput, claimed = false): Promise<Customer> {
     const existing = await this.customerRepo.findOne({
       where: { tenantId, externalCustomerId: input.userId },
     });
@@ -330,8 +390,10 @@ export class EmbedService {
     // signed the identify reaches here, and the host is the source of truth
     // for what its own user is called — a rename in the host's profile must
     // show in the widget header, not the first name ever seen.
+    // A CLAIMED (unsigned) identify only fills a gap (PLN-261023 S4): an
+    // unsigned call must not rename a row a signed one established.
     const name = input.name?.trim();
-    if (name) customer.name = name;
+    if (name && (!claimed || !customer.name)) customer.name = name;
     if (input.email && !customer.email) customer.email = input.email;
     if (input.phone && !customer.phone) customer.phone = input.phone;
 

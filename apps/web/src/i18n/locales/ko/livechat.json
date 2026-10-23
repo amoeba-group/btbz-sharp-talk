@@ -456,5 +456,32 @@
       "overnight": "숙박(야간)",
       "daily": "일일"
     }
+  },
+  "search": {
+    "inLabel": "검색 대상",
+    "inCustomer": "고객",
+    "inContent": "대화 내용",
+    "contentPlaceholder": "대화 내용 검색 (2자 이상)",
+    "contentScope": "최근 180일 메시지에서 찾습니다",
+    "matchCount": "{{count}}건 일치",
+    "inRoom": "찾기",
+    "inRoomPlaceholder": "이 대화에서 찾기",
+    "minChars": "2자 이상",
+    "noHits": "일치 없음",
+    "position": "{{n}} / {{total}}",
+    "older": "이전 일치 (Enter)",
+    "newer": "다음 일치 (Shift+Enter)",
+    "close": "닫기 (Esc)",
+    "failed": "검색하지 못했습니다."
+  },
+  "unverifiedCustomer": "미검증 — 서명 없는 호스트 로그인",
+  "hostUserId": "호스트 사용자 ID",
+  "hostRole": "역할",
+  "visitorIp": {
+    "label": "IP",
+    "reveal": "전체 IP 보기 (기록됨)",
+    "revealFailed": "IP를 표시하지 못했습니다.",
+    "changed": "세션 시작 이후 바뀜",
+    "firstWas": "최초 접속 {{ip}}"
   }
 }
