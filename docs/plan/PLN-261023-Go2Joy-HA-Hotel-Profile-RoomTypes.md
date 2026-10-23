@@ -34,7 +34,7 @@ HA 서버가 호텔 정보와 객실 유형을 **서버 간 서명 요청**으�
       "overnight_price": 920000, "daily_price": null, "memo": "test 001", "currency": "VND" } ] }
 ```
 - `room_types`는 **전체 목록**(보낸 목록에 없는 기존 객실 → `archived`). `room_types` 키를 빼면 객실은 건드리지 않음.
-- 응답: `{ companyId, rooms: { upserted, archived } }`. 오류: 서명 E5110, 시각 초과 E5111, 테넌트 없음 E5112(새 Exxxx 블록), 검증 400.
+- 응답: `{ companyId, rooms: { upserted, archived } }`. 오류: 서명 E5100, 시각 초과 E5101, 테넌트 없음 E5102(다음 빈 번호부터), 검증 400.
 
 ### 2.2 스키마 (`sql/261024-company-profile-products.sql`)
 ```
