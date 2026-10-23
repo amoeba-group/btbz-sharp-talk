@@ -7,6 +7,9 @@ import { Input, Label, Select } from '@/components/Field';
 import { cn } from '@/lib/cn';
 import { useJobLabels, useUnits, useUsers } from '../users/users.hooks';
 import { useAuthStore } from '@/store/auth-store';
+import { makeCan } from '@/lib/rbac';
+import { useCategoryName, useRoutingCategories } from '../routing-categories/routing-categories.hooks';
+import { RoutingCategoriesModal } from '../routing-categories/RoutingCategoriesModal';
 import { useWidgetSettings } from '../settings/settings.hooks';
 import { routingConditionDef } from '../../../../../packages/types/src/common/routing-condition';
 import { offeredLanguageCodes } from '../../../../../packages/types/src/common/language';
@@ -169,6 +172,16 @@ export function HandoffSection() {
     });
   const unitOptions = (unitRows.data ?? []).map((u) => ({ id: String(u.id), name: u.name }));
   const isMaster = useAuthStore((s) => s.principal?.rank) === 'master';
+  // Routing categories (PLN-261024): the tenant's list replaces the fixed region chips.
+  const principal = useAuthStore((s) => s.principal);
+  const canManageCategories = makeCan(principal)('ai_settings');
+  const categoryRows = useRoutingCategories();
+  const categoryName = useCategoryName();
+  const categories = useMemo(
+    () => (categoryRows.data ?? []).map((c) => ({ code: c.code, name: categoryName(c.code) })),
+    [categoryRows.data, categoryName],
+  );
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
 
   const toggle = <T,>(list: T[], value: T): T[] =>
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
@@ -306,7 +319,10 @@ export function HandoffSection() {
             units={unitOptions}
             languages={languages}
             manageHref={isMaster ? '/users?manage=1' : undefined}
+            categories={categories}
+            onManageCategories={canManageCategories ? () => setCategoriesOpen(true) : undefined}
           />
+          <RoutingCategoriesModal open={categoriesOpen} onClose={() => setCategoriesOpen(false)} />
 
           {/* Unanswered-alarm reminder (PLN-261015 D4). */}
           <div className="border-t border-gray-100 pt-4">

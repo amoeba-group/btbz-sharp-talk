@@ -35,6 +35,7 @@
   },
   "admins": "管理者アカウント",
   "settingsBasic": "基本設定",
+  "settingsHandoff": "担当者への引き継ぎ",
   "settingsWidget": "ウィジェット設定",
   "settingsPlatforms": "プラットフォーム連携",
   "settingsMarketing": "マーケティング・ヘルプデスク",

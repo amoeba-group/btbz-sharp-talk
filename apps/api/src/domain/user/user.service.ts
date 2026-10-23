@@ -1,9 +1,9 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { generateToken } from '@sharptalk/common';
-import { JOB_LABEL, canonicalRegion, isRegionCode, provinceKey } from '@sharptalk/types';
+import { JOB_LABEL, canonicalRegion, provinceKey } from '@sharptalk/types';
 import { User } from './entity/user.entity';
 import { JobLabel } from './entity/job-label.entity';
 import { UserJobLabel } from './entity/user-job-label.entity';
@@ -31,6 +31,7 @@ import { LoginRateLimitService } from '../auth/login-rate-limit.service';
 import { MailerService } from '../../infrastructure/infrastructure.module';
 import { TenantService } from '../tenant/tenant.service';
 import { ConfigService } from '@nestjs/config';
+import { RoutingCategoryService } from '../routing-category/routing-category.service';
 const INVITE_TTL_MS = 72 * 60 * 60 * 1000;
 
 /**
@@ -55,6 +56,8 @@ export class UserService {
     @InjectRepository(Unit) private readonly unitRepo: Repository<Unit>,
     // Read-only: delete refuses a unit/label a routing or deny rule still names.
     @InjectRepository(TenantAiConfig) private readonly aiConfigRepo: Repository<TenantAiConfig>,
+    // Scope regions must be the tenant's routing categories (PLN-261024); absent in older specs.
+    @Optional() private readonly categories?: RoutingCategoryService,
   ) {}
 
   // ---- Users ----
@@ -315,7 +318,7 @@ export class UserService {
       throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
     if (name !== undefined) label.name = name;
-    const scopeChanged = applyRegionScope(label, scope);
+    const scopeChanged = applyRegionScope(label, await this.checkScope(tenantId, scope));
     await this.labelRepo.save(label);
     if (scopeChanged && actorId != null) {
       await this.audit.write({
@@ -405,7 +408,7 @@ export class UserService {
     const unit = await this.getTenantUnit(tenantId, id);
     const before = unit.name;
     if (name !== undefined) unit.name = name;
-    const scopeChanged = applyRegionScope(unit, scope);
+    const scopeChanged = applyRegionScope(unit, await this.checkScope(tenantId, scope));
     await this.unitRepo.save(unit);
     if (name !== undefined && name !== before) {
       await this.audit.write({
@@ -451,6 +454,12 @@ export class UserService {
   }
 
   // ---- helpers ----
+
+  /** Scope regions folded and checked against the tenant's routing categories (PLN-261024; E5109 otherwise). */
+  private async checkScope(tenantId: number, scope?: RegionScopeInput): Promise<RegionScopeInput | undefined> {
+    if (!scope?.regions?.length || !this.categories) return scope;
+    return { ...scope, regions: await this.categories.assertCodes(tenantId, scope.regions) };
+  }
 
   /**
    * 409 E2007 when a routing rule's group or label filter, or a deny rule's label,
@@ -583,8 +592,8 @@ export interface RegionScopeInput {
 
 /**
  * Write the covered places onto a unit/label row; returns whether anything
- * changed. Regions are folded to catalogue codes (unknown dropped — the DTO
- * already refused them), provinces NFC-normalised and de-duplicated by their
+ * changed. Regions are folded to canonical codes (the service already checked
+ * them against the tenant's routing categories), provinces NFC-normalised and de-duplicated by their
  * comparison key keeping the first spelling. An empty list stores NULL.
  */
 export function applyRegionScope(
@@ -594,7 +603,7 @@ export function applyRegionScope(
   if (!scope) return false;
   const before = JSON.stringify([row.regions ?? [], row.provinces ?? []]);
   if (scope.regions !== undefined) {
-    const regions = [...new Set(scope.regions.map(canonicalRegion).filter(isRegionCode))];
+    const regions = [...new Set(scope.regions.map(canonicalRegion).filter(Boolean))];
     row.regions = regions.length ? regions : null;
   }
   if (scope.provinces !== undefined) {

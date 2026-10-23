@@ -63,21 +63,15 @@
   "orgDeleteError": "删除失败。",
   "permissionLabelNoDelete": "与权限关联的标签无法删除。",
   "orgInUseByRule": "正在被分配规则使用：{{rules}}。请先从规则中移除（转接人工客服 › 分配规则）。",
-  "scopeTitle": "负责区域",
-  "scopeNone": "无负责区域",
-  "scopeEdit": "设置区域",
-  "scopeRegions": "大区",
+  "scopeTitle": "负责范围",
+  "scopeNone": "无负责范围",
+  "scopeEdit": "设置范围",
+  "scopeRegions": "类别",
   "scopeProvinces": "省 / 市",
   "scopeProvincePh": "输入或选择省/市",
   "scopeAdd": "添加",
-  "scopeSaved": "已保存 {{name}} 的负责区域",
-  "scopeSaveError": "无法保存负责区域",
-  "scopeHint": "分配规则中的「按区域分配」会选择其团队或标签负责该对话省/市（优先）或大区的客服。",
-  "region": {
-    "north": "北部",
-    "north_center": "中北部",
-    "central": "中部",
-    "south_center": "中南部",
-    "south": "南部"
-  }
+  "scopeSaved": "已保存 {{name}} 的负责范围",
+  "scopeSaveError": "无法保存负责范围",
+  "scopeHint": "分配规则中的\"分配给类别负责人\"会选择团队或标签负责范围与对话的省/市（优先）或类别相符的人员。",
+  "scopeNoCategories": "没有类别 — 请在 设置 › 转接人工客服 › 管理类别 中添加"
 }

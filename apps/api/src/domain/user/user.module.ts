@@ -14,6 +14,7 @@ import { AdminTenantUserController } from './admin-tenant-user.controller';
 import { AuditModule } from '../audit/audit.module';
 import { AuthModule } from '../auth/auth.module';
 import { TenantModule } from '../tenant/tenant.module';
+import { RoutingCategoryModule } from '../routing-category/routing-category.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { TenantModule } from '../tenant/tenant.module';
     AuditModule,
     AuthModule, // MfaService (mfa-reset endpoints)
     TenantModule,
+    RoutingCategoryModule, // scope regions = the tenant's routing categories (PLN-261024)
   ],
   controllers: [UserController, JobLabelController, UnitController, AdminTenantUserController],
   providers: [UserService],

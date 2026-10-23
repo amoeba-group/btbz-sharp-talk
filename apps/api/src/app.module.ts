@@ -60,6 +60,7 @@ import { OdooModule } from './domain/odoo/odoo.module';
 import { HaravanModule } from './domain/haravan/haravan.module';
 import { WooModule } from './domain/woocommerce/woocommerce.module';
 import { ShopifyProxyModule } from './domain/shopify-proxy/shopify-proxy.module';
+import { RoutingCategoryModule } from './domain/routing-category/routing-category.module';
 
 @Module({
   imports: [
@@ -126,6 +127,7 @@ import { ShopifyProxyModule } from './domain/shopify-proxy/shopify-proxy.module'
     JourneyModule,
     PrivacyModule,
     HealthModule,
+    RoutingCategoryModule,
   ],
   providers: [
     // Throttle first (cheap, before auth work), then authenticate.

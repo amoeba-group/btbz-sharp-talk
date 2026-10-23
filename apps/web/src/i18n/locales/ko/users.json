@@ -63,21 +63,15 @@
   "orgDeleteError": "삭제에 실패했습니다.",
   "permissionLabelNoDelete": "권한과 연결된 라벨은 삭제할 수 없습니다.",
   "orgInUseByRule": "배정 규칙에서 사용 중입니다: {{rules}}. 규칙에서 먼저 제거하세요(상담원 연결 › 배정 규칙).",
-  "scopeTitle": "담당 지역",
-  "scopeNone": "담당 지역 없음",
-  "scopeEdit": "지역 설정",
-  "scopeRegions": "권역",
+  "scopeTitle": "담당 범위",
+  "scopeNone": "담당 범위 없음",
+  "scopeEdit": "범위 설정",
+  "scopeRegions": "카테고리",
   "scopeProvinces": "성·시",
   "scopeProvincePh": "성·시 이름 입력 또는 선택",
   "scopeAdd": "추가",
-  "scopeSaved": "{{name}} 담당 지역을 저장했습니다",
-  "scopeSaveError": "담당 지역을 저장하지 못했습니다",
-  "scopeHint": "배정 규칙의 \"지역 담당자에게 배정\"은 팀·라벨의 담당 지역이 대화의 성·시(우선) 또는 권역과 맞는 상담원을 고릅니다.",
-  "region": {
-    "north": "북부",
-    "north_center": "중북부",
-    "central": "중부",
-    "south_center": "중남부",
-    "south": "남부"
-  }
+  "scopeSaved": "{{name}} 담당 범위를 저장했습니다",
+  "scopeSaveError": "담당 범위를 저장하지 못했습니다",
+  "scopeHint": "배정 규칙의 \"카테고리 담당자에게 배정\"은 팀·라벨의 담당 범위가 대화의 성·시(우선) 또는 카테고리와 맞는 상담원을 고릅니다.",
+  "scopeNoCategories": "카테고리가 없습니다 — 설정 › 상담원 연결 › 카테고리 관리에서 추가하세요"
 }

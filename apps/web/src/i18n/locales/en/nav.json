@@ -35,6 +35,7 @@
   },
   "admins": "Admin operators",
   "settingsBasic": "Basic",
+  "settingsHandoff": "Agent handoff",
   "settingsWidget": "Widget",
   "settingsPlatforms": "Platforms",
   "settingsMarketing": "Marketing & Helpdesk",

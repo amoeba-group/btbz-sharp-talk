@@ -3,9 +3,11 @@ import { AiEngineCard } from './AiEngineCard';
 import { AiUsageCard } from './AiUsageCard';
 import { StorefrontCard } from './SettingsPage';
 import { KnowledgeOptionsCard } from './KnowledgeOptionsCard';
-import { HandoffSection } from '../ai-settings/HandoffSection';
 
-/** Tenant settings — basic (PLN-260824 B). Composition only; every card moved here unchanged. */
+/**
+ * Tenant settings — basic (PLN-260824 B). Composition only; every card moved here unchanged.
+ * Live-support routing moved to its own tab (PLN-261024): SettingsHandoffPage.
+ */
 export function SettingsBasicPage() {
   const { t } = useTranslation('settings');
 
@@ -18,8 +20,6 @@ export function SettingsBasicPage() {
       <StorefrontCard />
       {/* Shop-only knowledge features live next to the storefront they serve (PLN-260910). */}
       <KnowledgeOptionsCard />
-      {/* Live-support routing: business hours, break, off-hours mailbox. */}
-      <HandoffSection />
     </div>
   );
 }
