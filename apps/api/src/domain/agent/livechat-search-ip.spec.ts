@@ -78,7 +78,7 @@ describe('visitor address (S2)', () => {
       return { svc, updates, sessionRepo };
     }
     const withIp = <T>(ip: string, fn: () => Promise<T>) =>
-      runWithRequestContext({ requestId: 'r', ip: '6.6.6.6', clientIp: ip }, fn);
+      runWithRequestContext({ requestId: 'r', ip }, fn);
 
     it('stamps first and last on a new session', async () => {
       const h = build(null);
