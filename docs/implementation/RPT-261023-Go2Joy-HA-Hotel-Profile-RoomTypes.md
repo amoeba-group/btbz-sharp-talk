@@ -25,7 +25,7 @@
 | 스테이징 DB | SQL 선적용 10/23 16:2x KST |
 | 스테이징 코드 | `8ca1cfbe` 배포, healthy·부팅·새 경로 401 |
 | 스테이징 설정 | go2joy에 Partner **테스트** 자격증명 등록(콘솔 API) → 연결 테스트 "Connected" |
-| 프로덕션 | **미배포** — 배포 시 SQL 선적용 필요. Partner 운영 자격증명·IP 허용(G18) 전에는 연동 미설정 = 동작 불변 |
+| 프로덕션 | 10/23 16:44 KST 백업 `~/backups/sharptalk-production/20261023-1644-pre-261024` → SQL 선적용 → `c90cdb89` 배포(#702~#704), check-migrations OK·healthy·부팅·새 경로 401. Partner 자격증명 **미등록**(G18 대기) = 호텔 동기화 동작 없음 |
 
 ## 4. 스테이징 검증 (TCR §2)
 | # | 결과 |
