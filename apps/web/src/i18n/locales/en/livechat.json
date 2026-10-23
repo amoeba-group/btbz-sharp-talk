@@ -444,5 +444,17 @@
       "agent": "With agent",
       "ended": "Ended"
     }
+  },
+  "hotelCard": {
+    "title": "Hotel",
+    "details": "Details",
+    "unverified": "unverified sign-in",
+    "unverifiedHint": "This hotel number came from an unsigned host sign-in, so it may not be accurate.",
+    "sellingRooms": "Selling rooms {{count}}",
+    "kind": {
+      "hourly": "Hourly",
+      "overnight": "Overnight",
+      "daily": "Daily"
+    }
   }
 }

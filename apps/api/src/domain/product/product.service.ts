@@ -1,9 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Like, Repository } from 'typeorm';
+import { In, IsNull, Like, Repository } from 'typeorm';
 import { PRODUCT_STATUS, ProductCache } from './entity/product-cache.entity';
 import { ProductSave } from '../save/entity/product-save.entity';
 import { DOC_GROUP, KbDocument } from '../knowledge/entity/kb-document.entity';
+import { Company } from '../company/entity/company.entity';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 
@@ -28,7 +29,17 @@ export class ProductService {
     // Repository-only: the console list reports whether each catalogue row
     // reached the knowledge base, which is a read across one column.
     @InjectRepository(KbDocument) private readonly docRepo: Repository<KbDocument>,
+    // Repository-only: the company column/filter needs names, nothing more.
+    @InjectRepository(Company) private readonly companyRepo: Repository<Company>,
   ) {}
+
+  /** Company id → name for the given ids (tenant-scoped). */
+  async companyNames(tenantId: number | null, ids: Array<number | null>): Promise<Map<string, string | null>> {
+    const unique = [...new Set(ids.filter((i): i is number => i != null).map(Number))];
+    if (tenantId == null || !unique.length) return new Map();
+    const rows = await this.companyRepo.find({ where: { tenantId, id: In(unique) }, select: ['id', 'name'] });
+    return new Map(rows.map((r) => [String(r.id), r.name ?? null]));
+  }
 
   /**
    * Active products, newest first. `q` matches title OR tags (LIKE contains);
@@ -42,7 +53,9 @@ export class ProductService {
     size: number,
   ): Promise<[ProductCache[], number]> {
     if (tenantId == null) return [[], 0];
-    const base: Record<string, unknown> = { tenantId, status: PRODUCT_STATUS.ACTIVE };
+    // Storefront catalogue only — a B2B company's products (Go2Joy room types,
+    // PLN-261023) are not for sale to shoppers.
+    const base: Record<string, unknown> = { tenantId, status: PRODUCT_STATUS.ACTIVE, companyId: IsNull() };
     if (category) base.category = category;
     const where = q ? [{ ...base, title: Like(`%${q}%`) }, { ...base, tags: Like(`%${q}%`) }] : base;
     return this.productRepo.findAndCount({
@@ -63,12 +76,15 @@ export class ProductService {
    */
   async adminList(
     tenantId: number | null,
-    filters: { q?: string; category?: string; status?: string },
+    filters: { q?: string; category?: string; status?: string; companyId?: string },
     page: number,
     size: number,
   ): Promise<[ProductCache[], number]> {
     if (tenantId == null) return [[], 0];
     const base: Record<string, unknown> = { tenantId };
+    // B2B company filter (PLN-261023): 'none' = storefront rows, an id = that company's.
+    if (filters.companyId === 'none') base.companyId = IsNull();
+    else if (filters.companyId && /^\d+$/.test(filters.companyId)) base.companyId = Number(filters.companyId);
     if (filters.category) base.category = filters.category;
     if (filters.status === PRODUCT_STATUS.ACTIVE || filters.status === PRODUCT_STATUS.ARCHIVED) {
       base.status = filters.status;
@@ -149,7 +165,7 @@ export class ProductService {
   async categories(tenantId: number | null): Promise<string[]> {
     if (tenantId == null) return [];
     const rows = await this.productRepo.find({
-      where: { tenantId, status: PRODUCT_STATUS.ACTIVE },
+      where: { tenantId, status: PRODUCT_STATUS.ACTIVE, companyId: IsNull() },
       select: ['category'],
     });
     const set = new Set<string>();
@@ -196,7 +212,7 @@ export class ProductService {
     const tags = new Set(savedProducts.flatMap(splitTags));
 
     const candidates = await this.productRepo.find({
-      where: { tenantId, status: PRODUCT_STATUS.ACTIVE },
+      where: { tenantId, status: PRODUCT_STATUS.ACTIVE, companyId: IsNull() },
       order: { publishedAt: 'DESC', id: 'DESC' },
     });
     const scored = candidates
@@ -215,10 +231,39 @@ export class ProductService {
   /** Cold-start / anonymous fallback: the tenant's newest active products. */
   private async newestActive(tenantId: number, size: number): Promise<ProductCache[]> {
     return this.productRepo.find({
-      where: { tenantId, status: PRODUCT_STATUS.ACTIVE },
+      where: { tenantId, status: PRODUCT_STATUS.ACTIVE, companyId: IsNull() },
       order: { publishedAt: 'DESC', id: 'DESC' },
       take: size,
     });
+  }
+
+  /**
+   * Companies that own products, with counts — the console's company filter
+   * (PLN-261023). Empty for a storefront-only tenant, which hides the filter.
+   */
+  async companyFacets(tenantId: number | null): Promise<Array<{ companyId: string; count: number }>> {
+    if (tenantId == null) return [];
+    const rows: Array<{ companyId: string; n: string }> = await this.productRepo
+      .createQueryBuilder('p')
+      .select('p.companyId', 'companyId')
+      .addSelect('COUNT(*)', 'n')
+      .where('p.tenantId = :tenantId AND p.companyId IS NOT NULL', { tenantId })
+      .groupBy('p.companyId')
+      .getRawMany();
+    return rows.map((r) => ({ companyId: String(r.companyId), count: Number(r.n) }));
+  }
+
+  /**
+   * Operator-entered room count of a room type (PLN-261023) — the Partner API
+   * has none. Kept in `attributes`, which the hotel sync preserves.
+   */
+  async setRoomCount(tenantId: number, handle: string, count: number | null): Promise<ProductCache> {
+    const product = await this.productRepo.findOne({ where: { tenantId, handle } });
+    if (!product || product.companyId == null) {
+      throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+    product.attributes = { ...(product.attributes ?? {}), roomCount: count };
+    return this.productRepo.save(product);
   }
 
   /** One product by handle — archived rows stay reachable (deep links from old pushes). */

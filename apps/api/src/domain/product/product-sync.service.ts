@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { INTEGRATION_PROVIDER } from '@sharptalk/types';
 import { PRODUCT_STATUS, ProductCache } from './entity/product-cache.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
@@ -196,7 +196,9 @@ export class ProductSyncService implements OnModuleInit, OnModuleDestroy {
    */
   async syncTenant(tenant: Tenant): Promise<ProductSyncResult> {
     const origin = (tenant.storefrontUrl ?? `https://${tenant.shopDomain}`).trim().replace(/\/+$/, '');
-    const existing = await this.productRepo.find({ where: { tenantId: tenant.id } });
+    // Storefront rows only: a B2B company's products (Go2Joy room types,
+    // PLN-261023) are not on this storefront and must never be archived by it.
+    const existing = await this.productRepo.find({ where: { tenantId: tenant.id, companyId: IsNull() } });
     const byHandle = new Map(existing.map((p) => [p.handle, p]));
     const seen = new Set<string>();
     const now = new Date();

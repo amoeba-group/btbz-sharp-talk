@@ -11,7 +11,9 @@
   "filters": {
     "searchPlaceholder": "상품명·태그 검색",
     "allCategories": "전체 카테고리",
-    "allStatuses": "전체 상태"
+    "allStatuses": "전체 상태",
+    "allCompanies": "전체 업체",
+    "storeProducts": "스토어 상품"
   },
   "columns": {
     "product": "상품",
@@ -19,7 +21,12 @@
     "price": "가격",
     "status": "상태",
     "knowledge": "지식",
-    "openInShop": "쇼핑몰에서 열기"
+    "openInShop": "쇼핑몰에서 열기",
+    "company": "업체",
+    "rooms": "객실 수",
+    "hourly": "대실 (기본 / 추가)",
+    "overnight": "숙박",
+    "daily": "종일"
   },
   "status": {
     "active": "판매중",
@@ -45,5 +52,37 @@
     "description": "상세 내용",
     "noDescription": "상세 내용이 없습니다. 태그도 없으면 이 상품은 지식으로 등록되지 않습니다.",
     "openInShop": "쇼핑몰에서 열기"
+  },
+  "ha": {
+    "status": {
+      "selling": "판매 중",
+      "rejected": "반려",
+      "stopped": "판매 중지",
+      "other": "상태 {{code}}"
+    },
+    "hours": "기본 {{first}}시간, 추가 {{additional}}시간",
+    "roomCount": {
+      "edit": "객실 수 편집",
+      "label": "객실 수",
+      "save": "저장",
+      "cancel": "취소",
+      "saved": "객실 수를 저장했습니다.",
+      "failed": "객실 수를 저장하지 못했습니다.",
+      "invalid": "0~{{max}} 사이의 정수를 입력하거나 비워 두세요."
+    },
+    "section": "객실 유형",
+    "moreImages": "+{{n}}장 더",
+    "haStatus": "HA 상태",
+    "bedType": "침대 유형",
+    "square": "면적",
+    "squareValue": "{{value}} m²",
+    "flags": {
+      "label": "옵션",
+      "extraFee": "추가 요금",
+      "discount": "할인",
+      "flashSale": "플래시 세일"
+    },
+    "facilities": "편의시설",
+    "memo": "메모"
   }
 }

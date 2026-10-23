@@ -17,6 +17,7 @@ export type ProductStatus = (typeof PRODUCT_STATUS)[keyof typeof PRODUCT_STATUS]
  */
 @Entity('products_cache')
 @Unique('uk_product_tenant_handle', ['tenantId', 'handle'])
+@Index('idx_prdc_tenant_company', ['tenantId', 'companyId'])
 export class ProductCache {
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id: number;
@@ -82,6 +83,22 @@ export class ProductCache {
 
   @Column({ name: 'published_at', type: 'datetime', nullable: true })
   publishedAt: Date | null;
+
+  /**
+   * The B2B company this product belongs to (PLN-261023) — a Go2Joy room type
+   * belongs to its hotel. NULL = the tenant's storefront catalogue, which every
+   * storefront sync owns; those syncs never touch a row with a company.
+   */
+  @Column({ name: 'company_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
+  companyId: number | null;
+
+  /** 'go2joy_partner' for room types; NULL = storefront sync. */
+  @Column({ type: 'varchar', length: 16, nullable: true })
+  source: string | null;
+
+  /** Room-type details (RoomTypeAttributes) — NULL for storefront products. */
+  @Column({ type: 'json', nullable: true })
+  attributes: Record<string, unknown> | null;
 
   /** Last time a sync run saw this product on the storefront. */
   @Column({ name: 'synced_at', type: 'datetime', nullable: true })

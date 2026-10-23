@@ -202,7 +202,8 @@
       "email": "Email tài khoản",
       "webhook_secret": "Webhook secret (trạng thái L2)",
       "platform_name": "Tên nền tảng",
-      "description": "Mô tả"
+      "description": "Mô tả",
+      "base_url": "Địa chỉ máy chủ"
     },
     "ph": {
       "mall_id": "gian-hang-cua-ban",
@@ -215,7 +216,8 @@
       "email": "agent@example.com",
       "app_key": "yotpo app key",
       "platform_name": "Go2Joy",
-      "description": "VD: Trang quản trị đối tác khách sạn (tự phát triển)"
+      "description": "VD: Trang quản trị đối tác khách sạn (tự phát triển)",
+      "base_url": "https://partner.go2joy.vn/"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -261,6 +263,10 @@
     "self": {
       "title": "Nền tảng riêng",
       "subtitle": "Nền tảng do bạn tự phát triển và vận hành. Chỉ cần đăng ký tên và mô tả, không có gì để kiểm tra."
+    },
+    "go2joy_partner": {
+      "title": "Go2Joy Partner API",
+      "subtitle": "Thông tin khách sạn và loại phòng của khách sạn đối tác (khách hàng doanh nghiệp) — kết nối máy chủ, ký bằng client secret."
     }
   },
   "install": {

@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { productsService } from './products.service';
 import type { ProductListParams } from './products.service';
 import { useTenantKey } from '@/lib/use-tenant-key';
@@ -35,5 +35,28 @@ export const useProductCategories = () => {
   return useQuery({
     queryKey: ['products-categories', tenantKey],
     queryFn: () => productsService.categories(),
+  });
+};
+
+/** Companies that own products — empty for a plain storefront tenant. */
+export const useProductCompanies = () => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['products-companies', tenantKey],
+    queryFn: () => productsService.companies(),
+  });
+};
+
+/** Room count of an HA room type. Toasts are the caller's (they need `t`). */
+export const useUpdateRoomCount = () => {
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: ({ handle, roomCount }: { handle: string; roomCount: number | null }) =>
+      productsService.updateRoomCount(handle, roomCount),
+    onSuccess: (_detail, { handle }) => {
+      qc.invalidateQueries({ queryKey: ['products', tenantKey] });
+      qc.invalidateQueries({ queryKey: ['product', tenantKey, handle] });
+    },
   });
 };

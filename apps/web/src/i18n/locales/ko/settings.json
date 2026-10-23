@@ -202,7 +202,8 @@
       "email": "계정 이메일",
       "webhook_secret": "웹훅 시크릿 (L2 상태회신)",
       "platform_name": "플랫폼 이름",
-      "description": "설명"
+      "description": "설명",
+      "base_url": "서버 주소"
     },
     "ph": {
       "mall_id": "your-mall",
@@ -215,7 +216,8 @@
       "email": "agent@example.com",
       "app_key": "yotpo app key",
       "platform_name": "Go2Joy",
-      "description": "예: 호텔 파트너 어드민(자체 개발)"
+      "description": "예: 호텔 파트너 어드민(자체 개발)",
+      "base_url": "https://partner.go2joy.vn/"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -261,6 +263,10 @@
     "self": {
       "title": "자체 플랫폼",
       "subtitle": "직접 개발·운영하는 플랫폼입니다. 이름과 설명만 등록하면 되고, 테스트할 것은 없습니다."
+    },
+    "go2joy_partner": {
+      "title": "Go2Joy Partner API",
+      "subtitle": "파트너 호텔(B2B 고객)의 호텔 정보와 객실 유형을 가져옵니다 — 서버 간 연동, client secret으로 서명합니다."
     }
   },
   "install": {

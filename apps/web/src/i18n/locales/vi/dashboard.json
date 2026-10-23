@@ -29,7 +29,8 @@
     "yotpo": "Yotpo",
     "cafe24": "Cafe24",
     "notion": "Notion",
-    "self": "Nền tảng riêng"
+    "self": "Nền tảng riêng",
+    "go2joy_partner": "Go2Joy Partner"
   },
   "integrationState": {
     "connected": "Đã kết nối",

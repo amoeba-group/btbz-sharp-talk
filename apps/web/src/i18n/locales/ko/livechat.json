@@ -444,5 +444,17 @@
       "agent": "상담 중",
       "ended": "종료"
     }
+  },
+  "hotelCard": {
+    "title": "호텔",
+    "details": "상세",
+    "unverified": "미검증 로그인",
+    "unverifiedHint": "이 호텔 번호는 서명되지 않은 호스트 로그인에서 왔으므로 정확하지 않을 수 있습니다.",
+    "sellingRooms": "판매 객실 {{count}}",
+    "kind": {
+      "hourly": "대실",
+      "overnight": "숙박(야간)",
+      "daily": "일일"
+    }
   }
 }

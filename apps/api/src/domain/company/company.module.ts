@@ -4,6 +4,10 @@ import { Company } from './entity/company.entity';
 import { CompanyContact } from './entity/company-contact.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
+import { ProductCache } from '../product/entity/product-cache.entity';
+import { User } from '../user/entity/user.entity';
+import { Go2joyModule } from '../go2joy/go2joy.module';
+import { AuditModule } from '../audit/audit.module';
 import { CompanyService } from './company.service';
 import { CompanyController } from './company.controller';
 
@@ -13,7 +17,11 @@ import { CompanyController } from './company.controller';
  * without a cycle.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Company, CompanyContact, Customer, Conversation])],
+  imports: [
+    TypeOrmModule.forFeature([Company, CompanyContact, Customer, Conversation, ProductCache, User]),
+    Go2joyModule,
+    AuditModule,
+  ],
   controllers: [CompanyController],
   providers: [CompanyService],
   exports: [CompanyService],

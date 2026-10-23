@@ -1,6 +1,7 @@
 import { promises as dns } from 'dns';
 import { isIP } from 'net';
 import { GenericIntegrationProvider } from '@sharptalk/types';
+import { probePartner } from '../go2joy/partner-client';
 
 export interface ProbeResult {
   ok: boolean;
@@ -113,6 +114,8 @@ export async function probeEcommerce(
         return await probeYotpo(config);
       case 'gorgias':
         return await probeGorgias(config);
+      case 'go2joy_partner':
+        return await probePartner(config);
       default:
         return { ok: false, detail: 'Unsupported provider' };
     }

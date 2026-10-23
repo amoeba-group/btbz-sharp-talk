@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
@@ -39,7 +40,10 @@ export function CustomersPage() {
   const { t } = useTranslation('customers');
   const { t: tc } = useTranslation('common');
   // All / business customers (companies) / booking customers (PLN-261022 stage 2).
-  const [tab, setTab] = useState<'all' | 'b2b' | 'b2c'>('all');
+  // ?tab=b2b&company=ID opens a business customer directly (live-chat hotel card, PLN-261023).
+  const [params] = useSearchParams();
+  const linkedCompany = params.get('tab') === 'b2b' ? params.get('company') : null;
+  const [tab, setTab] = useState<'all' | 'b2b' | 'b2c'>(linkedCompany ? 'b2b' : 'all');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -143,7 +147,7 @@ export function CustomersPage() {
       </div>
 
       {tab === 'b2b' ? (
-        <CompaniesPanel />
+        <CompaniesPanel initialOpenId={linkedCompany} />
       ) : (
       <>
       <div className="mb-4">

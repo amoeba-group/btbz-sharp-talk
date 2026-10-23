@@ -11,7 +11,9 @@
   "filters": {
     "searchPlaceholder": "商品名またはタグで検索",
     "allCategories": "すべてのカテゴリ",
-    "allStatuses": "すべてのステータス"
+    "allStatuses": "すべてのステータス",
+    "allCompanies": "すべての企業",
+    "storeProducts": "ストア商品"
   },
   "columns": {
     "product": "商品",
@@ -19,7 +21,12 @@
     "price": "価格",
     "status": "ステータス",
     "knowledge": "ナレッジ",
-    "openInShop": "ストアで開く"
+    "openInShop": "ストアで開く",
+    "company": "企業",
+    "rooms": "客室数",
+    "hourly": "時間利用（基本 / 延長）",
+    "overnight": "宿泊",
+    "daily": "終日"
   },
   "status": {
     "active": "販売中",
@@ -45,5 +52,37 @@
     "description": "説明",
     "noDescription": "説明がありません。タグもないため、この商品はナレッジベースに登録されません。",
     "openInShop": "ストアで開く"
+  },
+  "ha": {
+    "status": {
+      "selling": "販売中",
+      "rejected": "却下",
+      "stopped": "販売停止",
+      "other": "ステータス {{code}}"
+    },
+    "hours": "基本{{first}}時間、延長{{additional}}時間",
+    "roomCount": {
+      "edit": "客室数を編集",
+      "label": "客室数",
+      "save": "保存",
+      "cancel": "キャンセル",
+      "saved": "客室数を保存しました。",
+      "failed": "客室数を保存できませんでした。",
+      "invalid": "0〜{{max}}の整数を入力するか、空欄にしてください。"
+    },
+    "section": "客室タイプ",
+    "moreImages": "他{{n}}枚",
+    "haStatus": "HAステータス",
+    "bedType": "ベッドタイプ",
+    "square": "広さ",
+    "squareValue": "{{value}} m²",
+    "flags": {
+      "label": "オプション",
+      "extraFee": "追加料金",
+      "discount": "割引",
+      "flashSale": "フラッシュセール"
+    },
+    "facilities": "設備",
+    "memo": "メモ"
   }
 }

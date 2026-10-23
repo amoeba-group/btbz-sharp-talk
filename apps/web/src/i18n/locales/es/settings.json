@@ -202,7 +202,8 @@
       "email": "Email de la cuenta",
       "webhook_secret": "Secreto del webhook (estado L2)",
       "platform_name": "Nombre de la plataforma",
-      "description": "Descripción"
+      "description": "Descripción",
+      "base_url": "URL del servidor"
     },
     "ph": {
       "mall_id": "your-mall",
@@ -215,7 +216,8 @@
       "email": "agente@ejemplo.com",
       "app_key": "yotpo app key",
       "platform_name": "Go2Joy",
-      "description": "p. ej. Panel de socios hoteleros (propio)"
+      "description": "p. ej. Panel de socios hoteleros (propio)",
+      "base_url": "https://partner.go2joy.vn/"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -261,6 +263,10 @@
     "self": {
       "title": "Plataforma propia",
       "subtitle": "Una plataforma que desarrollas y operas tú mismo. Registra un nombre y una nota; no hay nada que probar."
+    },
+    "go2joy_partner": {
+      "title": "API de socios de Go2Joy",
+      "subtitle": "Información y tipos de habitación de tus hoteles socios (clientes empresa) — servidor a servidor, firmado con tu client secret."
     }
   },
   "install": {

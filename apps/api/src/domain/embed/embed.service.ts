@@ -22,6 +22,7 @@ import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { CompanyService } from '../company/company.service';
 import type { Company } from '../company/entity/company.entity';
+import { HotelSyncService } from '../go2joy/hotel-sync.service';
 import { AuditService } from '../audit/audit.service';
 
 /** What the customer's own server signs, and what the SDK forwards. */
@@ -69,7 +70,21 @@ export class EmbedService {
     @Optional() @InjectRepository(Conversation) private readonly convRepo?: Repository<Conversation>,
     // Host sign-ins on the agent work log (PLN-261022 P6).
     @Optional() private readonly audit?: AuditService,
+    // Hotel profile + room types from the Go2Joy Partner API (PLN-261023 D1-②).
+    @Optional() private readonly hotels?: HotelSyncService,
   ) {}
+
+  /**
+   * A sign-in that names a hotel makes sure the hotel exists as a company,
+   * read from the Partner API (PLN-261023). In the background: the widget must
+   * not wait on Go2Joy, and a failure only means the profile arrives later
+   * (daily sweep). Signed or claimed alike — the API, not the browser, decides
+   * the hotel exists, and nothing is linked to the person here.
+   */
+  private refreshHotel(tenantId: number, attributes: IdentityAttributes | null): void {
+    if (!this.hotels || !attributes?.hotel_id) return;
+    void this.hotels.ensureHotel(tenantId, attributes.hotel_id).catch(() => undefined);
+  }
 
   /** New secret, stored encrypted. Returned in full exactly once, to the caller. */
   async rotateSecret(tenantId: number): Promise<string> {
@@ -119,6 +134,7 @@ export class EmbedService {
         if (session.identityLevel !== SESSION_IDENTITY.VERIFIED) {
           const claimed = await this.claimIdentity(session, input, attributes, tenant);
           await this.recordSignIn(claimed, signedInBefore);
+          this.refreshHotel(Number(session.tenantId), claimed.identityAttributes as IdentityAttributes | null);
           return claimed;
         }
         this.logger.warn(
@@ -167,6 +183,7 @@ export class EmbedService {
         `${company ? `, company ${company.id}` : ''})`,
     );
     await this.recordSignIn(saved, signedInBefore);
+    this.refreshHotel(Number(session.tenantId), stored.attributes);
     return saved;
   }
 

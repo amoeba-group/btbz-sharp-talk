@@ -1,3 +1,4 @@
+import { IsNull } from 'typeorm';
 import { ProductSyncService, stripHtml } from './product-sync.service';
 import { ProductCache } from './entity/product-cache.entity';
 import { Tenant } from '../tenant/entity/tenant.entity';
@@ -115,6 +116,13 @@ describe('ProductSyncService.syncTenant', () => {
     });
     expect(saved[0].publishedAt?.toISOString()).toBe('2026-08-01T00:00:00.000Z');
     expect(saved[0].syncedAt).toBeInstanceOf(Date);
+  });
+
+  it('reads storefront rows only — a B2B company\'s room types are never archived by it (PLN-261023)', async () => {
+    mockFetch([[product()]]);
+    const { svc, productRepo } = build();
+    await svc.syncTenant(tenant);
+    expect(productRepo.find).toHaveBeenCalledWith({ where: { tenantId: '7', companyId: IsNull() } });
   });
 
   it('takes the first NON-EMPTY variant sku, not variants[0]', async () => {

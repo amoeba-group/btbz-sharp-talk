@@ -146,10 +146,52 @@ export interface ConversationDetail {
   identity?: SessionIdentity | null;
   /** B2B company + how many of its other conversations exist (PLN-261022 stage 2). */
   company?: { id: string; name?: string | null; otherConversations: number } | null;
+  /** The hotel this business thread belongs to (PLN-261023 hotel profile); null for consumers/guests. */
+  hotel?: ConversationHotel | null;
   messages: ChatMessage[];
   /** Older messages exist before the first one returned (PLN-260807). */
   hasMore?: boolean;
   customer?: CustomerContext | null;
+}
+
+/** One booking kind's operating window; start/end are hours 0-23. */
+export interface HotelHoursWindow {
+  enabled: boolean;
+  start: number | null;
+  end: number | null;
+}
+
+/** Hotel profile shown next to the customer card (PLN-261023). */
+export interface ConversationHotel {
+  companyId: string;
+  /** false = found via an unsigned (claimed) host sign-in. */
+  verified: boolean;
+  name: string | null;
+  code: string | null;
+  address: string | null;
+  phone: string | null;
+  hotelType: string | null;
+  partnerInfo: {
+    name: string | null;
+    firstHours: number | null;
+    hourly: HotelHoursWindow;
+    overnight: HotelHoursWindow;
+    daily: HotelHoursWindow;
+    cancellation: {
+      hourlyMinutes: number | null;
+      overnightMinutes: number | null;
+      dailyMinutes: number | null;
+      afterBookingMinutes: number | null;
+    } | null;
+  } | null;
+  sellingRooms: number;
+  /** Up to 5 selling rooms, cheapest first. attributes.prices = {firstHours, additional, overnight, oneDay}. */
+  rooms: Array<{
+    title: string;
+    price: number | null;
+    currency: string;
+    attributes: Record<string, unknown> | null;
+  }>;
 }
 
 /** Host facts about the user (PLN-261015 D2/D5). */

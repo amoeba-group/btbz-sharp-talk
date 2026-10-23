@@ -444,5 +444,17 @@
       "agent": "Đang tư vấn",
       "ended": "Đã kết thúc"
     }
+  },
+  "hotelCard": {
+    "title": "Khách sạn",
+    "details": "Chi tiết",
+    "unverified": "đăng nhập chưa xác minh",
+    "unverifiedHint": "Mã khách sạn này đến từ lần đăng nhập của host không có chữ ký, nên có thể không chính xác.",
+    "sellingRooms": "Phòng đang bán {{count}}",
+    "kind": {
+      "hourly": "Theo giờ",
+      "overnight": "Qua đêm",
+      "daily": "Theo ngày"
+    }
   }
 }

@@ -612,6 +612,14 @@ export class AgentConsoleController {
               otherConversations: (await this.companyService.conversationsOf(tenantId, Number(conversation.companyId), id, 0)).total,
             }
           : null,
+      // Hotel card for the customer panel (PLN-261023) — also for an unsigned
+      // HA sign-in, looked up by its hotel number and flagged unverified.
+      hotel: await this.companyService.hotelSummary(
+        tenantId,
+        conversation.companyId != null ? Number(conversation.companyId) : null,
+        identityAttributes?.hotel_id ?? null,
+        identityLevel !== 'claimed',
+      ),
       // Carried on the detail as well as the list row: a deep link from the
       // escalation alarm opens a conversation the filtered list may not hold,
       // and the composer needs the channel to know whether a reply is possible.

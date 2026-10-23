@@ -9,9 +9,11 @@ import { Input, Select } from '@/components/Field';
 import { Table } from '@/components/Table';
 import type { Column } from '@/components/Table';
 import { Pagination } from '@/components/Pagination';
-import { useProductCategories, useProducts, useProductSummary } from './products.hooks';
+import { useProductCategories, useProductCompanies, useProducts, useProductSummary } from './products.hooks';
 import { ProductDetailModal } from './ProductDetailModal';
+import { roomTypeAttrs } from './products.service';
 import type { AdminProduct } from './products.service';
+import { HaStatusBadge, RoomCountEditor, fmtVnd } from './room-type';
 
 const PAGE_SIZE = 20;
 
@@ -44,6 +46,7 @@ export function ProductsPage() {
   const [q, setQ] = useState('');
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState('');
+  const [companyId, setCompanyId] = useState('');
   const [openHandle, setOpenHandle] = useState<string | null>(null);
 
   // Debounced so typing does not fire a request per keystroke.
@@ -55,9 +58,68 @@ export function ProductsPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const { data, isLoading, error } = useProducts({ page, pageSize: PAGE_SIZE, q, category, status });
+  const { data, isLoading, error } = useProducts({ page, pageSize: PAGE_SIZE, q, category, status, companyId });
   const { data: summary } = useProductSummary();
   const { data: categories } = useProductCategories();
+  const { data: companies } = useProductCompanies();
+  // A plain storefront tenant has no companies and must look exactly as before.
+  const hasCompanies = (companies?.length ?? 0) > 0;
+
+  const dash = <span className="text-gray-300">—</span>;
+
+  // Company + HA room-type columns (PLN-261022 HA hotel profile). Storefront
+  // rows in a company tenant show `—` in the room cells.
+  const companyColumns: Column<AdminProduct>[] = [
+    {
+      key: 'company',
+      header: t('columns.company'),
+      render: (p) => p.companyName ?? (p.companyId ? `#${p.companyId}` : dash),
+    },
+    {
+      key: 'rooms',
+      header: t('columns.rooms'),
+      render: (p) => {
+        const room = roomTypeAttrs(p);
+        return room ? <RoomCountEditor handle={p.handle} value={room.roomCount ?? null} /> : dash;
+      },
+    },
+    {
+      key: 'hourly',
+      header: t('columns.hourly'),
+      render: (p) => {
+        const room = roomTypeAttrs(p);
+        if (!room) return dash;
+        return (
+          <div className="whitespace-nowrap">
+            <p className="tabular-nums">
+              {fmtVnd(room.prices?.firstHours)} / {fmtVnd(room.prices?.additional)}
+            </p>
+            {room.firstHours != null && (
+              <p className="text-xs text-gray-500">
+                {t('ha.hours', { first: room.firstHours, additional: room.additionalHours ?? 1 })}
+              </p>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      key: 'overnight',
+      header: t('columns.overnight'),
+      render: (p) => {
+        const room = roomTypeAttrs(p);
+        return room ? <span className="whitespace-nowrap tabular-nums">{fmtVnd(room.prices?.overnight)}</span> : dash;
+      },
+    },
+    {
+      key: 'daily',
+      header: t('columns.daily'),
+      render: (p) => {
+        const room = roomTypeAttrs(p);
+        return room ? <span className="whitespace-nowrap tabular-nums">{fmtVnd(room.prices?.oneDay)}</span> : dash;
+      },
+    },
+  ];
 
   const columns: Column<AdminProduct>[] = [
     {
@@ -105,12 +167,15 @@ export function ProductsPage() {
     {
       key: 'status',
       header: t('columns.status'),
-      render: (p) =>
-        p.status === 'archived' ? (
+      render: (p) => {
+        const room = roomTypeAttrs(p);
+        if (room) return <HaStatusBadge code={room.haStatus} />;
+        return p.status === 'archived' ? (
           <Badge tone="gray">{t('status.archived')}</Badge>
         ) : (
           <Badge tone="success">{t('status.active')}</Badge>
-        ),
+        );
+      },
     },
     {
       key: 'knowledge',
@@ -143,7 +208,10 @@ export function ProductsPage() {
     },
   ];
 
-  const filtered = Boolean(q || category || status);
+  // Company columns go right after the product, before category/price.
+  const visibleColumns = hasCompanies ? [columns[0], ...companyColumns, ...columns.slice(1)] : columns;
+
+  const filtered = Boolean(q || category || status || companyId);
 
   return (
     <div>
@@ -173,6 +241,26 @@ export function ProductsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
+        {hasCompanies && (
+          <div className="w-60">
+            <Select
+              value={companyId}
+              onChange={(e) => {
+                setCompanyId(e.target.value);
+                setPage(1);
+              }}
+              aria-label={t('columns.company')}
+            >
+              <option value="">{t('filters.allCompanies')}</option>
+              <option value="none">{t('filters.storeProducts')}</option>
+              {(companies ?? []).map((c) => (
+                <option key={c.companyId} value={c.companyId}>
+                  {`${c.name ?? `#${c.companyId}`} (${c.count})`}
+                </option>
+              ))}
+            </Select>
+          </div>
+        )}
         <div className="w-52">
           <Select
             value={category}
@@ -207,7 +295,7 @@ export function ProductsPage() {
       </div>
 
       <Table
-        columns={columns}
+        columns={visibleColumns}
         data={data?.items}
         loading={isLoading}
         error={error ? (error as Error).message : null}

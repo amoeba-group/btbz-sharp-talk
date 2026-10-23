@@ -1,4 +1,4 @@
-import { apiGet, apiGetList, apiPatch, apiPostList } from '@/lib/api-client';
+import { apiGet, apiGetList, apiPatch, apiPost, apiPostList } from '@/lib/api-client';
 import type { Paginated } from '@/lib/types';
 
 export interface Customer {
@@ -36,7 +36,94 @@ export interface Company {
   conversationCount: number;
   lastSeenAt: string | null;
   lastConversationAt: string | null;
+  /** Hotel profile summary (PLN-261023). */
+  code?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  /** Selling room types. */
+  roomCount?: number;
+  partnerSyncedAt?: string | null;
 }
+
+/** Operator-entered hotel profile (PLN-261023). */
+export interface CompanyProfile {
+  code: string | null;
+  phone: string | null;
+  district: string | null;
+  address: string | null;
+  groupName: string | null;
+  promotion: boolean | null;
+  hot: boolean | null;
+  isNew: boolean | null;
+  contractStart: string | null;
+  contractEnd: string | null;
+  payment: string | null;
+  hotelType: string | null;
+  enterpriseName: string | null;
+  enterpriseRegNo: string | null;
+  extraFee: boolean | null;
+  descriptionEn: string | null;
+  descriptionVi: string | null;
+  policyEn: string | null;
+  policyVi: string | null;
+  updatedAt: string | null;
+  updatedBy: string | null;
+}
+
+interface HoursWindow {
+  enabled: boolean;
+  start: number | null;
+  end: number | null;
+}
+
+/** Go2Joy Partner API values — read-only (PLN-261023). */
+export interface CompanyPartnerInfo {
+  name: string | null;
+  firstHours: number | null;
+  hourly: HoursWindow;
+  overnight: HoursWindow;
+  daily: HoursWindow;
+  cancellation: {
+    hourlyMinutes: number | null;
+    overnightMinutes: number | null;
+    dailyMinutes: number | null;
+    afterBookingMinutes: number | null;
+  } | null;
+}
+
+export interface RoomAttributes {
+  haStatus: number | null;
+  firstHours: number | null;
+  additionalHours: number | null;
+  prices: { firstHours: number | null; additional: number | null; overnight: number | null; oneDay: number | null };
+  extraFee: boolean;
+  discount: boolean;
+  flashSale: boolean;
+  bedType: number | null;
+  square: number | null;
+  facilities: Array<{ vi: string | null; en: string | null }>;
+  images: string[];
+  memo: string | null;
+  roomCount: number | null;
+}
+
+export interface CompanyRoom {
+  handle: string;
+  title: string;
+  status: string;
+  imageUrl: string | null;
+  currency: string;
+  attributes: RoomAttributes | null;
+  syncedAt: string | null;
+}
+
+/** PATCH body — snake_case; '' / null clears. */
+export type CompanyProfileUpdate = Partial<Record<
+  | 'name' | 'code' | 'phone' | 'province' | 'district' | 'address' | 'group_name' | 'contract_start' | 'contract_end'
+  | 'payment' | 'hotel_type' | 'enterprise_name' | 'enterprise_reg_no' | 'description_en' | 'description_vi'
+  | 'policy_en' | 'policy_vi',
+  string | null
+> & Record<'promotion' | 'hot' | 'is_new' | 'extra_fee', boolean | null>>;
 
 export interface CompanyConversation {
   id: string;
@@ -49,6 +136,11 @@ export interface CompanyConversation {
 }
 
 export interface CompanyDetail extends Company {
+  profile: CompanyProfile;
+  partnerInfo: CompanyPartnerInfo | null;
+  partnerSyncedAt: string | null;
+  partnerSyncError: string | null;
+  rooms: CompanyRoom[];
   contacts: Array<{ customerId: string; name: string | null; role: string | null; lastSeenAt: string | null }>;
   conversations: CompanyConversation[];
 }
@@ -83,6 +175,11 @@ export const customersService = {
       region: params.region || undefined,
     }),
   company: (id: string) => apiGet<CompanyDetail>(`/companies/${id}`),
+  /** Add a Go2Joy hotel by number — confirmed + filled from the Partner API (PLN-261023). */
+  addHotel: (hotelSn: number) => apiPost<CompanyDetail>('/companies', { hotel_sn: hotelSn }),
+  syncCompany: (id: string) => apiPost<CompanyDetail>(`/companies/${id}/sync`),
+  updateCompanyProfile: (id: string, body: CompanyProfileUpdate) =>
+    apiPatch<CompanyDetail>(`/companies/${id}/profile`, body),
   /** Unmasked contact details for one customer. Audited server-side. */
   reveal: (id: number) => apiGet<Customer>(`/customers/${id}/reveal`),
   updateTier: (id: number, tier: string) => apiPatch<Customer>(`/customers/${id}`, { tier }),

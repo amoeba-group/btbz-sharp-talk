@@ -202,7 +202,8 @@
       "email": "アカウントのメールアドレス",
       "webhook_secret": "Webhookシークレット（L2ステータス）",
       "platform_name": "プラットフォーム名",
-      "description": "説明"
+      "description": "説明",
+      "base_url": "サーバー URL"
     },
     "ph": {
       "mall_id": "your-mall",
@@ -215,7 +216,8 @@
       "email": "agent@example.com",
       "app_key": "yotpo app key",
       "platform_name": "Go2Joy",
-      "description": "例: ホテルパートナー管理画面（自社開発）"
+      "description": "例: ホテルパートナー管理画面（自社開発）",
+      "base_url": "https://partner.go2joy.vn/"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -261,6 +263,10 @@
     "self": {
       "title": "自社プラットフォーム",
       "subtitle": "自社で開発・運用しているプラットフォームです。名前と説明を登録するだけで、テストは不要です。"
+    },
+    "go2joy_partner": {
+      "title": "Go2Joy Partner API",
+      "subtitle": "提携ホテル（法人顧客）のホテル情報と客室タイプを取得します — サーバー間連携、client secret で署名します。"
     }
   },
   "install": {

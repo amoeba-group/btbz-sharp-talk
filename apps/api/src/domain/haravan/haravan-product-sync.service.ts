@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { INTEGRATION_PROVIDER } from '@sharptalk/types';
 import { PRODUCT_STATUS, ProductCache } from '../product/entity/product-cache.entity';
 import { stripHtml } from '../product/product-sync.service';
@@ -52,7 +52,9 @@ export class HaravanProductSyncService {
     }
     const host = String(config.shop_domain).trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
 
-    const existing = await this.productRepo.find({ where: { tenantId } });
+    // Storefront rows only: a B2B company's products (Go2Joy room types,
+    // PLN-261023) are not on this storefront and must never be archived by it.
+    const existing = await this.productRepo.find({ where: { tenantId, companyId: IsNull() } });
     const byHandle = new Map(existing.map((p) => [p.handle, p]));
     const seen = new Set<string>();
     const now = new Date();

@@ -11,7 +11,9 @@
   "filters": {
     "searchPlaceholder": "Search name or tags",
     "allCategories": "All categories",
-    "allStatuses": "All statuses"
+    "allStatuses": "All statuses",
+    "allCompanies": "All companies",
+    "storeProducts": "Store products"
   },
   "columns": {
     "product": "Product",
@@ -19,7 +21,12 @@
     "price": "Price",
     "status": "Status",
     "knowledge": "Knowledge",
-    "openInShop": "Open in shop"
+    "openInShop": "Open in shop",
+    "company": "Company",
+    "rooms": "Rooms",
+    "hourly": "Hourly (first / add.)",
+    "overnight": "Overnight",
+    "daily": "Daily"
   },
   "status": {
     "active": "On sale",
@@ -45,5 +52,37 @@
     "description": "Description",
     "noDescription": "No description. With no tags either, this product is held back from the knowledge base.",
     "openInShop": "Open in shop"
+  },
+  "ha": {
+    "status": {
+      "selling": "Selling",
+      "rejected": "Rejected",
+      "stopped": "Stopped selling",
+      "other": "Status {{code}}"
+    },
+    "hours": "{{first}}h first, +{{additional}}h",
+    "roomCount": {
+      "edit": "Edit room count",
+      "label": "Room count",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saved": "Room count saved.",
+      "failed": "Could not save the room count.",
+      "invalid": "Enter a whole number from 0 to {{max}}, or leave it empty."
+    },
+    "section": "Room type",
+    "moreImages": "+{{n}} more",
+    "haStatus": "HA status",
+    "bedType": "Bed type",
+    "square": "Size",
+    "squareValue": "{{value}} m²",
+    "flags": {
+      "label": "Options",
+      "extraFee": "Extra fee",
+      "discount": "Discount",
+      "flashSale": "Flash sale"
+    },
+    "facilities": "Facilities",
+    "memo": "Memo"
   }
 }

@@ -29,7 +29,8 @@
     "yotpo": "Yotpo",
     "cafe24": "Cafe24",
     "notion": "Notion",
-    "self": "自有平台"
+    "self": "自有平台",
+    "go2joy_partner": "Go2Joy Partner"
   },
   "integrationState": {
     "connected": "已连接",

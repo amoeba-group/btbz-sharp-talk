@@ -11,7 +11,9 @@
   "filters": {
     "searchPlaceholder": "Buscar nombre o etiquetas",
     "allCategories": "Todas las categorías",
-    "allStatuses": "Todos los estados"
+    "allStatuses": "Todos los estados",
+    "allCompanies": "Todas las empresas",
+    "storeProducts": "Productos de la tienda"
   },
   "columns": {
     "product": "Producto",
@@ -19,7 +21,12 @@
     "price": "Precio",
     "status": "Estado",
     "knowledge": "Conocimiento",
-    "openInShop": "Abrir en la tienda"
+    "openInShop": "Abrir en la tienda",
+    "company": "Empresa",
+    "rooms": "Habitaciones",
+    "hourly": "Por horas (primeras / adic.)",
+    "overnight": "Noche",
+    "daily": "Día completo"
   },
   "status": {
     "active": "En venta",
@@ -45,5 +52,37 @@
     "description": "Descripción",
     "noDescription": "Sin descripción. Si tampoco tiene etiquetas, este producto no llega a la base de conocimiento.",
     "openInShop": "Abrir en la tienda"
+  },
+  "ha": {
+    "status": {
+      "selling": "En venta",
+      "rejected": "Rechazado",
+      "stopped": "Venta detenida",
+      "other": "Estado {{code}}"
+    },
+    "hours": "Primeras {{first}} h, +{{additional}} h",
+    "roomCount": {
+      "edit": "Editar número de habitaciones",
+      "label": "Número de habitaciones",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "saved": "Número de habitaciones guardado.",
+      "failed": "No se pudo guardar el número de habitaciones.",
+      "invalid": "Introduce un número entero de 0 a {{max}} o déjalo vacío."
+    },
+    "section": "Tipo de habitación",
+    "moreImages": "+{{n}} más",
+    "haStatus": "Estado HA",
+    "bedType": "Tipo de cama",
+    "square": "Superficie",
+    "squareValue": "{{value}} m²",
+    "flags": {
+      "label": "Opciones",
+      "extraFee": "Cargo extra",
+      "discount": "Descuento",
+      "flashSale": "Oferta flash"
+    },
+    "facilities": "Servicios",
+    "memo": "Nota"
   }
 }
