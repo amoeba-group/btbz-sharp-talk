@@ -88,6 +88,7 @@ export class CompanyMapper {
   static toConversation(c: Conversation, customerName: string | null): CompanyConversationResponse {
     return {
       id: String(c.id),
+      sessionId: String(c.sessionId),
       status: c.status,
       customerId: c.customerId != null ? String(c.customerId) : null,
       customerName,

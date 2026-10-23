@@ -436,14 +436,18 @@
   },
   "company": {
     "badge": "Doanh nghiệp",
-    "earlier": "{{count}} cuộc trò chuyện trước của doanh nghiệp này",
-    "earlierTitle": "Các cuộc trò chuyện trước của doanh nghiệp này",
+    "earlier": "{{count}} cuộc trò chuyện trước của khách hàng này",
+    "earlierTitle": "Các cuộc trò chuyện trước của khách hàng này",
     "status": {
       "ai_active": "AI",
       "waiting": "Đang chờ",
       "agent": "Đang tư vấn",
       "ended": "Đã kết thúc"
-    }
+    },
+    "mergeSelected": "Gộp các mục đã chọn ({{count}})",
+    "selectForMerge": "Chọn cuộc trò chuyện #{{id}} để gộp",
+    "open": "Mở",
+    "autoJoin": "Tự động thêm các phiên mới của khách hàng này"
   },
   "hotelCard": {
     "title": "Khách sạn",
@@ -494,7 +498,8 @@
     "matchedBy": {
       "customer": "Cùng tài khoản",
       "email": "Cùng email",
-      "claimed": "Đăng nhập ứng dụng"
+      "claimed": "Đăng nhập ứng dụng",
+      "company": "Cùng doanh nghiệp"
     },
     "inProgress": "Đang diễn ra",
     "lastAt": "Lần cuối {{when}}",

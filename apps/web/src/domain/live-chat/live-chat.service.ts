@@ -59,7 +59,7 @@ export interface MergeCandidates {
     alias: string | null;
     lastAt: string;
     open: boolean;
-    matchedBy: 'customer' | 'email' | 'claimed';
+    matchedBy: 'customer' | 'email' | 'claimed' | 'company';
     unverified: boolean;
     current: boolean;
     inRoom: boolean;
@@ -548,6 +548,8 @@ export const liveChatService = {
 /** One of a B2B company's conversations (PLN-261022 stage 2); the contact name is masked. */
 export interface CompanyConversationRow {
   id: string;
+  /** Its session — what merging it adds to the room (PLN-261023 F1). */
+  sessionId: string;
   status: string;
   customerId: string | null;
   customerName: string | null;

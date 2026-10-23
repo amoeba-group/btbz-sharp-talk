@@ -27,6 +27,8 @@ export interface CompanyContactResponse {
 
 export interface CompanyConversationResponse {
   id: string;
+  /** Its session — what merging it into a room adds (PLN-261023 F1). */
+  sessionId: string;
   status: string;
   customerId: string | null;
   customerName: string | null;
