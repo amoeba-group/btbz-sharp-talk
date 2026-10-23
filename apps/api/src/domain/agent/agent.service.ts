@@ -31,7 +31,7 @@ import {
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
 import { AuditService } from '../audit/audit.service';
 import { maskPii } from '../../global/util/pii.util';
-import { maskEmail, maskName, maskPhone } from '../../global/util/pii-display.util';
+import { maskEmail, maskPhone } from '../../global/util/pii-display.util';
 import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { EventBusService, EVENTS, MailerService } from '../../infrastructure/infrastructure.module';
 import { RedisService } from '../../infrastructure/cache/redis.service';
@@ -1281,7 +1281,8 @@ export class AgentService {
   private maskContext(ctx: CustomerContext): CustomerContext {
     return {
       ...ctx,
-      name: maskName(ctx.name),
+      // The name is in the clear like every console screen (2026-10-23);
+      // contact details stay masked until an audited reveal.
       email: maskEmail(ctx.email),
       phone: maskPhone(ctx.phone),
       masked: true,
@@ -1679,7 +1680,7 @@ export class AgentService {
           id: Number(c.id),
           sessionId: String(c.sessionId),
           alias: states.get(String(c.sessionId))?.alias ?? null,
-          customerName: maskName(contacts.get(String(c.id))?.name ?? null),
+          customerName: contacts.get(String(c.id))?.name ?? null,
           agentId: attributed != null ? Number(attributed) : null,
           agentName: attributed != null ? (nameById.get(String(attributed)) ?? null) : null,
           channel: c.channel || 'widget',

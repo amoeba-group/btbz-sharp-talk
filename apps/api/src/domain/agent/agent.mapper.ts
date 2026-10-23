@@ -10,7 +10,6 @@ import { ChatComment } from './entity/chat-comment.entity';
 import { ConversationBriefing } from './entity/conversation-briefing.entity';
 import { ChatGroup } from './entity/chat-group.entity';
 import { GroupMemberView, GroupRef, RelatedSessionView } from './chat-group.service';
-import { maskName } from '../../global/util/pii-display.util';
 import { SESSION_IDENTITY } from '@sharptalk/types';
 
 /** Escalation alert row for the console alarm modal (FR-S3). */
@@ -45,7 +44,7 @@ export function toSessionResponse(
      * (PLN-261015 D5). Not PII: a hotel id and a region name, shown as badges so
      * an agent sees which hotel is asking. camelCase keys, like every response.
      */
-    identity: toIdentityResponse(identityAttributes, identityLevel, { masked: false }),
+    identity: toIdentityResponse(identityAttributes, identityLevel),
     /** B2B company of the thread (PLN-261022 stage 2); null for consumers/guests. */
     companyId: c.companyId != null ? String(c.companyId) : null,
     /** That company's name — the title reads "customer / company" (PLN-261023). Not PII. */
@@ -139,7 +138,7 @@ export function toGroupDetailResponse(g: ChatGroup, members: GroupMemberView[]) 
     members: members.map((m) => ({
       sessionId: String(m.sessionId),
       alias: m.alias,
-      customerName: maskName(m.customerName),
+      customerName: m.customerName,
       channel: m.channel,
       receiveOnly: m.receiveOnly,
       targetConversationId: m.targetConversationId != null ? String(m.targetConversationId) : null,
@@ -243,11 +242,7 @@ export function toStatResponse(s: AgentDailyStat) {
  * `verified` is false for a 'claimed' session (unsigned host, PLN-261022): the
  * same facts plus who the host says it is (`userId`, `name`), none of it proven.
  */
-export function toIdentityResponse(
-  a: Record<string, string> | null | undefined,
-  level: string | null = null,
-  opts: { masked?: boolean } = {},
-) {
+export function toIdentityResponse(a: Record<string, string> | null | undefined, level: string | null = null) {
   if (!a) return null;
   return {
     hotelId: a.hotel_id ?? null,
@@ -256,9 +251,9 @@ export function toIdentityResponse(
     province: a.province ?? null,
     role: a.role ?? null,
     userId: a.user_id ?? null,
-    // A claimed name is the person's name all the same: masked inside the
-    // conversation, in the clear on the session list (2026-10-23).
-    name: opts.masked === false ? (a.name ?? null) : maskName(a.name ?? null),
+    // Names are in the clear on every console screen (2026-10-23 decision);
+    // masking is for AI-bound text, logs and contact details.
+    name: a.name ?? null,
     verified: level !== SESSION_IDENTITY.CLAIMED,
   };
 }

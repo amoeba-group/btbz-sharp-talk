@@ -188,8 +188,8 @@ describe('AuditService.list — host sign-ins on the work log (PLN-261022 P6)', 
       { id: 3, actorType: 'host', actorId: 99, action: 'host.user_signed_in' } as AuditLog,
     ]);
     const { items } = await svc.list({ tenantId: 1, page: 1, size: 20 });
-    // Masked like customer names elsewhere on the console.
-    expect(items.map((i) => i.actorName)).toEqual(['G*J S*****T', 'N****n A*', null]);
+    // In the clear like customer names elsewhere on the console (2026-10-23).
+    expect(items.map((i) => i.actorName)).toEqual(['G2J SUPPORT', 'Nguyễn An', null]);
   });
 });
 

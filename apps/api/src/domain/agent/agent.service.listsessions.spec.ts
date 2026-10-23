@@ -161,8 +161,8 @@ describe('toSessionResponse', () => {
     const claimed = toSessionResponse(conv, null, undefined, null, undefined, undefined, attrs, 'claimed');
     // The session list shows the claimed name in the clear (2026-10-23)…
     expect(claimed.identity).toMatchObject({ hotelId: '1721', region: 'south', userId: 'ha:8818', name: 'G2J SUPPORT', verified: false });
-    // …inside the conversation it stays masked.
-    expect(toIdentityResponse(attrs, 'claimed')?.name).toBe('G*J S*****T');
+    // …and inside the conversation too — names are never masked on the console.
+    expect(toIdentityResponse(attrs, 'claimed')?.name).toBe('G2J SUPPORT');
     // A signed session — or a caller that does not know the level — stays verified.
     expect(toSessionResponse(conv, null, undefined, null, undefined, undefined, { hotel_id: '1' }, 'verified').identity?.verified).toBe(true);
     expect(toSessionResponse(conv, null, undefined, null, undefined, undefined, { hotel_id: '1' }).identity?.verified).toBe(true);

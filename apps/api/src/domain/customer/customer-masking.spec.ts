@@ -32,10 +32,10 @@ function customer(over: Partial<Customer> = {}): Customer {
 }
 
 describe('CustomerMapper masking', () => {
-  it('masks name, email and phone by default', () => {
+  it('masks email and phone by default — never the name (2026-10-23)', () => {
     const row = CustomerMapper.toCustomer(customer());
     expect(row.email).toBe('ho***@gmail.com');
-    expect(row.name).toBe('홍*동');
+    expect(row.name).toBe('홍길동');
     expect(row.phone).toBe('***-5678');
     expect(row.masked).toBe(true);
   });
@@ -60,7 +60,7 @@ describe('CustomerMapper masking', () => {
   it('echoes back only the writable fields after an update', () => {
     const row = CustomerMapper.toCustomerSummary(customer());
     expect(Object.keys(row).sort()).toEqual(['id', 'masked', 'name', 'tier']);
-    expect(row.name).toBe('홍*동');
+    expect(row.name).toBe('홍길동');
   });
 
   it('leaves a missing value missing rather than inventing a mask', () => {
