@@ -115,7 +115,7 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
 <header class="hero">
   <div class="eyebrow">SharpTalk User Manual · 1/2</div>
   <h1>SharpTalk Quick Setup Manual</h1>
-  <div class="meta"><span>Version 1.1 · First published 2026-08-24 · Updated 2026-09-11 · Written against the code</span><span>Audience: platform administrators (Ch. 1) · new tenant administrators (Ch. 2–8)</span></div>
+  <div class="meta"><span>Version 1.2 · First published 2026-08-24 · Updated 2026-10-24 · Written against the code</span><span>Audience: platform administrators (Ch. 1) · new tenant administrators (Ch. 2–8)</span></div>
   <p class="lead">This manual covers the shortest path from opening a new store (tenant) to <strong>the chat widget actually serving customers</strong>.
   The staging base URL is <code>https://shoptalk.amoeba.site</code>; time required is about 5 minutes of admin work + about 30 minutes of initial tenant setup.
   For in-depth knowledge and AI configuration, see the <em>Knowledge &amp; AI Setup Manual</em> (Part 2).</p>
@@ -246,7 +246,7 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
 <section id="ch3">
   <div class="ch"><span class="num">03</span><h2>Commerce Platform Integration</h2></div>
   <span class="actor">Console [Tenant Settings] → Platform integrations tab</span>
-  <p>Settings is now organised into <strong>7 tabs</strong>: Basic settings (AI engines·usage·storefront·agent handoff) / Widget settings /
+  <p>Settings has <strong>8 tabs</strong>: Basic settings (AI engines·usage·storefront·knowledge options) / Agent handoff / Widget settings /
   Platform integrations / Marketing &amp; helpdesk / Messenger channels / Other settings / Privacy notice.
   This chapter is the <em>Platform integrations</em> tab; Chapter 4 is the <em>Widget settings</em> tab.
   The <strong>[Integration guide]</strong> button at the top right of the tab explains where to find each platform's credentials.</p>
@@ -383,8 +383,8 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
     <li><strong>Invite team members</strong>: [Users] menu → [Invite user] → choose email·rank (director/manager/staff)·duty labels →
       the same <strong>temporary password modal</strong> as in Ch. 1 (shown once·deliver directly). Per-menu access is adjusted per rank in
       the <em>Menu access</em> card of [Tenant Settings → Other settings] (master only).</li>
-    <li><strong>Agent handoff</strong>: in the <em>Agent handoff</em> card of [Tenant Settings → Basic settings], assign the responsible agents·working hours·off-hours forwarding
-      email — details in Ch. 5 of the Part 2 manual.</li>
+    <li><strong>Agent handoff</strong>: in the [Tenant Settings → Agent handoff] tab, assign the responsible agents·routing rules (team × label per consult category·region)·working hours·off-hours forwarding
+      email. To let customers pick a consult topic, set it to <strong>Shown</strong> in <em>Manage consult categories</em>, and check rules with <strong>Check routing</strong> — details in Ch. 5 of the Part 2 manual.</li>
   </ul>
 </section>
 

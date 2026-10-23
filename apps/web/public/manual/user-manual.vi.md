@@ -1,6 +1,6 @@
 # Widget trò chuyện·hỗ trợ khách hàng SharpTalk — Sổ tay người dùng (tổng hợp)
 
-> Phiên bản 2.1.0 · Bản đầu 2026-07-01 · Sửa đổi toàn diện 2026-08-24 · **Cập nhật 2026-09-11** (dựa trên mã nguồn)
+> Phiên bản 2.2.0 · Bản đầu 2026-07-01 · Sửa đổi toàn diện 2026-08-24 · **Cập nhật 2026-10-24** (dựa trên mã nguồn — tab Chuyển nhân viên·danh mục tư vấn·Trung tâm cảnh báo)
 > Đối tượng: người vận hành tenant · nhân viên tư vấn · quản trị viên nền tảng
 > Quy ước ký hiệu: **✅ đã triển khai / 🟡 đang chuẩn bị·lộ trình**. Ghi trung thực theo mã nguồn thực tế.
 >
@@ -70,7 +70,8 @@ Bấm logo ở thanh bên sẽ mở **danh sách thẻ các màn hình truy cậ
 | Khách hàng / Đơn hàng / Sản phẩm | `/customers` `/orders` `/products` | Tra cứu·quản lý dữ liệu đệm |
 | Chiến dịch / Đánh giá | `/campaigns` `/reviews` | Quản lý gửi tin·đánh giá |
 | Người dùng | `/users` | Mời thành viên·cấp bậc·nhãn |
-| Cài đặt gian hàng | `/settings` | 7 tab: Cài đặt cơ bản / Cài đặt widget / Tích hợp nền tảng / Marketing & Helpdesk / Kênh nhắn tin / Cài đặt khác / Thông báo quyền riêng tư (§14) |
+| Cài đặt gian hàng | `/settings` | 8 tab: Cài đặt cơ bản / Chuyển nhân viên / Cài đặt widget / Tích hợp nền tảng / Marketing & Helpdesk / Kênh nhắn tin / Cài đặt khác / Thông báo quyền riêng tư (§14) |
+| Trung tâm cảnh báo | `/live-chat/alerts` | Lịch sử·phân công·xác nhận cảnh báo chuyển tư vấn (🔔 trên header → Xem tất cả, §4.4) |
 | Trang của tôi | `/my-page` | Hồ sơ·mật khẩu·MFA |
 | Quản trị | `/admin/*` | Quản lý nền tảng (chỉ quản trị viên hệ thống) |
 
@@ -111,6 +112,13 @@ Bấm logo ở thanh bên sẽ mở **danh sách thẻ các màn hình truy cậ
   widget tự mở lại ② tra cứu đơn không cần tài khoản — mã đơn hàng+email (có giới hạn số lần).
 - **Đính kèm**: ảnh ≤10MB (gồm HEIC — tự chuyển đổi) / tệp ≤20MB (pdf·txt·csv·docx·xlsx),
   tối đa 5 tệp mỗi tin nhắn. Có thể gửi chỉ tệp không kèm chữ.
+- **Chọn danh mục tư vấn**: nếu tenant có danh mục tư vấn đang hiển thị cho khách, khi khách
+  bấm [Kết nối nhân viên hỗ trợ] thẻ "Bạn cần hỗ trợ về vấn đề gì?" sẽ hiện trước và hội
+  thoại được kết nối tới nhóm phụ trách của danh mục tư vấn đã chọn. Khi AI chuyển sang nhân
+  viên tư vấn, cùng thẻ này cũng hiện dưới thông báo; chọn thì hội thoại được kết nối lại tới
+  nhóm phụ trách đó (1 lần cho lựa chọn đầu tiên, trong khi chưa ai tiếp nhận). Bấm [Bỏ qua]
+  thì kết nối như trước. Nếu không có danh mục tư vấn nào đang hiển thị thì kết nối ngay,
+  không hiện thẻ (§14.1).
 - **Chỉ báo chờ** 3 loại: AI đang soạn / nhân viên tư vấn đang trả lời / chờ chuyển tiếp
   (chưa có nhân viên tư vấn được phân công).
 - **Kết thúc·mức độ hài lòng**: khách kết thúc thì sau xác nhận sẽ hiển thị đã kết thúc.
@@ -207,10 +215,29 @@ mới mỗi 5 giây.
   [Giải quyết]/[Từ chối] (bắt buộc lý do: không thể theo chính sách/phân công sai/spam),
   chọn phân công lại, dòng thời gian sự kiện.
 
-### 4.4 Cảnh báo chuyển tiếp·tự động kết thúc
+### 4.4 Cảnh báo chuyển tiếp·Trung tâm cảnh báo·tự động kết thúc
 - **Cảnh báo escalation**: khi có chuyển tiếp mới, dù đang ở đâu trong bảng điều khiển,
-  trong 10 giây sẽ hiện hộp thoại thông báo (lý do: độ tin cậy thấp/kiểm duyệt chặn/khách
-  yêu cầu) và bấm [Mở hội thoại] để vào ngay.
+  trong 10 giây sẽ hiện popup cảnh báo. Popup hiển thị lý do (độ tin cậy thấp/kiểm duyệt
+  chặn/khách yêu cầu/kết nối lại do chọn danh mục tư vấn) cùng **khách sạn·khu vực·danh mục
+  tư vấn**, **Phân công: tên nhân viên tư vấn** ("Tất cả" nếu không có quy tắc phù hợp) và
+  **tên quy tắc**. Cảnh báo hiển thị cho mọi nhân viên tư vấn của cùng tenant; cảnh báo đã
+  phân công cho nhân viên khác có thêm nhãn *Giao cho nhân viên khác*.
+  - **[Bỏ qua]**: chỉ ẩn trên màn hình của bạn (đánh dấu đã đọc). Cảnh báo·nhắc lại của người
+    được phân công vẫn giữ nguyên.
+  - **[Mở hội thoại]**: chuyển tới hội thoại. Nếu bạn là người được phân công hoặc đó là
+    cảnh báo gửi tất cả thì cảnh báo được **xác nhận** (ngừng nhắc lại).
+- **🔔 trên header**: số cảnh báo chưa đọc. Bấm vào sẽ mở 20 cảnh báo gần nhất (đã đọc hay
+  chưa·phân công·trạng thái·người xác nhận); *Xem tất cả* dẫn tới **Trung tâm cảnh báo**
+  (`/live-chat/alerts`).
+- **Trung tâm cảnh báo**: lọc theo Tất cả / Giao cho tôi / Gửi tất cả, trạng thái (chưa xác
+  nhận·đã xác nhận), khoảng thời gian (1·7·30·90 ngày), danh mục tư vấn. Bấm vào hàng để tới
+  hội thoại; cảnh báo bạn có thể xác nhận sẽ có nút [Xác nhận].
+- **Cài đặt cảnh báo (cá nhân)**: *Cài đặt cảnh báo* trong ngăn 🔔 hoặc Trung tâm cảnh báo —
+  popup (Mọi cảnh báo / Chỉ cảnh báo giao cho tôi (gồm cảnh báo gửi tất cả) / Tắt), âm thanh
+  (nghe thử), thông báo desktop của trình duyệt (cần quyền trình duyệt), nhận email khi được
+  phân công cho tôi. Tắt popup thì mọi cảnh báo vẫn còn trong 🔔 và Trung tâm cảnh báo.
+- Trên header hội thoại live chat, danh mục tư vấn khách đã chọn hiển thị bằng huy hiệu
+  `Tư vấn: Thanh toán`, và cũng được ghi lại thành dòng hệ thống trong hội thoại.
 - **Tự động kết thúc hội thoại bị bỏ quên** (hành vi máy chủ, chỉ kênh widget): cả hai bên
   im lặng 30 phút thì gửi "Còn gì tôi có thể giúp thêm không?", không phản hồi trong 1 phút
   thì kết thúc. Hội thoại quá 7 ngày được kết thúc lặng lẽ. Hội thoại đang chờ hồi âm email
@@ -253,8 +280,7 @@ Là **bảng kanban** quản lý yêu cầu dưới dạng ticket (issue).
 - Bấm thẻ → xem trước 10 lượt hội thoại gần nhất (chỉ đọc, việc xem được ghi vào kiểm tra)
   → [Mở phiên] để vào live chat.
 - Thao tác **[Ghi nhận tin nhắn này thành sự cố]** trong live chat (§4.2) cũng tạo issue.
-- Giờ chuẩn SLA đặt tại thẻ *Kết nối nhân viên tư vấn* trong [Cài đặt gian hàng → Cài đặt
-  cơ bản] (thường/khẩn cấp, 1~168 giờ, mặc định 24h/4h).
+- Giờ chuẩn SLA đặt tại tab [Cài đặt gian hàng → Chuyển nhân viên] (thường/khẩn cấp, 1~168 giờ, mặc định 24h/4h).
 - Chế độ quy trình (native hay không) là cài đặt **Gói/Add-on** của quản trị viên nền tảng
   (§16) — nếu chỉ được cấp menu mà chưa bật chế độ thì chỉ hiển thị màn hình thông báo.
 
@@ -397,12 +423,14 @@ Tóm tắt điểm cốt lõi:
 
 ## 14. Cài đặt gian hàng
 
-`/settings` đã được tổ chức lại thành **7 tab** (trước đây là một màn "Cài đặt" duy nhất).
-Tab cũng là đơn vị cấp menu — tab mà quản trị viên nền tảng không cấp sẽ không hiển thị.
+`/settings` gồm **8 tab** (trước đây là một màn "Cài đặt" duy nhất → 2026-08-24 thành 7 tab →
+2026-10-24 tách riêng tab *Chuyển nhân viên*). Tab cũng là đơn vị cấp menu — tab mà quản trị
+viên nền tảng không cấp sẽ không hiển thị (tab *Chuyển nhân viên* cùng đơn vị cấp với *Cài đặt cơ bản*).
 
 | Tab | Nội dung |
 |---|---|
-| Cài đặt cơ bản | **Công cụ AI** (đăng ký công cụ riêng của tenant — ưu tiên hơn công cụ nền tảng; kiểm tra kết nối·đặt mặc định; gọi bằng khóa của bạn thì tính phí vào tài khoản của bạn) · **Mức dùng AI** (số lần gọi/token theo kỳ và trục, cảnh báo rơi về stub — không ước tính tiền) · Cửa hàng (storefront) · **Kết nối nhân viên tư vấn** (người phụ trách·giờ làm việc·giờ nghỉ·email/nội dung ngoài giờ·SLA·chuyển tiếp bắt buộc theo chính sách) · **Tùy chọn tri thức** (có hiển thị thẻ "hướng dẫn sử dụng" trên trang Kiến thức hay không — dành cho tenant kiểu cửa hàng, mặc định tắt) |
+| Cài đặt cơ bản | **Công cụ AI** (đăng ký công cụ riêng của tenant — ưu tiên hơn công cụ nền tảng; kiểm tra kết nối·đặt mặc định; gọi bằng khóa của bạn thì tính phí vào tài khoản của bạn) · **Mức dùng AI** (số lần gọi/token theo kỳ và trục, cảnh báo rơi về stub — không ước tính tiền) · Cửa hàng (storefront) · **Tùy chọn tri thức** (có hiển thị thẻ "hướng dẫn sử dụng" trên trang Kiến thức hay không — dành cho tenant kiểu cửa hàng, mặc định tắt) |
+| Chuyển nhân viên | Nhân viên tư vấn phụ trách · **Quy tắc phân công** (danh mục tư vấn × nghiệp vụ × thông tin khách hàng → nhóm nhân viên tư vấn, **Kiểm tra phân công**·cảnh báo, **Quản lý danh mục tư vấn**) · nhắc lại khi chưa tiếp nhận · giờ làm việc·giờ nghỉ · email/nội dung ngoài giờ · SLA · chuyển tiếp bắt buộc theo chính sách (§14.1) |
 | Cài đặt widget | Chủ đề widget (màu thương hiệu·header·logo·vị trí nút mở) · **Widget tùy chỉnh** (tạo nhiều thiết kế có tên — phông chữ, cỡ chữ, bo góc, kích thước bảng, biểu tượng nút mở — lưu tại đây và áp dụng một cái bằng **[Dùng]**: có hiệu lực ngay, không cần triển khai; **[Về widget cơ bản]**, liên kết xem trước, nhân bản, **xuất/nhập gói** JSON, **Lịch sử** (mỗi lần lưu giữ lại trạng thái trước để khôi phục), lưu trữ·xóa. Ô CSS đã lọc chỉ hiện với tenant được quản trị viên nền tảng bật tiện ích) · **Tệp thiết kế** (phông woff2/ttf/otf·biểu tượng·hình ảnh·tài liệu thiết kế tải lên thư mục riêng của tenant — giữ nguyên qua các lần triển khai, hiển thị dung lượng theo khu vực) · bố cục tab · hành vi (tên hiển thị·lời chào — **6 tab ngôn ngữ**, kèm nội dung mặc định) · Nhúng/SDK · hướng dẫn cài lên cửa hàng — chi tiết: [Sổ tay tạo widget tùy chỉnh](custom-widget.vi.md) |
 | Tích hợp nền tảng | Các ô Shopify · Cafe24 · WooCommerce · Odoo · Haravan + nút **[Hướng dẫn tích hợp]** góc phải trên (tìm từng thông tin xác thực ở đâu) |
 | Marketing & Helpdesk | Klaviyo · Yotpo · Gorgias |
@@ -420,6 +448,46 @@ Tab cũng là đơn vị cấp menu — tab mà quản trị viên nền tảng 
 - Quy tắc **chuyển tiếp bắt buộc theo chính sách (deny-list)** có 2 chế độ hiển thị với
   khách: **Không trả lời** (chuyển thẳng, không qua AI — mặc định) / **Trả lời rồi
   chuyển** (trả lời từ tri thức trước rồi vẫn chuyển) — kiểu nào nhân viên cũng được gọi.
+### 14.1 Chuyển nhân viên — Danh mục tư vấn và quy tắc phân công
+
+**Danh mục tư vấn** là chủ đề tư vấn mà khách chọn trên widget (ví dụ: đặt phòng·thanh toán·
+đăng ký phòng). Quản lý tại **[Quản lý danh mục tư vấn]** ở đầu phần quy tắc phân công.
+- Thêm bằng mã (chữ Latin·số·_) và tên. **Mã không thể đổi sau khi tạo**; tên·thứ tự có thể
+  đổi bất cứ lúc nào.
+- **Hiển thị/Ẩn**: chỉ danh mục ở trạng thái Hiển thị mới xuất hiện trên thẻ widget (tạo mới
+  thì mặc định là Hiển thị).
+- **Tên theo ngôn ngữ** (bấm ▸ để mở): nếu có tên theo ngôn ngữ của khách thì hiển thị tên đó,
+  không có thì hiển thị tên mặc định.
+- Danh mục tư vấn đang được quy tắc·nhóm·nhãn sử dụng thì không xóa được, và hệ thống cho biết
+  nó đang được dùng ở đâu.
+- Dấu 👁 trên chip quy tắc nghĩa là danh mục tư vấn đó đang hiển thị cho khách.
+
+**Quy tắc phân công** được kiểm tra từ trên xuống; hội thoại được kết nối tới **nhóm nhân
+viên tư vấn (nhóm × nhãn)** và nhân viên chỉ định riêng của **quy tắc đầu tiên khớp cả danh
+mục tư vấn · nghiệp vụ · thông tin khách hàng**. Nếu không có quy tắc nào khớp thì báo cho
+nhân viên tư vấn phụ trách; nếu cũng không có nhân viên phụ trách thì báo cho tất cả.
+- Dòng **Danh mục tư vấn**: chỉ so với giá trị khách đã chọn. Với khách không chọn thì chỉ
+  các quy tắc để trống danh mục tư vấn mới khớp.
+- Dòng **Nghiệp vụ**: xét từ khóa câu hỏi và nhãn do quy tắc *chuyển tiếp bắt buộc theo
+  chính sách (deny)* gắn vào. Chip nhãn ở dòng nghiệp vụ chỉ khớp với hội thoại đến từ quy
+  tắc chính sách, vì vậy nhãn nhóm nhân viên tư vấn hãy chọn ở *Người phụ trách* bên dưới.
+- Dòng **Thông tin khách hàng**: Khu vực (Miền Bắc·Bắc Trung Bộ·Miền Trung·Nam Trung Bộ·Miền
+  Nam — khu vực khách sạn do ứng dụng chủ ký và gửi), tỉnh/thành, ngôn ngữ, mức xác thực,
+  hạng·loại khách hàng, khách sạn, vai trò, đường truy cập.
+- Ví dụ: *Thanh toán · Miền Nam* = danh mục tư vấn Thanh toán + Khu vực Miền Nam·Nam Trung Bộ
+  → nhóm South × nhãn kế toán.
+- Khi khách chọn danh mục tư vấn, hội thoại theo quy tắc của danh mục đó thay vì ưu tiên kết
+  nối nhân viên tư vấn trước đó.
+
+**Kiểm tra phân công**: nhập danh mục tư vấn·khu vực·tỉnh/thành·ngôn ngữ vào ô phía trên các
+quy tắc rồi bấm [Kiểm tra] — hệ thống dùng **các quy tắc đang chỉnh sửa, trước khi lưu** để cho
+biết hội thoại sẽ đến ai, cùng lý do các quy tắc bị bỏ qua (không khớp danh mục tư vấn·không
+khớp điều kiện khu vực·0 người có thể phân công…). Không gửi cảnh báo nào.
+
+**Cảnh báo** (không chặn việc lưu): ① dùng sai nhãn ở dòng nghiệp vụ ② tên có địa danh nhưng
+không có điều kiện khu vực·tỉnh/thành ③ hiện có 0 nhân viên tư vấn có thể phân công (hiển thị
+số người chưa chấp nhận lời mời). Người dùng chưa chấp nhận lời mời sẽ không được phân công.
+
 → [Sổ tay thiết lập nhanh chương 3~4](quick-setup.vi.md) ·
 hướng dẫn cài đặt widget
 
@@ -481,9 +549,17 @@ trị viên nền tảng có phải `native` không. Nếu menu hoàn toàn khô
 được cung cấp/quyền theo cấp bậc (2 tầng).
 
 **Q. Màn hình cài đặt trông khác với mô tả cũ.**
-Từ 2026-08-24, `/settings` được tổ chức lại thành **7 tab** (Cài đặt gian hàng, §14).
-Chuyển tiếp tư vấn nay ở thẻ **Kết nối nhân viên tư vấn** trong tab *Cài đặt cơ bản*,
-quyền truy cập menu chuyển sang tab *Cài đặt khác*.
+`/settings` gồm **8 tab** (Cài đặt gian hàng, §14). Từ 2026-10-24, chuyển tiếp tư vấn
+(handoff) nằm ở tab riêng **Chuyển nhân viên**, quyền truy cập menu ở tab *Cài đặt khác*.
+
+**Q. Khách đã gọi nhân viên tư vấn mà không thấy thẻ danh mục tư vấn.**
+Kiểm tra trong [Chuyển nhân viên → Quản lý danh mục tư vấn] xem có danh mục tư vấn nào ở
+trạng thái **Hiển thị** không. Nếu không có danh mục nào Hiển thị thì kết nối ngay, không hiện thẻ.
+
+**Q. Đã tạo quy tắc nhưng hội thoại không được phân công cho nhóm đã chỉ định.**
+Nhập cùng điều kiện vào **Kiểm tra phân công** phía trên các quy tắc — lý do bị bỏ qua sẽ hiện
+ra. Nguyên nhân thường gặp: dùng chip nhãn ở dòng nghiệp vụ, thiếu điều kiện khu vực, thành
+viên nhóm chưa chấp nhận lời mời (0 người có thể phân công).
 
 **Q. Số liệu Tổng quan/Thống kê giảm so với trước.**
 Có thể là bình thường — số hội thoại nay **loại trừ phiên xem thử của Cài đặt AI**, và với

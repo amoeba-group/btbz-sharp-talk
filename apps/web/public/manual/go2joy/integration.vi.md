@@ -94,7 +94,7 @@ Trạng thái là theo kiểm tra của SharpTalk ngày 2026-10-22.
 | G25 | Tên tỉnh mới trong bảng khu vực | Gửi bảng mới khi bắt đầu dùng tên sau sáp nhập 2025-07 (63 → 34 tỉnh) | Vận hành | P1 | Đang chờ |
 | G26 | Ngôn ngữ hỗ trợ | Có thêm ngôn ngữ ngoài tiếng Việt·tiếng Anh không | Vận hành | P2 | Chờ quyết định |
 
-> Tài khoản master của Go2Joy cũng có thể tự nhập khu vực phụ trách của nhóm và quy tắc phân công trên bảng điều khiển SharpTalk. Vị trí: **Người dùng › Quản lý nhãn·nhóm › Khu vực phụ trách** và **Cài đặt › Cơ bản › Agent handoff › Khớp khu vực**. Khi ánh xạ vùng → nhóm thay đổi, chỉ cần sửa khu vực phụ trách của nhóm, quy tắc giữ nguyên.
+> Tài khoản master của Go2Joy cũng có thể tự nhập khu vực phụ trách của nhóm và quy tắc phân công trên bảng điều khiển SharpTalk. Vị trí: **Cài đặt › Chuyển nhân viên › Quy tắc phân công** (sắp xếp lại 2026-10-24). Mỗi quy tắc lấy **danh mục tư vấn** khách đã chọn (ví dụ: Customer Services / Business Support) và **Thông tin khách hàng › Khu vực** (ví dụ: Miền Nam·Nam Trung Bộ) làm điều kiện, rồi chọn **nhóm × nhãn** (ví dụ: South × cs) ở người phụ trách. Dùng **Kiểm tra phân công** phía trên các quy tắc để xem trước hội thoại sẽ đến nhân viên nào trước khi lưu. Thành viên phụ trách phải chấp nhận lời mời mới được phân công.
 
 ### 2.4 Tri thức·chất lượng AI
 | # | Yêu cầu | Chi tiết | Phụ trách | Ưu tiên | Trạng thái |

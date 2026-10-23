@@ -116,7 +116,7 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
 <header class="hero">
   <div class="eyebrow">Sổ tay người dùng SharpTalk · 2/2</div>
   <h1>Sổ tay tri thức·cài đặt AI SharpTalk</h1>
-  <div class="meta"><span>Phiên bản 1.1 · Bản đầu 2026-08-24 · cập nhật 2026-09-04 · Biên soạn dựa trên mã nguồn</span><span>Đối tượng: người vận hành tenant · phụ trách CS (Cài đặt AI: master/director)</span></div>
+  <div class="meta"><span>Phiên bản 1.2 · Bản đầu 2026-08-24 · cập nhật 2026-10-24 · Biên soạn dựa trên mã nguồn</span><span>Đối tượng: người vận hành tenant · phụ trách CS (Cài đặt AI: master/director)</span></div>
   <p class="lead">Trình bày cách nhập và kiểm chứng tri thức sẽ sử dụng, cài đặt AI, và cấu hình tiếp khách trong live chat thực tế.
   Mỗi chương sắp xếp theo thứ tự <strong>giải thích thuật ngữ → quy trình → 💡 mẹo vận hành</strong>. Quy trình mở tenant xem trước <em>Sổ tay thiết lập nhanh</em> (tập 1).</p>
   <p class="lead">⚠ Bản dịch AI, đang chờ hiệu đính bởi người bản ngữ. Bản tiếng Hàn là bản chuẩn.</p>
@@ -519,7 +519,7 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
 
 <section id="ch5">
   <div class="ch"><span class="num">05</span><h2>Cài đặt tiếp khách live chat</h2></div>
-  <span class="actor">Thẻ Chuyển cho nhân viên trong tab [Cài đặt gian hàng] → Cài đặt cơ bản</span>
+  <span class="actor">[Cài đặt gian hàng] → tab Chuyển nhân viên (tách khỏi Cài đặt cơ bản từ 2026-10-24)</span>
   <div class="terms"><div class="t-label">Thuật ngữ</div>
   <div class="tablewrap"><table>
     <tr><td>Escalation (chuyển tiếp)</td><td>Việc AI đẩy hội thoại sang hàng chờ nhân viên tư vấn</td></tr>
@@ -549,12 +549,25 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
     <li>Không chỉ định người phụ trách nào thì hội thoại chuyển tiếp chỉ dồn trong hàng chờ chung — chỉ định tối thiểu 1 người.</li>
   </ul></div>
 
+  <h3>5.1a Danh mục tư vấn·quy tắc phân công</h3>
+  <ol class="steps">
+    <li>Trong <strong>[Quản lý danh mục tư vấn]</strong>, tạo các chủ đề tư vấn mà khách sẽ chọn (ví dụ: đặt phòng·thanh toán) và đặt ở trạng thái <strong>Hiển thị</strong>. Khi cần, nhập tên vi/en trong ▸ <em>Tên theo ngôn ngữ</em></li>
+    <li>Viết <strong>quy tắc phân công</strong> từ trên xuống: danh mục tư vấn + nghiệp vụ (từ khóa) + thông tin khách hàng (khu vực·tỉnh/thành·ngôn ngữ…) → người phụ trách (nhóm × nhóm nhãn hoặc cá nhân). Hội thoại được kết nối theo <strong>quy tắc đầu tiên</strong> khớp tất cả điều kiện</li>
+    <li>Nhập danh mục tư vấn·khu vực… vào <strong>Kiểm tra phân công</strong> phía trên các quy tắc để xem trước hội thoại sẽ đến ai, rồi <strong>lưu</strong></li>
+  </ol>
+  <div class="callout"><span class="c-label">⚠️ Lưu ý</span>
+  <ul>
+    <li>Chip nhãn ở dòng <em>Nghiệp vụ</em> chỉ khớp với hội thoại đến từ chuyển tiếp bắt buộc theo chính sách — nhãn nhóm nhân viên tư vấn hãy chọn ở <em>Người phụ trách</em> (trình soạn thảo sẽ hiện cảnh báo).</li>
+    <li>Nhân viên chưa chấp nhận lời mời sẽ không được phân công. Nếu nhóm có 0 nhân viên đang hoạt động thì quy tắc đó bị bỏ qua.</li>
+    <li>Nếu khách không chọn danh mục tư vấn thì chỉ những quy tắc để trống danh mục tư vấn mới khớp — đặt một quy tắc mặc định không có điều kiện ở cuối cùng sẽ an toàn.</li>
+  </ul></div>
+
   <h3>5.2 Hiểu điều kiện chuyển tiếp (escalation)</h3>
   <div class="tablewrap"><table>
     <tr><th>Kích hoạt</th><th>Hành vi</th></tr>
     <tr><td><strong>Độ tin cậy thấp</strong></td><td>Kèm câu "Tôi kết nối bạn với nhân viên tư vấn nhé?" vào câu trả lời và đưa vào hàng chờ</td></tr>
     <tr><td><strong>Bị kiểm duyệt chặn</strong></td><td>Không hiển thị câu trả lời AI, hướng dẫn kết nối nhân viên tư vấn rồi vào hàng chờ</td></tr>
-    <tr><td><strong>Khách yêu cầu</strong></td><td>Nút kịch bản Liên hệ hỗ trợ hoặc yêu cầu rõ ràng → vào hàng chờ ngay</td></tr>
+    <tr><td><strong>Khách yêu cầu</strong></td><td>Nút kịch bản Liên hệ hỗ trợ hoặc yêu cầu rõ ràng → vào hàng chờ ngay (nếu có danh mục tư vấn đang hiển thị, widget sẽ hỏi danh mục tư vấn trước rồi kết nối theo quy tắc của danh mục đó)</td></tr>
     <tr><td><strong>Chuyển tiếp bắt buộc theo chính sách</strong></td><td>Quy tắc "Không trả lời": vào hàng chờ <strong>ngay lập tức, không có phản hồi AI</strong>. Quy tắc "Trả lời rồi chuyển": trả lời từ tri thức trước rồi vào hàng chờ. Tin nhắn vẫn được lưu·hiển thị bình thường, yêu cầu được đóng dấu loại·nhãn (không phải chức năng chặn tin nhắn)</td></tr>
   </table></div>
   <div class="callout"><span class="c-label">💡 Mẹo</span>

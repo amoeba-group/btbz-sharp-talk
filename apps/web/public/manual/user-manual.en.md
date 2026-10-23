@@ -1,6 +1,6 @@
 # SharpTalk Chat & Customer Support Widget — User Manual (Integrated)
 
-> Version 2.1.0 · First edition 2026-07-01 · Fully revised 2026-08-24 · **Updated 2026-09-11** (against the code)
+> Version 2.2.0 · First edition 2026-07-01 · Fully revised 2026-08-24 · **Updated 2026-10-24** (against the code — Agent handoff tab · consult categories · Alarm center)
 > Audience: tenant operators · agents · platform administrators
 > Legend: **✅ implemented / 🟡 in preparation·roadmap**. Marked honestly against the actual code.
 > ⚠ AI-translated draft pending native review. The Korean edition is authoritative.
@@ -70,7 +70,8 @@ Clicking the sidebar logo opens the **card list of accessible screens** (`/menu`
 | Customers / Orders / Products | `/customers` `/orders` `/products` | Browse·manage cached data |
 | Campaigns / Reviews | `/campaigns` `/reviews` | Sending·review management |
 | Users | `/users` | Team invites·ranks·labels |
-| Tenant settings | `/settings` | 7 tabs: Basic settings / Widget settings / Platform integrations / Marketing & helpdesk / Messenger channels / Other settings / Privacy notice (§14) |
+| Tenant settings | `/settings` | 8 tabs: Basic settings / Agent handoff / Widget settings / Platform integrations / Marketing & helpdesk / Messenger channels / Other settings / Privacy notice (§14) |
+| Alarm center | `/live-chat/alerts` | Handoff alarm history·assignment·acknowledgement (header 🔔 → View all, §4.4) |
 | My page | `/my-page` | Profile·password·MFA |
 | Admin | `/admin/*` | Platform administration (system administrators only) |
 
@@ -111,6 +112,13 @@ Clicking the sidebar logo opens the **card list of accessible screens** (`/menu`
   auto-reopens on return ② guest order lookup — order number + email (rate-limited).
 - **Attachments**: images ≤10MB (HEIC included — auto-converted) / files ≤20MB
   (pdf·txt·csv·docx·xlsx), max 5 per message. Sending files alone is also possible.
+- **Consult category picker**: if the tenant has consult categories shown to customers,
+  pressing [Connect to an agent] first brings up a "What do you need help with?" card, and
+  the conversation is connected to the group responsible for the chosen consult category.
+  When the AI hands off to an agent, the same card appears below the notice; picking one
+  reconnects the conversation to that category's group (once, on the first pick, while no
+  agent has accepted). [Skip] connects as before. If no consult categories are shown, the
+  conversation connects directly without the card (§14.1).
 - **Waiting indicators**, 3 kinds: AI generating / agent responding / awaiting handoff
   (no agent assigned yet).
 - **Closing & satisfaction**: when the customer ends the chat, it closes after confirmation.
@@ -206,10 +214,29 @@ auto-refresh every 5 seconds.
   [Resolve]/[Decline] (reason required: policy-impossible/misassigned/spam), reassignment
   selector, event timeline.
 
-### 4.4 Handoff alerts & auto-wrap-up
+### 4.4 Handoff alerts · Alarm center · auto-wrap-up
 - **Escalation alarm**: when a new handoff occurs, wherever you are in the console an alert
-  modal appears within 10 seconds (reason: low confidence/moderation block/customer
-  request), and [Open chat] jumps straight in.
+  popup appears within 10 seconds. The popup shows the reason (low confidence/moderation
+  block/customer request/reconnected by consult category pick) together with the
+  **hotel·region·consult category**, **Assigned: agent name** ("Everyone" when no rule
+  matched), and the **rule name**. Alarms are visible to every agent of the same tenant;
+  those assigned to another agent are marked *Assigned to someone else*.
+  - **[Close]**: hides it on your screen only (marked read). The assignee's alarm and
+    re-alerts stay as they are.
+  - **[Open chat]**: goes to the conversation. If you are the assignee or the alarm is for
+    everyone, it is **acknowledged** (re-alerts stop).
+- **Header 🔔**: unread alarm count. Click it to open the latest 20 alarms (read state·
+  assignment·status·acknowledged by); *View all* goes to the **Alarm center**
+  (`/live-chat/alerts`).
+- **Alarm center**: filter by All / Assigned to me / Everyone, status (unacknowledged·
+  acknowledged), period (1·7·30·90 days), and consult category. Click a row to go to the
+  conversation; alarms you can acknowledge have an [Acknowledge] button.
+- **Alarm settings (personal)**: *Alarm settings* in the 🔔 drawer or the Alarm center —
+  popup (All alarms / Only those assigned to me (incl. everyone) / Off), sound (with
+  preview), browser desktop notifications (browser permission required), and email me when
+  assigned. Even with the popup off, everything stays in 🔔 and the Alarm center.
+- The live chat conversation header shows the consult category the customer picked as a
+  `Consult: Payment` badge, and it is also recorded as a system line in the conversation.
 - **Idle conversation auto-wrap-up** (server behavior, widget channel only): if both sides
   are silent for 30 minutes it sends "Is there anything else we can help with?", and closes
   after 1 more minute of silence. Conversations older than 7 days are closed quietly.
@@ -255,8 +282,8 @@ A **kanban board** that manages inquiries as tickets (issues).
   log) → [Open session] enters live chat.
 - The customer-message action **[File this message as an issue]** in live chat (§4.2) also
   creates issues.
-- SLA baseline hours are set on the *Agent handoff* card under [Tenant settings → Basic
-  settings] (normal/urgent, 1–168 hours, defaults 24h/4h).
+- SLA baseline hours are set on the [Tenant settings → Agent handoff] tab
+  (normal/urgent, 1–168 hours, defaults 24h/4h).
 - The workflow mode (whether native) is the platform administrator's **Plan/Add-ons**
   setting (§16) — with the menu provided but the mode off, only a notice screen shows.
 
@@ -405,13 +432,15 @@ The essentials:
 
 ## 14. Tenant Settings
 
-`/settings` has been reorganized into **7 tabs** (formerly a single "Settings" screen).
-Tabs are also menu-provisioning units — a tab the platform administrator does not provide
-is invisible.
+`/settings` has **8 tabs** (formerly a single "Settings" screen → 7 tabs on 2026-08-24 →
+the *Agent handoff* tab split out on 2026-10-24). Tabs are also menu-provisioning units —
+a tab the platform administrator does not provide is invisible (the *Agent handoff* tab is
+provided together with *Basic settings*).
 
 | Tab | Contents |
 |---|---|
-| Basic settings | **AI engines** (register the tenant's own engines — used ahead of platform engines; connection test·default selection; calls on your key are billed to your account) · **AI usage** (calls/tokens by period and axis, stub-fallback warnings — no cost estimates) · Storefront · **Agent handoff** (assignees·business hours·breaks·off-hours email/copy·SLA·policy-forced handoff) · **Knowledge options** (whether the "usage guides" card is shown on the Knowledge page — for shop-type tenants, off by default) |
+| Basic settings | **AI engines** (register the tenant's own engines — used ahead of platform engines; connection test·default selection; calls on your key are billed to your account) · **AI usage** (calls/tokens by period and axis, stub-fallback warnings — no cost estimates) · Storefront · **Knowledge options** (whether the "usage guides" card is shown on the Knowledge page — for shop-type tenants, off by default) |
+| Agent handoff | Assigned agents · **Routing rules** (consult category × topic × customer information → agent group, **Check routing**·warnings, **Manage consult categories**) · re-alerts for unaccepted handoffs · business hours·breaks · off-hours email/copy · SLA · policy-forced handoff (§14.1) |
 | Widget settings | Widget theme (brand colour·header·logo·launcher position) · **Custom widgets** (build several named designs — font, text size, corners, panel size, launcher icon — keep them here and apply one with **[Use]**: live immediately, no deployment; **[Back to basic widget]**, preview link, duplicate, JSON **package export/import**, **History** (every save keeps the previous state for restore), archive·delete. The sanitized-CSS box appears only for tenants the platform administrator has enabled the add-on for) · **Design files** (fonts woff2/ttf/otf·icons·images·design docs uploaded to this tenant's own folder — survive deployments, usage shown per area) · tab layout · behaviour (display name·greetings — **6 language tabs**, with the shipped default copy shown) · Embed/SDK · store install guide — details: [Custom Widget Manual](custom-widget.en.md) |
 | Platform integrations | Shopify · Cafe24 · WooCommerce · Odoo · Haravan tiles + the **[Integration guide]** button top-right (where to find each credential) |
 | Marketing & helpdesk | Klaviyo · Yotpo · Gorgias |
@@ -429,6 +458,48 @@ is invisible.
 - **Policy-forced handoff (deny-list)** rules carry one of two customer-facing modes:
   **No answer** (straight to an agent with no AI — the default) / **Answer, then hand
   off** (answer from knowledge first, then hand off) — either way an agent is called.
+### 14.1 Agent handoff — consult categories and routing rules
+
+A **consult category** is the consult topic the customer picks in the widget (e.g.
+Booking · Payment · Room listing). Manage them via **[Manage consult categories]** in the
+routing rules header.
+- Add one with a code (letters·digits·_) and a name. **The code cannot be changed after
+  creation**; the name and order can be changed at any time.
+- **Shown/Hidden**: only Shown categories appear on the widget card (new ones default to
+  Shown).
+- **Per-language names** (▸ expand): the name in the customer's language is shown if
+  present, otherwise the default name.
+- A consult category used by a rule, team, or label cannot be deleted; you are told where
+  it is used.
+- The 👁 mark on a rule chip means the consult category is shown to customers.
+
+**Routing rules** are checked from the top, and the conversation is connected to the
+**agent group (team × label)** and individually designated agents of the **first rule whose
+consult category · topic · customer information all match**. If no rule matches, the
+assigned agents are notified; if there are none, everyone is notified.
+- **Consult category** line: compared only with the value the customer picked. Customers
+  who did not pick one only match rules with an empty consult category.
+- **Topic** line: looks at question keywords and labels attached by *policy-forced handoff
+  (deny)* rules. Label chips on the topic line only match conversations handed off by a
+  policy rule, so pick agent-group labels under *Assignee* below.
+- **Customer information** line: Region (North·North Center·Central·South Center·South —
+  the hotel region signed and sent by the host app), province, language, verification
+  level, customer tier·type, hotel, role, entry path.
+- Example: *Payment · South* = consult category Payment + Region South·South Center → team
+  South × label accounting.
+- When the customer picks a consult category, its rules are followed instead of the
+  previous-agent-first connection.
+
+**Check routing**: enter a consult category·region·province·language in the box above the
+rules and press [Check] to see, **using the rules being edited, before saving**, who the
+conversation would be connected to and why rules were skipped (consult category mismatch·
+region condition mismatch·0 assignable agents, etc.). No alarm is sent.
+
+**Warnings** (they do not block saving): ① misuse of topic labels ② a region name in the
+rule name but no region·province condition ③ 0 agents assignable right now (members who
+have not yet accepted their invitation are shown). Users who have not accepted their
+invitation are not assigned.
+
 → [Quick Setup Manual, Chapters 3–4](quick-setup.en.md) ·
 widget settings guide
 
@@ -493,9 +564,17 @@ administrator's **Plan/Add-ons** setting says `native`. If the menu itself is mi
 check the provided menus/rank permissions (2-tier).
 
 **Q. The settings screen looks different from older descriptions.**
-Since 2026-08-24, `/settings` has been reorganized into **7 tabs** (Tenant settings, §14).
-Agent handoff moved to the **Agent handoff** card on the *Basic settings* tab, and menu
-access moved to the *Other settings* tab.
+`/settings` has **8 tabs** (Tenant settings, §14). Since 2026-10-24, agent handoff has
+its own **Agent handoff** tab, and menu access is on the *Other settings* tab.
+
+**Q. A customer asked for an agent, but the consult category card doesn't appear.**
+Check in [Agent handoff → Manage consult categories] that at least one consult category is
+**Shown**. If none are shown, the conversation connects directly without the card.
+
+**Q. I created a rule, but conversations aren't assigned to the team I specified.**
+Enter the same conditions in **Check routing** above the rules — it shows why rules were
+skipped. Common causes: using label chips on the topic line, a missing region condition, or
+team members who have not yet accepted their invitation (0 assignable agents).
 
 **Q. Dashboard/statistics numbers dropped compared to before.**
 That can be normal — conversation counts now **exclude AI-settings preview sessions**, and

@@ -1,6 +1,6 @@
 # SharpTalk Quick Setup Manual — From Tenant Creation to the First Conversation
 
-> Version 1.1 · First published 2026-08-24 · **Updated 2026-09-11** · Written against the code
+> Version 1.2 · First published 2026-08-24 · **Updated 2026-10-24** · Written against the code
 > Audience: **Platform administrators** (Chapter 1) · **New tenant administrators** (Chapters 2–8)
 > Online edition: https://shoptalk.amoeba.site/manual (HTML edition plus EN·VI translations)
 > Legend: ✅ implemented / 🟡 in preparation·roadmap. Staging base URL `https://shoptalk.amoeba.site`
@@ -166,8 +166,8 @@ store master) **[Reset MFA]** can unlock you.
 ## 3. Commerce Platform Integration
 *(Console left menu **[Tenant Settings]** → **Platform integrations** tab)*
 
-> Settings is now organised into **7 tabs**: Basic settings (AI engines · usage ·
-> storefront · agent handoff) / Widget settings / Platform integrations /
+> Settings has **8 tabs**: Basic settings (AI engines · usage · storefront ·
+> knowledge options) / Agent handoff / Widget settings / Platform integrations /
 > Marketing & helpdesk / Messenger channels / Other settings / Privacy notice.
 > This chapter is the *Platform integrations* tab; Chapter 4 is the *Widget settings* tab.
 
@@ -356,8 +356,11 @@ the [Knowledge & AI Manual](knowledge-ai.en.md).
   (director/manager/staff), and duty labels → the same **temporary password modal** as in
   Chapter 1 appears (shown once · deliver directly). Per-menu access is adjusted per rank in
   the *Menu access* card of [Tenant Settings → Other settings] (master only).
-- **Agent handoff**: in the *Agent handoff* card of [Tenant Settings → Basic settings],
-  assign the responsible agents, working hours, and the off-hours forwarding email. Details:
+- **Agent handoff**: in the [Tenant Settings → Agent handoff] tab, assign the responsible
+  agents, routing rules (team × label per consult category and region), working hours, and
+  the off-hours forwarding email. To let customers pick a consult topic in the widget, set
+  it to **Shown** in *Manage consult categories*. After creating rules, use **Check routing**
+  to see who a conversation will be connected to. Details:
   [Knowledge & AI Manual, Chapter 5](knowledge-ai.en.md).
 
 ---

@@ -116,7 +116,7 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
 <header class="hero">
   <div class="eyebrow">SharpTalk User Manual · 2/2</div>
   <h1>SharpTalk Knowledge &amp; AI Setup Manual</h1>
-  <div class="meta"><span>Version 1.1 · First 2026-08-24 · updated 2026-09-04 · Written against the code</span><span>Audience: tenant operators · CS staff (AI settings: master/director)</span></div>
+  <div class="meta"><span>Version 1.2 · First 2026-08-24 · updated 2026-10-24 · Written against the code</span><span>Audience: tenant operators · CS staff (AI settings: master/director)</span></div>
   <p class="lead">Covers how to enter and validate the knowledge in use, AI settings, and customer-response settings in real live chat.
   Each chapter is structured as <strong>terms → procedure → 💡 operating tips</strong>. For the setup procedure, read the <em>Quick Setup Manual</em> (Part 1) first.</p>
   <p class="lead">⚠ AI-translated draft pending native review. The Korean edition is authoritative.</p>
@@ -518,7 +518,7 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
 
 <section id="ch5">
   <div class="ch"><span class="num">05</span><h2>Live Chat Customer-Response Settings</h2></div>
-  <span class="actor">The Agent handoff card on [Tenant Settings] → Basic settings</span>
+  <span class="actor">[Tenant Settings] → Agent handoff tab (split out of Basic settings on 2026-10-24)</span>
   <div class="terms"><div class="t-label">Terms</div>
   <div class="tablewrap"><table>
     <tr><td>Escalation (handoff)</td><td>The AI passing a conversation to the agent queue</td></tr>
@@ -548,12 +548,25 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
     <li>If no assignee is designated, handed-off conversations only pile up in the shared queue — designate at least one.</li>
   </ul></div>
 
+  <h3>5.1a Consult categories·routing rules</h3>
+  <ol class="steps">
+    <li>In <strong>[Manage consult categories]</strong>, create the consult topics customers will pick from (e.g. Booking·Payment) and set them to <strong>Shown</strong>. If needed, enter vi/en names under ▸ <em>Per-language names</em></li>
+    <li>Write the <strong>routing rules</strong> from the top: consult category + topic (keywords) + customer information (region·province·language, etc.) → assignee (team × label group, or individual agents). The <strong>first rule</strong> whose conditions all match is used</li>
+    <li>In <strong>Check routing</strong> above the rules, enter a consult category·region, etc. to see who the conversation goes to before saving, then <strong>Save</strong></li>
+  </ol>
+  <div class="callout"><span class="c-label">⚠️ Caution</span>
+  <ul>
+    <li>Label chips on the <em>Topic</em> line only match conversations handed off by a policy-forced handoff — pick agent-group labels under <em>Assignee</em> (the editor shows a warning).</li>
+    <li>Agents who have not accepted their invitation are not assigned. If a group has 0 active agents, that rule is skipped.</li>
+    <li>If the customer does not pick a consult category, only rules with an empty consult category match — keeping a default rule with no conditions at the bottom is the safe choice.</li>
+  </ul></div>
+
   <h3>5.2 Understanding escalation triggers</h3>
   <div class="tablewrap"><table>
     <tr><th>Trigger</th><th>Behavior</th></tr>
     <tr><td><strong>Low confidence</strong></td><td>Appends "Shall I connect you to an agent?" to the answer and queues it</td></tr>
     <tr><td><strong>Blocked by moderation</strong></td><td>The AI answer is withheld; an agent-connection notice is shown, then queued</td></tr>
-    <tr><td><strong>Customer request</strong></td><td>The scenario's Contact support or an explicit request → queued immediately</td></tr>
+    <tr><td><strong>Customer request</strong></td><td>The scenario's Contact support or an explicit request → queued immediately (if any consult categories are shown, the widget first asks for a consult category and connects via that category's rule)</td></tr>
     <tr><td><strong>Policy-forced handoff</strong></td><td>"No answer" rule: queued <strong>immediately with no AI response</strong>. "Answer, then hand off" rule: answers from knowledge first, then queues. The message is stored·displayed normally, and the issue is stamped with type·label (this is not a message-blocking feature)</td></tr>
   </table></div>
   <div class="callout"><span class="c-label">💡 Tip</span>
