@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>샵톡 상담원 배정 가이드</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --accent:#2B7FFF; --accent-deep:#1D5FD6; --accent-tint:#EAF2FF;
+  --ink:#1B2430; --muted:#5C6675; --line:#E3E8F0;
+  --bg:#FAFBFD; --card:#FFFFFF; --soft:#F1F5FB;
+  --tip-bg:#EAF2FF; --tip-edge:#2B7FFF;
+  --warn-bg:#FFF7E6; --warn-edge:#D97706; --warn-ink:#8A4B04;
+  --code-bg:#EEF2F8; --mono-ink:#31435E;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --accent:#5C9BFF; --accent-deep:#82B4FF; --accent-tint:#16243C;
+    --ink:#E6EBF3; --muted:#93A0B4; --line:#28313F;
+    --bg:#0F141B; --card:#161C25; --soft:#1B222D;
+    --tip-bg:#152238; --tip-edge:#5C9BFF;
+    --warn-bg:#2A2010; --warn-edge:#E8A23D; --warn-ink:#EFC584;
+    --code-bg:#1E2632; --mono-ink:#B9C7DC;
+  }
+}
+:root[data-theme="dark"]{
+  --accent:#5C9BFF; --accent-deep:#82B4FF; --accent-tint:#16243C;
+  --ink:#E6EBF3; --muted:#93A0B4; --line:#28313F;
+  --bg:#0F141B; --card:#161C25; --soft:#1B222D;
+  --tip-bg:#152238; --tip-edge:#5C9BFF;
+  --warn-bg:#2A2010; --warn-edge:#E8A23D; --warn-ink:#EFC584;
+  --code-bg:#1E2632; --mono-ink:#B9C7DC;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Segoe UI",sans-serif;
+  font-size:16px;line-height:1.75}
+.shell{max-width:1120px;margin:0 auto;padding:0 24px 96px;
+  display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+@media(max-width:860px){.shell{display:block}}
+header.hero{grid-column:1/-1;padding:56px 0 8px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+h1{font-family:"Gothic A1",sans-serif;font-weight:800;font-size:clamp(28px,4.5vw,40px);
+  line-height:1.25;margin:10px 0 12px;text-wrap:balance}
+.meta{color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.lead{max-width:68ch;color:var(--muted);margin-top:14px}
+nav.toc{position:sticky;top:24px;align-self:start;font-size:13.5px;padding-top:24px}
+@media(max-width:860px){nav.toc{position:static;border:1px solid var(--line);border-radius:10px;
+  background:var(--card);padding:14px 16px;margin:20px 0}}
+nav.toc .toc-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+nav.toc a{display:flex;gap:8px;color:var(--muted);text-decoration:none;padding:4px 0;line-height:1.4}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent)}
+nav.toc a .n{font-family:"IBM Plex Mono",monospace;color:var(--accent);font-size:12px;min-width:18px;padding-top:1px}
+main{min-width:0;max-width:74ch}
+section{padding-top:40px}
+.ch{display:flex;align-items:baseline;gap:12px;border-top:2px solid var(--ink);padding-top:14px}
+.ch .num{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;color:var(--accent)}
+h2{font-family:"Gothic A1",sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.35;text-wrap:balance}
+.actor{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 12px;
+  background:var(--accent-tint);color:var(--accent-deep);margin-top:10px}
+h3{font-family:"Gothic A1",sans-serif;font-weight:700;font-size:17.5px;margin:30px 0 8px}
+p{margin:10px 0;max-width:68ch}
+a{color:var(--accent-deep)}
+strong{font-weight:700}
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:14px 0}
+th{font-size:12.5px;letter-spacing:.04em;color:var(--muted);text-align:left;font-weight:700;
+  border-bottom:2px solid var(--line);padding:7px 12px 7px 0}
+td{border-bottom:1px solid var(--line);padding:8px 12px 8px 0;vertical-align:top}
+.tablewrap{overflow-x:auto}
+.terms{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 18px 14px;margin:16px 0}
+.terms .t-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:12px 0 2px}
+.terms td:first-child{font-weight:700;white-space:nowrap;padding-right:18px}
+.callout{border-left:3px solid var(--tip-edge);background:var(--tip-bg);border-radius:0 10px 10px 0;
+  padding:12px 18px;margin:16px 0;font-size:14.5px}
+.callout .c-label{font-weight:700;color:var(--accent-deep)}
+.callout.warn{border-left-color:var(--warn-edge);background:var(--warn-bg);color:var(--warn-ink)}
+.callout.warn .c-label{color:var(--warn-ink)}
+.callout p{margin:6px 0}
+.callout ul{margin:6px 0}
+code,kbd{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--code-bg);
+  color:var(--mono-ink);border-radius:5px;padding:1px 6px}
+pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+  overflow-x:auto;font-size:13px;line-height:1.6}
+pre code{background:none;padding:0;color:var(--mono-ink)}
+ol.steps{padding-left:0;margin:14px 0;list-style:none;counter-reset:st}
+ol.steps>li{counter-increment:st;position:relative;padding:0 0 14px 40px}
+ol.steps>li::before{content:counter(st);position:absolute;left:0;top:1px;width:24px;height:24px;
+  border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;font-family:"IBM Plex Mono",monospace}
+ul{margin:10px 0;padding-left:22px}
+li{margin:4px 0}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:30px;position:relative}
+.check li::before{content:"";position:absolute;left:2px;top:6px;width:14px;height:14px;
+  border:2px solid var(--accent);border-radius:4px}
+.faq dt{font-weight:700;margin-top:18px}
+.faq dd{margin:4px 0 0;color:var(--muted)}
+.next{margin-top:56px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:20px 24px}
+.pagenav{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;padding-top:18px;color:var(--muted)}
+.pagenav a{color:var(--muted);text-decoration:none}
+.pagenav a:hover,.pagenav a:focus-visible{color:var(--accent)}
+.pagenav .cur{color:var(--accent-deep);font-weight:700}
+figure.shot{margin:18px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+figure.shot img{display:block;width:100%}
+figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+<nav class="pagenav" aria-label="매뉴얼 내비게이션"><a href="./">← 매뉴얼 목록</a><span>·</span><span class="cur">한국어</span><a href="agent-assignment.en.html">English</a><a href="agent-assignment.vi.html">Tiếng Việt</a><span>·</span><a href="agent-assignment.ko.md">MD 원문</a></nav>
+<header class="hero">
+  <div class="eyebrow">SharpTalk 사용자설명서 · 상담원 배정</div>
+  <h1>샵톡 상담원 배정 가이드</h1>
+  <div class="meta"><span>버전 1.0 · 2026-10-24 최초 · 코드 기준 작성</span><span>대상: 테넌트 운영자(master — 팀·라벨·배정 규칙 설정) · 상담원(알람·응대)</span></div>
+  <p class="lead">이 문서는 <strong>고객이 상담원을 찾을 때 누구에게 연결되는지</strong>를 처음부터 끝까지 따라갑니다. 앞부분(2~4장)은 운영자가 한 번 해 두는 설정이고, 뒷부분(5~9장)은 실제로 고객이 요청했을 때 고객 화면과 상담원 화면에서 일어나는 일입니다. 화면 예시는 호텔 파트너 상담을 가정한 시연 데이터입니다(호텔·상담원 이름은 가상).</p>
+</header>
+
+<nav class="toc" aria-label="목차">
+  <div class="toc-label">목차</div>
+  <a href="#ch1"><span class="n">1</span>한눈에 보기</a>
+  <a href="#ch2"><span class="n">2</span>준비 ① 상담원·팀·라벨</a>
+  <a href="#ch3"><span class="n">3</span>준비 ② 상담카테고리</a>
+  <a href="#ch4"><span class="n">4</span>준비 ③ 배정 규칙</a>
+  <a href="#ch5"><span class="n">5</span>고객 화면</a>
+  <a href="#ch6"><span class="n">6</span>배정 판단</a>
+  <a href="#ch7"><span class="n">7</span>상담원 화면</a>
+  <a href="#ch8"><span class="n">8</span>응대</a>
+  <a href="#ch9"><span class="n">9</span>알람 설정(개인)</a>
+  <a href="#ch10"><span class="n">10</span>운영 체크리스트</a>
+  <a href="#ch11"><span class="n">11</span>FAQ / 문제 해결</a>
+</nav>
+
+<main>
+
+<section id="ch1">
+  <div class="ch"><span class="num">01</span><h2>한눈에 보기</h2></div>
+  <pre><code>고객 위젯                       샵톡 서버                              상담원 콘솔
+──────────                      ─────────                              ──────────
+[상담원 연결] 또는 AI 인계  ──▶  상담카테고리 카드 표시
+"어떤 상담이 필요하세요?"
+  (고객 지원) 선택          ──▶  배정 규칙을 위에서부터 확인
+                                  상담카테고리 = 고객 지원 ?
+                                  고객 정보 › 권역 = 남부 ?   (호텔 로그인 정보)
+                                  → 첫 번째로 모두 맞는 규칙
+                                  → 그 규칙의 팀 × 라벨에서 접속 중인 상담원
+"○○ 상담으로 연결해 드릴게요" ◀─  배정                             ──▶  🔔 알람 팝업 "배정: 나"
+                                                                       [상담 열기] → 응대</code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>용어</th><th>뜻</th></tr>
+    <tr><td>상담카테고리</td><td>고객이 위젯에서 고르는 상담 주제(예: 고객 지원·제휴·정산). 운영자가 만들고 노출 여부를 정합니다</td></tr>
+    <tr><td>팀</td><td>상담원의 소속(1인 1팀). 예: North(하노이)·South(호찌민)</td></tr>
+    <tr><td>라벨</td><td>상담원의 업무 표시(여러 개 가능). 예: CS·Sales. <em>상담(Counsels)</em> 라벨이 있어야 라이브챗을 처리합니다</td></tr>
+    <tr><td>배정 규칙</td><td>"상담카테고리 + 고객 정보(권역 등) → 팀 × 라벨" 묶음. 위에서부터 확인해 <strong>처음 모두 맞는 규칙</strong>을 씁니다</td></tr>
+    <tr><td>권역</td><td>고객(호텔)의 위치: 북부·중북부·중부·중남부·남부. 호스트 앱이 로그인 정보로 보내거나, 성(省) 이름으로 채웁니다</td></tr>
+    <tr><td>담당 상담원</td><td>맞는 규칙이 없을 때 받는 사람(상담원 연결 탭 맨 위). 비우면 상담원 전원에게 알립니다</td></tr>
+  </table></div>
+</section>
+
+<section id="ch2">
+  <div class="ch"><span class="num">02</span><h2>준비 ① 상담원·팀·라벨</h2></div>
+  <p><em>(콘솔 <strong>[사용자 및 라벨]</strong> — master)</em></p>
+  <p>배정 규칙은 사람을 직접 고르기보다 <strong>팀 × 라벨</strong>로 고르는 것을 권장합니다. 사람이 바뀌어도 규칙을 고칠 필요가 없습니다.</p>
+  <h3>2.1 상담원 초대와 수락</h3>
+  <ol class="steps">
+    <li><strong>[사용자 초대]</strong> → 이메일·직급·라벨·팀 선택 → 초대</li>
+    <li>초대받은 사람이 임시 비밀번호로 <strong>처음 로그인</strong>하면 상태가 <code>active</code>가 됩니다</li>
+    <li>목록에서 <strong>라벨·팀·상태</strong>를 확인합니다</li>
+  </ol>
+  <figure class="shot"><img src="img/asg-users-list.ko.jpg" alt="사용자 목록 — 라벨·팀·상태(active)를 한눈에 확인" loading="lazy"><figcaption>사용자 목록 — 라벨·팀·상태(active)를 한눈에 확인</figcaption></figure>
+  <div class="callout warn"><span class="c-label">⚠️ 초대 수락 전(`invited`)인 상담원은 배정되지 않습니다.</span>
+    <p>규칙의 팀에 활성 상담원이 0명이면 그 규칙은 건너뜁니다(4.4절 경고).</p></div>
+  <h3>2.2 팀·라벨 만들기</h3>
+  <p><strong>[라벨·팀 관리]</strong> → <em>직무 라벨</em> / <em>팀</em> 탭에서 코드와 이름으로 추가합니다. 코드는 만든 뒤 바꿀 수 없고 이름은 언제든 바꿀 수 있습니다.</p>
+  <figure class="shot"><img src="img/asg-labels-units.ko.jpg" alt="라벨·팀 관리 — 직무 라벨 탭(CS·Sales 추가)" loading="lazy"><figcaption>라벨·팀 관리 — 직무 라벨 탭(CS·Sales 추가)</figcaption></figure>
+  <figure class="shot"><img src="img/asg-units.ko.jpg" alt="라벨·팀 관리 — 팀 탭(North·South 추가)" loading="lazy"><figcaption>라벨·팀 관리 — 팀 탭(North·South 추가)</figcaption></figure>
+  <div class="callout"><span class="c-label">💡 팁</span>
+    <p>*상담(consult)*·*회계*·*운영*은 권한과 연결된 기본 라벨이라 삭제할 수 없습니다. 배정용으로는 CS·Sales처럼 별도 라벨을 만들어 쓰면 권한과 섞이지 않습니다.</p></div>
+  <h3>2.3 상담원에게 팀·라벨 지정</h3>
+  <p>목록의 <strong>[편집]</strong> → *직무 라벨*을 체크하고 *팀*을 고른 뒤 저장합니다. 상담원이 라이브챗을 처리하려면 <strong>Counsels(상담)</strong> 라벨이 함께 있어야 합니다.</p>
+  <figure class="shot"><img src="img/asg-user-edit.ko.jpg" alt="사용자 편집 — 라벨(Counsels·CS·Sales)과 팀(South)" loading="lazy"><figcaption>사용자 편집 — 라벨(Counsels·CS·Sales)과 팀(South)</figcaption></figure>
+</section>
+
+<section id="ch3">
+  <div class="ch"><span class="num">03</span><h2>준비 ② 상담카테고리</h2></div>
+  <p><em>(<strong>[테넌트 설정] → 상담원 연결</strong> 탭 → 배정 규칙 머리글의 <strong>[상담카테고리 관리]</strong>)</em></p>
+  <ol class="steps">
+    <li>아래 줄에 <strong>코드</strong>(영문·숫자·_)와 <strong>이름</strong>을 넣고 *고객에게 노출*을 체크한 채 <strong>[추가]</strong></li>
+    <li>각 행의 ▸ <strong>언어별 이름</strong>에 고객 언어별 이름을 넣습니다(비우면 기본 이름)</li>
+    <li>고객에게 보일 것은 <strong>노출함</strong>, 내부용은 <strong>노출 안 함</strong>으로 두고 <strong>[변경 저장]</strong></li>
+  </ol>
+  <figure class="shot"><img src="img/asg-categories.ko.jpg" alt="상담카테고리 관리 — 노출함/노출 안 함, 언어별 이름, 사용처" loading="lazy"><figcaption>상담카테고리 관리 — 노출함/노출 안 함, 언어별 이름, 사용처</figcaption></figure>
+  <ul>
+    <li>코드는 만든 뒤 바꿀 수 없습니다(규칙이 코드로 참조). 이름·순서·노출은 언제든 바꿀 수 있습니다.</li>
+    <li>규칙·팀·라벨이 쓰고 있는 상담카테고리는 삭제되지 않고, 어디서 쓰는지 안내합니다.</li>
+    <li>노출함인 상담카테고리가 <strong>하나도 없으면</strong> 위젯에 카드가 뜨지 않고 바로 연결됩니다.</li>
+  </ul>
+</section>
+
+<section id="ch4">
+  <div class="ch"><span class="num">04</span><h2>준비 ③ 배정 규칙</h2></div>
+  <p>*(<strong>[테넌트 설정] → 상담원 연결</strong> 탭 → <em>배정 규칙</em>)*</p>
+  <h3>4.1 규칙 만들기</h3>
+  <p><strong>[규칙 추가]</strong> → 한 규칙에 다음을 정합니다.</p>
+  <div class="tablewrap"><table>
+    <tr><th>칸</th><th>정하는 것</th><th>예 (CS_South)</th></tr>
+    <tr><td>이름</td><td>로그·알람에 보일 이름</td><td>CS_South</td></tr>
+    <tr><td>배정 방식</td><td>접속 중 가장 한가한 1명 / 그룹 전원 알림</td><td>가장 한가한 1명</td></tr>
+    <tr><td>상담카테고리</td><td>고객이 고른 값 (비우면 전체)</td><td>Customer Services</td></tr>
+    <tr><td>업무</td><td>질문 키워드 (비우면 전체)</td><td>—</td></tr>
+    <tr><td>고객 정보</td><td>권역·지역(성)·언어 등 (비우면 전체)</td><td>권역 = 중남부·남부</td></tr>
+    <tr><td>담당자</td><td>그룹 배정(팀 × 라벨) 또는 개인 지정</td><td>팀 South × 라벨 CS</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/asg-rule-edit.ko.jpg" alt="규칙 편집 — 상담카테고리·고객 정보(권역)·그룹 배정(팀 × 라벨)과 현재 해당 인원" loading="lazy"><figcaption>규칙 편집 — 상담카테고리·고객 정보(권역)·그룹 배정(팀 × 라벨)과 현재 해당 인원</figcaption></figure>
+  <div class="callout warn"><span class="c-label">⚠️ 업무 줄의 라벨 칩은 다른 용도입니다.</span>
+    <p><em>정책 강제 핸드오프(deny)</em> 규칙으로 넘어온 대화에만 맞습니다. 상담원 그룹 라벨은 아래 <strong>담당자 › 그룹 배정 › 라벨</strong>에서 고르세요.</p></div>
+  <h3>4.2 규칙 순서와 기본 규칙</h3>
+  <p>규칙은 <strong>위에서부터</strong> 확인해 처음으로 모든 조건이 맞는 규칙을 씁니다. ↑↓로 순서를 바꿉니다. 이 가이드의 예시는 다음 5개입니다.</p>
+  <div class="tablewrap"><table>
+    <tr><th>#</th><th>규칙</th><th>상담카테고리</th><th>권역</th><th>담당자</th></tr>
+    <tr><td>1</td><td>CS_North</td><td>Customer Services</td><td>북부·중북부</td><td>팀 North × CS</td></tr>
+    <tr><td>2</td><td>CS_South</td><td>Customer Services</td><td>중남부·남부</td><td>팀 South × CS</td></tr>
+    <tr><td>3</td><td>BS_North</td><td>Business Support</td><td>북부·중북부</td><td>팀 North × Sales</td></tr>
+    <tr><td>4</td><td>BS_South</td><td>Business Support</td><td>중남부·남부</td><td>팀 South × Sales</td></tr>
+    <tr><td>5</td><td>Default</td><td>(전체)</td><td>(전체)</td><td>라벨 CS</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/asg-rules-list.ko.jpg" alt="배정 규칙 목록 — 위에서부터 확인, 위에는 배정 확인 상자" loading="lazy"><figcaption>배정 규칙 목록 — 위에서부터 확인, 위에는 배정 확인 상자</figcaption></figure>
+  <div class="callout"><span class="c-label">💡 팁</span>
+    <p>맨 아래에 조건 없는 <strong>기본 규칙</strong>을 두세요. 상담카테고리를 고르지 않은 고객이나 권역을 모르는 고객도 정해진 사람에게 갑니다(없으면 <em>담당 상담원</em>, 그것도 없으면 전원 알람).</p></div>
+  <h3>4.3 배정 확인 — 저장 전에 시험하기</h3>
+  <p>규칙 위 <strong>배정 확인</strong> 상자에 상담카테고리·권역·성·언어를 넣고 <strong>[확인]</strong> 을 누르면, <strong>지금 편집 중인(저장 전) 규칙</strong>으로 누구에게 연결되는지와 건너뛴 규칙의 이유가 나옵니다. 알림은 보내지 않습니다.</p>
+  <figure class="shot"><img src="img/asg-routing-check.ko.jpg" alt="배정 확인 — Customer Services · 남부 → #2 CS_South → Minh Le, 건너뜀: #1 권역 조건 불일치" loading="lazy"><figcaption>배정 확인 — Customer Services · 남부 → #2 CS_South → Minh Le, 건너뜀: #1 권역 조건 불일치</figcaption></figure>
+  <p>확인이 끝나면 카드 맨 아래 <strong>[저장]</strong> 을 누릅니다.</p>
+  <h3>4.4 경고 읽기</h3>
+  <p>규칙 카드 위쪽의 노란 경고는 저장을 막지 않지만 <strong>그대로 두면 배정되지 않는다</strong>는 뜻입니다.</p>
+  <div class="tablewrap"><table>
+    <tr><th>경고</th><th>뜻</th><th>조치</th></tr>
+    <tr><td>업무 라벨(…) 조건은 정책(deny) 규칙…</td><td>업무 줄 라벨 칩을 잘못 씀</td><td>업무 줄에서 해제, 담당자 › 라벨에서 선택</td></tr>
+    <tr><td>이름에 지역명이 있지만 권역·성 조건이 없습니다</td><td>모든 지역 고객이 맞음</td><td>고객 정보 › 권역 추가</td></tr>
+    <tr><td>지금 배정 가능한 상담원이 0명입니다 (초대 수락 전 n명)</td><td>팀 × 라벨에 활성 상담원이 없음</td><td>초대 수락 안내, 라벨·팀 지정 확인</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/asg-rule-warnings.ko.jpg" alt="경고 — BS_North: 팀 North에 Sales 라벨 상담원이 없어 0명" loading="lazy"><figcaption>경고 — BS_North: 팀 North에 Sales 라벨 상담원이 없어 0명</figcaption></figure>
+</section>
+
+<section id="ch5">
+  <div class="ch"><span class="num">05</span><h2>고객 화면 — 상담원 요청과 상담카테고리 선택</h2></div>
+  <p>고객이 상담원을 찾는 길은 두 가지이고, 둘 다 같은 <strong>상담카테고리 카드</strong>를 보여줍니다.</p>
+  <h3>5.1 고객이 직접 [상담원 연결]을 누를 때</h3>
+  <p>답변 아래 <strong>상담원 연결</strong> 칩(또는 문의 카드의 <em>상담원과 채팅</em>, 시나리오의 상담원 연결 버튼)을 누르면 바로 연결하지 않고 카드가 먼저 뜹니다.</p>
+  <figure class="shot" style="max-width:400px"><img src="img/asg-widget-before.ko.jpg" alt="위젯 — "어떤 상담이 필요하세요?" 카드(고객 지원 · 제휴·정산 · 건너뛰기)" loading="lazy"><figcaption>위젯 — "어떤 상담이 필요하세요?" 카드(고객 지원 · 제휴·정산 · 건너뛰기)</figcaption></figure>
+  <p>고객이 상담카테고리를 고르면 그 값으로 배정 규칙을 찾고, 대화에 "○○ 상담으로 연결해 드릴게요" 줄이 남은 뒤 대기 상태가 됩니다.</p>
+  <figure class="shot" style="max-width:400px"><img src="img/asg-widget-connecting.ko.jpg" alt="위젯 — 고객 지원 선택 후 연결 안내와 상담사 대기 표시" loading="lazy"><figcaption>위젯 — 고객 지원 선택 후 연결 안내와 상담사 대기 표시</figcaption></figure>
+  <h3>5.2 AI가 상담원에게 넘길 때</h3>
+  <p>AI가 확실한 답을 찾지 못했거나 고객이 "상담원 연결해 주세요"라고 하면, AI는 <strong>바로 상담원을 호출</strong>하고 안내 아래에 같은 카드를 띄웁니다. 고객이 고르면, <strong>아직 아무도 수락하지 않은 경우</strong> 그 상담카테고리의 담당 그룹으로 <strong>다시 연결</strong>합니다(처음 호출된 알람은 정리됩니다).</p>
+  <figure class="shot" style="max-width:400px"><img src="img/asg-widget-after.ko.jpg" alt="위젯 — AI 인계 안내 아래 "상담 내용을 고르면 더 정확한 담당자에게 연결해 드려요" 카드" loading="lazy"><figcaption>위젯 — AI 인계 안내 아래 "상담 내용을 고르면 더 정확한 담당자에게 연결해 드려요" 카드</figcaption></figure>
+  <ul>
+    <li><strong>[건너뛰기]</strong>: 고르지 않고 기존처럼 연결합니다(상담카테고리 조건이 없는 규칙으로).</li>
+    <li>한 대화에서 카드는 한 번만 뜹니다.</li>
+    <li>카드에 보이는 이름은 고객 언어의 *언어별 이름*입니다.</li>
+  </ul>
+</section>
+
+<section id="ch6">
+  <div class="ch"><span class="num">06</span><h2>배정 판단 — 누가 받나</h2></div>
+  <p>예시 규칙(4.2절)과 상담원(Linh Tran = 팀 North·CS / Minh Le = 팀 South·CS·Sales)일 때:</p>
+  <div class="tablewrap"><table>
+    <tr><th>고객(호텔 권역)</th><th>고른 상담카테고리</th><th>맞는 규칙</th><th>받는 사람</th></tr>
+    <tr><td>Saigon Riverside Hotel (남부)</td><td>Customer Services</td><td>#2 CS_South</td><td>Minh Le</td></tr>
+    <tr><td>Hanoi Garden Hotel (북부)</td><td>Customer Services</td><td>#1 CS_North</td><td>Linh Tran</td></tr>
+    <tr><td>Hanoi Garden Hotel (북부)</td><td>Business Support</td><td>#3 BS_North → 0명이라 건너뜀 → #5 Default</td><td>CS 라벨 중 가장 한가한 1명</td></tr>
+    <tr><td>권역 모름</td><td>(건너뛰기)</td><td>#5 Default</td><td>CS 라벨 중 가장 한가한 1명</td></tr>
+  </table></div>
+  <p>알아둘 규칙:</p>
+  <ul>
+    <li><strong>상담카테고리 조건은 고객이 고른 값만</strong> 봅니다. 고르지 않은 고객에게는 상담카테고리가 빈 규칙만 맞습니다.</li>
+    <li><strong>권역</strong>은 호스트 앱(예: Go2Joy HA)이 로그인 정보로 보낸 호텔 권역입니다. 권역이 없고 성(省) 이름만 오면 테넌트의 *지역표*(성 → 권역)로 채웁니다.</li>
+    <li>규칙이 맞아도 <strong>접속 중·활성 상담원이 0명</strong>이면 다음 규칙으로 넘어갑니다.</li>
+    <li>고객이 상담카테고리를 고르면 *직전 상담원 우선 연결*보다 규칙이 우선합니다. 고르지 않으면 같은 계정의 직전 대화를 맡았던 상담원이 이번 배정 대상에 들어 있을 때 그 상담원에게 먼저 갑니다.</li>
+    <li><strong>근무시간 밖</strong>(근무시간 설정 시)에는 상담원 대신 *근무시간 외 전달 이메일*로 접수됩니다.</li>
+  </ul>
+</section>
+
+<section id="ch7">
+  <div class="ch"><span class="num">07</span><h2>상담원 화면 — 알람</h2></div>
+  <h3>7.1 내게 배정된 알람</h3>
+  <p>콘솔 어디에 있든 10초 안에 <strong>상담 이관 알림</strong> 팝업이 뜹니다. 호텔·권역·상담카테고리, <strong>배정: 나</strong>, 규칙 이름, 사유, 고객의 마지막 말이 보입니다.</p>
+  <figure class="shot"><img src="img/asg-alarm-mine.ko.jpg" alt="알람 팝업 — 배정: 나 · 규칙 CS_South" loading="lazy"><figcaption>알람 팝업 — 배정: 나 · 규칙 CS_South</figcaption></figure>
+  <ul>
+    <li><strong>[상담 열기]</strong>: 대화로 이동하고 <strong>확인 처리</strong>(재알림 중지)됩니다.</li>
+    <li><strong>[닫기]</strong>: 내 화면에서만 숨깁니다(읽음). 확인 처리는 아니므로 미수락 재알림은 계속됩니다.</li>
+  </ul>
+  <h3>7.2 다른 상담원에게 배정된 알람</h3>
+  <p>알람은 상담원 모두에게 보입니다. 다른 사람에게 배정된 알람에는 <strong>다른 상담원 배정</strong> 표시가 붙고, 내가 열어도 그 상담원의 알람은 꺼지지 않습니다.</p>
+  <figure class="shot"><img src="img/asg-alarm-other.ko.jpg" alt="알람 팝업 — 배정: Linh Tran · 다른 상담원 배정 · 상담카테고리 선택으로 재연결" loading="lazy"><figcaption>알람 팝업 — 배정: Linh Tran · 다른 상담원 배정 · 상담카테고리 선택으로 재연결</figcaption></figure>
+  <h3>7.3 🔔와 알람센터</h3>
+  <p>헤더 🔔에 읽지 않은 알람 수가 뜹니다. 누르면 최근 알람이, *전체 보기*를 누르면 <strong>알람센터</strong>(<code>/live-chat/alerts</code>)가 열립니다. 전체/내 배정/전원 대상, 상태, 기간, 상담카테고리로 걸러 보고, 행을 누르면 대화로 갑니다.</p>
+  <figure class="shot"><img src="img/asg-alarm-center.ko.jpg" alt="알람센터 — 고객/호텔·상담카테고리·배정·규칙·상태" loading="lazy"><figcaption>알람센터 — 고객/호텔·상담카테고리·배정·규칙·상태</figcaption></figure>
+</section>
+
+<section id="ch8">
+  <div class="ch"><span class="num">08</span><h2>응대 — 상담 열기</h2></div>
+  <p><strong>[상담 열기]</strong> 로 들어간 라이브챗 대화의 헤더에 호텔 정보·권역과 <strong>상담: Customer Services</strong> 배지가 보이고, 대화에는 "고객 지원 상담으로 연결해 드릴게요" 시스템 줄이 남아 있습니다. <strong>[수락]</strong> 을 눌러 응대를 시작합니다.</p>
+  <figure class="shot"><img src="img/asg-livechat-assigned.ko.jpg" alt="라이브챗 — 대화 헤더의 권역·상담카테고리 배지와 시스템 줄" loading="lazy"><figcaption>라이브챗 — 대화 헤더의 권역·상담카테고리 배지와 시스템 줄</figcaption></figure>
+</section>
+
+<section id="ch9">
+  <div class="ch"><span class="num">09</span><h2>알람 설정(개인)</h2></div>
+  <p>알람센터나 🔔 드로어의 <strong>알람 설정</strong>에서 각자 정합니다.</p>
+  <div class="tablewrap"><table>
+    <tr><th>항목</th><th>선택</th></tr>
+    <tr><td>팝업</td><td>모든 알람 / 내게 배정된 것만(전원 대상 포함) / 끄기</td></tr>
+    <tr><td>소리</td><td>켬·끔, <em>들어보기</em></td></tr>
+    <tr><td>브라우저 데스크톱 알림</td><td>켜면 브라우저가 권한을 묻습니다</td></tr>
+    <tr><td>메일</td><td>내게 배정되면 메일 받기</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/asg-alarm-settings.ko.jpg" alt="알람 설정 — 팝업 범위·소리·데스크톱 알림·메일" loading="lazy"><figcaption>알람 설정 — 팝업 범위·소리·데스크톱 알림·메일</figcaption></figure>
+  <div class="callout"><span class="c-label">💡 팁</span>
+    <p>팝업을 꺼도 🔔와 알람센터에는 모든 알람이 남습니다. 바쁜 팀장은 *내게 배정된 것만*을 권장합니다.</p></div>
+</section>
+
+<section id="ch10">
+  <div class="ch"><span class="num">10</span><h2>운영 체크리스트</h2></div>
+  <ul class="check">
+    <li>상담원이 모두 초대를 수락했다(상태 <code>active</code>)</li>
+    <li>상담원마다 Counsels(상담) 라벨 + 배정용 라벨(CS·Sales 등) + 팀이 지정되어 있다</li>
+    <li>고객에게 보일 상담카테고리가 <strong>노출함</strong>이고, 언어별 이름이 들어가 있다</li>
+    <li>배정 규칙마다 상담카테고리·권역 조건과 팀 × 라벨이 맞게 걸려 있다</li>
+    <li>맨 아래에 조건 없는 기본 규칙이 있다</li>
+    <li>규칙 카드에 경고가 없다</li>
+    <li><strong>배정 확인</strong>으로 대표 조합(카테고리 × 권역)을 모두 시험했다</li>
+    <li>위젯에서 실제로 요청해 보고, 담당 상담원에게 알람이 가는지 확인했다</li>
+  </ul>
+</section>
+
+<section id="ch11">
+  <div class="ch"><span class="num">11</span><h2>FAQ / 문제 해결</h2></div>
+  <dl class="faq">
+    <dt>Q. 고객이 상담원을 불렀는데 상담카테고리 카드가 안 나옵니다.</dt>
+    <dd>[상담원 연결 → 상담카테고리 관리]에서 <strong>노출함</strong>인 상담카테고리가 있는지 확인하세요. 하나도 없으면 카드 없이 바로 연결합니다. 이미 고른 대화에는 다시 뜨지 않습니다.</dd>
+    <dt>Q. 지정한 팀이 아니라 다른 사람(또는 전원)에게 알람이 갑니다.</dt>
+    <dd>규칙 위 <strong>배정 확인</strong>에 같은 상담카테고리·권역을 넣어 보세요. 건너뛴 규칙과 이유가 나옵니다. 흔한 원인은 ① 업무 줄의 라벨 칩 사용 ② 권역 조건 누락 ③ 팀원이 초대를 수락하지 않음(배정 가능 0명) ④ 규칙 순서(위의 더 넓은 규칙이 먼저 맞음)입니다.</dd>
+    <dt>Q. 알람이 모든 상담원에게 갑니다.</dt>
+    <dd>맞는 규칙이 없고 *담당 상담원*도 비어 있으면 전원 알람이 됩니다. 기본 규칙을 두거나 담당 상담원을 지정하세요.</dd>
+    <dt>Q. 다른 상담원 알람을 닫았는데 그 상담원에게 영향이 있나요?</dt>
+    <dd>없습니다. [닫기]는 내 화면에서만 숨기고, 확인 처리(재알림 중지)는 배정된 상담원이 해야 합니다.</dd>
+    <dt>Q. 권역이 비어 있습니다.</dt>
+    <dd>호스트 앱이 권역을 보내지 않고 성 이름도 지역표에 없는 경우입니다. [고객] 화면의 *지역표 갱신*(Go2Joy 연동 시)을 하거나, 권역 조건 대신 <em>지역(성)</em> 조건을 쓰세요.</dd>
+  </dl>
+</section>
+
+<div class="next">
+  <strong>함께 보기 →</strong> <a href="user-manual.ko.html">통합 사용자 매뉴얼</a> 4.4절(알람)·14.1절(상담원 연결), <a href="knowledge-ai.ko.html">지식 등록·AI 설정 매뉴얼</a> 5장(라이브챗 고객 대응 설정).
+</div>
+
+</main>
+</div>
+
+</body>
+</html>

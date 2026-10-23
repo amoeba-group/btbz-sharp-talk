@@ -500,6 +500,8 @@ rule name but no region·province condition ③ 0 agents assignable right now (m
 have not yet accepted their invitation are shown). Users who have not accepted their
 invitation are not assigned.
 
+→ Screen-by-screen walkthrough (units & labels → consult categories → routing rules → customer request → alarms): [Agent Assignment Guide](agent-assignment.en.md)
+
 → [Quick Setup Manual, Chapters 3–4](quick-setup.en.md) ·
 widget settings guide
 
