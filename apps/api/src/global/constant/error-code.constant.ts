@@ -292,6 +292,16 @@ export const ERROR_CODE = {
   // E5103 — Live-chat transcript search (PLN-261023 S1).
   SEARCH_TERM_TOO_SHORT: { code: 'E5103', message: 'Search for at least 2 characters' },
 
+  // E5104-E5106 — merged room over the same customer's sessions (PLN-261023-LiveChat-Merge-Same-Customer-Sessions).
+  MERGED_ROOM_NOT_FOUND: { code: 'E5104', message: 'Merged room not found' },
+  /** Merging is by confirmed identity only — a guest session has none. */
+  MERGE_NO_IDENTITY: { code: 'E5105', message: 'This session has no confirmed customer to merge by' },
+  /** A session of another customer, or one already in another merged room. */
+  MERGE_SESSION_CONFLICT: {
+    code: 'E5106',
+    message: 'A session belongs to another customer or another merged room',
+  },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

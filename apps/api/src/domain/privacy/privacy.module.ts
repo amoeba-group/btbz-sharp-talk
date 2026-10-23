@@ -1,3 +1,4 @@
+import { MergedRoomModule } from '../merged-room/merged-room.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SessionModule } from '../session/session.module';
@@ -42,6 +43,8 @@ import { AgentAlert } from '../agent/entity/agent-alert.entity';
 @Module({
   imports: [
     SessionModule,
+    // Merged rooms keyed on an erased customer go with them (PLN-261023).
+    MergedRoomModule,
     TypeOrmModule.forFeature([
       Customer,
       Session,

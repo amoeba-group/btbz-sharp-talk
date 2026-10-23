@@ -22,8 +22,56 @@ export interface RelatedSessions {
   }>;
 }
 
+/** Same-customer merged room (PLN-261023) — header menu + member sessions. */
+export interface MergedRoomView {
+  id: string;
+  autoJoin: boolean;
+  sessions: Array<{
+    sessionId: string;
+    /** Newest conversation of the session — choosing it opens that one. */
+    conversationId: string;
+    channel: string;
+    alias: string | null;
+    lastAt: string;
+    open: boolean;
+    /** Joined by auto-join, not by an operator. */
+    auto: boolean;
+  }>;
+}
+
+/** Every conversation of the room, for the dividers in the merged transcript. */
+export interface MergedRoomConversation {
+  id: string;
+  sessionId: string;
+  channel: string;
+  status: string;
+  createdAt: string;
+}
+
+/** The merge dialog's rows — session metadata only. */
+export interface MergeCandidates {
+  sessionId: string;
+  room: MergedRoomView | null;
+  sessions: Array<{
+    sessionId: string;
+    conversationId: string;
+    channel: string;
+    alias: string | null;
+    lastAt: string;
+    open: boolean;
+    matchedBy: 'customer' | 'email' | 'claimed';
+    unverified: boolean;
+    current: boolean;
+    inRoom: boolean;
+    excluded: boolean;
+    otherRoom: boolean;
+  }>;
+}
+
 export interface AgentSession {
   id: string;
+  /** Same-customer merged room this row stands for (PLN-261023); null = a single session. */
+  mergedRoom?: { id: string; sessionCount: number; openCount: number } | null;
   /** Session behind the row (row ids are conversation ids). */
   sessionId?: string;
   /** Operator-set session name; shown ahead of the derived one. */
@@ -108,6 +156,8 @@ export interface ChatAttachment {
 
 export interface ChatMessage {
   id: string;
+  /** Owning conversation — a merged room's transcript spans several (PLN-261023). */
+  conversationId?: string;
   senderType: MessageSenderType;
   senderName?: string | null;
   body: string;
@@ -174,6 +224,8 @@ export interface ConversationDetail {
   /** Older messages exist before the first one returned (PLN-260807). */
   hasMore?: boolean;
   customer?: CustomerContext | null;
+  /** Same-customer merged room (PLN-261023); the messages above then span all its conversations. */
+  mergedRoom?: (MergedRoomView & { conversations: MergedRoomConversation[] }) | null;
 }
 
 /** One booking kind's operating window; start/end are hours 0-23. */
@@ -425,6 +477,20 @@ export const liveChatService = {
   end: (id: string) => apiPost<ConversationDetail>(`/agent/conversations/${id}/end`),
   // Session groups: timeline/project (REQ-260824-Session-Grouping).
   groups: () => apiGet<ChatGroupSummary[]>('/agent/groups'),
+  // Same-customer merged room (PLN-261023-LiveChat-Merge-Same-Customer-Sessions).
+  mergeCandidates: (conversationId: string) =>
+    apiGet<MergeCandidates>(`/agent/conversations/${conversationId}/merge-candidates`),
+  mergeSessions: (conversationId: string, sessionIds: string[], autoJoin: boolean) =>
+    apiPost<MergedRoomView>('/agent/merged-rooms', {
+      conversation_id: Number(conversationId),
+      session_ids: sessionIds.map(Number),
+      auto_join: autoJoin,
+    }),
+  setMergedAutoJoin: (roomId: string, autoJoin: boolean) =>
+    apiPatch<MergedRoomView>(`/agent/merged-rooms/${roomId}`, { auto_join: autoJoin }),
+  removeMergedSession: (roomId: string, sessionId: string) =>
+    apiDelete<{ dissolved: boolean; room: MergedRoomView | null }>(`/agent/merged-rooms/${roomId}/sessions/${sessionId}`),
+  dissolveMergedRoom: (roomId: string) => apiDelete<{ dissolved: boolean }>(`/agent/merged-rooms/${roomId}`),
   /** Other sessions of the same confirmed customer (PLN-261006 P1). */
   relatedSessions: (conversationId: string) =>
     apiGet<RelatedSessions>(`/agent/conversations/${conversationId}/related-sessions`),

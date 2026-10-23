@@ -184,7 +184,7 @@ describe('AgentService — search, visitor IP, claimed customer panel', () => {
     const res = await h.svc.searchMessages(887, 4, '100%');
     expect(h.qb.where).toHaveBeenCalledWith(expect.stringContaining('m.tenant_id = :tenantId'), {
       tenantId: 4,
-      conversationId: 887,
+      scope: [887],
       pattern: '%100\\%%',
     });
     expect(res.total).toBe(2);

@@ -333,6 +333,69 @@ export const useRelatedSessions = (conversationId: string | null) => {
   });
 };
 
+/** The merge dialog's candidates (PLN-261023) — this conversation's customer's sessions. */
+export const useMergeCandidates = (conversationId: string | null) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['agent', tenantKey, 'merge-candidates', conversationId],
+    queryFn: () => liveChatService.mergeCandidates(conversationId as string),
+    enabled: !!conversationId,
+    staleTime: 30_000,
+  });
+};
+
+/**
+ * Merge / auto-join / take out / dissolve (PLN-261023). Each one reshapes the
+ * queue (rows fold or unfold) and the open transcript, so all of them refresh
+ * the list, the conversation and the suggestion queries.
+ */
+export const useMergedRoomActions = () => {
+  const { t } = useTranslation('livechat');
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  const refresh = () => {
+    for (const key of ['sessions', 'conversation', 'merge-candidates', 'related']) {
+      qc.invalidateQueries({ queryKey: ['agent', tenantKey, key] });
+    }
+  };
+  const fail = (fallback: string) => (e: Error) => toast.error(e.message || t(fallback), { sticky: true });
+  return {
+    merge: useMutation({
+      mutationFn: (v: { conversationId: string; sessionIds: string[]; autoJoin: boolean }) =>
+        liveChatService.mergeSessions(v.conversationId, v.sessionIds, v.autoJoin),
+      onSuccess: (room) => {
+        refresh();
+        toast.success(t('merge.merged', { count: room.sessions.length }));
+      },
+      onError: fail('merge.error'),
+    }),
+    setAutoJoin: useMutation({
+      mutationFn: (v: { roomId: string; autoJoin: boolean }) => liveChatService.setMergedAutoJoin(v.roomId, v.autoJoin),
+      onSuccess: (room) => {
+        refresh();
+        toast.success(t(room.autoJoin ? 'merge.autoJoinOn' : 'merge.autoJoinOff'));
+      },
+      onError: fail('merge.error'),
+    }),
+    remove: useMutation({
+      mutationFn: (v: { roomId: string; sessionId: string }) => liveChatService.removeMergedSession(v.roomId, v.sessionId),
+      onSuccess: (res) => {
+        refresh();
+        toast.success(t(res.dissolved ? 'merge.dissolved' : 'merge.removed'));
+      },
+      onError: fail('merge.error'),
+    }),
+    dissolve: useMutation({
+      mutationFn: (roomId: string) => liveChatService.dissolveMergedRoom(roomId),
+      onSuccess: () => {
+        refresh();
+        toast.success(t('merge.dissolved'));
+      },
+      onError: fail('merge.error'),
+    }),
+  };
+};
+
 export const useGroups = (enabled = true) => {
   const tenantKey = useTenantKey();
   return useQuery({

@@ -1,3 +1,4 @@
+import type { MergeCandidateView, MergedRoomView } from '../merged-room/merged-room.service';
 import type { AnswerRating } from './entity/answer-rating.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { Message } from '../chat/entity/message.entity';
@@ -37,9 +38,14 @@ export function toSessionResponse(
   identityLevel: string | null = null,
   companyName: string | null = null,
   match: { snippet: string; count: number; messageId: string } | null = null,
+  mergedRoom: { roomId: number; sessionCount: number; openCount: number } | null = null,
 ) {
   return {
     id: c.id,
+    /** Same-customer merged room this row stands for (PLN-261023 D2); null = a single session. */
+    mergedRoom: mergedRoom
+      ? { id: String(mergedRoom.roomId), sessionCount: mergedRoom.sessionCount, openCount: mergedRoom.openCount }
+      : null,
     /** Transcript search hit (PLN-261023 S1): latest matching excerpt; null outside a search. */
     match,
     /**
@@ -95,6 +101,8 @@ export function toMessageResponse(
 ) {
   return {
     id: m.id,
+    /** Which conversation it belongs to — a merged room's transcript spans several (PLN-261023). */
+    conversationId: String(m.conversationId),
     senderType: m.senderType,
     senderId: m.senderId,
     senderName,
@@ -267,5 +275,44 @@ export function toIdentityResponse(a: Record<string, string> | null | undefined,
     // masking is for AI-bound text, logs and contact details.
     name: a.name ?? null,
     verified: level !== SESSION_IDENTITY.CLAIMED,
+  };
+}
+
+/** Merged room for the conversation header and its menu (PLN-261023). */
+export function toMergedRoomResponse(room: MergedRoomView | null) {
+  if (!room) return null;
+  return {
+    id: String(room.id),
+    autoJoin: room.autoJoin,
+    sessions: room.sessions.map((s) => ({
+      sessionId: String(s.sessionId),
+      conversationId: String(s.conversationId),
+      channel: s.channel,
+      alias: s.alias,
+      lastAt: s.lastAt,
+      open: s.open,
+      auto: s.auto,
+    })),
+  };
+}
+
+export function toMergeCandidatesResponse(r: { sessionId: number; room: MergedRoomView | null; sessions: MergeCandidateView[] }) {
+  return {
+    sessionId: String(r.sessionId),
+    room: toMergedRoomResponse(r.room),
+    sessions: r.sessions.map((s) => ({
+      sessionId: String(s.sessionId),
+      conversationId: String(s.conversationId),
+      channel: s.channel,
+      alias: s.alias,
+      lastAt: s.lastAt,
+      open: s.open,
+      matchedBy: s.matchedBy,
+      unverified: s.unverified,
+      current: s.current,
+      inRoom: s.inRoom,
+      excluded: s.excluded,
+      otherRoom: s.otherRoom,
+    })),
   };
 }

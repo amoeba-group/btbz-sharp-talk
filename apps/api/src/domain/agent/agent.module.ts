@@ -40,6 +40,7 @@ import { JobLabel } from '../user/entity/job-label.entity';
 import { UserJobLabel } from '../user/entity/user-job-label.entity';
 import { IssueModule } from '../issue/issue.module';
 import { AttachmentModule } from '../attachment/attachment.module';
+import { MergedRoomModule } from '../merged-room/merged-room.module';
 
 @Module({
   imports: [
@@ -83,6 +84,8 @@ import { AttachmentModule } from '../attachment/attachment.module';
     AuditModule,
     // Files on a transcript's turns (PLN-260814).
     AttachmentModule,
+    // Same-customer merged rooms (PLN-261023).
+    MergedRoomModule,
     SessionModule,
     // Answer reuse (PLN-260808 Track C): agent replies feed the reuse store.
     AnswerReuseModule,

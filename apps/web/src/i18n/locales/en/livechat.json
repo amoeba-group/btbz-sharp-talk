@@ -484,5 +484,40 @@
     "revealFailed": "Could not show the IP.",
     "changed": "Changed since the session began",
     "firstWas": "First seen from {{ip}}"
+  },
+  "merge": {
+    "badge": "Merged {{count}}",
+    "open": "Merge same customer ({{count}})",
+    "title": "Merge this customer's conversations",
+    "hint": "Sessions confirmed as the same customer (same account, same email, or the host sign-in). They show as one room; every conversation stays as it is.",
+    "submit": "Merge {{count}} sessions",
+    "matchedBy": {
+      "customer": "Same account",
+      "email": "Same email",
+      "claimed": "Host sign-in"
+    },
+    "inProgress": "In progress",
+    "lastAt": "Last {{when}}",
+    "current": "This one",
+    "alreadyMerged": "Merged",
+    "excluded": "Taken out",
+    "autoJoin": "Add this customer's new sessions automatically",
+    "autoJoinHint": "A later session joins on the customer's next message. Sessions you take out never rejoin.",
+    "manage": "Merged room",
+    "dissolve": "Unmerge all",
+    "autoJoined": "Auto",
+    "remove": "Take out",
+    "removeHint": "Take this session out — it will not rejoin automatically",
+    "addMore": "Merge {{count}} more sessions",
+    "rowHint": "One room over {{count}} sessions of the same customer",
+    "openCount": "{{count}} open",
+    "replyHere": "replying here",
+    "replyTarget": "Reply to",
+    "merged": "Merged {{count}} sessions into one room",
+    "error": "Could not update the merged room",
+    "autoJoinOn": "New sessions of this customer will be added",
+    "autoJoinOff": "New sessions will no longer be added",
+    "removed": "Session taken out of the room",
+    "dissolved": "Room unmerged — conversations are back as they were"
   }
 }

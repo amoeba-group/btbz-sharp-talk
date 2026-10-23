@@ -70,10 +70,19 @@ import {
   toProfileResponse,
   toSessionResponse,
   toIdentityResponse,
+  toMergeCandidatesResponse,
+  toMergedRoomResponse,
   toRatingResponse,
   toStatResponse,
 } from './agent.mapper';
-import { ListAlertsQuery, RateAnswerRequest, RatingSummaryQuery } from './dto/request/agent.request';
+import {
+  ListAlertsQuery,
+  MergedRoomAutoJoinRequest,
+  MergeSessionsRequest,
+  RateAnswerRequest,
+  RatingSummaryQuery,
+} from './dto/request/agent.request';
+import { MergedRoomService } from '../merged-room/merged-room.service';
 import { AnswerRatingService } from './answer-rating.service';
 import { CompanyService } from '../company/company.service';
 
@@ -97,6 +106,7 @@ export class AgentConsoleController {
     private readonly groupService: ChatGroupService,
     private readonly ratingService: AnswerRatingService,
     private readonly companyService: CompanyService,
+    private readonly mergedRooms: MergedRoomService,
   ) {}
 
   // ---- answer accuracy ratings (PLN-261015 D7) ----
@@ -180,7 +190,60 @@ export class AgentConsoleController {
   @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
   @ApiOperation({ summary: 'Other sessions of the same confirmed customer (grouping suggestion)' })
   async relatedSessions(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
-    return toRelatedSessionsResponse(await this.groupService.relatedSessions(id, tenantOf(user)));
+    const related = await this.groupService.relatedSessions(id, tenantOf(user));
+    // Sessions already merged with this one are not a suggestion any more (PLN-261023).
+    const room = await this.mergedRooms.roomOfSession(tenantOf(user), related.sessionId);
+    const merged = new Set(room?.sessions.map((s) => s.sessionId) ?? []);
+    return toRelatedSessionsResponse({ ...related, sessions: related.sessions.filter((s) => !merged.has(s.sessionId)) });
+  }
+
+  // ---- merged room over the same customer's sessions (PLN-261023) ----
+
+  @Get('conversations/:id/merge-candidates')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: "This conversation's customer's sessions, for the merge dialog (metadata only)" })
+  async mergeCandidates(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    return toMergeCandidatesResponse(await this.mergedRooms.candidates(id, tenantOf(user)));
+  }
+
+  @Post('merged-rooms')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: "Merge the same customer's sessions into one room (joins the existing room)" })
+  async mergeSessions(@CurrentUser() user: Principal, @Body() body: MergeSessionsRequest) {
+    return toMergedRoomResponse(
+      await this.mergedRooms.merge(tenantOf(user), actorIdOf(user), body.conversation_id, body.session_ids, body.auto_join),
+    );
+  }
+
+  @Patch('merged-rooms/:id')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: "Turn auto-join of the customer's later sessions on/off" })
+  async setMergedRoomAutoJoin(
+    @CurrentUser() user: Principal,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: MergedRoomAutoJoinRequest,
+  ) {
+    return toMergedRoomResponse(await this.mergedRooms.setAutoJoin(id, tenantOf(user), actorIdOf(user), body.auto_join));
+  }
+
+  @Delete('merged-rooms/:id/sessions/:sessionId')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Take a session out (it never auto-joins again); a room left with one is dissolved' })
+  async removeMergedSession(
+    @CurrentUser() user: Principal,
+    @Param('id', ParseIntPipe) id: number,
+    @Param('sessionId', ParseIntPipe) sessionId: number,
+  ) {
+    const room = await this.mergedRooms.removeSession(id, tenantOf(user), actorIdOf(user), sessionId);
+    return { dissolved: room == null, room: toMergedRoomResponse(room) };
+  }
+
+  @Delete('merged-rooms/:id')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Dissolve a merged room — every conversation stays as it was' })
+  async dissolveMergedRoom(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    await this.mergedRooms.dissolve(id, tenantOf(user), actorIdOf(user));
+    return { dissolved: true };
   }
 
   @Get('groups/:id')
@@ -388,7 +451,10 @@ export class AgentConsoleController {
     @Param('id', ParseIntPipe) id: number,
     @Body() body: SearchMessagesRequest,
   ) {
-    return this.agentService.searchMessages(id, tenantOf(user), body.q);
+    const tenantId = tenantOf(user);
+    const conversation = await this.agentService.findConversation(id, tenantId);
+    const room = await this.mergedRooms.roomConversations(tenantId, Number(conversation.sessionId));
+    return this.agentService.searchMessages(id, tenantId, body.q, room?.map((c) => c.id));
   }
 
   private async sessionPage(user: Principal, query: ListSessionsQuery, contentQ?: string) {
@@ -411,6 +477,10 @@ export class AgentConsoleController {
     const companyNames = await this.companyService.namesByIds(
       tenantOf(user),
       items.map((i) => Number(i.conversation.companyId)),
+    );
+    const rooms = await this.mergedRooms.badgesForSessions(
+      tenantOf(user),
+      items.map((i) => Number(i.conversation.sessionId)),
     );
     return new Paginated(
       items.map(
@@ -438,6 +508,7 @@ export class AgentConsoleController {
             identityLevel,
             conversation.companyId != null ? (companyNames.get(String(conversation.companyId)) ?? null) : null,
             match,
+            rooms.get(Number(conversation.sessionId)) ?? null,
           ),
       ),
       buildPagination(page, size, total),
@@ -616,13 +687,22 @@ export class AgentConsoleController {
     @Query() query: ConversationQuery,
   ) {
     const tenantId = tenantOf(user);
+    const conversation = await this.agentService.findConversation(id, tenantId);
+    // Merged room (PLN-261023): the transcript spans every conversation of the
+    // room's sessions; header, panel and actions stay on THIS conversation.
+    const roomConversations = await this.mergedRooms.roomConversations(tenantId, Number(conversation.sessionId));
     // The briefing is NOT computed here any more (PLN-260807 D1): it is a model
     // call, and waiting for it kept a two-message conversation on screen for
     // 6-8 seconds. The console fetches it separately, after the transcript.
-    const { messages, hasMore } = await this.agentService.listMessages(id, tenantId, {
-      limit: query.limit != null ? Number(query.limit) : undefined,
-      beforeId: query.before_id != null ? Number(query.before_id) : undefined,
-    });
+    const { messages, hasMore } = await this.agentService.listMessages(
+      id,
+      tenantId,
+      {
+        limit: query.limit != null ? Number(query.limit) : undefined,
+        beforeId: query.before_id != null ? Number(query.before_id) : undefined,
+      },
+      roomConversations?.map((c) => c.id),
+    );
     // PII-access audit (PRV-H4): the agent sees the transcript + customer panel.
     await this.agentService.auditConversationView(actorIdOf(user), tenantId, id);
     const names = await this.agentService.resolveSenderNames(messages);
@@ -635,7 +715,6 @@ export class AgentConsoleController {
       messages.filter((m) => m.senderType === 'ai' || m.senderType === 'agent').map((m) => Number(m.id)),
     );
     const customer = await this.agentService.customerContext(id, tenantId);
-    const conversation = await this.agentService.findConversation(id, tenantId);
     const { identityAttributes, identityLevel, ...sessionState } = await this.agentService.sessionStateFor(
       id,
       conversation.sessionId,
@@ -699,6 +778,19 @@ export class AgentConsoleController {
       ),
       hasMore,
       customer,
+      // Merged room header/menu + the dividers between its conversations.
+      mergedRoom: roomConversations
+        ? {
+            ...toMergedRoomResponse(await this.mergedRooms.roomOfSession(tenantId, Number(conversation.sessionId))),
+            conversations: roomConversations.map((c) => ({
+              id: String(c.id),
+              sessionId: String(c.sessionId),
+              channel: c.channel,
+              status: c.status,
+              createdAt: c.createdAt,
+            })),
+          }
+        : null,
     };
   }
 
