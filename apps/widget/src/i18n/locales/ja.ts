@@ -154,6 +154,7 @@ export const ja: Translation = {
     csatFailed: '評価を保存できませんでした。もう一度お試しください。',
     aiDisclosureShort: 'AIが生成した回答 · {{region}}で処理',
     termsLink: '利用規約',
+    privacyLink: 'プライバシー',
     csatSurvey: {
       title: '満足度アンケート',
       q1: 'お問い合わせは解決しましたか？',

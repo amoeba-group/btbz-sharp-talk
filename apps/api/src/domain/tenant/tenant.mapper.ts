@@ -5,6 +5,7 @@ import {
   EXTERNAL_CHANNELS,
   LANGUAGES,
   isWithinWindow,
+  normalizeHeaderControls,
   privacyProfileCopy,
   resolvePrivacyProfile,
   normalizeWidgetTheme,
@@ -167,6 +168,7 @@ export class TenantMapper {
       endsAt: access?.endsAt ?? null,
       ips: access?.ips ?? [],
       urls: access?.urls ?? [],
+      controls: normalizeHeaderControls(access?.controls),
       keyConfigured: !!tenant.widgetAccessKey,
       /** Whether the window is open right now — drives the console badge. */
       activeNow: access?.enabled ? isWithinWindow(access, new Date()) : false,

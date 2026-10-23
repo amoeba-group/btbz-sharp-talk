@@ -3,6 +3,7 @@ import {
   isValidIpEntry,
   matchIp,
   matchUrl,
+  normalizeHeaderControls,
   normalizeWidgetAccess,
   type WidgetAccess,
 } from './widget-access';
@@ -211,5 +212,29 @@ describe('normalizeWidgetAccess', () => {
   it('returns null when nothing was configured', () => {
     expect(normalizeWidgetAccess(null)).toBeNull();
     expect(normalizeWidgetAccess({ enabled: false, ips: [], urls: [] })).toBeNull();
+  });
+});
+
+describe('header controls (PLN-261023-Widget-Header-Buttons)', () => {
+  it('shows every button unless explicitly false', () => {
+    expect(normalizeHeaderControls(undefined)).toEqual({ language: true, settings: true });
+    expect(normalizeHeaderControls({ language: 'no' })).toEqual({ language: true, settings: true });
+    expect(normalizeHeaderControls({ settings: false })).toEqual({ language: true, settings: false });
+  });
+
+  it('keeps a hidden button even with the restriction off and no rules (D1)', () => {
+    const out = normalizeWidgetAccess({ enabled: false, ips: [], urls: [], controls: { language: false } });
+    expect(out).not.toBeNull();
+    expect(out?.controls).toEqual({ language: false, settings: true });
+  });
+
+  it('does not store default controls', () => {
+    const out = normalizeWidgetAccess({ enabled: true, ips: ['203.0.113.7'], urls: [], controls: { language: true, settings: true } });
+    expect(out?.controls).toBeUndefined();
+  });
+
+  it('never affects the verdict', () => {
+    const hidden = { enabled: false, startsAt: null, endsAt: null, ips: [], urls: [], controls: { language: false, settings: false } };
+    expect(evaluateWidgetAccess(hidden, { ip: '198.51.100.1' }).visible).toBe(true);
   });
 });

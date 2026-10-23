@@ -16,6 +16,13 @@ import { zh } from './locales/zh';
 export const LANG_STORAGE_KEY = 'ivy_lang';
 /** Per-shop cache of the languages the tenant offers (PLN-261019): `ivy_langs:<shop>`. */
 const OFFERED_CACHE_PREFIX = 'ivy_langs:';
+/**
+ * Per-shop cache of the header buttons the tenant shows
+ * (PLN-261023-Widget-Header-Buttons): `ivy_hdr:<shop>`. Language is decided —
+ * and the header painted — before the session answers, so the last answer is
+ * what the first paint goes by.
+ */
+const HEADER_CACHE_PREFIX = 'ivy_hdr:';
 
 /**
  * Which languages the widget offers — derived from the shared registry so the
@@ -100,23 +107,82 @@ export function hostLocale(): SupportedLanguage | null {
 }
 
 /**
+ * The page's `<html lang>` as the loader read it (`lang_src=doc`), or null when
+ * the page had none or chose its language in config (then `hostLocale`).
+ */
+export function docLocale(): SupportedLanguage | null {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('lang_src') !== 'doc') return null;
+    const code = (params.get('locale') || '').toLowerCase().split('-')[0];
+    return (SUPPORTED_LANGUAGES as readonly string[]).includes(code) ? (code as SupportedLanguage) : null;
+  } catch {
+    return null;
+  }
+}
+
+export interface HeaderControls {
+  language: boolean;
+  settings: boolean;
+}
+
+/** Header buttons as of the last session answer; every button when nothing is cached. */
+export function cachedHeaderControls(): HeaderControls {
+  try {
+    const raw = localStorage.getItem(HEADER_CACHE_PREFIX + shopFromUrl());
+    const v = raw ? (JSON.parse(raw) as Partial<HeaderControls> | null) : null;
+    return { language: v?.language !== false, settings: v?.settings !== false };
+  } catch {
+    return { language: true, settings: true };
+  }
+}
+
+export function cacheHeaderControls(controls: HeaderControls): void {
+  try {
+    const key = HEADER_CACHE_PREFIX + shopFromUrl();
+    if (controls.language && controls.settings) localStorage.removeItem(key);
+    else localStorage.setItem(key, JSON.stringify(controls));
+  } catch {
+    /* ignore storage failures */
+  }
+}
+
+/** Whether this tenant hid the language button, as of the last session answer. */
+export function languagePickerHidden(): boolean {
+  return !cachedHeaderControls().language;
+}
+
+/**
+ * The language the page chose: config first, then — only when the tenant hid
+ * the language button — the page's `<html lang>` (PLN-261023 D3). With the
+ * button shown, `<html lang>` stays a guess the shopper's own pick outranks.
+ */
+export function pageLocale(): SupportedLanguage | null {
+  return hostLocale() ?? (languagePickerHidden() ? docLocale() : null);
+}
+
+/**
  * Language to open in: the host page's choice, else manual pick, else browser,
  * else English — each only if the tenant offers it (cached list; everything
  * when unknown). The host outranks a stored pick: its language switch reloads
  * the page with the new choice, which must win over a pick from another visit.
+ * With the language button hidden there is no pick to honour — a stored one
+ * from an earlier visit would pin the widget with no way to change it.
  */
 export function initialLanguage(): SupportedLanguage {
   const offered = cachedOfferedLanguages();
   const offers = (code: string) => !offered || offered.includes(code);
-  const host = hostLocale();
+  const host = pageLocale();
   if (host && offers(host)) return host;
-  try {
-    const stored = localStorage.getItem(LANG_STORAGE_KEY);
-    if (stored && SUPPORTED_LANGUAGES.includes(stored) && offers(stored)) {
-      return stored;
+  if (!languagePickerHidden()) {
+    try {
+      const stored = localStorage.getItem(LANG_STORAGE_KEY);
+      if (stored && SUPPORTED_LANGUAGES.includes(stored) && offers(stored)) {
+        return stored;
+      }
+    } catch {
+      /* ignore storage failures */
     }
-  } catch {
-    /* ignore storage failures */
   }
   // A manual pick outranks the browser; a browser language the tenant does not
   // offer falls to English (PLN-261019 D1), which is also what the server

@@ -84,6 +84,8 @@ export function useEmbedCommands(): void {
         action?: string;
         tab?: string | null;
         locale?: string;
+        /** 'doc' = the loader saw the page's <html lang> change (PLN-261023 D3). */
+        source?: string;
         user?: IdentifyUser;
       };
       const store = useWidgetStore.getState();
@@ -111,6 +113,10 @@ export function useEmbedCommands(): void {
             // in the auto-detected one (found on-device, FIX-260828). The host's
             // choice is persisted like a manual pick so the session-ensure sync
             // does not immediately override it with the server-side language.
+            // The page's own <html lang> changing is a choice only when the
+            // tenant hid the language button; otherwise the shopper's pick
+            // stays theirs (PLN-261023-Widget-Header-Buttons D3).
+            if (d.source === 'doc' && store.headerControls.language) return;
             const code = (d.locale || '').toLowerCase();
             if (!(SUPPORTED_LANGUAGES as readonly string[]).includes(code)) return;
             // A host asking for a language the tenant does not offer is ignored

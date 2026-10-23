@@ -19,6 +19,7 @@ export class SessionMapper {
       sessionToken: s.sessionToken,
       language: s.language,
       languages: notice.languages,
+      headerControls: notice.headerControls,
       consentState: s.consentState,
       authenticated: s.customerId != null,
       customerName,

@@ -962,10 +962,21 @@
     "summary": "当前设置：仅从 {{ips}} 个 IP、{{urls}} 个 URL{{key}} 展示。",
     "summaryKey": " 和邀请链接",
     "expiredBadge": "时间段已结束 — 当前对所有人展示",
-    "saved": "已保存展示限制",
-    "saveError": "未能保存展示限制",
+    "saved": "已保存小部件展示设置",
+    "saveError": "未能保存小部件展示设置",
     "keyIssued": "已生成邀请链接",
-    "keyError": "未能生成邀请链接"
+    "keyError": "未能生成邀请链接",
+    "cardTitle": "小部件展示设置",
+    "controls": {
+      "title": "标题栏按钮",
+      "hint": "无论是否开启测试模式都会生效。",
+      "language": "语言选择按钮",
+      "settings": "设置按钮",
+      "shown": "显示",
+      "hidden": "隐藏",
+      "languageHint": "隐藏时：小部件跟随商店页面的语言。",
+      "settingsHint": "隐藏时：隐私选项仍可通过聊天提示行中的链接打开。"
+    }
   },
   "platforms": {
     "connectedTitle": "已连接的平台",

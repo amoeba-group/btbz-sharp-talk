@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsBoolean,
@@ -13,6 +14,7 @@ import {
   MaxLength,
   MinLength,
   ValidateIf,
+  ValidateNested,
 } from 'class-validator';
 import {
   TENANT_PLAN_VALUES,
@@ -364,6 +366,11 @@ export class UpdateWidgetDesignRequest {
  * allowlist: partial updates of a rule set invite the "I removed it but it is
  * still there" class of confusion.
  */
+export class WidgetHeaderControlsRequest {
+  @IsOptional() @IsBoolean() language?: boolean;
+  @IsOptional() @IsBoolean() settings?: boolean;
+}
+
 export class UpdateWidgetAccessRequest {
   @IsBoolean() enabled: boolean;
 
@@ -373,6 +380,10 @@ export class UpdateWidgetAccessRequest {
 
   @IsArray() @IsString({ each: true }) @ArrayMaxSize(50) ips: string[];
   @IsArray() @IsString({ each: true }) @ArrayMaxSize(50) urls: string[];
+
+  /** Header buttons (PLN-261023-Widget-Header-Buttons); absent = keep what is stored. */
+  @IsOptional() @IsObject() @ValidateNested() @Type(() => WidgetHeaderControlsRequest)
+  controls?: WidgetHeaderControlsRequest;
 }
 
 /** PLN-260819 S1 — replace the embed allowlist wholesale (empty = back to default). */

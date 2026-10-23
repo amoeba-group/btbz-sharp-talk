@@ -152,6 +152,7 @@ export const zh: Translation = {
     csatFailed: '评价保存失败，请重试。',
     aiDisclosureShort: 'AI 生成的回复 · 在{{region}}处理',
     termsLink: '服务条款',
+    privacyLink: '隐私设置',
     csatSurvey: {
       title: '满意度调查',
       q1: '您的问题解决了吗？',

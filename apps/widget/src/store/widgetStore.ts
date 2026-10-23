@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { setStoredSessionToken } from '../lib/api-client';
-import { initialLanguage, SUPPORTED_LANGUAGES } from '../i18n/i18n';
+import { cachedHeaderControls, initialLanguage, SUPPORTED_LANGUAGES, type HeaderControls } from '../i18n/i18n';
 import { WIDGET_TABS_DEFAULT } from '../lib/widget-tabs';
 import { isAppMode } from '../lib/host-bridge';
 import type {
@@ -131,6 +131,9 @@ interface WidgetState {
   /** Languages the tenant offers in the picker (PLN-261019); every registered one until the session says otherwise. */
   languages: string[];
   setLanguages: (l: string[]) => void;
+  /** Header buttons the tenant shows (PLN-261023-Widget-Header-Buttons); cached per shop for the first paint. */
+  headerControls: HeaderControls;
+  setHeaderControls: (c: HeaderControls) => void;
   setAiProcessingRegion: (r: string) => void;
   setCsatMode: (m: 'rating' | 'survey') => void;
   setTermsUrl: (u: string | null) => void;
@@ -208,6 +211,8 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setLanguage: (l) => set({ language: l }),
   languages: [...SUPPORTED_LANGUAGES],
   setLanguages: (l) => set({ languages: l }),
+  headerControls: cachedHeaderControls(),
+  setHeaderControls: (c) => set({ headerControls: c }),
   setAiProcessingRegion: (r) => set({ aiProcessingRegion: r }),
   setCsatMode: (m) => set({ csatMode: m }),
   setTermsUrl: (u) => set({ termsUrl: u }),

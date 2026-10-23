@@ -18,6 +18,7 @@
 
 import type { WidgetLoginMode, WidgetTab, WidgetTabPosition } from '../common/enum.types';
 import type { PrivacyNoticeKey } from '../common/privacy-notice-copy';
+import type { WidgetHeaderControls } from '../common/widget-access';
 import type { WidgetTheme } from '../common/widget-theme';
 
 // ---- session -------------------------------------------------------------
@@ -70,6 +71,11 @@ export interface SessionResponse {
    * absent on an older API = every registered language.
    */
   languages?: string[];
+  /**
+   * Header buttons this tenant shows (PLN-261023-Widget-Header-Buttons).
+   * Absent on an older API = every button, as before.
+   */
+  headerControls?: WidgetHeaderControls;
   consentState: string;
   authenticated: boolean;
   /** Bound customer's display name; null for guests and until the profile syncs. */
