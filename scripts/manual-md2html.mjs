@@ -32,6 +32,11 @@ const DOC_META = {
     en: { eyebrow: 'SharpTalk User Guides · Custom widgets', title: 'SharpTalk Custom Widget Manual', next: '<a href="user-manual.en.html">Complete User Manual</a> Ch. 14 (tenant settings) · Ch. 16 (platform admin), <a href="quick-setup.en.html">Quick Setup Manual</a> Ch. 5 (widget install · theme).' },
     vi: { eyebrow: 'Tài liệu SharpTalk · Widget tùy chỉnh', title: 'Sổ tay tạo widget tùy chỉnh SharpTalk', next: '<a href="user-manual.vi.html">Sổ tay tổng hợp</a> chương 14 (cài đặt tenant) · chương 16 (quản trị nền tảng), <a href="quick-setup.vi.html">Sổ tay cài đặt nhanh</a> chương 5 (cài widget · chủ đề).' },
   },
+  'agent-assignment': {
+    ko: { eyebrow: 'SharpTalk 사용자설명서 · 상담원 배정', title: '샵톡 상담원 배정 가이드', next: '<a href="user-manual.ko.html">통합 사용자 매뉴얼</a> 4.4절(알람)·14.1절(상담원 연결), <a href="knowledge-ai.ko.html">지식 등록·AI 설정 매뉴얼</a> 5장(라이브챗 고객 대응 설정).' },
+    en: { eyebrow: 'SharpTalk User Guides · Agent assignment', title: 'SharpTalk Agent Assignment Guide', next: '<a href="user-manual.en.html">Complete User Manual</a> §4.4 (alarms) · §14.1 (agent handoff), <a href="knowledge-ai.en.html">Knowledge &amp; AI Settings Manual</a> Ch. 5 (live-chat handoff settings).' },
+    vi: { eyebrow: 'Tài liệu SharpTalk · Phân công nhân viên', title: 'Hướng dẫn phân công nhân viên SharpTalk', next: '<a href="user-manual.vi.html">Sổ tay tổng hợp</a> mục 4.4 (cảnh báo) · 14.1 (chuyển nhân viên), <a href="knowledge-ai.vi.html">Sổ tay tri thức &amp; AI</a> chương 5.' },
+  },
   'cafe24-integration': {
     ko: { eyebrow: 'SharpTalk 사용자설명서 · 카페24 연동', title: '샵톡 카페24 연동 작업 가이드', next: '<a href="platform-integration.ko.html">커머스 연동 자격증명 가이드</a>(값 발급 위치), <a href="quick-setup.ko.html">간단 세팅 매뉴얼</a>(테넌트 개설·위젯 설치), <a href="knowledge-ai.ko.html">지식 등록·AI 설정 매뉴얼</a>(카탈로그 동기화 이후).' },
     en: { eyebrow: 'SharpTalk User Guides · Cafe24 integration', title: 'SharpTalk Cafe24 Integration Guide', next: '<a href="platform-integration.en.html">Commerce Integration Credentials</a> (where values come from), <a href="quick-setup.en.html">Quick Setup Manual</a> (tenant creation · widget install), <a href="knowledge-ai.en.html">Knowledge &amp; AI Settings Manual</a> (after catalog sync).' },

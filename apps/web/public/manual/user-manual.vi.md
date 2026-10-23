@@ -488,6 +488,8 @@ khớp điều kiện khu vực·0 người có thể phân công…). Không g�
 không có điều kiện khu vực·tỉnh/thành ③ hiện có 0 nhân viên tư vấn có thể phân công (hiển thị
 số người chưa chấp nhận lời mời). Người dùng chưa chấp nhận lời mời sẽ không được phân công.
 
+→ Hướng dẫn từng màn hình (nhóm & nhãn → danh mục tư vấn → quy tắc phân công → yêu cầu của khách → cảnh báo): [Hướng dẫn phân công nhân viên](agent-assignment.vi.md)
+
 → [Sổ tay thiết lập nhanh chương 3~4](quick-setup.vi.md) ·
 hướng dẫn cài đặt widget
 

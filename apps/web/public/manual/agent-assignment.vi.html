@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hướng dẫn phân công nhân viên SharpTalk</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --accent:#2B7FFF; --accent-deep:#1D5FD6; --accent-tint:#EAF2FF;
+  --ink:#1B2430; --muted:#5C6675; --line:#E3E8F0;
+  --bg:#FAFBFD; --card:#FFFFFF; --soft:#F1F5FB;
+  --tip-bg:#EAF2FF; --tip-edge:#2B7FFF;
+  --warn-bg:#FFF7E6; --warn-edge:#D97706; --warn-ink:#8A4B04;
+  --code-bg:#EEF2F8; --mono-ink:#31435E;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --accent:#5C9BFF; --accent-deep:#82B4FF; --accent-tint:#16243C;
+    --ink:#E6EBF3; --muted:#93A0B4; --line:#28313F;
+    --bg:#0F141B; --card:#161C25; --soft:#1B222D;
+    --tip-bg:#152238; --tip-edge:#5C9BFF;
+    --warn-bg:#2A2010; --warn-edge:#E8A23D; --warn-ink:#EFC584;
+    --code-bg:#1E2632; --mono-ink:#B9C7DC;
+  }
+}
+:root[data-theme="dark"]{
+  --accent:#5C9BFF; --accent-deep:#82B4FF; --accent-tint:#16243C;
+  --ink:#E6EBF3; --muted:#93A0B4; --line:#28313F;
+  --bg:#0F141B; --card:#161C25; --soft:#1B222D;
+  --tip-bg:#152238; --tip-edge:#5C9BFF;
+  --warn-bg:#2A2010; --warn-edge:#E8A23D; --warn-ink:#EFC584;
+  --code-bg:#1E2632; --mono-ink:#B9C7DC;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Segoe UI",sans-serif;
+  font-size:16px;line-height:1.75}
+.shell{max-width:1120px;margin:0 auto;padding:0 24px 96px;
+  display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+@media(max-width:860px){.shell{display:block}}
+header.hero{grid-column:1/-1;padding:56px 0 8px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+h1{font-family:"Gothic A1",sans-serif;font-weight:800;font-size:clamp(28px,4.5vw,40px);
+  line-height:1.25;margin:10px 0 12px;text-wrap:balance}
+.meta{color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.lead{max-width:68ch;color:var(--muted);margin-top:14px}
+nav.toc{position:sticky;top:24px;align-self:start;font-size:13.5px;padding-top:24px}
+@media(max-width:860px){nav.toc{position:static;border:1px solid var(--line);border-radius:10px;
+  background:var(--card);padding:14px 16px;margin:20px 0}}
+nav.toc .toc-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+nav.toc a{display:flex;gap:8px;color:var(--muted);text-decoration:none;padding:4px 0;line-height:1.4}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent)}
+nav.toc a .n{font-family:"IBM Plex Mono",monospace;color:var(--accent);font-size:12px;min-width:18px;padding-top:1px}
+main{min-width:0;max-width:74ch}
+section{padding-top:40px}
+.ch{display:flex;align-items:baseline;gap:12px;border-top:2px solid var(--ink);padding-top:14px}
+.ch .num{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;color:var(--accent)}
+h2{font-family:"Gothic A1",sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.35;text-wrap:balance}
+.actor{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 12px;
+  background:var(--accent-tint);color:var(--accent-deep);margin-top:10px}
+h3{font-family:"Gothic A1",sans-serif;font-weight:700;font-size:17.5px;margin:30px 0 8px}
+p{margin:10px 0;max-width:68ch}
+a{color:var(--accent-deep)}
+strong{font-weight:700}
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:14px 0}
+th{font-size:12.5px;letter-spacing:.04em;color:var(--muted);text-align:left;font-weight:700;
+  border-bottom:2px solid var(--line);padding:7px 12px 7px 0}
+td{border-bottom:1px solid var(--line);padding:8px 12px 8px 0;vertical-align:top}
+.tablewrap{overflow-x:auto}
+.terms{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 18px 14px;margin:16px 0}
+.terms .t-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:12px 0 2px}
+.terms td:first-child{font-weight:700;white-space:nowrap;padding-right:18px}
+.callout{border-left:3px solid var(--tip-edge);background:var(--tip-bg);border-radius:0 10px 10px 0;
+  padding:12px 18px;margin:16px 0;font-size:14.5px}
+.callout .c-label{font-weight:700;color:var(--accent-deep)}
+.callout.warn{border-left-color:var(--warn-edge);background:var(--warn-bg);color:var(--warn-ink)}
+.callout.warn .c-label{color:var(--warn-ink)}
+.callout p{margin:6px 0}
+.callout ul{margin:6px 0}
+code,kbd{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--code-bg);
+  color:var(--mono-ink);border-radius:5px;padding:1px 6px}
+pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+  overflow-x:auto;font-size:13px;line-height:1.6}
+pre code{background:none;padding:0;color:var(--mono-ink)}
+ol.steps{padding-left:0;margin:14px 0;list-style:none;counter-reset:st}
+ol.steps>li{counter-increment:st;position:relative;padding:0 0 14px 40px}
+ol.steps>li::before{content:counter(st);position:absolute;left:0;top:1px;width:24px;height:24px;
+  border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;font-family:"IBM Plex Mono",monospace}
+ul{margin:10px 0;padding-left:22px}
+li{margin:4px 0}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:30px;position:relative}
+.check li::before{content:"";position:absolute;left:2px;top:6px;width:14px;height:14px;
+  border:2px solid var(--accent);border-radius:4px}
+.faq dt{font-weight:700;margin-top:18px}
+.faq dd{margin:4px 0 0;color:var(--muted)}
+.next{margin-top:56px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:20px 24px}
+.pagenav{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;padding-top:18px;color:var(--muted)}
+.pagenav a{color:var(--muted);text-decoration:none}
+.pagenav a:hover,.pagenav a:focus-visible{color:var(--accent)}
+.pagenav .cur{color:var(--accent-deep);font-weight:700}
+figure.shot{margin:18px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+figure.shot img{display:block;width:100%}
+figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+<nav class="pagenav" aria-label="Điều hướng sổ tay"><a href="./">← Danh sách sổ tay</a><span>·</span><a href="agent-assignment.ko.html">한국어</a><a href="agent-assignment.en.html">English</a><span class="cur">Tiếng Việt</span><span>·</span><a href="agent-assignment.vi.md">Bản MD</a></nav>
+<header class="hero">
+  <div class="eyebrow">Tài liệu SharpTalk · Phân công nhân viên</div>
+  <h1>Hướng dẫn phân công nhân viên SharpTalk</h1>
+  <div class="meta"><span>Phiên bản 1.0 · Bản đầu 2026-10-24 · Biên soạn dựa trên mã nguồn</span><span>Đối tượng: người vận hành tenant (master — cài đặt đội, nhãn, quy tắc phân công) · nhân viên (cảnh báo, phản hồi)</span></div>
+  <p class="lead">Tài liệu này theo dõi từ đầu đến cuối <strong>khi khách hàng tìm nhân viên thì cuộc trò chuyện được chuyển tới ai</strong>. Phần đầu (chương 2–4) là các cài đặt người vận hành làm một lần; phần sau (chương 5–9) là những gì diễn ra trên màn hình khách hàng và màn hình nhân viên khi khách thực sự gửi yêu cầu. Ví dụ màn hình là dữ liệu trình diễn giả định tư vấn cho đối tác khách sạn (tên khách sạn và nhân viên là hư cấu).</p>
+</header>
+
+<nav class="toc" aria-label="Mục lục">
+  <div class="toc-label">Mục lục</div>
+  <a href="#ch1"><span class="n">1</span>Tổng quan nhanh</a>
+  <a href="#ch2"><span class="n">2</span>Chuẩn bị ① Nhân viên·đội·nhãn</a>
+  <a href="#ch3"><span class="n">3</span>Chuẩn bị ② Danh mục tư vấn</a>
+  <a href="#ch4"><span class="n">4</span>Chuẩn bị ③ Quy tắc phân công</a>
+  <a href="#ch5"><span class="n">5</span>Màn hình khách hàng</a>
+  <a href="#ch6"><span class="n">6</span>Quyết định phân công</a>
+  <a href="#ch7"><span class="n">7</span>Màn hình nhân viên</a>
+  <a href="#ch8"><span class="n">8</span>Phản hồi</a>
+  <a href="#ch9"><span class="n">9</span>Cài đặt cảnh báo (cá nhân)</a>
+  <a href="#ch10"><span class="n">10</span>Danh sách kiểm tra vận hành</a>
+  <a href="#ch11"><span class="n">11</span>FAQ / xử lý sự cố</a>
+</nav>
+
+<main>
+
+<section id="ch1">
+  <div class="ch"><span class="num">01</span><h2>Tổng quan nhanh</h2></div>
+  <pre><code>Widget khách hàng               Máy chủ SharpTalk                      Bảng điều khiển nhân viên
+──────────────────              ─────────────────                      ─────────────────────────
+[Kết nối nhân viên hỗ trợ]  ──▶  Hiện thẻ danh mục tư vấn
+  hoặc AI chuyển tiếp
+"Bạn cần hỗ trợ về vấn đề gì?"
+  chọn (Customer Services)  ──▶  Kiểm tra quy tắc phân công từ trên xuống
+                                  Danh mục tư vấn = Customer Services ?
+                                  Khách hàng › Khu vực = Miền Nam ?   (thông tin đăng nhập khách sạn)
+                                  → quy tắc đầu tiên khớp tất cả
+                                  → nhân viên trực tuyến thuộc đội × nhãn của quy tắc đó
+"…kết nối bạn với bộ phận ○○" ◀─  Phân công                        ──▶  🔔 cảnh báo bật lên "Giao cho: tôi"
+                                                                       [Mở hội thoại] → phản hồi</code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>Thuật ngữ</th><th>Ý nghĩa</th></tr>
+    <tr><td>Danh mục tư vấn</td><td>Chủ đề tư vấn khách chọn trên widget (vd: hỗ trợ khách hàng · hợp tác · đối soát). Người vận hành tạo và quyết định có hiển thị hay không</td></tr>
+    <tr><td>Đội</td><td>Nơi nhân viên trực thuộc (mỗi người một đội). Vd: North (Hà Nội) · South (TP. Hồ Chí Minh)</td></tr>
+    <tr><td>Nhãn</td><td>Dấu hiệu công việc của nhân viên (có thể nhiều). Vd: CS · Sales. Phải có nhãn <em>Tư vấn (Counsels)</em> mới xử lý được trò chuyện trực tiếp</td></tr>
+    <tr><td>Quy tắc phân công</td><td>Bộ "danh mục tư vấn + thông tin khách hàng (khu vực…) → đội × nhãn". Kiểm tra từ trên xuống và dùng <strong>quy tắc đầu tiên khớp tất cả</strong></td></tr>
+    <tr><td>Khu vực</td><td>Vị trí của khách hàng (khách sạn): Miền Bắc · Bắc Trung Bộ · Miền Trung · Nam Trung Bộ · Miền Nam. Ứng dụng host gửi qua thông tin đăng nhập, hoặc được điền từ tên tỉnh</td></tr>
+    <tr><td>Nhân viên được phân công</td><td>Người nhận khi không có quy tắc nào khớp (đầu tab Chuyển nhân viên). Để trống thì báo cho tất cả nhân viên</td></tr>
+  </table></div>
+</section>
+
+<section id="ch2">
+  <div class="ch"><span class="num">02</span><h2>Chuẩn bị ① Nhân viên·đội·nhãn</h2></div>
+  <p><em>(bảng điều khiển <strong>[Người dùng &amp; nhãn]</strong> — master)</em></p>
+  <p>Khuyến nghị chọn theo <strong>đội × nhãn</strong> trong quy tắc phân công thay vì chọn trực tiếp từng người. Khi nhân sự thay đổi, không cần sửa quy tắc.</p>
+  <h3>2.1 Mời nhân viên và chấp nhận lời mời</h3>
+  <ol class="steps">
+    <li><strong>[Mời người dùng]</strong> → chọn email · cấp bậc · nhãn · đội → mời</li>
+    <li>Khi người được mời <strong>đăng nhập lần đầu</strong> bằng mật khẩu tạm, trạng thái chuyển thành <code>active</code></li>
+    <li>Kiểm tra <strong>nhãn · đội · trạng thái</strong> trong danh sách</li>
+  </ol>
+  <figure class="shot"><img src="img/asg-users-list.en.jpg" alt="Danh sách người dùng — xem nhanh nhãn, đội và trạng thái (active)" loading="lazy"><figcaption>Danh sách người dùng — xem nhanh nhãn, đội và trạng thái (active)</figcaption></figure>
+  <div class="callout warn"><span class="c-label">⚠️ Nhân viên chưa chấp nhận lời mời (`invited`) sẽ không được phân công.</span>
+    <p>Nếu đội của quy tắc có 0 nhân viên đang hoạt động, quy tắc đó bị bỏ qua (cảnh báo ở mục 4.4).</p></div>
+  <h3>2.2 Tạo đội và nhãn</h3>
+  <p><strong>[Nhãn &amp; đội]</strong> → thêm bằng mã và tên ở tab <em>Nhãn công việc</em> / <em>Đội</em>. Mã không thể đổi sau khi tạo; tên có thể đổi bất cứ lúc nào.</p>
+  <figure class="shot"><img src="img/asg-labels-units.en.jpg" alt="Nhãn &amp; đội — tab Nhãn công việc (thêm CS · Sales)" loading="lazy"><figcaption>Nhãn &amp; đội — tab Nhãn công việc (thêm CS · Sales)</figcaption></figure>
+  <figure class="shot"><img src="img/asg-units.en.jpg" alt="Nhãn &amp; đội — tab Đội (thêm North · South)" loading="lazy"><figcaption>Nhãn &amp; đội — tab Đội (thêm North · South)</figcaption></figure>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p><em>Tư vấn (consult)</em> · <em>Kế toán</em> · <em>Vận hành</em> là các nhãn mặc định gắn với quyền nên không xóa được. Để phân công, hãy tạo nhãn riêng như CS · Sales để không lẫn với quyền.</p></div>
+  <h3>2.3 Gán đội và nhãn cho nhân viên</h3>
+  <p><strong>[Sửa]</strong> trong danh sách → đánh dấu <em>Nhãn công việc</em>, chọn <em>Đội</em> rồi lưu. Để xử lý trò chuyện trực tiếp, nhân viên cần có thêm nhãn <strong>Counsels (Tư vấn)</strong>.</p>
+  <figure class="shot"><img src="img/asg-user-edit.en.jpg" alt="Sửa người dùng — nhãn (Counsels · CS · Sales) và đội (South)" loading="lazy"><figcaption>Sửa người dùng — nhãn (Counsels · CS · Sales) và đội (South)</figcaption></figure>
+</section>
+
+<section id="ch3">
+  <div class="ch"><span class="num">03</span><h2>Chuẩn bị ② Danh mục tư vấn</h2></div>
+  <p><em>(<strong>[Cài đặt gian hàng] → tab Chuyển nhân viên</strong> → <strong>[Quản lý danh mục tư vấn]</strong> ở đầu phần quy tắc phân công)</em></p>
+  <ol class="steps">
+    <li>Ở dòng dưới cùng, nhập <strong>mã</strong> (chữ, số, _) và <strong>tên</strong>, giữ dấu chọn <em>Hiển thị cho khách</em> rồi bấm <strong>[Thêm]</strong></li>
+    <li>Ở ▸ <strong>Tên theo ngôn ngữ</strong> của mỗi dòng, nhập tên theo ngôn ngữ của khách (để trống thì dùng tên mặc định)</li>
+    <li>Danh mục cho khách thấy đặt <strong>Hiển thị</strong>, danh mục nội bộ đặt <strong>Ẩn</strong>, rồi bấm <strong>[Lưu thay đổi]</strong></li>
+  </ol>
+  <figure class="shot"><img src="img/asg-categories.en.jpg" alt="Quản lý danh mục tư vấn — Hiển thị/Ẩn, tên theo ngôn ngữ, nơi đang dùng" loading="lazy"><figcaption>Quản lý danh mục tư vấn — Hiển thị/Ẩn, tên theo ngôn ngữ, nơi đang dùng</figcaption></figure>
+  <ul>
+    <li>Mã không thể đổi sau khi tạo (quy tắc tham chiếu theo mã). Tên, thứ tự và hiển thị có thể đổi bất cứ lúc nào.</li>
+    <li>Danh mục tư vấn đang được quy tắc, đội hoặc nhãn dùng sẽ không bị xóa, và hệ thống cho biết nó đang được dùng ở đâu.</li>
+    <li>Nếu <strong>không có</strong> danh mục tư vấn nào ở trạng thái Hiển thị, widget không hiện thẻ mà kết nối ngay.</li>
+  </ul>
+</section>
+
+<section id="ch4">
+  <div class="ch"><span class="num">04</span><h2>Chuẩn bị ③ Quy tắc phân công</h2></div>
+  <p>*(<strong>[Cài đặt gian hàng] → tab Chuyển nhân viên</strong> → <em>Quy tắc phân công</em>)*</p>
+  <h3>4.1 Tạo quy tắc</h3>
+  <p><strong>[Thêm quy tắc]</strong> → mỗi quy tắc xác định các mục sau.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Ô</th><th>Xác định gì</th><th>Ví dụ (CS_South)</th></tr>
+    <tr><td>Tên</td><td>Tên hiển thị trong nhật ký và cảnh báo</td><td>CS_South</td></tr>
+    <tr><td>Cách phân công</td><td>Nhân viên trực tuyến đang rảnh nhất / Báo cả nhóm</td><td>Nhân viên trực tuyến đang rảnh nhất</td></tr>
+    <tr><td>Danh mục tư vấn</td><td>Giá trị khách đã chọn (trống = tất cả)</td><td>Customer Services</td></tr>
+    <tr><td>Nghiệp vụ</td><td>Từ khóa trong câu hỏi (trống = tất cả)</td><td>—</td></tr>
+    <tr><td>Khách hàng</td><td>Khu vực · tỉnh · ngôn ngữ… (trống = tất cả)</td><td>Khu vực = Nam Trung Bộ · Miền Nam</td></tr>
+    <tr><td>Người phụ trách</td><td>Phân công theo nhóm (đội × nhãn) hoặc chỉ định cá nhân</td><td>Đội South × nhãn CS</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/asg-rule-edit.en.jpg" alt="Sửa quy tắc — danh mục tư vấn, khách hàng (khu vực), phân công theo nhóm (đội × nhãn) và số người phù hợp hiện tại" loading="lazy"><figcaption>Sửa quy tắc — danh mục tư vấn, khách hàng (khu vực), phân công theo nhóm (đội × nhãn) và số người phù hợp hiện tại</figcaption></figure>
+  <div class="callout warn"><span class="c-label">⚠️ Chip nhãn ở dòng Nghiệp vụ dùng cho mục đích khác.</span>
+    <p>Nó chỉ khớp cuộc trò chuyện được chuyển tiếp bởi quy tắc <em>Bắt buộc chuyển tiếp theo chính sách (deny)</em>. Nhãn nhóm nhân viên hãy chọn ở <strong>Người phụ trách › Nhóm › Nhãn</strong> bên dưới.</p></div>
+  <h3>4.2 Thứ tự quy tắc và quy tắc mặc định</h3>
+  <p>Quy tắc được kiểm tra <strong>từ trên xuống</strong> và dùng quy tắc đầu tiên khớp mọi điều kiện. Đổi thứ tự bằng ↑↓. Ví dụ trong hướng dẫn này gồm 5 quy tắc sau.</p>
+  <div class="tablewrap"><table>
+    <tr><th>#</th><th>Quy tắc</th><th>Danh mục tư vấn</th><th>Khu vực</th><th>Người phụ trách</th></tr>
+    <tr><td>1</td><td>CS_North</td><td>Customer Services</td><td>Miền Bắc · Bắc Trung Bộ</td><td>Đội North × CS</td></tr>
+    <tr><td>2</td><td>CS_South</td><td>Customer Services</td><td>Nam Trung Bộ · Miền Nam</td><td>Đội South × CS</td></tr>
+    <tr><td>3</td><td>BS_North</td><td>Business Support</td><td>Miền Bắc · Bắc Trung Bộ</td><td>Đội North × Sales</td></tr>
+    <tr><td>4</td><td>BS_South</td><td>Business Support</td><td>Nam Trung Bộ · Miền Nam</td><td>Đội South × Sales</td></tr>
+    <tr><td>5</td><td>Default</td><td>(tất cả)</td><td>(tất cả)</td><td>Nhãn CS</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/asg-rules-list.en.jpg" alt="Danh sách quy tắc phân công — kiểm tra từ trên xuống, phía trên là ô Kiểm tra phân công" loading="lazy"><figcaption>Danh sách quy tắc phân công — kiểm tra từ trên xuống, phía trên là ô Kiểm tra phân công</figcaption></figure>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>Hãy đặt một <strong>quy tắc mặc định</strong> không có điều kiện ở cuối cùng. Khách không chọn danh mục tư vấn hoặc khách chưa rõ khu vực cũng sẽ đến đúng người đã định (nếu không có, sẽ chuyển cho *Nhân viên được phân công*; nếu cũng không có thì cảnh báo tất cả).</p></div>
+  <h3>4.3 Kiểm tra phân công — thử trước khi lưu</h3>
+  <p>Nhập danh mục tư vấn · khu vực · tỉnh · ngôn ngữ vào ô <strong>Kiểm tra phân công</strong> phía trên các quy tắc rồi bấm <strong>[Kiểm tra]</strong>: hệ thống cho biết với <strong>các quy tắc đang sửa (chưa lưu)</strong> thì cuộc trò chuyện sẽ đến ai, kèm lý do các quy tắc bị bỏ qua. Không gửi cảnh báo.</p>
+  <figure class="shot"><img src="img/asg-routing-check.en.jpg" alt="Kiểm tra phân công — Customer Services · Miền Nam → #2 CS_South → Minh Le, bỏ qua: #1 điều kiện khu vực không khớp" loading="lazy"><figcaption>Kiểm tra phân công — Customer Services · Miền Nam → #2 CS_South → Minh Le, bỏ qua: #1 điều kiện khu vực không khớp</figcaption></figure>
+  <p>Kiểm tra xong, bấm <strong>[Lưu]</strong> ở cuối thẻ.</p>
+  <h3>4.4 Đọc cảnh báo</h3>
+  <p>Các cảnh báo màu vàng phía trên thẻ quy tắc không chặn việc lưu, nhưng có nghĩa là <strong>nếu để nguyên thì sẽ không phân công được</strong>.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Cảnh báo</th><th>Ý nghĩa</th><th>Cách xử lý</th></tr>
+    <tr><td>Điều kiện nhãn nghiệp vụ (…) chỉ khớp cuộc trò chuyện chuyển tiếp bởi quy tắc chính sách (deny)…</td><td>Dùng nhầm chip nhãn ở dòng Nghiệp vụ</td><td>Bỏ chọn ở dòng Nghiệp vụ, chọn ở Người phụ trách › Nhãn</td></tr>
+    <tr><td>Tên có địa danh nhưng không có điều kiện khu vực/tỉnh</td><td>Khách ở mọi khu vực đều khớp</td><td>Thêm Khách hàng › Khu vực</td></tr>
+    <tr><td>Hiện không có nhân viên nào để giao (n người được mời chưa kích hoạt)</td><td>Đội × nhãn không có nhân viên đang hoạt động</td><td>Nhắc chấp nhận lời mời, kiểm tra việc gán nhãn và đội</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/asg-rule-warnings.en.jpg" alt="Cảnh báo — BS_North: đội North không có nhân viên mang nhãn Sales nên 0 người" loading="lazy"><figcaption>Cảnh báo — BS_North: đội North không có nhân viên mang nhãn Sales nên 0 người</figcaption></figure>
+</section>
+
+<section id="ch5">
+  <div class="ch"><span class="num">05</span><h2>Màn hình khách hàng — yêu cầu nhân viên và chọn danh mục tư vấn</h2></div>
+  <p>Khách có hai cách tìm nhân viên, và cả hai đều hiện cùng một <strong>thẻ danh mục tư vấn</strong>.</p>
+  <h3>5.1 Khi khách tự bấm [Kết nối nhân viên hỗ trợ]</h3>
+  <p>Khi khách bấm chip <strong>Kết nối nhân viên hỗ trợ</strong> dưới câu trả lời (hoặc <em>Trò chuyện với nhân viên</em> trên thẻ liên hệ, nút kết nối nhân viên trong kịch bản), hệ thống không kết nối ngay mà hiện thẻ trước.</p>
+  <figure class="shot" style="max-width:400px"><img src="img/asg-widget-before.en.jpg" alt="Widget — thẻ "Bạn cần hỗ trợ về vấn đề gì?" (Customer Services · Business Support · Bỏ qua)" loading="lazy"><figcaption>Widget — thẻ "Bạn cần hỗ trợ về vấn đề gì?" (Customer Services · Business Support · Bỏ qua)</figcaption></figure>
+  <p>Khi khách chọn danh mục tư vấn, hệ thống tìm quy tắc phân công theo giá trị đó; trong cuộc trò chuyện còn lại dòng "Đã rõ — tôi sẽ kết nối bạn với bộ phận ○○", sau đó chuyển sang trạng thái chờ.</p>
+  <figure class="shot" style="max-width:400px"><img src="img/asg-widget-connecting.en.jpg" alt="Widget — thông báo kết nối và trạng thái chờ nhân viên sau khi chọn Customer Services" loading="lazy"><figcaption>Widget — thông báo kết nối và trạng thái chờ nhân viên sau khi chọn Customer Services</figcaption></figure>
+  <h3>5.2 Khi AI chuyển cho nhân viên</h3>
+  <p>Khi AI không tìm được câu trả lời chắc chắn hoặc khách nói "cho tôi gặp nhân viên", AI <strong>gọi nhân viên ngay</strong> và hiện cùng thẻ đó bên dưới thông báo. Khi khách chọn, nếu <strong>chưa có ai nhận</strong>, hệ thống <strong>kết nối lại</strong> tới nhóm phụ trách của danh mục tư vấn đó (cảnh báo gọi lần đầu được dọn đi).</p>
+  <figure class="shot" style="max-width:400px"><img src="img/asg-widget-after.en.jpg" alt="Widget — thẻ "Chọn chủ đề để chúng tôi kết nối bạn với đúng người phụ trách" bên dưới thông báo AI chuyển tiếp" loading="lazy"><figcaption>Widget — thẻ "Chọn chủ đề để chúng tôi kết nối bạn với đúng người phụ trách" bên dưới thông báo AI chuyển tiếp</figcaption></figure>
+  <ul>
+    <li><strong>[Bỏ qua]</strong>: không chọn, kết nối như trước (theo quy tắc không có điều kiện danh mục tư vấn).</li>
+    <li>Trong một cuộc trò chuyện, thẻ chỉ hiện một lần.</li>
+    <li>Tên hiện trên thẻ là <em>Tên theo ngôn ngữ</em> của khách.</li>
+  </ul>
+</section>
+
+<section id="ch6">
+  <div class="ch"><span class="num">06</span><h2>Quyết định phân công — ai nhận</h2></div>
+  <p>Với quy tắc ví dụ (mục 4.2) và nhân viên (Linh Tran = đội North · CS / Minh Le = đội South · CS · Sales):</p>
+  <div class="tablewrap"><table>
+    <tr><th>Khách hàng (khu vực khách sạn)</th><th>Danh mục tư vấn đã chọn</th><th>Quy tắc khớp</th><th>Người nhận</th></tr>
+    <tr><td>Saigon Riverside Hotel (Miền Nam)</td><td>Customer Services</td><td>#2 CS_South</td><td>Minh Le</td></tr>
+    <tr><td>Hanoi Garden Hotel (Miền Bắc)</td><td>Customer Services</td><td>#1 CS_North</td><td>Linh Tran</td></tr>
+    <tr><td>Hanoi Garden Hotel (Miền Bắc)</td><td>Business Support</td><td>#3 BS_North → 0 người nên bỏ qua → #5 Default</td><td>1 người rảnh nhất trong nhãn CS</td></tr>
+    <tr><td>Không rõ khu vực</td><td>(Bỏ qua)</td><td>#5 Default</td><td>1 người rảnh nhất trong nhãn CS</td></tr>
+  </table></div>
+  <p>Quy tắc cần biết:</p>
+  <ul>
+    <li><strong>Điều kiện danh mục tư vấn chỉ xét giá trị khách đã chọn.</strong> Khách không chọn chỉ khớp quy tắc có danh mục tư vấn để trống.</li>
+    <li><strong>Khu vực</strong> là khu vực khách sạn do ứng dụng host (vd: Go2Joy HA) gửi qua thông tin đăng nhập. Nếu không có khu vực mà chỉ có tên tỉnh, hệ thống điền theo <em>bảng khu vực</em> (tỉnh → khu vực) của tenant.</li>
+    <li>Dù quy tắc khớp, nếu <strong>0 nhân viên trực tuyến · đang hoạt động</strong> thì chuyển sang quy tắc tiếp theo.</li>
+    <li>Khi khách chọn danh mục tư vấn, quy tắc được ưu tiên hơn <em>ưu tiên kết nối nhân viên lần trước</em>. Nếu không chọn, nhân viên đã phụ trách cuộc trò chuyện trước đó của cùng tài khoản sẽ được ưu tiên trước, nếu người đó nằm trong đối tượng phân công lần này.</li>
+    <li><strong>Ngoài giờ làm việc</strong> (khi đã cài giờ làm việc), yêu cầu được tiếp nhận qua <em>Email ngoài giờ</em> thay vì nhân viên.</li>
+  </ul>
+</section>
+
+<section id="ch7">
+  <div class="ch"><span class="num">07</span><h2>Màn hình nhân viên — cảnh báo</h2></div>
+  <h3>7.1 Cảnh báo giao cho tôi</h3>
+  <p>Dù đang ở đâu trong bảng điều khiển, trong vòng 10 giây cửa sổ <strong>Chuyển tiếp hội thoại</strong> sẽ bật lên. Cửa sổ hiện khách sạn · khu vực · danh mục tư vấn, <strong>Giao cho: tôi</strong>, tên quy tắc, lý do và câu nói cuối cùng của khách.</p>
+  <figure class="shot"><img src="img/asg-alarm-mine.en.jpg" alt="Cảnh báo bật lên — Giao cho: tôi · quy tắc CS_South" loading="lazy"><figcaption>Cảnh báo bật lên — Giao cho: tôi · quy tắc CS_South</figcaption></figure>
+  <ul>
+    <li><strong>[Mở hội thoại]</strong>: chuyển tới cuộc trò chuyện và <strong>xác nhận</strong> (ngừng nhắc lại).</li>
+    <li><strong>[Bỏ qua]</strong>: chỉ ẩn trên màn hình của tôi (đã đọc). Đây không phải là xác nhận nên việc nhắc lại khi chưa ai nhận vẫn tiếp tục.</li>
+  </ul>
+  <h3>7.2 Cảnh báo giao cho nhân viên khác</h3>
+  <p>Mọi nhân viên đều thấy cảnh báo. Cảnh báo giao cho người khác có nhãn <strong>Giao cho nhân viên khác</strong>, và dù tôi mở, cảnh báo của nhân viên đó cũng không bị tắt.</p>
+  <figure class="shot"><img src="img/asg-alarm-other.en.jpg" alt="Cảnh báo bật lên — Giao cho: Linh Tran · Giao cho nhân viên khác · kết nối lại do chọn danh mục tư vấn" loading="lazy"><figcaption>Cảnh báo bật lên — Giao cho: Linh Tran · Giao cho nhân viên khác · kết nối lại do chọn danh mục tư vấn</figcaption></figure>
+  <h3>7.3 🔔 và Trung tâm cảnh báo</h3>
+  <p>Biểu tượng 🔔 ở đầu trang hiện số cảnh báo chưa đọc. Bấm vào sẽ hiện các cảnh báo gần đây; bấm <em>Xem tất cả</em> sẽ mở <strong>Trung tâm cảnh báo</strong> (<code>/live-chat/alerts</code>). Lọc theo Tất cả / Giao cho tôi / Gửi tất cả, trạng thái, thời gian, danh mục tư vấn; bấm vào một dòng để mở cuộc trò chuyện.</p>
+  <figure class="shot"><img src="img/asg-alarm-center.en.jpg" alt="Trung tâm cảnh báo — khách/khách sạn · danh mục tư vấn · được giao · quy tắc · trạng thái" loading="lazy"><figcaption>Trung tâm cảnh báo — khách/khách sạn · danh mục tư vấn · được giao · quy tắc · trạng thái</figcaption></figure>
+</section>
+
+<section id="ch8">
+  <div class="ch"><span class="num">08</span><h2>Phản hồi — mở hội thoại</h2></div>
+  <p>Trong cuộc trò chuyện trực tiếp mở bằng <strong>[Mở hội thoại]</strong>, đầu cuộc trò chuyện hiện thông tin khách sạn · khu vực và huy hiệu <strong>Tư vấn: Customer Services</strong>, còn trong cuộc trò chuyện có dòng hệ thống "Đã rõ — tôi sẽ kết nối bạn với bộ phận Customer Services". Bấm <strong>[Nhận]</strong> để bắt đầu phản hồi.</p>
+  <figure class="shot"><img src="img/asg-livechat-assigned.en.jpg" alt="Trò chuyện trực tiếp — huy hiệu khu vực · danh mục tư vấn ở đầu cuộc trò chuyện và dòng hệ thống" loading="lazy"><figcaption>Trò chuyện trực tiếp — huy hiệu khu vực · danh mục tư vấn ở đầu cuộc trò chuyện và dòng hệ thống</figcaption></figure>
+</section>
+
+<section id="ch9">
+  <div class="ch"><span class="num">09</span><h2>Cài đặt cảnh báo (cá nhân)</h2></div>
+  <p>Mỗi người tự cài trong <strong>Cài đặt cảnh báo</strong> của Trung tâm cảnh báo hoặc ngăn kéo 🔔.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Mục</th><th>Lựa chọn</th></tr>
+    <tr><td>Cửa sổ bật lên</td><td>Mọi cảnh báo / Chỉ cảnh báo giao cho tôi (gồm cảnh báo gửi tất cả) / Tắt</td></tr>
+    <tr><td>Âm thanh</td><td>Bật · tắt, <em>Nghe thử</em></td></tr>
+    <tr><td>Thông báo màn hình của trình duyệt</td><td>Khi bật, trình duyệt sẽ hỏi quyền</td></tr>
+    <tr><td>Email</td><td>Gửi email khi được giao cho tôi</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/asg-alarm-settings.en.jpg" alt="Cài đặt cảnh báo — phạm vi cửa sổ bật lên · âm thanh · thông báo màn hình · email" loading="lazy"><figcaption>Cài đặt cảnh báo — phạm vi cửa sổ bật lên · âm thanh · thông báo màn hình · email</figcaption></figure>
+  <div class="callout"><span class="c-label">💡 Mẹo</span>
+    <p>Dù tắt cửa sổ bật lên, mọi cảnh báo vẫn có trong 🔔 và Trung tâm cảnh báo. Trưởng nhóm bận rộn nên chọn <em>Chỉ cảnh báo giao cho tôi</em>.</p></div>
+</section>
+
+<section id="ch10">
+  <div class="ch"><span class="num">10</span><h2>Danh sách kiểm tra vận hành</h2></div>
+  <ul class="check">
+    <li>Mọi nhân viên đã chấp nhận lời mời (trạng thái <code>active</code>)</li>
+    <li>Mỗi nhân viên đã được gán nhãn Counsels (Tư vấn) + nhãn phân công (CS · Sales…) + đội</li>
+    <li>Danh mục tư vấn cho khách thấy ở trạng thái <strong>Hiển thị</strong> và đã có tên theo ngôn ngữ</li>
+    <li>Mỗi quy tắc phân công có điều kiện danh mục tư vấn · khu vực và đội × nhãn đúng</li>
+    <li>Có quy tắc mặc định không điều kiện ở cuối cùng</li>
+    <li>Thẻ quy tắc không có cảnh báo</li>
+    <li>Đã thử mọi tổ hợp tiêu biểu (danh mục × khu vực) bằng <strong>Kiểm tra phân công</strong></li>
+    <li>Đã thực sự gửi yêu cầu từ widget và xác nhận cảnh báo đến đúng nhân viên phụ trách</li>
+  </ul>
+</section>
+
+<section id="ch11">
+  <div class="ch"><span class="num">11</span><h2>FAQ / xử lý sự cố</h2></div>
+  <dl class="faq">
+    <dt>Q. Khách đã gọi nhân viên nhưng thẻ danh mục tư vấn không hiện.</dt>
+    <dd>Kiểm tra trong [Chuyển nhân viên → Quản lý danh mục tư vấn] xem có danh mục tư vấn nào ở trạng thái <strong>Hiển thị</strong> không. Nếu không có, hệ thống kết nối ngay mà không hiện thẻ. Cuộc trò chuyện đã chọn rồi thì thẻ không hiện lại.</dd>
+    <dt>Q. Cảnh báo đến người khác (hoặc tất cả) chứ không phải đội đã chỉ định.</dt>
+    <dd>Hãy nhập cùng danh mục tư vấn · khu vực vào <strong>Kiểm tra phân công</strong> phía trên các quy tắc. Hệ thống sẽ hiện các quy tắc bị bỏ qua và lý do. Nguyên nhân thường gặp: ① dùng chip nhãn ở dòng Nghiệp vụ ② thiếu điều kiện khu vực ③ thành viên đội chưa chấp nhận lời mời (0 người có thể giao) ④ thứ tự quy tắc (một quy tắc rộng hơn ở trên khớp trước).</dd>
+    <dt>Q. Cảnh báo đến tất cả nhân viên.</dt>
+    <dd>Khi không có quy tắc nào khớp và <em>Nhân viên được phân công</em> cũng để trống, hệ thống cảnh báo tất cả. Hãy đặt quy tắc mặc định hoặc chỉ định nhân viên được phân công.</dd>
+    <dt>Q. Tôi bỏ qua cảnh báo của nhân viên khác — có ảnh hưởng đến nhân viên đó không?</dt>
+    <dd>Không. [Bỏ qua] chỉ ẩn trên màn hình của tôi; việc xác nhận (ngừng nhắc lại) phải do nhân viên được giao thực hiện.</dd>
+    <dt>Q. Khu vực bị trống.</dt>
+    <dd>Đây là trường hợp ứng dụng host không gửi khu vực và tên tỉnh cũng không có trong bảng khu vực. Hãy dùng <em>Cập nhật bảng khu vực</em> ở màn hình [Khách hàng] (khi đã kết nối Go2Joy), hoặc dùng điều kiện <em>Tỉnh</em> thay cho điều kiện khu vực.</dd>
+  </dl>
+</section>
+
+<div class="next">
+  <strong>Xem thêm →</strong> <a href="user-manual.vi.html">Sổ tay tổng hợp</a> mục 4.4 (cảnh báo) · 14.1 (chuyển nhân viên), <a href="knowledge-ai.vi.html">Sổ tay tri thức &amp; AI</a> chương 5.
+</div>
+
+</main>
+</div>
+
+</body>
+</html>

@@ -601,6 +601,8 @@ agent·open a URL) → save.
 - If the customer does not pick a consult category, only rules with an empty consult
   category match. Keeping a default rule with no conditions at the bottom is the safe choice.
 
+→ Screen-by-screen walkthrough (units & labels → consult categories → routing rules → customer request → alarms): [Agent Assignment Guide](agent-assignment.en.md)
+
 ### 5.2 Understanding escalation triggers
 
 When the AI hands off to an agent:

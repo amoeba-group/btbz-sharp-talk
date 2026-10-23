@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SharpTalk Agent Assignment Guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@700;800&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --accent:#2B7FFF; --accent-deep:#1D5FD6; --accent-tint:#EAF2FF;
+  --ink:#1B2430; --muted:#5C6675; --line:#E3E8F0;
+  --bg:#FAFBFD; --card:#FFFFFF; --soft:#F1F5FB;
+  --tip-bg:#EAF2FF; --tip-edge:#2B7FFF;
+  --warn-bg:#FFF7E6; --warn-edge:#D97706; --warn-ink:#8A4B04;
+  --code-bg:#EEF2F8; --mono-ink:#31435E;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --accent:#5C9BFF; --accent-deep:#82B4FF; --accent-tint:#16243C;
+    --ink:#E6EBF3; --muted:#93A0B4; --line:#28313F;
+    --bg:#0F141B; --card:#161C25; --soft:#1B222D;
+    --tip-bg:#152238; --tip-edge:#5C9BFF;
+    --warn-bg:#2A2010; --warn-edge:#E8A23D; --warn-ink:#EFC584;
+    --code-bg:#1E2632; --mono-ink:#B9C7DC;
+  }
+}
+:root[data-theme="dark"]{
+  --accent:#5C9BFF; --accent-deep:#82B4FF; --accent-tint:#16243C;
+  --ink:#E6EBF3; --muted:#93A0B4; --line:#28313F;
+  --bg:#0F141B; --card:#161C25; --soft:#1B222D;
+  --tip-bg:#152238; --tip-edge:#5C9BFF;
+  --warn-bg:#2A2010; --warn-edge:#E8A23D; --warn-ink:#EFC584;
+  --code-bg:#1E2632; --mono-ink:#B9C7DC;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Segoe UI",sans-serif;
+  font-size:16px;line-height:1.75}
+.shell{max-width:1120px;margin:0 auto;padding:0 24px 96px;
+  display:grid;grid-template-columns:220px minmax(0,1fr);gap:48px}
+@media(max-width:860px){.shell{display:block}}
+header.hero{grid-column:1/-1;padding:56px 0 8px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;color:var(--accent);text-transform:uppercase}
+h1{font-family:"Gothic A1",sans-serif;font-weight:800;font-size:clamp(28px,4.5vw,40px);
+  line-height:1.25;margin:10px 0 12px;text-wrap:balance}
+.meta{color:var(--muted);font-size:14px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.lead{max-width:68ch;color:var(--muted);margin-top:14px}
+nav.toc{position:sticky;top:24px;align-self:start;font-size:13.5px;padding-top:24px}
+@media(max-width:860px){nav.toc{position:static;border:1px solid var(--line);border-radius:10px;
+  background:var(--card);padding:14px 16px;margin:20px 0}}
+nav.toc .toc-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+nav.toc a{display:flex;gap:8px;color:var(--muted);text-decoration:none;padding:4px 0;line-height:1.4}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent)}
+nav.toc a .n{font-family:"IBM Plex Mono",monospace;color:var(--accent);font-size:12px;min-width:18px;padding-top:1px}
+main{min-width:0;max-width:74ch}
+section{padding-top:40px}
+.ch{display:flex;align-items:baseline;gap:12px;border-top:2px solid var(--ink);padding-top:14px}
+.ch .num{font-family:"IBM Plex Mono",monospace;font-size:13px;font-weight:500;color:var(--accent)}
+h2{font-family:"Gothic A1",sans-serif;font-weight:800;font-size:24px;margin:0;line-height:1.35;text-wrap:balance}
+.actor{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 12px;
+  background:var(--accent-tint);color:var(--accent-deep);margin-top:10px}
+h3{font-family:"Gothic A1",sans-serif;font-weight:700;font-size:17.5px;margin:30px 0 8px}
+p{margin:10px 0;max-width:68ch}
+a{color:var(--accent-deep)}
+strong{font-weight:700}
+table{border-collapse:collapse;width:100%;font-size:14.5px;margin:14px 0}
+th{font-size:12.5px;letter-spacing:.04em;color:var(--muted);text-align:left;font-weight:700;
+  border-bottom:2px solid var(--line);padding:7px 12px 7px 0}
+td{border-bottom:1px solid var(--line);padding:8px 12px 8px 0;vertical-align:top}
+.tablewrap{overflow-x:auto}
+.terms{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 18px 14px;margin:16px 0}
+.terms .t-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin:12px 0 2px}
+.terms td:first-child{font-weight:700;white-space:nowrap;padding-right:18px}
+.callout{border-left:3px solid var(--tip-edge);background:var(--tip-bg);border-radius:0 10px 10px 0;
+  padding:12px 18px;margin:16px 0;font-size:14.5px}
+.callout .c-label{font-weight:700;color:var(--accent-deep)}
+.callout.warn{border-left-color:var(--warn-edge);background:var(--warn-bg);color:var(--warn-ink)}
+.callout.warn .c-label{color:var(--warn-ink)}
+.callout p{margin:6px 0}
+.callout ul{margin:6px 0}
+code,kbd{font-family:"IBM Plex Mono",monospace;font-size:.86em;background:var(--code-bg);
+  color:var(--mono-ink);border-radius:5px;padding:1px 6px}
+pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+  overflow-x:auto;font-size:13px;line-height:1.6}
+pre code{background:none;padding:0;color:var(--mono-ink)}
+ol.steps{padding-left:0;margin:14px 0;list-style:none;counter-reset:st}
+ol.steps>li{counter-increment:st;position:relative;padding:0 0 14px 40px}
+ol.steps>li::before{content:counter(st);position:absolute;left:0;top:1px;width:24px;height:24px;
+  border-radius:50%;background:var(--accent);color:#fff;font-size:13px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;font-family:"IBM Plex Mono",monospace}
+ul{margin:10px 0;padding-left:22px}
+li{margin:4px 0}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:30px;position:relative}
+.check li::before{content:"";position:absolute;left:2px;top:6px;width:14px;height:14px;
+  border:2px solid var(--accent);border-radius:4px}
+.faq dt{font-weight:700;margin-top:18px}
+.faq dd{margin:4px 0 0;color:var(--muted)}
+.next{margin-top:56px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:20px 24px}
+.pagenav{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;padding-top:18px;color:var(--muted)}
+.pagenav a{color:var(--muted);text-decoration:none}
+.pagenav a:hover,.pagenav a:focus-visible{color:var(--accent)}
+.pagenav .cur{color:var(--accent-deep);font-weight:700}
+figure.shot{margin:18px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+figure.shot img{display:block;width:100%}
+figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+</style>
+</head>
+<body>
+
+<div class="shell">
+<nav class="pagenav" aria-label="Manual navigation"><a href="./">← All manuals</a><span>·</span><a href="agent-assignment.ko.html">한국어</a><span class="cur">English</span><a href="agent-assignment.vi.html">Tiếng Việt</a><span>·</span><a href="agent-assignment.en.md">Raw MD</a></nav>
+<header class="hero">
+  <div class="eyebrow">SharpTalk User Guides · Agent assignment</div>
+  <h1>SharpTalk Agent Assignment Guide</h1>
+  <div class="meta"><span>Version 1.0 · first published 2026-10-24 · written against the code</span><span>Audience: tenant operators (master — units, labels and routing rules) · agents (alarms and responding)</span></div>
+  <p class="lead">This guide follows, end to end, <strong>who a customer is connected to when they ask for an agent</strong>. The first part (Ch. 2–4) is setup an operator does once; the second part (Ch. 5–9) is what happens on the customer's screen and the agent's screen when a customer actually asks. Screenshots use demo data for hotel-partner support (hotel and agent names are fictional).</p>
+</header>
+
+<nav class="toc" aria-label="Contents">
+  <div class="toc-label">Contents</div>
+  <a href="#ch1"><span class="n">1</span>At a glance</a>
+  <a href="#ch2"><span class="n">2</span>Setup ① Agents, units and labels</a>
+  <a href="#ch3"><span class="n">3</span>Setup ② Consult categories</a>
+  <a href="#ch4"><span class="n">4</span>Setup ③ Routing rules</a>
+  <a href="#ch5"><span class="n">5</span>Customer view</a>
+  <a href="#ch6"><span class="n">6</span>Routing decision</a>
+  <a href="#ch7"><span class="n">7</span>Agent view</a>
+  <a href="#ch8"><span class="n">8</span>Responding</a>
+  <a href="#ch9"><span class="n">9</span>Alarm settings (personal)</a>
+  <a href="#ch10"><span class="n">10</span>Operations checklist</a>
+  <a href="#ch11"><span class="n">11</span>FAQ / Troubleshooting</a>
+</nav>
+
+<main>
+
+<section id="ch1">
+  <div class="ch"><span class="num">01</span><h2>At a glance</h2></div>
+  <pre><code>Customer widget                 SharpTalk server                       Agent console
+───────────────                 ────────────────                       ─────────────
+[Talk to an agent] or AI    ──▶  Show consult category card
+handoff
+"What do you need help with?"
+  picks (Customer Services) ──▶  Check routing rules top to bottom
+                                  Consult category = Customer Services ?
+                                  Customer › Region = South ?   (hotel sign-in info)
+                                  → first rule where everything matches
+                                  → online agent in that rule's unit × label
+"I'll connect you with our   ◀─  Assign                             ──▶  🔔 Alarm popup "Assigned: me"
+ ○○ team"                                                              [Open chat] → respond</code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>Term</th><th>Meaning</th></tr>
+    <tr><td>Consult category</td><td>The topic the customer picks in the widget (e.g. Customer Services, Business Support). Operators create them and decide which are shown</td></tr>
+    <tr><td>Unit</td><td>The agent's team (one unit per person). E.g. North (Hanoi), South (Ho Chi Minh City)</td></tr>
+    <tr><td>Label</td><td>The agent's job tags (several allowed). E.g. CS, Sales. An agent needs the <em>Counsels</em> label to handle live chat</td></tr>
+    <tr><td>Routing rule</td><td>A "consult category + customer information (region etc.) → unit × label" bundle. Checked top to bottom; the <strong>first rule where everything matches</strong> is used</td></tr>
+    <tr><td>Region</td><td>The customer's (hotel's) location: North, North Center, Central, South Center, South. Sent by the host app with the sign-in info, or filled in from the province name</td></tr>
+    <tr><td>Assigned agents</td><td>Who gets the chat when no rule matches (top of the Agent handoff tab). Leave empty to alert every agent</td></tr>
+  </table></div>
+</section>
+
+<section id="ch2">
+  <div class="ch"><span class="num">02</span><h2>Setup ① Agents, units and labels</h2></div>
+  <p><em>(console <strong>[Users &amp; Labels]</strong> — master)</em></p>
+  <p>We recommend picking a <strong>unit × label</strong> in routing rules rather than individual people. When people change, the rules don't need editing.</p>
+  <h3>2.1 Inviting agents and acceptance</h3>
+  <ol class="steps">
+    <li><strong>[Invite user]</strong> → enter email, choose rank, labels and unit → invite</li>
+    <li>When the invitee <strong>signs in for the first time</strong> with the temporary password, their status becomes <code>active</code></li>
+    <li>Check <strong>labels, unit and status</strong> in the list</li>
+  </ol>
+  <figure class="shot"><img src="img/asg-users-list.en.jpg" alt="User list — labels, unit and status (active) at a glance" loading="lazy"><figcaption>User list — labels, unit and status (active) at a glance</figcaption></figure>
+  <div class="callout warn"><span class="c-label">⚠️ Agents who haven't accepted the invite yet (`invited`) are not assigned.</span>
+    <p>If a rule's unit has 0 active agents, that rule is skipped (warning in §4.4).</p></div>
+  <h3>2.2 Creating units and labels</h3>
+  <p><strong>[Labels &amp; units]</strong> → add by code and name on the <em>Job labels</em> / <em>Units</em> tab. The code can't be changed once created; the name can be changed any time.</p>
+  <figure class="shot"><img src="img/asg-labels-units.en.jpg" alt="Labels &amp; units — Job labels tab (CS and Sales added)" loading="lazy"><figcaption>Labels &amp; units — Job labels tab (CS and Sales added)</figcaption></figure>
+  <figure class="shot"><img src="img/asg-units.en.jpg" alt="Labels &amp; units — Units tab (North and South added)" loading="lazy"><figcaption>Labels &amp; units — Units tab (North and South added)</figcaption></figure>
+  <div class="callout"><span class="c-label">💡 Tip</span>
+    <p><em>Consult</em>, <em>Accounting</em> and <em>Operations</em> are built-in labels tied to permissions and can't be deleted. For routing, create separate labels such as CS and Sales so they don't get mixed up with permissions.</p></div>
+  <h3>2.3 Assigning units and labels to agents</h3>
+  <p>Click <strong>[Edit]</strong> in the list → check <em>Job labels</em>, pick a <em>Unit</em>, and save. To handle live chat an agent must also have the <strong>Counsels</strong> label.</p>
+  <figure class="shot"><img src="img/asg-user-edit.en.jpg" alt="Edit user — labels (Counsels, CS, Sales) and unit (South)" loading="lazy"><figcaption>Edit user — labels (Counsels, CS, Sales) and unit (South)</figcaption></figure>
+</section>
+
+<section id="ch3">
+  <div class="ch"><span class="num">03</span><h2>Setup ② Consult categories</h2></div>
+  <p><em>(<strong>[Tenant Settings] → Agent handoff</strong> tab → <strong>[Manage consult categories]</strong> in the routing rules header)</em></p>
+  <ol class="steps">
+    <li>In the bottom row, enter a <strong>code</strong> (letters, digits, _) and a <strong>name</strong>, leave <em>Show to customers</em> checked, and click <strong>[Add]</strong></li>
+    <li>In each row's ▸ <strong>Per-language names</strong>, enter the name for each customer language (empty = the default name)</li>
+    <li>Set what customers should see to <strong>Shown</strong> and internal ones to <strong>Hidden</strong>, then click <strong>[Save changes]</strong></li>
+  </ol>
+  <figure class="shot"><img src="img/asg-categories.en.jpg" alt="Manage consult categories — Shown/Hidden, per-language names, where used" loading="lazy"><figcaption>Manage consult categories — Shown/Hidden, per-language names, where used</figcaption></figure>
+  <ul>
+    <li>The code can't be changed once created (rules reference it by code). Name, order and visibility can be changed any time.</li>
+    <li>A consult category used by a rule, unit or label can't be deleted; you're told where it's used.</li>
+    <li>If <strong>no</strong> consult category is Shown, the widget shows no card and connects directly.</li>
+  </ul>
+</section>
+
+<section id="ch4">
+  <div class="ch"><span class="num">04</span><h2>Setup ③ Routing rules</h2></div>
+  <p>*(<strong>[Tenant Settings] → Agent handoff</strong> tab → <em>Routing rules — consult category × topic</em>)*</p>
+  <h3>4.1 Creating a rule</h3>
+  <p><strong>[Add rule]</strong> → each rule sets the following.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Field</th><th>What it sets</th><th>Example (CS_South)</th></tr>
+    <tr><td>Name</td><td>Name shown in logs and alarms</td><td>CS_South</td></tr>
+    <tr><td>Assignment</td><td>Least busy online agent / Alert the whole group</td><td>Least busy online agent</td></tr>
+    <tr><td>Consult category</td><td>The value the customer picked (empty = any)</td><td>Customer Services</td></tr>
+    <tr><td>Topic</td><td>Question keywords (empty = any)</td><td>—</td></tr>
+    <tr><td>Customer</td><td>Region, province, language etc. (empty = any)</td><td>Region = South Center, South</td></tr>
+    <tr><td>People</td><td>Group assignment (unit × label) or specific people</td><td>Unit South × Label CS</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/asg-rule-edit.en.jpg" alt="Rule editor — consult category, customer (region), group assignment (unit × label) and people currently matching" loading="lazy"><figcaption>Rule editor — consult category, customer (region), group assignment (unit × label) and people currently matching</figcaption></figure>
+  <div class="callout warn"><span class="c-label">⚠️ The label chips in the Topic row are for something else.</span>
+    <p>They only match conversations handed off by a <em>policy force-handoff (deny)</em> rule. Pick agent-group labels under <strong>People › Group assignment › Label</strong> below.</p></div>
+  <h3>4.2 Rule order and the default rule</h3>
+  <p>Rules are checked <strong>top to bottom</strong>, and the first rule where all conditions match is used. Reorder with ↑↓. This guide's example uses these 5 rules.</p>
+  <div class="tablewrap"><table>
+    <tr><th>#</th><th>Rule</th><th>Consult category</th><th>Region</th><th>People</th></tr>
+    <tr><td>1</td><td>CS_North</td><td>Customer Services</td><td>North, North Center</td><td>Unit North × CS</td></tr>
+    <tr><td>2</td><td>CS_South</td><td>Customer Services</td><td>South Center, South</td><td>Unit South × CS</td></tr>
+    <tr><td>3</td><td>BS_North</td><td>Business Support</td><td>North, North Center</td><td>Unit North × Sales</td></tr>
+    <tr><td>4</td><td>BS_South</td><td>Business Support</td><td>South Center, South</td><td>Unit South × Sales</td></tr>
+    <tr><td>5</td><td>Default</td><td>(any)</td><td>(any)</td><td>Label CS</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/asg-rules-list.en.jpg" alt="Routing rules list — checked top to bottom, with the Check routing box above" loading="lazy"><figcaption>Routing rules list — checked top to bottom, with the Check routing box above</figcaption></figure>
+  <div class="callout"><span class="c-label">💡 Tip</span>
+    <p>Put a <strong>default rule</strong> with no conditions at the bottom. Customers who didn't pick a consult category, or whose region is unknown, still go to a set person (without it, the *Assigned agents*; without those, an alarm to everyone).</p></div>
+  <h3>4.3 Check routing — test before saving</h3>
+  <p>Enter a consult category, region, province and language in the <strong>Check routing</strong> box above the rules and click <strong>[Check]</strong>. It shows who would be connected using <strong>the rules as currently edited (unsaved)</strong>, and why rules were skipped. No alarm is sent.</p>
+  <figure class="shot"><img src="img/asg-routing-check.en.jpg" alt="Check routing — Customer Services · South → #2 CS_South → Minh Le, skipped: #1 region condition doesn't match" loading="lazy"><figcaption>Check routing — Customer Services · South → #2 CS_South → Minh Le, skipped: #1 region condition doesn't match</figcaption></figure>
+  <p>When you're done checking, click <strong>[Save]</strong> at the bottom of the card.</p>
+  <h3>4.4 Reading the warnings</h3>
+  <p>Yellow warnings at the top of a rule card don't block saving, but they mean <strong>the rule won't assign anyone as it stands</strong>.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Warning</th><th>Meaning</th><th>Fix</th></tr>
+    <tr><td>The topic label (…) filter only matches conversations handed off by a policy (deny) rule…</td><td>Label chip used in the Topic row by mistake</td><td>Clear it in the Topic row; pick under People › Label</td></tr>
+    <tr><td>The name mentions a region but there is no region/province condition</td><td>Customers from every region match</td><td>Add Customer › Region</td></tr>
+    <tr><td>Nobody can be paged right now (n invited, not yet active)</td><td>No active agent in the unit × label</td><td>Ask them to accept the invite; check label and unit assignments</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/asg-rule-warnings.en.jpg" alt="Warning — BS_North: no agent with the Sales label in unit North, so 0 people" loading="lazy"><figcaption>Warning — BS_North: no agent with the Sales label in unit North, so 0 people</figcaption></figure>
+</section>
+
+<section id="ch5">
+  <div class="ch"><span class="num">05</span><h2>Customer view — requesting an agent and choosing a consult category</h2></div>
+  <p>There are two ways a customer reaches an agent, and both show the same <strong>consult category card</strong>.</p>
+  <h3>5.1 When the customer taps [Talk to an agent]</h3>
+  <p>When the customer taps the <strong>Talk to an agent</strong> chip below an answer (or <em>Chat with an agent</em> on the contact card, or a scenario's agent handoff button), a card appears first instead of connecting right away.</p>
+  <figure class="shot" style="max-width:400px"><img src="img/asg-widget-before.en.jpg" alt="Widget — "What do you need help with?" card (Customer Services · Business Support · Skip)" loading="lazy"><figcaption>Widget — "What do you need help with?" card (Customer Services · Business Support · Skip)</figcaption></figure>
+  <p>When the customer picks a consult category, routing rules are matched with that value, the line "Got it — I'll connect you with our ○○ team. Please wait a moment." is added to the chat, and the chat goes into waiting.</p>
+  <figure class="shot" style="max-width:400px"><img src="img/asg-widget-connecting.en.jpg" alt="Widget — connection notice and waiting-for-agent indicator after picking Customer Services" loading="lazy"><figcaption>Widget — connection notice and waiting-for-agent indicator after picking Customer Services</figcaption></figure>
+  <h3>5.2 When the AI hands off to an agent</h3>
+  <p>If the AI can't find a confident answer, or the customer says "Connect me to an agent", the AI <strong>pages an agent right away</strong> and shows the same card below its notice. When the customer picks, <strong>if no one has accepted yet</strong>, the chat is <strong>re-routed</strong> to that consult category's group (the first alarm is cleared).</p>
+  <figure class="shot" style="max-width:400px"><img src="img/asg-widget-after.en.jpg" alt="Widget — "Pick a topic and we'll connect you to the right person" card below the AI handoff notice" loading="lazy"><figcaption>Widget — "Pick a topic and we'll connect you to the right person" card below the AI handoff notice</figcaption></figure>
+  <ul>
+    <li><strong>[Skip]</strong>: connects as before without picking (using rules with no consult category condition).</li>
+    <li>The card appears only once per conversation.</li>
+    <li>The names on the card are the <em>per-language names</em> for the customer's language.</li>
+  </ul>
+</section>
+
+<section id="ch6">
+  <div class="ch"><span class="num">06</span><h2>Routing decision — who gets it</h2></div>
+  <p>With the example rules (§4.2) and agents (Linh Tran = unit North · CS / Minh Le = unit South · CS · Sales):</p>
+  <div class="tablewrap"><table>
+    <tr><th>Customer (hotel region)</th><th>Consult category picked</th><th>Matching rule</th><th>Who gets it</th></tr>
+    <tr><td>Saigon Riverside Hotel (South)</td><td>Customer Services</td><td>#2 CS_South</td><td>Minh Le</td></tr>
+    <tr><td>Hanoi Garden Hotel (North)</td><td>Customer Services</td><td>#1 CS_North</td><td>Linh Tran</td></tr>
+    <tr><td>Hanoi Garden Hotel (North)</td><td>Business Support</td><td>#3 BS_North → 0 people, skipped → #5 Default</td><td>Least busy agent with the CS label</td></tr>
+    <tr><td>Region unknown</td><td>(Skip)</td><td>#5 Default</td><td>Least busy agent with the CS label</td></tr>
+  </table></div>
+  <p>Rules to know:</p>
+  <ul>
+    <li><strong>The consult category condition looks only at what the customer picked.</strong> A customer who picked nothing only matches rules with an empty consult category.</li>
+    <li><strong>Region</strong> is the hotel's region sent by the host app (e.g. Go2Joy HA) with the sign-in info. If no region comes but a province name does, it's filled in from the tenant's <em>region map</em> (province → region).</li>
+    <li>Even if a rule matches, if it has <strong>0 online, active agents</strong>, the next rule is tried.</li>
+    <li>When the customer picks a consult category, the rules take precedence over <em>previous agent first</em>. If they don't pick, the agent who handled the same account's previous chat gets it first, as long as that agent is among this assignment's candidates.</li>
+    <li><strong>Outside business hours</strong> (when business hours are set), the request goes to the <em>Off-hours email</em> instead of agents.</li>
+  </ul>
+</section>
+
+<section id="ch7">
+  <div class="ch"><span class="num">07</span><h2>Agent view — alarms</h2></div>
+  <h3>7.1 Alarms assigned to me</h3>
+  <p>Wherever you are in the console, a <strong>Chat escalation</strong> popup appears within 10 seconds. It shows the hotel, region, consult category, <strong>Assigned: me</strong>, the rule name, the reason, and the customer's last message.</p>
+  <figure class="shot"><img src="img/asg-alarm-mine.en.jpg" alt="Alarm popup — Assigned: me · rule CS_South" loading="lazy"><figcaption>Alarm popup — Assigned: me · rule CS_South</figcaption></figure>
+  <ul>
+    <li><strong>[Open chat]</strong>: goes to the conversation and <strong>acknowledges</strong> it (stops reminders).</li>
+    <li><strong>[Dismiss]</strong>: hides it on your screen only (read). It isn't an acknowledgement, so unaccepted reminders continue.</li>
+  </ul>
+  <h3>7.2 Alarms assigned to another agent</h3>
+  <p>All agents see alarms. An alarm assigned to someone else is marked <strong>Assigned to someone else</strong>, and opening it doesn't turn off that agent's alarm.</p>
+  <figure class="shot"><img src="img/asg-alarm-other.en.jpg" alt="Alarm popup — Assigned: Linh Tran · Assigned to someone else · re-routed by consult category pick" loading="lazy"><figcaption>Alarm popup — Assigned: Linh Tran · Assigned to someone else · re-routed by consult category pick</figcaption></figure>
+  <h3>7.3 🔔 and the Alarm center</h3>
+  <p>The header 🔔 shows the number of unread alarms. Click it for recent alarms; click <em>View all</em> to open the <strong>Alarm center</strong> (<code>/live-chat/alerts</code>). Filter by All / Assigned to me / Everyone, status, period and consult category; click a row to go to the conversation.</p>
+  <figure class="shot"><img src="img/asg-alarm-center.en.jpg" alt="Alarm center — customer/hotel, consult category, assignee, rule, status" loading="lazy"><figcaption>Alarm center — customer/hotel, consult category, assignee, rule, status</figcaption></figure>
+</section>
+
+<section id="ch8">
+  <div class="ch"><span class="num">08</span><h2>Responding — Open chat</h2></div>
+  <p>In the live chat conversation opened via <strong>[Open chat]</strong>, the header shows the hotel info, region and a <strong>Consult: Customer Services</strong> badge, and the chat keeps the system line "Got it — I'll connect you with our Customer Services team. Please wait a moment." Click <strong>[Accept]</strong> to start responding.</p>
+  <figure class="shot"><img src="img/asg-livechat-assigned.en.jpg" alt="Live chat — region and consult category badge in the conversation header, plus the system line" loading="lazy"><figcaption>Live chat — region and consult category badge in the conversation header, plus the system line</figcaption></figure>
+</section>
+
+<section id="ch9">
+  <div class="ch"><span class="num">09</span><h2>Alarm settings (personal)</h2></div>
+  <p>Each person sets these under <strong>Alarm settings</strong> in the Alarm center or the 🔔 drawer.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Item</th><th>Options</th></tr>
+    <tr><td>Popup</td><td>All alarms / Only those assigned to me (incl. everyone) / Off</td></tr>
+    <tr><td>Sound</td><td>On/off, <em>Play</em></td></tr>
+    <tr><td>Browser desktop notifications</td><td>When turned on, the browser asks for permission</td></tr>
+    <tr><td>Email</td><td>Email me when assigned</td></tr>
+  </table></div>
+  <figure class="shot"><img src="img/asg-alarm-settings.en.jpg" alt="Alarm settings — popup scope, sound, desktop notifications, email" loading="lazy"><figcaption>Alarm settings — popup scope, sound, desktop notifications, email</figcaption></figure>
+  <div class="callout"><span class="c-label">💡 Tip</span>
+    <p>Even with popups off, every alarm stays in 🔔 and the Alarm center. Busy team leads should use <em>Only those assigned to me</em>.</p></div>
+</section>
+
+<section id="ch10">
+  <div class="ch"><span class="num">10</span><h2>Operations checklist</h2></div>
+  <ul class="check">
+    <li>All agents have accepted their invites (status <code>active</code>)</li>
+    <li>Every agent has the Counsels label + a routing label (CS, Sales etc.) + a unit</li>
+    <li>Consult categories for customers are <strong>Shown</strong> and have per-language names</li>
+    <li>Each routing rule has the right consult category and region conditions and unit × label</li>
+    <li>There is a default rule with no conditions at the bottom</li>
+    <li>No rule card shows a warning</li>
+    <li>All representative combinations (category × region) have been tested with <strong>Check routing</strong></li>
+    <li>A real request was made from the widget and the alarm reached the right agent</li>
+  </ul>
+</section>
+
+<section id="ch11">
+  <div class="ch"><span class="num">11</span><h2>FAQ / Troubleshooting</h2></div>
+  <dl class="faq">
+    <dt>Q. A customer asked for an agent, but no consult category card appeared.</dt>
+    <dd>Check that at least one consult category is <strong>Shown</strong> in [Agent handoff → Manage consult categories]. If none is, the chat connects directly without a card. The card doesn't reappear in a conversation where a category was already picked.</dd>
+    <dt>Q. The alarm goes to someone else (or everyone), not the unit I set.</dt>
+    <dd>Enter the same consult category and region in <strong>Check routing</strong> above the rules. It shows the skipped rules and why. Common causes: ① label chips used in the Topic row ② missing region condition ③ unit members haven't accepted their invites (0 people assignable) ④ rule order (a broader rule above matches first).</dd>
+    <dt>Q. Alarms go to every agent.</dt>
+    <dd>If no rule matches and <em>Assigned agents</em> is also empty, everyone is alerted. Add a default rule or set assigned agents.</dd>
+    <dt>Q. I dismissed another agent's alarm — does that affect them?</dt>
+    <dd>No. [Dismiss] only hides it on your screen; the assigned agent has to acknowledge it (stopping reminders) themselves.</dd>
+    <dt>Q. The region is empty.</dt>
+    <dd>The host app didn't send a region and the province name isn't in the region map. Run <em>Update region map</em> on the [Customers] screen (with the Go2Joy integration), or use a <em>Province</em> condition instead of a region condition.</dd>
+  </dl>
+</section>
+
+<div class="next">
+  <strong>See also →</strong> <a href="user-manual.en.html">Complete User Manual</a> §4.4 (alarms) · §14.1 (agent handoff), <a href="knowledge-ai.en.html">Knowledge &amp; AI Settings Manual</a> Ch. 5 (live-chat handoff settings).
+</div>
+
+</main>
+</div>
+
+</body>
+</html>

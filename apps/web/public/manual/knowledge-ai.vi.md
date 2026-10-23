@@ -590,6 +590,8 @@ liên hệ·mở thẻ cộng tác viên·kết nối nhân viên·mở URL) →
 - Nếu khách không chọn danh mục tư vấn thì chỉ những quy tắc để trống danh mục tư vấn mới khớp.
   Đặt một quy tắc mặc định không có điều kiện ở cuối cùng sẽ an toàn.
 
+→ Hướng dẫn từng màn hình (nhóm & nhãn → danh mục tư vấn → quy tắc phân công → yêu cầu của khách → cảnh báo): [Hướng dẫn phân công nhân viên](agent-assignment.vi.md)
+
 ### 5.2 Hiểu điều kiện chuyển tiếp (escalation)
 
 Các trường hợp AI chuyển sang nhân viên tư vấn:
