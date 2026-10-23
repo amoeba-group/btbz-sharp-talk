@@ -444,5 +444,17 @@
       "agent": "人工处理中",
       "ended": "已结束"
     }
+  },
+  "hotelCard": {
+    "title": "酒店",
+    "details": "详情",
+    "unverified": "未验证的登录",
+    "unverifiedHint": "该酒店编号来自未签名的主机登录，可能不准确。",
+    "sellingRooms": "在售房间 {{count}}",
+    "kind": {
+      "hourly": "钟点",
+      "overnight": "过夜",
+      "daily": "全天"
+    }
   }
 }

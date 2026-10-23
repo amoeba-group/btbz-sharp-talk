@@ -1,9 +1,10 @@
-import { Controller, Get, HttpStatus, Logger, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Logger, Param, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CAPABILITY, CJM_STAGE, Principal } from '@sharptalk/types';
 import { buildPagination, normalizePage } from '@sharptalk/common';
 import { ProductService } from './product.service';
 import { ProductSyncService } from './product-sync.service';
+import { UpdateRoomCountRequest } from './dto/request/product.request';
 import {
   toAdminProductDetailResponse,
   toAdminProductResponse,
@@ -136,6 +137,17 @@ export class ProductAdminController {
     return this.productService.adminCategories(this.tenantId(user));
   }
 
+  /** Companies that own products — the B2B company filter (PLN-261023). */
+  @Get('companies')
+  @RequireCapability(CAPABILITY.MODULE_OPERATIONS)
+  @ApiOperation({ summary: 'B2B companies that own catalogue rows, with counts' })
+  async companies(@CurrentUser() user: Principal) {
+    const tenantId = this.tenantId(user);
+    const facets = await this.productService.companyFacets(tenantId);
+    const names = await this.productService.companyNames(tenantId, facets.map((f) => Number(f.companyId)));
+    return facets.map((f) => ({ ...f, name: names.get(f.companyId) ?? null }));
+  }
+
   @Get()
   @RequireCapability(CAPABILITY.MODULE_OPERATIONS)
   @ApiOperation({ summary: 'List the synced catalogue (archived rows included)' })
@@ -144,6 +156,7 @@ export class ProductAdminController {
     @Query('q') q?: string,
     @Query('category') category?: string,
     @Query('status') status?: string,
+    @Query('company_id') companyId?: string,
     @Query('page') page?: string,
     @Query('size') size?: string,
   ) {
@@ -151,7 +164,7 @@ export class ProductAdminController {
     const { page: p, size: s } = normalizePage(page, size);
     const [items, total] = await this.productService.adminList(
       tenantId,
-      { q, category, status },
+      { q, category, status, companyId },
       p,
       s,
     );
@@ -159,8 +172,11 @@ export class ProductAdminController {
       tenantId,
       items.map((i) => i.handle),
     );
+    const names = await this.productService.companyNames(tenantId, items.map((i) => i.companyId));
     return new Paginated(
-      items.map((i) => toAdminProductResponse(i, known.has(i.handle))),
+      items.map((i) =>
+        toAdminProductResponse(i, known.has(i.handle), i.companyId != null ? (names.get(String(i.companyId)) ?? null) : null),
+      ),
       buildPagination(p, s, total),
     );
   }
@@ -173,7 +189,28 @@ export class ProductAdminController {
     const tenantId = this.tenantId(user);
     const product = await this.productService.detail(tenantId, handle);
     const known = await this.productService.knowledgeHandles(tenantId, [handle]);
-    return toAdminProductDetailResponse(product, known.has(handle));
+    const names = await this.productService.companyNames(tenantId, [product.companyId]);
+    return toAdminProductDetailResponse(
+      product,
+      known.has(handle),
+      product.companyId != null ? (names.get(String(product.companyId)) ?? null) : null,
+    );
+  }
+
+  /** Operator-entered room count of a company room type (PLN-261023). */
+  @Patch(':handle/room-count')
+  @RequireCapability(CAPABILITY.MODULE_OPERATIONS)
+  @ApiOperation({ summary: 'Set the room count of a room-type product' })
+  async roomCount(
+    @CurrentUser() user: Principal,
+    @Param('handle') handle: string,
+    @Body() body: UpdateRoomCountRequest,
+  ) {
+    const tenantId = this.tenantId(user);
+    const product = await this.productService.setRoomCount(tenantId, handle, body.room_count ?? null);
+    const known = await this.productService.knowledgeHandles(tenantId, [handle]);
+    const names = await this.productService.companyNames(tenantId, [product.companyId]);
+    return toAdminProductDetailResponse(product, known.has(handle), names.get(String(product.companyId)) ?? null);
   }
 
   @Post('sync')

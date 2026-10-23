@@ -338,6 +338,8 @@ export const INTEGRATION_PROVIDER = {
   NOTION: 'notion',
   /** A platform the tenant built and runs itself (PLN-261019 D4) — registered, never probed. */
   SELF: 'self',
+  /** Go2Joy Partner API (PLN-261023 hotel profile) — hotel info + room types for B2B companies. */
+  GO2JOY_PARTNER: 'go2joy_partner',
 } as const;
 export type IntegrationProvider = (typeof INTEGRATION_PROVIDER)[keyof typeof INTEGRATION_PROVIDER];
 
@@ -377,12 +379,21 @@ export type HelpdeskProvider = (typeof HELPDESK_PROVIDERS)[number];
  */
 export const SELF_PLATFORM_PROVIDER = INTEGRATION_PROVIDER.SELF;
 
+/**
+ * Partner data sources (PLN-261023): read B2B company data from a platform the
+ * tenant partners with — Go2Joy's Partner API for hotel info and room types.
+ * Generic credential flow + probe; never in the commerce sync scheduler.
+ */
+export const PARTNER_PROVIDERS = [INTEGRATION_PROVIDER.GO2JOY_PARTNER] as const;
+export type PartnerProvider = (typeof PARTNER_PROVIDERS)[number];
+
 /** Every provider served by the generic settings/save/test flow. */
 export const GENERIC_INTEGRATION_PROVIDERS = [
   ...ECOMMERCE_PROVIDERS,
   ...MARKETING_PROVIDERS,
   ...HELPDESK_PROVIDERS,
   SELF_PLATFORM_PROVIDER,
+  ...PARTNER_PROVIDERS,
 ] as const;
 export type GenericIntegrationProvider = (typeof GENERIC_INTEGRATION_PROVIDERS)[number];
 
@@ -450,6 +461,13 @@ export const INTEGRATION_FIELDS: Record<GenericIntegrationProvider, IntegrationF
   self: [
     { key: 'platform_name', secret: false, required: true },
     { key: 'description', secret: false, required: false },
+  ],
+  // Go2Joy Partner API (PLN-261023): server-to-server HMAC — base URL per
+  // environment (staging-partner / partner), clientId + client secret.
+  go2joy_partner: [
+    { key: 'base_url', secret: false, required: true },
+    { key: 'client_id', secret: false, required: true },
+    { key: 'client_secret', secret: true, required: true },
   ],
 };
 

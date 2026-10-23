@@ -202,7 +202,8 @@
       "email": "账户邮箱",
       "webhook_secret": "Webhook secret（L2 状态）",
       "platform_name": "平台名称",
-      "description": "说明"
+      "description": "说明",
+      "base_url": "服务器地址"
     },
     "ph": {
       "mall_id": "your-mall",
@@ -215,7 +216,8 @@
       "email": "agent@example.com",
       "app_key": "yotpo app key",
       "platform_name": "Go2Joy",
-      "description": "例如：酒店合作伙伴后台（自研）"
+      "description": "例如：酒店合作伙伴后台（自研）",
+      "base_url": "https://partner.go2joy.vn/"
     },
     "cafe24": {
       "title": "Cafe24",
@@ -261,6 +263,10 @@
     "self": {
       "title": "自有平台",
       "subtitle": "由您自行开发和运营的平台。只需登记名称和说明，无需测试。"
+    },
+    "go2joy_partner": {
+      "title": "Go2Joy 合作伙伴 API",
+      "subtitle": "获取合作酒店（企业客户）的酒店信息和房型 — 服务器间对接，使用 client secret 签名。"
     }
   },
   "install": {

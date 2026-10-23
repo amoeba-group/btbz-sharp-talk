@@ -284,6 +284,11 @@ export const ERROR_CODE = {
   /** Earlier conversations are only for a signed-in user of a tenant that enabled continuity. */
   THREAD_NOT_AVAILABLE: { code: 'E5099', message: 'Earlier conversations are not available for this session' },
 
+  // E5100-E5102 — Go2Joy Partner API hotel profile sync (PLN-261023).
+  PARTNER_NOT_CONFIGURED: { code: 'E5100', message: 'The Go2Joy Partner API is not connected for this tenant' },
+  PARTNER_HOTEL_NOT_FOUND: { code: 'E5101', message: 'Go2Joy has no hotel with this number' },
+  PARTNER_REQUEST_FAILED: { code: 'E5102', message: 'The Go2Joy Partner API request failed' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

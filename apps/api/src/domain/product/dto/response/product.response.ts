@@ -49,12 +49,20 @@ export interface AdminProductResponse {
   descriptionSnippet: string | null;
   /** A product knowledge document exists for this handle. */
   inKnowledge: boolean;
+  /** B2B company the product belongs to (PLN-261023) — null for storefront rows. */
+  companyId: string | null;
+  companyName: string | null;
+  /** Room-type details for a company product; null for storefront rows. */
+  attributes: Record<string, unknown> | null;
 }
 
 /** One product in full — the console detail view. */
 export interface AdminProductDetailResponse extends ProductDetailResponse {
   syncedAt: string | null;
   inKnowledge: boolean;
+  companyId: string | null;
+  companyName: string | null;
+  attributes: Record<string, unknown> | null;
 }
 
 /** Header counters above the console list. */

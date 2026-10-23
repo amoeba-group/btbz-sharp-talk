@@ -10,6 +10,7 @@ import { EmbedService } from './embed.service';
 import { EmbedController } from './embed.controller';
 import { SessionModule } from '../session/session.module';
 import { AuditModule } from '../audit/audit.module';
+import { Go2joyModule } from '../go2joy/go2joy.module';
 
 /**
  * Embed SDK (PLN-260819). Repositories are registered directly rather than
@@ -17,7 +18,7 @@ import { AuditModule } from '../audit/audit.module';
  * pulling in the whole customer graph would make the module cycle.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([Tenant, Customer, Session, TenantAiConfig, Conversation]), SessionModule, CompanyModule, AuditModule],
+  imports: [TypeOrmModule.forFeature([Tenant, Customer, Session, TenantAiConfig, Conversation]), SessionModule, CompanyModule, AuditModule, Go2joyModule],
   controllers: [EmbedController],
   providers: [EmbedService],
   exports: [EmbedService],

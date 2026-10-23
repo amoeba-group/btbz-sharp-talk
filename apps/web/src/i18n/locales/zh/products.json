@@ -11,7 +11,9 @@
   "filters": {
     "searchPlaceholder": "搜索名称或标签",
     "allCategories": "全部分类",
-    "allStatuses": "全部状态"
+    "allStatuses": "全部状态",
+    "allCompanies": "全部企业",
+    "storeProducts": "店铺商品"
   },
   "columns": {
     "product": "商品",
@@ -19,7 +21,12 @@
     "price": "价格",
     "status": "状态",
     "knowledge": "知识库",
-    "openInShop": "在店铺中打开"
+    "openInShop": "在店铺中打开",
+    "company": "企业",
+    "rooms": "房间数",
+    "hourly": "钟点（首段 / 续时）",
+    "overnight": "过夜",
+    "daily": "全天"
   },
   "status": {
     "active": "在售",
@@ -45,5 +52,37 @@
     "description": "描述",
     "noDescription": "没有描述。由于也没有标签，此商品不会进入知识库。",
     "openInShop": "在店铺中打开"
+  },
+  "ha": {
+    "status": {
+      "selling": "在售",
+      "rejected": "已拒绝",
+      "stopped": "已停售",
+      "other": "状态 {{code}}"
+    },
+    "hours": "首{{first}}小时，续{{additional}}小时",
+    "roomCount": {
+      "edit": "编辑房间数",
+      "label": "房间数",
+      "save": "保存",
+      "cancel": "取消",
+      "saved": "房间数已保存。",
+      "failed": "无法保存房间数。",
+      "invalid": "请输入 0 到 {{max}} 之间的整数，或留空。"
+    },
+    "section": "房型",
+    "moreImages": "还有 {{n}} 张",
+    "haStatus": "HA 状态",
+    "bedType": "床型",
+    "square": "面积",
+    "squareValue": "{{value}} m²",
+    "flags": {
+      "label": "选项",
+      "extraFee": "额外费用",
+      "discount": "折扣",
+      "flashSale": "限时特惠"
+    },
+    "facilities": "设施",
+    "memo": "备注"
   }
 }

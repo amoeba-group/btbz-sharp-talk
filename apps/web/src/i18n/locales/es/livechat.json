@@ -444,5 +444,17 @@
       "agent": "Con agente",
       "ended": "Finalizada"
     }
+  },
+  "hotelCard": {
+    "title": "Hotel",
+    "details": "Detalles",
+    "unverified": "inicio de sesión no verificado",
+    "unverifiedHint": "El número de este hotel proviene de un inicio de sesión del host sin firma, por lo que podría no ser exacto.",
+    "sellingRooms": "Habitaciones a la venta {{count}}",
+    "kind": {
+      "hourly": "Por horas",
+      "overnight": "Noche",
+      "daily": "Por día"
+    }
   }
 }

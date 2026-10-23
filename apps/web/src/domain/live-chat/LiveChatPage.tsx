@@ -32,6 +32,7 @@ import { sessionTitle } from './session-title';
 import { SessionAlias } from './SessionAlias';
 import { IdentityBadges } from './IdentityBadges';
 import { CompanyThreadButton } from './CompanyThreadButton';
+import { HotelCard } from './HotelCard';
 import { AnswerRatingControl } from './AnswerRatingControl';
 import { AutoReplyControl } from './AutoReplyControl';
 import { DraftPanel } from './DraftPanel';
@@ -1540,6 +1541,8 @@ export function LiveChatPage() {
               </div>
             )}
           </div>
+
+          {convo?.hotel && <HotelCard hotel={convo.hotel} />}
 
           {convo?.customer?.recentOrders && convo.customer.recentOrders.length > 0 && (
             <div className="rounded-lg border border-gray-200 bg-white p-4">

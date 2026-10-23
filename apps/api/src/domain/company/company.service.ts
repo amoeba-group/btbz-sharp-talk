@@ -5,8 +5,17 @@ import { Company } from './entity/company.entity';
 import { CompanyContact } from './entity/company-contact.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
+import { PRODUCT_STATUS, ProductCache } from '../product/entity/product-cache.entity';
+import { User } from '../user/entity/user.entity';
 import { CompanyMapper } from './company.mapper';
-import type { CompanyDetailResponse, CompanyResponse, CompanyConversationResponse } from './dto/response/company.response';
+import type {
+  CompanyDetailResponse,
+  CompanyResponse,
+  CompanyConversationResponse,
+  HotelSummaryResponse,
+} from './dto/response/company.response';
+import type { UpdateCompanyProfileRequest } from './dto/request/company.request';
+import type { CompanyProfile } from './entity/company.entity';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 
@@ -42,7 +51,124 @@ export class CompanyService {
     @InjectRepository(CompanyContact) private readonly contactRepo: Repository<CompanyContact>,
     @InjectRepository(Customer) private readonly customerRepo: Repository<Customer>,
     @InjectRepository(Conversation) private readonly convRepo: Repository<Conversation>,
+    @InjectRepository(ProductCache) private readonly productRepo: Repository<ProductCache>,
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
+
+  /** The company of a Go2Joy hotel, or null (tenant-scoped). */
+  findHotel(tenantId: number, hotelSn: number): Promise<Company | null> {
+    return this.companyRepo.findOne({ where: { tenantId, externalKey: `hotel:${hotelSn}` } });
+  }
+
+  /**
+   * The hotel card of a conversation (PLN-261023): the thread's company when a
+   * signed sign-in set one, else the company of the hotel number the session
+   * carries — shown as unverified when that number came unsigned. Display only;
+   * nothing is linked. Null when there is no such company (yet).
+   */
+  async hotelSummary(
+    tenantId: number,
+    threadCompanyId: number | null,
+    hotelId: string | null | undefined,
+    verified: boolean,
+  ): Promise<HotelSummaryResponse | null> {
+    let company: Company | null = null;
+    if (threadCompanyId != null) company = await this.companyRepo.findOne({ where: { id: threadCompanyId, tenantId } });
+    const fromThread = company != null;
+    if (!company && hotelId && /^\d{1,10}$/.test(String(hotelId).trim())) {
+      company = await this.findHotel(tenantId, Number(String(hotelId).trim()));
+    }
+    if (!company) return null;
+    const selling = await this.productRepo.find({
+      where: { tenantId, companyId: Number(company.id), status: PRODUCT_STATUS.ACTIVE },
+      order: { price: 'ASC' },
+    });
+    return {
+      companyId: String(company.id),
+      verified: fromThread || verified,
+      name: company.name,
+      code: company.code ?? null,
+      address: company.address ?? null,
+      phone: company.phone ?? null,
+      hotelType: company.profile?.hotelType ?? null,
+      partnerInfo: (company.partnerInfo as unknown as Record<string, unknown>) ?? null,
+      sellingRooms: selling.length,
+      rooms: selling.slice(0, 5).map((r) => ({
+        title: r.title,
+        price: r.price,
+        currency: r.currency,
+        attributes: r.attributes ?? null,
+      })),
+    };
+  }
+
+  /** One company row or E5098 (tenant-scoped). */
+  async getOrThrow(tenantId: number, id: number): Promise<Company> {
+    const company = await this.companyRepo.findOne({ where: { id, tenantId } });
+    if (!company) {
+      this.logger.warn(`company ${id} not found in tenant ${tenantId}`);
+      throw new BusinessException(ERROR_CODE.COMPANY_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+    return company;
+  }
+
+  /**
+   * Operator edit of the hotel profile (PLN-261023 D3). Only keys present in
+   * the request change; '' and null clear. Returns the fields that changed so
+   * the caller can audit them (names only — values may be personal).
+   */
+  async updateProfile(
+    tenantId: number,
+    id: number,
+    dto: UpdateCompanyProfileRequest,
+    actorUserId: number,
+  ): Promise<string[]> {
+    const company = await this.getOrThrow(tenantId, id);
+    const text = (v: unknown) => (typeof v === 'string' ? v.trim() || null : null);
+    const changed: string[] = [];
+    const column = (key: 'name' | 'code' | 'phone' | 'province' | 'district' | 'address') => {
+      if (!(key in dto)) return;
+      const next = text(dto[key]);
+      if ((company[key] ?? null) !== next) {
+        company[key] = next;
+        changed.push(key);
+      }
+    };
+    (['name', 'code', 'phone', 'province', 'district', 'address'] as const).forEach(column);
+    const profile: CompanyProfile = { ...(company.profile ?? {}) };
+    const map: Array<[keyof UpdateCompanyProfileRequest, keyof CompanyProfile, 'text' | 'bool']> = [
+      ['group_name', 'groupName', 'text'],
+      ['promotion', 'promotion', 'bool'],
+      ['hot', 'hot', 'bool'],
+      ['is_new', 'isNew', 'bool'],
+      ['contract_start', 'contractStart', 'text'],
+      ['contract_end', 'contractEnd', 'text'],
+      ['payment', 'payment', 'text'],
+      ['hotel_type', 'hotelType', 'text'],
+      ['enterprise_name', 'enterpriseName', 'text'],
+      ['enterprise_reg_no', 'enterpriseRegNo', 'text'],
+      ['extra_fee', 'extraFee', 'bool'],
+      ['description_en', 'descriptionEn', 'text'],
+      ['description_vi', 'descriptionVi', 'text'],
+      ['policy_en', 'policyEn', 'text'],
+      ['policy_vi', 'policyVi', 'text'],
+    ];
+    for (const [from, to, kind] of map) {
+      if (!(from in dto)) continue;
+      const raw = dto[from];
+      const next = kind === 'bool' ? (typeof raw === 'boolean' ? raw : null) : text(raw);
+      if ((profile[to] ?? null) !== next) {
+        (profile as Record<string, unknown>)[to] = next;
+        changed.push(from);
+      }
+    }
+    if (!changed.length) return [];
+    company.profile = profile;
+    company.profileUpdatedAt = new Date();
+    company.profileUpdatedBy = actorUserId;
+    await this.companyRepo.save(company);
+    return changed;
+  }
 
   /**
    * Find-or-create the company a signed identify names, refreshing its name /
@@ -92,7 +218,9 @@ export class CompanyService {
     filter: { q?: string; region?: string } = {},
   ): Promise<{ items: CompanyResponse[]; total: number }> {
     const qb = this.companyRepo.createQueryBuilder('c').where('c.tenantId = :tenantId', { tenantId });
-    if (filter.q?.trim()) qb.andWhere('c.name LIKE :q', { q: `%${filter.q.trim()}%` });
+    if (filter.q?.trim()) {
+      qb.andWhere('(c.name LIKE :q OR c.code LIKE :q OR c.externalKey LIKE :q)', { q: `%${filter.q.trim()}%` });
+    }
     if (filter.region) qb.andWhere('c.region = :region', { region: filter.region });
     const [rows, total] = await qb
       .orderBy('c.lastSeenAt', 'DESC')
@@ -116,11 +244,7 @@ export class CompanyService {
   }
 
   async detail(tenantId: number, id: number): Promise<CompanyDetailResponse> {
-    const company = await this.companyRepo.findOne({ where: { id, tenantId } });
-    if (!company) {
-      this.logger.warn(`company ${id} not found in tenant ${tenantId}`);
-      throw new BusinessException(ERROR_CODE.COMPANY_NOT_FOUND, HttpStatus.NOT_FOUND);
-    }
+    const company = await this.getOrThrow(tenantId, id);
     const links = await this.contactRepo.find({ where: { tenantId, companyId: id }, order: { lastSeenAt: 'DESC' } });
     const conversations = await this.convRepo.find({
       where: { tenantId, companyId: id },
@@ -132,8 +256,21 @@ export class CompanyService {
       ...conversations.map((c) => Number(c.customerId)).filter((n) => Number.isFinite(n) && n > 0),
     ]);
     const stats = (await this.stats(tenantId, [Number(company.id)])).get(String(company.id));
+    const rooms = await this.productRepo.find({
+      where: { tenantId, companyId: Number(company.id) },
+      order: { status: 'ASC', title: 'ASC' },
+    });
+    const editor =
+      company.profileUpdatedBy != null
+        ? await this.userRepo.findOne({ where: { id: Number(company.profileUpdatedBy) }, select: ['id', 'name', 'email'] })
+        : null;
     return {
       ...CompanyMapper.toResponse(company, stats),
+      profile: CompanyMapper.toProfile(company, editor ? editor.name || editor.email : null),
+      partnerInfo: (company.partnerInfo as unknown as Record<string, unknown>) ?? null,
+      partnerSyncedAt: company.partnerSyncedAt ? new Date(company.partnerSyncedAt).toISOString() : null,
+      partnerSyncError: company.partnerSyncError ?? null,
+      rooms: rooms.map((r) => CompanyMapper.toRoom(r)),
       contacts: links.map((l) => CompanyMapper.toContact(l, names.get(String(l.customerId)) ?? null)),
       conversations: conversations.map((c) =>
         CompanyMapper.toConversation(c, c.customerId != null ? (names.get(String(c.customerId)) ?? null) : null),
@@ -172,10 +309,25 @@ export class CompanyService {
   private async stats(
     tenantId: number,
     ids: number[],
-  ): Promise<Map<string, { contactCount: number; conversationCount: number; lastConversationAt: Date | null }>> {
-    const out = new Map<string, { contactCount: number; conversationCount: number; lastConversationAt: Date | null }>();
+  ): Promise<Map<string, { contactCount: number; conversationCount: number; lastConversationAt: Date | null; roomCount: number }>> {
+    const out = new Map<string, { contactCount: number; conversationCount: number; lastConversationAt: Date | null; roomCount: number }>();
     if (!ids.length) return out;
-    for (const id of ids) out.set(String(id), { contactCount: 0, conversationCount: 0, lastConversationAt: null });
+    for (const id of ids) out.set(String(id), { contactCount: 0, conversationCount: 0, lastConversationAt: null, roomCount: 0 });
+    const rooms: Array<{ companyId: string; n: string }> = await this.productRepo
+      .createQueryBuilder('p')
+      .select('p.companyId', 'companyId')
+      .addSelect('COUNT(*)', 'n')
+      .where('p.tenantId = :tenantId AND p.companyId IN (:...ids) AND p.status = :active', {
+        tenantId,
+        ids,
+        active: PRODUCT_STATUS.ACTIVE,
+      })
+      .groupBy('p.companyId')
+      .getRawMany();
+    for (const r of rooms) {
+      const s = out.get(String(r.companyId));
+      if (s) s.roomCount = Number(r.n);
+    }
     const contacts: Array<{ companyId: string; n: string }> = await this.contactRepo
       .createQueryBuilder('l')
       .select('l.companyId', 'companyId')

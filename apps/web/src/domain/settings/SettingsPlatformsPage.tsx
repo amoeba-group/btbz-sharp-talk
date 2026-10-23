@@ -14,13 +14,14 @@ import {
 import { usePlatformConnections } from './platform-connections.hooks';
 import {
   ECOMMERCE_PROVIDERS,
+  PARTNER_PROVIDERS,
   PLATFORM_CHOICES,
   SELF_PLATFORM_PROVIDER,
   type PlatformChoice,
 } from './integration-providers';
 
 /** Platforms whose settings dialog is the generic credential modal. */
-const GENERIC_PLATFORMS = [...ECOMMERCE_PROVIDERS, SELF_PLATFORM_PROVIDER] as const;
+const GENERIC_PLATFORMS = [...ECOMMERCE_PROVIDERS, SELF_PLATFORM_PROVIDER, ...PARTNER_PROVIDERS] as const;
 
 /** Manual guide languages that exist under public/manual (PLN-260826). */
 const GUIDE_LANGS = ['ko', 'en', 'vi'] as const;

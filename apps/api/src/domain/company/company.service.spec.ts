@@ -66,3 +66,40 @@ describe('CompanyService', () => {
     await expect(svc.detail(4, 99)).rejects.toMatchObject({ errorCode: ERROR_CODE.COMPANY_NOT_FOUND.code });
   });
 });
+
+/** Operator-entered hotel profile (PLN-261023 D3). */
+describe('CompanyService.updateProfile', () => {
+  const build = (row: Record<string, unknown>) => {
+    const companyRepo = repo({ findOne: jest.fn(async () => row), save: jest.fn(async (x: object) => x) });
+    return new CompanyService(companyRepo, repo(), repo(), repo(), repo(), repo());
+  };
+
+  it('writes columns and profile keys present in the request, returns the changed names', async () => {
+    const row: Record<string, any> = { id: '7', tenantId: 4, externalKey: 'hotel:4118', phone: null, profile: { payment: 'Pay at hotel' } };
+    const changed = await build(row).updateProfile(
+      4,
+      7,
+      { phone: ' 0280886241062 ', enterprise_name: 'Nguyễn Thị', promotion: true, contract_start: '2021-06-24' },
+      39,
+    );
+    expect(changed.sort()).toEqual(['contract_start', 'enterprise_name', 'phone', 'promotion']);
+    expect(row.phone).toBe('0280886241062');
+    expect(row.profile).toEqual({ payment: 'Pay at hotel', enterpriseName: 'Nguyễn Thị', promotion: true, contractStart: '2021-06-24' });
+    expect(row.profileUpdatedBy).toBe(39);
+    expect(row.profileUpdatedAt).toBeInstanceOf(Date);
+  });
+
+  it("'' and null clear; an unchanged value is not reported and nothing is saved", async () => {
+    const row: Record<string, any> = { id: '7', tenantId: 4, externalKey: 'hotel:4118', address: 'X', profile: { hotelType: 'Couple' } };
+    const svc = build(row);
+    expect(await svc.updateProfile(4, 7, { address: '', hotel_type: null }, 1)).toEqual(['address', 'hotel_type']);
+    expect(row.address).toBeNull();
+    expect(row.profile.hotelType).toBeNull();
+    expect(await svc.updateProfile(4, 7, { address: null }, 1)).toEqual([]);
+  });
+
+  it('another tenant’s company is not found (E5098)', async () => {
+    const svc = new CompanyService(repo(), repo(), repo(), repo(), repo(), repo());
+    await expect(svc.updateProfile(4, 7, { phone: '1' }, 1)).rejects.toMatchObject({ errorCode: ERROR_CODE.COMPANY_NOT_FOUND.code });
+  });
+});

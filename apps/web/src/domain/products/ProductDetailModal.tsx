@@ -4,6 +4,111 @@ import { ExternalLink, Package } from 'lucide-react';
 import { Modal } from '@/components/Modal';
 import { Badge } from '@/components/Badge';
 import { useProduct } from './products.hooks';
+import { roomTypeAttrs } from './products.service';
+import type { RoomTypeAttributes } from './products.service';
+import { HaStatusBadge, RoomCountEditor, fmtVnd } from './room-type';
+
+const MAX_THUMBS = 6;
+
+/** An HA room type's own facts (PLN-261022 HA hotel profile). */
+function RoomTypeSection({
+  handle,
+  room,
+  companyName,
+}: {
+  handle: string;
+  room: RoomTypeAttributes;
+  companyName: string | null;
+}) {
+  const { t } = useTranslation('products');
+  const images = (room.images ?? []).filter(Boolean);
+  const facilities = (room.facilities ?? [])
+    .map((f) => (f.en && f.en.trim()) || (f.vi && f.vi.trim()) || '')
+    .filter(Boolean);
+  const flags = [
+    room.extraFee && t('ha.flags.extraFee'),
+    room.discount && t('ha.flags.discount'),
+    room.flashSale && t('ha.flags.flashSale'),
+  ].filter(Boolean) as string[];
+
+  return (
+    <div className="mt-4">
+      <p className="mb-2 text-sm font-semibold text-gray-900">{t('ha.section')}</p>
+      {images.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {images.slice(0, MAX_THUMBS).map((url) => (
+            <a key={url} href={url} target="_blank" rel="noopener noreferrer">
+              <img
+                src={url}
+                alt=""
+                loading="lazy"
+                className="h-20 w-20 rounded border border-gray-200 object-cover"
+                onError={(e) => {
+                  e.currentTarget.style.visibility = 'hidden';
+                }}
+              />
+            </a>
+          ))}
+          {images.length > MAX_THUMBS && (
+            <span className="self-center text-xs text-gray-500">
+              {t('ha.moreImages', { n: images.length - MAX_THUMBS })}
+            </span>
+          )}
+        </div>
+      )}
+      <div className="divide-y divide-gray-100 border-y border-gray-100">
+        <Row label={t('columns.company')}>{companyName ?? '—'}</Row>
+        <Row label={t('ha.haStatus')}>
+          <HaStatusBadge code={room.haStatus} />
+        </Row>
+        <Row label={t('columns.rooms')}>
+          <RoomCountEditor handle={handle} value={room.roomCount ?? null} />
+        </Row>
+        <Row label={t('columns.hourly')}>
+          {fmtVnd(room.prices?.firstHours)} / {fmtVnd(room.prices?.additional)}
+          {room.firstHours != null && (
+            <span className="ml-2 text-xs text-gray-500">
+              {t('ha.hours', { first: room.firstHours, additional: room.additionalHours ?? 1 })}
+            </span>
+          )}
+        </Row>
+        <Row label={t('columns.overnight')}>{fmtVnd(room.prices?.overnight)}</Row>
+        <Row label={t('columns.daily')}>{fmtVnd(room.prices?.oneDay)}</Row>
+        <Row label={t('ha.bedType')}>{room.bedType || '—'}</Row>
+        <Row label={t('ha.square')}>
+          {room.square != null && room.square !== '' ? t('ha.squareValue', { value: room.square }) : '—'}
+        </Row>
+        <Row label={t('ha.flags.label')}>
+          {flags.length > 0 ? (
+            <span className="flex flex-wrap gap-1">
+              {flags.map((f) => (
+                <Badge key={f} tone="info">
+                  {f}
+                </Badge>
+              ))}
+            </span>
+          ) : (
+            '—'
+          )}
+        </Row>
+        <Row label={t('ha.facilities')}>
+          {facilities.length > 0 ? (
+            <ul className="list-disc pl-4">
+              {facilities.map((f, i) => (
+                <li key={`${f}-${i}`}>{f}</li>
+              ))}
+            </ul>
+          ) : (
+            '—'
+          )}
+        </Row>
+        <Row label={t('ha.memo')}>
+          {room.memo ? <span className="whitespace-pre-wrap">{room.memo}</span> : '—'}
+        </Row>
+      </div>
+    </div>
+  );
+}
 
 function fmtMoney(value: number | null | undefined, currency: string | undefined): string {
   if (typeof value !== 'number') return '—';
@@ -39,6 +144,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
 export function ProductDetailModal({ handle, onClose }: { handle: string | null; onClose: () => void }) {
   const { t } = useTranslation('products');
   const { data: p, isLoading, error } = useProduct(handle);
+  const room = p ? roomTypeAttrs(p) : null;
 
   return (
     <Modal open={!!handle} onClose={onClose} title={p?.title ?? t('detail.title')} size="lg">
@@ -89,6 +195,9 @@ export function ProductDetailModal({ handle, onClose }: { handle: string | null;
           </div>
 
           <div className="divide-y divide-gray-100 border-y border-gray-100">
+            {p.companyId != null && !room && (
+              <Row label={t('columns.company')}>{p.companyName ?? `#${p.companyId}`}</Row>
+            )}
             <Row label={t('columns.category')}>{p.category ?? '—'}</Row>
             {p.vendor && <Row label={t('detail.vendor')}>{p.vendor}</Row>}
             <Row label={t('detail.tags')}>{p.tags ?? '—'}</Row>
@@ -101,6 +210,8 @@ export function ProductDetailModal({ handle, onClose }: { handle: string | null;
             <Row label={t('detail.publishedAt')}>{fmtDateTime(p.publishedAt)}</Row>
             <Row label={t('detail.syncedAt')}>{fmtDateTime(p.syncedAt)}</Row>
           </div>
+
+          {room && <RoomTypeSection handle={p.handle} room={room} companyName={p.companyName} />}
 
           <div className="mt-4">
             <p className="mb-1 text-sm text-gray-500">{t('detail.description')}</p>

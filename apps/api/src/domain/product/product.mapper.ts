@@ -52,7 +52,11 @@ export function descriptionSnippet(text: string | null): string | null {
 }
 
 /** Map a catalog row to the console list row (snippet only). */
-export function toAdminProductResponse(p: ProductCache, inKnowledge: boolean): AdminProductResponse {
+export function toAdminProductResponse(
+  p: ProductCache,
+  inKnowledge: boolean,
+  companyName: string | null = null,
+): AdminProductResponse {
   return {
     handle: p.handle,
     title: p.title,
@@ -69,6 +73,9 @@ export function toAdminProductResponse(p: ProductCache, inKnowledge: boolean): A
     syncedAt: p.syncedAt ? p.syncedAt.toISOString() : null,
     descriptionSnippet: descriptionSnippet(p.description),
     inKnowledge,
+    companyId: p.companyId != null ? String(p.companyId) : null,
+    companyName,
+    attributes: p.attributes ?? null,
   };
 }
 
@@ -76,10 +83,14 @@ export function toAdminProductResponse(p: ProductCache, inKnowledge: boolean): A
 export function toAdminProductDetailResponse(
   p: ProductCache,
   inKnowledge: boolean,
+  companyName: string | null = null,
 ): AdminProductDetailResponse {
   return {
     ...toProductDetailResponse(p),
     syncedAt: p.syncedAt ? p.syncedAt.toISOString() : null,
     inKnowledge,
+    companyId: p.companyId != null ? String(p.companyId) : null,
+    companyName,
+    attributes: p.attributes ?? null,
   };
 }

@@ -16,11 +16,14 @@ export type MarketingProvider = 'klaviyo' | 'yotpo';
 export type HelpdeskProvider = 'gorgias';
 /** The tenant's own platform (PLN-261019 D4): registered, never probed or synced. */
 export type SelfPlatformProvider = 'self';
+/** Partner data sources (PLN-261023): Go2Joy Partner API for hotel info + room types. */
+export type PartnerProvider = 'go2joy_partner';
 export type GenericIntegrationProvider =
   | EcommerceProvider
   | MarketingProvider
   | HelpdeskProvider
-  | SelfPlatformProvider;
+  | SelfPlatformProvider
+  | PartnerProvider;
 
 export interface IntegrationFieldSpec {
   key: string;
@@ -36,6 +39,7 @@ export const ECOMMERCE_PROVIDERS: EcommerceProvider[] = [
 export const MARKETING_PROVIDERS: MarketingProvider[] = ['klaviyo', 'yotpo'];
 export const HELPDESK_PROVIDERS: HelpdeskProvider[] = ['gorgias'];
 export const SELF_PLATFORM_PROVIDER: SelfPlatformProvider = 'self';
+export const PARTNER_PROVIDERS: PartnerProvider[] = ['go2joy_partner'];
 /** Anything the connected/add layout can show: Shopify or a generic-flow provider. */
 export type PlatformChoice = 'shopify' | GenericIntegrationProvider;
 /** The platforms tab's "Add a platform" row, in display order (PLN-261019 D3). */
@@ -43,6 +47,7 @@ export const PLATFORM_CHOICES: readonly PlatformChoice[] = [
   'shopify',
   ...ECOMMERCE_PROVIDERS,
   SELF_PLATFORM_PROVIDER,
+  ...PARTNER_PROVIDERS,
 ];
 /** The marketing · helpdesk tab's row (PLN-261019 S4). */
 export const MARKETING_CHOICES: readonly PlatformChoice[] = [
@@ -86,6 +91,11 @@ export const INTEGRATION_FIELDS: Record<GenericIntegrationProvider, IntegrationF
   self: [
     { key: 'platform_name', secret: false, required: true },
     { key: 'description', secret: false, required: false },
+  ],
+  go2joy_partner: [
+    { key: 'base_url', secret: false, required: true },
+    { key: 'client_id', secret: false, required: true },
+    { key: 'client_secret', secret: true, required: true },
   ],
 };
 

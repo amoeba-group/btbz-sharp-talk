@@ -444,5 +444,17 @@
       "agent": "対応中",
       "ended": "終了"
     }
+  },
+  "hotelCard": {
+    "title": "ホテル",
+    "details": "詳細",
+    "unverified": "未検証のサインイン",
+    "unverifiedHint": "このホテル番号は署名のないホストサインインから取得されたため、正確でない可能性があります。",
+    "sellingRooms": "販売中の客室 {{count}}",
+    "kind": {
+      "hourly": "時間利用",
+      "overnight": "宿泊(夜間)",
+      "daily": "1日"
+    }
   }
 }

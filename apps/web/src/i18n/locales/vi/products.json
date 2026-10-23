@@ -11,7 +11,9 @@
   "filters": {
     "searchPlaceholder": "Tìm theo tên hoặc thẻ",
     "allCategories": "Tất cả danh mục",
-    "allStatuses": "Tất cả trạng thái"
+    "allStatuses": "Tất cả trạng thái",
+    "allCompanies": "Tất cả công ty",
+    "storeProducts": "Sản phẩm cửa hàng"
   },
   "columns": {
     "product": "Sản phẩm",
@@ -19,7 +21,12 @@
     "price": "Giá",
     "status": "Trạng thái",
     "knowledge": "Tri thức",
-    "openInShop": "Mở trên cửa hàng"
+    "openInShop": "Mở trên cửa hàng",
+    "company": "Công ty",
+    "rooms": "Số phòng",
+    "hourly": "Theo giờ (đầu / thêm)",
+    "overnight": "Qua đêm",
+    "daily": "Theo ngày"
   },
   "status": {
     "active": "Đang bán",
@@ -45,5 +52,37 @@
     "description": "Mô tả",
     "noDescription": "Không có mô tả. Vì cũng không có thẻ, sản phẩm này chưa được đưa vào kho tri thức.",
     "openInShop": "Mở trên cửa hàng"
+  },
+  "ha": {
+    "status": {
+      "selling": "Đang bán",
+      "rejected": "Bị từ chối",
+      "stopped": "Ngừng bán",
+      "other": "Trạng thái {{code}}"
+    },
+    "hours": "{{first}} giờ đầu, +{{additional}} giờ",
+    "roomCount": {
+      "edit": "Sửa số phòng",
+      "label": "Số phòng",
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "saved": "Đã lưu số phòng.",
+      "failed": "Không thể lưu số phòng.",
+      "invalid": "Nhập số nguyên từ 0 đến {{max}} hoặc để trống."
+    },
+    "section": "Loại phòng",
+    "moreImages": "+{{n}} ảnh nữa",
+    "haStatus": "Trạng thái HA",
+    "bedType": "Loại giường",
+    "square": "Diện tích",
+    "squareValue": "{{value}} m²",
+    "flags": {
+      "label": "Tùy chọn",
+      "extraFee": "Phụ phí",
+      "discount": "Giảm giá",
+      "flashSale": "Flash sale"
+    },
+    "facilities": "Tiện nghi",
+    "memo": "Ghi chú"
   }
 }

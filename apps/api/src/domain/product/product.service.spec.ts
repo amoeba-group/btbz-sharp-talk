@@ -1,4 +1,4 @@
-import { Like } from 'typeorm';
+import { IsNull, Like } from 'typeorm';
 import { ProductService } from './product.service';
 import { ProductCache } from './entity/product-cache.entity';
 import { BusinessException } from '../../global/exception/business.exception';
@@ -44,7 +44,7 @@ describe('ProductService', () => {
       const { svc, repo } = build([{ handle: 'a' }]);
       await svc.list(7, undefined, undefined, 2, 20);
       expect(repo.findAndCount).toHaveBeenCalledWith({
-        where: { tenantId: 7, status: 'active' },
+        where: { tenantId: 7, status: 'active', companyId: IsNull() },
         order: { publishedAt: 'DESC', id: 'DESC' },
         skip: 20,
         take: 20,
@@ -57,8 +57,8 @@ describe('ProductService', () => {
       expect(repo.findAndCount).toHaveBeenCalledWith(
         expect.objectContaining({
           where: [
-            { tenantId: 7, status: 'active', title: Like('%serum%') },
-            { tenantId: 7, status: 'active', tags: Like('%serum%') },
+            { tenantId: 7, status: 'active', companyId: IsNull(), title: Like('%serum%') },
+            { tenantId: 7, status: 'active', companyId: IsNull(), tags: Like('%serum%') },
           ],
         }),
       );
@@ -70,8 +70,8 @@ describe('ProductService', () => {
       expect(repo.findAndCount).toHaveBeenCalledWith(
         expect.objectContaining({
           where: [
-            { tenantId: 7, status: 'active', category: 'Skin Care', title: Like('%mask%') },
-            { tenantId: 7, status: 'active', category: 'Skin Care', tags: Like('%mask%') },
+            { tenantId: 7, status: 'active', companyId: IsNull(), category: 'Skin Care', title: Like('%mask%') },
+            { tenantId: 7, status: 'active', companyId: IsNull(), category: 'Skin Care', tags: Like('%mask%') },
           ],
         }),
       );
@@ -95,7 +95,7 @@ describe('ProductService', () => {
       ]);
       expect(await svc.categories(7)).toEqual(['Mask', 'Serum']);
       expect(repo.find).toHaveBeenCalledWith({
-        where: { tenantId: 7, status: 'active' },
+        where: { tenantId: 7, status: 'active', companyId: IsNull() },
         select: ['category'],
       });
     });
@@ -141,7 +141,7 @@ describe('ProductService', () => {
       const out = await svc.recommendations(7, null, 2);
       expect(out.map((p) => p.handle)).toEqual(['new-toner', 'serum-b']);
       expect(repo.find).toHaveBeenCalledWith({
-        where: { tenantId: 7, status: 'active' },
+        where: { tenantId: 7, status: 'active', companyId: IsNull() },
         order: { publishedAt: 'DESC', id: 'DESC' },
         take: 2,
       });
