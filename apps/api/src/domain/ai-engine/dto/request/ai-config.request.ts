@@ -1,4 +1,5 @@
-import { IsArray, IsBoolean, IsInt, IsObject, IsOptional, IsString } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsBoolean, IsInt, IsObject, IsOptional, IsString, MaxLength, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 class ScenarioButtonDto {
   @IsString() id: string;
@@ -43,4 +44,22 @@ export class UpdateAiConfigRequest {
 
   /** Which AI agent a persona/rules write targets (PLN-260820); omitted = the default agent. */
   @IsOptional() @IsInt() ai_agent_id?: number;
+}
+
+/** What the routing simulator is asked about (PLN-261024 D6). All optional — empty = "unknown". */
+class RoutingSimulateContextDto {
+  @IsOptional() @IsString() @MaxLength(64) consult_category?: string;
+  @IsOptional() @IsString() @MaxLength(64) region?: string;
+  @IsOptional() @IsString() @MaxLength(120) province?: string;
+  @IsOptional() @IsString() @MaxLength(8) language?: string;
+  @IsOptional() @IsString() @MaxLength(500) text?: string;
+  @IsOptional() @IsString() @MaxLength(32) identity_level?: string;
+  @IsOptional() @IsString() @MaxLength(120) hotel_name?: string;
+}
+
+/** POST /ai-config/routing/simulate — the rules being edited (handoff_config shape) and a context. */
+export class RoutingSimulateRequest {
+  @IsArray() @ArrayMaxSize(100) @IsObject({ each: true }) rules: Record<string, unknown>[];
+  @IsOptional() @IsArray() @ArrayMaxSize(100) assignee_user_ids?: number[];
+  @ValidateNested() @Type(() => RoutingSimulateContextDto) context: RoutingSimulateContextDto;
 }

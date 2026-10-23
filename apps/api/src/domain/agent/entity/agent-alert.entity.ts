@@ -52,6 +52,23 @@ export class AgentAlert {
   @Column({ name: 'reminded_at', type: 'datetime', nullable: true })
   remindedAt: Date | null;
 
+  /**
+   * One escalation = one key (PLN-261024 alarm center): a group alarm writes a
+   * row per paged agent, shown in the console as one alarm with its assignees.
+   * NULL on rows written before the key existed — each stands alone.
+   */
+  @Column({ name: 'event_key', type: 'varchar', length: 36, nullable: true })
+  @Index('idx_alert_event')
+  eventKey: string | null;
+
+  /** The routing rule that chose the agents; NULL = no rule matched. */
+  @Column({ name: 'rule_name', type: 'varchar', length: 120, nullable: true })
+  ruleName: string | null;
+
+  /** The consult category the shopper picked (PLN-261024). */
+  @Column({ name: 'consult_category', type: 'varchar', length: 64, nullable: true })
+  consultCategory: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

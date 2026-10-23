@@ -497,3 +497,34 @@ describe('consult category + region condition (PLN-261024)', () => {
     expect(r).toMatchObject({ targetUserIds: [11, 12], ruleName: 'pay-north' });
   });
 });
+
+describe('HandoffRouterService.simulate (PLN-261024 D6)', () => {
+  // The staging go2joy shape of 10/24: a deny-label filter that never matches,
+  // a north-only rule, a south rule whose team has nobody active yet.
+  const rules = [
+    { name: 'BS_North_SA', regions: ['bs'], labels: ['sa'], assigneeUserIds: [], assigneeUnitIds: [64], assigneeLabelCodes: ['sa'] },
+    { name: 'CS_North', regions: ['cs'], conditions: [{ field: 'region' as const, values: ['north'] }], assigneeUserIds: [], assigneeUnitIds: [64], assigneeLabelCodes: ['cs'] },
+    { name: 'CS_South', regions: ['cs'], conditions: [{ field: 'region' as const, values: ['south'] }], assigneeUserIds: [], assigneeUnitIds: [66], assigneeLabelCodes: ['cs'] },
+    { name: 'CS_Any', regions: ['cs'], assigneeUserIds: [28] },
+  ];
+  const svc = (resolveDetailed: jest.Mock) =>
+    new HandoffRouterService({ getHandoffConfig: async () => ({}) } as unknown as AiConfigService, { resolveDetailed } as never);
+
+  it('walks the rules like a real handoff and says why each earlier rule was passed over', async () => {
+    const resolveDetailed = jest.fn(async (_t: number, sel: { unitIds: number[] }) => ({ ids: sel.unitIds[0] === 66 ? [] : [28], match: 'none' }));
+    const r = await svc(resolveDetailed).simulate(4, rules, [99], { consultCategory: 'cs', region: 'south', identityAttributes: { region: 'south' } });
+    expect(r.steps).toEqual([
+      { index: 0, name: 'BS_North_SA', outcome: 'skipped', reason: 'category' },
+      { index: 1, name: 'CS_North', outcome: 'skipped', reason: 'condition:region' },
+      { index: 2, name: 'CS_South', outcome: 'skipped', reason: 'nobody_active' },
+      { index: 3, name: 'CS_Any', outcome: 'matched', targetUserIds: [28] },
+    ]);
+    expect(r.result).toEqual({ ruleIndex: 3, ruleName: 'CS_Any', targetUserIds: [28] });
+  });
+
+  it('a deny-label filter is reported as such; no match falls back to the assignee list', async () => {
+    const r = await svc(jest.fn(async () => ({ ids: [28], match: 'none' }))).simulate(4, rules.slice(0, 1), [99], { consultCategory: 'bs' });
+    expect(r.steps[0]).toMatchObject({ outcome: 'skipped', reason: 'label' });
+    expect(r.result).toEqual({ ruleIndex: null, ruleName: null, targetUserIds: [99] });
+  });
+});

@@ -1,7 +1,7 @@
 # PLN-261024 — 알람센터 · 배정 상담원 표시 · 알람 설정 · 배정 시뮬레이터
 
 - REQ: `docs/analysis/REQ-261024-Alarm-Center-Assignee-Region-Routing.md`
-- 상태: **승인 대기** (D1~D7 결정 후 구현)
+- 상태: **승인됨** (2026-10-24, D1~D7 권장안)
 
 ## 1. 결정 사항 (권장안 ★)
 

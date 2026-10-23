@@ -7,7 +7,9 @@ import { AiConfigMapper } from './ai-config.mapper';
 import { CONFIG_REVISION_KIND } from './entity/tenant-ai-config-revision.entity';
 import type { HandoffConfig, ScenarioOverride } from './entity/tenant-ai-config.entity';
 import { SessionService } from '../session/session.service';
-import { UpdateAiConfigRequest, CreatePreviewSessionRequest } from './dto/request/ai-config.request';
+import { UpdateAiConfigRequest, CreatePreviewSessionRequest, RoutingSimulateRequest } from './dto/request/ai-config.request';
+import { HandoffRouterService } from './handoff-router.service';
+import type { RoutingRule } from './entity/tenant-ai-config.entity';
 import { RequireCapability } from '../../global/decorator/auth.decorator';
 import { Public } from '../../global/decorator/public.decorator';
 import { CurrentUser } from '../../global/decorator/current-user.decorator';
@@ -24,7 +26,37 @@ export class AiConfigController {
     private readonly aiConfig: AiConfigService,
     private readonly sessionService: SessionService,
     private readonly revisionService: AiConfigRevisionService,
+    private readonly handoffRouter: HandoffRouterService,
   ) {}
+
+  /**
+   * Routing dry run (PLN-261024 D6): who would a handoff with this context page
+   * under the rules being edited — same matching and group resolution as a
+   * real handoff, nothing saved, nobody paged.
+   */
+  @Post('routing/simulate')
+  @RequireCapability(CAPABILITY.AI_SETTINGS_MANAGE)
+  @ApiOperation({ summary: 'Which routing rule and agents a handoff with this context would reach (dry run)' })
+  simulateRouting(@CurrentUser() user: Principal, @Body() body: RoutingSimulateRequest) {
+    const c = body.context ?? {};
+    const attrs: Record<string, string> = {};
+    if (c.region) attrs.region = c.region;
+    if (c.province) attrs.province = c.province;
+    if (c.hotel_name) attrs.hotel_name = c.hotel_name;
+    return this.handoffRouter.simulate(
+      this.tenantId(user),
+      body.rules as unknown as RoutingRule[],
+      (body.assignee_user_ids ?? []).map(Number),
+      {
+        consultCategory: c.consult_category ?? null,
+        region: c.region ?? null,
+        language: c.language ?? null,
+        text: c.text ?? null,
+        identityLevel: c.identity_level ?? null,
+        identityAttributes: Object.keys(attrs).length ? attrs : null,
+      },
+    );
+  }
 
   @Get()
   @RequireCapability(CAPABILITY.AI_SETTINGS_MANAGE)

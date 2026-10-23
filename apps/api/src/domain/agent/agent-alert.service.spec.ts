@@ -209,3 +209,62 @@ describe('AgentAlertService — consult category re-route (PLN-261024)', () => {
     expect(alertRepo.update).not.toHaveBeenCalled();
   });
 });
+
+describe('AgentAlertService — who stops the page / alarm mail (PLN-261024 D2, D4)', () => {
+  function build(rows: Partial<AgentAlert>[], mailOff: number[] = []) {
+    const alertRepo = {
+      findOne: jest.fn(async ({ where }: { where: { id: number } }) => (rows.find((r) => String(r.id) === String(where.id)) ?? null) as AgentAlert | null),
+      find: jest.fn(async () => rows as AgentAlert[]),
+      save: jest.fn(async (a: AgentAlert) => a),
+      update: jest.fn(async () => ({ affected: 1 })),
+    };
+    const mailer = { send: jest.fn(async () => undefined) };
+    const userRepo = { findOne: jest.fn(async ({ where }: { where: { id: number } }) => ({ id: where.id, email: `u${where.id}@x` })) };
+    const settingsRepo = { find: jest.fn(async () => mailOff.map((userId) => ({ userId: String(userId) }))) };
+    const svc = new AgentAlertService(
+      alertRepo as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      { subscribe: jest.fn() } as never,
+      { get: jest.fn(() => undefined) } as never,
+      mailer as never,
+      userRepo as never,
+      undefined,
+      settingsRepo as never,
+    );
+    return { svc, alertRepo, mailer };
+  }
+  const group = [
+    { id: '11', tenantId: 4, conversationId: 30, reason: 'low_confidence', status: 'new', targetUserId: 28, eventKey: 'e1' },
+    { id: '12', tenantId: 4, conversationId: 30, reason: 'low_confidence', status: 'new', targetUserId: 29, eventKey: 'e1' },
+  ] as unknown as Partial<AgentAlert>[];
+
+  it('an agent the alarm is not addressed to cannot ack it', async () => {
+    const { svc, alertRepo } = build(group);
+    const res = await svc.ack(11, 55, 4);
+    expect(res.status).toBe('new');
+    expect(alertRepo.save).not.toHaveBeenCalled();
+  });
+
+  it('an assignee (any row of the escalation) acks it for the whole group', async () => {
+    const { svc, alertRepo } = build(group);
+    const res = await svc.ack(11, 29, 4);
+    expect(res.status).toBe('acked');
+    expect(alertRepo.update).toHaveBeenCalled();
+  });
+
+  it('a broadcast alarm can be acked by anyone', async () => {
+    const { svc } = build([{ id: '20', tenantId: 4, conversationId: 31, reason: 'user_request', status: 'new', targetUserId: null, eventKey: null }] as never);
+    expect((await svc.ack(20, 55, 4)).status).toBe('acked');
+  });
+
+  it('personal alarm mail is skipped for agents who switched it off', async () => {
+    const { svc, mailer } = build([], [29]);
+    await svc.notifyRows(group as AgentAlert[]);
+    const to = mailer.send.mock.calls.map((c) => (c as unknown as [{ to: string }])[0]?.to ?? c[0]);
+    expect(JSON.stringify(to)).toContain('u28@x');
+    expect(JSON.stringify(to)).not.toContain('u29@x');
+  });
+});

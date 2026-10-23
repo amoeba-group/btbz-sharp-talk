@@ -20,6 +20,7 @@ import { CAPABILITY, Principal, USER_RANK } from '@sharptalk/types';
 import { normalizePage, buildPagination } from '@sharptalk/common';
 import { AgentService } from './agent.service';
 import { AgentAlertService } from './agent-alert.service';
+import { AlertCenterService } from './alert-center.service';
 import { BriefingService } from './briefing.service';
 import { ChatCommentService } from './chat-comment.service';
 import { ChatGroupService } from './chat-group.service';
@@ -77,6 +78,8 @@ import {
 } from './agent.mapper';
 import {
   ListAlertsQuery,
+  AlarmCenterQuery,
+  AlertSettingsRequest,
   MergedRoomAutoJoinRequest,
   MergeSessionsRequest,
   RateAnswerRequest,
@@ -107,6 +110,7 @@ export class AgentConsoleController {
     private readonly ratingService: AnswerRatingService,
     private readonly companyService: CompanyService,
     private readonly mergedRooms: MergedRoomService,
+    private readonly alertCenter: AlertCenterService,
   ) {}
 
   // ---- answer accuracy ratings (PLN-261015 D7) ----
@@ -407,19 +411,57 @@ export class AgentConsoleController {
   @Get('alerts')
   @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
   @ApiOperation({ summary: 'Escalation alerts for the console alarm modal (FR-S3)' })
-  async alerts(@CurrentUser() user: Principal, @Query() query: ListAlertsQuery) {
-    // An alert addressed to a specific agent is only shown to that agent;
-    // broadcast alerts (target NULL) stay visible to everyone in the SAME
-    // tenant (PLN-AiSetting W3, tenant fence REQ-260824 R2).
-    const items = await this.alertService.list(query.status ?? 'new', actorIdOf(user), tenantOf(user));
-    return items.map(toAlertResponse);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async alerts(@CurrentUser() user: Principal, @Query() _query: ListAlertsQuery) {
+    // Every agent of the tenant sees every unacked alarm, with whom it was
+    // addressed to (PLN-261024 D1); the tenant fence stays (REQ-260824 R2).
+    return this.alertCenter.feed(tenantOf(user), actorIdOf(user));
+  }
+
+  @Get('alerts/center')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Alarm center history with filters (PLN-261024)' })
+  async alertCenterList(@CurrentUser() user: Principal, @Query() query: AlarmCenterQuery) {
+    const { page, size } = normalizePage(query.page, query.size ?? '20');
+    const { items, total } = await this.alertCenter.center(
+      tenantOf(user),
+      actorIdOf(user),
+      { scope: query.scope, status: query.status, days: query.days != null ? Number(query.days) : undefined, category: query.category },
+      page,
+      size,
+    );
+    return new Paginated(items, buildPagination(page, size, total));
+  }
+
+  @Get('alerts/settings')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: "The caller's own alarm settings (PLN-261024 D4)" })
+  alertSettings(@CurrentUser() user: Principal) {
+    return this.alertCenter.settings(tenantOf(user), actorIdOf(user));
+  }
+
+  @Put('alerts/settings')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: "Save the caller's own alarm settings (PLN-261024 D4)" })
+  saveAlertSettings(@CurrentUser() user: Principal, @Body() body: AlertSettingsRequest) {
+    return this.alertCenter.saveSettings(tenantOf(user), actorIdOf(user), body);
+  }
+
+  @Post('alerts/:id/read')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Mark an alarm read for the caller only (PLN-261024 D2)' })
+  async readAlert(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    await this.alertCenter.markRead(tenantOf(user), actorIdOf(user), id);
+    return { read: true };
   }
 
   @Post('alerts/:id/ack')
   @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
-  @ApiOperation({ summary: 'Acknowledge an escalation alert' })
+  @ApiOperation({ summary: 'Acknowledge an escalation alert (its assignee, or anyone for a broadcast)' })
   async ackAlert(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
     const alert = await this.alertService.ack(id, actorIdOf(user), tenantOf(user));
+    // Opening it is also seeing it — read for the caller whether or not they could ack.
+    await this.alertCenter.markRead(tenantOf(user), actorIdOf(user), id);
     return toAlertResponse(alert);
   }
 

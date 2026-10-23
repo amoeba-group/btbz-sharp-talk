@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Globe, PanelLeft } from 'lucide-react';
+import { AlarmBell } from '@/domain/alerts/AlarmBell';
 import { useTranslation } from 'react-i18next';
 import { useUiStore } from '@/store/ui-store';
 import {
@@ -126,7 +127,11 @@ export function Header() {
         <PanelLeft className="h-5 w-5" />
       </button>
 
-      <LanguageSwitcher />
+      <div className="flex items-center gap-2">
+        {/* Alarm center bell (PLN-261024) — renders nothing without Live Chat. */}
+        <AlarmBell />
+        <LanguageSwitcher />
+      </div>
     </header>
   );
 }

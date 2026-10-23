@@ -1,8 +1,10 @@
-import { HttpStatus, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { randomUUID } from 'crypto';
+import { HttpStatus, Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, IsNull, Repository } from 'typeorm';
 import { AgentAlert } from './entity/agent-alert.entity';
+import { UserAlertSettings } from './entity/user-alert-settings.entity';
 import { AgentProfile } from './entity/agent-profile.entity';
 import { Assignment } from './entity/assignment.entity';
 import { JobLabel } from '../user/entity/job-label.entity';
@@ -33,6 +35,11 @@ interface EscalationPayload {
   ruleName?: string;
   /** The consult category the shopper picked (PLN-261024), shown in the mail. */
   consultCategory?: string;
+}
+
+/** Can this user stop the page for an alarm? Its assignee, or anyone for a broadcast (PLN-261024 D2). */
+export function canAckAlarm(rows: Array<{ targetUserId: number | null }>, userId: number): boolean {
+  return rows.some((r) => r.targetUserId == null || String(r.targetUserId) === String(userId));
 }
 
 const REASON_LABEL: Record<string, string> = {
@@ -69,6 +76,8 @@ export class AgentAlertService implements OnModuleInit {
     // without them every mail goes to the ops mailbox, as before.
     @InjectRepository(User) private readonly userRepo?: Repository<User>,
     @InjectRepository(Session) private readonly sessionRepo?: Repository<Session>,
+    // Personal mail off (PLN-261024 D4); optional for older positional fixtures.
+    @Optional() @InjectRepository(UserAlertSettings) private readonly settingsRepo?: Repository<UserAlertSettings>,
   ) {}
 
   onModuleInit(): void {
@@ -108,6 +117,10 @@ export class AgentAlertService implements OnModuleInit {
       reason: payload.reason ?? 'user_request',
       preview: payload.preview?.slice(0, 300) ?? null,
       status: 'new',
+      // One key per escalation: the console shows the per-agent rows as one alarm (PLN-261024).
+      eventKey: randomUUID(),
+      ruleName: payload.ruleName?.slice(0, 120) ?? null,
+      consultCategory: payload.consultCategory?.slice(0, 64) ?? null,
     };
     // One row per addressed agent: each sees the alarm in their own feed, and
     // acking one acks its siblings (see ack). NULL = tenant-wide broadcast.
@@ -136,7 +149,11 @@ export class AgentAlertService implements OnModuleInit {
     const facts = rows[0] ? await this.alertContext(rows[0]) : null;
     const context = [opts.category && `Consult category: ${opts.category}`, facts].filter(Boolean).join(' · ') || null;
     let opsMailed = false;
+    const mailOff = await this.mailOptedOut(rows);
     for (const row of rows) {
+      // Personal mail switched off by the agent (PLN-261024 D4): no mail for this
+      // row — the console alarm still reaches them, and broadcast keeps the ops mailbox.
+      if (row.targetUserId != null && mailOff.has(String(row.targetUserId))) continue;
       const to = row.targetUserId != null ? await this.agentEmail(row.tenantId, row.targetUserId) : null;
       if (to) {
         await this.notifyEmail(row, to, { context, reminder: opts.reminder });
@@ -144,6 +161,19 @@ export class AgentAlertService implements OnModuleInit {
         opsMailed = true;
         await this.notifyEmail(row, undefined, { context, reminder: opts.reminder });
       }
+    }
+  }
+
+  /** Addressed agents who switched personal alarm mail off. Never throws (mail is the safe default). */
+  private async mailOptedOut(rows: AgentAlert[]): Promise<Set<string>> {
+    const ids = [...new Set(rows.map((r) => r.targetUserId).filter((v): v is number => v != null))];
+    if (!this.settingsRepo || !ids.length) return new Set();
+    try {
+      const off = await this.settingsRepo.find({ where: { userId: In(ids), email: 0 }, select: { userId: true } });
+      return new Set(off.map((s) => String(s.userId)));
+    } catch (e) {
+      this.logger.warn(`alarm mail settings unreadable: ${(e as Error).message}`);
+      return new Set();
     }
   }
 
@@ -271,6 +301,13 @@ export class AgentAlertService implements OnModuleInit {
       // the cross-tenant attempt is worth a server-side trace (4xx are silent).
       this.logger.warn(`alert ack refused: id=${id} tenant=${tenantId} user=${userId}`);
       throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+    // Only the assignee — or anyone, for a broadcast — stops the page (PLN-261024
+    // D2). Anyone else opening or closing it just marks it read for themselves.
+    const group = alert.eventKey ? await this.alertRepo.find({ where: { tenantId, eventKey: alert.eventKey } }) : [alert];
+    if (!canAckAlarm(group, userId)) {
+      this.logger.log(`alert ${id} not acked by user ${userId}: addressed to someone else`);
+      return alert;
     }
     if (alert.status === 'new') {
       alert.status = 'acked';

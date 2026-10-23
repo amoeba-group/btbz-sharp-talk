@@ -96,6 +96,24 @@ export class ListAlertsQuery {
   @IsOptional() @IsString() status?: string;
 }
 
+/** GET /agent/alerts/center — alarm history (PLN-261024 alarm center). */
+export class AlarmCenterQuery {
+  @IsOptional() @IsIn(['all', 'mine', 'broadcast']) scope?: 'all' | 'mine' | 'broadcast';
+  @IsOptional() @IsIn(['new', 'acked', 'all']) status?: 'new' | 'acked' | 'all';
+  @IsOptional() @IsString() @Matches(/^\d{1,2}$/) days?: string;
+  @IsOptional() @IsString() @MaxLength(64) category?: string;
+  @IsOptional() @IsString() page?: string;
+  @IsOptional() @IsString() size?: string;
+}
+
+/** PUT /agent/alerts/settings — a user's own alarm preferences (PLN-261024 D4). */
+export class AlertSettingsRequest {
+  @IsOptional() @IsIn(['all', 'mine', 'off']) popup?: 'all' | 'mine' | 'off';
+  @IsOptional() @IsBoolean() sound?: boolean;
+  @IsOptional() @IsBoolean() desktop?: boolean;
+  @IsOptional() @IsBoolean() email?: boolean;
+}
+
 /** Operator display name for a session; blank/omitted clears it (PLN-260812). */
 export class SetSessionAliasRequest {
   @IsOptional() @IsString() @MaxLength(60) alias?: string | null;

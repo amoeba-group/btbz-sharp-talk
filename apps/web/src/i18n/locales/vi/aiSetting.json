@@ -283,6 +283,29 @@
         "newVisible": "Hiển thị cho khách",
         "names": "Tên theo ngôn ngữ",
         "visibleHint": "Hiển thị cho khách trên widget"
+      },
+      "warn": {
+        "denyLabel": "Điều kiện nhãn nghiệp vụ ({{labels}}) chỉ khớp cuộc trò chuyện chuyển tiếp bởi quy tắc chính sách (deny) — hãy chọn nhãn nhóm nhân viên ở mục 'Người phụ trách' bên dưới",
+        "placeName": "Tên có địa danh nhưng không có điều kiện khu vực/tỉnh — khách ở mọi khu vực đều khớp quy tắc này",
+        "nobody": "Hiện không có nhân viên nào để giao — khi chuyển tiếp, quy tắc này sẽ bị bỏ qua",
+        "nobodyPending": "Hiện không có nhân viên nào để giao ({{count}} người được mời chưa kích hoạt) — khi chuyển tiếp, quy tắc này sẽ bị bỏ qua"
+      },
+      "sim": {
+        "title": "Kiểm tra phân công — quy tắc đang sửa sẽ chuyển tới ai (không gửi cảnh báo)",
+        "none": "(không)",
+        "run": "Kiểm tra",
+        "error": "Không kiểm tra được phân công",
+        "fallback": "Không khớp quy tắc → người phụ trách {{names}}",
+        "broadcast": "Không khớp quy tắc → cảnh báo tất cả",
+        "skipped": "Bỏ qua: #{{n}} {{name}} — {{reason}}",
+        "reason": {
+          "no_assignee": "không có người phụ trách",
+          "category": "danh mục tư vấn không khớp",
+          "keywords": "từ khóa nghiệp vụ không khớp",
+          "label": "nhãn nghiệp vụ không khớp (chỉ quy tắc chính sách)",
+          "nobody_active": "không có nhân viên hoạt động",
+          "condition": "điều kiện {{field}} không khớp"
+        }
       }
     },
     "reAlert": {
