@@ -22,7 +22,7 @@
 ## 2. 테스트
 - 로컬: API jest 252 suites / 2,547 통과 · typecheck api·web · `i18n:check` complete · 실제 부팅(DB_SYNCHRONIZE=false) + 새 경로 401
 - CI: PR #710 `typecheck · test · build` pass(2m45s)
-- 스테이징(2026-10-23 17:14~17:17 KST, go2joy tenant 4):
+- 스테이징(2026-10-23 19:14~19:17 KST, go2joy tenant 4):
 
 | TCR | 결과 |
 |---|---|
@@ -37,8 +37,8 @@
 | 환경 | 상태 |
 |---|---|
 | PR | #710 → main `68c42bb6` (squash) |
-| 스테이징 | 배포 `68c42bb6`(10/23 17:13 KST), healthy·부팅 로그·새 경로 401. SQL 없음. 지역표 갱신·보정 `--apply` 완료 |
-| 프로덕션 | **미배포** — 반영 시 코드만(SQL 없음). Partner 자격증명이 없어 H1-a·H2·H3는 동작 안 함, H1-b·c는 지역표가 있는 테넌트에서만(보정은 dry-run 먼저) |
+| 스테이징 | 배포 `68c42bb6`(10/23 19:13 KST), healthy·부팅 로그·새 경로 401. SQL 없음. 지역표 갱신·보정 `--apply` 완료 |
+| 프로덕션 | 배포 `68c42bb6`(10/23 19:19 KST) — 백업 `~/backups/sharptalk-production/20261023-1918-pre-261023-partner-region`, SQL 없음, check-migrations OK, healthy·부팅 로그·새 경로 401. 보정 dry-run **0건**(고객사 0) → `--apply` 생략. 프로덕션은 Partner 자격증명 0건·**지역표(`provinceRegions`) 미설정 테넌트뿐** → H1-a·H2·H3 무동작, H1-b·c도 지역표가 생길 때까지 무동작 = 동작 불변 |
 
 ## 4. 남은 것 / 주의
 - 권역 `10` 이름(G19⑤) 회신 후 카탈로그 코드·번역 추가 — 그때까지 규칙·담당 지역에서 `region_10` 그대로.
