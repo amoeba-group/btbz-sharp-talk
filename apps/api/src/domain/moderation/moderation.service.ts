@@ -98,6 +98,14 @@ export class ModerationService {
   }
 
   async moderate(input: ModerateInput): Promise<ModerateResult> {
+    // Nothing to judge (FIX-261023-AI-Empty-Answer): an empty text cannot break
+    // a rule, and sending it to the context classifier is a 400 ("user messages
+    // must have non-empty content") that the fail-safe below turned into a
+    // block — a policy handoff for a reply that never existed, and a false
+    // "unreachable" on the engine. Whether to send nothing is the caller's call.
+    if (!input.text?.trim()) {
+      return this.finalize(input, MODERATION_DECISION.DELIVERED, 'pass', input.text ?? '');
+    }
     try {
       const rules = await this.activeRules(input.tenantId, input.scope);
       // Published contacts (support e-mail, hotline, the account customers pay

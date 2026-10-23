@@ -28,6 +28,7 @@ describe('ChatService — queued threads', () => {
       confidence?: number;
       decision?: string;
       previousUserTurns?: string[];
+      answerText?: string;
     } = {},
   ) {
     const conversation = {
@@ -50,13 +51,13 @@ describe('ChatService — queued threads', () => {
     let nextId = 100;
     const msgSave = jest.fn(async (m: Message) => ({ ...m, id: m.id ?? nextId++ }) as Message);
     const ragAnswer = jest.fn(async () => ({
-      text: 'AI answer',
+      text: opts.answerText ?? 'AI answer',
       confidence: opts.confidence ?? 0.9,
       citations: [],
     }));
     const moderate = jest.fn(async () => ({
       decision: opts.decision ?? MODERATION_DECISION.DELIVERED,
-      text: 'AI answer',
+      text: opts.answerText ?? 'AI answer',
     }));
     const busPublish = jest.fn();
     const convSave = jest.fn(async (c: Conversation) => c);
@@ -137,6 +138,21 @@ describe('ChatService — queued threads', () => {
     const res = await svc.handleUserMessage(session, 'any update?');
     expect(res.reply).toBeNull();
     expect(ragAnswer).not.toHaveBeenCalled();
+  });
+
+  // FIX-261023-AI-Empty-Answer: go2joy conversation 888.
+  it('hands an empty answer off as low_confidence, never as moderation_blocked', async () => {
+    const { svc, session, msgSave } = build({
+      status: CONVERSATION_STATUS.AI_ACTIVE,
+      answerText: '',
+      confidence: 0,
+    });
+    const res = await svc.handleUserMessage(session, "View today's bookings");
+    expect(res.reply?.senderType).toBe('system');
+    expect(res.escalate).toBe(true);
+    const traces = msgSave.mock.calls.map(([m]) => (m as Message).retrievalTrace);
+    expect(traces).toContainEqual({ reason: 'low_confidence' });
+    expect(msgSave.mock.calls.some(([m]) => (m as Message).senderType === 'ai')).toBe(false);
   });
 
   it('stays silent in agent mode', async () => {
