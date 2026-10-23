@@ -1,6 +1,6 @@
 import { AgentService } from './agent.service';
 import { Conversation } from '../chat/entity/conversation.entity';
-import { toSessionResponse } from './agent.mapper';
+import { toIdentityResponse, toSessionResponse } from './agent.mapper';
 import { Message } from '../chat/entity/message.entity';
 
 /** listSessions — queue query, customer-name search branch (PLN-260804). */
@@ -159,7 +159,10 @@ describe('toSessionResponse', () => {
     const conv = { id: 1, status: 'waiting', escalated: 0, createdAt: new Date() } as Conversation;
     const attrs = { hotel_id: '1721', region: 'south', user_id: 'ha:8818', name: 'G2J SUPPORT' };
     const claimed = toSessionResponse(conv, null, undefined, null, undefined, undefined, attrs, 'claimed');
-    expect(claimed.identity).toMatchObject({ hotelId: '1721', region: 'south', userId: 'ha:8818', name: 'G*J S*****T', verified: false });
+    // The session list shows the claimed name in the clear (2026-10-23)…
+    expect(claimed.identity).toMatchObject({ hotelId: '1721', region: 'south', userId: 'ha:8818', name: 'G2J SUPPORT', verified: false });
+    // …inside the conversation it stays masked.
+    expect(toIdentityResponse(attrs, 'claimed')?.name).toBe('G*J S*****T');
     // A signed session — or a caller that does not know the level — stays verified.
     expect(toSessionResponse(conv, null, undefined, null, undefined, undefined, { hotel_id: '1' }, 'verified').identity?.verified).toBe(true);
     expect(toSessionResponse(conv, null, undefined, null, undefined, undefined, { hotel_id: '1' }).identity?.verified).toBe(true);

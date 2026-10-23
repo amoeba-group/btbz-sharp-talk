@@ -165,7 +165,10 @@ export class CompanyService {
     );
     return {
       total,
-      items: rows.map((c) => CompanyMapper.toConversation(c, c.customerId != null ? (names.get(String(c.customerId)) ?? null) : null)),
+      // Inside a live conversation → masked, like the rest of the room.
+      items: rows.map((c) =>
+        CompanyMapper.toConversation(c, c.customerId != null ? (names.get(String(c.customerId)) ?? null) : null, true),
+      ),
     };
   }
 

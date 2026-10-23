@@ -10,7 +10,7 @@ import { ChatComment } from './entity/chat-comment.entity';
 import { ConversationBriefing } from './entity/conversation-briefing.entity';
 import { ChatGroup } from './entity/chat-group.entity';
 import { GroupMemberView, GroupRef, RelatedSessionView } from './chat-group.service';
-import { maskEmail, maskName } from '../../global/util/pii-display.util';
+import { maskName } from '../../global/util/pii-display.util';
 import { SESSION_IDENTITY } from '@sharptalk/types';
 
 /** Escalation alert row for the console alarm modal (FR-S3). */
@@ -45,7 +45,7 @@ export function toSessionResponse(
      * (PLN-261015 D5). Not PII: a hotel id and a region name, shown as badges so
      * an agent sees which hotel is asking. camelCase keys, like every response.
      */
-    identity: toIdentityResponse(identityAttributes, identityLevel),
+    identity: toIdentityResponse(identityAttributes, identityLevel, { masked: false }),
     /** B2B company of the thread (PLN-261022 stage 2); null for consumers/guests. */
     companyId: c.companyId != null ? String(c.companyId) : null,
     /** That company's name — the title reads "customer / company" (PLN-261023). Not PII. */
@@ -72,12 +72,12 @@ export function toSessionResponse(
     pinned: c.pinnedAt != null,
     pinnedAt: c.pinnedAt ?? null,
     escalated: c.escalated === 1,
-    // Masked: the queue only has to let an agent tell two shoppers apart, and
-    // it is on screen all day in a shared room (PLN-260920). The full value is
-    // one audited reveal away in the customer panel.
-    customerName: maskName(contact.name),
+    // In the clear (2026-10-23 decision, reversing PLN-260920 for lists): the
+    // queue is how an agent finds a customer. Masking stays inside the
+    // conversation (detail header, customer panel) and on AI-bound text.
+    customerName: contact.name,
     // Fallback identity for a shopper who only ever left an address.
-    customerEmail: maskEmail(contact.email),
+    customerEmail: contact.email,
     lastMessagePreview: lastMessage ? lastMessage.body.slice(0, 140) : null,
     lastMessageAt: lastMessage?.createdAt ?? null,
     createdAt: c.createdAt,
@@ -243,7 +243,11 @@ export function toStatResponse(s: AgentDailyStat) {
  * `verified` is false for a 'claimed' session (unsigned host, PLN-261022): the
  * same facts plus who the host says it is (`userId`, `name`), none of it proven.
  */
-export function toIdentityResponse(a: Record<string, string> | null | undefined, level: string | null = null) {
+export function toIdentityResponse(
+  a: Record<string, string> | null | undefined,
+  level: string | null = null,
+  opts: { masked?: boolean } = {},
+) {
   if (!a) return null;
   return {
     hotelId: a.hotel_id ?? null,
@@ -252,9 +256,9 @@ export function toIdentityResponse(a: Record<string, string> | null | undefined,
     province: a.province ?? null,
     role: a.role ?? null,
     userId: a.user_id ?? null,
-    // Masked like every customer name on the console (pii-display) — a claimed
-    // name is the person's name all the same.
-    name: maskName(a.name ?? null),
+    // A claimed name is the person's name all the same: masked inside the
+    // conversation, in the clear on the session list (2026-10-23).
+    name: opts.masked === false ? (a.name ?? null) : maskName(a.name ?? null),
     verified: level !== SESSION_IDENTITY.CLAIMED,
   };
 }

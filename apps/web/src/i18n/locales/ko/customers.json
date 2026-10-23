@@ -31,7 +31,7 @@
   "companyOpen": "보기",
   "companySearchPlaceholder": "기업(호텔) 이름 검색",
   "allRegions": "전체 권역",
-  "companyHint": "호스트 앱에 로그인한 사용자(예: Go2Joy 호텔 어드민 직원)가 채팅을 시작하면 기업고객으로 등록됩니다. 연락처 이름은 일반 고객 목록처럼 가려서 표시합니다.",
+  "companyHint": "호스트 앱에 로그인한 사용자(예: Go2Joy 호텔 어드민 직원)가 채팅을 시작하면 기업고객으로 등록됩니다.",
   "companyEmpty": "등록된 기업고객이 없습니다",
   "companyDetail": "기업고객",
   "companyBack": "뒤로",

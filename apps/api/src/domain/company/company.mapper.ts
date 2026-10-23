@@ -30,15 +30,19 @@ export class CompanyMapper {
   }
 
   static toContact(link: CompanyContact, name: string | null): CompanyContactResponse {
-    return { customerId: String(link.customerId), name: maskName(name), role: link.role, lastSeenAt: iso(link.lastSeenAt) };
+    return { customerId: String(link.customerId), name, role: link.role, lastSeenAt: iso(link.lastSeenAt) };
   }
 
-  static toConversation(c: Conversation, customerName: string | null): CompanyConversationResponse {
+  /**
+   * `masked` = shown inside a live conversation (the "earlier conversations at
+   * this hotel" panel); the customers screen lists names in the clear (2026-10-23).
+   */
+  static toConversation(c: Conversation, customerName: string | null, masked = false): CompanyConversationResponse {
     return {
       id: String(c.id),
       status: c.status,
       customerId: c.customerId != null ? String(c.customerId) : null,
-      customerName: maskName(customerName),
+      customerName: masked ? maskName(customerName) : customerName,
       agentId: c.agentId != null ? String(c.agentId) : null,
       createdAt: iso(c.createdAt) ?? '',
       endedAt: iso(c.endedAt),

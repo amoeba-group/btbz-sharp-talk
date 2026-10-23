@@ -48,11 +48,12 @@ describe('CustomerMapper masking', () => {
     expect(row.masked).toBe(false);
   });
 
-  it('never ships a phone number in list rows', () => {
+  it('list rows: name and e-mail in the clear, still no phone (2026-10-23)', () => {
     const rows = CustomerMapper.toCustomerList([customer(), customer({ id: 8 })]);
     for (const row of rows) {
       expect(row).not.toHaveProperty('phone');
-      expect(row.email).toBe('ho***@gmail.com');
+      expect(row.email).toBe('hong.gildong@gmail.com');
+      expect(row.masked).toBe(false);
     }
   });
 

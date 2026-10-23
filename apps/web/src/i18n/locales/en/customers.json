@@ -31,7 +31,7 @@
   "companyOpen": "Open",
   "companySearchPlaceholder": "Search by company name",
   "allRegions": "All regions",
-  "companyHint": "A business customer is registered when a signed-in host user (e.g. a Go2Joy Hotel Admin staff member) starts a chat. Contacts are masked like the consumer list.",
+  "companyHint": "A business customer is registered when a signed-in host user (e.g. a Go2Joy Hotel Admin staff member) starts a chat.",
   "companyEmpty": "No business customers yet",
   "companyDetail": "Business customer",
   "companyBack": "Back",

@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Eye } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
@@ -9,22 +8,12 @@ import type { Column } from '@/components/Table';
 import { Pagination } from '@/components/Pagination';
 import { Modal } from '@/components/Modal';
 import { FormRow, Select } from '@/components/Field';
-import { useCustomers, useRevealCustomer, useUpdateTier } from './customers.hooks';
+import { useCustomers, useUpdateTier } from './customers.hooks';
 import type { Customer } from './customers.service';
-import { useAuthStore } from '@/store/auth-store';
-import { makeCan } from '@/lib/rbac';
-import { toast } from '@/store/toast-store';
 import { cn } from '@/lib/cn';
 import { CompaniesPanel } from './CompaniesPanel';
 
 const PAGE_SIZE = 20;
-/**
- * How long a revealed record stays on screen.
- *
- * Long enough to finish the call that needed it, short enough that a console
- * left open on a shared desk goes back to masked on its own (PLN-260920).
- */
-const REVEAL_TTL_MS = 5 * 60_000;
 const TIERS = ['guest', 'subscriber', 'regular'] as const;
 
 function fmtMoney(value?: number, currency?: string | null): string {
@@ -56,40 +45,6 @@ export function CustomersPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [editing, setEditing] = useState<Customer | null>(null);
   const [tier, setTier] = useState<string>('guest');
-  // Revealed records live here only, never in the query cache: they expire,
-  // and a cached copy would outlive the reveal the operator asked for.
-  const [revealed, setRevealed] = useState<Record<number, Customer>>({});
-  const timers = useRef<Record<number, ReturnType<typeof setTimeout>>>({});
-  const principal = useAuthStore((s) => s.principal);
-  const canReveal = useMemo(() => makeCan(principal)('customer_pii_reveal'), [principal]);
-  const reveal = useRevealCustomer();
-
-  // Drop pending expiry timers when the page unmounts.
-  useEffect(() => {
-    const pending = timers.current;
-    return () => {
-      Object.values(pending).forEach(clearTimeout);
-    };
-  }, []);
-
-  const onReveal = useCallback(
-    async (c: Customer) => {
-      if (revealed[c.id]) return;
-      const full = await reveal.mutateAsync(c.id);
-      setRevealed((prev) => ({ ...prev, [c.id]: full }));
-      toast.success(t('revealAudited'));
-      timers.current[c.id] = setTimeout(() => {
-        setRevealed((prev) => {
-          const next = { ...prev };
-          delete next[c.id];
-          return next;
-        });
-        delete timers.current[c.id];
-      }, REVEAL_TTL_MS);
-    },
-    [reveal, revealed, t],
-  );
-
   // Debounce the search box and reset to the first page on a new query.
   useEffect(() => {
     const id = setTimeout(() => {
@@ -118,21 +73,14 @@ export function CustomersPage() {
     setEditing(null);
   };
 
-  const shown = (c: Customer): Customer => revealed[c.id] ?? c;
-
   const columns: Column<Customer>[] = [
-    { key: 'name', header: t('name'), render: (c) => shown(c).name ?? '—' },
+    // In the clear since 2026-10-23: the list is where an operator finds a
+    // customer. Masking applies inside conversations and to AI-bound text.
+    { key: 'name', header: t('name'), render: (c) => c.name ?? '—' },
     {
       key: 'email',
       header: t('email'),
-      render: (c) => {
-        const row = shown(c);
-        return (
-          <span className={revealed[c.id] ? 'font-medium text-gray-900' : 'text-gray-600'}>
-            {row.email ?? '—'}
-          </span>
-        );
-      },
+      render: (c) => <span className="text-gray-600">{c.email ?? '—'}</span>,
     },
     {
       key: 'type',
@@ -154,21 +102,6 @@ export function CustomersPage() {
       className: 'text-right',
       render: (c) => (
         <div className="flex items-center justify-end gap-2">
-          {canReveal && !revealed[c.id] && (
-            <Button
-              size="sm"
-              variant="ghost"
-              title={t('reveal')}
-              aria-label={t('reveal')}
-              disabled={reveal.isPending}
-              onClick={(e) => {
-                e.stopPropagation();
-                void onReveal(c);
-              }}
-            >
-              <Eye className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          )}
           <Button
             size="sm"
             variant="secondary"
@@ -224,10 +157,6 @@ export function CustomersPage() {
         />
       </div>
 
-      <p className="mb-3 text-xs text-gray-500">
-        {canReveal ? t('maskedHintWithReveal') : t('maskedHint')}
-      </p>
-
       <Table
         columns={columns}
         data={data?.items}
@@ -263,7 +192,7 @@ export function CustomersPage() {
         }
       >
         {editing && (
-          <FormRow label={t('tierFor', { name: shown(editing).name ?? editing.id })}>
+          <FormRow label={t('tierFor', { name: editing.name ?? editing.id })}>
             <Select value={tier} onChange={(e) => setTier(e.target.value)}>
               {TIERS.map((t) => (
                 <option key={t} value={t}>
