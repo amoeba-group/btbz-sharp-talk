@@ -28,8 +28,9 @@
 
 | 항목 | 상태 |
 |---|---|
-| PR | #696 (오픈, 미머지) |
-| 커밋 | 13b7b96f (브랜치) |
-| 스테이징 | 미배포 — 마이그레이션 불필요 |
-| 프로덕션 | 미배포 |
-| 잔여 확인 | 스테이징 실 LLM 번역 품질, 상담원 버블 육안 |
+| PR | #696 squash-merge → main `d89001d9` (CI typecheck·test·build 통과) |
+| 마이그레이션 | 없음(스키마 변경 없음) |
+| 스테이징 | ✅ 2026-10-23 11:40 KST `deploy-staging.sh` — api healthy, 부팅 로그 `successfully started`, 컨테이너 내 API(`support reply` 프롬프트)·웹 번들(우측 정렬 서브버블) 새 코드 확인, `POST /agent/messages/:id/translate` 401 |
+| 프로덕션 | ✅ 2026-10-23 11:43 KST `production` ff `18559f08..d89001d9` → `deploy-self-hosted.sh --check`(마이그레이션 누락 0) → 배포. api healthy, 부팅 로그, 새 코드 확인, 라우트 401 |
+| 동승 | #695(go2joy HA 서명 전 identify)가 같은 ff로 스테이징·프로덕션에 함께 반영 — `EMBED_UNSIGNED_IDENTIFY_TENANT_IDS` 양쪽 미설정 확인 = 현행 동작(사용자 승인) |
+| 잔여 확인 | 스테이징 실 LLM 번역 품질·상담원 버블 육안(콘솔 로그인 필요) |
