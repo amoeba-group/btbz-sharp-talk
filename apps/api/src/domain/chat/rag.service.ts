@@ -664,7 +664,7 @@ export class RagService {
     // The tenant's contact footer is appended by the system (R4); the model is
     // told not to write its own, which also frees the output budget.
     const footerOn = !!footerFor(await this.aiConfig.getAnswerFooter?.(tenantId), language);
-    const res = await this.ai.complete({
+    const request: Parameters<AiGatewayService['complete']>[0] = {
       tenantId,
       function: AI_FUNCTION.RAG,
       feature: 'chat_answer',
@@ -686,7 +686,18 @@ export class RagService {
         previousBlock +
         callerBlock,
       messages: withCurrentTurn(history, query),
-    });
+    };
+    let res = await this.ai.complete(request);
+
+    // An empty reply is retried once (FIX-261023-AI-Empty-Answer). go2joy
+    // conversation 888 got a successful call whose visible text was empty; it
+    // went on to moderation, whose classifier rejected the empty message with a
+    // 400, and the customer was told the help content had no answer while the
+    // same question answered fine on every re-run.
+    if (!res.degraded && !splitCitedMarker(res.text).text) {
+      this.logger.warn(`answer empty (tenant ${tenantId}, out ${res.tokensOut ?? 0} tokens) — retrying once`);
+      res = await this.ai.complete(request);
+    }
 
     // The engine failed and the stub's canned text came back (PLN-261007 D4).
     // Not an answer: zero confidence sends the turn to a person through the
@@ -703,6 +714,12 @@ export class RagService {
     // text against titles cannot do this — replies are localized while the
     // catalogue titles are English — so the model reports which items it used.
     const { text: visible, cited } = splitCitedMarker(res.text);
+    // Still nothing to say: not an answer, so the turn takes the ordinary
+    // low-confidence handoff instead of reaching moderation empty.
+    if (!visible) {
+      this.logger.warn(`answer withheld: empty after retry (tenant ${tenantId})`);
+      return { text: '', confidence: 0, citations: [], tokensIn: res.tokensIn, tokensOut: res.tokensOut };
+    }
     // The marker is already split off, so a translation cannot disturb the
     // citations; the visible text alone is judged and, if need be, redone.
     const text = await this.enforceReplyLanguage(tenantId, visible, language);
@@ -826,7 +843,7 @@ export class RagService {
     // with the conversation in view the model answers it instead of saying it
     // did not understand (PLN-260929 S3).
     const memory = history?.length ? CONVERSATION_RULES : '';
-    const res = await this.ai.complete({
+    const request: Parameters<AiGatewayService['complete']>[0] = {
       tenantId,
       function: AI_FUNCTION.RAG,
       feature: 'chat_rewrite',
@@ -835,7 +852,13 @@ export class RagService {
         `${instruction}\n${replyLanguageRule(language)} Two sentences at most.` +
         callerPart,
       messages: withCurrentTurn(history, query),
-    });
+    };
+    let res = await this.ai.complete(request);
+    // Same single retry as answer() (FIX-261023-AI-Empty-Answer).
+    if (!res.degraded && !res.text.trim()) {
+      this.logger.warn(`no-knowledge reply empty (tenant ${tenantId}) — retrying once`);
+      res = await this.ai.complete(request);
+    }
     // Empty = no reply could be written; the caller hands off (PLN-261007 D4).
     if (res.degraded) return '';
     return this.enforceReplyLanguage(tenantId, res.text.trim(), language);

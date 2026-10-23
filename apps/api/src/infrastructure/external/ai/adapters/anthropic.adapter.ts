@@ -53,6 +53,13 @@ export class AnthropicAdapter implements AiAdapter {
     }
     const data: any = await res.json();
     const text = (data.content ?? []).map((c: any) => c.text ?? '').join('');
+    // Why a call came back empty (FIX-261023-AI-Empty-Answer): shape only, no text.
+    if (!text.trim()) {
+      this.logger.warn(
+        `Anthropic empty text: stop_reason=${data.stop_reason ?? '-'} output_tokens=${data.usage?.output_tokens ?? 0} ` +
+          `blocks=${(data.content ?? []).map((c: any) => c.type).join(',') || '-'}`,
+      );
+    }
     return {
       text,
       tokensIn: data.usage?.input_tokens ?? 0,
