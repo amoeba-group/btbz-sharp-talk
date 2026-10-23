@@ -94,7 +94,7 @@ Status is as checked by SharpTalk on 2026-10-22.
 | G25 | New province names in the region table | Send a new table once names after the 2025-07 merger (63 → 34 provinces) come into use | Operations | P1 | Waiting |
 | G26 | Supported languages | Any languages beyond Vietnamese and English | Operations | P2 | Decision pending |
 
-> Go2Joy's master account can also enter team regions and assignment rules directly in the SharpTalk console. The places are **Users › Labels & teams › Regions** and **Settings › Basic › Agent handoff › Region match**. If the region → team mapping changes, only the team's regions need editing; the rules stay as they are.
+> Go2Joy's master account can also enter team regions and assignment rules directly in the SharpTalk console. The place is **Settings › Agent handoff › Routing rules** (reorganized 2026-10-24). Each rule takes the **consult category** the customer picked (e.g. Customer Services / Business Support) and **Customer information › Region** (e.g. South · South Center) as conditions, and picks a **team × label** as the assignee (e.g. South × cs). Use **Check routing** above the rules to see which agent a conversation would go to before saving. Team members are assigned only after they accept their invitation.
 
 ### 2.4 Knowledge · AI quality
 | # | Request | Details | Owner | Priority | Status |

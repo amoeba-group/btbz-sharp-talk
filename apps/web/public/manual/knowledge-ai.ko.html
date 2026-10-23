@@ -116,7 +116,7 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
 <header class="hero">
   <div class="eyebrow">SharpTalk 사용자설명서 · 2/2</div>
   <h1>샵톡 지식·AI 설정 매뉴얼</h1>
-  <div class="meta"><span>버전 1.1 · 2026-08-24 최초 · 현행화 2026-09-04 · 코드 기준 작성</span><span>대상: 테넌트 운영자 · CS 담당 (AI 설정은 master/director)</span></div>
+  <div class="meta"><span>버전 1.2 · 2026-08-24 최초 · 현행화 2026-10-24 · 코드 기준 작성</span><span>대상: 테넌트 운영자 · CS 담당 (AI 설정은 master/director)</span></div>
   <p class="lead">사용할 지식의 입력 방법과 검증, AI 설정, 실제 라이브챗에서의 고객 대응 설정을 다룹니다.
   각 장은 <strong>용어 설명 → 절차 → 💡 동작 팁</strong> 순서로 구성됩니다. 개설 절차는 <em>간단 세팅 매뉴얼</em>(1편)을 먼저 보세요.</p>
 </header>
@@ -510,7 +510,7 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
 
 <section id="ch5">
   <div class="ch"><span class="num">05</span><h2>라이브챗 고객 대응 설정</h2></div>
-  <span class="actor">[테넌트 설정] → 기본 설정 탭의 상담원 연결 카드</span>
+  <span class="actor">[테넌트 설정] → 상담원 연결 탭 (2026-10-24 기본 설정에서 분리)</span>
   <div class="terms"><div class="t-label">용어</div>
   <div class="tablewrap"><table>
     <tr><td>에스컬레이션(인계)</td><td>AI가 대화를 상담원 대기열로 넘기는 것</td></tr>
@@ -540,12 +540,25 @@ figure.shot figcaption{padding:8px 16px;font-size:13px;color:var(--muted);border
     <li>담당자를 아무도 지정하지 않으면 인계 대화가 공용 대기열에만 쌓입니다 — 최소 1명은 지정하세요.</li>
   </ul></div>
 
+  <h3>5.1a 상담카테고리·배정 규칙</h3>
+  <ol class="steps">
+    <li><strong>[상담카테고리 관리]</strong>에서 고객이 고를 상담 주제(예: 예약·결제)를 만들고 <strong>노출함</strong>으로 둡니다. 필요하면 ▸ <em>언어별 이름</em>에 vi/en 이름</li>
+    <li><strong>배정 규칙</strong>을 위에서부터: 상담카테고리 + 업무(키워드) + 고객 정보(권역·성·언어 등) → 담당자(팀 × 라벨 그룹 또는 개인). 조건이 모두 맞는 <strong>첫 규칙</strong>이 연결됩니다</li>
+    <li>규칙 위 <strong>배정 확인</strong>에 상담카테고리·권역 등을 넣어 저장 전에 누구에게 가는지 확인하고 <strong>저장</strong></li>
+  </ol>
+  <div class="callout"><span class="c-label">⚠️ 주의</span>
+  <ul>
+    <li><em>업무</em> 줄의 라벨 칩은 정책 강제 핸드오프로 넘어온 대화에만 맞습니다 — 상담원 그룹 라벨은 <em>담당자</em>에서 고르세요(편집기 경고 표시).</li>
+    <li>초대를 수락하지 않은 상담원은 배정되지 않습니다. 그룹에 활성 상담원이 0명이면 그 규칙은 건너뜁니다.</li>
+    <li>상담카테고리를 고르지 않은 고객에게는 상담카테고리를 비운 규칙만 맞습니다 — 맨 아래에 조건 없는 기본 규칙을 두면 안전합니다.</li>
+  </ul></div>
+
   <h3>5.2 인계(에스컬레이션) 조건 이해</h3>
   <div class="tablewrap"><table>
     <tr><th>트리거</th><th>동작</th></tr>
     <tr><td><strong>신뢰도 낮음</strong></td><td>답변에 "상담원 연결을 도와드릴까요?"를 덧붙이고 대기열로</td></tr>
     <tr><td><strong>모더레이션 차단</strong></td><td>AI 답변 미노출, 상담원 연결 안내 후 대기열로</td></tr>
-    <tr><td><strong>고객 요청</strong></td><td>시나리오의 고객 지원 문의 또는 명시적 요청 → 즉시 대기열로</td></tr>
+    <tr><td><strong>고객 요청</strong></td><td>시나리오의 고객 지원 문의 또는 명시적 요청 → 즉시 대기열로 (노출된 상담카테고리가 있으면 위젯이 먼저 상담카테고리를 묻고 그 규칙으로 연결)</td></tr>
     <tr><td><strong>정책 강제 핸드오프</strong></td><td>「답변 안 함」 규칙: <strong>AI 응답 없이 즉시</strong> 대기열로. 「답변 후 인계」 규칙: 지식으로 먼저 답한 뒤 대기열로. 메시지는 정상 저장·표시되며 이슈에 유형·라벨 스탬프 (메시지를 막는 기능이 아님)</td></tr>
   </table></div>
   <div class="callout"><span class="c-label">💡 팁</span>

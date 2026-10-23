@@ -104,7 +104,7 @@ li{margin:4px 0}
 <header class="hero">
   <div class="eyebrow">SharpTalk User Manual · Integrated Reference</div>
   <h1>SharpTalk Integrated User Manual</h1>
-  <div class="meta"><span>Version 2.1.0 · Fully revised 2026-08-24 · Updated 2026-09-11 (against the code)</span><span>Audience: tenant operators · agents · platform administrators</span></div>
+  <div class="meta"><span>Version 2.2.0 · Fully revised 2026-08-24 · Updated 2026-10-24 (against the code — Agent handoff tab · consult categories · Alarm center)</span><span>Audience: tenant operators · agents · platform administrators</span></div>
   <p class="lead"><strong>The reference manual that walks every screen.</strong> If you are setting up for the first time, start with the
   <a href="quick-setup.en.html">Quick Setup Manual</a> (Part 1); if you are refining knowledge and AI, see the
   <a href="knowledge-ai.en.html">Knowledge &amp; AI Setup Manual</a> (Part 2).
@@ -167,7 +167,8 @@ li{margin:4px 0}
     <tr><td>Customers / Orders / Products</td><td><code>/customers</code> <code>/orders</code> <code>/products</code></td><td>Browse·manage cached data</td></tr>
     <tr><td>Campaigns / Reviews</td><td><code>/campaigns</code> <code>/reviews</code></td><td>Sending·review management</td></tr>
     <tr><td>Users</td><td><code>/users</code></td><td>Team invites·ranks·labels</td></tr>
-    <tr><td>Tenant settings</td><td><code>/settings</code></td><td>7 tabs: Basic settings / Widget settings / Platform integrations / Marketing &amp; helpdesk / Messenger channels / Other settings / Privacy notice</td></tr>
+    <tr><td>Tenant settings</td><td><code>/settings</code></td><td>8 tabs: Basic settings / Agent handoff / Widget settings / Platform integrations / Marketing &amp; helpdesk / Messenger channels / Other settings / Privacy notice</td></tr>
+    <tr><td>Alarm center</td><td><code>/live-chat/alerts</code></td><td>Handoff alarm history·assignment·acknowledgement (header 🔔 → View all)</td></tr>
     <tr><td>My page</td><td><code>/my-page</code></td><td>Profile·password·MFA</td></tr>
     <tr><td>Admin</td><td><code>/admin/*</code></td><td>Platform administration (system administrators only)</td></tr>
   </table></div>
@@ -196,6 +197,7 @@ li{margin:4px 0}
     <li><strong>Scenario buttons</strong>: the quick menu the tenant configured (6 defaults). Product help opens a submenu (usage·ingredients·exchange/return·restock). After an answer, quick chips (my orders/shipping/returns/connect to agent)</li>
     <li><strong>Identity verification</strong>, 2 methods: ① store login — redirect (default)/popup, Cafe24·Shopify login paths handled automatically, widget auto-reopens on return ② guest order lookup — order number+email (rate-limited)</li>
     <li><strong>Attachments</strong>: images ≤10MB (HEIC auto-converted) / files ≤20MB (pdf·txt·csv·docx·xlsx), max 5 per message</li>
+    <li><strong>Consult category picker</strong>: if consult categories are shown, [Connect to an agent] first brings up a "What do you need help with?" card → connected to the group responsible for the chosen consult category. The same card appears when the AI hands off (one reconnect on the first pick while no agent has accepted). [Skip] connects as before (14.1)</li>
     <li><strong>Waiting indicators</strong>, 3 kinds: AI generating / agent responding / awaiting handoff</li>
     <li><strong>Closing·satisfaction</strong>: a closed conversation shows a satisfaction card (5-level emoji = 1–5 points) within 24 hours. Sending a new message starts a new conversation</li>
   </ul>
@@ -251,9 +253,13 @@ li{margin:4px 0}
     <li><strong>Issue panel</strong> (native workflow): issue number·status·type·reopen count, [Resolve]/[Decline] (reason required), reassignment, event timeline</li>
   </ul>
   <figure class="shot"><img src="img/live-chat.en.jpg" alt="The three-column live chat console — queue, conversation (auto-reply control, accept/close), AI briefing &amp; knowledge lookup" loading="lazy"><figcaption>The three-column live chat console — queue, conversation (auto-reply control, accept/close), AI briefing &amp; knowledge lookup</figcaption></figure>
-  <h3>4.4 Handoff alerts·auto-wrap-up</h3>
+  <h3>4.4 Handoff alerts·Alarm center·auto-wrap-up</h3>
   <ul>
-    <li><strong>Escalation alarm</strong>: on a new handoff, an alert modal within 10 seconds (reason: low confidence/moderation block/customer request) → [Open chat]</li>
+    <li><strong>Escalation alarm</strong>: on a new handoff, a popup within 10 seconds — the reason plus <strong>hotel·region·consult category</strong>, <strong>Assigned: agent name</strong> ("Everyone" when no rule matched), and the rule name. Visible to every agent; alarms assigned to another agent are marked <em>Assigned to someone else</em></li>
+    <li><strong>[Close]</strong> = marked read on your screen only (the assignee's alarm·re-alerts stay) · <strong>[Open chat]</strong> = goes to the conversation; if you are the assignee or the alarm is for everyone, it is <strong>acknowledged</strong> (re-alerts stop)</li>
+    <li><strong>Header 🔔</strong>: unread count + latest 20 → <em>View all</em> opens the <strong>Alarm center</strong> (<code>/live-chat/alerts</code>): All/Assigned to me/Everyone·status·period·consult category filters, click a row to go to the conversation, [Acknowledge]</li>
+    <li><strong>Alarm settings (personal)</strong>: popup (All alarms / Only those assigned to me (incl. everyone) / Off) · sound (with preview) · browser desktop notifications (permission required) · email me when assigned. Even with the popup off, alarms stay in 🔔 and the Alarm center</li>
+    <li>The conversation header shows the consult category badge the customer picked (<code>Consult: Payment</code>) + a system line</li>
     <li><strong>Idle auto-wrap-up</strong> (server, widget channel only): 30 min silence on both sides → "Is there anything else we can help with?" → closed after 1 more silent minute. Conversations older than 7 days close quietly. Conversations awaiting an email reply are never auto-closed</li>
   </ul>
   <h3>4.5 Session grouping·customer journey report</h3>
@@ -275,7 +281,7 @@ li{margin:4px 0}
     <li><strong>Declining</strong> requires a reason (policy-impossible/misassigned/spam + memo). Reopening is possible after resolve/decline</li>
     <li>Card click → read-only preview of the last 10 turns (viewing is audit-logged) → [Open session]</li>
     <li><strong>[File this message as an issue]</strong> in live chat (4.2) also creates issues</li>
-    <li>SLA baseline hours (normal/urgent, 1–168h, defaults 24h/4h) are set on the <em>Agent handoff</em> card under [Tenant settings → Basic settings]</li>
+    <li>SLA baseline hours (normal/urgent, 1–168h, defaults 24h/4h) are set on the [Tenant settings → Agent handoff] tab</li>
     <li>The workflow mode (native or not) is the platform administrator's <strong>Plan/Add-ons</strong> setting (Ch. 16) — menu provided without the mode shows only a notice screen</li>
   </ul>
 </section>
@@ -371,10 +377,11 @@ li{margin:4px 0}
 
 <section id="ch14">
   <div class="ch"><span class="num">14</span><h2>Tenant Settings</h2></div>
-  <p><code>/settings</code> is now <strong>7 tabs</strong> (formerly one "Settings" screen). Tabs are menu-provisioning units — an unprovided tab is invisible.</p>
+  <p><code>/settings</code> has <strong>8 tabs</strong> (formerly one "Settings" screen → 7 tabs on 2026-08-24 → the <em>Agent handoff</em> tab split out on 2026-10-24). Tabs are menu-provisioning units — an unprovided tab is invisible (<em>Agent handoff</em> is provided together with <em>Basic settings</em>).</p>
   <div class="tablewrap"><table>
     <tr><th>Tab</th><th>Contents</th></tr>
-    <tr><td>Basic settings</td><td><strong>AI engines</strong> (tenant's own engines — ahead of platform engines; connection test·default) · <strong>AI usage</strong> (calls/tokens, stub-fallback warnings) · Storefront · <strong>Agent handoff</strong> (assignees·business hours·breaks·off-hours email/copy·SLA·deny-list) · <strong>Knowledge options</strong> (usage-guides card on/off)</td></tr>
+    <tr><td>Basic settings</td><td><strong>AI engines</strong> (tenant's own engines — ahead of platform engines; connection test·default) · <strong>AI usage</strong> (calls/tokens, stub-fallback warnings) · Storefront · <strong>Knowledge options</strong> (usage-guides card on/off)</td></tr>
+    <tr><td>Agent handoff</td><td>Assigned agents · <strong>Routing rules</strong> (consult category × topic × customer information → agent group, <strong>Check routing</strong>·warnings, <strong>Manage consult categories</strong>) · re-alerts for unaccepted handoffs · business hours·breaks · off-hours email/copy · SLA · deny-list (14.1)</td></tr>
     <tr><td>Widget settings</td><td>Theme · <strong>Custom widgets</strong> (design library — font·size·corners·panel size·launcher icon; [Use] applies instantly, [Back to basic widget], preview·duplicate·JSON package·history restore·archive; sanitized CSS when the add-on is allowed) · <strong>Design files</strong> (fonts·icons·images — tenant folder, deployment-independent) · tab layout · behaviour (greetings — 6 language tabs, default copy shown) · Embed/SDK · install guide — details: <a href="custom-widget.en.html">Custom Widget Manual</a></td></tr>
     <tr><td>Platform integrations</td><td>Shopify·Cafe24·WooCommerce·Odoo·Haravan tiles + the <strong>[Integration guide]</strong> button</td></tr>
     <tr><td>Marketing &amp; helpdesk</td><td>Klaviyo · Yotpo · Gorgias</td></tr>
@@ -386,6 +393,15 @@ li{margin:4px 0}
     <li><strong>Saved ≠ connected</strong>: saving shows "untested" — only a passed <strong>[Connection test]</strong> flips it to "connected" ("error" on failure)</li>
     <li>Odoo·Woo·Haravan sync via the modal's <strong>[Import products]/[Sync orders]</strong> (Cafe24: OAuth card; Shopify: [Sync now]+[Register webhooks]) — AI use still needs the catalog sync in [Knowledge]</li>
     <li><strong>Deny-list</strong> rules carry 2 modes: <strong>No answer</strong> (straight handoff, default) / <strong>Answer, then hand off</strong> (answer from knowledge, then hand off) — an agent is called either way</li>
+  </ul>
+  <h3>14.1 Agent handoff — consult categories and routing rules</h3>
+  <ul>
+    <li><strong>Consult category</strong> = the consult topic the customer picks in the widget. <strong>[Manage consult categories]</strong> in the routing rules header: code (cannot be changed after creation)·name·order, <strong>Shown/Hidden</strong> (only Shown appear on the widget card; new ones default to Shown), <strong>per-language names</strong>. One used by a rule·team·label cannot be deleted. 👁 on a rule chip = shown to customers</li>
+    <li><strong>Routing rules</strong>: from the top, connected to the <strong>agent group (team × label)</strong>·individually designated agents of the <strong>first rule whose consult category · topic · customer information all match</strong>. If none, the assigned agents; if none either, everyone is notified</li>
+    <li>The <em>Consult category</em> line compares only the value the customer picked (no pick → only rules with an empty consult category) · label chips on the <em>Topic</em> line are for policy (deny) handoffs only — pick group labels under <em>Assignee</em> · <em>Customer information</em>: Region (North·North Center·Central·South Center·South)·province·language·verification level·customer tier/type·hotel·role·entry path</li>
+    <li>Example: <em>Payment · South</em> = Payment + Region South·South Center → team South × label accounting. When the customer picks a consult category, its rules are followed instead of previous-agent-first</li>
+    <li><strong>Check routing</strong>: enter consult category·region·province·language → see, <strong>using the unsaved rules</strong>, who it goes to and why rules were skipped (consult category mismatch·region condition mismatch·0 assignable agents, etc.). No alarm is sent</li>
+    <li><strong>Warnings</strong> (do not block saving): topic-label misuse · region name in the rule without a region·province condition · 0 assignable agents (members yet to accept their invitation are shown)</li>
   </ul>
   <p>→ <a href="quick-setup.en.html">Quick Setup Manual, Ch. 3–4</a></p>
   <figure class="shot"><img src="img/settings-custom-widget.en.jpg" alt="Custom widgets card — design library, [Use], [Back to basic widget], history; Design files card below" loading="lazy"><figcaption>Custom widgets card — design library, [Use], [Back to basic widget], history; Design files card below</figcaption></figure>
@@ -433,7 +449,11 @@ li{margin:4px 0}
     <dd>It is exclusive to tenants whose workflow mode is native — check the admin <strong>Plan/Add-ons</strong> setting says native.
     If the menu itself is missing, check the provided menus/rank permissions (2-tier).</dd>
     <dt>Q. The settings screen looks different from older descriptions.</dt>
-    <dd>Since 2026-08-24, /settings is <strong>7 tabs</strong> (Tenant settings, Ch. 14). Agent handoff moved to the Basic settings tab; menu access to the Other settings tab.</dd>
+    <dd>/settings has <strong>8 tabs</strong> (Tenant settings, Ch. 14). Since 2026-10-24, agent handoff has its own <strong>Agent handoff</strong> tab; menu access is on the <em>Other settings</em> tab.</dd>
+    <dt>Q. A customer asked for an agent, but the consult category card doesn't appear.</dt>
+    <dd>Check in [Agent handoff → Manage consult categories] that at least one consult category is <strong>Shown</strong>. If none are shown, the conversation connects directly without the card.</dd>
+    <dt>Q. I created a rule, but conversations aren't assigned to the team I specified.</dt>
+    <dd>Enter the same conditions in <strong>Check routing</strong> above the rules to see why rules were skipped. Common causes: label chips on the topic line, a missing region condition, team members yet to accept their invitation (0 assignable agents).</dd>
     <dt>Q. Dashboard/statistics numbers dropped.</dt>
     <dd>Can be normal — conversation counts now exclude preview sessions, and with the unified "resolved" definition, conversations where the customer spoke last no longer count as resolved (Ch. 8·9).</dd>
     <dt>Q. I changed widget settings but nothing changed.</dt>

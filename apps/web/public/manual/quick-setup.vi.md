@@ -1,6 +1,6 @@
 # Sổ tay thiết lập nhanh SharpTalk — Từ khi mở tenant đến phiên tư vấn đầu tiên
 
-> Phiên bản 1.1 · Bản đầu 2026-08-24 · **Cập nhật 2026-09-11** · Biên soạn dựa trên mã nguồn
+> Phiên bản 1.2 · Bản đầu 2026-08-24 · **Cập nhật 2026-10-24** · Biên soạn dựa trên mã nguồn
 > Đối tượng: **Quản trị viên nền tảng** (chương 1) · **Quản trị viên tenant mới** (chương 2~8)
 > Bản trực tuyến: https://shoptalk.amoeba.site/manual (có bản HTML và bản dịch EN·VI)
 > Ký hiệu: ✅ đã triển khai / 🟡 đang chuẩn bị·lộ trình. URL staging chuẩn `https://shoptalk.amoeba.site`
@@ -166,8 +166,8 @@ viên (admin hoặc master của cửa hàng).
 ## 3. Tích hợp nền tảng thương mại
 *(Menu trái của bảng điều khiển **[Cài đặt gian hàng]** → tab **Tích hợp nền tảng**)*
 
-> Trang cài đặt nay gồm **7 tab**: Cài đặt cơ bản (công cụ AI · mức dùng · storefront ·
-> chuyển cho nhân viên) / Cài đặt widget / Tích hợp nền tảng / Marketing & Helpdesk /
+> Trang cài đặt gồm **8 tab**: Cài đặt cơ bản (công cụ AI · mức dùng · storefront ·
+> tùy chọn tri thức) / Chuyển nhân viên / Cài đặt widget / Tích hợp nền tảng / Marketing & Helpdesk /
 > Kênh nhắn tin / Cài đặt khác / Thông báo quyền riêng tư. Chương này là tab
 > *Tích hợp nền tảng*, chương 4 là tab *Cài đặt widget*.
 
@@ -351,9 +351,11 @@ nguồn ngoài (Google Drive·Notion), kiểm chứng·quản lý chất lượn
   (director/manager/staff)·nhãn công việc → **hộp thoại mật khẩu tạm thời** giống chương 1
   hiện ra (hiển thị 1 lần·tự tay chuyển giao). Quyền truy cập từng menu điều chỉnh theo
   cấp bậc tại thẻ *Quyền truy cập menu* trong [Cài đặt gian hàng → Cài đặt khác] (chỉ master).
-- **Chuyển cho nhân viên (handoff)**: trong thẻ *Chuyển cho nhân viên* của [Cài đặt gian
-  hàng → Cài đặt cơ bản], chỉ định nhân viên tư vấn phụ trách, giờ làm việc, email chuyển
-  tiếp ngoài giờ. Chi tiết xem
+- **Chuyển cho nhân viên (handoff)**: trong tab [Cài đặt gian hàng → Chuyển nhân viên], chỉ
+  định nhân viên tư vấn phụ trách, quy tắc phân công (nhóm × nhãn theo danh mục tư vấn·khu
+  vực), giờ làm việc, email chuyển tiếp ngoài giờ. Muốn khách chọn chủ đề tư vấn trên widget
+  thì đặt danh mục ở trạng thái Hiển thị trong *Quản lý danh mục tư vấn*. Sau khi tạo quy tắc,
+  hãy dùng **Kiểm tra phân công** để xem hội thoại sẽ đến ai. Chi tiết xem
   [Sổ tay tri thức·AI chương 5](knowledge-ai.vi.md).
 
 ---

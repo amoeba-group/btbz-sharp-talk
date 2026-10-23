@@ -1,6 +1,6 @@
 # Sổ tay đăng ký tri thức·cài đặt AI SharpTalk — Pipeline tri thức và vận hành tiếp khách
 
-> Phiên bản 1.1 · Bản đầu 2026-08-24 · **cập nhật 2026-09-04** · Biên soạn dựa trên mã nguồn
+> Phiên bản 1.2 · Bản đầu 2026-08-24 · **cập nhật 2026-10-24** · Biên soạn dựa trên mã nguồn
 > Đối tượng: người vận hành tenant · phụ trách CS (khuyến nghị master/director — Cài đặt AI chỉ dành cho cấp bậc cao)
 > Bản trực tuyến: https://shoptalk.amoeba.site/manual (có bản HTML và bản dịch EN·VI)
 > Ký hiệu: ✅ đã triển khai / 🟡 đang chuẩn bị·lộ trình. Tài liệu tiên quyết: [Sổ tay thiết lập nhanh](quick-setup.vi.md)
@@ -535,7 +535,7 @@ liên hệ·mở thẻ cộng tác viên·kết nối nhân viên·mở URL) →
 ---
 
 ## 5. Cài đặt tiếp khách live chat
-*(Thẻ *Chuyển cho nhân viên* trong tab **[Cài đặt gian hàng] → Cài đặt cơ bản** — đã được chuyển từ màn hình Cài đặt AI sang đây)*
+*(Tab **[Cài đặt gian hàng] → Chuyển nhân viên** — tách khỏi tab Cài đặt cơ bản từ 2026-10-24)*
 
 **Thuật ngữ**
 
@@ -549,7 +549,7 @@ liên hệ·mở thẻ cộng tác viên·kết nối nhân viên·mở URL) →
 
 ### 5.1 Người phụ trách·giờ làm việc·hướng dẫn ngoài giờ
 
-**Quy trình**: trong thẻ *Chuyển cho nhân viên*
+**Quy trình**: trong tab *Chuyển nhân viên*
 1. **Nhân viên được phân công** — tích chọn nhân viên tư vấn sẽ nhận chuyển tiếp (bỏ
    trống thì báo cho mọi nhân viên; ai nhận trước người đó tiếp)
 2. Công tắc **Chỉ kết nối trong giờ làm việc** → múi giờ·giờ bắt đầu/kết thúc·ngày trong
@@ -572,6 +572,24 @@ liên hệ·mở thẻ cộng tác viên·kết nối nhân viên·mở URL) →
 - Không chỉ định người phụ trách nào thì hội thoại chuyển tiếp chỉ dồn trong hàng chờ
   chung. Hãy chỉ định tối thiểu 1 người.
 
+### 5.1a Danh mục tư vấn·quy tắc phân công
+
+1. Trong **[Quản lý danh mục tư vấn]**, tạo các chủ đề tư vấn mà khách sẽ chọn (ví dụ: đặt
+   phòng·thanh toán) và đặt ở trạng thái **Hiển thị**. Khi cần, nhập tên vi/en trong ▸ *Tên theo ngôn ngữ*.
+2. Viết **quy tắc phân công** theo thứ tự từ trên xuống. Quy tắc = danh mục tư vấn + nghiệp vụ
+   (từ khóa) + thông tin khách hàng (khu vực·tỉnh/thành·ngôn ngữ…) → người phụ trách (nhóm × nhóm
+   nhãn hoặc cá nhân). Hội thoại được kết nối theo **quy tắc đầu tiên** khớp tất cả điều kiện.
+3. Nhập danh mục tư vấn·khu vực… vào ô **Kiểm tra phân công** phía trên các quy tắc để xem
+   trước hội thoại sẽ đến ai, rồi **lưu**.
+
+⚠️ Lưu ý
+- Chip nhãn ở dòng *Nghiệp vụ* chỉ khớp với hội thoại đến từ chuyển tiếp bắt buộc theo chính
+  sách. Nhãn nhóm nhân viên tư vấn hãy chọn ở *Người phụ trách* (trình soạn thảo sẽ hiện cảnh báo).
+- Nhân viên chưa chấp nhận lời mời sẽ không được phân công. Nếu nhóm có 0 nhân viên đang hoạt
+  động thì quy tắc đó bị bỏ qua.
+- Nếu khách không chọn danh mục tư vấn thì chỉ những quy tắc để trống danh mục tư vấn mới khớp.
+  Đặt một quy tắc mặc định không có điều kiện ở cuối cùng sẽ an toàn.
+
 ### 5.2 Hiểu điều kiện chuyển tiếp (escalation)
 
 Các trường hợp AI chuyển sang nhân viên tư vấn:
@@ -580,7 +598,7 @@ Các trường hợp AI chuyển sang nhân viên tư vấn:
 |---|---|
 | **Độ tin cậy thấp** | Kèm câu "Tôi kết nối bạn với nhân viên tư vấn nhé?" vào câu trả lời và đưa vào hàng chờ |
 | **Bị kiểm duyệt chặn** | Không hiển thị câu trả lời AI, hướng dẫn kết nối nhân viên tư vấn rồi đưa vào hàng chờ |
-| **Khách yêu cầu** | Nút kịch bản *Liên hệ hỗ trợ* hoặc yêu cầu rõ ràng → vào hàng chờ ngay |
+| **Khách yêu cầu** | Nút kịch bản *Liên hệ hỗ trợ* hoặc yêu cầu rõ ràng → vào hàng chờ ngay (nếu có danh mục tư vấn đang hiển thị, widget sẽ hỏi danh mục tư vấn trước rồi kết nối theo quy tắc của danh mục đó) |
 | **Chuyển tiếp bắt buộc theo chính sách (deny-list)** | Quy tắc "Không trả lời": vào hàng chờ **ngay lập tức, không có phản hồi AI**. Quy tắc "Trả lời rồi chuyển": trả lời từ tri thức trước rồi vào hàng chờ. Tin nhắn vẫn được lưu·hiển thị bình thường, và yêu cầu được đóng dấu loại·nhãn (đây không phải chức năng chặn tin nhắn) |
 
 💡 **Mẹo**

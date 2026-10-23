@@ -104,7 +104,7 @@ li{margin:4px 0}
 <header class="hero">
   <div class="eyebrow">SharpTalk 사용자설명서 · 통합 참조</div>
   <h1>샵톡 통합 사용자 매뉴얼</h1>
-  <div class="meta"><span>버전 2.1.0 · 전면 개정 2026-08-24 · 현행화 2026-09-11 (코드 기준)</span><span>대상: 테넌트 운영자 · 상담원 · 플랫폼 관리자</span></div>
+  <div class="meta"><span>버전 2.2.0 · 전면 개정 2026-08-24 · 현행화 2026-10-24 (코드 기준 — 상담원 연결 탭·상담카테고리·알람센터)</span><span>대상: 테넌트 운영자 · 상담원 · 플랫폼 관리자</span></div>
   <p class="lead"><strong>화면 전체를 훑는 참조 매뉴얼</strong>입니다. 처음 개설하는 분은
   <a href="quick-setup.ko.html">간단 세팅 매뉴얼</a>(1편)부터, 지식·AI를 다듬는 분은
   <a href="knowledge-ai.ko.html">지식 등록·AI 설정 매뉴얼</a>(2편)을 보세요.
@@ -166,7 +166,8 @@ li{margin:4px 0}
     <tr><td>고객 / 주문 / 상품</td><td><code>/customers</code> <code>/orders</code> <code>/products</code></td><td>캐시 데이터 조회·관리</td></tr>
     <tr><td>캠페인 / 리뷰</td><td><code>/campaigns</code> <code>/reviews</code></td><td>발송·리뷰 관리</td></tr>
     <tr><td>사용자</td><td><code>/users</code></td><td>팀원 초대·직급·라벨</td></tr>
-    <tr><td>테넌트 설정</td><td><code>/settings</code></td><td>7탭: 기본 설정 / 위젯 설정 / 플랫폼 연동 / 마케팅·헬프데스크 / 메신저 채널 / 기타 설정 / 개인정보 안내</td></tr>
+    <tr><td>테넌트 설정</td><td><code>/settings</code></td><td>8탭: 기본 설정 / 상담원 연결 / 위젯 설정 / 플랫폼 연동 / 마케팅·헬프데스크 / 메신저 채널 / 기타 설정 / 개인정보 안내</td></tr>
+    <tr><td>알람센터</td><td><code>/live-chat/alerts</code></td><td>상담 이관 알람 이력·배정·확인 (헤더 🔔 → 전체 보기)</td></tr>
     <tr><td>마이페이지</td><td><code>/my-page</code></td><td>프로필·비밀번호·MFA</td></tr>
     <tr><td>관리자</td><td><code>/admin/*</code></td><td>플랫폼 관리 (시스템 관리자 전용)</td></tr>
   </table></div>
@@ -195,6 +196,7 @@ li{margin:4px 0}
     <li><strong>시나리오 버튼</strong>: 테넌트 구성 빠른 메뉴(기본 6종). 상품 도움말은 서브메뉴(사용법·성분·교환/반품·재입고). 답변 뒤 빠른 칩(내 주문/배송/반품/상담원 연결)</li>
     <li><strong>본인확인</strong> 2방식: ① 스토어 로그인 — 리다이렉트(기본)/팝업, Cafe24·Shopify 로그인 경로 자동 처리, 복귀 시 위젯 자동 재오픈 ② 비회원 주문조회 — 주문번호+이메일(횟수 제한)</li>
     <li><strong>첨부</strong>: 이미지 ≤10MB(HEIC 자동 변환) / 파일 ≤20MB(pdf·txt·csv·docx·xlsx), 메시지당 최대 5개</li>
+    <li><strong>상담카테고리 선택</strong>: 노출된 상담카테고리가 있으면 [상담원 연결] 시 "어떤 상담이 필요하세요?" 카드 → 고른 상담카테고리의 담당 그룹으로 연결. AI가 넘길 때도 같은 카드(아직 아무도 수락하지 않았으면 첫 선택 1회 재연결). [건너뛰기]는 기존처럼 연결 (14.1)</li>
     <li><strong>대기 표시</strong> 3종: AI 생성 중 / 상담원 응대 중 / 인계 대기</li>
     <li><strong>종료·만족도</strong>: 종료된 대화에 24시간 내 만족도(이모지 5단계 = 1~5점) 카드. 새 메시지를 보내면 새 상담 시작</li>
   </ul>
@@ -250,9 +252,13 @@ li{margin:4px 0}
     <li><strong>이슈 패널</strong>(네이티브 워크플로우): 이슈 번호·상태·유형·재오픈 수, [해결]/[반려](사유 필수), 담당 재배정, 이벤트 타임라인</li>
   </ul>
   <figure class="shot"><img src="img/live-chat.ko.jpg" alt="라이브챗 3열 콘솔 — 대기열·대화(자동응답 제어·수락/종료)·AI 브리핑/지식 조회" loading="lazy"><figcaption>라이브챗 3열 콘솔 — 대기열·대화(자동응답 제어·수락/종료)·AI 브리핑/지식 조회</figcaption></figure>
-  <h3>4.4 인계 알림·자동 마무리</h3>
+  <h3>4.4 인계 알림·알람센터·자동 마무리</h3>
   <ul>
-    <li><strong>에스컬레이션 알람</strong>: 새 인계 발생 시 10초 내 알림 모달(사유: 낮은 신뢰도/모더레이션 차단/고객 요청) → [채팅 열기]</li>
+    <li><strong>에스컬레이션 알람</strong>: 새 인계 발생 시 10초 내 팝업 — 사유와 함께 <strong>호텔·권역·상담카테고리</strong>, <strong>배정: 상담원 이름</strong>(맞는 규칙 없으면 "전체"), 규칙 이름. 상담원 모두에게 보이며 다른 사람 배정 건은 <em>다른 상담원 배정</em> 표시</li>
+    <li><strong>[닫기]</strong> = 내 화면에서만 읽음 처리(배정자 알람·재알림 유지) · <strong>[상담 열기]</strong> = 대화로 이동, 배정자이거나 전원 대상이면 <strong>확인 처리</strong>(재알림 중지)</li>
+    <li><strong>헤더 🔔</strong>: 읽지 않은 수 + 최근 20건 → <em>전체 보기</em>로 <strong>알람센터</strong>(<code>/live-chat/alerts</code>): 전체/내 배정/전원 대상·상태·기간·상담카테고리 필터, 행 클릭 시 대화 이동, [확인 처리]</li>
+    <li><strong>알람 설정(개인)</strong>: 팝업(모든 알람 / 내게 배정된 것만(전원 대상 포함) / 끄기) · 소리(들어보기) · 브라우저 데스크톱 알림(권한 필요) · 내게 배정되면 메일. 팝업을 꺼도 🔔·알람센터에는 남음</li>
+    <li>대화 헤더에 고객이 고른 상담카테고리 배지(<code>상담: 결제</code>) + 시스템 줄</li>
     <li><strong>방치 자동 마무리</strong>(서버, 위젯 채널만): 양측 30분 무응답 → "더 도와드릴 일이 있을까요?" → 1분 내 무응답 시 종료. 7일 초과 대화는 조용히 종료. 이메일 회신 대기 대화는 자동 종료 안 함</li>
   </ul>
   <h3>4.5 세션 그룹핑·고객여정분석</h3>
@@ -274,7 +280,7 @@ li{margin:4px 0}
     <li><strong>반려</strong>는 사유 필수(정책상 불가/오배정/스팸 + 메모). 해결/반려 후 재오픈 가능</li>
     <li>카드 클릭 → 최근 10턴 미리보기(읽기 전용, 조회는 감사 기록) → [세션 열기]</li>
     <li>라이브챗의 <strong>[이 메시지를 이슈로 등록]</strong>(4.2)으로도 이슈 생성</li>
-    <li>SLA 기준 시간(일반/긴급, 1~168h, 기본 24h/4h)은 [테넌트 설정 → 기본 설정]의 <em>상담원 연결</em> 카드에서 설정</li>
+    <li>SLA 기준 시간(일반/긴급, 1~168h, 기본 24h/4h)은 [테넌트 설정 → 상담원 연결] 탭에서 설정</li>
     <li>워크플로우 모드(native 여부)는 플랫폼 관리자의 <strong>요금제/애드온</strong> 설정(16장) — 메뉴만 제공되고 모드가 아니면 안내 화면만 표시</li>
   </ul>
 </section>
@@ -370,10 +376,11 @@ li{margin:4px 0}
 
 <section id="ch14">
   <div class="ch"><span class="num">14</span><h2>테넌트 설정</h2></div>
-  <p><code>/settings</code>는 <strong>7개 탭</strong>으로 재편(구 단일 "환경설정"). 탭도 제공 메뉴 단위 — 제공되지 않은 탭은 보이지 않습니다.</p>
+  <p><code>/settings</code>는 <strong>8개 탭</strong>(구 단일 "환경설정" → 2026-08-24 7개 탭 → 2026-10-24 <em>상담원 연결</em> 탭 분리). 탭도 제공 메뉴 단위 — 제공되지 않은 탭은 보이지 않습니다(<em>상담원 연결</em>은 <em>기본 설정</em>과 같은 제공 단위).</p>
   <div class="tablewrap"><table>
     <tr><th>탭</th><th>내용</th></tr>
-    <tr><td>기본 설정</td><td><strong>AI 엔진</strong>(테넌트 자체 엔진 — 플랫폼 엔진보다 우선, 연결 테스트·기본값) · <strong>AI 사용량</strong>(호출/토큰 집계, stub 폴백 경고) · 스토어프론트 · <strong>상담원 연결</strong>(담당자·근무시간·휴게·영업외 이메일/문구·SLA·deny-list) · <strong>지식 옵션</strong>(사용 가이드 카드 노출)</td></tr>
+    <tr><td>기본 설정</td><td><strong>AI 엔진</strong>(테넌트 자체 엔진 — 플랫폼 엔진보다 우선, 연결 테스트·기본값) · <strong>AI 사용량</strong>(호출/토큰 집계, stub 폴백 경고) · 스토어프론트 · <strong>지식 옵션</strong>(사용 가이드 카드 노출)</td></tr>
+    <tr><td>상담원 연결</td><td>담당 상담원 · <strong>배정 규칙</strong>(상담카테고리 × 업무 × 고객 정보 → 상담원 그룹, <strong>배정 확인</strong>·경고, <strong>상담카테고리 관리</strong>) · 미수락 재알림 · 근무시간·휴게 · 영업외 이메일/문구 · SLA · deny-list (14.1)</td></tr>
     <tr><td>위젯 설정</td><td>테마 · <strong>커스텀 위젯</strong>(폰트·크기·모서리·패널 크기·런처 아이콘 디자인 라이브러리 — [사용함]으로 즉시 적용, [기본 위젯으로 복귀], 미리보기·복제·JSON 패키지·이력 복원·보관; 정제 CSS는 애드온 허용 시) · <strong>디자인 파일</strong>(폰트·아이콘·이미지 — 테넌트 폴더, 배포 무관) · 탭 구성 · 동작(인사말 — 6개 언어 탭, 기본 문구 표시) · 임베드/SDK · 설치 가이드 — 상세: <a href="custom-widget.ko.html">커스텀 위젯 만들기 매뉴얼</a></td></tr>
     <tr><td>플랫폼 연동</td><td>Shopify·Cafe24·WooCommerce·Odoo·Haravan 타일 + <strong>[연동 가이드]</strong> 버튼</td></tr>
     <tr><td>마케팅·헬프데스크</td><td>Klaviyo · Yotpo · Gorgias</td></tr>
@@ -385,6 +392,15 @@ li{margin:4px 0}
     <li><strong>저장 ≠ 연결</strong>: 저장 시 "미테스트" — <strong>[연결 테스트]</strong> 통과해야 "연결됨"(실패 시 "오류")</li>
     <li>Odoo·Woo·Haravan은 모달의 <strong>[상품 가져오기]/[주문 동기화]</strong>(Cafe24는 OAuth 카드, Shopify는 [지금 동기화]+[웹훅 등록]) — AI 활용은 [지식] 카탈로그 동기화 별도</li>
     <li><strong>deny-list</strong> 규칙별 모드 2종: <strong>답변 안 함</strong>(즉시 인계, 기본) / <strong>답변 후 인계</strong>(지식으로 답한 뒤 인계) — 어느 쪽이든 상담원 호출</li>
+  </ul>
+  <h3>14.1 상담원 연결 — 상담카테고리와 배정 규칙</h3>
+  <ul>
+    <li><strong>상담카테고리</strong> = 고객이 위젯에서 고르는 상담 주제. 배정 규칙 머리글 <strong>[상담카테고리 관리]</strong>: 코드(만든 뒤 변경 불가)·이름·순서, <strong>노출함/노출 안 함</strong>(노출함만 위젯 카드에 표시, 새로 만들면 노출함), <strong>언어별 이름</strong>. 규칙·팀·라벨이 쓰는 것은 삭제 불가. 규칙 칩의 👁 = 고객 노출</li>
+    <li><strong>배정 규칙</strong>: 위에서부터 <strong>상담카테고리 · 업무 · 고객 정보가 모두 맞는 첫 규칙</strong>의 <strong>상담원 그룹(팀 × 라벨)</strong>·개인 지정 상담원에게 연결. 없으면 담당 상담원, 그것도 없으면 전원 알림</li>
+    <li><em>상담카테고리</em> 줄은 고객이 고른 값만 비교(고르지 않으면 상담카테고리를 비운 규칙만) · <em>업무</em> 줄 라벨 칩은 정책(deny) 인계 전용 — 그룹 라벨은 <em>담당자</em>에서 · <em>고객 정보</em>: 권역(북부·중북부·중부·중남부·남부)·지역(성)·언어·인증 수준·고객 등급/유형·호텔·역할·방문 경로</li>
+    <li>예: <em>결제 · 남부</em> = 결제 + 권역 남부·중남부 → 팀 South × 라벨 회계. 고객이 상담카테고리를 고르면 직전 상담원 우선 대신 규칙을 따름</li>
+    <li><strong>배정 확인</strong>: 상담카테고리·권역·성·언어 입력 → <strong>저장 전 규칙</strong>으로 누구에게 가는지·건너뛴 이유(상담카테고리 불일치·권역 조건 불일치·배정 가능 0명 등). 알림은 보내지 않음</li>
+    <li><strong>경고</strong>(저장은 막지 않음): 업무 라벨 오용 · 지역명 규칙에 권역·성 조건 없음 · 배정 가능 0명(초대 수락 전 인원 표시)</li>
   </ul>
   <p>→ <a href="quick-setup.ko.html">간단 세팅 매뉴얼 3~4장</a></p>
   <figure class="shot"><img src="img/settings-custom-widget.ko.jpg" alt="커스텀 위젯 카드 — 디자인 라이브러리·[사용함]·[기본 위젯으로 복귀]·이력, 아래는 디자인 파일 카드" loading="lazy"><figcaption>커스텀 위젯 카드 — 디자인 라이브러리·[사용함]·[기본 위젯으로 복귀]·이력, 아래는 디자인 파일 카드</figcaption></figure>
@@ -432,7 +448,11 @@ li{margin:4px 0}
     <dd>워크플로우 모드가 네이티브인 테넌트 전용입니다 — 어드민 <strong>요금제/애드온</strong>에서 native인지 확인하세요.
     메뉴 자체가 없다면 제공 메뉴/직급 권한(2계층)을 확인하세요.</dd>
     <dt>Q. 설정 화면이 예전 설명과 다릅니다.</dt>
-    <dd>2026-08-24 이후 /settings가 <strong>7개 탭</strong>(테넌트 설정)으로 재편되었습니다(14장). 상담 전환은 <em>기본 설정</em> 탭의 상담원 연결 카드, 메뉴 접근 권한은 <em>기타 설정</em> 탭으로 이동했습니다.</dd>
+    <dd>/settings는 <strong>8개 탭</strong>(테넌트 설정)입니다(14장). 상담 전환은 2026-10-24부터 별도 <strong>상담원 연결</strong> 탭, 메뉴 접근 권한은 <em>기타 설정</em> 탭에 있습니다.</dd>
+    <dt>Q. 고객이 상담원을 불렀는데 상담카테고리 카드가 안 나옵니다.</dt>
+    <dd>[상담원 연결 → 상담카테고리 관리]에서 <strong>노출함</strong>인 상담카테고리가 있는지 확인하세요. 하나도 없으면 카드 없이 바로 연결합니다.</dd>
+    <dt>Q. 규칙을 만들었는데 지정한 팀으로 배정되지 않습니다.</dt>
+    <dd>규칙 위 <strong>배정 확인</strong>에 같은 조건을 넣어 건너뛴 이유를 보세요. 흔한 원인: 업무 줄 라벨 칩 사용, 권역 조건 누락, 팀원 초대 미수락(배정 가능 0명).</dd>
     <dt>Q. 대시보드·통계 숫자가 예전보다 줄었습니다.</dt>
     <dd>정상일 수 있습니다 — 대화 수에서 미리보기 세션이 제외되었고, "해결" 정의 통일로 고객이 마지막으로 말한 대화는 해결로 세지 않습니다(8·9장).</dd>
     <dt>Q. 위젯 설정을 바꿨는데 반영이 안 됩니다.</dt>

@@ -1,6 +1,6 @@
 # SharpTalk Knowledge & AI Setup Manual — The Knowledge Pipeline and Customer-Response Operations
 
-> Version 1.1 · First edition 2026-08-24 · **updated 2026-09-04** · Written against the code
+> Version 1.2 · First edition 2026-08-24 · **updated 2026-10-24** · Written against the code
 > Audience: tenant operators · CS staff (master/director recommended — AI settings are restricted to senior ranks)
 > Online edition: https://shoptalk.amoeba.site/manual (HTML edition plus EN·VI translations)
 > Legend: ✅ implemented / 🟡 in preparation·roadmap. Prerequisite: [Quick Setup Manual](quick-setup.en.md)
@@ -543,7 +543,7 @@ agent·open a URL) → save.
 ---
 
 ## 5. Live Chat Customer-Response Settings
-*(the *Agent handoff* card on the **[Tenant Settings] → Basic settings** tab — relocated from the AI settings screen)*
+*(the **[Tenant Settings] → Agent handoff** tab — split out of the Basic settings tab on 2026-10-24)*
 
 **Terms**
 
@@ -557,7 +557,7 @@ agent·open a URL) → save.
 
 ### 5.1 Assignees · business hours · off-hours notice
 
-**Procedure**: in the *Agent handoff* card
+**Procedure**: in the *Agent handoff* tab
 1. **Assigned agents** — check the agents who receive handoffs (leave empty to notify every
    agent; whoever accepts first responds)
 2. **Business-hours-only** toggle → timezone·start/end times·weekdays, plus a **break
@@ -582,6 +582,25 @@ agent·open a URL) → save.
 - If no assignee is designated, handed-off conversations only pile up in the shared queue.
   Designate at least one.
 
+### 5.1a Consult categories · routing rules
+
+1. In **[Manage consult categories]**, create the consult topics customers will pick from
+   (e.g. Booking · Payment) and set them to **Shown**. If needed, enter vi/en names under
+   ▸ *Per-language names*.
+2. Write the **routing rules** from the top down. Rule = consult category + topic (keywords)
+   + customer information (region · province · language, etc.) → assignee (team × label
+   group, or individual agents). The **first rule** whose conditions all match is used.
+3. In **Check routing** above the rules, enter a consult category, region, etc. to see who
+   the conversation goes to before saving, then **Save**.
+
+⚠️ Caution
+- Label chips on the *Topic* line only match conversations handed off by a policy-forced
+  handoff. Pick agent-group labels under *Assignee* (the editor shows a warning).
+- Agents who have not accepted their invitation are not assigned. If a group has 0 active
+  agents, that rule is skipped.
+- If the customer does not pick a consult category, only rules with an empty consult
+  category match. Keeping a default rule with no conditions at the bottom is the safe choice.
+
 ### 5.2 Understanding escalation triggers
 
 When the AI hands off to an agent:
@@ -590,7 +609,7 @@ When the AI hands off to an agent:
 |---|---|
 | **Low confidence** | Appends "Shall I connect you to an agent?" to the answer and queues it |
 | **Blocked by moderation** | The AI answer is withheld; an agent-connection notice is shown, then queued |
-| **Customer request** | The scenario's *Contact support* or an explicit request → queued immediately |
+| **Customer request** | The scenario's *Contact support* or an explicit request → queued immediately (if any consult categories are shown, the widget first asks for a consult category and connects via that category's rule) |
 | **Policy-forced handoff (deny-list)** | "No answer" rule: to the queue **immediately, with no AI response**. "Answer, then hand off" rule: answers from knowledge first, then queues. The message is stored·displayed normally, and the issue is stamped with type·label (this is not a message-blocking feature) |
 
 💡 **Tips**
