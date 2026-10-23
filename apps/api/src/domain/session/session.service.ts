@@ -121,6 +121,15 @@ export function sessionCacheKey(token: string): string {
  */
 const OPEN_COUNT_CEILING = 50;
 
+/** How stale `last_ip_at` may get before an unchanged address is re-stamped. */
+const IP_REFRESH_MS = 60 * 60 * 1000;
+
+/** IP columns for a new session — empty outside an HTTP request. */
+function visitorIpFields(): Pick<Session, 'firstIp' | 'lastIp' | 'lastIpAt'> {
+  const ip = getRequestContext()?.clientIp ?? null;
+  return { firstIp: ip, lastIp: ip, lastIpAt: ip ? new Date() : null };
+}
+
 /**
  * Session lifecycle (S1 / FN-006). Creates or resumes a widget session, tracks
  * CCPA consent, and resolves UI language. Emits a CJM Awareness event on create.
@@ -173,6 +182,7 @@ export class SessionService {
         // here, without a data migration.
         await this.realignLanguage(existing, locale);
         if (languageChosen) await this.adoptChosenLanguage(existing, locale);
+        await this.recordVisitorIp(existing);
         return existing;
       }
     }
@@ -197,6 +207,7 @@ export class SessionService {
         consentState: CONSENT_STATE.PENDING,
         customerId: null,
         identityLevel: SESSION_IDENTITY.GUEST,
+        ...visitorIpFields(),
       }),
     );
     await this.bus.publish(EVENTS.CJM, {
@@ -207,6 +218,27 @@ export class SessionService {
       eventType: 'session_start',
     });
     return session;
+  }
+
+  /**
+   * Keep the visitor address current on a resumed session (PLN-261023 S2).
+   * Written only when it changed or the last write is over an hour old — the
+   * widget calls ensure on every page, and a write per page view is waste.
+   * Never fails the ensure.
+   */
+  private async recordVisitorIp(session: Session): Promise<void> {
+    const ip = getRequestContext()?.clientIp;
+    if (!ip) return;
+    const fresh = session.lastIpAt != null && Date.now() - new Date(session.lastIpAt).getTime() < IP_REFRESH_MS;
+    if (session.lastIp === ip && session.firstIp != null && fresh) return;
+    const patch: Partial<Session> = { lastIp: ip, lastIpAt: new Date() };
+    if (session.firstIp == null) patch.firstIp = ip;
+    try {
+      await this.sessionRepo.update({ id: session.id }, patch);
+      Object.assign(session, patch);
+    } catch (err) {
+      this.logger.warn(`visitor ip not recorded (session ${session.id}): ${(err as Error).message}`);
+    }
   }
 
   /**

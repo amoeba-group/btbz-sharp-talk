@@ -31,7 +31,7 @@ import {
 import { AiGatewayService } from '../../infrastructure/external/ai/ai-gateway.service';
 import { AuditService } from '../audit/audit.service';
 import { maskPii } from '../../global/util/pii.util';
-import { maskEmail, maskPhone } from '../../global/util/pii-display.util';
+import { maskEmail, maskIp, maskPhone } from '../../global/util/pii-display.util';
 import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { EventBusService, EVENTS, MailerService } from '../../infrastructure/infrastructure.module';
 import { RedisService } from '../../infrastructure/cache/redis.service';
@@ -40,6 +40,7 @@ import { PROMPT_LANGUAGE_NAMES } from './prompt-language';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { UpsertProfileRequest } from './dto/request/agent.request';
+import { SEARCH_MESSAGE_LIMIT, SEARCH_WINDOW_DAYS, likePattern, matchSnippet, searchTerm } from './message-search.util';
 import { ChannelThread } from '../messenger/entity/channel-thread.entity';
 import { MessengerChannel } from '../messenger/entity/messenger-channel.entity';
 import { ReplyDraft } from '../chat/entity/reply-draft.entity';
@@ -295,9 +296,13 @@ export class AgentService {
     scope: 'all' | 'queue' | 'ended' = 'all',
     channel?: string,
     aiAgentId?: number,
+    /** Transcript text filter (PLN-261023 S1) — rows whose messages contain it. */
+    contentQ?: string,
   ): Promise<{
     items: Array<{
       conversation: Conversation;
+      /** Latest matching message excerpt + match count, with `contentQ` only. */
+      match: { snippet: string; count: number; messageId: string } | null;
       lastMessage: Message | null;
       contact: { name: string | null; email: string | null };
       /** Operator-set session name (PLN-260812); null when unset. */
@@ -373,6 +378,20 @@ export class AgentService {
       });
     }
 
+    const term = contentQ !== undefined ? searchTerm(contentQ) : null;
+    if (contentQ !== undefined && !term) {
+      throw new BusinessException(ERROR_CODE.SEARCH_TERM_TOO_SHORT, HttpStatus.BAD_REQUEST);
+    }
+    if (term) {
+      // Bodies are plain text, so a tenant-scoped LIKE over a bounded window
+      // does it (PLN-261023 S1); the window keeps a scan from growing with history.
+      qb.andWhere(
+        `EXISTS (SELECT 1 FROM messages mq WHERE mq.conversation_id = c.id AND mq.tenant_id = :tenantId
+           AND mq.created_at >= NOW() - INTERVAL ${SEARCH_WINDOW_DAYS} DAY AND mq.body LIKE :pattern)`,
+        { pattern: likePattern(term) },
+      );
+    }
+
     // Correlated MAX(id) rather than a grouped derived table: idx_msg_conv makes
     // it an index lookup per candidate row, and the whole messages table never
     // has to be aggregated to sort a page of conversations.
@@ -396,6 +415,7 @@ export class AgentService {
     const channelDefaults = await this.channelDefaults(conversations.map((c) => c.id));
     // One small lookup per page: id→label + the default (REQ-260825 R6).
     const agentDisplay = await this.aiAgentDisplay(tenantId);
+    const matches = term ? await this.contentMatches(tenantId, conversations.map((c) => Number(c.id)), term) : null;
     const items = conversations.map((conversation) => {
       const state = stateBySession.get(String(conversation.sessionId));
       const pinned = state?.aiAgentId ?? null;
@@ -403,6 +423,7 @@ export class AgentService {
         pinned != null && agentDisplay.byId.has(pinned) ? pinned : agentDisplay.defaultId;
       return {
         conversation,
+        match: matches?.get(String(conversation.id)) ?? null,
         lastMessage: lastByConv.get(String(conversation.id)) ?? null,
         contact: contactByConv.get(String(conversation.id)) ?? { name: null, email: null },
         alias: state?.alias ?? null,
@@ -741,6 +762,73 @@ export class AgentService {
   }
 
   /** conversation id → its newest message, in a single grouped query (PERF-7). */
+  /**
+   * Per conversation of a search page: how many messages match and an excerpt
+   * of the latest one — one query for the page (at most `size` conversations).
+   */
+  private async contentMatches(
+    tenantId: number,
+    ids: number[],
+    term: string,
+  ): Promise<Map<string, { snippet: string; count: number; messageId: string }>> {
+    const out = new Map<string, { snippet: string; count: number; messageId: string }>();
+    if (ids.length === 0) return out;
+    const rows = await this.msgRepo
+      .createQueryBuilder('m')
+      .select(['m.id', 'm.conversationId', 'm.body'])
+      .where('m.tenant_id = :tenantId AND m.conversation_id IN (:...ids) AND m.body LIKE :pattern', {
+        tenantId,
+        ids,
+        pattern: likePattern(term),
+      })
+      .andWhere(`m.created_at >= NOW() - INTERVAL ${SEARCH_WINDOW_DAYS} DAY`)
+      .orderBy('m.id', 'DESC')
+      .getMany();
+    for (const m of rows) {
+      const key = String(m.conversationId);
+      const hit = out.get(key);
+      if (hit) hit.count += 1;
+      else out.set(key, { snippet: matchSnippet(m.body, term), count: 1, messageId: String(m.id) });
+    }
+    return out;
+  }
+
+  /**
+   * Find in one conversation (PLN-261023 S1): the matching messages (latest
+   * SEARCH_MESSAGE_LIMIT), oldest first, so the console can step through them and page back to ones it has
+   * not loaded yet. The whole transcript — no time window inside one room.
+   */
+  async searchMessages(
+    conversationId: number,
+    tenantId: number,
+    q: string,
+  ): Promise<{ items: Array<{ id: string; senderType: string; createdAt: Date; snippet: string }>; total: number }> {
+    const term = searchTerm(q);
+    if (!term) throw new BusinessException(ERROR_CODE.SEARCH_TERM_TOO_SHORT, HttpStatus.BAD_REQUEST);
+    await this.requireConversation(conversationId, tenantId);
+    const qb = this.msgRepo
+      .createQueryBuilder('m')
+      .select(['m.id', 'm.senderType', 'm.body', 'm.createdAt'])
+      .where('m.tenant_id = :tenantId AND m.conversation_id = :conversationId AND m.body LIKE :pattern', {
+        tenantId,
+        conversationId,
+        pattern: likePattern(term),
+      })
+      // Newest first for the cap (a long room keeps its recent matches), then
+      // handed back oldest first — the order the transcript reads in.
+      .orderBy('m.id', 'DESC');
+    const [rows, total] = await qb.take(SEARCH_MESSAGE_LIMIT).getManyAndCount();
+    return {
+      items: rows.reverse().map((m) => ({
+        id: String(m.id),
+        senderType: m.senderType,
+        createdAt: m.createdAt,
+        snippet: matchSnippet(m.body, term),
+      })),
+      total,
+    };
+  }
+
   private async lastMessagesByConversation(ids: number[]): Promise<Map<string, Message>> {
     if (ids.length === 0) return new Map();
     const rows = await this.msgRepo
@@ -771,14 +859,17 @@ export class AgentService {
       select: { id: true, customerId: true },
     });
     const custBySession = new Map(sessions.map((s) => [String(s.id), s.customerId]));
+    // The session's customer, else the one the conversation is filed under (claimed, PLN-261023 S4).
+    const customerOf = (c: Conversation) => custBySession.get(String(c.sessionId)) ?? c.customerId ?? null;
     const tenantId = conversations.find((c) => c.tenantId != null)?.tenantId ?? null;
-    const customerIds = sessions
-      .map((s) => s.customerId)
-      .filter((id): id is number => id != null);
+    const customerIds = conversations
+      .map(customerOf)
+      .filter((id): id is number => id != null)
+      .map(Number);
     if (tenantId == null || customerIds.length === 0) return result;
     const contacts = await this.customerService.contactsByIds(tenantId, customerIds);
     for (const c of conversations) {
-      const custId = custBySession.get(String(c.sessionId));
+      const custId = customerOf(c);
       const contact = custId != null ? contacts.get(String(custId)) : undefined;
       if (contact) result.set(String(c.id), contact);
     }
@@ -1294,8 +1385,14 @@ export class AgentService {
     const conversation = await this.convRepo.findOne({ where: { id: conversationId, tenantId } });
     if (!conversation) return null;
     const session = await this.sessionRepo.findOne({ where: { id: conversation.sessionId } });
-    if (!session?.customerId) return null;
-    return this.maskContext(await this.customerService.getContext(tenantId, session.customerId));
+    if (session?.customerId) {
+      return this.maskContext(await this.customerService.getContext(tenantId, session.customerId));
+    }
+    // A claimed (unsigned) user's conversation is filed under their customer
+    // row without the session holding it (PLN-261023 S4) — shown, flagged.
+    if (conversation.customerId == null) return null;
+    const ctx = this.maskContext(await this.customerService.getContext(tenantId, Number(conversation.customerId)));
+    return { ...ctx, unverified: true };
   }
 
   /**
@@ -1320,6 +1417,52 @@ export class AgentService {
       metadata: { email: maskPii(ctx.email) },
     });
     return { ...ctx, masked: false };
+  }
+
+  /**
+   * The visitor address of a conversation's session, masked (PLN-261023 S2).
+   * `changed` tells the agent the visitor moved since the session began
+   * without revealing either address. Null when nothing was recorded (a relay
+   * channel, or a session from before addresses were kept).
+   */
+  async visitorIp(
+    sessionId: number,
+  ): Promise<{ masked: string | null; at: Date | null; changed: boolean } | null> {
+    const session = await this.sessionRepo.findOne({
+      where: { id: sessionId },
+      select: { id: true, firstIp: true, lastIp: true, lastIpAt: true },
+    });
+    if (!session?.lastIp) return null;
+    return {
+      masked: maskIp(session.lastIp),
+      at: session.lastIpAt ?? null,
+      changed: session.firstIp != null && session.firstIp !== session.lastIp,
+    };
+  }
+
+  /**
+   * The same address unmasked — `customer.pii_reveal` holders only, one audit
+   * row per call that records THAT it was read, never the address.
+   */
+  async revealVisitorIp(
+    conversationId: number,
+    tenantId: number,
+    actorUserId: number,
+  ): Promise<{ firstIp: string | null; lastIp: string | null; lastIpAt: Date | null }> {
+    const conversation = await this.requireConversation(conversationId, tenantId);
+    const session = await this.sessionRepo.findOne({
+      where: { id: conversation.sessionId, tenantId },
+      select: { id: true, firstIp: true, lastIp: true, lastIpAt: true },
+    });
+    await this.audit.write({
+      tenantId,
+      actorType: 'user',
+      actorId: actorUserId,
+      action: 'session.ip_revealed',
+      target: `session:${conversation.sessionId}`,
+      metadata: { conversationId: String(conversationId) },
+    });
+    return { firstIp: session?.firstIp ?? null, lastIp: session?.lastIp ?? null, lastIpAt: session?.lastIpAt ?? null };
   }
 
   /** Suggest existing customers to link to the current chat. */

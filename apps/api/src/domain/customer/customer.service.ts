@@ -19,6 +19,8 @@ export interface CustomerContext {
   phone: string | null;
   /** True when name/email/phone above are masked (PLN-260920). */
   masked?: boolean;
+  /** Filed under this customer by an unsigned (claimed) identify, not a signed one (PLN-261023 S4). */
+  unverified?: boolean;
   tier: string;
   recentOrders: { id: number; status: string | null; total: number | null; createdAt: Date }[];
 }

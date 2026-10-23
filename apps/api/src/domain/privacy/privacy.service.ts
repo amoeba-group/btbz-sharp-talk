@@ -339,6 +339,11 @@ export class PrivacyService {
             createdAt: customer.createdAt,
           }
         : null,
+      // Addresses the widget was used from (PLN-261023 S2) — personal data, so
+      // part of what the person gets back.
+      visitorIps: sessions
+        .filter((sn) => sn.firstIp || sn.lastIp)
+        .map((sn) => ({ firstIp: sn.firstIp, lastIp: sn.lastIp, lastIpAt: sn.lastIpAt, sessionCreatedAt: sn.createdAt })),
       orders: orders.map((o) => ({
         orderNumber: o.orderNumber,
         status: o.statusUi ?? o.statusInternal,
@@ -548,6 +553,8 @@ export class PrivacyService {
     const sessions = await this.sessionRepo.find({ where: { customerId } });
     const sessionIds = sessions.map((s) => s.id);
     if (sessionIds.length) {
+      // Visitor addresses go with the person (PLN-261023 S2).
+      await this.sessionRepo.update({ id: In(sessionIds) }, { firstIp: null, lastIp: null, lastIpAt: null });
       const conversations = await this.conversationRepo.find({
         where: { sessionId: In(sessionIds) },
       });

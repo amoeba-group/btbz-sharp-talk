@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader2, Send, Settings2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { groupMemberLabel } from './session-title';
 import { Badge } from '@/components/Badge';
 import { Button } from '@/components/Button';
 import { cn } from '@/lib/cn';
@@ -66,8 +67,8 @@ export function GroupRoom({
   const memberBySession = new Map<string, ChatGroupMemberView>(
     (group?.members ?? []).map((m) => [m.sessionId, m]),
   );
-  const memberLabel = (m: ChatGroupMemberView) =>
-    m.alias || m.customerName || t('sessionLabel', { id: m.sessionId.slice(0, 6) });
+  // Same name and number as the conversation list (PLN-261023 S3).
+  const memberLabel = (m: ChatGroupMemberView) => groupMemberLabel(m, (id) => t('sessionLabel', { id }));
 
   const loadOlder = async () => {
     const oldest = messages[0]?.id;

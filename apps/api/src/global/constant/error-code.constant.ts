@@ -289,6 +289,9 @@ export const ERROR_CODE = {
   PARTNER_HOTEL_NOT_FOUND: { code: 'E5101', message: 'Go2Joy has no hotel with this number' },
   PARTNER_REQUEST_FAILED: { code: 'E5102', message: 'The Go2Joy Partner API request failed' },
 
+  // E5103 — Live-chat transcript search (PLN-261023 S1).
+  SEARCH_TERM_TOO_SHORT: { code: 'E5103', message: 'Search for at least 2 characters' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

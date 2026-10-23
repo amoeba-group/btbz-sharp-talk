@@ -36,6 +36,8 @@ import {
   CreateCommentRequest,
   CreateCustomerRequest,
   SearchCustomersRequest,
+  SearchMessagesRequest,
+  SearchSessionsRequest,
   CreateGroupRequest,
   GroupMessageRequest,
   UpdateGroupRequest,
@@ -186,7 +188,11 @@ export class AgentConsoleController {
   @ApiOperation({ summary: 'Group detail with member sessions and send targets' })
   async group(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
     const { group, members } = await this.groupService.detail(id, tenantOf(user));
-    return toGroupDetailResponse(group, members);
+    const companyNames = await this.companyService.namesByIds(
+      tenantOf(user),
+      members.map((m) => Number(m.companyId)).filter((v) => Number.isFinite(v) && v > 0),
+    );
+    return toGroupDetailResponse(group, members, companyNames);
   }
 
   @Get('groups/:id/messages')
@@ -290,7 +296,11 @@ export class AgentConsoleController {
       { added },
     );
     const { group, members } = await this.groupService.detail(id, tenantOf(user));
-    return toGroupDetailResponse(group, members);
+    const companyNames = await this.companyService.namesByIds(
+      tenantOf(user),
+      members.map((m) => Number(m.companyId)).filter((v) => Number.isFinite(v) && v > 0),
+    );
+    return toGroupDetailResponse(group, members, companyNames);
   }
 
   @Delete('groups/:id/members/:sessionId')
@@ -310,7 +320,11 @@ export class AgentConsoleController {
       { removed: sessionId },
     );
     const { group, members } = await this.groupService.detail(id, tenantOf(user));
-    return toGroupDetailResponse(group, members);
+    const companyNames = await this.companyService.namesByIds(
+      tenantOf(user),
+      members.map((m) => Number(m.companyId)).filter((v) => Number.isFinite(v) && v > 0),
+    );
+    return toGroupDetailResponse(group, members, companyNames);
   }
 
   @Delete('groups/:id')
@@ -350,6 +364,34 @@ export class AgentConsoleController {
   @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
   @ApiOperation({ summary: 'List waiting/agent conversations (session queue)' })
   async sessions(@CurrentUser() user: Principal, @Query() query: ListSessionsQuery) {
+    return this.sessionPage(user, query);
+  }
+
+  /**
+   * The same list, narrowed to conversations whose transcript contains `q`
+   * (PLN-261023 S1). POST so the term — often a name, phone or order number —
+   * stays out of proxy access logs, like the customer search.
+   */
+  @Post('sessions/search')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Conversations whose messages contain the term (term in body)' })
+  async searchSessions(@CurrentUser() user: Principal, @Body() body: SearchSessionsRequest) {
+    return this.sessionPage(user, { ...body, q: undefined }, body.q ?? '');
+  }
+
+  /** Find in one conversation — matching messages with excerpts (PLN-261023 S1). */
+  @Post('conversations/:id/messages/search')
+  @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
+  @ApiOperation({ summary: 'Messages of one conversation containing the term (term in body)' })
+  async searchMessages(
+    @CurrentUser() user: Principal,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() body: SearchMessagesRequest,
+  ) {
+    return this.agentService.searchMessages(id, tenantOf(user), body.q);
+  }
+
+  private async sessionPage(user: Principal, query: ListSessionsQuery, contentQ?: string) {
     // 50, not the platform default 20: the list now includes live AI threads,
     // and a console that silently truncates the queue is worse than a long one.
     const { page, size } = normalizePage(query.page, query.size ?? '50');
@@ -364,6 +406,7 @@ export class AgentConsoleController {
       scope,
       query.channel,
       Number.isFinite(agentFilter) ? agentFilter : undefined,
+      contentQ,
     );
     const companyNames = await this.companyService.namesByIds(
       tenantOf(user),
@@ -373,6 +416,7 @@ export class AgentConsoleController {
       items.map(
         ({
           conversation,
+          match,
           lastMessage,
           contact,
           alias,
@@ -393,6 +437,7 @@ export class AgentConsoleController {
             identityAttributes,
             identityLevel,
             conversation.companyId != null ? (companyNames.get(String(conversation.companyId)) ?? null) : null,
+            match,
           ),
       ),
       buildPagination(page, size, total),
@@ -550,6 +595,18 @@ export class AgentConsoleController {
     return this.agentService.revealCustomer(tenantOf(user), id, actorIdOf(user));
   }
 
+  /**
+   * The visitor's IP unmasked for the customer panel (PLN-261023 S2) — same
+   * holders, limit and audit as the customer reveal above.
+   */
+  @Get('conversations/:id/ip/reveal')
+  @RequireCapability(CAPABILITY.CUSTOMER_PII_REVEAL)
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  @ApiOperation({ summary: "Reveal the visitor's IP for the chat panel (audited)" })
+  async revealVisitorIp(@CurrentUser() user: Principal, @Param('id', ParseIntPipe) id: number) {
+    return this.agentService.revealVisitorIp(id, tenantOf(user), actorIdOf(user));
+  }
+
   @Get('conversations/:id')
   @RequireCapability(CAPABILITY.CONVERSATION_HANDLE)
   @ApiOperation({ summary: 'Conversation messages (recent page; older via before_id)' })
@@ -598,6 +655,8 @@ export class AgentConsoleController {
         : null,
       sessionId: String(conversation.sessionId),
       ...sessionState,
+      // Visitor address, masked (PLN-261023 S2); the unmasked one is the audited reveal.
+      visitorIp: await this.agentService.visitorIp(Number(conversation.sessionId)),
       identity: toIdentityResponse(identityAttributes, identityLevel),
       // B2B company of the thread (PLN-261022 stage 2) — header badge + "earlier
       // conversations at this hotel". Null for consumers and guests.

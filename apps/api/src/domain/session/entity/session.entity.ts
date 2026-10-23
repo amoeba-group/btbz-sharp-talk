@@ -46,6 +46,21 @@ export class Session {
   @Column({ name: 'first_opened_at', type: 'datetime', nullable: true })
   firstOpenedAt: Date | null;
 
+  /**
+   * Visitor address (PLN-261023 S2) as our proxies recorded it — the first one
+   * seen and the latest, so an agent can tell a moved visitor. Personal data:
+   * the console shows it masked unless the viewer may reveal PII (audited).
+   * NULL for sessions from before this, and for relay channels (no browser).
+   */
+  @Column({ name: 'first_ip', type: 'varchar', length: 45, nullable: true })
+  firstIp: string | null;
+
+  @Column({ name: 'last_ip', type: 'varchar', length: 45, nullable: true })
+  lastIp: string | null;
+
+  @Column({ name: 'last_ip_at', type: 'datetime', nullable: true })
+  lastIpAt: Date | null;
+
   // Tenant the session belongs to (resolved at creation). Threads tenant context
   // through the chat/notification path instead of a "first tenant" lookup.
   @Column({ name: 'tenant_id', type: 'bigint', nullable: true, transformer: bigintTransformer })

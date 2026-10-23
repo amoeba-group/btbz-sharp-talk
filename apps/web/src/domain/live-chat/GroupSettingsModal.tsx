@@ -6,6 +6,7 @@ import { Modal } from '@/components/Modal';
 import { ChannelBadge } from './ChannelBadge';
 import type { useGroupActions } from './live-chat.hooks';
 import type { ChatGroupDetail } from './live-chat.service';
+import { groupMemberLabel } from './session-title';
 
 /**
  * Group settings (REQ-260824 R4): rename, switch the classifier, remove
@@ -39,8 +40,9 @@ export function GroupSettingsModal({
     }
   }, [open, group.title, group.kind]);
 
+  // Same name and number as the conversation list (PLN-261023 S3).
   const memberLabel = (m: ChatGroupDetail['members'][number]) =>
-    m.alias || m.customerName || t('sessionLabel', { id: m.sessionId.slice(0, 6) });
+    groupMemberLabel(m, (id) => t('sessionLabel', { id }));
 
   const dirty = title.trim() !== group.title || kind !== group.kind;
 

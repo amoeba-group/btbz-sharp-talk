@@ -36,9 +36,12 @@ export function toSessionResponse(
   identityAttributes: Record<string, string> | null = null,
   identityLevel: string | null = null,
   companyName: string | null = null,
+  match: { snippet: string; count: number; messageId: string } | null = null,
 ) {
   return {
     id: c.id,
+    /** Transcript search hit (PLN-261023 S1): latest matching excerpt; null outside a search. */
+    match,
     /**
      * What the host app signed about this user — hotel, region, role
      * (PLN-261015 D5). Not PII: a hotel id and a region name, shown as badges so
@@ -132,13 +135,22 @@ export function toGroupResponse(
   };
 }
 
-export function toGroupDetailResponse(g: ChatGroup, members: GroupMemberView[]) {
+export function toGroupDetailResponse(
+  g: ChatGroup,
+  members: GroupMemberView[],
+  companyNames: Map<string, string | null> = new Map(),
+) {
   return {
     ...toGroupResponse(g, members.length),
     members: members.map((m) => ({
       sessionId: String(m.sessionId),
       alias: m.alias,
       customerName: m.customerName,
+      // Same name parts as the queue row (PLN-261023 S3): company, then what
+      // the host said when nothing is on record.
+      companyName: m.companyId != null ? (companyNames.get(String(m.companyId)) ?? null) : null,
+      identityName: m.identityName,
+      identityHotelName: m.identityHotelName,
       channel: m.channel,
       receiveOnly: m.receiveOnly,
       targetConversationId: m.targetConversationId != null ? String(m.targetConversationId) : null,

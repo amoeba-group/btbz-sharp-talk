@@ -456,5 +456,32 @@
       "overnight": "Noche",
       "daily": "Por día"
     }
+  },
+  "search": {
+    "inLabel": "Buscar en",
+    "inCustomer": "Cliente",
+    "inContent": "Texto de la conversación",
+    "contentPlaceholder": "Buscar lo que se dijo (2+ caracteres)",
+    "contentScope": "Busca en mensajes de los últimos 180 días",
+    "matchCount": "{{count}} coincidencias",
+    "inRoom": "Buscar",
+    "inRoomPlaceholder": "Buscar en esta conversación",
+    "minChars": "2+ caracteres",
+    "noHits": "Sin coincidencias",
+    "position": "{{n}} / {{total}}",
+    "older": "Coincidencia anterior (Enter)",
+    "newer": "Coincidencia siguiente (Shift+Enter)",
+    "close": "Cerrar (Esc)",
+    "failed": "No se pudo buscar."
+  },
+  "unverifiedCustomer": "No verificado — inicio de sesión del host sin firma",
+  "hostUserId": "ID de usuario del host",
+  "hostRole": "Rol",
+  "visitorIp": {
+    "label": "IP",
+    "reveal": "Mostrar IP completa (se registra)",
+    "revealFailed": "No se pudo mostrar la IP.",
+    "changed": "Cambió desde el inicio de la sesión",
+    "firstWas": "Primera conexión desde {{ip}}"
   }
 }

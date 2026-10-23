@@ -456,5 +456,32 @@
       "overnight": "宿泊(夜間)",
       "daily": "1日"
     }
+  },
+  "search": {
+    "inLabel": "検索対象",
+    "inCustomer": "顧客",
+    "inContent": "会話内容",
+    "contentPlaceholder": "会話内容を検索（2文字以上）",
+    "contentScope": "直近180日のメッセージから検索します",
+    "matchCount": "{{count}}件一致",
+    "inRoom": "検索",
+    "inRoomPlaceholder": "この会話内を検索",
+    "minChars": "2文字以上",
+    "noHits": "一致なし",
+    "position": "{{n}} / {{total}}",
+    "older": "前の一致 (Enter)",
+    "newer": "次の一致 (Shift+Enter)",
+    "close": "閉じる (Esc)",
+    "failed": "検索できませんでした。"
+  },
+  "unverifiedCustomer": "未検証 — 署名なしのホストログイン",
+  "hostUserId": "ホストユーザーID",
+  "hostRole": "役割",
+  "visitorIp": {
+    "label": "IP",
+    "reveal": "IPをすべて表示（記録されます）",
+    "revealFailed": "IPを表示できませんでした。",
+    "changed": "セッション開始後に変更",
+    "firstWas": "最初の接続元 {{ip}}"
   }
 }

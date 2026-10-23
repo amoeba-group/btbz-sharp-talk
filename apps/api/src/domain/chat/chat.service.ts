@@ -298,6 +298,12 @@ export class ChatService {
     // tenant is still allowed to send unsigned identities.
     const linkable = !!account && (!account.claimedUserId || unsignedIdentifyAllowed(tenantId));
     const prev = linkable && tenantId != null && this.threads ? await this.threads.previousOf(tenantId, account!) : null;
+    // A claimed user's conversation is filed under the customer and company
+    // their identify registered (PLN-261023 S4) — on the row, not the session.
+    const claimed =
+      linkable && account!.claimedUserId && tenantId != null && session && this.threads
+        ? await this.threads.claimedAttribution(tenantId, session)
+        : null;
     return this.convRepo.save(
       this.convRepo.create({
         sessionId,
@@ -306,8 +312,8 @@ export class ChatService {
         status: CONVERSATION_STATUS.AI_ACTIVE,
         escalated: 0,
         agentId: null,
-        customerId: account?.customerId ?? null,
-        companyId: account?.companyId ?? null,
+        customerId: account?.customerId ?? claimed?.customerId ?? null,
+        companyId: account?.companyId ?? claimed?.companyId ?? null,
         prevConversationId: prev ? Number(prev.id) : null,
       }),
     );

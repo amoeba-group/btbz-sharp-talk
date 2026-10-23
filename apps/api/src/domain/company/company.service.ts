@@ -74,7 +74,6 @@ export class CompanyService {
   ): Promise<HotelSummaryResponse | null> {
     let company: Company | null = null;
     if (threadCompanyId != null) company = await this.companyRepo.findOne({ where: { id: threadCompanyId, tenantId } });
-    const fromThread = company != null;
     if (!company && hotelId && /^\d{1,10}$/.test(String(hotelId).trim())) {
       company = await this.findHotel(tenantId, Number(String(hotelId).trim()));
     }
@@ -85,7 +84,10 @@ export class CompanyService {
     });
     return {
       companyId: String(company.id),
-      verified: fromThread || verified,
+      // The caller's identity level decides: a claimed user's conversation is
+      // filed under the company too (PLN-261023 S4), so "on the thread" no
+      // longer implies a signed identify.
+      verified,
       name: company.name,
       code: company.code ?? null,
       address: company.address ?? null,

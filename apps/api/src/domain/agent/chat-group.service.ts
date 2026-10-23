@@ -64,6 +64,11 @@ export interface GroupMemberView {
   receiveOnly: boolean;
   /** Where a 1:1 send to this member would land (open ?? latest conversation). */
   targetConversationId: number | null;
+  /** B2B company of that conversation (or the session), for the "customer / company" name. */
+  companyId: number | null;
+  /** What the host said about the user — the name/hotel fallback the queue uses (PLN-261023 S3). */
+  identityName: string | null;
+  identityHotelName: string | null;
 }
 
 /**
@@ -186,14 +191,6 @@ export class ChatGroupService {
 
     const sessions = await this.sessionRepo.find({ where: { id: In(sessionIds), tenantId } });
     const sessionById = new Map(sessions.map((s) => [Number(s.id), s]));
-    const customerIds = [
-      ...new Set(sessions.map((s) => s.customerId).filter((v): v is number => v != null)),
-    ];
-    const customers = customerIds.length
-      ? await this.customerRepo.find({ where: { id: In(customerIds.map(Number)), tenantId } })
-      : [];
-    const customerById = new Map(customers.map((c) => [Number(c.id), c]));
-
     // Newest-first pass over all member conversations resolves, per session,
     // both "the open one" and "the latest one" without per-member queries.
     const convs = await this.convRepo.find({
@@ -209,16 +206,32 @@ export class ChatGroupService {
         openBySession.set(sid, c);
       }
     }
+    const targetOf = (sid: number) => openBySession.get(sid) ?? latestBySession.get(sid) ?? null;
+    // The member's customer the way the queue row resolves it: the session's,
+    // else the one its conversation was attributed to (PLN-261023 S4).
+    const customerIdOf = (sid: number): number | null => {
+      const own = sessionById.get(sid)?.customerId;
+      const attributed = targetOf(sid)?.customerId;
+      return own != null ? Number(own) : attributed != null ? Number(attributed) : null;
+    };
+    const customerIds = [
+      ...new Set(sessionIds.map(customerIdOf).filter((v): v is number => v != null)),
+    ];
+    const customers = customerIds.length
+      ? await this.customerRepo.find({ where: { id: In(customerIds.map(Number)), tenantId } })
+      : [];
+    const customerById = new Map(customers.map((c) => [Number(c.id), c]));
 
     return {
       group,
       members: members.map((m) => {
         const sid = Number(m.sessionId);
         const session = sessionById.get(sid);
-        const target = openBySession.get(sid) ?? latestBySession.get(sid) ?? null;
+        const target = targetOf(sid);
         const channel = target?.channel || 'widget';
-        const customer =
-          session?.customerId != null ? customerById.get(Number(session.customerId)) : undefined;
+        const customerId = customerIdOf(sid);
+        const customer = customerId != null ? customerById.get(customerId) : undefined;
+        const companyId = target?.companyId ?? session?.companyId ?? null;
         return {
           sessionId: sid,
           alias: session?.alias ?? null,
@@ -226,6 +239,9 @@ export class ChatGroupService {
           channel,
           receiveOnly: RECEIVE_ONLY_CHANNELS.has(channel),
           targetConversationId: target ? Number(target.id) : null,
+          companyId: companyId != null ? Number(companyId) : null,
+          identityName: session?.identityAttributes?.name ?? null,
+          identityHotelName: session?.identityAttributes?.hotel_name ?? null,
         };
       }),
     };

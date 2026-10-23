@@ -456,5 +456,32 @@
       "overnight": "Overnight",
       "daily": "Daily"
     }
+  },
+  "search": {
+    "inLabel": "Search in",
+    "inCustomer": "Customer",
+    "inContent": "Conversation text",
+    "contentPlaceholder": "Search what was said (2+ characters)",
+    "contentScope": "Matches messages from the last 180 days",
+    "matchCount": "{{count}} matches",
+    "inRoom": "Find",
+    "inRoomPlaceholder": "Find in this conversation",
+    "minChars": "2+ characters",
+    "noHits": "No matches",
+    "position": "{{n}} / {{total}}",
+    "older": "Older match (Enter)",
+    "newer": "Newer match (Shift+Enter)",
+    "close": "Close (Esc)",
+    "failed": "Search failed."
+  },
+  "unverifiedCustomer": "Unverified — unsigned host sign-in",
+  "hostUserId": "Host user ID",
+  "hostRole": "Role",
+  "visitorIp": {
+    "label": "IP",
+    "reveal": "Show full IP (logged)",
+    "revealFailed": "Could not show the IP.",
+    "changed": "Changed since the session began",
+    "firstWas": "First seen from {{ip}}"
   }
 }

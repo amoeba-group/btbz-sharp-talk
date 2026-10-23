@@ -5,6 +5,7 @@ import { Modal } from '@/components/Modal';
 import { ChannelBadge } from './ChannelBadge';
 import { useGroups, useGroupActions } from './live-chat.hooks';
 import type { AgentSession } from './live-chat.service';
+import { sessionTitle } from './session-title';
 
 /**
  * Group the selected sessions (REQ-260824): create a new timeline/project, or
@@ -49,7 +50,11 @@ export function GroupCreateModal({
   );
 
   const labelOf = (s: AgentSession) =>
-    s.alias || s.customerName || s.customerEmail || t('sessionLabel', { id: s.id.slice(0, 6) });
+    // The list row's name and number (PLN-261023 S3).
+    s.alias ||
+    sessionTitle(s.customerName || s.identity?.name, s.companyName || s.identity?.hotelName) ||
+    s.customerEmail ||
+    t('sessionLabel', { id: s.id });
 
   const busy = actions.create.isPending || actions.addMembers.isPending;
   const canSubmit =

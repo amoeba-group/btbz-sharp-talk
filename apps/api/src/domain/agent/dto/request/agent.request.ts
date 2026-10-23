@@ -26,6 +26,19 @@ export class ListSessionsQuery {
   @IsOptional() @IsString() ai_agent_id?: string;
 }
 
+/**
+ * Conversation list filtered by transcript text (PLN-261023 S1) — the list
+ * filters plus `q`, in the body so the term stays out of access logs.
+ */
+export class SearchSessionsRequest extends ListSessionsQuery {
+  @IsString() @MaxLength(200) declare q: string;
+}
+
+/** Find in one conversation's transcript (PLN-261023 S1). */
+export class SearchMessagesRequest {
+  @IsString() @MaxLength(200) q: string;
+}
+
 /** Re-pin the session to another AI agent — applies from the next turn. */
 export class SetSessionAiAgentRequest {
   @IsInt() @Min(1) ai_agent_id: number;

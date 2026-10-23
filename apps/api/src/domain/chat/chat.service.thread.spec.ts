@@ -12,6 +12,7 @@ describe('ChatService — account threads', () => {
     previous?: object | null;
     sticky?: number | null;
     route?: { mode: 'agents' | 'email'; targetUserIds: number[]; ruleName?: string };
+    attribution?: { customerId: number | null; companyId: number | null } | null;
   }) {
     const save = jest.fn(async (x: object) => ({ id: '77', ...x }));
     const convFindOne = jest.fn(async (q: { where: { id?: number } }) =>
@@ -21,6 +22,7 @@ describe('ChatService — account threads', () => {
     const threads = {
       previousOf: jest.fn(async () => opts.previous ?? null),
       stickyAgent: jest.fn(async () => opts.sticky ?? null),
+      claimedAttribution: jest.fn(async () => opts.attribution ?? null),
     };
     const svc = new ChatService(
       { findOne: convFindOne, create: (x: object) => x, save, update: jest.fn() } as never,
@@ -72,12 +74,26 @@ describe('ChatService — account threads', () => {
     }
   });
 
+  it('a claimed user\'s new conversation is filed under the customer and company its identify registered (PLN-261023 S4)', async () => {
+    process.env.EMBED_UNSIGNED_IDENTIFY_TENANT_IDS = '4';
+    try {
+      const { svc, save, threads } = build({ attribution: { customerId: 100, companyId: 4 } });
+      const claimed = { id: 5, tenantId: 4, customerId: null, companyId: null, identityLevel: 'claimed', identityAttributes: { user_id: 'laquan10', hotel_id: '4118' } };
+      await svc.getOrCreateConversation(5, claimed as unknown as Session);
+      expect(threads.claimedAttribution).toHaveBeenCalledWith(4, claimed);
+      expect(save).toHaveBeenCalledWith(expect.objectContaining({ customerId: 100, companyId: 4 }));
+    } finally {
+      delete process.env.EMBED_UNSIGNED_IDENTIFY_TENANT_IDS;
+    }
+  });
+
   it('a claimed user is not linked once its tenant leaves the unsigned list', async () => {
     const { svc, save, threads } = build({ previous: { id: '41' } });
     const claimed = { id: 5, tenantId: 4, customerId: null, companyId: null, identityLevel: 'claimed', identityAttributes: { user_id: 'ha:8818' } };
     await svc.getOrCreateConversation(5, claimed as unknown as Session);
     expect(threads.previousOf).not.toHaveBeenCalled();
-    expect(save).toHaveBeenCalledWith(expect.objectContaining({ prevConversationId: null }));
+    expect(threads.claimedAttribution).not.toHaveBeenCalled();
+    expect(save).toHaveBeenCalledWith(expect.objectContaining({ customerId: null, companyId: null, prevConversationId: null }));
   });
 
   it('a guest conversation has no account and no link', async () => {
