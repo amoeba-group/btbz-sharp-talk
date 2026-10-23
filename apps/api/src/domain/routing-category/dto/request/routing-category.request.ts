@@ -2,6 +2,8 @@ import { Type } from 'class-transformer';
 import {
   ArrayMaxSize,
   IsArray,
+  IsBoolean,
+  IsObject,
   IsInt,
   IsOptional,
   IsString,
@@ -29,6 +31,16 @@ export class CreateRoutingCategoryRequest {
   @IsString()
   @MaxLength(100)
   name?: string;
+
+  /** Offered to shoppers in the widget; default true (PLN-261024 D6). */
+  @IsOptional()
+  @IsBoolean()
+  visible?: boolean;
+
+  /** Per-language names {en,es,ko,vi,ja,zh}; unknown keys and empty values are dropped server-side. */
+  @IsOptional()
+  @IsObject()
+  names?: Record<string, string>;
 }
 
 export class RoutingCategoryPatchItem {
@@ -47,6 +59,15 @@ export class RoutingCategoryPatchItem {
   @Min(0)
   @Max(1_000_000)
   sort_order?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  visible?: boolean;
+
+  /** Replaces the per-language names; `{}` clears them. */
+  @IsOptional()
+  @IsObject()
+  names?: Record<string, string>;
 }
 
 /** PATCH /routing-categories — rename and reorder in one save. */

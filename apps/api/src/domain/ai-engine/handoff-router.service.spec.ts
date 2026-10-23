@@ -222,27 +222,27 @@ describe('matchRoutingRule', () => {
     { name: 'catch-all', assigneeUserIds: [9] },
   ];
 
-  it('needs every filter to match — region AND topic', () => {
-    expect(matchRoutingRule(rules, { region: 'north', text: 'Cách nhận phòng cho khách?' })?.rule.name).toBe('north-booking');
-    expect(matchRoutingRule(rules, { region: 'south', text: 'Cách nhận phòng cho khách?' })?.rule.name).toBe('catch-all');
+  it('needs every filter to match — consult category AND topic', () => {
+    expect(matchRoutingRule(rules, { consultCategory: 'north', text: 'Cách nhận phòng cho khách?' })?.rule.name).toBe('north-booking');
+    expect(matchRoutingRule(rules, { consultCategory: 'south', text: 'Cách nhận phòng cho khách?' })?.rule.name).toBe('catch-all');
   });
 
   it('a topic rule with no region serves every region, in rule order', () => {
-    expect(matchRoutingRule(rules, { region: 'south', text: 'Hỏi về đối soát tháng 9' })?.rule.name).toBe('settlement');
+    expect(matchRoutingRule(rules, { consultCategory: 'south', text: 'Hỏi về đối soát tháng 9' })?.rule.name).toBe('settlement');
     // Earlier region+topic rule does not match, so the settlement rule wins for the north too.
-    expect(matchRoutingRule(rules, { region: 'north', text: 'settlement' })?.rule.name).toBe('settlement');
+    expect(matchRoutingRule(rules, { consultCategory: 'north', text: 'settlement' })?.rule.name).toBe('settlement');
   });
 
-  it('compares regions case-insensitively', () => {
-    expect(matchRoutingRule(rules, { region: 'NORTH', text: 'xin chào' })?.rule.name).toBe('north-any');
+  it('compares consult categories case-insensitively', () => {
+    expect(matchRoutingRule(rules, { consultCategory: 'NORTH', text: 'xin chào' })?.rule.name).toBe('north-any');
   });
 
   it('skips a rule that would page nobody', () => {
-    expect(matchRoutingRule(rules, { region: 'south', text: 'x' })?.rule.name).toBe('catch-all');
+    expect(matchRoutingRule(rules, { consultCategory: 'south', text: 'x' })?.rule.name).toBe('catch-all');
   });
 
-  it('an unsigned session (no region) only reaches region-free rules', () => {
-    expect(matchRoutingRule(rules, { region: null, text: 'x' })?.rule.name).toBe('catch-all');
+  it('a shopper who picked no category only reaches category-free rules', () => {
+    expect(matchRoutingRule(rules, { consultCategory: null, text: 'x' })?.rule.name).toBe('catch-all');
   });
 
   it('matches deny-rule labels when a rule asks for one', () => {
@@ -252,7 +252,7 @@ describe('matchRoutingRule', () => {
   });
 
   it('no rules → null (the legacy assignee list applies)', () => {
-    expect(matchRoutingRule(undefined, { region: 'north' })).toBeNull();
+    expect(matchRoutingRule(undefined, { consultCategory: 'north' })).toBeNull();
   });
 });
 
@@ -261,7 +261,7 @@ describe('HandoffRouterService.route — routing rules', () => {
     const route = await routerFor({
       assigneeUserIds: [99],
       routingRules: [{ name: 'north', regions: ['north'], assigneeUserIds: [1, 2] }],
-    }).route(4, 'VI', { region: 'north', text: 'hi' });
+    }).route(4, 'VI', { consultCategory: 'north', text: 'hi' });
     expect(route).toEqual({ mode: 'agents', targetUserIds: [1, 2], assignMode: 'least_loaded', ruleName: 'north' });
   });
 
@@ -269,7 +269,7 @@ describe('HandoffRouterService.route — routing rules', () => {
     const route = await routerFor({
       assigneeUserIds: [99],
       routingRules: [{ regions: ['north'], assigneeUserIds: [1] }],
-    }).route(4, 'VI', { region: 'south' });
+    }).route(4, 'VI', { consultCategory: 'south' });
     expect(route).toEqual({ mode: 'agents', targetUserIds: [99] });
   });
 
@@ -279,7 +279,7 @@ describe('HandoffRouterService.route — routing rules', () => {
         businessHours: { timezone: 'Asia/Ho_Chi_Minh', days: [1, 2, 3, 4, 5], start: '08:30', end: '17:30' },
         offHours: { email: 'cs@go2joy.vn' },
         routingRules: [{ regions: ['north'], assigneeUserIds: [1] }],
-      }).route(4, 'VI', { region: 'north' }),
+      }).route(4, 'VI', { consultCategory: 'north' }),
     );
     expect(route.mode).toBe('email');
   });
@@ -302,13 +302,13 @@ describe('matchRoutingRule — customer-information conditions (PLN-261019 P4)',
     { name: 'empty-values', conditions: [{ field: 'role' as const, values: [] }], assigneeUserIds: [5] },
   ];
 
-  it('all conditions must hold, AND-ed with the region', () => {
-    const ctx = { region: 'north', language: 'VI', identityAttributes: { hotel_name: 'Khách sạn Hanoi Center' } };
+  it('all conditions must hold, AND-ed with the consult category', () => {
+    const ctx = { consultCategory: 'north', language: 'VI', identityAttributes: { hotel_name: 'Khách sạn Hanoi Center' } };
     expect(matchRoutingRule(rules, ctx)?.rule.name).toBe('hanoi-vi');
     // Same hotel, English session: the language condition fails → falls through.
     expect(matchRoutingRule(rules, { ...ctx, language: 'EN' })?.rule.name).toBe('empty-values');
-    // Right language, wrong region.
-    expect(matchRoutingRule(rules, { ...ctx, region: 'south' })?.rule.name).toBe('legacy-no-conditions');
+    // Right language, other consult category.
+    expect(matchRoutingRule(rules, { ...ctx, consultCategory: 'south' })?.rule.name).toBe('legacy-no-conditions');
   });
 
   it('enum conditions compare exact values case-insensitively', () => {
@@ -320,8 +320,9 @@ describe('matchRoutingRule — customer-information conditions (PLN-261019 P4)',
 
   it('a claimed (unsigned host) session routes on its region and can be singled out (PLN-261022)', () => {
     const claimed = { region: 'south', identityLevel: 'claimed', identityAttributes: { province: 'Hồ Chí Minh', region: 'south' } };
-    // Region rules see the claimed region like a signed one…
-    expect(matchRoutingRule(rules, claimed)?.rule.name).toBe('legacy-no-conditions');
+    // The region condition sees the claimed region like a signed one… (PLN-261024: region is customer information)
+    const byRegion = [{ name: 'south-region', conditions: [{ field: 'region' as const, values: ['south'] }], assigneeUserIds: [4] }];
+    expect(matchRoutingRule(byRegion, claimed)?.rule.name).toBe('south-region');
     // …and an operator can route unverified sessions on their own.
     const unverified = [{ name: 'unverified', conditions: [{ field: 'identity_level' as const, values: ['claimed'] }], assigneeUserIds: [9] }];
     expect(matchRoutingRule(unverified, claimed)?.rule.name).toBe('unverified');
@@ -336,16 +337,16 @@ describe('matchRoutingRule — customer-information conditions (PLN-261019 P4)',
   });
 
   it('a rule written before conditions existed keeps matching exactly as before', () => {
-    expect(matchRoutingRule(rules, { region: 'south', text: 'x' })?.rule.name).toBe('legacy-no-conditions');
+    expect(matchRoutingRule(rules, { consultCategory: 'south', text: 'x' })?.rule.name).toBe('legacy-no-conditions');
   });
 
   it('an empty value list is "anything" and a field outside the catalog never matches', () => {
-    expect(matchRoutingRule(rules, { region: null })?.rule.name).toBe('empty-values');
+    expect(matchRoutingRule(rules, { consultCategory: null })?.rule.name).toBe('empty-values');
     const stale = [
       { name: 'stale', conditions: [{ field: 'email' as never, values: ['a@b.c'] }], assigneeUserIds: [8] },
       { name: 'fallback', assigneeUserIds: [9] },
     ];
-    expect(matchRoutingRule(stale, { region: null })?.rule.name).toBe('fallback');
+    expect(matchRoutingRule(stale, { consultCategory: null })?.rule.name).toBe('fallback');
   });
 
   it('describes the matched conditions for the log line', () => {
@@ -373,7 +374,7 @@ describe('HandoffRouterService — assignee groups (PLN-261019-Routing-Assignee-
 
   it('resolves the group at handoff time and pages its members', async () => {
     const resolve = jest.fn(async () => [10, 12]);
-    const r = await service(resolve).route(4, 'VI', { region: 'north' });
+    const r = await service(resolve).route(4, 'VI', { consultCategory: 'north' });
     expect(resolve).toHaveBeenCalledWith(
       4,
       { unitIds: [7], labelCodes: ['consult'], byRegion: false },
@@ -383,24 +384,24 @@ describe('HandoffRouterService — assignee groups (PLN-261019-Routing-Assignee-
   });
 
   it('a group that resolves to nobody is skipped for the next matching rule', async () => {
-    const r = await service(jest.fn(async () => [])).route(4, 'VI', { region: 'north' });
+    const r = await service(jest.fn(async () => [])).route(4, 'VI', { consultCategory: 'north' });
     expect(r).toMatchObject({ targetUserIds: [5], ruleName: 'north-person' });
   });
 
   it('explicit agents and the group are unioned without duplicates', async () => {
-    const r = await service(jest.fn(async () => [5, 6])).route(4, 'VI', { region: 'south' });
+    const r = await service(jest.fn(async () => [5, 6])).route(4, 'VI', { consultCategory: 'south' });
     expect(r).toMatchObject({ targetUserIds: [5, 6], ruleName: 'mixed' });
   });
 
   it('a rule with neither agents nor a group never matches; no rule → default assignees', async () => {
-    const r = await service(jest.fn(async () => [1])).route(4, 'VI', { region: 'east' });
+    const r = await service(jest.fn(async () => [1])).route(4, 'VI', { consultCategory: 'east' });
     expect(r).toMatchObject({ targetUserIds: [99] });
     expect(r.ruleName).toBeUndefined();
   });
 
   it('without a resolver (positional specs) a group-only rule is skipped, explicit rules still work', async () => {
     const svc = new HandoffRouterService({ getHandoffConfig: async () => config } as unknown as AiConfigService);
-    const r = await svc.route(4, 'VI', { region: 'north' });
+    const r = await svc.route(4, 'VI', { consultCategory: 'north' });
     expect(r).toMatchObject({ targetUserIds: [5], ruleName: 'north-person' });
   });
 });
@@ -420,7 +421,7 @@ describe('HandoffRouterService — region match (PLN-261022 stage 1)', () => {
 
   it('a region rule passes the session place and pages who covers it', async () => {
     const resolveDetailed = jest.fn(async () => ({ ids: [30], match: 'province' }));
-    const r = await svc(resolveDetailed).route(4, 'VI', { region: 'south_center', identityAttributes: attrs, text: 'phòng trống' });
+    const r = await svc(resolveDetailed).route(4, 'VI', { consultCategory: 'south_center', identityAttributes: attrs, text: 'phòng trống' });
     expect(resolveDetailed).toHaveBeenCalledWith(
       4,
       { unitIds: undefined, labelCodes: ['cs'], byRegion: true },
@@ -430,7 +431,7 @@ describe('HandoffRouterService — region match (PLN-261022 stage 1)', () => {
   });
 
   it('nobody covering the place falls through to the next rule', async () => {
-    const r = await svc(jest.fn(async () => ({ ids: [], match: 'none' }))).route(4, 'VI', { region: 'central' });
+    const r = await svc(jest.fn(async () => ({ ids: [], match: 'none' }))).route(4, 'VI', { consultCategory: 'central' });
     expect(r).toMatchObject({ targetUserIds: [7], ruleName: 'fallback' });
   });
 
@@ -438,11 +439,11 @@ describe('HandoffRouterService — region match (PLN-261022 stage 1)', () => {
     expect(matchRoutingRules(config.routingRules, { text: 'x' }).map((h) => h.rule.name)).toEqual(['cs', 'fallback']);
   });
 
-  it('rule regions and the session region compare in canonical form', () => {
+  it('rule categories and the picked category compare in canonical form', () => {
     const rules = [{ name: 'nc', regions: ['north_center'], assigneeUserIds: [1] }];
-    expect(matchRoutingRules(rules, { region: 'North Center' })).toHaveLength(1);
-    expect(matchRoutingRules([{ name: 'txt', regions: ['North Central'], assigneeUserIds: [1] }], { region: 'north_center' })).toHaveLength(1);
-    expect(matchRoutingRules(rules, { region: 'south' })).toHaveLength(0);
+    expect(matchRoutingRules(rules, { consultCategory: 'North Center' })).toHaveLength(1);
+    expect(matchRoutingRules([{ name: 'txt', regions: ['North Central'], assigneeUserIds: [1] }], { consultCategory: 'north_center' })).toHaveLength(1);
+    expect(matchRoutingRules(rules, { consultCategory: 'south' })).toHaveLength(0);
   });
 });
 
@@ -460,5 +461,39 @@ describe('routing condition customer_type (PLN-261022 stage 2)', () => {
   it('a customer_type condition makes routing read the customer row', async () => {
     const svc = new HandoffRouterService({ getHandoffConfig: async () => ({ routingRules: rules }) } as unknown as AiConfigService);
     await expect(svc.needsCustomerTier(4)).resolves.toBe(true);
+  });
+});
+
+describe('consult category + region condition (PLN-261024)', () => {
+  // The example table of PLN-261024 §1: category × region → team × label.
+  const rules = [
+    { name: 'pay-north', regions: ['payment'], conditions: [{ field: 'region' as const, values: ['north', 'North Center'] }], assigneeUserIds: [], assigneeUnitIds: [1], assigneeLabelCodes: ['accounting'] },
+    { name: 'pay-south', regions: ['payment'], conditions: [{ field: 'region' as const, values: ['south_center', 'south'] }], assigneeUserIds: [], assigneeUnitIds: [2], assigneeLabelCodes: ['accounting'] },
+    { name: 'booking', regions: ['booking'], assigneeUserIds: [], assigneeLabelCodes: ['consult'] },
+    { name: 'default', assigneeUserIds: [], assigneeLabelCodes: ['consult'] },
+  ];
+
+  it('the picked category and the signed region (canonical) choose the rule', () => {
+    expect(matchRoutingRule(rules, { consultCategory: 'payment', region: 'north_center' })?.rule.name).toBe('pay-north');
+    expect(matchRoutingRule(rules, { consultCategory: 'Payment', identityAttributes: { region: 'South' } })?.rule.name).toBe('pay-south');
+    expect(matchRoutingRule(rules, { consultCategory: 'booking', region: 'south' })?.rule.name).toBe('booking');
+  });
+
+  it('the signed region never satisfies the category filter; no pick → category-free rules only', () => {
+    expect(matchRoutingRule(rules, { region: 'north' })?.rule.name).toBe('default');
+    expect(matchRoutingRule([{ name: 'legacy', regions: ['north'], assigneeUserIds: [1] }], { region: 'north' })).toBeNull();
+    // A payment pick from a region no payment rule covers falls through.
+    expect(matchRoutingRule(rules, { consultCategory: 'payment', region: 'central' })?.rule.name).toBe('default');
+  });
+
+  it('pages the matched rule group (unit × label) through the resolver', async () => {
+    const resolveDetailed = jest.fn(async () => ({ ids: [11, 12], match: 'none' }));
+    const svc = new HandoffRouterService(
+      { getHandoffConfig: async () => ({ assigneeUserIds: [99], routingRules: rules }) } as unknown as AiConfigService,
+      { resolveDetailed } as never,
+    );
+    const r = await svc.route(4, 'VI', { consultCategory: 'payment', region: 'north' });
+    expect(resolveDetailed).toHaveBeenCalledWith(4, { unitIds: [1], labelCodes: ['accounting'], byRegion: false }, { region: 'payment', province: null });
+    expect(r).toMatchObject({ targetUserIds: [11, 12], ruleName: 'pay-north' });
   });
 });

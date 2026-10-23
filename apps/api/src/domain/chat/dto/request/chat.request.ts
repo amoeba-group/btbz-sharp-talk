@@ -24,6 +24,15 @@ export class EscalateRequest {
   @IsString() session_token: string;
   // Widget echoes the id back as a string (bigint PKs serialize as strings).
   @Type(() => Number) @IsInt() conversation_id: number;
+  /** Consult category the shopper picked first (PLN-261024); only a visible one counts. */
+  @IsOptional() @IsString() @MaxLength(64) category_code?: string;
+}
+
+/** POST /chat/consult-category — the shopper's pick after the handoff (PLN-261024 B path). */
+export class ConsultCategoryRequest {
+  @IsString() session_token: string;
+  @Type(() => Number) @IsInt() conversation_id: number;
+  @IsString() @MinLength(1) @MaxLength(64) category_code: string;
 }
 
 export class ScenarioRequest {

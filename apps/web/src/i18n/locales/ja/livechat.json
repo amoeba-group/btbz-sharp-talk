@@ -41,6 +41,7 @@
   "alarmReasonLowConfidence": "AIがナレッジベースから回答を見つけられませんでした。",
   "alarmReasonModeration": "AIの回答がモデレーションによりブロックされました。",
   "alarmReasonUserRequest": "お客様が担当者との会話を希望されました。",
+  "alarmReasonCategory": "顧客が相談カテゴリを選び、その担当グループにつなぎ直しました。",
   "alarmOpen": "チャットを開く",
   "alarmDismiss": "閉じる",
   "listSearchPlaceholder": "顧客名またはメールアドレスで検索",
@@ -524,5 +525,6 @@
     "autoJoinOff": "新しいセッションは追加されなくなります",
     "removed": "セッションをルームから除外しました",
     "dissolved": "統合を解除しました — 会話は元に戻ります"
-  }
+  },
+  "consultCategoryBadge": "相談: {{name}}"
 }

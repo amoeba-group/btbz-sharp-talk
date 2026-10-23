@@ -41,6 +41,7 @@
   "alarmReasonLowConfidence": "The AI could not find an answer in the knowledge base.",
   "alarmReasonModeration": "The AI reply was blocked by moderation.",
   "alarmReasonUserRequest": "The customer asked to talk to an agent.",
+  "alarmReasonCategory": "The customer picked a consult category — routed to its team.",
   "alarmOpen": "Open chat",
   "alarmDismiss": "Dismiss",
   "listSearchPlaceholder": "Search by customer name or email",
@@ -524,5 +525,6 @@
     "autoJoinOff": "New sessions will no longer be added",
     "removed": "Session taken out of the room",
     "dissolved": "Room unmerged — conversations are back as they were"
-  }
+  },
+  "consultCategoryBadge": "Consult: {{name}}"
 }

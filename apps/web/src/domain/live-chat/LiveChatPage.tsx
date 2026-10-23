@@ -68,6 +68,7 @@ import { CommentCard } from './CommentCard';
 import { GroupCreateModal } from './GroupCreateModal';
 import { RelatedSessionsBanner } from './RelatedSessionsBanner';
 import { MergeRoomControl } from './MergeRoomControl';
+import { useCategoryName } from '../routing-categories/routing-categories.hooks';
 import { GroupRoom } from './GroupRoom';
 import { useGroups } from './live-chat.hooks';
 import { KnowledgeCaptureModal } from './KnowledgeCaptureModal';
@@ -129,6 +130,8 @@ function anchorTranslateMenu(id: string, rect: DOMRect): TranslateMenuAnchor {
 export function LiveChatPage() {
   const { t } = useTranslation('livechat');
   const { t: tc } = useTranslation('common');
+  // Header badge for the shopper's consult category (PLN-261024).
+  const categoryName = useCategoryName();
 
   /** Compact relative time for the queue rows; absolute time goes in the tooltip. */
   const timeAgo = (value: string | undefined | null): string => {
@@ -1013,6 +1016,9 @@ export function LiveChatPage() {
                     <Badge tone="info">AI: {convo.aiAgentName}</Badge>
                   )}
                   <IdentityBadges identity={convo?.identity} />
+                  {convo?.consultCategory && (
+                    <Badge tone="primary">{t('consultCategoryBadge', { name: categoryName(convo.consultCategory) })}</Badge>
+                  )}
                   {selected && (
                     <CompanyThreadButton conversationId={selected} company={convo?.company} onOpen={setSelected} />
                   )}

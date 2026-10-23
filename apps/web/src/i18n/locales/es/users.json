@@ -66,12 +66,12 @@
   "scopeTitle": "Cobertura",
   "scopeNone": "Sin cobertura",
   "scopeEdit": "Configurar cobertura",
-  "scopeRegions": "Categorías",
+  "scopeRegions": "Categorías de consulta",
   "scopeProvinces": "Provincias / ciudades",
   "scopeProvincePh": "Escribe o elige una provincia",
   "scopeAdd": "Añadir",
   "scopeSaved": "Se guardó la cobertura de {{name}}",
   "scopeSaveError": "No se pudo guardar la cobertura",
-  "scopeHint": "Las reglas con \"asignar a responsables de la categoría\" avisan a las personas cuyo equipo o etiquetas cubren la provincia (primero) o la categoría de la conversación.",
-  "scopeNoCategories": "No hay categorías — añádelas en Configuración › Traspaso a agentes › Gestionar categorías"
+  "scopeHint": "Las reglas con \"asignar a responsables de la categoría de consulta\" avisan a las personas cuyo equipo o etiquetas cubren la categoría elegida por el cliente o su provincia (primero).",
+  "scopeNoCategories": "No hay categorías de consulta — añádelas en Configuración › Traspaso a agentes › Gestionar categorías de consulta"
 }

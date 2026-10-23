@@ -734,6 +734,8 @@ export class AgentConsoleController {
         : null,
       sessionId: String(conversation.sessionId),
       ...sessionState,
+      // The consult category the shopper picked (PLN-261024) — header badge; the console names it.
+      consultCategory: conversation.consultCategory ?? null,
       // Visitor address, masked (PLN-261023 S2); the unmasked one is the audited reveal.
       visitorIp: await this.agentService.visitorIp(Number(conversation.sessionId)),
       identity: toIdentityResponse(identityAttributes, identityLevel),

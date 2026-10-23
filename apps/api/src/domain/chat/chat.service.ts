@@ -35,6 +35,7 @@ import type { HandoffRoute } from '../ai-engine/handoff-router.service';
 import { ROUTING_MODE } from '../ai-engine/entity/tenant-ai-config.entity';
 import { MergedRoomService } from '../merged-room/merged-room.service';
 import { ThreadService } from './thread.service';
+import { RoutingCategoryService, consultLabel } from '../routing-category/routing-category.service';
 import type { RoutingContext } from '../ai-engine/handoff-router.service';
 import { EventBusService, EVENTS, RedisService } from '../../infrastructure/infrastructure.module';
 import { AttachmentService } from '../attachment/attachment.service';
@@ -118,6 +119,14 @@ const SYSTEM_MESSAGES = {
     JA: 'この件をお手伝いできるサポート担当者におつなぎします。',
     ZH: '正在为您转接可以处理此问题的客服人员。',
   },
+  consultCategoryChosen: {
+    EN: "Got it — I'll connect you with our {category} team. Please wait a moment.",
+    ES: 'Entendido: te pondré en contacto con nuestro equipo de {category}. Espera un momento, por favor.',
+    KO: '{category} 상담으로 연결해 드릴게요. 잠시만 기다려 주세요.',
+    VI: 'Đã rõ — tôi sẽ kết nối bạn với bộ phận {category}. Vui lòng chờ trong giây lát.',
+    JA: '{category}の担当者におつなぎします。少々お待ちください。',
+    ZH: '好的，正在为您转接{category}客服，请稍候。',
+  },
   offerAgent: {
     EN: 'Would you like me to connect you with a support agent?',
     ES: '¿Quieres que te conecte con un agente de soporte?',
@@ -191,7 +200,14 @@ export interface ChatDraft {
  */
 export type ChatTurnResult = ChatTurnResponse & { draft?: ChatDraft };
 
-export type EscalationReason = 'low_confidence' | 'moderation_blocked' | 'user_request' | 'policy';
+export type EscalationReason =
+  | 'low_confidence'
+  | 'moderation_blocked'
+  | 'user_request'
+  | 'policy'
+  // The shopper picked a consult category after the handoff and nobody had
+  // accepted yet: paged again for that category (PLN-261024 D1/D2).
+  | 'category_selected';
 
 /** What a handoff tells the caller: the notice shown, and whether we still need an address. */
 export interface HandoffOutcome {
@@ -217,6 +233,8 @@ export interface EscalationEvent {
   /** Set when a routing rule chose the group (PLN-261015 D3). */
   assignMode?: string;
   ruleName?: string;
+  /** The consult category the shopper picked (PLN-261024), for the alert. */
+  consultCategory?: string;
 }
 
 /**
@@ -257,6 +275,8 @@ export class ChatService {
     private readonly threads?: ThreadService,
     /** Same-customer merged rooms: auto-join on the customer's message (PLN-261023 D4). */
     private readonly mergedRooms?: MergedRoomService,
+    /** Consult categories the shopper may pick when asking for an agent (PLN-261024). */
+    private readonly consultCategories?: RoutingCategoryService,
   ) {}
 
   /**
@@ -337,7 +357,14 @@ export class ChatService {
    * (they are among the rule's targets, or the route broadcasts to everyone).
    * Off-hours mailbox routes are left alone.
    */
-  private async preferPreviousAgent(tenantId: number, conversationId: number, route: HandoffRoute): Promise<HandoffRoute> {
+  private async preferPreviousAgent(
+    tenantId: number,
+    conversationId: number,
+    route: HandoffRoute,
+    consultCategory?: string | null,
+  ): Promise<HandoffRoute> {
+    // A shopper who picked a consult category asked for that team (PLN-261024 D4).
+    if (consultCategory) return route;
     if (!this.threads || route.mode !== 'agents') return route;
     const conversation = await this.convRepo.findOne({ where: { id: conversationId } });
     if (!conversation) return route;
@@ -1311,9 +1338,11 @@ export class ChatService {
     session: Session,
     text: string | null,
     label: string | null,
+    consultCategory: string | null = null,
   ): Promise<RoutingContext> {
     const ctx: RoutingContext = {
       region: session.identityAttributes?.region ?? null,
+      consultCategory,
       text,
       label,
       language: session.language ?? null,
@@ -1346,14 +1375,17 @@ export class ChatService {
     // Routing decides both who gets paged and what the customer is told:
     // outside business hours the message goes to a mailbox and the shopper is
     // told to expect an email reply instead of a live agent (PLN-AiSetting W3).
+    // A pick made earlier in this conversation still counts (PLN-261024).
+    const picked = await this.storedConsultCategory(conversationId);
     const route = await this.preferPreviousAgent(
       tenantId,
       conversationId,
       await this.handoffRouter.route(
         tenantId,
         session.language,
-        await this.routingContext(tenantId, session, preview, stamp?.issueLabel ?? null),
+        await this.routingContext(tenantId, session, preview, stamp?.issueLabel ?? null, picked),
       ),
+      picked,
     );
     // Off hours the answer travels by email, so we need somewhere to send it.
     // Without an address on file the widget asks for one (PLN-260806) and the
@@ -1391,6 +1423,7 @@ export class ChatService {
       issueLabel: stamp?.issueLabel,
       assignMode: route.assignMode,
       ruleName: route.ruleName,
+      consultCategory: picked ?? undefined,
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
     return { body, needsContactEmail };
@@ -1435,19 +1468,27 @@ export class ChatService {
    * caller's own session — a `@Public()` endpoint keyed on a raw, enumerable
    * conversation id must not let anyone force-escalate another visitor's chat.
    */
-  async escalate(session: Session, conversationId: number): Promise<void> {
-    const conversation = await this.convRepo.findOne({ where: { id: conversationId } });
-    // Number() both sides: session.id is a bare bigint PK (hydrates as a string)
-    // while conversation.sessionId goes through bigintTransformer (number).
-    if (!conversation || Number(conversation.sessionId) !== Number(session.id)) {
-      throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
+  async escalate(session: Session, conversationId: number, categoryCode?: string | null): Promise<void> {
+    const conversation = await this.ownConversation(session, conversationId);
+    const tenantId = session.tenantId ?? conversation.tenantId ?? 0;
+    // The consult category picked on the way in (PLN-261024 A path). Only a
+    // category the tenant shows to shoppers counts — anything else is ignored
+    // (logged) and the request is routed as if nothing was picked.
+    let picked = conversation.consultCategory ?? null;
+    if (categoryCode) {
+      const row = await this.consultCategories?.visibleRow(tenantId, categoryCode);
+      if (row) {
+        picked = row.code;
+        await this.recordConsultCategory(tenantId, conversationId, session.language, row);
+      } else {
+        this.logger.warn(`escalate: category '${String(categoryCode).slice(0, 64)}' not offered (tenant ${tenantId}) — ignored`);
+      }
     }
     if (session.channel === 'preview') return; // sandbox: never page the agents
     const lastUser = await this.msgRepo.findOne({
       where: { conversationId, senderType: SENDER_TYPE.USER },
       order: { id: 'DESC' },
     });
-    const tenantId = session.tenantId ?? conversation.tenantId ?? 0;
     // Same routing as the automatic handoff (PLN-AiSetting W3). Off hours the
     // widget's local "connecting you" line would be a lie, so persist the
     // off-hours notice — the conversation poll shows it to the customer.
@@ -1457,8 +1498,9 @@ export class ChatService {
       await this.handoffRouter.route(
         tenantId,
         session.language,
-        await this.routingContext(tenantId, session, lastUser?.body ?? null, null),
+        await this.routingContext(tenantId, session, lastUser?.body ?? null, null, picked),
       ),
+      picked,
     );
     if (route.mode === 'email' && route.notice) {
       await this.persist(tenantId, conversationId, SENDER_TYPE.SYSTEM, route.notice, session.language, {
@@ -1476,8 +1518,103 @@ export class ChatService {
       offHoursEmail: route.mode === 'email' ? route.email : undefined,
       assignMode: route.assignMode,
       ruleName: route.ruleName,
+      consultCategory: picked ?? undefined,
     };
     await this.bus.publish(EVENTS.ESCALATION, event);
+  }
+
+  /**
+   * The shopper picked a consult category after the handoff (PLN-261024 B path).
+   * Recorded on the conversation with a system line. If the conversation is
+   * still waiting, nobody has accepted it and this is the first pick, it is
+   * routed again for that category (D1/D2) — the earlier page stands down in
+   * the alert service. A later pick, or one on an accepted conversation, is
+   * recorded only. 400 E5109 for a code the tenant does not offer.
+   */
+  async chooseConsultCategory(
+    session: Session,
+    conversationId: number,
+    categoryCode: string,
+  ): Promise<{ rerouted: boolean; label: string }> {
+    const conversation = await this.ownConversation(session, conversationId);
+    const tenantId = session.tenantId ?? conversation.tenantId ?? 0;
+    const row = await this.consultCategories?.visibleRow(tenantId, categoryCode);
+    if (!row) {
+      this.logger.warn(`consult category '${String(categoryCode).slice(0, 64)}' not offered (tenant ${tenantId})`);
+      throw new BusinessException(ERROR_CODE.ROUTING_CATEGORY_NOT_FOUND, HttpStatus.BAD_REQUEST);
+    }
+    const firstPick = conversation.consultCategory == null;
+    const label = await this.recordConsultCategory(tenantId, conversationId, session.language, row);
+    const reroute =
+      firstPick &&
+      conversation.status === CONVERSATION_STATUS.WAITING &&
+      conversation.agentId == null &&
+      session.channel !== 'preview';
+    if (!reroute) return { rerouted: false, label };
+
+    const lastUser = await this.msgRepo.findOne({
+      where: { conversationId, senderType: SENDER_TYPE.USER },
+      order: { id: 'DESC' },
+    });
+    const route = await this.handoffRouter.route(
+      tenantId,
+      session.language,
+      await this.routingContext(tenantId, session, lastUser?.body ?? null, null, row.code),
+    );
+    if (route.mode === 'email') {
+      // Off hours the message already went to the mailbox; a second mail adds nothing.
+      return { rerouted: false, label };
+    }
+    const event: EscalationEvent = {
+      tenantId,
+      conversationId,
+      sessionId: session.id,
+      reason: 'category_selected',
+      preview: (lastUser?.body ?? '').slice(0, 300),
+      targetUserIds: route.targetUserIds,
+      assignMode: route.assignMode,
+      ruleName: route.ruleName,
+      consultCategory: row.code,
+    };
+    await this.bus.publish(EVENTS.ESCALATION, event);
+    return { rerouted: true, label };
+  }
+
+  /** The caller's own conversation (SEC-L3) — 404 otherwise. */
+  private async ownConversation(session: Session, conversationId: number): Promise<Conversation> {
+    const conversation = await this.convRepo.findOne({ where: { id: conversationId } });
+    // Number() both sides: session.id is a bare bigint PK (hydrates as a string)
+    // while conversation.sessionId goes through bigintTransformer (number).
+    if (!conversation || Number(conversation.sessionId) !== Number(session.id)) {
+      throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
+    }
+    return conversation;
+  }
+
+  /** Store the pick and leave a system line both sides read; returns the shopper-facing label. */
+  private async recordConsultCategory(
+    tenantId: number,
+    conversationId: number,
+    language: string,
+    row: { code: string; name: string | null; names: Record<string, string> | null },
+  ): Promise<string> {
+    const label = consultLabel(row, language);
+    await this.convRepo.update({ id: conversationId }, { consultCategory: row.code, consultCategoryAt: new Date() });
+    await this.persist(
+      tenantId,
+      conversationId,
+      SENDER_TYPE.SYSTEM,
+      sysMsg('consultCategoryChosen', language).replace('{category}', label),
+      language,
+      { consultCategory: row.code },
+    );
+    return label;
+  }
+
+  /** The category already picked in this conversation, if any. */
+  private async storedConsultCategory(conversationId: number): Promise<string | null> {
+    const row = await this.convRepo.findOne({ where: { id: conversationId }, select: { id: true, consultCategory: true } });
+    return row?.consultCategory ?? null;
   }
 
   // ---- helpers ----

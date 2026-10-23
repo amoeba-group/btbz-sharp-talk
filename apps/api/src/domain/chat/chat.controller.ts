@@ -9,6 +9,7 @@ import { threadEligible } from '../embed/unsigned-identify';
 import {
   SendMessageRequest,
   EndChatRequest,
+  ConsultCategoryRequest,
   EscalateRequest,
   ScenarioRequest,
   ContactEmailRequest,
@@ -140,7 +141,15 @@ export class ChatController {
   @ApiOperation({ summary: 'Request a human agent (FR-015)' })
   async escalate(@Body() body: EscalateRequest) {
     const session = await this.sessionService.findByToken(body.session_token);
-    await this.chatService.escalate(session, body.conversation_id);
+    await this.chatService.escalate(session, body.conversation_id, body.category_code);
     return { escalated: true };
+  }
+
+  @Post('consult-category')
+  @Public()
+  @ApiOperation({ summary: 'Pick a consult category after the handoff (PLN-261024)' })
+  async consultCategory(@Body() body: ConsultCategoryRequest) {
+    const session = await this.sessionService.findByToken(body.session_token);
+    return this.chatService.chooseConsultCategory(session, body.conversation_id, body.category_code);
   }
 }

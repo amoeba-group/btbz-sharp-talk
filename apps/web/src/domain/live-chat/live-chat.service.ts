@@ -220,6 +220,8 @@ export interface ConversationDetail {
   hotel?: ConversationHotel | null;
   /** Visitor address, masked (PLN-261023 S2); null when none was recorded. */
   visitorIp?: VisitorIp | null;
+  /** Consult category the shopper picked (PLN-261024); null = none picked. */
+  consultCategory?: string | null;
   messages: ChatMessage[];
   /** Older messages exist before the first one returned (PLN-260807). */
   hasMore?: boolean;

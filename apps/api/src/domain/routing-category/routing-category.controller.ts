@@ -29,7 +29,10 @@ export class RoutingCategoryController {
   @ApiOperation({ summary: 'Create a routing category (the code is fixed afterwards)' })
   create(@CurrentUser() user: Principal, @Body() body: CreateRoutingCategoryRequest) {
     const actor = asTenantUser(user);
-    return this.service.create(actor.tenantId, actor.userId, body.code, body.name);
+    return this.service.create(actor.tenantId, actor.userId, body.code, body.name, {
+      visible: body.visible,
+      names: body.names,
+    });
   }
 
   @Patch()
@@ -40,7 +43,7 @@ export class RoutingCategoryController {
     return this.service.update(
       actor.tenantId,
       actor.userId,
-      body.items.map((i) => ({ id: i.id, name: i.name, sortOrder: i.sort_order })),
+      body.items.map((i) => ({ id: i.id, name: i.name, sortOrder: i.sort_order, visible: i.visible, names: i.names })),
     );
   }
 

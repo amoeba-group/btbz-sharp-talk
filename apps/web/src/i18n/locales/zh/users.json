@@ -66,12 +66,12 @@
   "scopeTitle": "负责范围",
   "scopeNone": "无负责范围",
   "scopeEdit": "设置范围",
-  "scopeRegions": "类别",
+  "scopeRegions": "咨询类别",
   "scopeProvinces": "省 / 市",
   "scopeProvincePh": "输入或选择省/市",
   "scopeAdd": "添加",
   "scopeSaved": "已保存 {{name}} 的负责范围",
   "scopeSaveError": "无法保存负责范围",
-  "scopeHint": "分配规则中的\"分配给类别负责人\"会选择团队或标签负责范围与对话的省/市（优先）或类别相符的人员。",
-  "scopeNoCategories": "没有类别 — 请在 设置 › 转接人工客服 › 管理类别 中添加"
+  "scopeHint": "分配规则中的\"分配给咨询类别负责人\"会选择团队或标签负责范围与客户所选咨询类别或省/市（优先）相符的人员。",
+  "scopeNoCategories": "没有咨询类别 — 请在 设置 › 转接人工客服 › 管理咨询类别 中添加"
 }

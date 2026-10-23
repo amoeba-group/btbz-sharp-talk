@@ -20,6 +20,7 @@ import { EarlierConversations } from './EarlierConversations';
 import { TypingBubble } from './TypingBubble';
 import { CsatCard } from './CsatCard';
 import { ContactEmailCard } from './ContactEmailCard';
+import { ConsultCategoryCard } from './ConsultCategoryCard';
 import { ConsentBanner } from './ConsentBanner';
 import { ScenarioMenu, type SubAction } from './ScenarioMenu';
 import { AuthGate } from './AuthGate';
@@ -29,7 +30,7 @@ import { InlineOrdersAnswer } from './InlineOrderCard';
 import { replyChips } from './reply-chips';
 import { pickCopy, splitDisclosure, welcomeGreeting } from '../../lib/copy';
 
-type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'orders' | null;
+type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'orders' | 'consultCategory' | null;
 
 
 export function ChatTab() {
@@ -48,8 +49,14 @@ export function ChatTab() {
   const consumeChatMessage = useWidgetStore((s) => s.consumeChatMessage);
   const analytics = useAnalytics();
 
-  const { messages, send, scenario, sending, status, escalate, endChat, canRate, rate, conversationId } =
+  const { messages, send, scenario, sending, status, escalate, pickConsultCategory, endChat, canRate, rate, conversationId } =
     useChat(sessionToken);
+  // Consult categories (PLN-261024): offered before an agent request, or right
+  // after the AI hands off; once per conversation.
+  const consultCategories = useWidgetStore((s) => s.consultCategories);
+  const [categoryMode, setCategoryMode] = useState<'before' | 'after'>('before');
+  const pickedFor = useRef<string | null>(null);
+  const categoryOffered = () => consultCategories.length > 0 && pickedFor.current !== conversationId;
   // Reply-pending indicator (PLN-260804, corrected by FIX-260806).
   //  · sending  → the AI completion runs synchronously inside the send request.
   //  · agent    → a human took the thread; their reply arrives via the poll.
@@ -219,6 +226,12 @@ export function ChatTab() {
     const res = await send(text, attachments);
     setShowEscalate(res.escalate);
     if (res.needsAuth && !authenticated) setInline('auth');
+    // Handed off this turn: let the shopper steer it to the right team (PLN-261024 B path).
+    else if (res.escalate && !res.needsContactEmail && categoryOffered()) {
+      setShowEscalate(false);
+      setCategoryMode('after');
+      setInline('consultCategory');
+    }
     // Handed off outside business hours and we hold no address: the reply has
     // to travel by email, so ask before the shopper walks away (PLN-260806).
     else if (res.needsContactEmail) setInline('contactEmail');
@@ -264,6 +277,33 @@ export function ChatTab() {
   }
 
   /**
+   * Every "talk to a person" control ends here (PLN-261024 A path): with consult
+   * categories on offer the shopper picks one first, otherwise connect at once.
+   */
+  function requestAgent() {
+    if (categoryOffered()) {
+      setShowEscalate(false);
+      setCategoryMode('before');
+      setInline('consultCategory');
+      return;
+    }
+    void escalate();
+  }
+
+  async function onConsultPick(code: string) {
+    pickedFor.current = conversationId;
+    setInline(null);
+    if (categoryMode === 'before') await escalate(code);
+    else await pickConsultCategory(code).catch(() => undefined);
+  }
+
+  function onConsultSkip() {
+    pickedFor.current = conversationId;
+    setInline(null);
+    if (categoryMode === 'before') void escalate();
+  }
+
+  /**
    * Tenant-configured navigation after a scripted reply (PLN-AiSetting W2).
    * Mirrors the scenario-button destinations so an admin can send a shopper
    * straight to their orders, the contact form, or an external page.
@@ -281,7 +321,7 @@ export function ChatTab() {
         setInline('affiliate');
         return;
       case 'connect_agent':
-        void escalate();
+        requestAgent();
         return;
       case 'open_url':
         // noopener/noreferrer: the destination is tenant-supplied.
@@ -319,7 +359,7 @@ export function ChatTab() {
       case 'agent_connect':
         setShowEscalate(false);
         analytics.escalate();
-        void escalate();
+        requestAgent();
         return;
       case 'my_orders':
         openOrAuth('orders');
@@ -569,8 +609,16 @@ export function ChatTab() {
             onChatAgent={() => {
               setInline(null);
               setShowEscalate(true);
-              void escalate();
+              requestAgent();
             }}
+          />
+        )}
+        {inline === 'consultCategory' && (
+          <ConsultCategoryCard
+            mode={categoryMode}
+            categories={consultCategories}
+            onPick={onConsultPick}
+            onSkip={onConsultSkip}
           />
         )}
         {inline === 'affiliate' && (
@@ -582,7 +630,7 @@ export function ChatTab() {
           <button
             onClick={() => {
               setShowEscalate(false);
-              void escalate();
+              requestAgent();
             }}
             className="flex w-full items-center justify-center gap-2 rounded-st-md border border-primary-400 bg-primary-500/5 px-3 py-2 text-sm font-medium text-primary-600 hover:bg-primary-500/10"
           >

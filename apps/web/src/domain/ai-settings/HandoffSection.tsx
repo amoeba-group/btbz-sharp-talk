@@ -172,13 +172,13 @@ export function HandoffSection() {
     });
   const unitOptions = (unitRows.data ?? []).map((u) => ({ id: String(u.id), name: u.name }));
   const isMaster = useAuthStore((s) => s.principal?.rank) === 'master';
-  // Routing categories (PLN-261024): the tenant's list replaces the fixed region chips.
+  // Consult categories (PLN-261024): the tenant's list; 👁 marks the ones shoppers pick from.
   const principal = useAuthStore((s) => s.principal);
   const canManageCategories = makeCan(principal)('ai_settings');
   const categoryRows = useRoutingCategories();
   const categoryName = useCategoryName();
   const categories = useMemo(
-    () => (categoryRows.data ?? []).map((c) => ({ code: c.code, name: categoryName(c.code) })),
+    () => (categoryRows.data ?? []).map((c) => ({ code: c.code, name: categoryName(c.code), visible: c.visible })),
     [categoryRows.data, categoryName],
   );
   const [categoriesOpen, setCategoriesOpen] = useState(false);

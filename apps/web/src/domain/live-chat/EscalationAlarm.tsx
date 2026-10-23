@@ -53,7 +53,9 @@ export function EscalationAlarm() {
       ? 'alarmReasonLowConfidence'
       : current.reason === 'moderation_blocked'
         ? 'alarmReasonModeration'
-        : 'alarmReasonUserRequest';
+        : current.reason === 'category_selected'
+          ? 'alarmReasonCategory'
+          : 'alarmReasonUserRequest';
 
   const dismiss = () => {
     setDismissed((prev) => new Set(prev).add(current.id));

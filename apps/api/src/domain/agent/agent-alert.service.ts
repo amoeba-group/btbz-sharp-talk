@@ -31,9 +31,12 @@ interface EscalationPayload {
    */
   assignMode?: string;
   ruleName?: string;
+  /** The consult category the shopper picked (PLN-261024), shown in the mail. */
+  consultCategory?: string;
 }
 
 const REASON_LABEL: Record<string, string> = {
+  category_selected: 'Customer picked a consult category — routed to its team',
   low_confidence: 'AI could not answer from the knowledge base',
   moderation_blocked: 'AI reply blocked by moderation',
   user_request: 'Customer asked for a human agent',
@@ -88,6 +91,15 @@ export class AgentAlertService implements OnModuleInit {
     });
     if (existing) return; // channels already notified for this escalation
 
+    // Re-routed for the shopper's consult category (PLN-261024 D1/D2): the first
+    // page stands down, so the first group's alarm and reminders stop.
+    if (payload.reason === 'category_selected' && payload.tenantId) {
+      await this.alertRepo.update(
+        { tenantId: payload.tenantId, conversationId: payload.conversationId, status: 'new' },
+        { status: 'acked', ackedAt: new Date() },
+      );
+    }
+
     const targets = await this.resolveTargets(payload);
     const base = {
       tenantId: payload.tenantId ?? null,
@@ -111,7 +123,7 @@ export class AgentAlertService implements OnModuleInit {
       await this.notifyEmail(alert, payload.offHoursEmail);
       return;
     }
-    await Promise.allSettled([this.notifySlack(alert), this.notifyRows(rows)]);
+    await Promise.allSettled([this.notifySlack(alert), this.notifyRows(rows, { category: payload.consultCategory })]);
   }
 
   /**
@@ -120,8 +132,9 @@ export class AgentAlertService implements OnModuleInit {
    * the historical ops-mailbox mail. An agent whose address cannot be read
    * falls back to the ops mailbox, so a page is never silently lost.
    */
-  async notifyRows(rows: AgentAlert[], opts: { reminder?: boolean } = {}): Promise<void> {
-    const context = rows[0] ? await this.alertContext(rows[0]) : null;
+  async notifyRows(rows: AgentAlert[], opts: { reminder?: boolean; category?: string } = {}): Promise<void> {
+    const facts = rows[0] ? await this.alertContext(rows[0]) : null;
+    const context = [opts.category && `Consult category: ${opts.category}`, facts].filter(Boolean).join(' · ') || null;
     let opsMailed = false;
     for (const row of rows) {
       const to = row.targetUserId != null ? await this.agentEmail(row.tenantId, row.targetUserId) : null;
