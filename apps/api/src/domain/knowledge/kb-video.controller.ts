@@ -30,6 +30,7 @@ export class KbVideoController {
       res.redirect(302, r.url);
       return;
     }
+    // `broken` (the source no longer has the video) is permanent → 404.
     const status = r.reason === 'unavailable' ? 503 : 404;
     res
       .status(status)
