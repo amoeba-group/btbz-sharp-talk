@@ -9,6 +9,7 @@ import {
   useSaveWidgetAccess,
   useWidgetAccess,
 } from './settings.hooks';
+import type { WidgetHeaderControls } from './settings.service';
 
 /**
  * Widget exposure restriction (PLN-260929).
@@ -47,6 +48,7 @@ export function WidgetAccessCard() {
     endsAt: string | null;
     ips: string[];
     urls: string[];
+    controls: WidgetHeaderControls;
   } | null>(null);
   const [ipEntry, setIpEntry] = useState('');
   const [urlEntry, setUrlEntry] = useState('');
@@ -59,6 +61,10 @@ export function WidgetAccessCard() {
     endsAt: data?.endsAt ?? null,
     ips: data?.ips ?? [],
     urls: data?.urls ?? [],
+    controls: {
+      language: data?.controls?.language ?? true,
+      settings: data?.controls?.settings ?? true,
+    },
   };
   const dirty = draft !== null;
   // Switched on but the window has passed: the restriction lifts itself, and
@@ -96,7 +102,7 @@ export function WidgetAccessCard() {
 
   return (
     <Card
-      title={t('widgetAccess.title')}
+      title={t('widgetAccess.cardTitle')}
       action={
         expired ? (
           <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
@@ -105,6 +111,7 @@ export function WidgetAccessCard() {
         ) : undefined
       }
     >
+      <h3 className="mb-2 text-sm font-semibold text-gray-800">① {t('widgetAccess.title')}</h3>
       <label className="flex items-start gap-2">
         <input
           type="checkbox"
@@ -261,6 +268,42 @@ export function WidgetAccessCard() {
         </div>
       )}
 
+      {/* --- header buttons (PLN-261023-Widget-Header-Buttons) ---
+          Outside the `enabled` block on purpose (D1): these apply whether or
+          not the test mode is on, so they are always editable. */}
+      <div className="mt-4 border-t border-gray-100 pt-4">
+        <h3 className="text-sm font-semibold text-gray-800">② {t('widgetAccess.controls.title')}</h3>
+        <p className="mt-0.5 text-xs text-gray-500">{t('widgetAccess.controls.hint')}</p>
+        <div className="mt-3 space-y-3">
+          {(['language', 'settings'] as const).map((key) => (
+            <div key={key}>
+              <div
+                role="radiogroup"
+                aria-labelledby={`widget-header-${key}-label`}
+                className="flex flex-wrap items-center gap-x-4 gap-y-1"
+              >
+                <span id={`widget-header-${key}-label`} className="w-36 text-sm font-medium text-gray-700">
+                  {t(`widgetAccess.controls.${key}`)}
+                </span>
+                {[true, false].map((shown) => (
+                  <label key={String(shown)} className="flex items-center gap-1.5 text-sm text-gray-700">
+                    <input
+                      type="radio"
+                      name={`widget-header-${key}`}
+                      checked={current.controls[key] === shown}
+                      disabled={isLoading}
+                      onChange={() => patch({ controls: { ...current.controls, [key]: shown } })}
+                    />
+                    {shown ? t('widgetAccess.controls.shown') : t('widgetAccess.controls.hidden')}
+                  </label>
+                ))}
+              </div>
+              <p className="mt-0.5 text-xs text-gray-400">{t(`widgetAccess.controls.${key}Hint`)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="mt-4 flex justify-end">
         <Button
           disabled={!dirty || save.isPending}
@@ -272,6 +315,7 @@ export function WidgetAccessCard() {
                 endsAt: current.endsAt,
                 ips: current.ips,
                 urls: current.urls,
+                controls: current.controls,
               },
               { onSuccess: () => setDraft(null) },
             )

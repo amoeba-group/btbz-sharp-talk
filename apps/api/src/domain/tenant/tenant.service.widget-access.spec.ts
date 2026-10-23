@@ -113,4 +113,33 @@ describe('TenantService.updateWidgetAccess', () => {
     const saved = await svc.updateWidgetAccess(1, 9, body({ enabled: false }));
     expect(saved.widgetAccess).toMatchObject({ enabled: false, ips: ['203.0.113.7'] });
   });
+
+  // PLN-261023-Widget-Header-Buttons D1 — the buttons ride in the same JSON
+  // but apply whether or not the restriction is on.
+  it('saves hidden header buttons with the restriction off and no rules', async () => {
+    const saved = await svc.updateWidgetAccess(
+      1,
+      9,
+      body({ enabled: false, ips: [], controls: { language: false, settings: true } }),
+    );
+    expect(saved.widgetAccess).toMatchObject({ enabled: false, controls: { language: false, settings: true } });
+  });
+
+  it('keeps stored header buttons when an older client omits them', async () => {
+    tenant.widgetAccess = {
+      enabled: false, startsAt: null, endsAt: null, ips: [], urls: [],
+      controls: { language: true, settings: false },
+    };
+    const saved = await svc.updateWidgetAccess(1, 9, body());
+    expect(saved.widgetAccess?.controls).toEqual({ language: true, settings: false });
+  });
+
+  it('stores NULL once every button is shown again and nothing else is set', async () => {
+    tenant.widgetAccess = {
+      enabled: false, startsAt: null, endsAt: null, ips: [], urls: [],
+      controls: { language: false, settings: true },
+    };
+    const saved = await svc.updateWidgetAccess(1, 9, body({ enabled: false, ips: [], controls: { language: true } }));
+    expect(saved.widgetAccess).toBeNull();
+  });
 });

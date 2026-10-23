@@ -42,7 +42,7 @@ import {
   resolvePrivacyProfile,
 } from '@sharptalk/types';
 import type { ResolvedPrivacyNotice, SessionLanguage } from '@sharptalk/types';
-import { evaluateWidgetAccess } from '@sharptalk/types';
+import { evaluateWidgetAccess, normalizeHeaderControls, type WidgetHeaderControls } from '@sharptalk/types';
 import { getRequestContext } from '../../global/middleware/request-context.middleware';
 
 /** A suspended tenant serves nobody — widget included (REQ-260929 G6). */
@@ -87,6 +87,8 @@ export interface PrivacyNoticeInfo {
   termsUrl: string | null;
   /** Languages the widget offers, lowercase codes in display order (PLN-261019-Widget-Language-Follow-Selection). */
   languages: string[];
+  /** Header buttons shown (PLN-261023-Widget-Header-Buttons); independent of the exposure verdict. */
+  headerControls: WidgetHeaderControls;
   /**
    * Consent notice lines for this session's language (PLN-261001). Only the
    * lines we can actually fill travel; the widget keeps its bundled copy for
@@ -678,6 +680,9 @@ export class SessionService {
       // Unknown tenant → a store: the safe direction is the behaviour every
       // widget had before the flag existed.
       commerceEnabled: Number(tenant?.commerceEnabled ?? 1) !== 0,
+      // Read regardless of `enabled` (PLN-261023 D1): turning the test mode
+      // off must not bring hidden buttons back.
+      headerControls: normalizeHeaderControls(tenant?.widgetAccess?.controls),
       // Null passes through as null: the widget's CSS already holds the built-in
       // palette, so "no theme" needs no payload and paints no variables.
       widgetTheme: stripCustomCss(normalizeWidgetTheme(tenant?.widgetTheme), Number(tenant?.customCssEnabled) === 1),

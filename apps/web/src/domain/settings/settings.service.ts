@@ -287,6 +287,13 @@ export interface WidgetAccessSettings {
   /** Whether the window is open right now; drives the "expired" badge. */
   activeNow: boolean;
   shopDomain: string | null;
+  /** Header buttons (PLN-261023-Widget-Header-Buttons); absent on an older API = all shown. */
+  controls?: WidgetHeaderControls;
+}
+
+export interface WidgetHeaderControls {
+  language: boolean;
+  settings: boolean;
 }
 
 export interface WidgetAccessDraft {
@@ -295,6 +302,7 @@ export interface WidgetAccessDraft {
   endsAt: string | null;
   ips: string[];
   urls: string[];
+  controls: WidgetHeaderControls;
 }
 
 export interface EmbedSettings {
@@ -322,6 +330,7 @@ export const settingsService = {
       ends_at: body.endsAt,
       ips: body.ips,
       urls: body.urls,
+      controls: body.controls,
     }),
   rotateWidgetAccessKey: () => apiPost<{ key: string }>('/tenants/widget-access/key', {}),
   widgetSettings: () => apiGet<WidgetSettings>('/tenants/widget-settings'),

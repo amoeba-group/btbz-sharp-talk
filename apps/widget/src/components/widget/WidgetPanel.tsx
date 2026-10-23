@@ -42,6 +42,7 @@ export function WidgetPanel() {
   // link) can open the settings/preferences area too.
   const showSettings = useWidgetStore((s) => s.settingsOpen);
   const setShowSettings = useWidgetStore((s) => s.setSettingsOpen);
+  const headerControls = useWidgetStore((s) => s.headerControls);
   const displayName = useWidgetStore((s) => s.widgetCopy?.displayName);
   // Per-language header title (PLN-261019 P3); empty = the display name.
   const language = useWidgetStore((s) => s.language);
@@ -162,7 +163,10 @@ export function WidgetPanel() {
         <span className="st-header-title truncate text-xl font-bold text-header-fg">{title}</span>
         )}
         <div className="flex flex-shrink-0 items-center gap-0.5">
-          {!triggerMode && <LanguageSwitcher />}
+          {/* Each button is the tenant's to hide (PLN-261023-Widget-Header-Buttons);
+              the close button is not — a touch device would lose its only way out. */}
+          {!triggerMode && headerControls.language && <LanguageSwitcher />}
+          {headerControls.settings && (
           <button
             onClick={() => setShowSettings(!showSettings)}
             aria-label={t('settings')}
@@ -172,6 +176,7 @@ export function WidgetPanel() {
           >
             <Settings className="h-5 w-5" />
           </button>
+          )}
           {showClose && (
             <button
               onClick={dismiss}

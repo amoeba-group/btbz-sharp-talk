@@ -151,6 +151,7 @@ export const ko: Translation = {
     csatFailed: '평가를 저장하지 못했습니다. 다시 시도해 주세요.',
     aiDisclosureShort: 'AI가 생성한 답변 · {{region}}에서 처리',
     termsLink: '이용약관',
+    privacyLink: '개인정보 설정',
     csatSurvey: {
       title: '만족도 설문',
       q1: '문의가 해결되었나요?',

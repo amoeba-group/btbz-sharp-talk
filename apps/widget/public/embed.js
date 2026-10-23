@@ -505,7 +505,10 @@
   function frameSrc() {
     // Re-read from cfg so init()'s merge is reflected.
     var s0 = cfg.shop || shop;
-    var l0 = String(cfg.locale || locale).slice(0, 2);
+    // The page's <html lang> as it is now, not at script load — a storefront
+    // can set it after this script ran.
+    var d0 = cfg.locale ? '' : docLang();
+    var l0 = String(cfg.locale || d0 || locale).slice(0, 2);
     var g0 = cfg.ga4Id && /^G-[A-Z0-9]+$/i.test(cfg.ga4Id) ? cfg.ga4Id : ga4Id;
     // AI agent code (PLN-260820): which persona answers sessions opened from
     // THIS page. Validated to the server's code shape; anything else is dropped
@@ -522,6 +525,10 @@
       // document-lang / 'en' guess above — the widget then holds the session to
       // it instead of letting the tenant default win (PLN-261023 ③).
       (cfg.locale ? '&host_locale=1' : '') +
+      // Read from the page's <html lang>, not chosen in config. Only a tenant
+      // that hid the language button treats it as the page's choice
+      // (PLN-261023-Widget-Header-Buttons D3); everyone else keeps the guess.
+      (d0 ? '&lang_src=doc' : '') +
       (a0 ? '&agent=' + encodeURIComponent(a0) : '') +
       (g0 ? '&ga4=' + encodeURIComponent(g0) : '') +
       (reopenTab ? '&reopen=' + encodeURIComponent(reopenTab) : '') +
@@ -647,9 +654,36 @@
       }
     }
     frame.src = frameSrc();
+    watchDocLang();
     if (launcher) applyLauncher(launcher);
     if (document.body) mount();
     else document.addEventListener('DOMContentLoaded', mount);
+  }
+
+  function docLang() {
+    return String(document.documentElement.lang || '').toLowerCase().slice(0, 2);
+  }
+
+  /**
+   * A storefront whose language switch rewrites <html lang> without reloading
+   * (SPA) used to leave the widget in the old language (PLN-261023 D3). Report
+   * the change; the widget acts on it only when the tenant hid its own language
+   * button — with the button shown, the shopper's pick stays theirs. A page that
+   * set `locale` in config owns the language through setLocale() instead.
+   */
+  function watchDocLang() {
+    if (cfg.locale || typeof MutationObserver === 'undefined') return;
+    var last = docLang();
+    try {
+      new MutationObserver(function () {
+        var next = docLang();
+        if (!next || next === last) return;
+        last = next;
+        command({ type: 'ivy:command', action: 'locale', locale: next, source: 'doc' });
+      }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+    } catch (_) {
+      /* observation is best-effort; a reload still picks the language up */
+    }
   }
 
   function sendToWidget(msg) {

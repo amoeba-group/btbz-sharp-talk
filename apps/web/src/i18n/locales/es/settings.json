@@ -962,10 +962,21 @@
     "summary": "Ahora mismo: visible solo desde {{ips}} IP y {{urls}} URL{{key}}.",
     "summaryKey": " y el enlace de invitación",
     "expiredBadge": "Periodo terminado: visible para todos",
-    "saved": "Restricción guardada",
-    "saveError": "No se pudo guardar la restricción",
+    "saved": "Visibilidad del widget guardada",
+    "saveError": "No se pudo guardar la visibilidad del widget",
     "keyIssued": "Enlace emitido",
-    "keyError": "No se pudo emitir el enlace"
+    "keyError": "No se pudo emitir el enlace",
+    "cardTitle": "Visibilidad del widget",
+    "controls": {
+      "title": "Botones del encabezado",
+      "hint": "Se aplica tanto si el modo prueba está activo como si no.",
+      "language": "Botón de idioma",
+      "settings": "Botón de ajustes",
+      "shown": "Mostrar",
+      "hidden": "Ocultar",
+      "languageHint": "Oculto: el widget sigue el idioma de la página de la tienda.",
+      "settingsHint": "Oculto: las opciones de privacidad siguen disponibles desde un enlace en la línea de aviso del chat."
+    }
   },
   "platforms": {
     "connectedTitle": "Plataformas conectadas",

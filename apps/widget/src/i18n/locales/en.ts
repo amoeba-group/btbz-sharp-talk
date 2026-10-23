@@ -150,6 +150,7 @@ export const en = {
     csatFailed: 'We couldn\'t save your rating. Please try again.',
     aiDisclosureShort: 'AI-generated replies · processed in {{region}}',
     termsLink: 'terms of service',
+    privacyLink: 'Privacy',
     csatSurvey: {
       title: 'Satisfaction survey',
       q1: 'Was your issue resolved?',

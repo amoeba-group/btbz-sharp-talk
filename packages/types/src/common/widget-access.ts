@@ -27,7 +27,27 @@ export interface WidgetAccess {
   ips: string[];
   /** Origin + optional path prefix: `https://shop.example.com/collections/test`. */
   urls: string[];
+  /**
+   * Which header buttons the widget shows (PLN-261023-Widget-Header-Buttons).
+   * Stored here so the console card saves once, but deliberately OUTSIDE the
+   * verdict: it applies whether or not the restriction is on (D1) — switching
+   * the test mode off must not bring hidden buttons back.
+   */
+  controls?: WidgetHeaderControls;
 }
+
+/** Header buttons a tenant may hide. Absent = shown, which is how it always was. */
+export interface WidgetHeaderControls {
+  /** Off = the widget follows the storefront's language (PLN-261023 D3). */
+  language: boolean;
+  /** Off = the privacy choices stay reachable from the disclosure line (D4). */
+  settings: boolean;
+}
+
+export const WIDGET_HEADER_CONTROLS_DEFAULTS: WidgetHeaderControls = {
+  language: true,
+  settings: true,
+};
 
 export const WIDGET_ACCESS_DEFAULTS: WidgetAccess = {
   enabled: false,
@@ -36,6 +56,12 @@ export const WIDGET_ACCESS_DEFAULTS: WidgetAccess = {
   ips: [],
   urls: [],
 };
+
+/** Only an explicit `false` hides a button — a missing or garbled value shows it. */
+export function normalizeHeaderControls(input: unknown): WidgetHeaderControls {
+  const raw = (input && typeof input === 'object' ? input : {}) as Partial<WidgetHeaderControls>;
+  return { language: raw.language !== false, settings: raw.settings !== false };
+}
 
 /** Why the widget is hidden — surfaced to the console, never to the shopper. */
 export const WIDGET_ACCESS_REASON = {
@@ -263,7 +289,10 @@ export function normalizeWidgetAccess(input: unknown): WidgetAccess | null {
     ips: normaliseList(raw.ips, isValidIpEntry),
     urls: normaliseList(raw.urls, (e) => parseUrlRule(e) != null),
   };
-  if (!out.enabled && !out.ips.length && !out.urls.length && !out.startsAt && !out.endsAt) {
+  const controls = normalizeHeaderControls(raw.controls);
+  const controlsDefault = controls.language && controls.settings;
+  if (!controlsDefault) out.controls = controls;
+  if (!out.enabled && !out.ips.length && !out.urls.length && !out.startsAt && !out.endsAt && controlsDefault) {
     return null; // nothing configured — store NULL rather than an empty shell
   }
   return out;

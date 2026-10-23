@@ -962,10 +962,21 @@
     "summary": "Hiện tại: chỉ hiển thị từ {{ips}} IP và {{urls}} URL{{key}}.",
     "summaryKey": " và liên kết mời",
     "expiredBadge": "Đã hết thời gian — hiển thị cho mọi người",
-    "saved": "Đã lưu giới hạn hiển thị",
-    "saveError": "Không lưu được giới hạn hiển thị",
+    "saved": "Đã lưu cài đặt hiển thị widget",
+    "saveError": "Không lưu được cài đặt hiển thị widget",
     "keyIssued": "Đã phát hành liên kết mời",
-    "keyError": "Không phát hành được liên kết mời"
+    "keyError": "Không phát hành được liên kết mời",
+    "cardTitle": "Hiển thị widget",
+    "controls": {
+      "title": "Nút trên tiêu đề",
+      "hint": "Luôn áp dụng, dù chế độ thử nghiệm có bật hay không.",
+      "language": "Nút ngôn ngữ",
+      "settings": "Nút cài đặt",
+      "shown": "Hiển thị",
+      "hidden": "Ẩn",
+      "languageHint": "Ẩn: widget theo ngôn ngữ của trang cửa hàng.",
+      "settingsHint": "Ẩn: lựa chọn quyền riêng tư vẫn mở được từ liên kết trên dòng thông báo của khung chat."
+    }
   },
   "platforms": {
     "connectedTitle": "Nền tảng đã kết nối",

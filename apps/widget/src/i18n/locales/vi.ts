@@ -154,6 +154,7 @@ export const vi: Translation = {
     csatFailed: 'Không lưu được đánh giá của bạn. Vui lòng thử lại.',
     aiDisclosureShort: 'Được tạo bởi AI · xử lý tại {{region}}',
     termsLink: 'điều khoản dịch vụ',
+    privacyLink: 'Quyền riêng tư',
     csatSurvey: {
       title: 'Khảo sát mức độ hài lòng',
       q1: 'Quý khách đã được hỗ trợ thành công chưa?',

@@ -643,6 +643,9 @@ export class TenantService {
       endsAt: body.ends_at ?? null,
       ips: body.ips ?? [],
       urls: body.urls ?? [],
+      // A client that predates the header buttons sends no `controls`; keep
+      // what is stored rather than resetting them to "shown".
+      controls: { ...tenant.widgetAccess?.controls, ...body.controls },
     });
 
     if (next?.startsAt && next.endsAt && new Date(next.startsAt) >= new Date(next.endsAt)) {

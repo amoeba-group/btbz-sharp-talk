@@ -151,6 +151,7 @@ export const es: Translation = {
     csatFailed: 'No pudimos guardar tu valoración. Inténtalo de nuevo.',
     aiDisclosureShort: 'Respuestas generadas por IA · procesadas en {{region}}',
     termsLink: 'términos del servicio',
+    privacyLink: 'Privacidad',
     csatSurvey: {
       title: 'Encuesta de satisfacción',
       q1: '¿Se resolvió tu consulta?',

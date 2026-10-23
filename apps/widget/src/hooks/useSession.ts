@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useWidgetStore, type ConsentInfo } from '../store/widgetStore';
-import { ensureSession, setConsent } from '../services/sessionService';
+import { ensureSession, setConsent, setSessionLanguage } from '../services/sessionService';
 import { getStoredSessionToken } from '../lib/api-client';
 import { applyTheme, cacheTheme } from '../lib/theme';
 import { apiOrigin } from '../lib/api-client';
@@ -9,8 +9,10 @@ import type { SessionResponse } from '../lib/types';
 import i18n, {
   LANG_STORAGE_KEY,
   SUPPORTED_LANGUAGES,
+  cacheHeaderControls,
   cacheOfferedLanguages,
-  hostLocale,
+  languagePickerHidden,
+  pageLocale,
 } from '../i18n/i18n';
 
 /**
@@ -23,9 +25,12 @@ const IDENTITY_WAIT_MS = 5000;
 /**
  * True when the language is a choice rather than a guess: the host page set it
  * (PLN-261023) or the user picked one manually (persisted to localStorage).
+ * With the language button hidden a stored pick is a leftover, not a choice
+ * (PLN-261023-Widget-Header-Buttons D3).
  */
 function hasManualLanguageOverride(): boolean {
-  if (hostLocale()) return true;
+  if (pageLocale()) return true;
+  if (languagePickerHidden()) return false;
   try {
     return !!localStorage.getItem(LANG_STORAGE_KEY);
   } catch {
@@ -204,6 +209,40 @@ export function adoptTenantConfig(res: SessionResponse): void {
   s.setAiProcessingRegion((res.aiProcessingRegion || 'US').toUpperCase());
   s.setCsatMode(res.csatMode === 'survey' ? 'survey' : 'rating');
   s.setTermsUrl(res.termsUrl ?? null);
+  // Header buttons (PLN-261023-Widget-Header-Buttons). Absent (older API) = all shown.
+  const controls = {
+    language: res.headerControls?.language !== false,
+    settings: res.headerControls?.settings !== false,
+  };
+  s.setHeaderControls(controls);
+  cacheHeaderControls(controls);
+  followPageLanguage(res);
+}
+
+/**
+ * With the language button hidden the widget speaks the page's language (D3).
+ * The first paint may have gone by an older cache, so once the session says
+ * the button is hidden, move to the page's language if the tenant offers it.
+ * No page language → the session's own language, via the caller's usual path.
+ */
+function followPageLanguage(res: SessionResponse): void {
+  if (res.headerControls?.language !== false) return;
+  try {
+    localStorage.removeItem(LANG_STORAGE_KEY);
+  } catch {
+    /* ignore storage failures */
+  }
+  const code = pageLocale();
+  const offered = res.languages?.length ? res.languages : (SUPPORTED_LANGUAGES as readonly string[]);
+  if (!code || !offered.includes(code)) return;
+  if ((i18n.language || 'en').split('-')[0] !== code) {
+    void i18n.changeLanguage(code);
+    useWidgetStore.getState().setLanguage(code);
+    document.documentElement.lang = code;
+  }
+  if ((res.language || '').toLowerCase() !== code && res.sessionToken) {
+    setSessionLanguage(res.sessionToken, code.toUpperCase()).catch(() => {});
+  }
 }
 
 /**

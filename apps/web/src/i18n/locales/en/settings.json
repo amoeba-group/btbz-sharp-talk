@@ -962,10 +962,21 @@
     "summary": "Right now: visible only from {{ips}} IP(s), {{urls}} URL(s){{key}}.",
     "summaryKey": " and the invite link",
     "expiredBadge": "Window ended — visible to everyone",
-    "saved": "Exposure restriction saved",
-    "saveError": "Could not save the exposure restriction",
+    "saved": "Widget visibility saved",
+    "saveError": "Could not save widget visibility",
     "keyIssued": "Invite link issued",
-    "keyError": "Could not issue the invite link"
+    "keyError": "Could not issue the invite link",
+    "cardTitle": "Widget visibility",
+    "controls": {
+      "title": "Header buttons",
+      "hint": "Applies whether or not test mode is on.",
+      "language": "Language button",
+      "settings": "Settings button",
+      "shown": "Show",
+      "hidden": "Hide",
+      "languageHint": "Hidden: the widget follows the language of the store page.",
+      "settingsHint": "Hidden: privacy choices stay available from a link on the chat notice line."
+    }
   },
   "platforms": {
     "connectedTitle": "Connected platforms",
