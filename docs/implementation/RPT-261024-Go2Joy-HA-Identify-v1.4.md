@@ -20,7 +20,7 @@ TCR 참조 — 단위 2,623 통과, 벡터 Node = PHP(8.3 + intl) 일치, 스테
 |---|---|
 | PR | #737 → main `4e947d44`(코드 + 가이드 KO) · 문서 후속 PR(이 RPT·TCR·EN·작업요청서) |
 | 스테이징 | 10/24 배포 `4e947d44`, healthy·부팅·ERROR 0. SQL 없음. go2joy `provinceIndex` 80(지역표 갱신) |
-| 프로덕션 | **미배포**. 반영 시 코드만(go2joy 테넌트 없음 = 동작 불변). 운영 Go2Joy 서버 설치(S-07) 때 Partner 동기화 또는 `province-index-sql.mjs`로 색인 투입 |
+| 프로덕션 | 반영됨 `c3ea0c10` — 다른 세션의 매뉴얼 07(#738) 배포 때 production ff에 함께 포함(36713aa0..c3ea0c10). SQL 없음, healthy·ERROR 0, 번들에 `province_sn`, `/companies/province-regions` 401. go2joy 테넌트가 없어 동작 불변(`province_sn`은 보내는 호스트에만 영향). 운영 Go2Joy 서버 설치(S-07) 때 Partner 동기화 또는 `province-index-sql.mjs`로 색인 투입 |
 
 ## 4. 남은 것
 - HA 작업(가이드 체크리스트 A~D) — Go2Joy
