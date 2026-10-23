@@ -6,7 +6,7 @@ import { useWidgetStore } from '../../store/widgetStore';
 import { useChat } from '../../hooks/useChat';
 import { useScenario } from '../../hooks/useScenario';
 import { useAttachmentUpload } from '../../hooks/useAttachmentUpload';
-import { getShopDomain } from '../../hooks/useSession';
+import { adoptTenantConfig, getShopDomain } from '../../hooks/useSession';
 import { ensureSession, setConsent } from '../../services/sessionService';
 import { getStoredConsent, setStoredConsent } from '../../lib/consent';
 import { useAnalytics } from '../../lib/analytics';
@@ -55,8 +55,27 @@ export function ChatTab() {
   // after the AI hands off; once per conversation.
   const consultCategories = useWidgetStore((s) => s.consultCategories);
   const [categoryMode, setCategoryMode] = useState<'before' | 'after'>('before');
-  const pickedFor = useRef<string | null>(null);
-  const categoryOffered = () => consultCategories.length > 0 && pickedFor.current !== conversationId;
+  // Conversations the shopper already picked (or skipped) in. Keyed by id —
+  // FIX-261024: a single `pickedFor` compared null (nothing picked yet) with
+  // null (no conversation yet), so a handoff on the very first message never
+  // offered the card.
+  const picked = useRef(new Set<string>());
+  const pickedIn = (id: string | null) => !!id && picked.current.has(id);
+  /**
+   * The list to offer, fresh: a widget opened before the operator switched a
+   * category to "shown" still holds the empty list from its load (FIX-261024),
+   * so an empty list is re-read once before connecting without a picker.
+   */
+  async function offeredCategories(): Promise<Array<{ code: string; label: string }>> {
+    const current = useWidgetStore.getState().consultCategories;
+    if (current.length || !sessionToken) return current;
+    try {
+      adoptTenantConfig(await ensureSession(sessionToken, language));
+    } catch {
+      /* offline — connect without a picker, as before */
+    }
+    return useWidgetStore.getState().consultCategories;
+  }
   // Reply-pending indicator (PLN-260804, corrected by FIX-260806).
   //  · sending  → the AI completion runs synchronously inside the send request.
   //  · agent    → a human took the thread; their reply arrives via the poll.
@@ -227,10 +246,12 @@ export function ChatTab() {
     setShowEscalate(res.escalate);
     if (res.needsAuth && !authenticated) setInline('auth');
     // Handed off this turn: let the shopper steer it to the right team (PLN-261024 B path).
-    else if (res.escalate && !res.needsContactEmail && categoryOffered()) {
-      setShowEscalate(false);
-      setCategoryMode('after');
-      setInline('consultCategory');
+    else if (res.escalate && !res.needsContactEmail && !pickedIn(res.conversationId ?? conversationId)) {
+      if ((await offeredCategories()).length) {
+        setShowEscalate(false);
+        setCategoryMode('after');
+        setInline('consultCategory');
+      }
     }
     // Handed off outside business hours and we hold no address: the reply has
     // to travel by email, so ask before the shopper walks away (PLN-260806).
@@ -280,8 +301,8 @@ export function ChatTab() {
    * Every "talk to a person" control ends here (PLN-261024 A path): with consult
    * categories on offer the shopper picks one first, otherwise connect at once.
    */
-  function requestAgent() {
-    if (categoryOffered()) {
+  async function requestAgent() {
+    if (!pickedIn(conversationId) && (await offeredCategories()).length) {
       setShowEscalate(false);
       setCategoryMode('before');
       setInline('consultCategory');
@@ -291,14 +312,14 @@ export function ChatTab() {
   }
 
   async function onConsultPick(code: string) {
-    pickedFor.current = conversationId;
+    if (conversationId) picked.current.add(conversationId);
     setInline(null);
     if (categoryMode === 'before') await escalate(code);
     else await pickConsultCategory(code).catch(() => undefined);
   }
 
   function onConsultSkip() {
-    pickedFor.current = conversationId;
+    if (conversationId) picked.current.add(conversationId);
     setInline(null);
     if (categoryMode === 'before') void escalate();
   }
@@ -321,7 +342,7 @@ export function ChatTab() {
         setInline('affiliate');
         return;
       case 'connect_agent':
-        requestAgent();
+        void requestAgent();
         return;
       case 'open_url':
         // noopener/noreferrer: the destination is tenant-supplied.
@@ -359,7 +380,7 @@ export function ChatTab() {
       case 'agent_connect':
         setShowEscalate(false);
         analytics.escalate();
-        requestAgent();
+        void requestAgent();
         return;
       case 'my_orders':
         openOrAuth('orders');
@@ -609,7 +630,7 @@ export function ChatTab() {
             onChatAgent={() => {
               setInline(null);
               setShowEscalate(true);
-              requestAgent();
+              void requestAgent();
             }}
           />
         )}
@@ -630,7 +651,7 @@ export function ChatTab() {
           <button
             onClick={() => {
               setShowEscalate(false);
-              requestAgent();
+              void requestAgent();
             }}
             className="flex w-full items-center justify-center gap-2 rounded-st-md border border-primary-400 bg-primary-500/5 px-3 py-2 text-sm font-medium text-primary-600 hover:bg-primary-500/10"
           >
