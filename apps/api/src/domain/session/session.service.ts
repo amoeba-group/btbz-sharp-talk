@@ -126,7 +126,7 @@ const IP_REFRESH_MS = 60 * 60 * 1000;
 
 /** IP columns for a new session — empty outside an HTTP request. */
 function visitorIpFields(): Pick<Session, 'firstIp' | 'lastIp' | 'lastIpAt'> {
-  const ip = getRequestContext()?.clientIp ?? null;
+  const ip = getRequestContext()?.ip ?? null;
   return { firstIp: ip, lastIp: ip, lastIpAt: ip ? new Date() : null };
 }
 
@@ -227,7 +227,7 @@ export class SessionService {
    * Never fails the ensure.
    */
   private async recordVisitorIp(session: Session): Promise<void> {
-    const ip = getRequestContext()?.clientIp;
+    const ip = getRequestContext()?.ip;
     if (!ip) return;
     const fresh = session.lastIpAt != null && Date.now() - new Date(session.lastIpAt).getTime() < IP_REFRESH_MS;
     if (session.lastIp === ip && session.firstIp != null && fresh) return;

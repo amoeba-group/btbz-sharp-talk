@@ -26,12 +26,13 @@ import { Auth } from '../../global/decorator/auth.decorator';
 import { AllowPendingPassword } from '../../global/decorator/allow-pending-password.decorator';
 import { AllowPendingMfa } from '../../global/decorator/allow-pending-mfa.decorator';
 import { CurrentUser } from '../../global/decorator/current-user.decorator';
+import { trustedClientIp } from '../../global/middleware/request-context.middleware';
 
-/** Client IP for rate limiting: the first X-Forwarded-For hop (set by the edge
- *  nginx) if present, else the direct socket address. */
+/** Client IP for rate limiting: X-Forwarded-For read from the right
+ *  (`trustedClientIp` — the first hop is the browser's own claim), else the
+ *  direct socket address. */
 function clientIp(xff: string | undefined, ip: string): string {
-  const first = xff?.split(',')[0]?.trim();
-  return first || ip || 'unknown';
+  return trustedClientIp(xff, ip) ?? 'unknown';
 }
 
 @ApiTags('Auth')

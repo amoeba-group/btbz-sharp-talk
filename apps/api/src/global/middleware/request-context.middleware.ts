@@ -12,13 +12,12 @@ import { NextFunction, Request, Response } from 'express';
  */
 export interface RequestContext {
   requestId: string;
-  ip: string | null;
   /**
-   * The visitor's address as our own proxies recorded it (PLN-261023 S2) —
-   * see `trustedClientIp`. Kept apart from `ip`, whose first-hop reading the
-   * throttler and audit trail already depend on.
+   * The visitor's address as our own proxies recorded it — see
+   * `trustedClientIp`. The one reading of "who is this" for the audit trail,
+   * the rate limiters, the widget visibility rule and the session IP.
    */
-  clientIp?: string | null;
+  ip: string | null;
 }
 
 /**
@@ -64,9 +63,11 @@ export function runWithRequestContext<T>(ctx: RequestContext, fn: () => T): T {
 /**
  * Seeds the AsyncLocalStorage context for every route (Stage 4, audit
  * traceability). requestId honors an incoming `x-request-id` (edge nginx /
- * upstream tracing) and falls back to a fresh UUID; the client IP is the first
- * X-Forwarded-For hop set by the edge proxy (same trust model as
- * XffThrottlerGuard), falling back to the socket address in dev.
+ * upstream tracing) and falls back to a fresh UUID; the client IP is read by
+ * `trustedClientIp` (same reading as XffThrottlerGuard). It used to be the
+ * FIRST X-Forwarded-For hop, which the browser writes: a made-up header moved
+ * the widget IP rule's verdict and gave every request a fresh rate-limit key
+ * (FIX-261023).
  */
 @Injectable()
 export class RequestContextMiddleware implements NestMiddleware {
@@ -76,18 +77,9 @@ export class RequestContextMiddleware implements NestMiddleware {
     // Column is VARCHAR(36) (UUID-sized) — clamp arbitrary client input.
     const requestId = (headerId?.trim() || randomUUID()).slice(0, 36);
 
-    const xff = req.headers['x-forwarded-for'];
-    const firstHop =
-      typeof xff === 'string'
-        ? xff.split(',')[0]?.trim()
-        : Array.isArray(xff)
-          ? String(xff[0]).split(',')[0]?.trim()
-          : undefined;
-    // ip column is VARCHAR(45) (IPv6 max) — clamp defensively as well.
-    const ip = (firstHop || req.ip || null)?.slice(0, 45) ?? null;
+    // trustedClientIp clamps to VARCHAR(45) (IPv6 max), the ip column's size.
+    const ip = trustedClientIp(req.headers['x-forwarded-for'], req.ip);
 
-    const clientIp = trustedClientIp(xff, req.ip);
-
-    runWithRequestContext({ requestId, ip, clientIp }, () => next());
+    runWithRequestContext({ requestId, ip }, () => next());
   }
 }
