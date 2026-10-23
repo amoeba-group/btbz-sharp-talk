@@ -43,6 +43,29 @@
 | **HA 서버 → SharpTalk 서버 전송(push)** | HA가 이미 가진 데이터를 저장·변경 시 보냄. Go2Joy 개발 필요 | ○ 전 항목 가능 |
 | HA 화면 → 위젯(identify에 실어 보냄) | 서명 밖 값 — 아무나 다른 호텔 정보를 덮어쓸 수 있음 | ✗ |
 
+### 1.4 Partner API 실측 (2026-10-23, `staging-partner.go2joy.vn`, 테스트 clientId, hotelSn 4118)
+| API | 결과 | 주는 항목 |
+|---|---|---|
+| Hotel Info v2 `/api/v2/hotel/getHotelInfo` | 200 | 이름, 시간제·숙박·1일 **영업 시간**(시 단위), 첫 시간 수, 취소 정책(무료 취소 분) |
+| Hotel Feed v2 `/api/v2/datafeed/getHotelFeed` (`0,0,[4118]`) | 200이지만 **4118 없음** — 피드 호텔 13개 전체 반환(T15와 같음) | (피드에 있으면) 주소·성/군·설명 VI/EN·평점·이미지 |
+| Room Type Feed v1 `/api/v1/datafeed/getRoomTypeFeed` | 200 · **21개** | 객실명, **상태 코드**(1·4·5), 첫 시간 수·추가 시간, **정가**(첫 시간·추가·숙박·1일), 추가요금·할인·플래시세일 여부, 대표 이미지, 침대·면적, 메모 |
+| Room Type Feed v2 | 200 · 17개 | 객실명, 침대·면적, 이미지 목록, **시설 목록**(VI/EN) — 가격·상태 없음 |
+| Room Type List v2 `/api/v2/hotel/getRoomTypeList` | bookingType 1·3 = 빈 배열, 2 = 500 | 예약 날짜 조건이 있어야 하는 판매가 조회(정보 저장용 아님) |
+| Hotel List v2 | 400 — 예약 조건(checkIn 등) 필수 | 예약 검색용 |
+
+**HA ★ 항목 대비**
+| HA 항목 | Partner API | 비고 |
+|---|---|---|
+| 호텔명 | ✅ Hotel Info | |
+| 영업시간(시간제·숙박·1일) | ✅ Hotel Info | ⚠ 스테이징 값이 HA UAT와 다름(숙박 21~12 vs HA 15:00~08:00, 1일 14~12 vs 10:00~12:00) |
+| 객실 유형·요금·상태 | ✅ Room Type Feed v1 | **객실 수(Number of rooms) 없음**. 상태는 숫자 코드(1·4·5)라 의미 확인 필요 |
+| 추가 요금 | △ 객실 단위 `extraFee` | 호텔 단위 아님 |
+| 취소 정책 | ✅ (HA 화면엔 없음) | 추가 정보 |
+| 코드·그룹·전화·프로모션/인기/신규·계약일·결제·호텔 유형·기업명·등록번호 | ❌ | 어느 API에도 없음 |
+| 성/군·주소·설명(EN/VI) | ❌ (피드에 없는 호텔) | 피드 범위가 넓어지면 ✅ |
+
+**⚠ 데이터 원천이 다르다**: 같은 4118인데 Partner 스테이징의 객실은 21개(Standard/Deluxe/Junior + Phòng số 003~010 …), 요금도 Standard 60k/65k/340k/450k다. **HA UAT 화면은 7개**(Junior·Standard·Test003 …), Standard 50k/55k/230k. → Partner 스테이징과 HA UAT는 **다른 DB**다. 스테이징에서 Partner 값으로는 HA UAT 화면과 맞춰 볼 수 없고, 운영에서 같은 DB인지 Go2Joy 확인이 필요하다.
+
 ### 1.3 SharpTalk에 있는 것
 - `companies`: `external_key=hotel:{id}`, `name`·`province`·`region`·`last_seen_at`만. **서명된 identify가 있어야 생긴다** → 지금 HA UAT(`hash:"testing"`, claimed)에서는 **Lá Hotel 고객사가 아직 없다**(제목의 호텔명은 claimed 속성에서 읽은 것).
 - `products_cache`: 테넌트 단위 카탈로그(쇼핑몰 동기화). `(tenant_id, handle)` 유일, `price DECIMAL(10,2)`, 통화, 상태 active/archived, 카테고리·태그. **고객사 축 없음.**
