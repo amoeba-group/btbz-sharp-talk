@@ -89,12 +89,14 @@ export function ProductsPage() {
       render: (p) => {
         const room = roomTypeAttrs(p);
         if (!room) return dash;
+        // No hourly price at all = hourly not sold: one dash, no "0h first" hint.
+        if (room.prices?.firstHours == null && room.prices?.additional == null) return dash;
         return (
           <div className="whitespace-nowrap">
             <p className="tabular-nums">
               {fmtVnd(room.prices?.firstHours)} / {fmtVnd(room.prices?.additional)}
             </p>
-            {room.firstHours != null && (
+            {!!room.firstHours && (
               <p className="text-xs text-gray-500">
                 {t('ha.hours', { first: room.firstHours, additional: room.additionalHours ?? 1 })}
               </p>

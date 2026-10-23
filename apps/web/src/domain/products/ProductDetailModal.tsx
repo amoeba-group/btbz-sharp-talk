@@ -65,8 +65,10 @@ function RoomTypeSection({
           <RoomCountEditor handle={handle} value={room.roomCount ?? null} />
         </Row>
         <Row label={t('columns.hourly')}>
-          {fmtVnd(room.prices?.firstHours)} / {fmtVnd(room.prices?.additional)}
-          {room.firstHours != null && (
+          {room.prices?.firstHours == null && room.prices?.additional == null
+            ? '—'
+            : `${fmtVnd(room.prices?.firstHours)} / ${fmtVnd(room.prices?.additional)}`}
+          {!!room.firstHours && (room.prices?.firstHours != null || room.prices?.additional != null) && (
             <span className="ml-2 text-xs text-gray-500">
               {t('ha.hours', { first: room.firstHours, additional: room.additionalHours ?? 1 })}
             </span>
