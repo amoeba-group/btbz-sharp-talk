@@ -12,6 +12,7 @@
 | 환경 | HA UAT `https://go2joy-ha-uat.go2joy.io` ↔ SharpTalk 스테이징 `https://shoptalk.amoeba.site` · 운영은 Go2Joy 서버 `https://sharptalk.go2joy.vn`(설치 대기) |
 | 함께 보는 문서 | [작업요청서](GUIDE-261023-Go2Joy-Work-Request.md)(WR 번호·일정) · [v1.3](GUIDE-261022-Go2Joy-HA-Identify-v1.3.md)(이전 규격) |
 | 예제 코드 | `scripts/go2joy/php/sharptalk_identity.php` · `vectors.php`(테스트 벡터 실행) |
+| 공유 페이지 | https://claude.ai/artifact/2An9WPgY9oCcs3PugiqXf8 (KO/EN, 체크리스트 체크 가능) |
 
 ---
 

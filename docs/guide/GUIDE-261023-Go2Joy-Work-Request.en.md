@@ -1,15 +1,26 @@
 # SharpTalk × Go2Joy — Work Request (tasks for Go2Joy)
 
-> Shared page (KO/EN): https://claude.ai/artifact/YXajSxYLdmHLgXnUQdVShz — same content. `v1.1` and `v1.2` mark items added or changed in that version.
+> Shared page (KO/EN): https://claude.ai/artifact/YXajSxYLdmHLgXnUQdVShz — same content. `v1.1`, `v1.2` and `v1.3` mark items added or changed in that version. HA integration spec: [guide v1.4](GUIDE-261024-Go2Joy-HA-Identify-v1.4.en.md).
 
 
 | Item |  |
 |----|----|
 | To | Go2Joy PM · HA dev team (backend · FE) · Go2Joy dev (Partner API) · Infra · Operations (CS) · Legal |
 | From | SharpTalk (Amoeba) |
-| Date / version | 2026-10-24 · **v1.2** (replaces v1.1 and v1.0 of 10/23) |
-| Based on | ① HA integration guide **v1.3** + the changes in §1 of this request (→ guide v1.4, released by SharpTalk on 10/26) ② Integration requests & checklist (G numbers, 2026-10-22) ③ Go2Joy Support Assistant API overview and the public Partner API docs (`dev.go2joy.vn/api`, checked 10/23)<br>**The v1.0 PDF (10/20) is withdrawn.** Its userId format, region values and test vectors T1 · T2 no longer apply. |
+| Date / version | 2026-10-24 · **v1.3** (replaces v1.2, v1.1 and v1.0) |
+| Based on | ① HA integration guide **v1.3** + the changes in §1 of this request → [**guide v1.4**](https://claude.ai/artifact/2An9WPgY9oCcs3PugiqXf8) (released 10/24) ② Integration requests & checklist (G numbers, 2026-10-22) ③ Go2Joy Support Assistant API overview and the public Partner API docs (`dev.go2joy.vn/api`, checked 10/23)<br>**The v1.0 PDF (10/20) is withdrawn.** Its userId format, region values and test vectors T1 · T2 no longer apply. |
 | Reply | Per-task completion report, or the reply table in §8 — daily check-in channel (WR-40) |
+
+
+
+**✅ What HA (Go2Joy) must do — checklist** `v1.3`
+
+Spec v1.4 is final (approved 10/24); guide v1.4 and the test vectors are released. How to check each item, plus sample code, is in the checklist at the top of [HA integration guide v1.4](https://claude.ai/artifact/2An9WPgY9oCcs3PugiqXf8).
+
+- **Backend (WR-01 · 02, Tue 10/27)**: ☐ secret only in a server environment variable ☐ endpoint for signed-in sessions only ☐ values from the session and DB ☐ `userId = "ha:" + userSn` ☐ only 4 attributes `hotel_id · hotel_name · province_sn · role` ☐ `province_sn` = Go2Joy provinceSn ☐ role code + **send the code list** ☐ "all hotels" → `role` only ☐ NFC → collapse whitespace → trim → 120 chars ☐ drop empty values ☐ HMAC-SHA256 ☐ **test vectors T1 – T6 match, results sent back** ☐ never log the package
+- **FE (WR-04, Wed 10/28)**: ☐ remove browser assembly and `hash: "testing"` ☐ pass the server response to `identify` unchanged ☐ re-identify on sign-in, reload, hotel change, language change ☐ `logout` on sign-out, session expiry, account switch, sign-out in another tab ☐ keep `locale` ☐ allow CSP and CORS ☐ one setting for the SharpTalk domain
+- **UAT (WR-05, 10/29 – 30)**: ☐ pass the guide's §8 checklist ☐ north and south test accounts
+- **Production (WR-06)**: ☐ production secret ☐ production domain `sharptalk.go2joy.vn` ☐ production CSP, CORS, release schedule shared
 
 
 
@@ -32,7 +43,7 @@
 
 ## 1. Integration spec history `v1.1`
 
-Parts of HA were built from the v1.0 PDF, so the differences between versions are in one table. **The v1.4 column is the final spec.** SharpTalk releases guide v1.4 and new test vectors by 10/26 (S-01).
+Parts of HA were built from the v1.0 PDF, so the differences between versions are in one table. **The v1.4 column is the final spec.** SharpTalk released guide v1.4 and the new test vectors on 10/24 (S-01 done).
 
 
 <table>
@@ -227,12 +238,12 @@ Values Go2Joy operations entered in the console. Settings › Agent handoff › 
 
 | WR | Task | Detail | Done when | Prio | Due (proposed) | Ref |
 |----|----|----|----|----|----|----|
-| WR-10 | **Confirm the routing rules** `v1.1` `v1.2`<br>[Partial] | Go2Joy has **5 regions** in the Partner API (1 South · 2 North · 3 Central · 4 North Central · 5 South Center). Please check the 4 rules in §2.3.<br>① Should the **North Center and South Center teams** receive enquiries? If yes, split the rules by region or add them as targets<br>② The team for the `central` region (Da Nang etc.); today no rule covers it, so it goes to the default assignee<br>③ To split by province instead, list the exception provinces<br>④ The Philippines (region `10`) is phase 2 | Confirmation (or edit in the console and tell us); no warnings in the assignment check | P0-S | 10/27 | G20 |
-| WR-11 | **Accept invitations, complete the roster** `v1.2`<br>[Partial] | The 8 invited agents must sign in once (accept the invitation) before they can be assigned. **The South team has no active agent**, so southern hotels never reach it. Send name · email · team · job label (cs / sa) · rank for anyone missing | At least one active agent per team (no "0 active" warning in the assignment check) | P0-S | 10/27 | G21 |
-| WR-12 | **Define the consult categories and name them** `v1.2`<br>[Partial] | Instead of Sales keywords, **the customer picks in the widget**. Say when to pick Business Support and when Customer Services (1 – 2 lines each), and give the **Vietnamese display names**, shown as-is on the widget card. Decide whether to split further (e.g. settlement / contract) | Definitions and Vietnamese names (or enter them in the console's category manager) | P0-S | 10/27 | G22 |
+| WR-10 | **Confirm the routing rules** `v1.1` `v1.2`<br>\[Partial\] | Go2Joy has **5 regions** in the Partner API (1 South · 2 North · 3 Central · 4 North Central · 5 South Center). Please check the 4 rules in §2.3.<br>① Should the **North Center and South Center teams** receive enquiries? If yes, split the rules by region or add them as targets<br>② The team for the `central` region (Da Nang etc.); today no rule covers it, so it goes to the default assignee<br>③ To split by province instead, list the exception provinces<br>④ The Philippines (region `10`) is phase 2 | Confirmation (or edit in the console and tell us); no warnings in the assignment check | P0-S | 10/27 | G20 |
+| WR-11 | **Accept invitations, complete the roster** `v1.2`<br>\[Partial\] | The 8 invited agents must sign in once (accept the invitation) before they can be assigned. **The South team has no active agent**, so southern hotels never reach it. Send name · email · team · job label (cs / sa) · rank for anyone missing | At least one active agent per team (no "0 active" warning in the assignment check) | P0-S | 10/27 | G21 |
+| WR-12 | **Define the consult categories and name them** `v1.2`<br>\[Partial\] | Instead of Sales keywords, **the customer picks in the widget**. Say when to pick Business Support and when Customer Services (1 – 2 lines each), and give the **Vietnamese display names**, shown as-is on the widget card. Decide whether to split further (e.g. settlement / contract) | Definitions and Vietnamese names (or enter them in the console's category manager) | P0-S | 10/27 | G22 |
 | WR-13 | **Hours, absence order, default assignee** `v1.2` | Working hours per team (HCM time zone), order when nobody is available (proposal: backup agent → team queue → offline message). The **default assignee** for enquiries with no region (**"all hotels" selected**, no hotel selected, unmapped province), **customers who skip the category**, and enquiries no rule matches | Reply → SharpTalk enters the rules and shares a preview | P0-S | 10/27 | G23 |
-| WR-14 | **UAT test accounts** | One `Quản lý` (several hotels) + one `Lễ tân` (one hotel), covering hotels in at least two regions **including north and south**, and at least one hotel name with Vietnamese diacritics. `v1.2` [Partial] UAT runs only on the southern Lá Hotel Quận 10 account today | Accounts sent over a secure channel | P0-S | 10/27 | G13 |
-| WR-15 | Reconnect the Notion knowledge source<br>[Done] | `v1.2` The 3 sources (HA guide, FAQ, hotel registration guide) were reconnected on 10/22 and sync normally | — | P0 | 10/30 | G30 |
+| WR-14 | **UAT test accounts** | One `Quản lý` (several hotels) + one `Lễ tân` (one hotel), covering hotels in at least two regions **including north and south**, and at least one hotel name with Vietnamese diacritics. `v1.2` \[Partial\] UAT runs only on the southern Lá Hotel Quận 10 account today | Accounts sent over a secure channel | P0-S | 10/27 | G13 |
+| WR-15 | Reconnect the Notion knowledge source<br>\[Done\] | `v1.2` The 3 sources (HA guide, FAQ, hotel registration guide) were reconnected on 10/22 and sync normally | — | P0 | 10/30 | G30 |
 | WR-16 | Knowledge conflict decisions | The 78 items classified on 10/15 (3 real corrections, 3 duplicate policy documents, 32 copied FAQs): which side to keep | Decision table | P1 | 11/06 | G31 |
 | WR-17 | Golden set review | Confirm the answers of the 44 `#Talk-4-Hotel` questions (the regression baseline for engine changes and tuning) | Review result | P1 | 11/06 | G32 |
 | WR-18 | Widget visibility and resume window | Current defaults: the widget shows the user's own conversations + "n earlier enquiries from this hotel"; the same agent is preferred for 24 hours (a chosen category takes the rules first) | Keep / change | P1 | 11/06 | G14 · G15 |
@@ -273,7 +284,7 @@ Where the public Partner API docs (checked 10/23) and staging measurements (10/2
 | WR | Task | Detail | Done when | Prio | Due (proposed) | Ref |
 |----|----|----|----|----|----|----|
 | WR-30 | **Privacy / PDPL review** | Cross-border transfer notice (processors Anthropic · Voyage, processing regions), whether a transfer impact assessment is needed, masking scope, conversation retention (draft 180 days), breach notification procedure | Written reply | P0 | 10/30 | G4 |
-| WR-31 | **Confirm the terms URL, version and AI notice** `v1.2`<br>[Please confirm] | For signed-in HA users the HA terms acceptance is recorded as widget consent and the consent banner is skipped. What SharpTalk set on staging: terms `https://go2joy.vn/vi-vn/policy?tab=terms-of-use`; notice under the widget VI "Được tạo bởi AI, áp dụng **điều khoản dịch vụ**" / EN "Created by AI; apply **terms of service**" (the bold part links to the terms). Is it the right document, which **version**, and is the text approved? | Confirmation including the version | P0 | 10/30 | G5 |
+| WR-31 | **Confirm the terms URL, version and AI notice** `v1.2`<br>\[Please confirm\] | For signed-in HA users the HA terms acceptance is recorded as widget consent and the consent banner is skipped. What SharpTalk set on staging: terms `https://go2joy.vn/vi-vn/policy?tab=terms-of-use`; notice under the widget VI "Được tạo bởi AI, áp dụng **điều khoản dịch vụ**" / EN "Created by AI; apply **terms of service**" (the bold part links to the terms). Is it the right document, which **version**, and is the text approved? | Confirmation including the version | P0 | 10/30 | G5 |
 
 
 ### 3.7 PM
@@ -291,8 +302,8 @@ Where the public Partner API docs (checked 10/23) and staging measurements (10/2
 
 | \# | Work | Starts when | Time / due | Prio |
 |----|----|----|----|----|
-| S-01 | Release guide v1.4: §1 spec, change history, PHP sample (with NFC), new test vectors T1 – T6 | — | Mon 10/26 | P0-S |
-| S-02 | Accept v1.4: `province_sn` and role codes, derive the region from the Province Feed, accept v1.3 keys during the transition | — | Tue 10/27 on staging | P0-S |
+| S-01 | Release guide v1.4: §1 spec, change history, PHP sample (with NFC), new test vectors T1 – T6 `v1.3`<br>\[Done\] 10/24 — [shared page](https://claude.ai/artifact/2An9WPgY9oCcs3PugiqXf8) · repo `GUIDE-261024-Go2Joy-HA-Identify-v1.4` · T1 – T6 cross-checked with PHP 8.3 + intl | — | Mon 10/26 | P0-S |
+| S-02 | Accept v1.4: `province_sn` and role codes, derive the region from the Province Feed, accept v1.3 keys during the transition `v1.3`<br>\[Done\] 10/24 on staging — 80 province numbers indexed; measured (number → province and region, the number wins over differing v1.3 values, unknown number → default assignee) | — | Tue 10/27 on staging | P0-S |
 | S-03 | Send the staging embed secret over a secure channel | WR-02 option A | Same day | P0-S |
 | S-04 | Input for a partner-supplied secret (small change) | WR-02 option B | Schedule after the decision | Conditional |
 | S-05 | `v1.2` Invite missing agents, complete the rules (North Center, South Center, central), Vietnamese category names, default assignee and hours (or review what Go2Joy entered) → share the assignment-check result | WR-10 – 13 | Same day – half a day | P0-S |
