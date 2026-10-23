@@ -179,6 +179,39 @@ describe('AgentService — pin / translate / message issue (PLN-260826)', () => 
     expect(h.redis.set).toHaveBeenCalledWith('msgtr:77:en', result.text, 24 * 3600);
   });
 
+  it('customer and reply turns get their own prompt (PLN-261023)', async () => {
+    const h = build();
+    await h.svc.translateMessage(77, 1, 'en');
+    expect(h.aiGateway.complete).toHaveBeenCalledWith(
+      expect.objectContaining({ system: expect.stringContaining('customer message') }),
+    );
+
+    for (const senderType of ['agent', 'ai']) {
+      const r = build({
+        message: { id: '78', conversationId: '5', tenantId: 1, senderType, body: '- 2개 남았어요' },
+      });
+      await r.svc.translateMessage(78, 1, 'vi');
+      expect(r.aiGateway.complete).toHaveBeenCalledWith(
+        expect.objectContaining({
+          feature: 'agent_translate',
+          system: expect.stringContaining('support reply'),
+        }),
+      );
+      expect(r.redis.set).toHaveBeenCalledWith('msgtr:78:vi', expect.any(String), 24 * 3600);
+    }
+  });
+
+  it('system notices are not translatable', async () => {
+    const h = build({
+      message: { id: '79', conversationId: '5', tenantId: 1, senderType: 'system', body: '상담원 연결' },
+    });
+
+    await expect(h.svc.translateMessage(79, 1, 'en')).rejects.toMatchObject({
+      errorCode: 'E5003',
+    });
+    expect(h.aiGateway.complete).not.toHaveBeenCalled();
+  });
+
   it('gateway failure or empty output → E5055 (502), nothing cached', async () => {
     const h = build({ aiError: true });
 

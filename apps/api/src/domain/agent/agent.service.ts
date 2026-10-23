@@ -952,11 +952,12 @@ export class AgentService {
   }
 
   /**
-   * Translate one customer message for the console (PLN-260826 R2). On-demand
+   * Translate one message for the console (PLN-260826 R2) — the customer's
+   * turns and, since PLN-261023, the agent's and AI's replies too. On-demand
    * LLM call behind a shared Redis cache — several agents clicking the same
    * bubble cost one completion, not one each. Nothing is stored on the row:
    * chat is flowing data, and the cache TTL matches how long a conversation
-   * stays worked on.
+   * stays worked on. Console-only: the translation never reaches the customer.
    */
   async translateMessage(
     messageId: number,
@@ -974,6 +975,10 @@ export class AgentService {
       this.logger.warn(`message translate refused: msg=${messageId} tenant=${tenantId}`);
       throw new BusinessException(ERROR_CODE.RESOURCE_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
+    // System notices are our own localized copy, not conversation content.
+    if (message.senderType === SENDER_TYPE.SYSTEM) {
+      throw new BusinessException(ERROR_CODE.VALIDATION_FAILED, HttpStatus.BAD_REQUEST);
+    }
     const cacheKey = `msgtr:${messageId}:${normalized}`;
     if (this.redis.available()) {
       const cached = await this.redis.get(cacheKey);
@@ -986,7 +991,10 @@ export class AgentService {
         tenantId,
         function: AI_FUNCTION.ASSIST,
         feature: 'agent_translate',
-        system: `Translate the customer message into ${target}. Output only the translation — no commentary, no quotes.`,
+        system:
+          message.senderType === SENDER_TYPE.USER
+            ? `Translate the customer message into ${target}. Output only the translation — no commentary, no quotes.`
+            : `Translate the customer support reply into ${target}. Keep the markdown formatting, lists and links exactly as they are. Output only the translation — no commentary, no quotes.`,
         messages: [{ role: 'user', content: message.body }],
       });
       text = (res.text ?? '').trim();
