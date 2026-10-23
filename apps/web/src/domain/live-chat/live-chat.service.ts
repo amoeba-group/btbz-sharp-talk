@@ -205,6 +205,7 @@ export interface ConversationHotel {
       dailyMinutes: number | null;
       afterBookingMinutes: number | null;
     } | null;
+    cancelBeforeHours?: number | null;
   } | null;
   sellingRooms: number;
   /** Up to 5 selling rooms, cheapest first. attributes.prices = {firstHours, additional, overnight, oneDay}. */

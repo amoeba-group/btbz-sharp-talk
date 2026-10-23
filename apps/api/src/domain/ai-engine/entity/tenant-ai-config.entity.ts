@@ -119,9 +119,13 @@ export interface HandoffConfig {
    * Province → region code (PLN-261022 stage 1), e.g. { "Hồ Chí Minh": "south" }.
    * When a signed identify carries a province but no region, the region is filled
    * from here before the session is saved. Keys compare NFC + case-insensitively.
-   * Go2Joy: its own 63-province table (= Partner API Province Feed).
+   * Go2Joy: its province table — the Partner API Province Feed, refreshed daily (PLN-261023 H1-a).
    */
   provinceRegions?: Record<string, string>;
+  /** When `provinceRegions` last came from the Partner API Province Feed (ISO; PLN-261023 H1-a). */
+  provinceRegionsSyncedAt?: string;
+  /** 'go2joy_partner' once the feed has filled the map; absent = entered by SQL. */
+  provinceRegionsSource?: string;
   /**
    * Account conversation threads (PLN-261022 stage 2; the tenant switch is
    * `tenants.thread_continuity`). `scope` — what the WIDGET shows a B2B contact:

@@ -21,6 +21,18 @@ describe('CompanyService', () => {
     expect(companyKeyFor(null)).toBeNull();
   });
 
+  it('fills an empty region from the province map (PLN-261023 H1-c)', async () => {
+    const existing = { id: '4', tenantId: 4, externalKey: 'hotel:4118', name: 'Lá Hotel Quận 10', province: 'Hồ Chí Minh', region: null };
+    const companyRepo = repo({ findOne: jest.fn(async () => existing) });
+    const aiConfigRepo = repo({ findOne: jest.fn(async () => ({ handoffConfig: { provinceRegions: { 'hồ chí minh': 'south' } } })) });
+    const svc = new CompanyService(companyRepo, repo(), repo(), repo(), repo(), repo(), aiConfigRepo);
+    const c = await svc.upsertFromIdentity(4, { hotel_id: '4118' });
+    expect(c).toMatchObject({ province: 'Hồ Chí Minh', region: 'south' });
+    // A region already there is never replaced from the map.
+    existing.region = 'north' as never;
+    expect(await svc.upsertFromIdentity(4, { hotel_id: '4118' })).toMatchObject({ region: 'north' });
+  });
+
   it('creates the company from the signed attributes', async () => {
     const companyRepo = repo();
     const svc = new CompanyService(companyRepo, repo(), repo(), repo());

@@ -455,7 +455,8 @@
       "hourly": "Por horas",
       "overnight": "Noche",
       "daily": "Por día"
-    }
+    },
+    "cancelBefore": "Cancelación: hasta {{n}} h antes de la hora reservada"
   },
   "search": {
     "inLabel": "Buscar en",

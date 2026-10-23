@@ -11,6 +11,7 @@ import {
   SelfPlatformCard,
   ShopifyConnectedCard,
 } from './ConnectedPlatformCard';
+import { Go2JoyPartnerCard } from './Go2JoyPartnerCard';
 import { usePlatformConnections } from './platform-connections.hooks';
 import {
   ECOMMERCE_PROVIDERS,
@@ -104,6 +105,8 @@ export function SettingsPlatformsPage() {
                 setDialog({ kind: 'cafe24-oauth', reconnectMallId: c.fields.mall_id ?? '' })
               }
             />
+          ) : c.provider === 'go2joy_partner' ? (
+            <Go2JoyPartnerCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
           ) : (
             <GenericConnectedCard key={c.provider} connection={c} onConfigure={() => configure(c.provider)} />
           )

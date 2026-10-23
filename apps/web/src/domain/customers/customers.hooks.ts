@@ -68,6 +68,29 @@ function useCompanyWrite<V>(fn: (v: V) => Promise<import('./customers.service').
   });
 }
 
+/** Province → region map status for the Go2Joy Partner card (PLN-261023 H1-a). */
+export const useProvinceRegions = (enabled: boolean) => {
+  const tenantKey = useTenantKey();
+  return useQuery({
+    queryKey: ['province-regions', tenantKey],
+    queryFn: () => customersService.provinceRegions(),
+    enabled,
+  });
+};
+
+export const useSyncProvinceRegions = () => {
+  const qc = useQueryClient();
+  const tenantKey = useTenantKey();
+  return useMutation({
+    mutationFn: () => customersService.syncProvinceRegions(),
+    onSuccess: (r) => {
+      qc.invalidateQueries({ queryKey: ['province-regions', tenantKey] });
+      toast.success(i18n.t('provinceRegions.synced', { ns: 'customers', total: r.total, added: r.added, changed: r.changed, kept: r.kept }));
+    },
+    onError: (e: Error) => toast.error(e.message || i18n.t('provinceRegions.syncFailed', { ns: 'customers' })),
+  });
+};
+
 export const useAddHotel = () => useCompanyWrite((hotelSn: number) => customersService.addHotel(hotelSn), 'hotelAdded');
 export const useSyncCompany = () => useCompanyWrite((id: string) => customersService.syncCompany(id), 'hotelSynced');
 export const useUpdateCompanyProfile = () =>

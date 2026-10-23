@@ -117,5 +117,19 @@
   "hotelAdded": "ホテルを追加しました。",
   "hotelSynced": "Go2Joy から同期しました。",
   "profileSaved": "保存しました。",
-  "companySaveFailed": "保存できませんでした。"
+  "companySaveFailed": "保存できませんでした。",
+  "field_rightNowTonight": "今すぐ / 今夜",
+  "rightNowTonightText": "{{start}}–{{end}}時（宿泊）",
+  "field_cancelBefore": "キャンセル期限",
+  "cancelBeforeText": "予約時刻の{{n}}時間前まで",
+  "provinceRegions": {
+    "label": "地域表",
+    "none": "省が未登録",
+    "synced_line": "{{total}}省 · {{at}} 更新（Go2Joy）",
+    "manual_line": "{{total}}省 · 手動登録",
+    "sync": "地域表を更新",
+    "syncing": "更新中…",
+    "synced": "地域表を更新しました：{{total}}省 — 新規 {{added}} · 変更 {{changed}} · 維持 {{kept}}",
+    "syncFailed": "地域表を更新できませんでした"
+  }
 }

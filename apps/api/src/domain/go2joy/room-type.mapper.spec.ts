@@ -17,6 +17,9 @@ describe('room-type.mapper', () => {
         endOvernight: 12,
         startDaily: 14,
         endDaily: 12,
+        cancelBeforeHours: 1,
+        startRightNowTonight: 0,
+        endRightNowTonight: 6,
         cancellationPolicy: { freeCancellationHourly: 60, freeCancellationOvernight: 120, freeCancellationDaily: 120, freeCancellationAfterBooking: 5 },
       }),
     ).toEqual({
@@ -26,7 +29,15 @@ describe('room-type.mapper', () => {
       overnight: { enabled: true, start: 21, end: 12 },
       daily: { enabled: true, start: 14, end: 12 },
       cancellation: { hourlyMinutes: 60, overnightMinutes: 120, dailyMinutes: 120, afterBookingMinutes: 5 },
+      cancelBeforeHours: 1,
+      rightNowTonight: { start: 0, end: 6 },
     });
+  });
+
+  it('cancel-before and right-now/tonight are null when Hotel Info omits them (PLN-261023 H2)', () => {
+    const p = toPartnerInfo({ sn: 1, startRightNowTonight: 0 });
+    expect(p.cancelBeforeHours).toBeNull();
+    expect(p.rightNowTonight).toBeNull();
   });
 
   it('merges v1 prices/status with v2 facilities/images and keeps the entered room count', () => {
@@ -34,7 +45,8 @@ describe('room-type.mapper', () => {
       { sn: 11360, name: 'Standard Room', status: 1, square: 15, firstHours: 2, additionalHours: 1, imageUrl: 'v1.jpg',
         firstHoursOrigin: 60000, additionalOrigin: 65000, overnightOrigin: 340000, oneDayOrigin: 450000, extraFee: false },
       { sn: 11360, bedType: 2, square: 15, imageList: [{ imageUrl: 'b.jpg', firstDisplay: 0 }, { imageUrl: 'a.jpg', firstDisplay: 1 }],
-        facilityList: [{ name: 'máy sấy', nameEn: 'dryer' }] },
+        facilityList: [{ name: 'máy sấy', nameEn: 'dryer' }, { name: ' ', nameEn: '' }],
+        viewList: [{ name: 'Hướng thành phố', nameEn: 'City' }, { name: 'Cửa sổ (Không hướng)', nameEn: 'Window (Non-view)' }] },
       14,
     );
     expect(a).toMatchObject({
@@ -43,6 +55,7 @@ describe('room-type.mapper', () => {
       prices: { firstHours: 60000, additional: 65000, overnight: 340000, oneDay: 450000 },
       bedType: 2,
       facilities: [{ vi: 'máy sấy', en: 'dryer' }],
+      views: [{ vi: 'Hướng thành phố', en: 'City' }, { vi: 'Cửa sổ (Không hướng)', en: 'Window (Non-view)' }],
       images: ['a.jpg', 'b.jpg'],
       roomCount: 14,
     });
@@ -53,6 +66,7 @@ describe('room-type.mapper', () => {
     expect(a.prices).toEqual({ firstHours: null, additional: null, overnight: null, oneDay: 123000 });
     expect(representativePrice(a.prices)).toBe(123000);
     expect(a.images).toEqual([]);
+    expect(a.views).toEqual([]);
   });
 
   it('room handles are stable per hotel and room', () => {

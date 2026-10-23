@@ -162,9 +162,14 @@ export function ShopifyConnectedCard({
 export function GenericConnectedCard({
   connection,
   onConfigure,
+  body,
+  extraActions,
 }: {
   connection: PlatformConnection;
   onConfigure: () => void;
+  /** Provider-specific lines under the detail (Go2Joy Partner: the region map). */
+  body?: ReactNode;
+  extraActions?: ReactNode;
 }) {
   const { t } = useTranslation('settings');
   const test = useTestIntegration(connection.provider);
@@ -178,6 +183,7 @@ export function GenericConnectedCard({
       lastCheckedLabel={t('platforms.lastChecked')}
       lastCheckedAt={connection.lastCheckedAt}
       siteUrl={platformSiteUrl(connection, null)}
+      body={body}
       actions={
         <>
           <Button variant="secondary" size="sm" onClick={onConfigure}>
@@ -188,6 +194,7 @@ export function GenericConnectedCard({
             <Zap className="mr-1.5 h-4 w-4" />
             {test.isPending ? t('integrations.testing') : t('integrations.testConnection')}
           </Button>
+          {extraActions}
         </>
       }
     />

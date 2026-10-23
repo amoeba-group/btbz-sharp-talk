@@ -1,4 +1,4 @@
-import { canonicalRegion, provinceKey } from '@sharptalk/types';
+import { canonicalRegion, isRegionValue, provinceKey } from '@sharptalk/types';
 
 /**
  * Signed identity attributes (PLN-261015 D2).
@@ -52,7 +52,7 @@ export function identitySigningString(userId: string, attributes: IdentityAttrib
 }
 
 /** What `storedIdentityAttributes` decided about the region, for the identify log. */
-export type RegionSource = 'signed' | 'map' | 'none';
+export type RegionSource = 'signed' | 'map' | 'province_in_region' | 'none';
 
 /**
  * The attributes as they are STORED and routed on (PLN-261022 stage 1). Runs
@@ -75,9 +75,23 @@ export function storedIdentityAttributes(
     const value = attributes[key];
     if (value) out[key] = value.normalize('NFC');
   }
-  const mapped = mappedRegion(out.province, provinceRegions);
   if (out.region) {
     out.region = canonicalRegion(out.region);
+    // A province name in the region field (HA sends `region: "Hồ Chí Minh"`,
+    // PLN-261023 H1-b): read it as the province. Only a value that is not a
+    // region at all, and only when the map knows it — the signature was
+    // checked on the raw values before this runs.
+    if (!isRegionValue(out.region)) {
+      const asProvince = provinceInMap(out.region.replace(/_/g, ' '), provinceRegions);
+      if (asProvince) {
+        if (!out.province) out.province = asProvince.name;
+        out.region = asProvince.region;
+        return { attributes: out, regionSource: 'province_in_region' };
+      }
+    }
+  }
+  const mapped = mappedRegion(out.province, provinceRegions);
+  if (out.region) {
     const mismatch = mapped && mapped !== out.region ? mapped : undefined;
     return { attributes: out, regionSource: 'signed', mismatch };
   }
@@ -113,11 +127,30 @@ function claimedText(value: unknown): string {
   return value.normalize('NFC').replace(/[\r\n]+/g, ' ').trim().slice(0, IDENTITY_ATTRIBUTE_MAX_LENGTH);
 }
 
-function mappedRegion(province: string | undefined, map: Record<string, string> | null | undefined): string | undefined {
+/** The map's entry for a province (its own spelling + canonical region), or null. */
+function provinceInMap(
+  province: string | null | undefined,
+  map: Record<string, string> | null | undefined,
+): { name: string; region: string } | null {
   const key = provinceKey(province);
-  if (!key || !map) return undefined;
+  if (!key || !map) return null;
   for (const [name, region] of Object.entries(map)) {
-    if (provinceKey(name) === key) return canonicalRegion(region) || undefined;
+    if (provinceKey(name) === key) {
+      const code = canonicalRegion(region);
+      return code ? { name, region: code } : null;
+    }
   }
-  return undefined;
+  return null;
+}
+
+function mappedRegion(province: string | undefined, map: Record<string, string> | null | undefined): string | undefined {
+  return provinceInMap(province, map)?.region;
+}
+
+/** The region the tenant's map gives a province (company backfill, PLN-261023 H1-c). */
+export function regionForProvince(
+  province: string | null | undefined,
+  map: Record<string, string> | null | undefined,
+): string | null {
+  return provinceInMap(province, map)?.region ?? null;
 }

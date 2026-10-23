@@ -19,6 +19,9 @@ export interface PartnerHotelInfo {
   endOvernight?: number | null;
   startDaily?: number | null;
   endDaily?: number | null;
+  cancelBeforeHours?: number | null;
+  startRightNowTonight?: number | null;
+  endRightNowTonight?: number | null;
   cancellationPolicy?: {
     freeCancellationHourly?: number | null;
     freeCancellationOvernight?: number | null;
@@ -53,6 +56,7 @@ export interface PartnerRoomV2 {
   square?: number | null;
   imageList?: Array<{ imageUrl?: string; firstDisplay?: number }> | null;
   facilityList?: Array<{ name?: string; nameEn?: string }> | null;
+  viewList?: Array<{ name?: string; nameEn?: string }> | null;
 }
 
 /** Stored in products_cache.attributes for a room type. */
@@ -68,6 +72,8 @@ export interface RoomTypeAttributes {
   bedType: number | null;
   square: number | null;
   facilities: Array<{ vi: string | null; en: string | null }>;
+  /** Room views (v2 `viewList`, PLN-261023 H3). Absent on rows synced before. */
+  views?: Array<{ vi: string | null; en: string | null }>;
   images: string[];
   memo: string | null;
   /** Operator-entered — the API has no room count. Kept across syncs. */
@@ -81,8 +87,16 @@ const hour = (v: number | null | undefined) => (typeof v === 'number' && Number.
 /** 0 and negatives mean "not offered" in the feed. */
 const price = (v: number | null | undefined) => (typeof v === 'number' && v > 0 ? v : null);
 
+/** A feed list of `{ name (vi), nameEn }` → `{ vi, en }`, dropping empty rows. */
+const bilingual = (list: Array<{ name?: string; nameEn?: string }> | null | undefined) =>
+  (list ?? [])
+    .map((f) => ({ vi: f.name?.trim() || null, en: f.nameEn?.trim() || null }))
+    .filter((f) => f.vi || f.en);
+
 export function toPartnerInfo(info: PartnerHotelInfo): CompanyPartnerInfo {
   const c = info.cancellationPolicy;
+  const rnStart = hour(info.startRightNowTonight);
+  const rnEnd = hour(info.endRightNowTonight);
   return {
     name: info.name?.trim() || null,
     firstHours: hour(info.firstHours),
@@ -97,6 +111,8 @@ export function toPartnerInfo(info: PartnerHotelInfo): CompanyPartnerInfo {
           afterBookingMinutes: hour(c.freeCancellationAfterBooking),
         }
       : null,
+    cancelBeforeHours: hour(info.cancelBeforeHours),
+    rightNowTonight: rnStart != null && rnEnd != null ? { start: rnStart, end: rnEnd } : null,
   };
 }
 
@@ -133,7 +149,8 @@ export function toRoomAttributes(
     flashSale: !!v1.flashSale,
     bedType: hour(v2?.bedType),
     square: hour(v2?.square ?? v1.square),
-    facilities: (v2?.facilityList ?? []).map((f) => ({ vi: f.name?.trim() || null, en: f.nameEn?.trim() || null })),
+    facilities: bilingual(v2?.facilityList),
+    views: bilingual(v2?.viewList),
     images: images.length ? images : v1.imageUrl ? [v1.imageUrl] : [],
     memo: v1.memo?.trim() || null,
     roomCount: previousRoomCount,

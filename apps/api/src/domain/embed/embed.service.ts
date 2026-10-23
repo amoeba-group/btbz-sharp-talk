@@ -2,7 +2,7 @@ import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHmac, randomBytes, timingSafeEqual } from 'crypto';
 import { In, Repository } from 'typeorm';
-import { CONSENT_STATE, CONVERSATION_STATUS, CUSTOMER_TYPE, SESSION_IDENTITY } from '@sharptalk/types';
+import { CONSENT_STATE, CONVERSATION_STATUS, CUSTOMER_TYPE, SESSION_IDENTITY, canonicalRegion, isRegionValue } from '@sharptalk/types';
 import { Tenant } from '../tenant/entity/tenant.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { Session } from '../session/entity/session.entity';
@@ -349,12 +349,16 @@ export class EmbedService {
     }
   }
 
-  /** The tenant's province → region map; only read when a province arrived. Never throws. */
+  /**
+   * The tenant's province → region map; only read when a province arrived, or
+   * a region that is not one (a province name, PLN-261023 H1-b). Never throws.
+   */
   private async provinceRegions(
     tenantId: number,
     attributes: IdentityAttributes | null,
   ): Promise<Record<string, string> | null> {
-    if (!attributes?.province || !this.aiConfigRepo) return null;
+    const regionIsProvince = !!attributes?.region && !isRegionValue(canonicalRegion(attributes.region));
+    if ((!attributes?.province && !regionIsProvince) || !this.aiConfigRepo) return null;
     try {
       const config = await this.aiConfigRepo.findOne({ where: { tenantId } });
       return config?.handoffConfig?.provinceRegions ?? null;

@@ -266,6 +266,14 @@ describe('EmbedService.identify — region normalisation', () => {
     await svc.identify({ sessionToken: 'tok', userId: USER, hash: EmbedService.sign(SECRET, USER, attrs), attributes: attrs });
     expect(aiConfigRepo.findOne).not.toHaveBeenCalled();
   });
+
+  it('reads a province name sent as the region (PLN-261023 H1-b)', async () => {
+    const { svc, aiConfigRepo } = withMap();
+    const attrs = { hotel_id: '1', region: 'Hồ Chí Minh' };
+    const session = await svc.identify({ sessionToken: 'tok', userId: USER, hash: EmbedService.sign(SECRET, USER, attrs), attributes: attrs });
+    expect(aiConfigRepo.findOne).toHaveBeenCalled();
+    expect(session.identityAttributes).toEqual({ hotel_id: '1', province: 'Hồ Chí Minh', region: 'south' });
+  });
 });
 
 /** B2B account registration (PLN-261022 stage 2). */

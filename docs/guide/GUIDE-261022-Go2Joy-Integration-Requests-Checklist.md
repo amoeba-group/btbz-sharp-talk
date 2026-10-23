@@ -82,8 +82,8 @@
 | G15 | 재개 창(Q3) | 끝난 대화 뒤 같은 상담원을 먼저 배정하는 시간. **현재 기본값 24시간** | 운영 | P1 | 기본값 적용, 확인 대기 |
 | G16 | 서명 유효기간(`ts`) | 패키지 재사용 방지. 적용하면 양쪽 규격을 함께 바꿈(가이드 7절) | HA 백엔드 | P1 | 결정 대기 |
 | G17 | 역할별 차이(Q5) · 호텔 주소·군(Q6) | `Quản lý` / `Lễ tân` 응대 차이가 필요한가. 주소(`settingList.address`)·군(`districtName`)은 3단계 | 운영 | P2 | 결정 대기 |
-| G18 | **Partner API 운영 자격증명 · IP 허용** (10/23 추가) | 호텔 정보·객실 유형을 B2B 고객정보·상품으로 가져오는 데 씁니다(PLN-261023). 운영 `partner.go2joy.vn` clientId·secret, SharpTalk 서버 IP 허용, **HA 호텔 전체가 Hotel Feed에 들어오는지**(4118은 스테이징 피드에 없음) | Go2Joy 개발 | P1 | 요청 |
-| G19 | **Partner 데이터 확인** (10/23 추가) | ① Partner 스테이징과 HA UAT가 다른 DB인지(4118: Partner 객실 21개 / HA 7개, 요금·영업시간 다름) — 운영은 같은가 ② 객실 상태 코드 의미(1·4·5, "승인 대기"·"임시저장" 코드) ③ 객실 수(Number of rooms)를 API로 줄 수 있는가 ④ 기업명·사업자번호·계약일·결제·호텔 유형을 **HA 서버가 SharpTalk으로 보내는 방식(A)** 일정 | Go2Joy 개발 | P1 | 요청 |
+| G18 | **Partner API 운영 자격증명 · IP 허용** (10/23 추가) | 호텔 정보·객실 유형을 B2B 고객정보·상품으로 가져오는 데 씁니다(PLN-261023). 운영 `partner.go2joy.vn` clientId·secret, SharpTalk 서버 IP 허용, **HA 호텔 전체가 Hotel Feed에 들어오는지**(4118은 스테이징 피드에 없음), Support Assistant API 문서의 운영 전환 절차(예약 3건 생성)가 예약 API를 쓰지 않는 SharpTalk에도 적용되는지 | Go2Joy 개발 | P1 | 요청 |
+| G19 | **Partner 데이터 확인** (10/23 추가) | ① Partner 스테이징과 HA UAT가 다른 DB인지(4118: Partner 객실 21개 / HA 7개, 요금·영업시간 다름) — 운영은 같은가 ② 객실 상태 코드 의미(1·4·5, "승인 대기"·"임시저장" 코드) ③ 객실 수(Number of rooms)를 API로 줄 수 있는가 ④ 기업명·사업자번호·계약일·결제·호텔 유형을 **HA 서버가 SharpTalk으로 보내는 방식(A)** 일정 ⑤ (10/23 Support Assistant API 문서 대조) Province Feed 권역 `10`(마닐라 17개 시)의 이름 — 문서 enum은 1~5뿐 ⑥ Room Type List `numOfRoom`이 전부 2147483647(알 수 없음) — 남은 객실 수를 줄 수 있는가 ⑦ Room Type List 시간제(`bookingType=1`) 조회가 `code 0` ⑧ 문서 오기: Hotel Info 경로 `getHotelnfo`, Room Type Feed v1 경로에 v2 응답 예시 | Go2Joy 개발 | P1 | 요청 |
 
 > 10/23 HA UAT 실측: HA가 `identify`에 서명 대신 `hash:"testing"`을 보내고, 허용 외 속성 5개(`hotel_code`·`user_id`·`user_sn`·`district`·`hotel_group_id`)와 `region`=성 이름을 보냅니다(G10). 스테이징은 UAT 진행을 위해 서명 없는 로그인을 임시 허용 중이며, 프로덕션은 서명 전용입니다.
 

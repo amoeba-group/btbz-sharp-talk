@@ -117,5 +117,19 @@
   "hotelAdded": "호텔을 추가했습니다.",
   "hotelSynced": "Go2Joy에서 동기화했습니다.",
   "profileSaved": "저장했습니다.",
-  "companySaveFailed": "저장하지 못했습니다."
+  "companySaveFailed": "저장하지 못했습니다.",
+  "field_rightNowTonight": "지금/오늘 밤",
+  "rightNowTonightText": "{{start}}–{{end}}시 (숙박)",
+  "field_cancelBefore": "취소 시한",
+  "cancelBeforeText": "예약 시각 {{n}}시간 전까지",
+  "provinceRegions": {
+    "label": "지역표",
+    "none": "등록된 성 없음",
+    "synced_line": "{{total}}개 성 · {{at}} 갱신 (Go2Joy)",
+    "manual_line": "{{total}}개 성 · 수동 등록",
+    "sync": "지역표 갱신",
+    "syncing": "갱신 중…",
+    "synced": "지역표 {{total}}개 성 반영 — 새 {{added}} · 변경 {{changed}} · 유지 {{kept}}",
+    "syncFailed": "지역표를 갱신하지 못했습니다"
+  }
 }

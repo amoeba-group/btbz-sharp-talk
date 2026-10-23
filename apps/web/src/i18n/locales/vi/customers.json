@@ -117,5 +117,19 @@
   "hotelAdded": "Đã thêm khách sạn.",
   "hotelSynced": "Đã đồng bộ từ Go2Joy.",
   "profileSaved": "Đã lưu hồ sơ.",
-  "companySaveFailed": "Không lưu được."
+  "companySaveFailed": "Không lưu được.",
+  "field_rightNowTonight": "Ngay bây giờ / tối nay",
+  "rightNowTonightText": "{{start}}–{{end}}h (qua đêm)",
+  "field_cancelBefore": "Hạn hủy",
+  "cancelBeforeText": "Trước giờ đặt {{n}} giờ",
+  "provinceRegions": {
+    "label": "Bảng khu vực",
+    "none": "Chưa có tỉnh/thành",
+    "synced_line": "{{total}} tỉnh/thành · cập nhật {{at}} (Go2Joy)",
+    "manual_line": "{{total}} tỉnh/thành · nhập thủ công",
+    "sync": "Cập nhật bảng khu vực",
+    "syncing": "Đang cập nhật…",
+    "synced": "Đã cập nhật bảng khu vực: {{total}} tỉnh/thành — mới {{added}} · đổi {{changed}} · giữ {{kept}}",
+    "syncFailed": "Không cập nhật được bảng khu vực"
+  }
 }

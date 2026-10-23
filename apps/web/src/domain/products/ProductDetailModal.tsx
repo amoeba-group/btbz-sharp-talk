@@ -22,9 +22,10 @@ function RoomTypeSection({
 }) {
   const { t } = useTranslation('products');
   const images = (room.images ?? []).filter(Boolean);
-  const facilities = (room.facilities ?? [])
-    .map((f) => (f.en && f.en.trim()) || (f.vi && f.vi.trim()) || '')
-    .filter(Boolean);
+  const bilingual = (list: { vi?: string | null; en?: string | null }[] | null | undefined) =>
+    (list ?? []).map((f) => (f.en && f.en.trim()) || (f.vi && f.vi.trim()) || '').filter(Boolean);
+  const facilities = bilingual(room.facilities);
+  const views = bilingual(room.views);
   const flags = [
     room.extraFee && t('ha.flags.extraFee'),
     room.discount && t('ha.flags.discount'),
@@ -93,6 +94,7 @@ function RoomTypeSection({
             '—'
           )}
         </Row>
+        <Row label={t('ha.views')}>{views.length > 0 ? views.join(' · ') : '—'}</Row>
         <Row label={t('ha.facilities')}>
           {facilities.length > 0 ? (
             <ul className="list-disc pl-4">
