@@ -5,7 +5,7 @@
 --   'signed'  — only a SIGNED identify records consent via the host's terms (today's behaviour).
 --   'claimed' — an UNSIGNED identify kept as 'claimed' (tenant on EMBED_UNSIGNED_IDENTIFY_TENANT_IDS)
 --               also records consent. UAT aid before the host can sign; customer/company
---               registration and thread continuity stay signed-only.
+--               registration stays signed-only.
 -- No `AFTER <col>`: a database behind on earlier migrations would refuse it.
 -- Idempotence: guard with `SHOW COLUMNS FROM tenants LIKE 'host_terms_trust'`.
 

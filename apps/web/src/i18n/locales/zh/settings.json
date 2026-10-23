@@ -56,7 +56,7 @@
     "consentSourceWidgetHint": "所有访客都会看到同意横幅,同意后才能聊天。",
     "consentSourceHostHint": "由您的应用签名的登录用户(embed identify)会被记录为已同意(时间和告知版本),不显示横幅。您的条款须涵盖 AI 支持及其处理地区。未签名的访客仍会看到横幅。",
     "hostTermsTrustClaimed": "未签名的登录也视为同意",
-    "hostTermsTrustClaimedHint": "用于宿主应用签名之前的测试。客户/企业登记以及历史会话关联仍仅适用于已签名的登录。",
+    "hostTermsTrustClaimedHint": "用于宿主应用签名之前的测试。客户/企业登记仍仅适用于已签名的登录。",
     "termsUrl": "服务条款 URL",
     "termsUrlHint": "从组件底部的声明行链接（自定义组件 › AI 声明位置）。留空 = 隐私政策 URL。"
   },

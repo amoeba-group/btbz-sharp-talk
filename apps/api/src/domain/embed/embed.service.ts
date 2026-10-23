@@ -219,7 +219,7 @@ export class EmbedService {
     session.identityAttributes = claimedIdentityAttributes(input.userId, input.name, stored.attributes);
     // Host-terms consent for an unsigned user only where the tenant opted in
     // (PLN-261023 host_terms_trust=claimed, a UAT aid): skipping the banner
-    // affects only this browser, unlike a customer record or thread.
+    // affects only this browser, unlike a customer or company record.
     const consentFromHost = tenant?.hostTermsTrust === 'claimed' && grantHostTermsConsent(session, tenant);
     const saved = await this.sessionRepo.save(session);
     await this.redis.del(sessionCacheKey(input.sessionToken));

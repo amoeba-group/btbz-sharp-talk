@@ -106,8 +106,9 @@ export class Tenant {
    * Which host sign-ins count as consent under 'host_terms' (PLN-261023).
    * 'signed' (default) — only a verified identify. 'claimed' — an unsigned
    * identify the tenant is allowed to make (EMBED_UNSIGNED_IDENTIFY_TENANT_IDS)
-   * counts too: a UAT aid before the host signs. Customer/company records and
-   * thread continuity stay signed-only either way.
+   * counts too: a UAT aid before the host signs. Customer/company records stay
+   * signed-only either way (earlier conversations of a claimed user id follow
+   * EMBED_UNSIGNED_IDENTIFY_TENANT_IDS, PLN-261022 P7 — not this switch).
    */
   @Column({ name: 'host_terms_trust', type: 'varchar', length: 16, default: 'signed' })
   hostTermsTrust: string;

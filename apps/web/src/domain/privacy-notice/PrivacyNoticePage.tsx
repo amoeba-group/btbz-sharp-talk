@@ -188,7 +188,7 @@ export function PrivacyNoticePage() {
                   {t(consentSource === 'host_terms' ? 'privacyNotice.consentSourceHostHint' : 'privacyNotice.consentSourceWidgetHint')}
                 </p>
                 {/* PLN-261023: a UAT aid while the host cannot sign yet —
-                    banner only; records and earlier chats stay signed-only. */}
+                    banner only; customer/company records stay signed-only. */}
                 {consentSource === 'host_terms' && (
                   <label className="mt-2 flex items-start gap-2 text-sm text-gray-700">
                     <input
