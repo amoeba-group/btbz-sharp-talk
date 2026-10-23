@@ -341,6 +341,54 @@ export function LiveChatPage() {
   // Knowledge lookup (PLN-260810 S2/S3). Answer lives in component state, not
   // in the conversation: it is the agent checking, not a customer turn.
   const { i18n } = useTranslation();
+  // Translate icon + its language popover, shared by customer and reply turns
+  // (PLN-261023). The popover is `fixed` — see anchorTranslateMenu.
+  const renderTranslateControl = (messageId: string) => (
+    <>
+      <button
+        type="button"
+        onClick={(e) =>
+          setTrMenu(
+            trOpenFor === messageId
+              ? null
+              : anchorTranslateMenu(messageId, e.currentTarget.getBoundingClientRect()),
+          )
+        }
+        aria-label={t('msgActions.translate')}
+        title={t('msgActions.translate')}
+        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+      >
+        <Languages className="h-3.5 w-3.5" />
+      </button>
+      {/* One-click language popover (AmoebaTalk mirror). */}
+      {trMenu?.id === messageId && (
+        <div
+          role="menu"
+          style={trMenu.style}
+          className="fixed z-50 w-40 rounded-lg border border-gray-200 bg-white p-1 shadow-lg"
+        >
+          <p className="px-2 py-1 text-[10px] font-medium text-gray-400">
+            {t('msgActions.translateTitle')}
+          </p>
+          {LANGUAGES.map((l) => (
+            <button
+              key={l.code}
+              type="button"
+              onClick={() => onTranslate(messageId, l.code)}
+              className={cn(
+                'block w-full rounded px-2 py-1 text-left text-xs hover:bg-gray-50',
+                l.code === (i18n.language || 'en').slice(0, 2)
+                  ? 'font-semibold text-primary-600'
+                  : 'text-gray-700',
+              )}
+            >
+              {l.nativeLabel}
+            </button>
+          ))}
+        </div>
+      )}
+    </>
+  );
   const askKnowledge = useAskKnowledge();
   const proposeAnswer = useProposeAnswer();
   const [kbQuestion, setKbQuestion] = useState('');
@@ -982,9 +1030,15 @@ export function LiveChatPage() {
                         )}
                       >
                         {outbound && (
-                          <span className="shrink-0 text-[11px] text-gray-400">
-                            {clockTime(m.createdAt)}
-                          </span>
+                          <>
+                            {/* Reply turns translate too (PLN-261023) — console-only. */}
+                            <div className="relative flex shrink-0 items-center self-center opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                              {renderTranslateControl(m.id)}
+                            </div>
+                            <span className="shrink-0 text-[11px] text-gray-400">
+                              {clockTime(m.createdAt)}
+                            </span>
+                          </>
                         )}
                       <div
                         className={cn(
@@ -1042,93 +1096,57 @@ export function LiveChatPage() {
                           />
                         )}
                       </div>
-                        {/* Hover actions on customer turns (PLN-260826 R2~R5),
-                            hidden while the AI is auto-answering (D2). */}
-                        {m.senderType === 'user' && msgActionsVisible && (
+                        {/* Hover actions on customer turns (PLN-260826 R2~R5). Translate
+                            is read-only and always offered (PLN-261023 D2); the other three
+                            hide while the AI is auto-answering (PLN-260826 D2). */}
+                        {m.senderType === 'user' && (
                           <div className="relative flex shrink-0 items-center gap-0.5 self-center opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
-                            <button
-                              type="button"
-                              onClick={(e) =>
-                                setTrMenu(
-                                  trOpenFor === m.id
-                                    ? null
-                                    : anchorTranslateMenu(m.id, e.currentTarget.getBoundingClientRect()),
-                                )
-                              }
-                              aria-label={t('msgActions.translate')}
-                              title={t('msgActions.translate')}
-                              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                            >
-                              <Languages className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setKbQuestion(m.body);
-                                kbInputRef.current?.scrollIntoView({
-                                  behavior: 'smooth',
-                                  block: 'center',
-                                });
-                                kbInputRef.current?.focus({ preventScroll: true });
-                              }}
-                              aria-label={t('msgActions.knowledge')}
-                              title={t('msgActions.knowledge')}
-                              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                            >
-                              <BookOpen className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setQuote({ messageId: m.id, excerpt: m.body.replace(/\s+/g, ' ').trim().slice(0, 80) })}
-                              aria-label={t('msgActions.reply')}
-                              title={t('msgActions.reply')}
-                              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                            >
-                              <Reply className="h-3.5 w-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setIssueTarget({
-                                  messageId: m.id,
-                                  excerpt: m.body.replace(/\s+/g, ' ').trim().slice(0, 120),
-                                });
-                                setIssueType('other');
-                                setIssueMemo('');
-                                setIssueOpen(true);
-                              }}
-                              aria-label={t('msgActions.fileIssue')}
-                              title={t('msgActions.fileIssue')}
-                              className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                            >
-                              <ClipboardPlus className="h-3.5 w-3.5" />
-                            </button>
-                            {/* One-click language popover (AmoebaTalk mirror). */}
-                            {trMenu?.id === m.id && (
-                              <div
-                                role="menu"
-                                style={trMenu.style}
-                                className="fixed z-50 w-40 rounded-lg border border-gray-200 bg-white p-1 shadow-lg"
-                              >
-                                <p className="px-2 py-1 text-[10px] font-medium text-gray-400">
-                                  {t('msgActions.translateTitle')}
-                                </p>
-                                {LANGUAGES.map((l) => (
-                                  <button
-                                    key={l.code}
-                                    type="button"
-                                    onClick={() => onTranslate(m.id, l.code)}
-                                    className={cn(
-                                      'block w-full rounded px-2 py-1 text-left text-xs hover:bg-gray-50',
-                                      l.code === (i18n.language || 'en').slice(0, 2)
-                                        ? 'font-semibold text-primary-600'
-                                        : 'text-gray-700',
-                                    )}
-                                  >
-                                    {l.nativeLabel}
-                                  </button>
-                                ))}
-                              </div>
+                            {renderTranslateControl(m.id)}
+                            {msgActionsVisible && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setKbQuestion(m.body);
+                                    kbInputRef.current?.scrollIntoView({
+                                      behavior: 'smooth',
+                                      block: 'center',
+                                    });
+                                    kbInputRef.current?.focus({ preventScroll: true });
+                                  }}
+                                  aria-label={t('msgActions.knowledge')}
+                                  title={t('msgActions.knowledge')}
+                                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                                >
+                                  <BookOpen className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setQuote({ messageId: m.id, excerpt: m.body.replace(/\s+/g, ' ').trim().slice(0, 80) })}
+                                  aria-label={t('msgActions.reply')}
+                                  title={t('msgActions.reply')}
+                                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                                >
+                                  <Reply className="h-3.5 w-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIssueTarget({
+                                      messageId: m.id,
+                                      excerpt: m.body.replace(/\s+/g, ' ').trim().slice(0, 120),
+                                    });
+                                    setIssueType('other');
+                                    setIssueMemo('');
+                                    setIssueOpen(true);
+                                  }}
+                                  aria-label={t('msgActions.fileIssue')}
+                                  title={t('msgActions.fileIssue')}
+                                  className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                                >
+                                  <ClipboardPlus className="h-3.5 w-3.5" />
+                                </button>
+                              </>
                             )}
                           </div>
                         )}
@@ -1139,12 +1157,18 @@ export function LiveChatPage() {
                         )}
                       </div>
                       {/* Inline translations, stacked per language (R2). The
-                          original stays — this is a console-only sub-bubble. */}
-                      {m.senderType === 'user' &&
+                          original stays — this is a console-only sub-bubble,
+                          on the same side as the turn it translates. */}
+                      {m.senderType !== 'system' &&
                         (translations[m.id] ||
                           (translateMsg.isPending &&
                             translateMsg.variables?.messageId === m.id)) && (
-                          <div className="mt-1 space-y-1">
+                          <div
+                            className={cn(
+                              'mt-1 flex flex-col gap-1',
+                              outbound ? 'items-end' : 'items-start',
+                            )}
+                          >
                             {Object.entries(translations[m.id] ?? {}).map(([lg, text]) => (
                               <div
                                 key={lg}
@@ -1174,7 +1198,7 @@ export function LiveChatPage() {
                                     <X className="h-3 w-3" />
                                   </button>
                                 </div>
-                                <div className="whitespace-pre-wrap">{text}</div>
+                                <MessageBody text={text} raw={m.senderType === 'user'} />
                               </div>
                             ))}
                             {translateMsg.isPending &&
