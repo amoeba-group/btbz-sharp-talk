@@ -92,6 +92,12 @@ export const en = {
       returns: 'Return or exchange',
       agent: 'Talk to an agent',
     },
+    // Consult-category picker (PLN-261024).
+    consultCategory: {
+      title: 'What do you need help with?',
+      titleAfter: "Pick a topic and we'll connect you to the right person",
+      skip: 'Skip',
+    },
     connectAgent: 'Connect to an agent',
     consent: {
       title: 'Privacy notice',

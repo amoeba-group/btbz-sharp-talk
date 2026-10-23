@@ -44,7 +44,6 @@ function build(opts: {
   rules?: Array<{ name?: string; regions?: string[] }>;
   units?: Array<{ name: string; regions: string[] | null }>;
   labels?: Array<{ name: string; regions: string[] | null }>;
-  companies?: Array<{ region: string; n: string }>;
 }) {
   const repo = categoryRepo(opts.categories ?? []);
   const aiConfigRepo = {
@@ -52,17 +51,12 @@ function build(opts: {
   };
   const unitRepo = { find: jest.fn(async () => opts.units ?? []) };
   const labelRepo = { find: jest.fn(async () => opts.labels ?? []) };
-  const qb: Record<string, jest.Mock> = {};
-  for (const m of ['select', 'addSelect', 'where', 'andWhere', 'groupBy']) qb[m] = jest.fn(() => qb);
-  qb.getRawMany = jest.fn(async () => opts.companies ?? []);
-  const companyRepo = { createQueryBuilder: jest.fn(() => qb) };
   const audit = { write: jest.fn(async () => undefined) };
   const svc = new RoutingCategoryService(
     repo as never,
     aiConfigRepo as never,
     unitRepo as never,
     labelRepo as never,
-    companyRepo as never,
     audit as never,
   );
   return { svc, repo, audit };
@@ -88,15 +82,14 @@ describe('RoutingCategoryService (PLN-261024)', () => {
       rules: [{ name: 'North · booking', regions: ['North'] }, { regions: ['south_center'] }],
       units: [{ name: 'HN team', regions: ['north'] }],
       labels: [{ name: 'Consult', regions: ['north', 'south'] }],
-      companies: [{ region: 'north', n: '3' }],
     });
     const list = await svc.list(1);
     expect(list.map((c) => c.code)).toEqual(['north', 'south']);
     expect(list[0]).toMatchObject({
       name: 'Hà Nội',
-      usage: { rules: ['North · booking'], units: ['HN team'], labels: ['Consult'], companies: 3 },
+      usage: { rules: ['North · booking'], units: ['HN team'], labels: ['Consult'] },
     });
-    expect(list[1].usage).toEqual({ rules: [], units: [], labels: ['Consult'], companies: 0 });
+    expect(list[1].usage).toEqual({ rules: [], units: [], labels: ['Consult'] });
   });
 
   it('create folds the code, appends at the end and audits; duplicates are E5108, bad shapes E5003', async () => {
@@ -168,5 +161,26 @@ describe('RoutingCategoryService (PLN-261024)', () => {
     await expect(svc.assertCodes(1, ['North Center', 'north_central'])).resolves.toEqual(['north_center']);
     await expect(svc.assertCodes(1, [])).resolves.toEqual([]);
     expect(await codeOf(svc.assertCodes(1, ['south']))).toBe('E5109');
+  });
+
+  it('visible + per-language names: new rows are offered by default, the widget label follows the session language (PLN-261024)', async () => {
+    const { svc, repo } = build({ categories: [{ tenantId: 1, code: 'internal', name: '내부', sortOrder: 10 }] });
+    const created = await svc.create(1, 9, 'payment', '결제', { names: { vi: ' Thanh toán ', en: 'Payment', xx: 'drop', ja: '' } });
+    expect(created).toMatchObject({ visible: true, names: { en: 'Payment', vi: 'Thanh toán' } });
+    const hidden = await svc.create(1, 9, 'refund', '', { visible: false });
+    expect(hidden).toMatchObject({ visible: false, names: null });
+    // `internal` was seeded hidden (column default 0).
+    repo.rows[0].visible = 0;
+    expect(await svc.visibleFor(1, 'VI')).toEqual([{ code: 'payment', label: 'Thanh toán' }]);
+    expect(await svc.visibleFor(1, 'ko')).toEqual([{ code: 'payment', label: '결제' }]);
+    // Turning visibility on/off and clearing names go through update.
+    await svc.update(1, 9, [{ id: hidden.id, visible: true }, { id: created.id, names: {} }]);
+    expect(await svc.visibleFor(1, 'en')).toEqual([
+      { code: 'payment', label: '결제' },
+      { code: 'refund', label: 'refund' },
+    ]);
+    expect(await svc.visibleRow(1, 'Refund')).toMatchObject({ code: 'refund' });
+    expect(await svc.visibleRow(1, 'internal')).toBeNull();
+    expect(await svc.visibleRow(2, 'refund')).toBeNull();
   });
 });

@@ -66,12 +66,12 @@
   "scopeTitle": "담당 범위",
   "scopeNone": "담당 범위 없음",
   "scopeEdit": "범위 설정",
-  "scopeRegions": "카테고리",
+  "scopeRegions": "상담카테고리",
   "scopeProvinces": "성·시",
   "scopeProvincePh": "성·시 이름 입력 또는 선택",
   "scopeAdd": "추가",
   "scopeSaved": "{{name}} 담당 범위를 저장했습니다",
   "scopeSaveError": "담당 범위를 저장하지 못했습니다",
-  "scopeHint": "배정 규칙의 \"카테고리 담당자에게 배정\"은 팀·라벨의 담당 범위가 대화의 성·시(우선) 또는 카테고리와 맞는 상담원을 고릅니다.",
-  "scopeNoCategories": "카테고리가 없습니다 — 설정 › 상담원 연결 › 카테고리 관리에서 추가하세요"
+  "scopeHint": "배정 규칙의 \"상담카테고리 담당자에게 배정\"은 팀·라벨의 담당 범위가 고객이 고른 상담카테고리 또는 성·시(우선)와 맞는 상담원을 고릅니다.",
+  "scopeNoCategories": "상담카테고리가 없습니다 — 설정 › 상담원 연결 › 상담카테고리 관리에서 추가하세요"
 }

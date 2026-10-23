@@ -15,6 +15,8 @@
  * Browser bundles import this file directly (a value import from the package
  * root fails the Vite build), the same way language.ts is consumed.
  */
+import { REGION_CODES } from './region';
+
 export const ROUTING_CONDITION_FIELDS = [
   { field: 'language', kind: 'enum', op: 'in', source: 'session' },
   { field: 'identity_level', kind: 'enum', op: 'in', source: 'session' },
@@ -23,6 +25,11 @@ export const ROUTING_CONDITION_FIELDS = [
   { field: 'customer_type', kind: 'enum', op: 'in', source: 'customer' },
   { field: 'hotel_id', kind: 'text', op: 'in', source: 'identity' },
   { field: 'hotel_name', kind: 'text', op: 'contains', source: 'identity' },
+  // Region (north … south) the host signs (PLN-261024 consult categories): it
+  // used to be the rules' own region axis; that axis is now the shopper-picked
+  // consult category, so region is read as customer information. Compared in
+  // canonical form (`canonicalRegion`).
+  { field: 'region', kind: 'enum', op: 'in', source: 'identity' },
   { field: 'province', kind: 'text', op: 'contains', source: 'identity' },
   { field: 'role', kind: 'text', op: 'in', source: 'identity' },
   { field: 'landing_path', kind: 'text', op: 'contains', source: 'session' },
@@ -43,6 +50,7 @@ export const ROUTING_CONDITION_ENUM_VALUES: Readonly<Partial<Record<RoutingCondi
   identity_level: ['guest', 'verified', 'claimed'],
   customer_tier: ['guest', 'subscriber', 'regular'],
   customer_type: ['b2c', 'b2b_contact'],
+  region: REGION_CODES,
 };
 
 export function routingConditionDef(field: string): RoutingConditionDef | undefined {

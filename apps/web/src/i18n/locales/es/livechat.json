@@ -41,6 +41,7 @@
   "alarmReasonLowConfidence": "La IA no encontró una respuesta en la base de conocimiento.",
   "alarmReasonModeration": "La respuesta de la IA fue bloqueada por moderación.",
   "alarmReasonUserRequest": "El cliente pidió hablar con un agente.",
+  "alarmReasonCategory": "El cliente eligió una categoría de consulta y se redirigió a su equipo.",
   "alarmOpen": "Abrir chat",
   "alarmDismiss": "Descartar",
   "listSearchPlaceholder": "Buscar por nombre o email del cliente",
@@ -524,5 +525,6 @@
     "autoJoinOff": "Ya no se añadirán sesiones nuevas",
     "removed": "Sesión retirada de la sala",
     "dissolved": "Unificación deshecha — las conversaciones vuelven a estar como antes"
-  }
+  },
+  "consultCategoryBadge": "Consulta: {{name}}"
 }

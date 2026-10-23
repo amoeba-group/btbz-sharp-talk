@@ -142,6 +142,12 @@ export interface SessionResponse {
    * (`GET /chat/thread`, PLN-261022 stage 2). Optional: absent = no.
    */
   threadAvailable?: boolean;
+  /**
+   * Consult categories the shopper may pick when asking for an agent or after
+   * the AI hands off (PLN-261024), in order, labelled in the session language.
+   * Empty/absent = no picker: the widget connects straight away as before.
+   */
+  consultCategories?: Array<{ code: string; label: string }>;
 }
 
 // ---- chat ---------------------------------------------------------------
@@ -258,6 +264,7 @@ export interface ChatTurnResponse {
      */
     messageId?: string;
   } | null;
+  /** True when this turn handed the conversation to a human (the widget then offers the consult-category picker). */
   escalate: boolean;
   needsAuth: boolean;
   /**

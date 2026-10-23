@@ -161,19 +161,19 @@
     "denyModeHint": "\"No answer\" hands the thread to a person without replying. \"Answer, then hand off\" replies from the knowledge base first and still hands it over — the agent is paged either way.",
     "denyModeLabel": "What the customer hears",
     "routing": {
-      "title": "Routing rules — category × topic",
-      "hint": "Checked top to bottom; the first rule whose filters all match decides who is paged. An empty filter means any. No match → the agents above.",
+      "title": "Routing rules — consult category × topic",
+      "hint": "Checked top to bottom; the first rule whose consult category, topic and customer information all match is sent to its agent group (team × label). An empty filter means any. The consult category is what the customer picked in the widget; a customer who picked none only matches rules without one. No match → the agents above.",
       "namePh": "Rule name (e.g. North · bookings)",
       "mode": "Assignment",
       "modes": {
         "least_loaded": "Least busy online agent",
         "broadcast": "Alert the whole group"
       },
-      "regions": "Category",
+      "regions": "Consult category",
       "topic": "Topic",
       "keywordsPh": "Keywords in the message, comma-separated (empty = any)",
       "agents": "Agents",
-      "any": "Any category",
+      "any": "Any consult category",
       "noAssignee": "Pick at least one agent — rules without agents are not saved",
       "add": "Add rule",
       "region": {
@@ -202,7 +202,8 @@
           "province": "Province",
           "role": "Role",
           "landing_path": "Landing path",
-          "customer_type": "Customer type"
+          "customer_type": "Customer type",
+          "region": "Region"
         },
         "value": {
           "identity_level": {
@@ -218,6 +219,13 @@
           "customer_type": {
             "b2c": "Consumer",
             "b2b_contact": "Business contact"
+          },
+          "region": {
+            "north": "North",
+            "north_center": "North Center",
+            "central": "Central",
+            "south_center": "South Center",
+            "south": "South"
           }
         }
       },
@@ -235,20 +243,20 @@
         "people": "People",
         "needOne": "Pick a person or a group — rules without agents are not saved",
         "manageLink": "Manage labels & units →",
-        "byRegion": "Assign to category owners",
-        "byRegionHint": "Pages active people whose team or labels cover the conversation's province (first) or category. Units/labels below narrow the pool.",
+        "byRegion": "Assign to consult-category owners",
+        "byRegionHint": "Pages active people whose team or labels cover the customer's consult category or province (province first). Units/labels below narrow the pool.",
         "byRegionFilters": "Narrow by (optional)",
-        "byRegionPreview": "Candidates by category:",
+        "byRegionPreview": "Candidates by consult category:",
         "byRegionNoneWarn": "no one → next rule",
-        "byRegionScopeLink": "Set team/label categories"
+        "byRegionScopeLink": "Set team/label consult categories"
       },
       "regionOther": "Not in list",
       "categories": {
-        "manage": "Manage categories",
-        "title": "Manage categories",
-        "hint": "A conversation is in a category when its category value (the region the host app signs into the login) equals the code. The code is fixed once created; the name and order can change any time. If the host app sends no such value, rules with a category filter never match.",
-        "empty": "No categories yet. Add one below.",
-        "none": "No categories",
+        "manage": "Manage consult categories",
+        "title": "Manage consult categories",
+        "hint": "Visible consult categories appear in the widget when a customer asks for an agent or the AI hands off, and the one the customer picks selects the routing rule. The code is fixed once created; name, visibility, per-language names and order can change any time.",
+        "empty": "No consult categories yet. Add one below.",
+        "none": "No consult categories",
         "code": "Code",
         "codePh": "Code (letters, digits, _)",
         "name": "Name",
@@ -259,18 +267,22 @@
         "add": "Add",
         "save": "Save changes",
         "confirmDelete": "Confirm delete",
-        "usage": "Rules {{rules}} · Teams {{units}} · Labels {{labels}} · Companies {{companies}}",
-        "inUseHint": "A category in use cannot be deleted",
-        "created": "Added category \"{{name}}\"",
-        "saved": "Saved category changes",
-        "deleted": "Deleted category \"{{name}}\"",
-        "saveError": "Could not save the category",
-        "deleteError": "Could not delete the category",
+        "usage": "Rules {{rules}} · Teams {{units}} · Labels {{labels}}",
+        "inUseHint": "A consult category in use cannot be deleted",
+        "created": "Added consult category \"{{name}}\"",
+        "saved": "Saved consult category changes",
+        "deleted": "Deleted consult category \"{{name}}\"",
+        "saveError": "Could not save the consult category",
+        "deleteError": "Could not delete the consult category",
         "inUse": "In use, so it cannot be deleted — {{where}}",
         "whereRule": "rule \"{{name}}\"",
         "whereUnit": "team \"{{name}}\"",
         "whereLabel": "label \"{{name}}\"",
-        "whereCompanies": "{{count}} companies"
+        "visible": "Shown",
+        "hidden": "Hidden",
+        "newVisible": "Show to customers",
+        "names": "Per-language names",
+        "visibleHint": "Shown to customers in the widget"
       }
     },
     "reAlert": {

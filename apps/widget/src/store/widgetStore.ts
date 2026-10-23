@@ -98,6 +98,8 @@ interface WidgetState {
   issueFeed: boolean;
   /** The signed-in account's earlier conversations can be loaded (PLN-261022 stage 2). */
   threadAvailable: boolean;
+  /** Consult categories offered when the shopper asks for an agent (PLN-261024); empty = connect directly. */
+  consultCategories: Array<{ code: string; label: string }>;
   /**
    * Tenant has orders to look up (PLN-261001). False = a hotel partner desk or
    * B2B help desk: reply chips come from the tenant's scenario buttons. Seeded
@@ -121,6 +123,7 @@ interface WidgetState {
   setWidgetCopy: (c: WidgetCopy | null) => void;
   setIssueFeed: (v: boolean) => void;
   setThreadAvailable: (v: boolean) => void;
+  setConsultCategories: (v: Array<{ code: string; label: string }>) => void;
   setCommerceEnabled: (v: boolean) => void;
   setCustomerName: (n: string | null) => void;
   /** Tenant theme, for the parts that are markup rather than CSS (logo, launcher). */
@@ -187,6 +190,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   tabsResolved: false,
   issueFeed: false,
   threadAvailable: false,
+  consultCategories: [],
   commerceEnabled: true,
   chatUnread: 0,
   setSessionToken: (t) => {
@@ -203,6 +207,7 @@ export const useWidgetStore = create<WidgetState>()((set, get) => ({
   setWidgetCopy: (c) => set({ widgetCopy: c }),
   setIssueFeed: (v) => set({ issueFeed: v }),
   setThreadAvailable: (v) => set({ threadAvailable: v }),
+  setConsultCategories: (v) => set({ consultCategories: v }),
   setCommerceEnabled: (v) => set({ commerceEnabled: v }),
   setCustomerName: (n) => set({ customerName: n }),
   widgetTheme: null,

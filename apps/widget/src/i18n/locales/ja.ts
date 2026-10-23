@@ -80,6 +80,12 @@ export const ja: Translation = {
       returns: '返品・交換',
       agent: '担当者と話す',
     },
+    // Consult-category picker (PLN-261024).
+    consultCategory: {
+      title: 'どのようなご相談ですか？',
+      titleAfter: '内容を選ぶと、より適切な担当者におつなぎします',
+      skip: 'スキップ',
+    },
     connectAgent: '担当者につなぐ',
     consent: {
       title: 'プライバシーに関するお知らせ',

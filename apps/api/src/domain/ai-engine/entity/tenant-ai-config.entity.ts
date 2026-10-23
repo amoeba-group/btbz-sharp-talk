@@ -148,7 +148,11 @@ export type RoutingMode = (typeof ROUTING_MODE)[keyof typeof ROUTING_MODE];
 export interface RoutingRule {
   /** Operator's own name for the rule, shown in the console and the logs. */
   name?: string;
-  /** Signed session region (identity_attributes.region); empty = any region. */
+  /**
+   * Consult category codes (PLN-261024; key name kept from the region axis it
+   * replaced) matched against the shopper's pick; empty = any. Region is now a
+   * customer-information condition (`conditions[].field = 'region'`).
+   */
   regions?: string[];
   /** Substring match on the customer's message; empty = any topic. */
   keywords?: string[];

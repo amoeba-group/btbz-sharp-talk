@@ -32,6 +32,14 @@ export class RoutingCategory {
   @Column({ name: 'sort_order', type: 'int', default: 0 })
   sortOrder: number;
 
+  /** Offered to the shopper in the widget when an agent is requested (PLN-261024 consult categories). */
+  @Column({ type: 'tinyint', width: 1, default: 0 })
+  visible: number;
+
+  /** Per-language display names for the widget ({en,es,ko,vi,ja,zh}); missing → `name`. */
+  @Column({ type: 'json', nullable: true })
+  names: Record<string, string> | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

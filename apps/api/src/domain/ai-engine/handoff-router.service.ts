@@ -28,8 +28,14 @@ export interface HandoffRoute {
 
 /** What routing may look at (PLN-261015 D3, PLN-261019 P4). All optional. */
 export interface RoutingContext {
-  /** Signed session region — `sessions.identity_attributes.region`. */
+  /** Signed session region — `sessions.identity_attributes.region`; read by the `region` condition. */
   region?: string | null;
+  /**
+   * The consult category the shopper picked (PLN-261024). The rules' category
+   * filter (`rule.regions`, stored key kept) matches this only — a shopper who
+   * skipped the picker never satisfies a rule that names a category.
+   */
+  consultCategory?: string | null;
   /** The customer's message that triggered the handoff. */
   text?: string | null;
   /** Deny-rule label stamp, when a deny rule forced the handoff. */
@@ -64,6 +70,8 @@ function conditionValue(ctx: RoutingContext, field: RoutingConditionField): stri
       return ctx.customerType ?? null;
     case 'landing_path':
       return ctx.landingPath ?? null;
+    case 'region':
+      return canonicalRegion(ctx.region ?? ctx.identityAttributes?.region) || null;
     case 'hotel_id':
     case 'hotel_name':
     case 'province':
@@ -80,14 +88,16 @@ function conditionValue(ctx: RoutingContext, field: RoutingConditionField): stri
  * condition we cannot read would page the wrong team silently (REQ D6).
  */
 export function conditionHolds(cond: RoutingCondition, ctx: RoutingContext): boolean {
-  const values = (cond?.values ?? []).map(norm).filter(Boolean);
-  if (!values.length) return true;
   const def = routingConditionDef(String(cond?.field));
+  // Region values fold like the session value ("North Center" = north_center).
+  const fold = def?.field === 'region' ? canonicalRegion : norm;
+  const values = (cond?.values ?? []).map(fold).filter(Boolean);
+  if (!values.length) return true;
   if (!def) {
     ruleLogger.warn(`routing condition field '${String(cond?.field)}' is not in the catalog — rule skipped`);
     return false;
   }
-  const actual = norm(conditionValue(ctx, def.field));
+  const actual = fold(conditionValue(ctx, def.field));
   if (!actual) return false;
   return def.op === 'contains' ? values.some((v) => actual.includes(v)) : values.includes(actual);
 }
@@ -116,9 +126,9 @@ export interface RoutingRuleHit {
  * fallback. Pure — tested directly.
  */
 export function matchRoutingRules(rules: RoutingRule[] | undefined, ctx: RoutingContext): RoutingRuleHit[] {
-  // Canonical on both sides (PLN-261022): "North Center", "north_central" and
-  // `north_center` are one region, so a rule written once matches every spelling.
-  const region = canonicalRegion(ctx.region);
+  // The category filter matches the shopper's pick only (PLN-261024 D3), folded
+  // the same way on both sides so a rule written once matches every spelling.
+  const category = canonicalRegion(ctx.consultCategory);
   const text = norm(ctx.text);
   const label = norm(ctx.label);
   const hits: RoutingRuleHit[] = [];
@@ -130,8 +140,8 @@ export function matchRoutingRules(rules: RoutingRule[] | undefined, ctx: Routing
       byRegion: rule?.assigneeByRegion === true,
     });
     if (!assigneeUserIds.length && !hasGroup) continue;
-    const regions = (rule.regions ?? []).map(canonicalRegion).filter(Boolean);
-    if (regions.length && !regions.includes(region)) continue;
+    const categories = (rule.regions ?? []).map(canonicalRegion).filter(Boolean);
+    if (categories.length && !categories.includes(category)) continue;
     const keywords = (rule.keywords ?? []).map(norm).filter(Boolean);
     if (keywords.length && !keywords.some((k) => text.includes(k))) continue;
     const labels = (rule.labels ?? []).map(norm).filter(Boolean);
@@ -246,7 +256,7 @@ export class HandoffRouterService {
           `${hit.rule.assigneeByRegion ? `×byRegion match=${resolved.match ?? 'none'}` : ''}) ${group.length}`
         : '';
       this.logger.log(
-        `handoff routed by rule ${ruleName} (tenant ${tenantId}, region ${ctx.region ?? '-'}${conds ? `, ${conds}` : ''}, explicit ${hit.assigneeUserIds.length}${groupDesc} → ${targets.length} agent(s))`,
+        `handoff routed by rule ${ruleName} (tenant ${tenantId}, category ${ctx.consultCategory ?? '-'}, region ${ctx.region ?? '-'}${conds ? `, ${conds}` : ''}, explicit ${hit.assigneeUserIds.length}${groupDesc} → ${targets.length} agent(s))`,
       );
       return {
         mode: 'agents',
@@ -264,7 +274,8 @@ export class HandoffRouterService {
       return await this.assignees.resolveDetailed(
         tenantId,
         { unitIds: rule.assigneeUnitIds, labelCodes: rule.assigneeLabelCodes, byRegion: rule.assigneeByRegion === true },
-        { region: ctx.region ?? null, province: ctx.identityAttributes?.province ?? null },
+        // Scopes cover consult categories and provinces (PLN-261024): the pick, then the place.
+        { region: ctx.consultCategory ?? null, province: ctx.identityAttributes?.province ?? null },
       );
     } catch (err) {
       this.logger.warn(`assignee group resolution failed (tenant ${tenantId}): ${(err as Error).message}`);

@@ -1,8 +1,9 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Logger, Optional, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { SessionService } from './session.service';
 import { SessionMapper } from './session.mapper';
+import { RoutingCategoryService } from '../routing-category/routing-category.service';
 import {
   ConsentRequest,
   EnsureSessionRequest,
@@ -15,7 +16,13 @@ import { Public } from '../../global/decorator/public.decorator';
 @ApiTags('Session')
 @Controller('session')
 export class SessionController {
-  constructor(private readonly sessionService: SessionService) {}
+  private readonly logger = new Logger(SessionController.name);
+
+  constructor(
+    private readonly sessionService: SessionService,
+    /** Consult categories offered in the widget (PLN-261024); optional for older specs. */
+    @Optional() private readonly consultCategories?: RoutingCategoryService,
+  ) {}
 
   @Post('ensure')
   @Public()
@@ -33,7 +40,23 @@ export class SessionController {
       body.language_chosen === true,
     );
     const notice = await this.sessionService.privacyNotice(s.tenantId, s.aiAgentId, s.language);
-    return SessionMapper.toResponse(s, notice, await this.sessionService.customerDisplayName(s));
+    return SessionMapper.toResponse(
+      s,
+      notice,
+      await this.sessionService.customerDisplayName(s),
+      await this.offeredCategories(s.tenantId, s.language),
+    );
+  }
+
+  /** The picker list, or none — a failed read must never fail the session (the widget connects directly). */
+  private async offeredCategories(tenantId: number | null, language: string): Promise<Array<{ code: string; label: string }>> {
+    if (tenantId == null || !this.consultCategories) return [];
+    try {
+      return await this.consultCategories.visibleFor(tenantId, language);
+    } catch (err) {
+      this.logger.warn(`consult categories unavailable (tenant ${tenantId}): ${(err as Error).message}`);
+      return [];
+    }
   }
 
   /**

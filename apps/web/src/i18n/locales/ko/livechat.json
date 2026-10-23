@@ -41,6 +41,7 @@
   "alarmReasonLowConfidence": "AI가 지식 베이스에서 답변을 찾지 못했습니다.",
   "alarmReasonModeration": "AI 답변이 모더레이션에 의해 차단되었습니다.",
   "alarmReasonUserRequest": "고객이 상담원 연결을 요청했습니다.",
+  "alarmReasonCategory": "고객이 상담카테고리를 골라 해당 담당 그룹으로 다시 연결되었습니다.",
   "alarmOpen": "상담 열기",
   "alarmDismiss": "닫기",
   "listSearchPlaceholder": "고객명 또는 이메일 검색",
@@ -524,5 +525,6 @@
     "autoJoinOff": "새 세션을 더 이상 추가하지 않습니다",
     "removed": "세션을 통합 대화방에서 뺐습니다",
     "dissolved": "통합을 해제했습니다 — 대화는 원래대로 돌아갑니다"
-  }
+  },
+  "consultCategoryBadge": "상담: {{name}}"
 }

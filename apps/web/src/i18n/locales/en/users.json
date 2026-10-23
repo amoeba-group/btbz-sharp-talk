@@ -66,12 +66,12 @@
   "scopeTitle": "Coverage",
   "scopeNone": "No coverage",
   "scopeEdit": "Set coverage",
-  "scopeRegions": "Categories",
+  "scopeRegions": "Consult categories",
   "scopeProvinces": "Provinces / cities",
   "scopeProvincePh": "Type or pick a province",
   "scopeAdd": "Add",
   "scopeSaved": "Saved what {{name}} covers",
   "scopeSaveError": "Could not save the coverage",
-  "scopeHint": "Routing rules set to \"assign to category owners\" page the people whose team or labels cover the conversation's province (first) or category.",
-  "scopeNoCategories": "No categories — add them in Settings › Agent handoff › Manage categories"
+  "scopeHint": "Routing rules set to \"assign to consult-category owners\" page the people whose team or labels cover the consult category the customer picked or their province (first).",
+  "scopeNoCategories": "No consult categories — add them in Settings › Agent handoff › Manage consult categories"
 }

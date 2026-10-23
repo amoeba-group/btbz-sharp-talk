@@ -161,19 +161,19 @@
     "denyModeHint": "\"Sin respuesta\" deriva a una persona sin contestar. \"Responder y derivar\" contesta desde la base de conocimiento y deriva igualmente: el agente recibe el aviso en ambos casos.",
     "denyModeLabel": "Qué escucha el cliente",
     "routing": {
-      "title": "Reglas de asignación — categoría × tema",
-      "hint": "Se revisan de arriba abajo; la primera regla que cumple todos los filtros decide a quién se avisa. Un filtro vacío significa cualquiera. Sin coincidencia → los agentes de arriba.",
+      "title": "Reglas de asignación — categoría de consulta × tema",
+      "hint": "Se revisan de arriba abajo; la primera regla cuya categoría de consulta, tema e información del cliente coinciden envía la conversación a su grupo de agentes (equipo × etiqueta). Un filtro vacío significa cualquiera. La categoría de consulta es la que el cliente eligió en el widget; quien no eligió ninguna solo coincide con reglas sin categoría. Sin coincidencia → los agentes de arriba.",
       "namePh": "Nombre de la regla (p. ej. Norte · reservas)",
       "mode": "Asignación",
       "modes": {
         "least_loaded": "Agente conectado menos ocupado",
         "broadcast": "Avisar a todo el grupo"
       },
-      "regions": "Categoría",
+      "regions": "Categoría de consulta",
       "topic": "Tema",
       "keywordsPh": "Palabras clave del mensaje, separadas por comas (vacío = cualquiera)",
       "agents": "Agentes",
-      "any": "Cualquier categoría",
+      "any": "Cualquier categoría de consulta",
       "noAssignee": "Elige al menos un agente: las reglas sin agentes no se guardan",
       "add": "Añadir regla",
       "region": {
@@ -202,7 +202,8 @@
           "province": "Provincia",
           "role": "Rol",
           "landing_path": "Ruta de entrada",
-          "customer_type": "Tipo de cliente"
+          "customer_type": "Tipo de cliente",
+          "region": "Región"
         },
         "value": {
           "identity_level": {
@@ -218,6 +219,13 @@
           "customer_type": {
             "b2c": "Consumidor",
             "b2b_contact": "Contacto de empresa"
+          },
+          "region": {
+            "north": "Norte",
+            "north_center": "Centro-norte",
+            "central": "Centro",
+            "south_center": "Centro-sur",
+            "south": "Sur"
           }
         }
       },
@@ -235,20 +243,20 @@
         "people": "Personas",
         "needOne": "Elija una persona o un grupo — las reglas sin agentes no se guardan",
         "manageLink": "Gestionar etiquetas y equipos →",
-        "byRegion": "Asignar a responsables de la categoría",
-        "byRegionHint": "Avisa a las personas activas cuyo equipo o etiquetas cubren la provincia (primero) o la categoría de la conversación. Los equipos/etiquetas de abajo acotan el grupo.",
+        "byRegion": "Asignar a responsables de la categoría de consulta",
+        "byRegionHint": "Avisa a las personas activas cuyo equipo o etiquetas cubren la categoría de consulta elegida o la provincia del cliente (primero la provincia). Los equipos/etiquetas de abajo acotan el grupo.",
         "byRegionFilters": "Acotar por (opcional)",
-        "byRegionPreview": "Candidatos por categoría:",
+        "byRegionPreview": "Candidatos por categoría de consulta:",
         "byRegionNoneWarn": "nadie → siguiente regla",
-        "byRegionScopeLink": "Configurar categorías de equipos/etiquetas"
+        "byRegionScopeLink": "Configurar categorías de consulta de equipos/etiquetas"
       },
       "regionOther": "Fuera de la lista",
       "categories": {
-        "manage": "Gestionar categorías",
-        "title": "Gestionar categorías",
-        "hint": "Una conversación pertenece a una categoría cuando su valor de categoría (la región que la app anfitriona firma en el inicio de sesión) es igual al código. El código no cambia una vez creado; el nombre y el orden se pueden cambiar cuando quieras. Si la app anfitriona no envía ese valor, las reglas con filtro de categoría nunca coinciden.",
-        "empty": "Aún no hay categorías. Añade una abajo.",
-        "none": "Sin categorías",
+        "manage": "Gestionar categorías de consulta",
+        "title": "Gestionar categorías de consulta",
+        "hint": "Las categorías de consulta visibles aparecen en el widget cuando un cliente pide un agente o la IA lo transfiere, y la que elige el cliente determina la regla de asignación. El código no cambia una vez creado; el nombre, la visibilidad, los nombres por idioma y el orden se pueden cambiar cuando quieras.",
+        "empty": "Aún no hay categorías de consulta. Añade una abajo.",
+        "none": "Sin categorías de consulta",
         "code": "Código",
         "codePh": "Código (letras, dígitos, _)",
         "name": "Nombre",
@@ -259,18 +267,22 @@
         "add": "Añadir",
         "save": "Guardar cambios",
         "confirmDelete": "Confirmar eliminación",
-        "usage": "Reglas {{rules}} · Equipos {{units}} · Etiquetas {{labels}} · Empresas {{companies}}",
-        "inUseHint": "No se puede eliminar una categoría en uso",
-        "created": "Categoría \"{{name}}\" añadida",
-        "saved": "Cambios de categorías guardados",
-        "deleted": "Categoría \"{{name}}\" eliminada",
-        "saveError": "No se pudo guardar la categoría",
-        "deleteError": "No se pudo eliminar la categoría",
+        "usage": "Reglas {{rules}} · Equipos {{units}} · Etiquetas {{labels}}",
+        "inUseHint": "No se puede eliminar una categoría de consulta en uso",
+        "created": "Categoría de consulta \"{{name}}\" añadida",
+        "saved": "Cambios de categorías de consulta guardados",
+        "deleted": "Categoría de consulta \"{{name}}\" eliminada",
+        "saveError": "No se pudo guardar la categoría de consulta",
+        "deleteError": "No se pudo eliminar la categoría de consulta",
         "inUse": "Está en uso y no se puede eliminar — {{where}}",
         "whereRule": "regla \"{{name}}\"",
         "whereUnit": "equipo \"{{name}}\"",
         "whereLabel": "etiqueta \"{{name}}\"",
-        "whereCompanies": "{{count}} empresas"
+        "visible": "Visible",
+        "hidden": "Oculta",
+        "newVisible": "Mostrar a clientes",
+        "names": "Nombres por idioma",
+        "visibleHint": "Visible para los clientes en el widget"
       }
     },
     "reAlert": {

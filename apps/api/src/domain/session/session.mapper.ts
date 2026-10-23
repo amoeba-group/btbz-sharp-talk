@@ -14,6 +14,7 @@ export class SessionMapper {
     s: Session,
     notice: PrivacyNoticeInfo,
     customerName: string | null = null,
+    consultCategories: Array<{ code: string; label: string }> = [],
   ): SessionResponse {
     return {
       sessionToken: s.sessionToken,
@@ -42,6 +43,7 @@ export class SessionMapper {
       // tenant that switched continuity on — never a guest or a lookup-only
       // session. A claimed user of an unsigned-host tenant sees its own (P7).
       threadAvailable: !!notice.threadContinuity && threadEligible(s),
+      consultCategories,
     };
   }
 }

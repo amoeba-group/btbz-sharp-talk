@@ -161,19 +161,19 @@
     "denyModeHint": "\"Không trả lời\" chuyển cho nhân viên mà không phản hồi. \"Trả lời rồi chuyển\" trả lời từ cơ sở tri thức trước rồi vẫn chuyển — nhân viên đều được gọi trong cả hai trường hợp.",
     "denyModeLabel": "Khách hàng nhận được gì",
     "routing": {
-      "title": "Quy tắc phân công — danh mục × nghiệp vụ",
-      "hint": "Kiểm tra từ trên xuống; quy tắc đầu tiên khớp mọi điều kiện sẽ quyết định ai được báo. Điều kiện để trống nghĩa là tất cả. Không khớp → các nhân viên ở trên.",
+      "title": "Quy tắc phân công — danh mục tư vấn × nghiệp vụ",
+      "hint": "Kiểm tra từ trên xuống; quy tắc đầu tiên khớp cả danh mục tư vấn, nghiệp vụ và thông tin khách hàng sẽ chuyển tới nhóm nhân viên của nó (nhóm × nhãn). Điều kiện trống nghĩa là tất cả. Danh mục tư vấn là lựa chọn của khách trên widget; khách không chọn chỉ khớp quy tắc không có danh mục. Không khớp → nhân viên phụ trách ở trên.",
       "namePh": "Tên quy tắc (vd: Miền Bắc · Đặt phòng)",
       "mode": "Cách phân công",
       "modes": {
         "least_loaded": "Nhân viên trực tuyến đang rảnh nhất",
         "broadcast": "Báo cả nhóm"
       },
-      "regions": "Danh mục",
+      "regions": "Danh mục tư vấn",
       "topic": "Nghiệp vụ",
       "keywordsPh": "Từ khóa trong câu hỏi, cách nhau bằng dấu phẩy (trống = tất cả)",
       "agents": "Nhân viên",
-      "any": "Mọi danh mục",
+      "any": "Mọi danh mục tư vấn",
       "noAssignee": "Chọn ít nhất một nhân viên — quy tắc không có nhân viên sẽ không được lưu",
       "add": "Thêm quy tắc",
       "region": {
@@ -202,7 +202,8 @@
           "province": "Tỉnh",
           "role": "Vai trò",
           "landing_path": "Đường dẫn vào",
-          "customer_type": "Loại khách hàng"
+          "customer_type": "Loại khách hàng",
+          "region": "Khu vực"
         },
         "value": {
           "identity_level": {
@@ -218,6 +219,13 @@
           "customer_type": {
             "b2c": "Khách cá nhân",
             "b2b_contact": "Liên hệ doanh nghiệp"
+          },
+          "region": {
+            "north": "Miền Bắc",
+            "north_center": "Bắc Trung Bộ",
+            "central": "Miền Trung",
+            "south_center": "Nam Trung Bộ",
+            "south": "Miền Nam"
           }
         }
       },
@@ -235,20 +243,20 @@
         "people": "Cá nhân",
         "needOne": "Chọn ít nhất một người hoặc một nhóm — quy tắc không có nhân viên sẽ không được lưu",
         "manageLink": "Quản lý nhãn & đội →",
-        "byRegion": "Giao cho người phụ trách danh mục",
-        "byRegionHint": "Gọi những người đang hoạt động có nhóm hoặc nhãn phụ trách tỉnh/thành (ưu tiên) hoặc danh mục của cuộc trò chuyện. Nhóm/nhãn bên dưới dùng để thu hẹp.",
+        "byRegion": "Giao cho người phụ trách danh mục tư vấn",
+        "byRegionHint": "Gọi những người đang hoạt động có nhóm hoặc nhãn phụ trách danh mục tư vấn khách đã chọn hoặc tỉnh/thành của khách (ưu tiên tỉnh/thành). Nhóm/nhãn bên dưới dùng để thu hẹp.",
         "byRegionFilters": "Thu hẹp theo (tùy chọn)",
-        "byRegionPreview": "Ứng viên theo danh mục:",
+        "byRegionPreview": "Ứng viên theo danh mục tư vấn:",
         "byRegionNoneWarn": "không có ai → quy tắc tiếp theo",
-        "byRegionScopeLink": "Thiết lập danh mục cho nhóm/nhãn"
+        "byRegionScopeLink": "Thiết lập danh mục tư vấn cho nhóm/nhãn"
       },
       "regionOther": "Không có trong danh sách",
       "categories": {
-        "manage": "Quản lý danh mục",
-        "title": "Quản lý danh mục",
-        "hint": "Cuộc trò chuyện thuộc một danh mục khi giá trị danh mục của nó (region mà ứng dụng chủ ký trong thông tin đăng nhập) trùng với mã. Mã không đổi sau khi tạo; tên và thứ tự có thể đổi bất cứ lúc nào. Nếu ứng dụng chủ không gửi giá trị này, quy tắc có điều kiện danh mục sẽ không bao giờ khớp.",
-        "empty": "Chưa có danh mục. Thêm ở bên dưới.",
-        "none": "Không có danh mục",
+        "manage": "Quản lý danh mục tư vấn",
+        "title": "Quản lý danh mục tư vấn",
+        "hint": "Danh mục tư vấn được hiển thị sẽ xuất hiện trên widget khi khách yêu cầu nhân viên hoặc AI chuyển tiếp, và lựa chọn của khách quyết định quy tắc phân công. Mã không đổi sau khi tạo; tên, hiển thị, tên theo ngôn ngữ và thứ tự có thể đổi bất cứ lúc nào.",
+        "empty": "Chưa có danh mục tư vấn. Thêm ở bên dưới.",
+        "none": "Không có danh mục tư vấn",
         "code": "Mã",
         "codePh": "Mã (chữ, số, _)",
         "name": "Tên",
@@ -259,18 +267,22 @@
         "add": "Thêm",
         "save": "Lưu thay đổi",
         "confirmDelete": "Xác nhận xóa",
-        "usage": "Quy tắc {{rules}} · Nhóm {{units}} · Nhãn {{labels}} · Doanh nghiệp {{companies}}",
-        "inUseHint": "Không thể xóa danh mục đang được dùng",
-        "created": "Đã thêm danh mục \"{{name}}\"",
-        "saved": "Đã lưu thay đổi danh mục",
-        "deleted": "Đã xóa danh mục \"{{name}}\"",
-        "saveError": "Không lưu được danh mục",
-        "deleteError": "Không xóa được danh mục",
+        "usage": "Quy tắc {{rules}} · Nhóm {{units}} · Nhãn {{labels}}",
+        "inUseHint": "Không thể xóa danh mục tư vấn đang được dùng",
+        "created": "Đã thêm danh mục tư vấn \"{{name}}\"",
+        "saved": "Đã lưu thay đổi danh mục tư vấn",
+        "deleted": "Đã xóa danh mục tư vấn \"{{name}}\"",
+        "saveError": "Không lưu được danh mục tư vấn",
+        "deleteError": "Không xóa được danh mục tư vấn",
         "inUse": "Đang được dùng nên không thể xóa — {{where}}",
         "whereRule": "quy tắc \"{{name}}\"",
         "whereUnit": "nhóm \"{{name}}\"",
         "whereLabel": "nhãn \"{{name}}\"",
-        "whereCompanies": "{{count}} doanh nghiệp"
+        "visible": "Hiển thị",
+        "hidden": "Ẩn",
+        "newVisible": "Hiển thị cho khách",
+        "names": "Tên theo ngôn ngữ",
+        "visibleHint": "Hiển thị cho khách trên widget"
       }
     },
     "reAlert": {

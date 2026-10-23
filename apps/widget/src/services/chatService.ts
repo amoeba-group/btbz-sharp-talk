@@ -86,10 +86,20 @@ export function rateChat(
   });
 }
 
-export function escalate(sessionToken: string, conversationId: string): Promise<unknown> {
+export function escalate(sessionToken: string, conversationId: string, categoryCode?: string): Promise<unknown> {
   return apiClient.post('/chat/escalate', {
     session_token: sessionToken,
     conversation_id: conversationId,
+    ...(categoryCode ? { category_code: categoryCode } : {}),
+  });
+}
+
+/** The shopper's consult category after the AI handed off (PLN-261024 B path). */
+export function chooseConsultCategory(sessionToken: string, conversationId: string, categoryCode: string): Promise<unknown> {
+  return apiClient.post('/chat/consult-category', {
+    session_token: sessionToken,
+    conversation_id: conversationId,
+    category_code: categoryCode,
   });
 }
 

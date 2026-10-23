@@ -66,12 +66,12 @@
   "scopeTitle": "Phạm vi phụ trách",
   "scopeNone": "Chưa có phạm vi",
   "scopeEdit": "Thiết lập phạm vi",
-  "scopeRegions": "Danh mục",
+  "scopeRegions": "Danh mục tư vấn",
   "scopeProvinces": "Tỉnh / thành phố",
   "scopeProvincePh": "Nhập hoặc chọn tỉnh/thành",
   "scopeAdd": "Thêm",
   "scopeSaved": "Đã lưu phạm vi phụ trách của {{name}}",
   "scopeSaveError": "Không lưu được phạm vi",
-  "scopeHint": "Quy tắc \"giao cho người phụ trách danh mục\" chọn những người có nhóm hoặc nhãn phụ trách tỉnh/thành (ưu tiên) hoặc danh mục của cuộc trò chuyện.",
-  "scopeNoCategories": "Chưa có danh mục — thêm tại Cài đặt › Chuyển nhân viên › Quản lý danh mục"
+  "scopeHint": "Quy tắc \"giao cho người phụ trách danh mục tư vấn\" chọn những người có nhóm hoặc nhãn phụ trách danh mục khách đã chọn hoặc tỉnh/thành của khách (ưu tiên).",
+  "scopeNoCategories": "Chưa có danh mục tư vấn — thêm tại Cài đặt › Chuyển nhân viên › Quản lý danh mục tư vấn"
 }

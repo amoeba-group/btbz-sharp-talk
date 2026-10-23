@@ -24,6 +24,7 @@ import { CustomerModule } from '../customer/customer.module';
 import { AnswerReuseModule } from '../answer-reuse/answer-reuse.module';
 import { IssueModule } from '../issue/issue.module';
 import { MergedRoomModule } from '../merged-room/merged-room.module';
+import { RoutingCategoryModule } from '../routing-category/routing-category.module';
 import { Customer } from '../customer/entity/customer.entity';
 import { Company } from '../company/entity/company.entity';
 
@@ -66,6 +67,7 @@ import { Company } from '../company/entity/company.entity';
     IssueModule,
     // Same-customer merged rooms: auto-join (PLN-261023). Repositories + audit only.
     MergedRoomModule,
+    RoutingCategoryModule, // consult categories the shopper picks (PLN-261024)
   ],
   controllers: [ChatController],
   providers: [ChatService, RagService, ScenarioService, IdleConversationService, ThreadService],

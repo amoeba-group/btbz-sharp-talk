@@ -80,6 +80,12 @@ export const zh: Translation = {
       returns: '退货或换货',
       agent: '联系人工客服',
     },
+    // Consult-category picker (PLN-261024).
+    consultCategory: {
+      title: '您需要咨询哪方面的问题？',
+      titleAfter: '选择咨询内容，我们会为您转接更合适的客服',
+      skip: '跳过',
+    },
     connectAgent: '转接人工客服',
     consent: {
       title: '隐私声明',

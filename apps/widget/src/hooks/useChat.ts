@@ -2,7 +2,7 @@ import { useCallback, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { isAuthError } from '../lib/errors';
-import { endChat as endChatApi, escalate as escalateApi, getConversation, sendMessage, sendScenario, rateChat, type CsatSurveyAnswers } from '../services/chatService';
+import { chooseConsultCategory, endChat as endChatApi, escalate as escalateApi, getConversation, sendMessage, sendScenario, rateChat, type CsatSurveyAnswers } from '../services/chatService';
 import type { ChatAttachment, ChatMessage, ChatReply, ScenarioPostAction } from '../lib/types';
 
 export interface SendResult {
@@ -192,16 +192,31 @@ export function useChat(sessionToken: string | null) {
     [sessionToken, append, t],
   );
 
-  const escalate = useCallback(async () => {
-    if (!conversationId) return;
-    await escalateApi(sessionToken!, conversationId);
-    append({
-      id: `sys-${Date.now()}`,
-      senderType: 'system',
-      body: t('chat.connectingAgent'),
-      createdAt: new Date().toISOString(),
-    });
-  }, [conversationId, sessionToken, append, t]);
+  const escalate = useCallback(
+    async (categoryCode?: string) => {
+      if (!conversationId) return;
+      await escalateApi(sessionToken!, conversationId, categoryCode);
+      // With a consult category the server writes the "connecting you to …" line
+      // itself (PLN-261024) and the poll brings it; only the plain request needs one here.
+      if (categoryCode) return;
+      append({
+        id: `sys-${Date.now()}`,
+        senderType: 'system',
+        body: t('chat.connectingAgent'),
+        createdAt: new Date().toISOString(),
+      });
+    },
+    [conversationId, sessionToken, append, t],
+  );
+
+  /** Consult category picked after the AI handed off (PLN-261024 B path); the server line arrives by poll. */
+  const pickConsultCategory = useCallback(
+    async (categoryCode: string) => {
+      if (!conversationId || !sessionToken) return;
+      await chooseConsultCategory(sessionToken, conversationId, categoryCode);
+    },
+    [conversationId, sessionToken],
+  );
 
   /**
    * Customer-side end chat (PLN-260808 Track B). The session (and sign-in)
@@ -235,6 +250,7 @@ export function useChat(sessionToken: string | null) {
     sending,
     status,
     escalate,
+    pickConsultCategory,
     endChat,
     append,
     conversationId,

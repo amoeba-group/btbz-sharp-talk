@@ -161,3 +161,51 @@ describe('AgentAlertService — routing-rule groups', () => {
     expect(h.saved.map((a) => a.targetUserId)).toEqual([11]);
   });
 });
+
+describe('AgentAlertService — consult category re-route (PLN-261024)', () => {
+  function build() {
+    const order: string[] = [];
+    const alertRepo = {
+      findOne: jest.fn(async () => null),
+      save: jest.fn(async (rows: AgentAlert[]) => {
+        order.push('save');
+        return rows;
+      }),
+      create: jest.fn((a: Partial<AgentAlert>) => a as AgentAlert),
+      update: jest.fn(async () => {
+        order.push('update');
+        return { affected: 2 };
+      }),
+    };
+    const svc = new AgentAlertService(
+      alertRepo as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      { subscribe: jest.fn() } as never,
+      { get: jest.fn(() => undefined) } as never,
+      { send: jest.fn() } as never,
+    );
+    jest.spyOn(svc, 'notifyRows').mockResolvedValue(undefined);
+    jest.spyOn(svc as never, 'notifySlack').mockResolvedValue(undefined as never);
+    return { svc, alertRepo, order };
+  }
+
+  it('the first page stands down before the category team is paged', async () => {
+    const { svc, alertRepo, order } = build();
+    await svc.onEscalation({ tenantId: 4, conversationId: 30, reason: 'category_selected', targetUserIds: [11], consultCategory: 'payment' } as never);
+    expect(alertRepo.update).toHaveBeenCalledWith(
+      { tenantId: 4, conversationId: 30, status: 'new' },
+      expect.objectContaining({ status: 'acked' }),
+    );
+    expect(order).toEqual(['update', 'save']);
+    expect(svc.notifyRows).toHaveBeenCalledWith(expect.any(Array), { category: 'payment' });
+  });
+
+  it('any other escalation leaves earlier alarms alone', async () => {
+    const { svc, alertRepo } = build();
+    await svc.onEscalation({ tenantId: 4, conversationId: 30, reason: 'user_request', targetUserIds: [11] } as never);
+    expect(alertRepo.update).not.toHaveBeenCalled();
+  });
+});

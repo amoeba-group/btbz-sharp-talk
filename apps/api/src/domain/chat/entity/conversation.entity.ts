@@ -110,4 +110,15 @@ export class Conversation {
   /** The account thread's previous conversation — its agent is preferred on handoff (sticky). */
   @Column({ name: 'prev_conversation_id', type: 'bigint', nullable: true, transformer: bigintTransformer })
   prevConversationId: number | null;
+
+  /**
+   * The consult category the shopper picked when asking for an agent
+   * (PLN-261024-Widget-Handoff-Consult-Category-Picker). Routing rules'
+   * category filter matches this only; NULL = not picked (skipped / none offered).
+   */
+  @Column({ name: 'consult_category', type: 'varchar', length: 64, nullable: true })
+  consultCategory: string | null;
+
+  @Column({ name: 'consult_category_at', type: 'datetime', precision: 6, nullable: true })
+  consultCategoryAt: Date | null;
 }

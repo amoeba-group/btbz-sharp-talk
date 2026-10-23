@@ -93,6 +93,12 @@ export const ko: Translation = {
       returns: '반품/교환',
       agent: '상담원 연결',
     },
+    // Consult-category picker (PLN-261024).
+    consultCategory: {
+      title: '어떤 상담이 필요하세요?',
+      titleAfter: '상담 내용을 고르면 더 정확한 담당자에게 연결해 드려요',
+      skip: '건너뛰기',
+    },
     connectAgent: '상담원 연결',
     consent: {
       title: '개인정보 처리 안내',

@@ -93,6 +93,12 @@ export const es: Translation = {
       returns: 'Devolver o cambiar',
       agent: 'Hablar con un agente',
     },
+    // Consult-category picker (PLN-261024).
+    consultCategory: {
+      title: '¿Con qué necesitas ayuda?',
+      titleAfter: 'Elige un tema y te conectaremos con la persona adecuada',
+      skip: 'Omitir',
+    },
     connectAgent: 'Conectar con un agente',
     consent: {
       title: 'Aviso de privacidad',

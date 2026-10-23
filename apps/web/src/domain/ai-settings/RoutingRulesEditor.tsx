@@ -110,7 +110,7 @@ export function RoutingRulesEditor({
    * The tenant's routing categories, in order, with display names (PLN-261024) —
    * the category chips and the by-category preview. Codes are what rules store.
    */
-  categories: Array<{ code: string; name: string }>;
+  categories: Array<{ code: string; name: string; visible?: boolean }>;
   /** Opens category management (undefined = button hidden — no permission). */
   onManageCategories?: () => void;
 }) {
@@ -241,8 +241,15 @@ export function RoutingRulesEditor({
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="w-16 shrink-0 text-xs text-gray-500">{t('handoff.routing.regions')}</span>
               {categories.map((c) => (
-                <button key={c.code} type="button" className={chip(row.regions.includes(c.code))} onClick={() => patch(i, { regions: toggle(row.regions, c.code) })}>
+                <button
+                  key={c.code}
+                  type="button"
+                  className={chip(row.regions.includes(c.code))}
+                  title={c.visible ? t('handoff.routing.categories.visibleHint') : undefined}
+                  onClick={() => patch(i, { regions: toggle(row.regions, c.code) })}
+                >
                   {c.name}
+                  {c.visible && <span aria-hidden> 👁</span>}
                 </button>
               ))}
               {/* A stored value outside the catalogue is kept visible so it can be removed — never dropped silently. */}

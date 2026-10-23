@@ -45,6 +45,7 @@ describe('SessionMapper.toResponse', () => {
       aiProcessingRegion: 'US',
       issueFeed: false,
       threadAvailable: false,
+      consultCategories: [],
     });
   });
 

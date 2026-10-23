@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
-import { IsBoolean, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min, ValidateIf } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsOptional, IsString, Matches, Max, MaxLength, Min, ValidateIf } from 'class-validator';
+import { REGION_CODES } from '@sharptalk/types';
 
 /** GET /companies query — snake_case (amoeba_code_convention). PLN-261022 stage 2. */
 export class ListCompaniesQuery {
@@ -17,10 +18,9 @@ export class ListCompaniesQuery {
   @MaxLength(120)
   q?: string;
 
-  /** A routing category code (PLN-261024) — tenant-defined, so only the shape is checked. */
+  /** The hotel's region — the fixed Go2Joy table, not a consult category (PLN-261024 G15). */
   @IsOptional()
-  @IsString()
-  @Matches(/^[a-z0-9_]{1,64}$/)
+  @IsIn(REGION_CODES as unknown as string[])
   region?: string;
 }
 

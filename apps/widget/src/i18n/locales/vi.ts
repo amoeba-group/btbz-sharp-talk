@@ -80,6 +80,12 @@ export const vi: Translation = {
       returns: 'Trả hoặc đổi hàng',
       agent: 'Gặp nhân viên hỗ trợ',
     },
+    // Consult-category picker (PLN-261024).
+    consultCategory: {
+      title: 'Bạn cần hỗ trợ về vấn đề gì?',
+      titleAfter: 'Chọn chủ đề để chúng tôi kết nối bạn với đúng người phụ trách',
+      skip: 'Bỏ qua',
+    },
     connectAgent: 'Kết nối nhân viên hỗ trợ',
     consent: {
       title: 'Thông báo về quyền riêng tư',
