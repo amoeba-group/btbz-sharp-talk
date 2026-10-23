@@ -19,8 +19,9 @@ export class EmbedIdentifyRequest {
   @IsOptional() @IsString() @MaxLength(40) phone?: string;
 
   /**
-   * Signed facts about the user: hotel_id, hotel_name, region, province, role.
-   * Other keys are ignored. Included in the signature, unlike the profile fields.
+   * Signed facts about the user — spec v1.4: hotel_id, hotel_name, province_sn,
+   * role (region and province are still accepted from v1.3 senders). Other keys
+   * are ignored. Included in the signature, unlike the profile fields.
    */
   @IsOptional() @IsObject() attributes?: Record<string, unknown>;
 }
