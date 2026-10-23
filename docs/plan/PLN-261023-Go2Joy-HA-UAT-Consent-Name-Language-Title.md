@@ -15,7 +15,7 @@
 ## 1. 결정 필요 — 서명 없는 HA 로그인을 동의로 인정할지
 | 안 | 내용 | 장단 |
 |---|---|---|
-| **A (권장)** | 테넌트 옵션 `host_terms_trust = signed | claimed`(기본 `signed`). go2joy **스테이징만 `claimed`** + `EMBED_UNSIGNED_IDENTIFY_TENANT_IDS=4`. 서명 없는 identify도 배너 생략·이름 표시. 고객·고객사 저장과 이전 대화 연결은 **서명 전용 그대로** | UAT를 오늘 진행 가능. 프로덕션은 서명 전용 유지. 동의 기록에 `host_terms(claimed)`로 구분 |
+| **A (권장)** | 테넌트 옵션 `host_terms_trust = signed | claimed`(기본 `signed`). go2joy **스테이징만 `claimed`** + `EMBED_UNSIGNED_IDENTIFY_TENANT_IDS=4`. 서명 없는 identify도 배너 생략·이름 표시. 고객·고객사 저장은 **서명 전용 그대로**. ⚠ 정정(10/23 배포 후): env를 켜면 PLN-261022 P7 설계대로 claimed user_id의 **이전 대화 보기도 열린다** — "이전 대화 연결도 서명 전용"이라고 쓴 것은 오류 | UAT를 오늘 진행 가능. 프로덕션은 서명 전용 유지. 동의 기록에 `host_terms(claimed)`로 구분 |
 | B | SharpTalk 변경 없이 Go2Joy 서명 완료를 기다림(②~④만 진행) | 경계 변경 없음. 서명 전까지 UAT에서 배너가 계속 보임 |
 
 어느 쪽이든 Go2Joy에는 G-a(서명·허용 키 5개·`region`=지역표 값)를 다시 요청합니다(§6).
