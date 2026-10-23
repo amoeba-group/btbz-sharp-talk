@@ -130,7 +130,7 @@ Copy the `.example` to the real filename on the server and fill in secrets — t
 | `SEED_DEMO_DATA` | — | true | **false** | demo orders/customers |
 | `SEED_KB_PROFILE` | us-cosmetics | us-cosmetics | us-cosmetics | baseline KB on first boot: `us-cosmetics` / `none` — REQ-260913 G11 |
 | `SEED_PASSWORD` | — | override recommended | **strong required** | bootstrap account password |
-| `EMBED_UNSIGNED_IDENTIFY_TENANT_IDS` | — | `4` (go2joy, 임시) | **unset** | 서명 없는 `identify`를 `claimed`(미검증)로 받는 테넌트 id 목록(쉼표). 세션에만 표시·라우팅 정보를 두고 고객·기업·동의는 만들지 않음. Go2Joy HA 서명 완료 후 제거 — PLN-261022 unsigned |
+| `EMBED_UNSIGNED_IDENTIFY_TENANT_IDS` | — | `4` (go2joy, 임시) | **unset** | 서명 없는 `identify`를 `claimed`(미검증)로 받는 테넌트 id 목록(쉼표). 세션에만 표시·라우팅 정보를 두고 고객·기업은 만들지 않음. 동의는 테넌트 `host_terms_trust=claimed`일 때만(스테이징 go2joy, PLN-261023). Go2Joy HA 서명 완료 후 제거 — PLN-261022 unsigned |
 
 ### 4.2 Escalation alerts (optional — empty disables a channel)
 `SLACK_WEBHOOK_URL`, `SMTP_HOST`, `SMTP_PORT` (587), `SMTP_USER`, `SMTP_PASS`,
