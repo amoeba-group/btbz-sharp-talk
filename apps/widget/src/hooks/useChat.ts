@@ -6,7 +6,10 @@ import { chooseConsultCategory, endChat as endChatApi, escalate as escalateApi, 
 import type { ChatAttachment, ChatMessage, ChatReply, ScenarioPostAction } from '../lib/types';
 
 export interface SendResult {
+  /** True when this turn handed the conversation to a human. */
   escalate: boolean;
+  /** The conversation the turn landed in (the first message creates it). */
+  conversationId?: string | null;
   needsAuth: boolean;
   /** Off-hours handoff with no address on file — ask the shopper for one. */
   needsContactEmail?: boolean;
@@ -111,6 +114,7 @@ export function useChat(sessionToken: string | null) {
         }
         return {
           escalate: res.escalate,
+          conversationId: res.conversationId,
           needsAuth: res.needsAuth,
           needsContactEmail: res.needsContactEmail,
         };
