@@ -28,7 +28,7 @@ HA가 `hash:"testing"`(서명 아님)과 허용 외 키 5개, `region`=성 이�
 | 스테이징 DB | SQL 선적용 10/23 14:23 KST, go2joy `host_terms_trust='claimed'` |
 | 스테이징 env | `.env.staging`에 `EMBED_UNSIGNED_IDENTIFY_TENANT_IDS=4` (백업 `~/.env.staging.bak-20261023-pre-unsigned`) |
 | 스테이징 코드 | `d834048b` 배포, healthy·부팅 로그·`printenv`=4·embed.js `host_locale` 확인 |
-| 프로덕션 | **미배포** (요구=스테이징만. 코드 배포 시 SQL 선적용 필요, 옵션 기본 `signed`라 동작 불변) |
+| 프로덕션 | 10/23 15:24 KST 백업 `~/backups/sharptalk-production/20261023-1524-pre-261023` → SQL 선적용(전 테넌트 `signed`) → `87defb9d` 배포(#697~#701 동승), check-migrations OK·healthy·부팅 확인. `EMBED_UNSIGNED_IDENTIFY_TENANT_IDS` **미설정 유지** → 서명 없는 identify는 계속 401, 동의 동작 불변 |
 
 ## 5. 스테이징 실화면 검증 (HA UAT, Orca 내장 브라우저)
 | TCR | 결과 |
