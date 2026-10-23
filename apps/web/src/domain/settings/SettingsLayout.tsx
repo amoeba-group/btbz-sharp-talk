@@ -21,6 +21,9 @@ interface Tab {
 
 const TABS: Tab[] = [
   { to: '/settings/basic', labelKey: 'settingsBasic', code: 'settings_basic' },
+  // Split out of the basic tab (PLN-261024 D1): same provisioning code, so
+  // whoever had basic settings keeps the handoff settings with no new grant.
+  { to: '/settings/handoff', labelKey: 'settingsHandoff', code: 'settings_basic' },
   { to: '/settings/widget', labelKey: 'settingsWidget', code: 'settings_widget' },
   { to: '/settings/platforms', labelKey: 'settingsPlatforms', code: 'settings_platforms' },
   { to: '/settings/marketing', labelKey: 'settingsMarketing', code: 'settings_marketing' },
@@ -32,7 +35,7 @@ const TABS: Tab[] = [
 ];
 
 /**
- * One "Settings" entry in the left nav, seven tabs inside it.
+ * One "Settings" entry in the left nav, eight tabs inside it.
  *
  * Six separate nav lines said "settings" and pushed the sidebar to twenty-one
  * entries. The screens stay separate routes — deep links, the back button and

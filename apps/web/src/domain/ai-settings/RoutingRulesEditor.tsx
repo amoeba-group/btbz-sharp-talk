@@ -12,7 +12,6 @@ import {
 } from '../../../../../packages/types/src/common/routing-condition';
 import { languageByCode } from '../../../../../packages/types/src/common/language';
 import { resolveAssigneeGroup, resolveRegionAssignees } from '../../../../../packages/types/src/common/routing-assignee';
-import { REGION_CODES } from '../../../../../packages/types/src/common/region';
 
 /**
  * One customer-information condition as edited (PLN-261019 P4): enum fields
@@ -37,7 +36,7 @@ export interface RoutingRuleRow {
   /** Group selector — unit ids / label codes, resolved at handoff time. */
   assigneeUnits: string[];
   assigneeLabels: string[];
-  /** Assign by region (PLN-261022): units/labels above then only narrow the pool. */
+  /** Assign by category (PLN-261022; renamed PLN-261024): units/labels above then only narrow the pool. */
   byRegion: boolean;
   mode: RoutingMode;
 }
@@ -92,6 +91,8 @@ export function RoutingRulesEditor({
   units,
   languages,
   manageHref,
+  categories,
+  onManageCategories,
 }: {
   rows: RoutingRuleRow[];
   onChange: (rows: RoutingRuleRow[]) => void;
@@ -105,6 +106,13 @@ export function RoutingRulesEditor({
   languages: string[];
   /** Where "manage labels & units" goes (undefined = link hidden, e.g. non-master). */
   manageHref?: string;
+  /**
+   * The tenant's routing categories, in order, with display names (PLN-261024) —
+   * the category chips and the by-category preview. Codes are what rules store.
+   */
+  categories: Array<{ code: string; name: string }>;
+  /** Opens category management (undefined = button hidden — no permission). */
+  onManageCategories?: () => void;
 }) {
   const { t } = useTranslation('aiSetting');
   const { t: tc } = useTranslation('common');
@@ -114,9 +122,11 @@ export function RoutingRulesEditor({
   /** Group members right now — the same resolver the API runs at handoff time. */
   const groupMembers = (row: RoutingRuleRow) =>
     resolveAssigneeGroup(agents, { unitIds: row.assigneeUnits, labelCodes: row.assigneeLabels });
-  /** By-region preview: how many would be paged for each region right now (same resolver as the API). */
+  const categoryCodes = categories.map((c) => c.code);
+  const categoryName = (code: string) => categories.find((c) => c.code === code)?.name ?? code;
+  /** By-category preview: how many would be paged for each category right now (same resolver as the API). */
   const regionCounts = (row: RoutingRuleRow) =>
-    REGION_CODES.map((region) => ({
+    categoryCodes.map((region) => ({
       region,
       count: resolveRegionAssignees(agents, { byRegion: true, unitIds: row.assigneeUnits, labelCodes: row.assigneeLabels }, { region }).ids.length,
     }));
@@ -179,7 +189,14 @@ export function RoutingRulesEditor({
 
   return (
     <div className="border-t border-gray-100 pt-4">
-      <Label>{t('handoff.routing.title')}</Label>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Label>{t('handoff.routing.title')}</Label>
+        {onManageCategories && (
+          <Button size="sm" variant="secondary" onClick={onManageCategories}>
+            {t('handoff.routing.categories.manage')}
+          </Button>
+        )}
+      </div>
       <p className="mb-2 mt-0.5 text-[11px] text-gray-400">{t('handoff.routing.hint')}</p>
       <div className="space-y-3">
         {rows.map((row, i) => (
@@ -223,20 +240,30 @@ export function RoutingRulesEditor({
 
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="w-16 shrink-0 text-xs text-gray-500">{t('handoff.routing.regions')}</span>
-              {REGION_CODES.map((r) => (
-                <button key={r} type="button" className={chip(row.regions.includes(r))} onClick={() => patch(i, { regions: toggle(row.regions, r) })}>
-                  {t(`handoff.routing.region.${r}`)}
+              {categories.map((c) => (
+                <button key={c.code} type="button" className={chip(row.regions.includes(c.code))} onClick={() => patch(i, { regions: toggle(row.regions, c.code) })}>
+                  {c.name}
                 </button>
               ))}
               {/* A stored value outside the catalogue is kept visible so it can be removed — never dropped silently. */}
               {row.regions
-                .filter((r) => !(REGION_CODES as readonly string[]).includes(r))
+                .filter((r) => !categoryCodes.includes(r))
                 .map((r) => (
                   <button key={r} type="button" className={chip(true)} onClick={() => patch(i, { regions: toggle(row.regions, r) })}>
                     {t('handoff.routing.regionOther')}: {r} ×
                   </button>
                 ))}
               {row.regions.length === 0 && <span className="text-[11px] text-gray-400">{t('handoff.routing.any')}</span>}
+              {categories.length === 0 && (
+                <span className="text-[11px] text-gray-400">
+                  · {t('handoff.routing.categories.none')}
+                  {onManageCategories && (
+                    <button type="button" className="ml-1 text-primary-600 hover:underline" onClick={onManageCategories}>
+                      {t('handoff.routing.categories.manage')}
+                    </button>
+                  )}
+                </span>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
@@ -352,7 +379,7 @@ export function RoutingRulesEditor({
                         <span>{t('handoff.routing.assignee.byRegionPreview')}</span>
                         {regionCounts(row).map(({ region, count }) => (
                           <span key={region} className={count === 0 ? 'text-warning' : undefined}>
-                            {t(`handoff.routing.region.${region}`)} {count}
+                            {categoryName(region)} {count}
                             {count === 0 && ` (${t('handoff.routing.assignee.byRegionNoneWarn')})`}
                           </span>
                         ))}

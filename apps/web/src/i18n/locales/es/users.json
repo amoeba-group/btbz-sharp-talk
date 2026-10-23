@@ -63,21 +63,15 @@
   "orgDeleteError": "No se pudo eliminar.",
   "permissionLabelNoDelete": "Las etiquetas vinculadas a permisos no se pueden eliminar.",
   "orgInUseByRule": "En uso por reglas de asignación: {{rules}}. Quítelo primero de la regla (Transferencia a agente › Reglas de asignación).",
-  "scopeTitle": "Zonas atendidas",
-  "scopeNone": "Sin zonas",
-  "scopeEdit": "Definir zonas",
-  "scopeRegions": "Regiones",
+  "scopeTitle": "Cobertura",
+  "scopeNone": "Sin cobertura",
+  "scopeEdit": "Configurar cobertura",
+  "scopeRegions": "Categorías",
   "scopeProvinces": "Provincias / ciudades",
   "scopeProvincePh": "Escribe o elige una provincia",
   "scopeAdd": "Añadir",
-  "scopeSaved": "Zonas de {{name}} guardadas",
-  "scopeSaveError": "No se pudieron guardar las zonas",
-  "scopeHint": "Las reglas de asignación «por región» avisan a quienes, por su equipo o etiquetas, atienden la provincia (primero) o la región de la conversación.",
-  "region": {
-    "north": "Norte",
-    "north_center": "Centro-Norte",
-    "central": "Centro",
-    "south_center": "Centro-Sur",
-    "south": "Sur"
-  }
+  "scopeSaved": "Se guardó la cobertura de {{name}}",
+  "scopeSaveError": "No se pudo guardar la cobertura",
+  "scopeHint": "Las reglas con \"asignar a responsables de la categoría\" avisan a las personas cuyo equipo o etiquetas cubren la provincia (primero) o la categoría de la conversación.",
+  "scopeNoCategories": "No hay categorías — añádelas en Configuración › Traspaso a agentes › Gestionar categorías"
 }

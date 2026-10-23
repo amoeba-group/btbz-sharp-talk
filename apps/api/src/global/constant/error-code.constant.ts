@@ -302,6 +302,13 @@ export const ERROR_CODE = {
     message: 'A session belongs to another customer or another merged room',
   },
 
+  // E5107-E5109 — tenant routing categories (PLN-261024-Settings-Handoff-Tab-Routing-Categories).
+  /** A rule, unit, label or company still uses the category; `details` lists where (D6). */
+  ROUTING_CATEGORY_IN_USE: { code: 'E5107', message: 'The category is in use' },
+  ROUTING_CATEGORY_DUPLICATE: { code: 'E5108', message: 'A category with this code already exists' },
+  /** Not one of this tenant's categories (also a foreign tenant's id or code). */
+  ROUTING_CATEGORY_NOT_FOUND: { code: 'E5109', message: 'Category not found' },
+
   // E9xxx — system
   INTERNAL_ERROR: { code: 'E9001', message: 'Internal server error' },
   EXTERNAL_SERVICE_ERROR: { code: 'E9002', message: 'External service error' },

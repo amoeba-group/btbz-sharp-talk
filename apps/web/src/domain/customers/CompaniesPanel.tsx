@@ -6,7 +6,7 @@ import { Select } from '@/components/Field';
 import { Pagination } from '@/components/Pagination';
 import { Table } from '@/components/Table';
 import type { Column } from '@/components/Table';
-import { REGION_CODES } from '../../../../../packages/types/src/common/region';
+import { useCategoryName, useRoutingCategories } from '../routing-categories/routing-categories.hooks';
 import { useCompanies } from './customers.hooks';
 import { AddHotelModal, CompanyDetailModal } from './CompanyDetailModal';
 import type { Company } from './customers.service';
@@ -48,7 +48,10 @@ export function CompaniesPanel({ initialOpenId = null }: { initialOpenId?: strin
   }, [search]);
 
   const { data, isLoading, error } = useCompanies({ page, pageSize: PAGE_SIZE, q: q || undefined, region: region || undefined });
-  const regionLabel = (r: string | null) => (r ? t(`region.${r}`, { defaultValue: r }) : '—');
+  // A company's region is one of the tenant's routing categories (PLN-261024 D5: the column keeps "region").
+  const categories = useRoutingCategories();
+  const categoryName = useCategoryName();
+  const regionLabel = (r: string | null) => (r ? categoryName(r) : '—');
 
   const columns: Column<Company>[] = [
     {
@@ -100,9 +103,9 @@ export function CompaniesPanel({ initialOpenId = null }: { initialOpenId?: strin
             }}
           >
             <option value="">{t('allRegions')}</option>
-            {REGION_CODES.map((r) => (
-              <option key={r} value={r}>
-                {regionLabel(r)}
+            {(categories.data ?? []).map((c) => (
+              <option key={c.code} value={c.code}>
+                {regionLabel(c.code)}
               </option>
             ))}
           </Select>

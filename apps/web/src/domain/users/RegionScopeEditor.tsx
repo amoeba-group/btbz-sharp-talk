@@ -3,20 +3,23 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/Button';
 import { Input } from '@/components/Field';
 import { cn } from '@/lib/cn';
-import { REGION_CODES, provinceKey } from '../../../../../packages/types/src/common/region';
+import { provinceKey } from '../../../../../packages/types/src/common/region';
+import { useCategoryName, useRoutingCategories } from '../routing-categories/routing-categories.hooks';
 import type { RegionScopeBody } from './users.service';
 
 /** "North · North Center / Đà Nẵng" — the read-only line under a unit/label name. */
 export function RegionScopeSummary({ regions, provinces }: RegionScopeBody) {
   const { t } = useTranslation('users');
+  const categoryName = useCategoryName();
   if (!regions.length && !provinces.length) return <span className="text-[11px] text-gray-400">{t('scopeNone')}</span>;
-  const parts = [regions.map((r) => t(`region.${r}`, { defaultValue: r })).join(' · '), provinces.join(', ')].filter(Boolean);
+  const parts = [regions.map(categoryName).join(' · '), provinces.join(', ')].filter(Boolean);
   return <span className="text-[11px] text-gray-600">{parts.join(' / ')}</span>;
 }
 
 /**
  * Inline editor for the places a unit or job label covers (PLN-261022 stage 1,
- * wireframe 2.6). Regions are the catalogue chips; provinces are free entries
+ * wireframe 2.6). Categories are the tenant's routing categories (PLN-261024),
+ * a stored code no longer in the list stays visible so it can be removed; provinces are free entries
  * suggested from the tenant's province → region map, de-duplicated by the same
  * key the server uses (NFC, case-insensitive). Saving is the caller's.
  */
@@ -38,6 +41,10 @@ export function RegionScopeEditor({
   const [regions, setRegions] = useState<string[]>(initial.regions);
   const [provinces, setProvinces] = useState<string[]>(initial.provinces);
   const [draft, setDraft] = useState('');
+  const categories = useRoutingCategories();
+  const categoryName = useCategoryName();
+  const codes = (categories.data ?? []).map((c) => c.code);
+  const stale = regions.filter((r) => !codes.includes(r));
 
   const toggleRegion = (code: string) =>
     setRegions((list) => (list.includes(code) ? list.filter((r) => r !== code) : [...list, code]));
@@ -61,11 +68,17 @@ export function RegionScopeEditor({
     <div className="space-y-2 rounded-md border border-gray-200 bg-white p-3">
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="w-24 shrink-0 text-xs text-gray-500">{t('scopeRegions')}</span>
-        {REGION_CODES.map((code) => (
+        {codes.map((code) => (
           <button key={code} type="button" aria-pressed={regions.includes(code)} className={chip(regions.includes(code))} onClick={() => toggleRegion(code)}>
-            {t(`region.${code}`)}
+            {categoryName(code)}
           </button>
         ))}
+        {stale.map((code) => (
+          <button key={code} type="button" aria-pressed className={chip(true)} onClick={() => toggleRegion(code)}>
+            {code} ×
+          </button>
+        ))}
+        {!codes.length && !stale.length && <span className="text-[11px] text-gray-400">{t('scopeNoCategories')}</span>}
       </div>
       <div className="flex flex-wrap items-start gap-1.5">
         <span className="w-24 shrink-0 pt-1.5 text-xs text-gray-500">{t('scopeProvinces')}</span>

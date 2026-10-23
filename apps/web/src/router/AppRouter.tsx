@@ -40,6 +40,7 @@ const UsersPage = lazy(() => import('@/domain/users/UsersPage').then((m) => ({ d
 const SettingsPage = lazy(() => import('@/domain/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })));
 const SettingsLayout = lazy(() => import('@/domain/settings/SettingsLayout').then((m) => ({ default: m.SettingsLayout })));
 const SettingsBasicPage = lazy(() => import('@/domain/settings/SettingsBasicPage').then((m) => ({ default: m.SettingsBasicPage })));
+const SettingsHandoffPage = lazy(() => import('@/domain/settings/SettingsHandoffPage').then((m) => ({ default: m.SettingsHandoffPage })));
 const SettingsWidgetPage = lazy(() => import('@/domain/settings/SettingsWidgetPage').then((m) => ({ default: m.SettingsWidgetPage })));
 const SettingsPlatformsPage = lazy(() => import('@/domain/settings/SettingsPlatformsPage').then((m) => ({ default: m.SettingsPlatformsPage })));
 const SettingsMarketingPage = lazy(() => import('@/domain/settings/SettingsMarketingPage').then((m) => ({ default: m.SettingsMarketingPage })));
@@ -113,6 +114,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <SettingsPage /> },
           { path: 'basic', element: <SettingsBasicPage /> },
+          { path: 'handoff', element: <SettingsHandoffPage /> },
           { path: 'widget', element: <SettingsWidgetPage /> },
           { path: 'platforms', element: <SettingsPlatformsPage /> },
           { path: 'marketing', element: <SettingsMarketingPage /> },

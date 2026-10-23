@@ -121,6 +121,7 @@
 261024-company-profile-products.sql	column	products_cache	company_id
 261024-company-profile-products.sql	column	products_cache	source
 261024-company-profile-products.sql	column	products_cache	attributes
+261024-routing-categories.sql	table	routing_categories	-
 migration_agent_coaching.sql	table	agent_coaching_threads	-
 migration_agent_coaching.sql	table	agent_coaching_messages	-
 migration_agent_coaching.sql	table	agent_coaching_proposals	-

@@ -158,4 +158,35 @@ describe('UserService — unit/label region scope', () => {
     const res = await svc.updateLabel(1, 8, undefined, { regions: ['North Center' as string] }, 9);
     expect(res).toMatchObject({ name: 'Backup', regions: ['north_center'], provinces: [] });
   });
+
+  it('a scope region outside the tenant routing categories is refused (E5109) and nothing is saved (PLN-261024)', async () => {
+    const unit = { id: '3', tenantId: 1, code: 'hn', name: 'Hanoi', sortOrder: 10, regions: null, provinces: null };
+    const unitRepo = repo({ findOne: jest.fn(async () => unit) });
+    const { BusinessException } = await import('../../global/exception/business.exception');
+    const categories = {
+      assertCodes: jest.fn(async (_t: number, codes: string[]) => {
+        if (codes.includes('vip')) throw new BusinessException(ERROR_CODE.ROUTING_CATEGORY_NOT_FOUND);
+        return codes;
+      }),
+    };
+    const svc = new UserService(
+      repo(),
+      repo(),
+      repo(),
+      repo(),
+      audit(),
+      { clearAccountLock: jest.fn() } as never,
+      {} as never,
+      {} as never,
+      {} as never,
+      unitRepo,
+      repo(),
+      categories as never,
+    );
+    await expect(svc.renameUnit(1, 9, 3, undefined, { regions: ['vip'] })).rejects.toMatchObject({ errorCode: 'E5109' });
+    expect((unitRepo as unknown as { save: jest.Mock }).save).not.toHaveBeenCalled();
+    await svc.renameUnit(1, 9, 3, undefined, { regions: ['north'] });
+    expect(categories.assertCodes).toHaveBeenLastCalledWith(1, ['north']);
+    expect(unit.regions).toEqual(['north']);
+  });
 });

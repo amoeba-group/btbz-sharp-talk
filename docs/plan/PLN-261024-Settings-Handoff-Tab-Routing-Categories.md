@@ -1,7 +1,7 @@
 # PLN-261024 — 설정: 상담원 연결 탭 분리 · 배정 규칙 카테고리 + 카테고리 관리
 
 - REQ: `docs/analysis/REQ-261024-Settings-Handoff-Tab-Routing-Categories.md`
-- 상태: **승인 대기** (D1~D6 결정 후 구현)
+- 상태: **승인됨** (2026-10-24, D1~D6 권장안)
 
 ## 1. 결정 사항 (권장안 ★)
 

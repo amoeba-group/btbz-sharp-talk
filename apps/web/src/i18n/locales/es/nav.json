@@ -35,6 +35,7 @@
   },
   "admins": "Operadores admin",
   "settingsBasic": "Básico",
+  "settingsHandoff": "Traspaso a agentes",
   "settingsWidget": "Widget",
   "settingsPlatforms": "Plataformas",
   "settingsMarketing": "Marketing y helpdesk",
