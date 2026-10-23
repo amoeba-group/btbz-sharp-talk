@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>HA sign-in integration spec v1.4</title>
+<meta name="description" content="Checklist for the HA dev team (backend, FE, UAT, production), province_sn and role codes, PHP and JS samples, test vectors T1–T6, UAT checklist">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>/* Layout: single reading column (~72ch) under a slim masthead; tables/diagrams/figures break wider inside their own scrollers. */
+:root {
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --fg: #1d1f24;
+  --muted: #5d6270;
+  --line: #e4e1dc;
+  --tint: #fff1e6;
+  --accent: #e8650a;
+  --accent-ink: #b44c04;
+  --ink2: #2b3a67;
+  --f-display: "Be Vietnam Pro", "Noto Sans KR", system-ui, sans-serif;
+  --f-body: "Noto Sans KR", "Be Vietnam Pro", system-ui, -apple-system, "Apple SD Gothic Neo", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+    --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15161a; --surface: #1d1f25; --fg: #e9e7e3; --muted: #a3a7b2; --line: #33353d;
+  --tint: #2c2017; --accent: #ff8a3d; --accent-ink: #ffab70; --ink2: #a9b8ea; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 15.5px; line-height: 1.72; word-break: keep-all; overflow-wrap: anywhere; }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.masthead { border-bottom: 1px solid var(--line); background: var(--surface); }
+.masthead .wrap { padding-block: 40px 28px; display: grid; gap: 6px; }
+.eyebrow { margin: 0; font-size: 12px; letter-spacing: .06em; color: var(--muted); }
+.brand { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(30px, 6vw, 46px); line-height: 1.1; letter-spacing: -.01em; text-wrap: balance; }
+.brand .g2j { color: var(--accent); }
+.domain { margin: 0; font-family: var(--f-mono); font-size: 13px; color: var(--accent-ink); }
+.doc { padding-block: 24px 64px; }
+.doc > * { max-width: 72ch; }
+.doc > .scroll, .doc > .diagram, .doc > figure, .doc > blockquote.lead { max-width: 100%; }
+h1 { display: none; }
+h2 { font-family: var(--f-display); font-size: 25px; line-height: 1.3; margin: 56px 0 12px; padding-top: 18px; border-top: 2px solid var(--fg); text-wrap: balance; }
+h3 { font-size: 18.5px; margin: 34px 0 8px; text-wrap: balance; }
+h4 { font-size: 16px; margin: 24px 0 6px; color: var(--ink2); }
+p, ul, ol { margin: 0 0 14px; }
+li { margin-bottom: 4px; }
+a { color: var(--accent-ink); text-underline-offset: 3px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+strong { font-weight: 700; }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--tint); color: var(--accent-ink); padding: 1px 5px; border-radius: 4px; }
+.docref { color: var(--ink2); font-weight: 500; }
+hr { border: 0; height: 0; margin: 8px 0; }
+blockquote { margin: 0 0 16px; padding: 10px 16px; border-left: 3px solid var(--line); color: var(--muted); }
+blockquote p:last-child { margin-bottom: 0; }
+blockquote.lead { background: var(--tint); border-left: 0; border-radius: 10px; color: var(--fg); padding: 18px 22px; font-size: 16.5px; }
+.scroll { overflow-x: auto; margin: 0 0 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; line-height: 1.55; background: var(--surface); font-variant-numeric: tabular-nums; }
+th, td { border-bottom: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; min-width: 5.5em; }
+th { font-weight: 700; font-size: 12.5px; letter-spacing: .03em; color: var(--muted); border-bottom: 1.5px solid var(--fg); white-space: nowrap; }
+pre.code { margin: 0; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-family: var(--f-mono); font-size: 12.5px; line-height: 1.5; }
+pre.code code { background: none; color: var(--fg); padding: 0; font-size: inherit; }
+.diagram { overflow-x: auto; margin: 6px 0 22px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.diagram pre.mermaid { margin: 0; display: flex; justify-content: center; background: none; }
+figure { margin: 8px 0 26px; display: grid; gap: 8px; justify-items: start; }
+figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; max-height: 720px; width: auto; }
+figcaption { font-size: 13px; color: var(--muted); max-width: 72ch; }
+.foot { padding-block: 20px 40px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+@media (max-width: 520px) { body { font-size: 15px; } h2 { font-size: 21px; } .masthead .wrap { padding-block: 28px 20px; } }
+
+/* Diagrams are pre-rendered in mermaid's light theme: keep their card light in both themes. */
+.diagram { background: #fbfaf8; border-color: #e3ddd4; }
+.diagram svg { max-width: 100%; height: auto; }
+@media (max-width: 700px) { .diagram svg { min-width: 620px; } }
+/* Drawn SVG figures (fixed-size boxes): scroll sideways on phones rather than shrink the labels. */
+figure:has(> img[src$=".svg"]) { overflow-x: auto; justify-items: stretch; }
+figure > img[src$=".svg"] { width: 100%; max-height: none; background: #ffffff; }
+@media (max-width: 700px) { figure > img[src$=".svg"] { min-width: 760px; max-width: none; } }
+/* Labels were measured with browser defaults; inherit nothing that changes their size. */
+.diagram { font-size: 16px; line-height: normal; word-break: normal; overflow-wrap: normal; letter-spacing: normal; }
+.topnav { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; font-size: 13px; }
+.topnav a { color: var(--accent-ink); text-decoration: none; }
+.topnav a:hover { text-decoration: underline; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-block; padding: 3px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--fg) !important; }
+.chip[aria-current="page"] { border-color: var(--accent); color: var(--accent-ink) !important; font-weight: 600; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin: 18px 0 30px; }
+.card { display: grid; gap: 6px; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); text-decoration: none; color: var(--fg); }
+.card:hover { border-color: var(--accent); }
+.card b { font-size: 16px; }
+.card span { font-size: 13px; color: var(--muted); }
+.langblock h2 { margin-top: 28px; }
+</style>
+</head>
+<body>
+<header class="masthead"><div class="wrap">
+  <nav class="topnav"><a href="./">← Go2Joy documents</a><span class="chips" aria-label="Documents"><a class="chip" href="work-request.en.html">Work request</a><a class="chip" href="ha-identify.en.html" aria-current="page">HA integration v1.4</a><a class="chip" href="integration.en.html">Requests &amp; checklist</a><a class="chip" href="plan.en.html">Project plan</a><a class="chip" href="kb-conflicts.en.html">Knowledge conflict triage</a><a class="chip" href="notion-setup.en.html">Notion setup</a></span><span class="chips" aria-label="Language"><a class="chip" href="ha-identify.ko.html" hreflang="ko">한국어</a><a class="chip" href="ha-identify.en.html" aria-current="page" hreflang="en">English</a><a class="chip" href="ha-identify.vi.html" hreflang="vi">Tiếng Việt</a><a class="chip" href="ha-identify.en.pdf" download>PDF</a></span></nav>
+  <p class="eyebrow">Documents for Go2Joy · 2026-10-24</p>
+  <p class="brand"><span class="mark">SharpTalk</span> for <span class="g2j">Go2Joy</span></p>
+  <p class="domain">HA sign-in integration spec v1.4</p>
+</div></header>
+<main class="wrap doc"><h1 id="hotel-admin-sign-in-integration--spec-v14">Hotel Admin sign-in integration — spec v1.4</h1>
+<blockquote class="lead">
+<p>Sign-in integration spec v1.4 for the Go2Joy HA dev team (2026-10-24). Done means every item in the checklist at the top passes. Schedule and owners: <a href="work-request.en.html">work request</a>. For printing or sending: <a href="ha-identify.en.pdf">PDF</a></p>
+</blockquote>
+<blockquote>
+<p>When an HA staff member opens the widget while signed in, <strong>the HA server signs the staff and hotel data</strong>, and HA FE passes that package to the widget <strong>unchanged</strong>.
+SharpTalk verifies the signature, registers the hotel as a business customer and the staff member as a contact, continues conversations per hotel account, and routes to the team for the hotel's region.
+<strong>In v1.4, HA does not calculate the region.</strong> HA sends only the province number (<code>province_sn</code>). SharpTalk sets the name and region from the Go2Joy province list.</p>
+</blockquote>
+<div class="scroll"><table><thead><tr>
+<th>Item</th>
+<th>Details</th>
+</tr>
+</thead><tbody><tr>
+<td>To</td>
+<td>Go2Joy Hotel Admin (HA) dev team (backend, FE) · Go2Joy PM</td>
+</tr>
+<tr>
+<td>From</td>
+<td>SharpTalk (Amoeba)</td>
+</tr>
+<tr>
+<td>Date / version</td>
+<td>2026-10-24 · <strong>v1.4</strong> (v1.3 2026-10-22 · v1.0 PDF 2026-10-20 are obsolete)</td>
+</tr>
+<tr>
+<td>Environments</td>
+<td>HA UAT <code>https://go2joy-ha-uat.go2joy.io</code> ↔ SharpTalk staging <code>https://shoptalk.amoeba.site</code> · Production is the Go2Joy server <code>https://sharptalk.go2joy.vn</code> (install pending)</td>
+</tr>
+<tr>
+<td>Related docs</td>
+<td><a href="work-request.en.html">Work request</a> (WR numbers, schedule) · <span class="docref">v1.3</span> (previous spec)</td>
+</tr>
+<tr>
+<td>Sample code</td>
+<td><a href="files/sharptalk_identity.php.txt">sharptalk_identity.php</a> · <a href="files/vectors.php.txt">vectors.php</a> (runs the test vectors)</td>
+</tr>
+</tbody></table></div>
+<hr>
+<h2 id="what-ha-must-do--checklist">✅ What HA must do — checklist</h2>
+<p><strong>This checklist is the core of this document.</strong> An item is done when its check passes.</p>
+<h3 id="a-ha-backend-wr-01--wr-02--tue-1027">A. HA backend (WR-01 · WR-02) — Tue 10/27</h3>
+<ul>
+<li><input disabled="" type="checkbox"> <strong>A1. Keep the signing key (embed secret) only in HA server environment variables.</strong> Do not put it in FE, the browser, the app, logs or documents. SharpTalk sends the staging value over a secure channel (on the day WR-02 is decided).
+Check: the secret string appears nowhere in the repository or bundles.</li>
+<li><input disabled="" type="checkbox"> <strong>A2. Create an endpoint that can be called only with a signed-in session</strong> (e.g. <code>GET /api/v1/staff/sharptalkIdentity</code>).
+Check: a call without sign-in returns 401.</li>
+<li><input disabled="" type="checkbox"> <strong>A3. Read values from the HA session and DB.</strong> Do not build them from values sent by the browser.</li>
+<li><input disabled="" type="checkbox"> <strong>A4. <code>userId = "ha:" + userSn</code>.</strong> Use the staff number, which never changes. Do not use the login ID (<code>go2joysupport</code> etc.).</li>
+<li><input disabled="" type="checkbox"> <strong>A5. Exactly 4 attributes</strong>: <code>hotel_id</code> · <code>hotel_name</code> · <code>province_sn</code> · <code>role</code>.<ul>
+<li><strong>Do not send keys outside this list</strong>, such as <code>hotel_code</code>·<code>hotel_group_id</code>·<code>user_id</code>·<code>user_sn</code>·<code>district</code> (they are left out of the signature calculation, so you get 401).</li>
+<li>Do not send <code>region</code>·<code>province</code> (name) either. During the transition period this is not 401, but <code>province_sn</code> takes priority. After the transition it becomes 401.</li>
+</ul>
+</li>
+<li><input disabled="" type="checkbox"> <strong>A6. <code>province_sn</code> = the Go2Joy <code>provinceSn</code> of the selected hotel</strong> (Province Feed <code>sn</code>, numeric string, e.g. Hồ Chí Minh = <code>"1"</code>).</li>
+<li><input disabled="" type="checkbox"> <strong>A7. <code>role</code> = the HA role code</strong> (a value that does not depend on the UI language). Send SharpTalk the <strong>code table</strong> (code · Vietnamese/English display name).</li>
+<li><input disabled="" type="checkbox"> <strong>A8. When "All hotels" is selected</strong>, leave out <code>hotel_id</code> · <code>hotel_name</code> · <code>province_sn</code> and sign only <code>role</code>.</li>
+<li><input disabled="" type="checkbox"> <strong>A9. Follow the normalization order</strong>: <strong>NFC → collapse whitespace (incl. NBSP) → trim → 120 chars (<code>mb_substr</code>)</strong>. Requires the PHP <code>intl</code>·<code>mbstring</code> extensions.</li>
+<li><input disabled="" type="checkbox"> <strong>A10. Leave out empty values entirely (drop the field)</strong>. This applies to attributes and to <code>name</code> · <code>email</code> · <code>phone</code> (an empty <code>email</code> returns 400).</li>
+<li><input disabled="" type="checkbox"> <strong>A11. <code>hash = hex(HMAC-SHA256(secret, signing string))</code></strong>. The signing string uses the format in 5.1 (keys in alphabetical order).</li>
+<li><input disabled="" type="checkbox"> <strong>A12. Test vectors T1 ~ T6 all match</strong> (5.4). Send the results to SharpTalk.</li>
+<li><input disabled="" type="checkbox"> <strong>A13. Return the response package over HTTPS only to the signed-in session. Do not log it.</strong></li>
+</ul>
+<h3 id="b-ha-fe-wr-04--wed-1028">B. HA FE (WR-04) — Wed 10/28</h3>
+<ul>
+<li><input disabled="" type="checkbox"> <strong>B1. Do not build the package in the browser.</strong> <strong>Delete</strong> the current <code>sharptalkSignIn</code> (built from profile values) and the initial value <code>hash: "testing"</code>.</li>
+<li><input disabled="" type="checkbox"> <strong>B2. Take the A2 response and pass it to <code>SharpTalk.identify(response)</code> unchanged</strong> (do not add or change keys).</li>
+<li><input disabled="" type="checkbox"> <strong>B3. Call again on</strong>: sign-in confirmed · page reload · <strong>hotel selection change (incl. All hotels)</strong> · HA language change.</li>
+<li><input disabled="" type="checkbox"> <strong>B4. Call <code>SharpTalk.logout()</code> on</strong>: sign-out button · <strong>automatic sign-out on session/token expiry</strong> · right before another account signs in · sign-out in another tab (<code>storage</code> event etc.).</li>
+<li><input disabled="" type="checkbox"> <strong>B5. <code>locale</code></strong>: same as now, <code>localStorage.lang</code> → <code>vi</code>/<code>en</code>. Call <code>setLocale</code> when it changes.</li>
+<li><input disabled="" type="checkbox"> <strong>B6. Allow the SharpTalk domain in CSP (<code>script-src</code> · <code>frame-src</code> · <code>connect-src</code>) and CORS.</strong></li>
+<li><input disabled="" type="checkbox"> <strong>B7. Put the 3 SharpTalk domain uses</strong> (<code>embed.js</code> src · <code>widgetUrl</code> · <code>ivy:event</code> origin check) <strong>behind one environment setting</strong> (so you change it once when moving to production).
+Check (all of B): DevTools › Network <code>POST …/public/embed/identify</code> <strong>200</strong> (<code>consentState: "granted"</code>), and the page receives <code>ivy:event</code> <code>identified {ok: true}</code>.</li>
+</ul>
+<h3 id="c-joint-uat-check-wr-05--1029--1030">C. Joint UAT check (WR-05) — 10/29 ~ 10/30</h3>
+<ul>
+<li><input disabled="" type="checkbox"> <strong>C1. All items in the section 8 checklist pass</strong> (together with SharpTalk).</li>
+<li><input disabled="" type="checkbox"> <strong>C2. Test accounts</strong>: 1 <code>Quản lý</code> (multiple hotels) + 1 <code>Lễ tân</code> (1 hotel), including hotels in the north and the south (WR-14).</li>
+</ul>
+<h3 id="d-production-deploy-wr-06--before-production-uat">D. Production deploy (WR-06) — before production UAT</h3>
+<ul>
+<li><input disabled="" type="checkbox"> <strong>D1. Apply the production embed secret.</strong> It differs from staging (SharpTalk sends it over a secure channel).</li>
+<li><input disabled="" type="checkbox"> <strong>D2. Switch to the production domain</strong>: <code>https://sharptalk.go2joy.vn/widget/embed.js</code> · <code>widgetUrl</code> · origin check.</li>
+<li><input disabled="" type="checkbox"> <strong>D3. Apply production CSP and CORS. Share the HA deploy schedule in advance.</strong>
+Check: identify returns 200 on production HA. A package made with the staging secret returns 401 on production.</li>
+</ul>
+<hr>
+<h2 id="v14-changes">v1.4 changes</h2>
+<div class="scroll"><table><thead><tr>
+<th>Item</th>
+<th>v1.0 (10/20 PDF)</th>
+<th>v1.3</th>
+<th><strong>v1.4</strong></th>
+</tr>
+</thead><tbody><tr>
+<td><code>userId</code></td>
+<td>Login ID</td>
+<td><code>"ha:" + userSn</code></td>
+<td>Same as v1.3</td>
+</tr>
+<tr>
+<td>Signed attribute keys</td>
+<td><code>hotel_id</code> · <code>hotel_name</code> · <code>province</code> · <code>region</code> · <code>role</code></td>
+<td>Same</td>
+<td><strong><code>hotel_id</code> · <code>hotel_name</code> · <code>province_sn</code> · <code>role</code></strong></td>
+</tr>
+<tr>
+<td>Province</td>
+<td>Province name</td>
+<td>Province name</td>
+<td><strong><code>province_sn</code></strong> = Go2Joy <code>provinceSn</code></td>
+</tr>
+<tr>
+<td>Region</td>
+<td>Calculated by HA (3 values)</td>
+<td>Calculated by HA (5 codes)</td>
+<td><strong>Not sent</strong>. Calculated by SharpTalk</td>
+</tr>
+<tr>
+<td>Role</td>
+<td>Display name (<code>Lễ tân</code>)</td>
+<td>Display name</td>
+<td><strong>Role code</strong></td>
+</tr>
+<tr>
+<td>Normalization</td>
+<td>trim · 120 chars</td>
+<td>+ NFC</td>
+<td><strong>NFC → collapse whitespace → trim → 120 chars</strong></td>
+</tr>
+<tr>
+<td>"All hotels"</td>
+<td>Not defined</td>
+<td>Call again only</td>
+<td>Drop the 3 hotel keys, sign <code>role</code> only</td>
+</tr>
+<tr>
+<td>Empty values</td>
+<td>Empty attributes·email left out</td>
+<td>Same</td>
+<td>Empty <code>name</code> · <code>email</code> · <code>phone</code> also left out</td>
+</tr>
+<tr>
+<td>Test vectors</td>
+<td>T1 · T2</td>
+<td>T1 ~ T5</td>
+<td><strong>T1 ~ T6</strong> (previous vectors no longer used)</td>
+</tr>
+</tbody></table></div>
+<p><strong>Why the change</strong></p>
+<ul>
+<li>If both HA and SharpTalk keep a region table, they drift apart. The single source is the Province Feed of the Go2Joy Partner API.</li>
+<li>Province names and role display names change with the HA language (vi/en), so the signed values could differ. Numbers and codes do not change.</li>
+</ul>
+<p><strong>Transition period</strong>: For now, SharpTalk still accepts the v1.3 format (<code>province</code> · <code>region</code> keys). If <code>province_sn</code> is also sent, <strong>the values set from <code>province_sn</code> take priority</strong>. When HA has moved to v1.4 and passed UAT, we will end support for the v1.3 keys and announce the date.</p>
+<h2 id="1-what-sharptalk-does">1. What SharpTalk does</h2>
+<div class="scroll"><table><thead><tr>
+<th>Step</th>
+<th>Details</th>
+</tr>
+</thead><tbody><tr>
+<td>Verify</td>
+<td>Builds the signing string from the received values as-is and compares the HMAC. On mismatch: 401 E5048 (stays guest)</td>
+</tr>
+<tr>
+<td>Province · region</td>
+<td><code>province_sn</code> → fills <strong>province name and region</strong> from the Go2Joy province list (80 entries, Partner API Province Feed, refreshed daily). A number not in the list is saved without a region and goes to the default assignee</td>
+</tr>
+<tr>
+<td>Register</td>
+<td>Hotel = business customer (<code>hotel_id</code>), staff = contact (<code>userId</code>), role recorded</td>
+</tr>
+<tr>
+<td>Continuity</td>
+<td>Continues previous conversations per hotel account (after session end, on another PC, with another staff member)</td>
+</tr>
+<tr>
+<td>Routing</td>
+<td>Consult category chosen by the customer × hotel region → team × work label (rules managed by Go2Joy in the console)</td>
+</tr>
+</tbody></table></div>
+<p><strong>Region table</strong> (Province Feed <code>region</code>)</p>
+<div class="scroll"><table><thead><tr>
+<th>No.</th>
+<th>Code</th>
+<th>Name</th>
+</tr>
+</thead><tbody><tr>
+<td>1</td>
+<td><code>south</code></td>
+<td>South</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>north</code></td>
+<td>North</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>central</code></td>
+<td>Central</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>north_center</code></td>
+<td>North Central</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>south_center</code></td>
+<td>South Center</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>region_10</code></td>
+<td>Not documented (17 cities of Manila). To be fixed after the reply to work request WR-27</td>
+</tr>
+</tbody></table></div>
+<h2 id="2-data-sent-v14">2. Data sent (v1.4)</h2>
+<div class="scroll"><table><thead><tr>
+<th>Field</th>
+<th>Signed</th>
+<th>Value</th>
+<th>HA source (example)</th>
+<th>Example</th>
+</tr>
+</thead><tbody><tr>
+<td><code>userId</code></td>
+<td>Yes</td>
+<td><code>"ha:" + userSn</code></td>
+<td>Staff number in HA DB</td>
+<td><code>ha:1001</code></td>
+</tr>
+<tr>
+<td><code>attributes.hotel_id</code></td>
+<td>Yes</td>
+<td>Selected hotel <code>hotelSn</code> (string)</td>
+<td>Selected hotel in the session</td>
+<td><code>"1721"</code></td>
+</tr>
+<tr>
+<td><code>attributes.hotel_name</code></td>
+<td>Yes</td>
+<td>Hotel name</td>
+<td>Hotel in HA DB</td>
+<td><code>A In Hotel Del Luna</code></td>
+</tr>
+<tr>
+<td><code>attributes.province_sn</code></td>
+<td>Yes</td>
+<td><code>provinceSn</code> of the hotel's province (string)</td>
+<td>Hotel in HA DB → provinceSn</td>
+<td><code>"1"</code></td>
+</tr>
+<tr>
+<td><code>attributes.role</code></td>
+<td>Yes</td>
+<td>HA role code</td>
+<td>Role key in HA DB</td>
+<td><code>RECEPTIONIST</code> (example. Real codes come with the A7 reply)</td>
+</tr>
+<tr>
+<td><code>name</code> · <code>email</code> · <code>phone</code></td>
+<td>No</td>
+<td>For display. Drop the field when empty</td>
+<td>Profile</td>
+<td><code>G2J SUPPORT</code></td>
+</tr>
+</tbody></table></div>
+<h2 id="3-request-flow">3. Request flow</h2>
+<div class="scroll"><pre class="code"><code>HA FE ──(signed-in session)──▶ HA server  GET /api/v1/staff/sharptalkIdentity
+                         └ values from session/DB → normalize → sign → return package
+HA FE ── SharpTalk.identify(package unchanged) ──▶ widget iframe
+widget ── POST /api/v1/public/embed/identify ──▶ SharpTalk
+                         └ verify signature → province_sn → province name/region → business customer/contact → link conversation
+widget ── ivy:event { event: "identified", ok } ──▶ HA FE (optional: log)</code></pre></div>
+<h2 id="4-signing-string">4. Signing string</h2>
+<div class="scroll"><pre class="code"><code>no attributes   : userId
+with attributes : userId + "\n" + key=value + "\n" + key=value ...   (keys in alphabetical order)
+
+hash = hex( HMAC-SHA256( key = SHARPTALK_EMBED_SECRET, message = signing string (UTF-8) ) )
+       → 64 lowercase hex chars
+
+Example (T2):
+ha:1001
+hotel_id=1721
+hotel_name=A In Hotel Del Luna
+province_sn=1
+role=RECEPTIONIST</code></pre></div>
+<ul>
+<li>Key order: <code>hotel_id</code> → <code>hotel_name</code> → <code>province_sn</code> → <code>role</code>.</li>
+<li>The values you send must be <strong>exactly the same</strong> as the values you signed (including spaces, letter case and tone marks).</li>
+</ul>
+<h2 id="5-implementation">5. Implementation</h2>
+<h3 id="51-ha-server-php--sharptalkidentityphp">5.1 HA server (PHP) — <a href="files/sharptalk_identity.php.txt">sharptalk_identity.php</a></h3>
+<div class="scroll"><pre class="code"><code>&lt;?php
+// SharpTalk identify package — HA server (spec v1.4). Requires PHP intl + mbstring.
+
+/** NFC → collapse whitespace (incl. NBSP) → trim → 120 chars. Order matters. */
+function sharptalk_clean($value): string {
+    $v = Normalizer::normalize((string) $value, Normalizer::FORM_C);
+    if ($v === false) { $v = (string) $value; }
+    $v = preg_replace('/[\s\x{00A0}\x{2000}-\x{200B}\x{3000}]+/u', ' ', $v);
+    $v = trim($v);
+    return mb_substr($v, 0, 120, 'UTF-8');
+}
+
+/**
+ * @param string     $userSn   staff number from the HA DB (never the login ID)
+ * @param array|null $hotel    ['sn' =&gt; …, 'name' =&gt; …, 'provinceSn' =&gt; …] or null for "all hotels"
+ * @param string     $roleCode HA role code (language independent)
+ * @param array      $profile  ['name' =&gt; …, 'email' =&gt; …, 'phone' =&gt; …] — display only, not signed
+ */
+function sharptalk_identity(string $userSn, ?array $hotel, string $roleCode, array $profile, string $secret): array {
+    $attributes = ['role' =&gt; $roleCode];
+    if ($hotel !== null) {
+        $attributes['hotel_id']    = $hotel['sn'];
+        $attributes['hotel_name']  = $hotel['name'];
+        $attributes['province_sn'] = $hotel['provinceSn'];
+    }
+    $clean = [];
+    foreach ($attributes as $k =&gt; $v) {
+        $c = sharptalk_clean($v);
+        if ($c !== '') { $clean[$k] = $c; }          // empty values are left out of signing AND payload
+    }
+    ksort($clean, SORT_STRING);
+    $userId = 'ha:' . sharptalk_clean($userSn);
+    $lines = [$userId];
+    foreach ($clean as $k =&gt; $v) { $lines[] = $k . '=' . $v; }
+    $hash = hash_hmac('sha256', implode("\n", $lines), $secret);
+
+    $package = ['userId' =&gt; $userId, 'hash' =&gt; $hash];
+    foreach (['name', 'email', 'phone'] as $f) {     // unsigned; drop when empty
+        $c = sharptalk_clean($profile[$f] ?? '');
+        if ($c !== '') { $package[$f] = $c; }
+    }
+    if ($clean) { $package['attributes'] = $clean; }
+    return $package;
+}
+
+// Controller (login session required):
+// $staff = currentStaff(); $hotel = selectedHotelOrNull();
+// return json(sharptalk_identity($staff-&gt;sn, $hotel ? ['sn' =&gt; $hotel-&gt;sn, 'name' =&gt; $hotel-&gt;name,
+//        'provinceSn' =&gt; $hotel-&gt;provinceSn] : null, $staff-&gt;roleCode,
+//        ['name' =&gt; $staff-&gt;fullName, 'email' =&gt; $staff-&gt;email, 'phone' =&gt; $staff-&gt;mobile],
+//        getenv('SHARPTALK_EMBED_SECRET')));</code></pre></div>
+<h3 id="52-ha-fe">5.2 HA FE</h3>
+<div class="scroll"><pre class="code"><code>&lt;script&gt;
+  window.SHARPTALK_WIDGET_CONFIG = {
+    shop: "https://www.go2joy.vn",
+    widgetUrl: SHARPTALK_ORIGIN + "/widget",        // B7: one setting per environment
+    agent: "hotel-partner",
+    locale: (localStorage.getItem("lang") || "vi").toLowerCase()
+    // no `user` block, no hash here (B1)
+  };
+  window.SharpTalk = window.SharpTalk || { q: [] };
+  function sharptalkCall(method, arg) {
+    if (typeof window.SharpTalk[method] === "function") window.SharpTalk[method](arg);
+    else window.SharpTalk.q.push([method, arg]);
+  }
+&lt;/script&gt;
+&lt;script src="SHARPTALK_ORIGIN/widget/embed.js" defer&gt;&lt;/script&gt;</code></pre></div>
+<div class="scroll"><pre class="code"><code>// B2 · B3: after sign-in, on reload, on hotel change (incl. "all hotels"), on language change
+async function sharptalkSignIn() {
+  const pkg = await haApi.get('/api/v1/staff/sharptalkIdentity'); // signed on the server
+  sharptalkCall('identify', pkg);                                // UNCHANGED
+}
+// B4: sign-out button, session/token expiry, before another account signs in, other tab signed out
+function sharptalkSignOut() { sharptalkCall('logout'); }
+window.addEventListener('storage', (e) =&gt; { if (e.key === 'profile' &amp;&amp; !e.newValue) sharptalkSignOut(); });
+// B5
+function sharptalkSetLocale(lang) { sharptalkCall('setLocale', String(lang || 'vi').toLowerCase()); }
+// optional log
+window.addEventListener('message', (e) =&gt; {
+  if (e.origin !== SHARPTALK_ORIGIN || e.data?.type !== 'ivy:event') return;
+  if (e.data.event === 'identified') console.info('[SharpTalk] identify', e.data.ok ? 'OK' : 'rejected');
+});</code></pre></div>
+<h3 id="53-package-example-t2">5.3 Package example (T2)</h3>
+<div class="scroll"><pre class="code"><code>{
+  "userId": "ha:1001",
+  "hash": "fb670d6fbaac555b40b2f9896ec7de0604a1fad83aaf9e892f293f1d3be9faa7",
+  "name": "G2J SUPPORT",
+  "attributes": { "hotel_id": "1721", "hotel_name": "A In Hotel Del Luna", "province_sn": "1", "role": "RECEPTIONIST" }
+}</code></pre></div>
+<h3 id="54-test-vectors-v14">5.4 Test vectors (v1.4)</h3>
+<p>The test secret is <code>test-secret-do-not-use</code> (not a real secret). The hashes below were computed separately by <strong>the SharpTalk server verification code</strong> and by <strong>the 5.1 PHP sample (PHP 8.3 + intl)</strong>, and they match. Role codes and <code>userSn</code> are example values.</p>
+<div class="scroll"><table><thead><tr>
+<th>#</th>
+<th>Input</th>
+<th>Expected hash</th>
+</tr>
+</thead><tbody><tr>
+<td>T1</td>
+<td><code>ha:1001</code> · no attributes</td>
+<td><code>244f6fa4c1c48d077d54bd632b0897042fa413e36d55921517c462e2af51e618</code></td>
+</tr>
+<tr>
+<td>T2</td>
+<td><code>ha:1001</code> · hotel_id=<code>1721</code>, hotel_name=<code>A In Hotel Del Luna</code>, province_sn=<code>1</code>, role=<code>RECEPTIONIST</code></td>
+<td><code>fb670d6fbaac555b40b2f9896ec7de0604a1fad83aaf9e892f293f1d3be9faa7</code></td>
+</tr>
+<tr>
+<td>T3</td>
+<td><code>ha:2002</code> · hotel_id=<code>2001</code>, hotel_name=<code>Huế Garden Hotel</code>, province_sn=<code>32</code>, role=<code>OWNER</code></td>
+<td><code>0df74c490621c521a673b7bbd6014e6e3141a086d04c7c2f8de3699d31e581d7</code></td>
+</tr>
+<tr>
+<td>T4</td>
+<td><code>ha:3003</code> · hotel_id=<code>3001</code>, hotel_name=<code>Hạ Long Bay Hotel</code>, province_sn=<code>15</code>, role=<code>RECEPTIONIST</code></td>
+<td><code>7e5cf87cdd3dc38574ec8f3f9fe6671e9650806d28f4741a55bb508f53b77ea9</code></td>
+</tr>
+<tr>
+<td>T5</td>
+<td><code>ha:1001</code> · role=<code>MANAGER</code> (<strong>All hotels</strong>)</td>
+<td><code>d57dc894632e52a7ca62d97f4cbec924eb33982dff23f57058b7299d24f57f20</code></td>
+</tr>
+<tr>
+<td>T6</td>
+<td>Same values as T3, entered messy: hotel_id=<code>" 2001"</code> (leading space), hotel_name=<code>"  Hu" + "ế" + "  Garden&nbsp;Hotel&nbsp;"</code> (decomposed ế · double space · NBSP), province_sn=<code>32</code> (number type) → sign after 5.1 normalization</td>
+<td><strong>Must equal T3</strong> <code>0df74c490621c521a673b7bbd6014e6e3141a086d04c7c2f8de3699d31e581d7</code></td>
+</tr>
+</tbody></table></div>
+<ul>
+<li>Run: <code>docker run --rm -v "$PWD/scripts/go2joy/php":/w php:8.3-cli sh -c 'apt-get update -qq &amp;&amp; apt-get install -y -qq libicu-dev &amp;&amp; docker-php-ext-install intl &amp;&amp; php /w/vectors.php'</code></li>
+<li>Resulting province/region (values SharpTalk saves): T2 Hồ Chí Minh · <code>south</code>, T3 Thừa Thiên Huế · <code>north_center</code>, T4 Quảng Ninh · <code>north</code>, T5 none (default assignee).</li>
+<li>Do not use the v1.0 ~ v1.3 vectors (only T1 is the same).</li>
+</ul>
+<h3 id="55-sharptalk-responses">5.5 SharpTalk responses</h3>
+<div class="scroll"><table><thead><tr>
+<th>Result</th>
+<th>Meaning</th>
+<th>Action</th>
+</tr>
+</thead><tbody><tr>
+<td>200</td>
+<td>Verified. Session is "verified", business customer and contact linked</td>
+<td>—</td>
+</tr>
+<tr>
+<td>401 · E5048</td>
+<td>Signature mismatch: string·secret·environment mismatch, unknown key, over 120 chars or line break, NFC/whitespace difference, non-numeric <code>province_sn</code></td>
+<td>Compare with section 4, rerun 5.4</td>
+</tr>
+<tr>
+<td>400</td>
+<td>Format error (empty email etc.)</td>
+<td>Leave out empty fields</td>
+</tr>
+<tr>
+<td>404</td>
+<td>No chat session</td>
+<td>Widget handles it automatically. Reload</td>
+</tr>
+</tbody></table></div>
+<h2 id="6-security">6. Security</h2>
+<ul>
+<li>Keep the secret only in HA server environment variables. Staging and production secrets differ (SharpTalk sends them over a secure channel).</li>
+<li>Anyone holding a signed package can chat as that staff member and see that hotel's previous conversations. Do not log it, and do not skip sign-out handling (B4).</li>
+<li>Whether to add a signature expiry (<code>ts</code>) is decided in work request WR-03 (if added, it ships together as v1.5).</li>
+<li>Shared PCs (front desk): automatic sign-out and account switching in B4 are especially important.</li>
+</ul>
+<h2 id="7-sharptalk-status">7. SharpTalk status</h2>
+<div class="scroll"><table><thead><tr>
+<th>Item</th>
+<th>Status</th>
+</tr>
+</thead><tbody><tr>
+<td>v1.4 support (<code>province_sn</code> → province name/region, v1.3 in parallel)</td>
+<td>Staging deploy (target 10/27)</td>
+</tr>
+<tr>
+<td>Go2Joy province list, 80 entries (indexed by number)</td>
+<td>Loaded on staging · production loaded at install</td>
+</tr>
+<tr>
+<td>Temporary unsigned sign-in (for staging UAT)</td>
+<td>Ends after A and B are done</td>
+</tr>
+<tr>
+<td>Role code display names</td>
+<td>After the A7 code table is received</td>
+</tr>
+</tbody></table></div>
+<h2 id="8-uat-checklist-wr-05">8. UAT checklist (WR-05)</h2>
+<div class="scroll"><table><thead><tr>
+<th>Check</th>
+<th>Expected</th>
+</tr>
+</thead><tbody><tr>
+<td>Widget while not signed in</td>
+<td>Guest, consent notice shown (same as now)</td>
+</tr>
+<tr>
+<td>HA sign-in → widget</td>
+<td>identify <strong>200</strong>, <code>identified {ok: true}</code>, no consent notice, staff name in greeting, "verified" in console</td>
+</tr>
+<tr>
+<td>Console › Customers › Business customers</td>
+<td>1 hotel (name · province · region, calculated by SharpTalk), staff and role code under contacts</td>
+</tr>
+<tr>
+<td>HA language vi ↔ en</td>
+<td>Signed values unchanged → same conversation continues, only the reply language changes</td>
+</tr>
+<tr>
+<td>Change hotel selection</td>
+<td>Business customer and conversation switch to the new hotel</td>
+</tr>
+<tr>
+<td>"All hotels" → connect to agent</td>
+<td>200, no hotel, default assignee</td>
+</tr>
+<tr>
+<td>Connect to agent from hotels in each region (north · north_center · south_center · south) → choose consult category</td>
+<td>Team routing follows console rules, assignee shown in alarm center</td>
+</tr>
+<tr>
+<td>Hotel name with many tone marks (incl. decomposed input)</td>
+<td>200</td>
+</tr>
+<tr>
+<td>Staff with empty email</td>
+<td>200 without the email field</td>
+</tr>
+<tr>
+<td>Sign-out · session expiry · another account signs in</td>
+<td>Guest (or the new account), previous staff conversations not visible</td>
+</tr>
+<tr>
+<td>Change one signed value without re-signing</td>
+<td>401, guest. <code>name</code> · <code>email</code> · <code>phone</code> are not signed, so changing them still gives 200</td>
+</tr>
+<tr>
+<td>Add a key outside the list (e.g. <code>district</code>) and sign</td>
+<td>401 (unknown keys are left out of the signature calculation)</td>
+</tr>
+</tbody></table></div>
+</main>
+<footer class="wrap foot">Amoeba(BitBiz) · SharpTalk for Go2Joy</footer>
+</body>
+</html>
