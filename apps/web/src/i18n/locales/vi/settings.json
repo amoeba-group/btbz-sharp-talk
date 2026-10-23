@@ -112,7 +112,9 @@
     "csatMode": "Thẻ hài lòng",
     "csatModeRating": "Chỉ đánh giá (mặc định) — năm biểu cảm, một chạm",
     "csatModeSurvey": "Khảo sát — đã giải quyết? + đánh giá + lý do khi không hài lòng",
-    "csatModeHint": "Hiện khi cuộc trò chuyện kết thúc. Khảo sát hỏi thêm \"đã giải quyết chưa?\" (tính vào tỷ lệ giải quyết) và hỏi lý do khi chấm 1–2."
+    "csatModeHint": "Hiện khi cuộc trò chuyện kết thúc. Khảo sát hỏi thêm \"đã giải quyết chưa?\" (tính vào tỷ lệ giải quyết) và hỏi lý do khi chấm 1–2.",
+    "disclosureLine": "Dòng thông báo AI",
+    "disclosureLineHint": "Dòng thông báo AI phía trên hoặc dưới khung chat. Chữ trong [ngoặc vuông] sẽ liên kết tới điều khoản dịch vụ (Thông báo quyền riêng tư → URL điều khoản). Để trống = dòng mặc định."
   },
   "shopify": {
     "title": "Kết nối Shopify",

@@ -281,6 +281,13 @@ export class UpdateWidgetSettingsRequest {
   @IsOptional() @IsString() @MaxLength(120) launcher_teaser_vi?: string | null;
   @IsOptional() @IsString() @MaxLength(120) launcher_teaser_ja?: string | null;
   @IsOptional() @IsString() @MaxLength(120) launcher_teaser_zh?: string | null;
+  // PLN-261023-Widget-Disclosure-Line-Copy — one line under/over the chat.
+  @IsOptional() @IsString() @MaxLength(160) disclosure_line_en?: string | null;
+  @IsOptional() @IsString() @MaxLength(160) disclosure_line_es?: string | null;
+  @IsOptional() @IsString() @MaxLength(160) disclosure_line_ko?: string | null;
+  @IsOptional() @IsString() @MaxLength(160) disclosure_line_vi?: string | null;
+  @IsOptional() @IsString() @MaxLength(160) disclosure_line_ja?: string | null;
+  @IsOptional() @IsString() @MaxLength(160) disclosure_line_zh?: string | null;
 }
 
 /**

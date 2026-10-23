@@ -112,7 +112,9 @@
     "csatMode": "Tarjeta de satisfacción",
     "csatModeRating": "Solo valoración (predeterminado): cinco caras, un toque",
     "csatModeSurvey": "Encuesta: ¿resuelto? + valoración + motivo si no está satisfecho",
-    "csatModeHint": "Se muestra al terminar un chat. La encuesta añade \"¿se resolvió?\" (cuenta en la tasa de resolución) y pregunta el motivo con 1–2."
+    "csatModeHint": "Se muestra al terminar un chat. La encuesta añade \"¿se resolvió?\" (cuenta en la tasa de resolución) y pregunta el motivo con 1–2.",
+    "disclosureLine": "Línea de aviso de IA",
+    "disclosureLineHint": "La línea de aviso de IA sobre o bajo el chat. Las palabras entre [corchetes] enlazan a tus términos del servicio (Aviso de privacidad → URL de términos). Vacío = la línea predeterminada."
   },
   "shopify": {
     "title": "Conexión de Shopify",

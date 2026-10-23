@@ -135,6 +135,8 @@ export interface WidgetSettings {
   aiSenderName?: Record<string, string>;
   agentSenderName?: Record<string, string>;
   launcherTeaser?: Record<string, string>;
+  /** PLN-261023 AI disclosure line; absent on an older API = empty. */
+  disclosureLine?: Record<string, string>;
   displayNameFallback: string | null;
 }
 
@@ -148,10 +150,11 @@ export interface WidgetCopyDraft {
   aiSenderName: Record<string, string>;
   agentSenderName: Record<string, string>;
   launcherTeaser: Record<string, string>;
+  disclosureLine: Record<string, string>;
 }
 
 /** The per-language bags a WidgetCopyDraft carries — one place to iterate. */
-export const WIDGET_COPY_BAGS = ['firstVisit', 'loginGreeting', 'headerTitle', 'headerGreeting', 'aiSenderName', 'agentSenderName', 'launcherTeaser'] as const;
+export const WIDGET_COPY_BAGS = ['firstVisit', 'loginGreeting', 'headerTitle', 'headerGreeting', 'aiSenderName', 'agentSenderName', 'launcherTeaser', 'disclosureLine'] as const;
 export type WidgetCopyBag = (typeof WIDGET_COPY_BAGS)[number];
 
 /** Tenant delivery policy — a ceiling on what the shop sends, per category. */
@@ -227,6 +230,7 @@ const COPY_WIRE_KEYS: Record<WidgetCopyBag, string> = {
   aiSenderName: 'ai_sender_name',
   agentSenderName: 'agent_sender_name',
   launcherTeaser: 'launcher_teaser',
+  disclosureLine: 'disclosure_line',
 };
 
 /** Flatten the per-language bags into the API's `{bag}_{lang}` fields. */

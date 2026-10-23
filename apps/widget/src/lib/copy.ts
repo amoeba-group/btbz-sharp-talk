@@ -36,3 +36,16 @@ export function welcomeGreeting(opts: {
   if (name) return fill(withShop, '{name}', name);
   return withShop.replace(/\s*\{name\}/g, '').replace(/^[\s,]+/, '');
 }
+
+/**
+ * A tenant's AI disclosure line split around its terms link
+ * (PLN-261023-Widget-Disclosure-Line-Copy D2): the first `[…]` pair is the
+ * linked part — "Created by AI; apply [terms of service]". `link` is null when
+ * the text has no brackets; the caller then appends its usual terms link.
+ * An unmatched or empty bracket is left as text rather than guessed at.
+ */
+export function splitDisclosure(text: string): { before: string; link: string | null; after: string } {
+  const m = /\[([^\]]+)\]/.exec(text);
+  if (!m || !m[1].trim()) return { before: text, link: null, after: '' };
+  return { before: text.slice(0, m.index), link: m[1], after: text.slice(m.index + m[0].length) };
+}

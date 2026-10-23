@@ -703,6 +703,7 @@ export class SessionService {
         aiSenderName: tenant?.widgetCopy?.aiSenderName ?? {},
         agentSenderName: tenant?.widgetCopy?.agentSenderName ?? {},
         launcherTeaser: tenant?.widgetCopy?.launcherTeaser ?? {},
+        disclosureLine: tenant?.widgetCopy?.disclosureLine ?? {},
       },
       // 'base' (the default) has no shopper-facing issue feed (PLN-260923 D-2).
       issueFeed: !!tenant?.workflowMode && tenant.workflowMode !== 'base',
