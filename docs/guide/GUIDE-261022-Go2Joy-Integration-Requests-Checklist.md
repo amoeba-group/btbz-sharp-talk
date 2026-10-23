@@ -8,6 +8,7 @@
 | 수신 | Go2Joy PM · HA 개발팀(백엔드·FE) · 인프라 · 운영팀(CS) · 법무 |
 | 발신 | SharpTalk (Amoeba) |
 | 일자 / 버전 | 2026-10-22 · v1.0 |
+| 후속 | **[작업요청서 v1.0 (2026-10-23)](GUIDE-261023-Go2Joy-Work-Request.md)** — 이 문서의 G 항목을 Go2Joy 담당별 작업(WR)·기한·완료 기준으로 재정리, HA UAT 점검 결과 포함 |
 | 참고 | SharpTalk × Go2Joy 채널 구조(2026-10-21) · Go2Joy-SharpTalk AI 운용 전략 Level 1·2·3(2026-10-22) · 연동 체크리스트 및 일정표(2026-10-12) · 프로젝트 계획서 PLN-261015 · [HA 연동 가이드 v1.3](GUIDE-261022-Go2Joy-HA-Identify-v1.3.md) |
 
 ## 요약
