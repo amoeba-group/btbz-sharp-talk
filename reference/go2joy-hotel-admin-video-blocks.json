@@ -1,384 +1,511 @@
 {
-  "_about": "Go2Joy Hotel Admin Notion page — video blocks in page order (PLN-261006-KB-Video-Links). Read from the Notion API on 2026-10-06 (63 video blocks, all Notion-hosted files). `video` = the Video N of reference/hoteladminvideoguidevien.md (51 analysed); Videos 51–62 (analysed 2026-10-08) are the twelve added later: positions 17–19 → Videos 51–53, positions 54–62 → Videos 54–62. Mapping: N<=16 -> same position, N>=17 -> position N+3 (positions 17-19 were inserted).",
-  "pageId": "8968fee0bb548347a35e01756b4cc89c",
+  "_about": "Go2Joy Hotel Admin Notion page — video blocks in page order (PLN-261006-KB-Video-Links). Read from the Notion API on 2026-10-06 (63 video blocks, all Notion-hosted files). `video` = the Video N of reference/hoteladminvideoguidevien.md (51 analysed); Videos 51–62 (analysed 2026-10-08) are the twelve added later: positions 17–19 → Videos 51–53, positions 54–62 → Videos 54–62. Mapping: N<=16 -> same position, N>=17 -> position N+3 (positions 17-19 were inserted). Re-pointed on 2026-10-23 (FIX-261023): Go2Joy moved the guide to the shared page `Hướng dẫn sử dụng Hotel Admin` (sub-pages, same 63 videos in the same order) and Notion issued new block ids; `blockId` is the live id, `oldBlockId` the 2026-10-06 one (404 since), `notionPageId` the sub-page holding the block.",
+  "pageId": "bfb56ba489b9429fba706ed8f96bedde",
   "blocks": [
     {
       "position": 0,
-      "blockId": "4648fee0bb548292bc6381250b79b647",
+      "blockId": "27e6dfbd464d807c8af6cacc3d74bc65",
       "heading": "Trang chủ",
-      "video": 0
+      "video": 0,
+      "oldBlockId": "4648fee0bb548292bc6381250b79b647",
+      "notionPageId": "e7eaa041138e461496050fe4e6aed4e4"
     },
     {
       "position": 1,
-      "blockId": "3ac8fee0bb548208aca3817093a010d5",
+      "blockId": "e580bdb1dcb04ff08b8d08ba97cf8159",
       "heading": "Quản lý đánh giá",
-      "video": 1
+      "video": 1,
+      "oldBlockId": "3ac8fee0bb548208aca3817093a010d5",
+      "notionPageId": "412d961a21ab4858a86198a8046e9039"
     },
     {
       "position": 2,
-      "blockId": "c118fee0bb548237907b811490142c9b",
+      "blockId": "0128305bf3274e748917c7f595fe6f7a",
       "heading": "1. Tạo hoặc Sửa chương trình",
-      "video": 2
+      "video": 2,
+      "oldBlockId": "c118fee0bb548237907b811490142c9b",
+      "notionPageId": "2292c728cce64ac4b3be9584a58d0494"
     },
     {
       "position": 3,
-      "blockId": "d378fee0bb54826087a501d00a08c1cc",
+      "blockId": "0ddbf4d790d6430e9a7755fdff490eb5",
       "heading": "1. Tạo hoặc Sửa chương trình",
-      "video": 3
+      "video": 3,
+      "oldBlockId": "d378fee0bb54826087a501d00a08c1cc",
+      "notionPageId": "9f0d784231e64328825acd98047a2d44"
     },
     {
       "position": 4,
-      "blockId": "5278fee0bb54825b8c0181f91d54e2a9",
+      "blockId": "17f55cb9a81d497eaad164a0662ca9a9",
       "heading": "1. Tạo hoặc Sửa chương trình",
-      "video": 4
+      "video": 4,
+      "oldBlockId": "5278fee0bb54825b8c0181f91d54e2a9",
+      "notionPageId": "06063ea10508466eb7bd4e857496f36f"
     },
     {
       "position": 5,
-      "blockId": "4288fee0bb54835e8201819155c16ac0",
+      "blockId": "6876c2554ef142bda35e69ce8d8794be",
       "heading": "1. Tạo hoặc Sửa chương trình",
-      "video": 5
+      "video": 5,
+      "oldBlockId": "4288fee0bb54835e8201819155c16ac0",
+      "notionPageId": "7bc8f92728fe4ac1a9e88195bd4bab83"
     },
     {
       "position": 6,
-      "blockId": "7168fee0bb54827d8d7f814090cb2e5f",
+      "blockId": "e485be1d24874c08bcea4053e05c3a77",
       "heading": "2. Tìm chương trình giảm giá trực tiếp",
-      "video": 6
+      "video": 6,
+      "oldBlockId": "7168fee0bb54827d8d7f814090cb2e5f",
+      "notionPageId": "bdd6df33ac0b4a029643585ca1c55d38"
     },
     {
       "position": 7,
-      "blockId": "fe68fee0bb5482349e49018853fd3468",
+      "blockId": "1fe2e443f05748909e88cc70995392ad",
       "heading": "2. Tìm chương trình giảm giá trực tiếp",
-      "video": 7
+      "video": 7,
+      "oldBlockId": "fe68fee0bb5482349e49018853fd3468",
+      "notionPageId": "1437dc1621f7445aa00bffe92fb57913"
     },
     {
       "position": 8,
-      "blockId": "9588fee0bb5482b2910d01f099bdf875",
+      "blockId": "a09ea9a867a34f9b88cd88a52184930e",
       "heading": "1. Thiết lập Flash Sale",
-      "video": 8
+      "video": 8,
+      "oldBlockId": "9588fee0bb5482b2910d01f099bdf875",
+      "notionPageId": "d30ab17ac1f44dd3babd81ebc23ffd87"
     },
     {
       "position": 9,
-      "blockId": "7a08fee0bb54829aad028195e5197507",
+      "blockId": "3c936074b0e9473bb2087ec3762bc616",
       "heading": "1. Thiết lập Flash Sale",
-      "video": 9
+      "video": 9,
+      "oldBlockId": "7a08fee0bb54829aad028195e5197507",
+      "notionPageId": "a32d7294641a480588fee24f07b8f849"
     },
     {
       "position": 10,
-      "blockId": "6378fee0bb548322ad37813d0825d810",
+      "blockId": "62d6e7a537b74d03b563bcba8de52a7d",
       "heading": "2. Dừng Giảm sốc",
-      "video": 10
+      "video": 10,
+      "oldBlockId": "6378fee0bb548322ad37813d0825d810",
+      "notionPageId": "d2ecdc7713984c0ab55f938100d064ce"
     },
     {
       "position": 11,
-      "blockId": "0bf8fee0bb5482cda3c501e5bc26fad1",
+      "blockId": "3678c43145f849c3bcc273e7e85d1936",
       "heading": "1. Thiết lập Phụ thu",
-      "video": 11
+      "video": 11,
+      "oldBlockId": "0bf8fee0bb5482cda3c501e5bc26fad1",
+      "notionPageId": "80864435733c49359dcb5661ee68d4fe"
     },
     {
       "position": 12,
-      "blockId": "f028fee0bb5482008ee48196f3653a22",
+      "blockId": "d09970bbec2d492086ffdc955a289a8a",
       "heading": "2. Xoá Phụ thu",
-      "video": 12
+      "video": 12,
+      "oldBlockId": "f028fee0bb5482008ee48196f3653a22",
+      "notionPageId": "80864435733c49359dcb5661ee68d4fe"
     },
     {
       "position": 13,
-      "blockId": "7ab8fee0bb548238b11d8133a2631b94",
+      "blockId": "8d05bb4d50ef45d6b2549c1bfe86e5d5",
       "heading": "1. Thiết lập khoá phòng",
-      "video": 13
+      "video": 13,
+      "oldBlockId": "7ab8fee0bb548238b11d8133a2631b94",
+      "notionPageId": "99831012fc694448b6cea687221de3e6"
     },
     {
       "position": 14,
-      "blockId": "d678fee0bb5482538ce981ca65942ef3",
+      "blockId": "47202950e4944dfe86fd647ccac1c2d8",
       "heading": "1. Thiết lập khoá phòng",
-      "video": 14
+      "video": 14,
+      "oldBlockId": "d678fee0bb5482538ce981ca65942ef3",
+      "notionPageId": "a1be449bc1fa4a5681c9e21889493914"
     },
     {
       "position": 15,
-      "blockId": "ec58fee0bb5482a0b190813110190e9b",
+      "blockId": "8f47765098734c39aa8e2f7bf0af3e7e",
       "heading": "1. Thiết lập khoá phòng",
-      "video": 15
+      "video": 15,
+      "oldBlockId": "ec58fee0bb5482a0b190813110190e9b",
+      "notionPageId": "60e2af2fd32b4c6fb8d85d0db3ddf55c"
     },
     {
       "position": 16,
-      "blockId": "b748fee0bb5482798dc10139399da4fa",
+      "blockId": "91568cb01f644421b8d91788cfac3b5e",
       "heading": "2. Xoá thiết lập khoá phòng",
-      "video": 16
+      "video": 16,
+      "oldBlockId": "b748fee0bb5482798dc10139399da4fa",
+      "notionPageId": "41627e6a5a914417b7579a71c0a40563"
     },
     {
       "position": 17,
-      "blockId": "e568fee0bb54826d9395813284c8f10f",
+      "blockId": "247dbdec56634387ab9e05041826055d",
       "heading": "Tin nhắn từ G2J",
-      "video": 51
+      "video": 51,
+      "oldBlockId": "e568fee0bb54826d9395813284c8f10f",
+      "notionPageId": "1f4e44deb64d4eff80cd30628718edb0"
     },
     {
       "position": 18,
-      "blockId": "19c8fee0bb548299a02d8125515fc7b7",
+      "blockId": "1092c6b613eb4c9cbf6665708dd2f8a8",
       "heading": "Tin nhắn từ G2J",
-      "video": 52
+      "video": 52,
+      "oldBlockId": "19c8fee0bb548299a02d8125515fc7b7",
+      "notionPageId": "1265f8e9e12449d2a47922a2f7179413"
     },
     {
       "position": 19,
-      "blockId": "b1c8fee0bb5482c4b03d01a3eb58bb7e",
+      "blockId": "3106dfbd464d80359422de49619c2646",
       "heading": "Chat với khách (Mới)",
-      "video": 53
+      "video": 53,
+      "oldBlockId": "b1c8fee0bb5482c4b03d01a3eb58bb7e",
+      "notionPageId": "30f6dfbd464d80fa8b50cb8671390236"
     },
     {
       "position": 20,
-      "blockId": "82a8fee0bb54836a9d218108a4db98b3",
+      "blockId": "1dd6dfbd464d80c097dfcd01da7172e1",
       "heading": "1. Tất cả đặt phòng đều được huỷ phòng khi chọn lý do",
-      "video": 17
+      "video": 17,
+      "oldBlockId": "82a8fee0bb54836a9d218108a4db98b3",
+      "notionPageId": "1dd6dfbd464d809dbe25e1183863cc73"
     },
     {
       "position": 21,
-      "blockId": "3818fee0bb54824fa96a01855cca7c28",
+      "blockId": "1dd6dfbd464d809cacebe8d74918f412",
       "heading": "2. Đối với các lý do còn lại",
-      "video": 18
+      "video": 18,
+      "oldBlockId": "3818fee0bb54824fa96a01855cca7c28",
+      "notionPageId": "a97ef2d2886342ff97752f88d52f9bec"
     },
     {
       "position": 22,
-      "blockId": "7138fee0bb548204b5a68111a39fdbe1",
+      "blockId": "1dd6dfbd464d805192edf9b0a43f4367",
       "heading": "2. Đối với các lý do còn lại",
-      "video": 19
+      "video": 19,
+      "oldBlockId": "7138fee0bb548204b5a68111a39fdbe1",
+      "notionPageId": "fa6c6bfb44094ee1b0276a9bc4c906cf"
     },
     {
       "position": 23,
-      "blockId": "72f8fee0bb54838fb93b01574c7251ab",
+      "blockId": "1dd6dfbd464d80779505e5f129ccfab5",
       "heading": "2. Đối với các lý do còn lại",
-      "video": 20
+      "video": 20,
+      "oldBlockId": "72f8fee0bb54838fb93b01574c7251ab",
+      "notionPageId": "ca123827236f4b7192a474191b5c9df9"
     },
     {
       "position": 24,
-      "blockId": "8188fee0bb54824bbe4e0129344fac12",
+      "blockId": "9eb5de0d82da4d24b21058de35bf2e1b",
       "heading": "2. Đối với các lý do còn lại",
-      "video": 21
+      "video": 21,
+      "oldBlockId": "8188fee0bb54824bbe4e0129344fac12",
+      "notionPageId": "5e2e578ab5c14cf4991e63e54efbae13"
     },
     {
       "position": 25,
-      "blockId": "dab8fee0bb54834795e001304c3ed4f1",
+      "blockId": "4810477a33774264a602da1d96878d5a",
       "heading": "2. Đối với các lý do còn lại",
-      "video": 22
+      "video": 22,
+      "oldBlockId": "dab8fee0bb54834795e001304c3ed4f1",
+      "notionPageId": "7c58d44ce42e409ea48302f82a27f06c"
     },
     {
       "position": 26,
-      "blockId": "1de8fee0bb548242b9e0815df30d63b7",
+      "blockId": "b9544668b9ae440090bba001311afcfb",
       "heading": "2. Đối với các lý do còn lại",
-      "video": 23
+      "video": 23,
+      "oldBlockId": "1de8fee0bb548242b9e0815df30d63b7",
+      "notionPageId": "296c2be53ffb4536abc3e663b8f780bf"
     },
     {
       "position": 27,
-      "blockId": "cba8fee0bb5483c7b45381a7ea779bf2",
+      "blockId": "2ba148fd418542a6b9685947112aacd4",
       "heading": "Báo cáo đặt phòng",
-      "video": 24
+      "video": 24,
+      "oldBlockId": "cba8fee0bb5483c7b45381a7ea779bf2",
+      "notionPageId": "0d75ee517c64477785d75b216542a25c"
     },
     {
       "position": 28,
-      "blockId": "c328fee0bb548264a0ea81ad27bb0b2a",
+      "blockId": "800e19e7bd1f42fe953cbed385cf7a97",
       "heading": "Quản lý đối soát",
-      "video": 25
+      "video": 25,
+      "oldBlockId": "c328fee0bb548264a0ea81ad27bb0b2a",
+      "notionPageId": "edd678fbe1914423b76d412cd88790b4"
     },
     {
       "position": 29,
-      "blockId": "e198fee0bb548344bffb81debe69b831",
+      "blockId": "b2469a47d31e49a083cfd8e85915f19b",
       "heading": "Quản lý đối soát",
-      "video": 26
+      "video": 26,
+      "oldBlockId": "e198fee0bb548344bffb81debe69b831",
+      "notionPageId": "c56f7e452375488799865a1c84f9b84e"
     },
     {
       "position": 30,
-      "blockId": "8e18fee0bb5483d09ce10171442d3485",
+      "blockId": "d2113aa1d1f34ac19e10acb6a26c0e00",
       "heading": "Quản lý đối soát",
-      "video": 27
+      "video": 27,
+      "oldBlockId": "8e18fee0bb5483d09ce10171442d3485",
+      "notionPageId": "a228fe4fa467415bb19feeaccce8bd62"
     },
     {
       "position": 31,
-      "blockId": "8a78fee0bb5482de9e78815ba58be66a",
+      "blockId": "1207264ff6bf4ff0b518ee350c22a1af",
       "heading": "Quản lý đối soát",
-      "video": 28
+      "video": 28,
+      "oldBlockId": "8a78fee0bb5482de9e78815ba58be66a",
+      "notionPageId": "38094535ceb448d292a7dea9d812bf25"
     },
     {
       "position": 32,
-      "blockId": "2ba8fee0bb5482dd9c3b0138128ee370",
+      "blockId": "1fcf527b4f7046c2bd50289f33c7b234",
       "heading": "Quản lý đối soát",
-      "video": 29
+      "video": 29,
+      "oldBlockId": "2ba8fee0bb5482dd9c3b0138128ee370",
+      "notionPageId": "64f933abf9e54b6abccd757891b68571"
     },
     {
       "position": 33,
-      "blockId": "c438fee0bb5482ea88688166a715b128",
+      "blockId": "a87656398a544be6af84c34bf1d16e84",
       "heading": "Quản lý đối soát",
-      "video": 30
+      "video": 30,
+      "oldBlockId": "c438fee0bb5482ea88688166a715b128",
+      "notionPageId": "5dab632d95614ca0b9e4771223e7fdca"
     },
     {
       "position": 34,
-      "blockId": "ad78fee0bb548239b9f081fff5bedb03",
+      "blockId": "1c8bec3c6b62463d9f4043351851d4e8",
       "heading": "Quản lý đối soát",
-      "video": 31
+      "video": 31,
+      "oldBlockId": "ad78fee0bb548239b9f081fff5bedb03",
+      "notionPageId": "59b573ebcd1f4cbea410cf0127d445df"
     },
     {
       "position": 35,
-      "blockId": "cd18fee0bb54827692778183b52b0f53",
+      "blockId": "d3aaa00014f3447b8276d76df7449df4",
       "heading": "Quản lý sản phẩm",
-      "video": 32
+      "video": 32,
+      "oldBlockId": "cd18fee0bb54827692778183b52b0f53",
+      "notionPageId": "b14f4543310140368cdf89d28d55efeb"
     },
     {
       "position": 36,
-      "blockId": "2898fee0bb54821fbd1d01ed78dd9993",
+      "blockId": "c54405cd138d4dc4b3389ce9da7c7da7",
       "heading": "Quản lý sản phẩm",
-      "video": 33
+      "video": 33,
+      "oldBlockId": "2898fee0bb54821fbd1d01ed78dd9993",
+      "notionPageId": "43946d8d7f7844d28ecfa97e4cd975df"
     },
     {
       "position": 37,
-      "blockId": "2978fee0bb54838e984c81973e2ee3d0",
+      "blockId": "1b0c7c6844d246159c5c4d3db5a34ed3",
       "heading": "1. Xem Danh sách coupon",
-      "video": 34
+      "video": 34,
+      "oldBlockId": "2978fee0bb54838e984c81973e2ee3d0",
+      "notionPageId": "4da3b709c218446089b71513670b140f"
     },
     {
       "position": 38,
-      "blockId": "88b8fee0bb548306bef501390c6f30ae",
+      "blockId": "46fd39a8abed4738b2c2b98431499619",
       "heading": "1. Đăng ký tại trang Danh sách coupon",
-      "video": 35
+      "video": 35,
+      "oldBlockId": "88b8fee0bb548306bef501390c6f30ae",
+      "notionPageId": "98616b3fe56e40528c874f788669afa4"
     },
     {
       "position": 39,
-      "blockId": "05e8fee0bb54823986d7013f7951ab00",
+      "blockId": "7027faa884d04d3982b086a33d0efb2f",
       "heading": "2. Đăng ký tại trang Chi tiết coupon",
-      "video": 36
+      "video": 36,
+      "oldBlockId": "05e8fee0bb54823986d7013f7951ab00",
+      "notionPageId": "98616b3fe56e40528c874f788669afa4"
     },
     {
       "position": 40,
-      "blockId": "f278fee0bb5483079f9a8114326db532",
+      "blockId": "d060f7adcd51417c9829781efb9cc3cd",
       "heading": "2. Đăng ký tại trang Chi tiết coupon",
-      "video": 37
+      "video": 37,
+      "oldBlockId": "f278fee0bb5483079f9a8114326db532",
+      "notionPageId": "e7c59dc70c28407d9ece8f77045b951f"
     },
     {
       "position": 41,
-      "blockId": "78e8fee0bb5483a585bb8192ef6d9b91",
+      "blockId": "b1ff7c7439804984aea1d909c3fe567f",
       "heading": "2. Đăng ký tại trang Chi tiết coupon",
-      "video": 38
+      "video": 38,
+      "oldBlockId": "78e8fee0bb5483a585bb8192ef6d9b91",
+      "notionPageId": "2c26dfbd464d8066a3c1dc0ce98314bc"
     },
     {
       "position": 42,
-      "blockId": "96d8fee0bb548285af2801121c1e93bd",
+      "blockId": "2c26dfbd464d80e29f54f0c35153478c",
       "heading": "2. Đăng ký tại trang Chi tiết coupon",
-      "video": 39
+      "video": 39,
+      "oldBlockId": "96d8fee0bb548285af2801121c1e93bd",
+      "notionPageId": "2c26dfbd464d80c3a81ccbe58500f843"
     },
     {
       "position": 43,
-      "blockId": "c918fee0bb5482cf9746814d8ab9edbd",
+      "blockId": "49022d1daaa6487b9a8cd04170814059",
       "heading": "2. Đăng ký tại trang Chi tiết coupon",
-      "video": 40
+      "video": 40,
+      "oldBlockId": "c918fee0bb5482cf9746814d8ab9edbd",
+      "notionPageId": "4bedea3b3eba48a08387fb291c60dc8f"
     },
     {
       "position": 44,
-      "blockId": "2d58fee0bb548322954981351858e43e",
+      "blockId": "8f11e4699e9649e3811637690fc8da7d",
       "heading": "2. Đăng ký tại trang Chi tiết coupon",
-      "video": 41
+      "video": 41,
+      "oldBlockId": "2d58fee0bb548322954981351858e43e",
+      "notionPageId": "9f3138f868ff40b6bb7697e40b62c844"
     },
     {
       "position": 45,
-      "blockId": "0dc8fee0bb5482a99350810f3833c60c",
+      "blockId": "2696dfbd464d805ab6abfdef99640c28",
       "heading": "Chiến dịch quảng cáo",
-      "video": 42
+      "video": 42,
+      "oldBlockId": "0dc8fee0bb5482a99350810f3833c60c",
+      "notionPageId": "2696dfbd464d809e89c8c714874179be"
     },
     {
       "position": 46,
-      "blockId": "4ee8fee0bb548341bb1f0177682d11df",
+      "blockId": "2696dfbd464d809c986ecb4df0cf23cf",
       "heading": "Chiến dịch quảng cáo",
-      "video": 43
+      "video": 43,
+      "oldBlockId": "4ee8fee0bb548341bb1f0177682d11df",
+      "notionPageId": "2696dfbd464d800dbc6be1d61d41c04c"
     },
     {
       "position": 47,
-      "blockId": "bad8fee0bb5482628f1e01579a3ee2c7",
+      "blockId": "2696dfbd464d80d39aaee216ba3aeac8",
       "heading": "Chiến dịch quảng cáo",
-      "video": 44
+      "video": 44,
+      "oldBlockId": "bad8fee0bb5482628f1e01579a3ee2c7",
+      "notionPageId": "2696dfbd464d809db346da027a8f7ab2"
     },
     {
       "position": 48,
-      "blockId": "32f8fee0bb548321adbb017cdea916b3",
+      "blockId": "2706dfbd464d80c7811ccc83f22ad979",
       "heading": "Chiến dịch quảng cáo",
-      "video": 45
+      "video": 45,
+      "oldBlockId": "32f8fee0bb548321adbb017cdea916b3",
+      "notionPageId": "2696dfbd464d809db346da027a8f7ab2"
     },
     {
       "position": 49,
-      "blockId": "70a8fee0bb5483b0a5e301eb1bca48d2",
+      "blockId": "1b8fa5730c024682a0ba88b286254728",
       "heading": "Quản lý nhân viên",
-      "video": 46
+      "video": 46,
+      "oldBlockId": "70a8fee0bb5483b0a5e301eb1bca48d2",
+      "notionPageId": "35de374d4b92490db7c992b9036381fe"
     },
     {
       "position": 50,
-      "blockId": "6de8fee0bb548248973581cc781729c9",
+      "blockId": "3cab4046a06b48398e9e094233928771",
       "heading": "Quản lý nhân viên",
-      "video": 47
+      "video": 47,
+      "oldBlockId": "6de8fee0bb548248973581cc781729c9",
+      "notionPageId": "27f9185b9c2e48bfa099d002930df342"
     },
     {
       "position": 51,
-      "blockId": "dc88fee0bb548355bd08817fc4a8c07e",
+      "blockId": "a5ab0355f30e4ab2a6ce46e670d7a125",
       "heading": "1. Tạo tài khoản cho Lễ tân",
-      "video": 48
+      "video": 48,
+      "oldBlockId": "dc88fee0bb548355bd08817fc4a8c07e",
+      "notionPageId": "c5c7e7d03e4f4d1da657785fa6a0ac51"
     },
     {
       "position": 52,
-      "blockId": "f1b8fee0bb5483fc95848100d2bd7be0",
+      "blockId": "058b6bb3e3a947aeabafef0b9132d7fd",
       "heading": "2. Tạo tài khoản cho Quản lý",
-      "video": 49
+      "video": 49,
+      "oldBlockId": "f1b8fee0bb5483fc95848100d2bd7be0",
+      "notionPageId": "19bb8780067a4b369a97bdc0f5553802"
     },
     {
       "position": 53,
-      "blockId": "f338fee0bb548282bf030189f14e8d05",
+      "blockId": "9a774b100b44423a8a59d3c75d94af56",
       "heading": "2. Tạo tài khoản cho Quản lý",
-      "video": 50
+      "video": 50,
+      "oldBlockId": "f338fee0bb548282bf030189f14e8d05",
+      "notionPageId": "c3533cd8f47242b5ad0f02aa9e555fb3"
     },
     {
       "position": 54,
-      "blockId": "7258fee0bb5482d5906c015c7cf42b85",
+      "blockId": "19b9bb8d36724d29b58e25174f5749a6",
       "heading": "Thiết lập thông tin chung",
-      "video": 54
+      "video": 54,
+      "oldBlockId": "7258fee0bb5482d5906c015c7cf42b85",
+      "notionPageId": "54c7e9a8f3f547a6abb88cee7d93001c"
     },
     {
       "position": 55,
-      "blockId": "1558fee0bb548244a45a0196472bee6a",
+      "blockId": "2176dfbd464d8027b852e5ef65d1f4f0",
       "heading": "Thiết lập thông tin loại phòng (Mới)",
-      "video": 55
+      "video": 55,
+      "oldBlockId": "1558fee0bb548244a45a0196472bee6a",
+      "notionPageId": "2166dfbd464d806dbd1ac90db23f2b2b"
     },
     {
       "position": 56,
-      "blockId": "c748fee0bb5483ca8280016d3b921997",
+      "blockId": "2176dfbd464d80d0bfdedc1358c57a06",
       "heading": "Thiết lập thông tin loại phòng (Mới)",
-      "video": 56
+      "video": 56,
+      "oldBlockId": "c748fee0bb5483ca8280016d3b921997",
+      "notionPageId": "2166dfbd464d8083a7cdf9de3eeb359c"
     },
     {
       "position": 57,
-      "blockId": "92a8fee0bb5482118f9001c67bdc40d1",
+      "blockId": "2176dfbd464d809dbe04c77b80d133a5",
       "heading": "Thiết lập thông tin loại phòng (Mới)",
-      "video": 57
+      "video": 57,
+      "oldBlockId": "92a8fee0bb5482118f9001c67bdc40d1",
+      "notionPageId": "2166dfbd464d80539785ed5367680bc0"
     },
     {
       "position": 58,
-      "blockId": "9d18fee0bb548246aef401584ef1048c",
+      "blockId": "1d26dfbd464d801ab6b9ea49fdced0f0",
       "heading": "Thiết lập chính sách huỷ phòng",
-      "video": 58
+      "video": 58,
+      "oldBlockId": "9d18fee0bb548246aef401584ef1048c",
+      "notionPageId": "1d26dfbd464d80f2b371d45e5908d98e"
     },
     {
       "position": 59,
-      "blockId": "c768fee0bb5483fc8c5601bfbccdc495",
+      "blockId": "1d26dfbd464d80d48b1ee652b288db7f",
       "heading": "Thiết lập chính sách huỷ phòng",
-      "video": 59
+      "video": 59,
+      "oldBlockId": "c768fee0bb5483fc8c5601bfbccdc495",
+      "notionPageId": "1d26dfbd464d80498fc7f7fe4489da55"
     },
     {
       "position": 60,
-      "blockId": "b278fee0bb5483fdbe6801839f3a1eeb",
+      "blockId": "1d26dfbd464d8031a5dee935bb4110b9",
       "heading": "Thiết lập chính sách huỷ phòng",
-      "video": 60
+      "video": 60,
+      "oldBlockId": "b278fee0bb5483fdbe6801839f3a1eeb",
+      "notionPageId": "1d26dfbd464d80bf9eb6d9e2687baf3f"
     },
     {
       "position": 61,
-      "blockId": "3b88fee0bb5483e3833a0141a9e7c5d0",
+      "blockId": "2176dfbd464d809f89afcfef1f676d34",
       "heading": "Quản lý kênh đối tác",
-      "video": 61
+      "video": 61,
+      "oldBlockId": "3b88fee0bb5483e3833a0141a9e7c5d0",
+      "notionPageId": "2176dfbd464d809a92e6da24aa081a4d"
     },
     {
       "position": 62,
-      "blockId": "8008fee0bb548262a83e0182f0e6d84f",
+      "blockId": "2176dfbd464d807eb6e1cf908ec85bd9",
       "heading": "Quản lý kênh đối tác",
-      "video": 62
+      "video": 62,
+      "oldBlockId": "8008fee0bb548262a83e0182f0e6d84f",
+      "notionPageId": "2176dfbd464d8062abf3c610dd596ae8"
     }
-  ]
+  ],
+  "oldPageId": "8968fee0bb548347a35e01756b4cc89c"
 }

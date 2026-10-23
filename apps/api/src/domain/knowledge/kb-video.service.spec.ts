@@ -1,4 +1,5 @@
 import { KbVideoService } from './kb-video.service';
+import { NotionRequestError } from './notion.client';
 import { kbVideoPath, parseVideoRef } from './video-ref.util';
 import { signKbVideo, verifyKbVideo } from '../../global/util/crypto.util';
 
@@ -35,9 +36,16 @@ describe('KB video links', () => {
   });
 
   describe('KbVideoService.resolve', () => {
-    function build(opts: { videoRef?: string | null; doc?: boolean; token?: string | null; cached?: string | null; notion?: unknown }) {
+    function build(opts: {
+      videoRef?: string | null;
+      doc?: boolean;
+      docs?: unknown[];
+      token?: string | null;
+      cached?: string | null;
+      notion?: unknown;
+    }) {
       const doc = opts.doc === false ? null : { id: 2633, tenantId: 4, active: 1, videoRef: opts.videoRef ?? null };
-      const docRepo = { findOne: jest.fn(async () => doc) };
+      const docRepo = { findOne: jest.fn(async () => doc), find: jest.fn(async () => opts.docs ?? (doc ? [doc] : [])) };
       const store = new Map<string, { v: string; ttl?: number }>();
       if (opts.cached) store.set('kbvideo:4:4648fee0bb548292bc6381250b79b647', { v: opts.cached });
       const redis = {
@@ -93,6 +101,50 @@ describe('KB video links', () => {
       expect(await build({ videoRef: NOTION, token: null }).svc.resolve(2633, 4, sig())).toMatchObject({ reason: 'unavailable' });
       expect(await build({ videoRef: NOTION, notion: null }).svc.resolve(2633, 4, sig())).toMatchObject({ reason: 'unavailable' });
       expect(await build({ videoRef: NOTION, notion: new Error('boom') }).svc.resolve(2633, 4, sig())).toMatchObject({ reason: 'unavailable' });
+    });
+
+    it('a block Notion cannot find is a broken ref, not an outage (FIX-261023)', async () => {
+      const gone = new NotionRequestError('Could not find block', 404, 'object_not_found');
+      expect(await build({ videoRef: NOTION, notion: gone }).svc.resolve(2633, 4, sig())).toEqual({ ok: false, reason: 'broken' });
+      const limited = new NotionRequestError('rate limited', 429, 'rate_limited');
+      expect(await build({ videoRef: NOTION, notion: limited }).svc.resolve(2633, 4, sig())).toMatchObject({ reason: 'unavailable' });
+    });
+  });
+
+  describe('KbVideoService.checkRefs (FIX-261023)', () => {
+    const docs = [
+      { id: '1', tenantId: 4, externalKey: 'GTJ-VID-24-VI', videoRef: 'notion:cba8fee0bb5483c7b45381a7ea779bf2' },
+      { id: '2', tenantId: 4, externalKey: 'GTJ-VID-24-EN', videoRef: 'notion:cba8fee0bb5483c7b45381a7ea779bf2' },
+      { id: '3', tenantId: 4, externalKey: 'X', videoRef: 'https://youtu.be/abc' },
+    ];
+    function build(notion: unknown, token: string | null = 'secret_x') {
+      const docRepo = { find: jest.fn(async () => docs) };
+      const client = {
+        videoUrl: jest.fn(async () => {
+          if (notion instanceof Error) throw notion;
+          return notion;
+        }),
+      };
+      const creds = { load: jest.fn(async () => token) };
+      const svc = new KbVideoService(docRepo as never, client as never, creds as never, {} as never);
+      return { svc, client };
+    }
+
+    it('reports every document on a dead block, probing each block once', async () => {
+      const h = build(new NotionRequestError('Could not find block', 404, 'object_not_found'));
+      const r = await h.svc.checkRefs(4);
+      expect(r.checked).toBe(3);
+      expect(r.problems.map((p) => [p.docId, p.reason])).toEqual([
+        [1, 'broken'],
+        [2, 'broken'],
+      ]);
+      expect(h.client.videoUrl).toHaveBeenCalledTimes(1); // external URL skipped, block deduped
+    });
+
+    it('healthy refs report nothing; a missing token is unavailable', async () => {
+      expect((await build({ url: 'https://s3/x', expiresAt: null }).svc.checkRefs(4)).problems).toEqual([]);
+      const noToken = await build(null, null).svc.checkRefs(4);
+      expect(noToken.problems.every((p) => p.reason === 'unavailable')).toBe(true);
     });
   });
 });
