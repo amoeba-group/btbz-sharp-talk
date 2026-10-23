@@ -85,6 +85,51 @@ describe('ThreadService', () => {
     });
   });
 
+  /** Claimed threads (PLN-261022 P7, D7ⓐ): keyed by the claimed user id, never a customer. */
+  describe('claimed user thread', () => {
+    const claimed = { tenantId: 4, customerId: null, companyId: null, identityLevel: 'claimed', identityAttributes: { user_id: 'ha:8818' } };
+
+    it('accountOf: a claimed session is its claimed user id; a claimed session without one is a guest', () => {
+      expect(ThreadService.accountOf(claimed as never)).toEqual({ companyId: null, customerId: null, claimedUserId: 'ha:8818' });
+      expect(ThreadService.accountOf({ ...claimed, identityAttributes: { hotel_id: '1' } } as never)).toBeNull();
+      // A bound customer still wins — that is the verified path.
+      expect(ThreadService.accountOf({ ...claimed, customerId: 5 } as never)).toEqual({ companyId: null, customerId: 5 });
+    });
+
+    it("previousOf reads only that user's claimed sessions, and only rows with no customer", async () => {
+      const sessionFind = jest.fn(async () => [{ id: '11' }, { id: '12' }]);
+      const findOne = jest.fn(async () => ({ id: '40' }));
+      const svc = new ThreadService(repo({ findOne }), repo(), tenantOn(), repo(), aiConfig(), repo({ find: sessionFind }));
+      await expect(svc.previousOf(4, { companyId: null, customerId: null, claimedUserId: 'ha:8818' })).resolves.toEqual({ id: '40' });
+
+      const sessionWhere = (sessionFind.mock.calls[0] as unknown[])[0] as { where: Record<string, unknown> };
+      expect(sessionWhere.where).toMatchObject({ tenantId: 4, identityLevel: 'claimed' });
+      expect(sessionWhere.where.identityAttributes).toBeDefined(); // JSON user_id match
+      const convWhere = ((findOne.mock.calls[0] as unknown[])[0] as { where: Record<string, { _type?: string; _value?: unknown }> }).where;
+      expect(convWhere.tenantId).toBe(4);
+      expect(convWhere.customerId._type).toBe('isNull');
+      expect(convWhere.sessionId._value).toEqual([11, 12]);
+    });
+
+    it('no claimed sessions yet → no previous conversation, no conversation query', async () => {
+      const findOne = jest.fn(async () => ({ id: '40' }));
+      const svc = new ThreadService(repo({ findOne }), repo(), tenantOn(), repo(), aiConfig(), repo({ find: jest.fn(async () => []) }));
+      await expect(svc.previousOf(4, { companyId: null, customerId: null, claimedUserId: 'ha:1' })).resolves.toBeNull();
+      expect(findOne).not.toHaveBeenCalled();
+    });
+
+    it('the widget page is own conversations only, no colleagues', async () => {
+      const find = jest.fn(async () => [{ id: '30', customerId: null, companyId: null, createdAt: new Date() }]);
+      const msgFind = jest.fn(async () => [{ id: '1', conversationId: 30, senderType: 'user', body: 'Làm sao đổi giá phòng?' }]);
+      const svc = new ThreadService(repo({ find }), repo({ find: msgFind }), tenantOn(), repo(), aiConfig({ scope: 'company' }), repo({ find: jest.fn(async () => [{ id: '11' }]) }));
+      const page = await svc.listForWidget(claimed as never, 60, 3);
+      expect(page).toMatchObject({ hasMore: false, colleagueCount: 0 });
+      expect(page.conversations[0]).toMatchObject({ own: true, messages: [{ body: 'Làm sao đổi giá phòng?' }] });
+      const convWhere = ((find.mock.calls[0] as unknown[])[0] as { where: Record<string, { _type?: string }> }).where;
+      expect(convWhere.customerId._type).toBe('isNull');
+    });
+  });
+
   describe('previousExcerpt', () => {
     const conv = { id: 50, prevConversationId: 40 } as never;
     it('formats the last turns, scrubs a phone number the customer typed, dates the excerpt', async () => {

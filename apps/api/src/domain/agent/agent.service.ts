@@ -311,6 +311,8 @@ export class AgentService {
       aiAgentName: string | null;
       /** Signed host facts — hotel, region, role (PLN-261015 D5). */
       identityAttributes: Record<string, string> | null;
+      /** guest | verified | claimed — 'claimed' facts are unsigned (PLN-261022). */
+      identityLevel: string | null;
     }>;
     total: number;
   }> {
@@ -415,6 +417,7 @@ export class AgentService {
             ? agentDisplay.byId.get(effectiveAgentId) ?? agentDisplay.defaultLabel
             : agentDisplay.defaultLabel,
         identityAttributes: state?.identityAttributes ?? null,
+        identityLevel: state?.identityLevel ?? null,
       };
     });
     return { items, total };
@@ -533,6 +536,7 @@ export class AgentService {
     aiAgentId: number | null;
     aiAgentName: string | null;
     identityAttributes: Record<string, string> | null;
+    identityLevel: string | null;
   }> {
     const state = (await this.sessionStates([sessionId])).get(String(sessionId));
     const mode = state?.autoReplyMode ?? AUTO_REPLY_MODE.INHERIT;
@@ -555,6 +559,7 @@ export class AgentService {
           ? display.byId.get(effectiveAgentId) ?? display.defaultLabel
           : display.defaultLabel,
       identityAttributes: state?.identityAttributes ?? null,
+      identityLevel: state?.identityLevel ?? null,
     };
   }
 
@@ -567,13 +572,14 @@ export class AgentService {
         autoReplyMode: string;
         aiAgentId: number | null;
         identityAttributes: Record<string, string> | null;
+        identityLevel: string | null;
       }
     >
   > {
     if (sessionIds.length === 0) return new Map();
     const rows = await this.sessionRepo.find({
       where: { id: In(sessionIds) },
-      select: { id: true, alias: true, autoReplyMode: true, aiAgentId: true, identityAttributes: true },
+      select: { id: true, alias: true, autoReplyMode: true, aiAgentId: true, identityAttributes: true, identityLevel: true },
     });
     return new Map(
       rows.map((s) => [
@@ -583,6 +589,7 @@ export class AgentService {
           autoReplyMode: s.autoReplyMode || AUTO_REPLY_MODE.INHERIT,
           aiAgentId: s.aiAgentId != null ? Number(s.aiAgentId) : null,
           identityAttributes: s.identityAttributes ?? null,
+          identityLevel: s.identityLevel ?? null,
         },
       ]),
     );

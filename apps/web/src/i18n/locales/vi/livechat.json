@@ -408,7 +408,9 @@
       "manager": "Quản lý",
       "reception": "Lễ tân"
     },
-    "signed": "Thông tin do ứng dụng chủ ký"
+    "signed": "Thông tin do ứng dụng chủ ký",
+    "unverified": "Chưa xác minh",
+    "unverifiedHint": "Ứng dụng chủ chưa ký thông tin này — chỉ dùng để hiển thị và phân bổ"
   },
   "rating": {
     "action": "Đánh giá câu trả lời",

@@ -5,6 +5,7 @@ import { ChatService } from './chat.service';
 import { ScenarioService } from './scenario.service';
 import { ChatMapper } from './chat.mapper';
 import { ThreadService } from './thread.service';
+import { threadEligible } from '../embed/unsigned-identify';
 import {
   SendMessageRequest,
   EndChatRequest,
@@ -120,8 +121,7 @@ export class ChatController {
   @ApiOperation({ summary: "Earlier conversations of the signed-in user's account" })
   async thread(@SessionToken() token: string, @Query('before') before?: string, @Query('limit') limit?: string) {
     const session = await this.sessionService.findByToken(token);
-    const verified = session.identityLevel === 'verified' && session.customerId != null;
-    if (!verified || !(await this.threadService.enabled(session.tenantId))) {
+    if (!threadEligible(session) || !(await this.threadService.enabled(session.tenantId))) {
       throw new BusinessException(ERROR_CODE.THREAD_NOT_AVAILABLE, HttpStatus.FORBIDDEN);
     }
     // Default "before" = the conversation the widget is showing, so the page starts behind it.

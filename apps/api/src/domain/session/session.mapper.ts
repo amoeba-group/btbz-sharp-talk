@@ -1,6 +1,7 @@
 import type { SessionResponse } from '@sharptalk/types';
 import { Session } from './entity/session.entity';
 import { PrivacyNoticeInfo } from './session.service';
+import { threadEligible } from '../embed/unsigned-identify';
 
 /**
  * Response shape lives in `@sharptalk/types` — the widget imports the same contract, so
@@ -37,8 +38,9 @@ export class SessionMapper {
       aiProcessingRegion: notice.aiProcessingRegion ?? 'US',
       issueFeed: notice.issueFeed ?? false,
       // Earlier conversations (PLN-261022 stage 2): only a host-signed user of a
-      // tenant that switched continuity on — never a guest or a lookup-only session.
-      threadAvailable: !!notice.threadContinuity && s.identityLevel === 'verified' && s.customerId != null,
+      // tenant that switched continuity on — never a guest or a lookup-only
+      // session. A claimed user of an unsigned-host tenant sees its own (P7).
+      threadAvailable: !!notice.threadContinuity && threadEligible(s),
     };
   }
 }

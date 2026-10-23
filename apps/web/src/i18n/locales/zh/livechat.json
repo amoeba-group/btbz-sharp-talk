@@ -408,7 +408,9 @@
       "manager": "管理员",
       "reception": "前台"
     },
-    "signed": "由宿主应用签名的信息"
+    "signed": "由宿主应用签名的信息",
+    "unverified": "未验证",
+    "unverifiedHint": "宿主应用未签名此信息，仅用于显示和分配"
   },
   "rating": {
     "action": "评价回答",

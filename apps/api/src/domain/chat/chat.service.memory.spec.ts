@@ -43,6 +43,8 @@ describe('ChatService — conversation memory', () => {
       grounding?: number;
       reuseHit?: boolean;
       footer?: string;
+      /** Host identify on the session (PLN-261022 P8). */
+      identity?: { level: string; attributes: Record<string, string> };
     } = {},
   ) => {
     const conversation = {
@@ -56,7 +58,8 @@ describe('ChatService — conversation memory', () => {
       sessionToken: 'tok',
       tenantId: 5,
       customerId: null,
-      identityLevel: 'guest',
+      identityLevel: opts.identity?.level ?? 'guest',
+      identityAttributes: opts.identity?.attributes ?? null,
       language: 'KO',
       consentState: CONSENT_STATE.GRANTED,
       consentAt: new Date(),
@@ -224,6 +227,42 @@ describe('ChatService — conversation memory', () => {
 
     expect(b.answerReuse.lookup).toHaveBeenCalled();
     expect(b.rag.answer).not.toHaveBeenCalled();
+  });
+
+  describe('who is asking (PLN-261022 P8)', () => {
+    const identity = {
+      level: 'claimed',
+      attributes: { hotel_id: '1721', hotel_name: 'A In Hotel Del Luna', region: 'south', role: 'Lễ tân', user_id: 'ha:8818', name: 'G2J SUPPORT' },
+    };
+
+    it('hands the caller to the answering model and keeps that answer out of the reuse store', async () => {
+      const b = build({ prior: [], identity });
+
+      await b.svc.handleUserMessage(b.session, 'Làm sao đổi giá phòng?');
+
+      const caller = b.rag.answer.mock.calls[0][10] as string;
+      expect(caller).toContain('Name: G2J SUPPORT');
+      expect(caller).toContain('Hotel: A In Hotel Del Luna (id 1721)');
+      expect(caller).toContain('Verified: no');
+      // An answer written for a named caller may name their hotel — never replayed to others.
+      expect(b.answerReuse.recordAiAnswer).not.toHaveBeenCalled();
+    });
+
+    it('a greeting gets the caller too', async () => {
+      const b = build({ prior: [], identity, intent: 'unintelligible', intentConfidence: 0.9 });
+
+      await b.svc.handleUserMessage(b.session, 'xin chào');
+
+      expect((b.rag.answerWithoutKnowledge.mock.calls[0] as unknown[])[6]).toContain('Name: G2J SUPPORT');
+    });
+
+    it('a guest turn carries no caller', async () => {
+      const b = build({ prior: [] });
+
+      await b.svc.handleUserMessage(b.session, 'Làm sao đổi giá phòng?');
+
+      expect(b.rag.answer.mock.calls[0][10]).toBeUndefined();
+    });
   });
 
   it('passes no history on the first turn (prompt unchanged)', async () => {

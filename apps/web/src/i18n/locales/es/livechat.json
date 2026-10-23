@@ -408,7 +408,9 @@
       "manager": "Gerente",
       "reception": "Recepción"
     },
-    "signed": "Firmado por la aplicación anfitriona"
+    "signed": "Firmado por la aplicación anfitriona",
+    "unverified": "Sin verificar",
+    "unverifiedHint": "La aplicación anfitriona no lo firmó: solo se muestra y se usa para el enrutamiento"
   },
   "rating": {
     "action": "Valorar respuesta",

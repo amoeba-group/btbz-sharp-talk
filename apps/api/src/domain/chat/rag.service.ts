@@ -15,6 +15,7 @@ import { envNumber } from '../../global/util/env-number.util';
 import { signKbVideo } from '../../global/util/crypto.util';
 import { kbVideoPath, parseVideoRef } from '../knowledge/video-ref.util';
 import { CONVERSATION_RULES, transcript, withCurrentTurn } from './conversation-history.util';
+import { CALLER_RULE } from './caller-context.util';
 import { PROMPT_LANGUAGE_NAMES } from '../agent/prompt-language';
 import { replyLanguageMismatch } from '../../global/util/reply-language.util';
 
@@ -566,6 +567,8 @@ export class RagService {
     history?: AiMessage[],
     /** The account's previous conversation as a short transcript (PLN-261022 D14). */
     previousConversation?: string,
+    /** Who is asking, from the host app's identify (PLN-261022 P8) — see caller-context.util. */
+    caller?: string,
   ): Promise<RagAnswer> {
     // The caller decides the group preference; RAG only applies it. Keeping the
     // judgement out of here means the chat path can use its intent label and
@@ -654,6 +657,9 @@ export class RagService {
         '(an issue they raised before, "as I said last time") and to avoid asking again for what they already told us. ' +
         'Base facts and instructions on CONTEXT.\n'
       : '';
+    // Who is asking (PLN-261022 P8): to address them and read "my hotel" — not evidence.
+    const callerBlock = caller?.trim() ? `\n${caller.trim()}` : '';
+    const callerRule = callerBlock ? CALLER_RULE : '';
 
     // The tenant's contact footer is appended by the system (R4); the model is
     // told not to write its own, which also frees the output budget.
@@ -667,6 +673,7 @@ export class RagService {
       system:
         `${persona}${rulesBlock}${hasHistory ? CONVERSATION_RULES : ''}${footerOn ? FOOTER_RULE : ''}\n` +
         previousRule +
+        callerRule +
         `${sourceRule} If the information is insufficient, apologize briefly and ` +
         `offer to connect a human agent. ${replyLanguageRule(language)}\n` +
         `The context items are numbered. After your reply, on its own final line, ` +
@@ -676,7 +683,8 @@ export class RagService {
         `or refer to the context items in the visible reply.\n` +
         `CONTEXT_START\n${context || '(no relevant documents found)'}\nCONTEXT_END` +
         orderBlock +
-        previousBlock,
+        previousBlock +
+        callerBlock,
       messages: withCurrentTurn(history, query),
     });
 
@@ -808,9 +816,12 @@ export class RagService {
     language: string,
     aiAgentId?: number | null,
     history?: AiMessage[],
+    /** Who is asking (PLN-261022 P8) — a greeting can use their name. */
+    caller?: string,
   ): Promise<string> {
     const { persona, rules } = await this.aiConfig.getPersonaRules(tenantId, aiAgentId);
     const instruction = NO_KNOWLEDGE_INSTRUCTION[kind];
+    const callerPart = caller?.trim() ? `\n${CALLER_RULE}${caller.trim()}` : '';
     // A misclassified reply ("1. 김익용" to "what is your name?") lands here too;
     // with the conversation in view the model answers it instead of saying it
     // did not understand (PLN-260929 S3).
@@ -821,7 +832,8 @@ export class RagService {
       feature: 'chat_rewrite',
       system:
         `${persona}\n${rules.map((r) => `- ${r}`).join('\n')}${memory}\n` +
-        `${instruction}\n${replyLanguageRule(language)} Two sentences at most.`,
+        `${instruction}\n${replyLanguageRule(language)} Two sentences at most.` +
+        callerPart,
       messages: withCurrentTurn(history, query),
     });
     // Empty = no reply could be written; the caller hands off (PLN-261007 D4).

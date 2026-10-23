@@ -1,17 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { AuditLog } from './entity/audit-log.entity';
 import { User } from '../user/entity/user.entity';
 import { AdminUser } from '../auth/entity/admin-user.entity';
+import { Session } from '../session/entity/session.entity';
+import { Customer } from '../customer/entity/customer.entity';
 import { getRequestContext } from '../../global/middleware/request-context.middleware';
+import { maskName } from '../../global/util/pii-display.util';
 
 export type AuditResult = 'success' | 'denied' | 'error';
 
 export interface WriteAuditParams {
   tenantId?: number | null;
-  /** 'system' = machine writer (webhook/scheduler/event consumer) — never a fake admin/user. */
-  actorType: 'admin' | 'user' | 'system';
+  /**
+   * 'system' = machine writer (webhook/scheduler/event consumer) — never a fake admin/user.
+   * 'host' = a host app's signed-in user (Go2Joy HA, PLN-261022 P6); actorId is the widget
+   * SESSION id, and the name is resolved from that session at read time — never stored.
+   */
+  actorType: 'admin' | 'user' | 'system' | 'host';
   actorId: number;
   action: string;
   target?: string;
@@ -30,7 +37,7 @@ export interface ListAuditParams {
   action?: string;
   actorType?: string;
   actorId?: number;
-  /** Action-prefix filter, e.g. 'agent.' for the agent work log. */
+  /** Action-prefix filter, e.g. 'agent.' for the agent work log; comma-separated = any of them. */
   actionPrefix?: string;
   /** Exact target, e.g. 'group:12' — one object's history (PLN-261006). */
   target?: string;
@@ -50,6 +57,10 @@ export class AuditService {
     @InjectRepository(AuditLog) private readonly logRepo: Repository<AuditLog>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     @InjectRepository(AdminUser) private readonly adminRepo: Repository<AdminUser>,
+    // Last + optional: specs build the service positionally. Names 'host' actors
+    // from the session they signed in on (PLN-261022 P6).
+    @Optional() @InjectRepository(Session) private readonly sessionRepo?: Repository<Session>,
+    @Optional() @InjectRepository(Customer) private readonly customerRepo?: Repository<Customer>,
   ) {}
 
   /**
@@ -78,8 +89,17 @@ export class AuditService {
     const qb = this.logRepo.createQueryBuilder('a');
     if (params.tenantId != null) qb.andWhere('a.tenant_id = :tenantId', { tenantId: params.tenantId });
     if (params.action) qb.andWhere('a.action = :action', { action: params.action });
-    if (params.actionPrefix) {
-      qb.andWhere('a.action LIKE :prefix', { prefix: `${params.actionPrefix}%` });
+    const prefixes = (params.actionPrefix ?? '')
+      .split(',')
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (prefixes.length === 1) {
+      qb.andWhere('a.action LIKE :prefix', { prefix: `${prefixes[0]}%` });
+    } else if (prefixes.length > 1) {
+      // The work log reads console agents and host sign-ins together (PLN-261022 P6).
+      const clauses = prefixes.map((_, i) => `a.action LIKE :prefix${i}`);
+      const values = Object.fromEntries(prefixes.map((p, i) => [`prefix${i}`, `${p}%`]));
+      qb.andWhere(`(${clauses.join(' OR ')})`, values);
     }
     if (params.target) qb.andWhere('a.target = :target', { target: params.target });
     if (params.actorType) qb.andWhere('a.actor_type = :actorType', { actorType: params.actorType });
@@ -101,6 +121,7 @@ export class AuditService {
   private async withActorNames(items: AuditLog[]): Promise<AuditLogWithActor[]> {
     const userIds = [...new Set(items.filter((i) => i.actorType === 'user').map((i) => i.actorId))];
     const adminIds = [...new Set(items.filter((i) => i.actorType === 'admin').map((i) => i.actorId))];
+    const sessionIds = [...new Set(items.filter((i) => i.actorType === 'host').map((i) => i.actorId))];
     const names = new Map<string, string>();
 
     if (userIds.length > 0) {
@@ -112,6 +133,7 @@ export class AuditService {
       const admins = await this.adminRepo.find({ where: { id: In(adminIds) }, select: ['id', 'email'] });
       for (const a of admins) names.set(`admin:${a.id}`, a.email);
     }
+    if (sessionIds.length > 0) await this.hostNames(sessionIds, names);
 
     return items.map((i) => ({
       ...i,
@@ -119,5 +141,33 @@ export class AuditService {
       // have no row to join to — label them rather than showing a bare id.
       actorName: i.actorType === 'system' ? 'system' : (names.get(`${i.actorType}:${i.actorId}`) ?? null),
     })) as AuditLogWithActor[];
+  }
+
+  /**
+   * A host user's display name, from the session it signed in on: the host's
+   * claimed name, or the verified customer's name — masked (pii-display), as
+   * customer names are everywhere on the console. Kept out of the audit row
+   * itself (no PII in audit data).
+   */
+  private async hostNames(sessionIds: number[], names: Map<string, string>): Promise<void> {
+    if (!this.sessionRepo) return;
+    const sessions = await this.sessionRepo.find({
+      where: { id: In(sessionIds) },
+      select: ['id', 'customerId', 'identityLevel', 'identityAttributes'],
+    });
+    const customerIds = sessions.filter((s) => s.customerId != null).map((s) => Number(s.customerId));
+    const customers =
+      customerIds.length && this.customerRepo
+        ? await this.customerRepo.find({ where: { id: In(customerIds) }, select: ['id', 'name'] })
+        : [];
+    const customerName = new Map(customers.map((c) => [Number(c.id), c.name?.trim() || null]));
+    for (const s of sessions) {
+      const name =
+        (s.customerId != null ? customerName.get(Number(s.customerId)) : null) ||
+        (s.identityLevel === 'claimed' ? s.identityAttributes?.name?.trim() : null);
+      // A host user is a customer, not staff: masked like customer names on the console.
+      const masked = maskName(name);
+      if (masked) names.set(`host:${s.id}`, masked);
+    }
   }
 }

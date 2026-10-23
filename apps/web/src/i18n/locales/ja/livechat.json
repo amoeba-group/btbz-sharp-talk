@@ -408,7 +408,9 @@
       "manager": "管理者",
       "reception": "フロント"
     },
-    "signed": "ホストアプリが署名した情報"
+    "signed": "ホストアプリが署名した情報",
+    "unverified": "未検証",
+    "unverifiedHint": "ホストアプリの署名がない情報です。表示と振り分けにのみ使います"
   },
   "rating": {
     "action": "回答を評価",

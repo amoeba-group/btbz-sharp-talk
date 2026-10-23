@@ -150,13 +150,18 @@ export interface ConversationDetail {
   customer?: CustomerContext | null;
 }
 
-/** Signed host facts about the user (PLN-261015 D2/D5). */
+/** Host facts about the user (PLN-261015 D2/D5). */
 export interface SessionIdentity {
   hotelId: string | null;
   hotelName: string | null;
   region: string | null;
   province: string | null;
   role: string | null;
+  /** Who the host says the user is — only on a claimed (unsigned) session, PLN-261022. */
+  userId?: string | null;
+  name?: string | null;
+  /** False when the host did not sign these facts (claimed). Older APIs omit it → signed. */
+  verified?: boolean;
 }
 
 export interface CustomerLead {

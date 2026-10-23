@@ -19,6 +19,10 @@
     "agent.customer_created": "Cliente creado",
     "agent.conversation_ended": "Conversación finalizada",
     "agent.conversation_viewed": "Conversación consultada (PII)",
-    "agent.transcript_viewed": "Transcripción consultada (PII)"
-  }
+    "agent.transcript_viewed": "Transcripción consultada (PII)",
+    "host.user_signed_in": "Inicio de sesión de usuario HA"
+  },
+  "hostBadge": "HA",
+  "hostUser": "Usuario HA",
+  "unverified": "Sin verificar"
 }

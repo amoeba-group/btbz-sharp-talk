@@ -318,6 +318,16 @@ describe('matchRoutingRule — customer-information conditions (PLN-261019 P4)',
     expect(matchRoutingRule(rules, { identityLevel: 'verified', customerTier: null })?.rule.name).toBe('empty-values');
   });
 
+  it('a claimed (unsigned host) session routes on its region and can be singled out (PLN-261022)', () => {
+    const claimed = { region: 'south', identityLevel: 'claimed', identityAttributes: { province: 'Hồ Chí Minh', region: 'south' } };
+    // Region rules see the claimed region like a signed one…
+    expect(matchRoutingRule(rules, claimed)?.rule.name).toBe('legacy-no-conditions');
+    // …and an operator can route unverified sessions on their own.
+    const unverified = [{ name: 'unverified', conditions: [{ field: 'identity_level' as const, values: ['claimed'] }], assigneeUserIds: [9] }];
+    expect(matchRoutingRule(unverified, claimed)?.rule.name).toBe('unverified');
+    expect(matchRoutingRule(unverified, { identityLevel: 'verified' })).toBeNull();
+  });
+
   it('text conditions use substring match for contains-fields and exact match for in-fields', () => {
     expect(matchRoutingRule(rules, { landingPath: '/vi/booking/123' })?.rule.name).toBe('booking-page');
     const roleRule = [{ name: 'managers', conditions: [{ field: 'role' as const, values: ['manager'] }], assigneeUserIds: [7] }];

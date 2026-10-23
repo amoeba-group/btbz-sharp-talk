@@ -19,6 +19,10 @@
     "agent.customer_created": "顧客を作成",
     "agent.conversation_ended": "会話を終了",
     "agent.conversation_viewed": "会話を閲覧（個人情報）",
-    "agent.transcript_viewed": "会話内容を閲覧（個人情報）"
-  }
+    "agent.transcript_viewed": "会話内容を閲覧（個人情報）",
+    "host.user_signed_in": "HAユーザーのログイン"
+  },
+  "hostBadge": "HA",
+  "hostUser": "HAユーザー",
+  "unverified": "未検証"
 }

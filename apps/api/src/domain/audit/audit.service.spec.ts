@@ -150,6 +150,49 @@ describe('AuditService.list — filters + actor names', () => {
   });
 });
 
+describe('AuditService.list — host sign-ins on the work log (PLN-261022 P6)', () => {
+  const build = (rows: Partial<AuditLog>[]) => {
+    const clauses: Array<[string, Record<string, unknown> | undefined]> = [];
+    const qb = {
+      andWhere: jest.fn((c: string, p?: Record<string, unknown>) => {
+        clauses.push([c, p]);
+        return qb;
+      }),
+      orderBy: jest.fn(() => qb),
+      skip: jest.fn(() => qb),
+      take: jest.fn(() => qb),
+      getManyAndCount: jest.fn(async () => [rows, rows.length] as [AuditLog[], number]),
+    };
+    const repo = { createQueryBuilder: jest.fn(() => qb) } as unknown as Repository<AuditLog>;
+    const sessionRepo = {
+      find: jest.fn(async () => [
+        { id: 18921, customerId: null, identityLevel: 'claimed', identityAttributes: { user_id: 'ha:8818', name: 'G2J SUPPORT' } },
+        { id: 18922, customerId: 70, identityLevel: 'verified', identityAttributes: { hotel_id: '1' } },
+      ]),
+    };
+    const customerRepo = { find: jest.fn(async () => [{ id: 70, name: 'Nguyễn An' }]) };
+    const svc = new AuditService(repo, userRepo(), adminRepo(), sessionRepo as never, customerRepo as never);
+    return { svc, clauses };
+  };
+
+  it('reads several action prefixes at once', async () => {
+    const { svc, clauses } = build([]);
+    await svc.list({ tenantId: 1, actionPrefix: 'agent., host.', page: 1, size: 20 });
+    expect(clauses).toContainEqual(['(a.action LIKE :prefix0 OR a.action LIKE :prefix1)', { prefix0: 'agent.%', prefix1: 'host.%' }]);
+  });
+
+  it('names a host actor from the session it signed in on — claimed name or verified customer', async () => {
+    const { svc } = build([
+      { id: 1, actorType: 'host', actorId: 18921, action: 'host.user_signed_in' } as AuditLog,
+      { id: 2, actorType: 'host', actorId: 18922, action: 'host.user_signed_in' } as AuditLog,
+      { id: 3, actorType: 'host', actorId: 99, action: 'host.user_signed_in' } as AuditLog,
+    ]);
+    const { items } = await svc.list({ tenantId: 1, page: 1, size: 20 });
+    // Masked like customer names elsewhere on the console.
+    expect(items.map((i) => i.actorName)).toEqual(['G*J S*****T', 'N****n A*', null]);
+  });
+});
+
 describe('AuditService.list — agent work log lens', () => {
   it("the work log's default view is the audit trail filtered to agent.*", async () => {
     // The work log is not a second store: one trail, two lenses. A console

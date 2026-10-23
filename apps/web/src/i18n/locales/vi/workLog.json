@@ -19,6 +19,10 @@
     "agent.customer_created": "Tạo khách hàng",
     "agent.conversation_ended": "Kết thúc hội thoại",
     "agent.conversation_viewed": "Xem hội thoại (dữ liệu cá nhân)",
-    "agent.transcript_viewed": "Xem nội dung hội thoại (dữ liệu cá nhân)"
-  }
+    "agent.transcript_viewed": "Xem nội dung hội thoại (dữ liệu cá nhân)",
+    "host.user_signed_in": "Người dùng HA đăng nhập"
+  },
+  "hostBadge": "HA",
+  "hostUser": "Người dùng HA",
+  "unverified": "Chưa xác minh"
 }

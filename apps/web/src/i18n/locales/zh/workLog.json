@@ -19,6 +19,10 @@
     "agent.customer_created": "创建客户",
     "agent.conversation_ended": "结束会话",
     "agent.conversation_viewed": "查看会话（个人信息）",
-    "agent.transcript_viewed": "查看会话内容（个人信息）"
-  }
+    "agent.transcript_viewed": "查看会话内容（个人信息）",
+    "host.user_signed_in": "HA 用户登录"
+  },
+  "hostBadge": "HA",
+  "hostUser": "HA 用户",
+  "unverified": "未验证"
 }

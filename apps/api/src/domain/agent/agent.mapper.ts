@@ -11,6 +11,7 @@ import { ConversationBriefing } from './entity/conversation-briefing.entity';
 import { ChatGroup } from './entity/chat-group.entity';
 import { GroupMemberView, GroupRef, RelatedSessionView } from './chat-group.service';
 import { maskEmail, maskName } from '../../global/util/pii-display.util';
+import { SESSION_IDENTITY } from '@sharptalk/types';
 
 /** Escalation alert row for the console alarm modal (FR-S3). */
 export function toAlertResponse(a: AgentAlert) {
@@ -34,6 +35,7 @@ export function toSessionResponse(
   autoReply: { mode: string; effective: boolean } = { mode: 'inherit', effective: true },
   aiAgent: { id: number | null; name: string | null } = { id: null, name: null },
   identityAttributes: Record<string, string> | null = null,
+  identityLevel: string | null = null,
 ) {
   return {
     id: c.id,
@@ -42,7 +44,7 @@ export function toSessionResponse(
      * (PLN-261015 D5). Not PII: a hotel id and a region name, shown as badges so
      * an agent sees which hotel is asking. camelCase keys, like every response.
      */
-    identity: toIdentityResponse(identityAttributes),
+    identity: toIdentityResponse(identityAttributes, identityLevel),
     /** B2B company of the thread (PLN-261022 stage 2); null for consumers/guests. */
     companyId: c.companyId != null ? String(c.companyId) : null,
     status: c.status,
@@ -233,8 +235,12 @@ export function toStatResponse(s: AgentDailyStat) {
   };
 }
 
-/** Signed identity attributes → console shape (PLN-261015 D5); null when unsigned. */
-export function toIdentityResponse(a: Record<string, string> | null | undefined) {
+/**
+ * Host identity → console shape (PLN-261015 D5); null when the session has none.
+ * `verified` is false for a 'claimed' session (unsigned host, PLN-261022): the
+ * same facts plus who the host says it is (`userId`, `name`), none of it proven.
+ */
+export function toIdentityResponse(a: Record<string, string> | null | undefined, level: string | null = null) {
   if (!a) return null;
   return {
     hotelId: a.hotel_id ?? null,
@@ -242,5 +248,10 @@ export function toIdentityResponse(a: Record<string, string> | null | undefined)
     region: a.region ?? null,
     province: a.province ?? null,
     role: a.role ?? null,
+    userId: a.user_id ?? null,
+    // Masked like every customer name on the console (pii-display) — a claimed
+    // name is the person's name all the same.
+    name: maskName(a.name ?? null),
+    verified: level !== SESSION_IDENTITY.CLAIMED,
   };
 }

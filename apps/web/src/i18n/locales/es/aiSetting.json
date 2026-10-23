@@ -187,7 +187,7 @@
       "customer": {
         "title": "Cliente",
         "add": "+ Añadir condición",
-        "hint": "Datos de sesión y cliente que la regla también exige. Hotel, provincia y rol solo coinciden si el host los firmó. Vacío = cualquiera.",
+        "hint": "Datos de sesión y cliente que la regla también exige. Hotel, provincia y rol vienen del inicio de sesión del host: firmados, o sin verificar mientras el host aún no puede firmar. Vacío = cualquiera.",
         "opIn": "es uno de",
         "opContains": "contiene",
         "textPh": "Valores separados por comas",
@@ -207,7 +207,8 @@
         "value": {
           "identity_level": {
             "guest": "Invitado",
-            "verified": "Verificado"
+            "verified": "Verificado",
+            "claimed": "Sin verificar (sin firma)"
           },
           "customer_tier": {
             "guest": "Invitado",
