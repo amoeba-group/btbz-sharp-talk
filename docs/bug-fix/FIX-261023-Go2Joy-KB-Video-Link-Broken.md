@@ -125,3 +125,12 @@ Go2Joy가 문서를 새 워크스페이스/페이지로 옮기면서 끊긴 것�
 | 60 | Stopping a cancellation policy | `b278fee0bb5483fdbe6801839f3a1eeb` | `1d26dfbd464d8031a5dee935bb4110b9` | [열기](https://app.notion.com/p/1d26dfbd464d80bf9eb6d9e2687baf3f#1d26dfbd464d8031a5dee935bb4110b9) |
 | 61 | Connecting a partner channel (PMS) | `3b88fee0bb5483e3833a0141a9e7c5d0` | `2176dfbd464d809f89afcfef1f676d34` | [열기](https://app.notion.com/p/2176dfbd464d809a92e6da24aa081a4d#2176dfbd464d809f89afcfef1f676d34) |
 | 62 | Disconnecting a partner channel | `8008fee0bb548262a83e0182f0e6d84f` | `2176dfbd464d807eb6e1cf908ec85bd9` | [열기](https://app.notion.com/p/2176dfbd464d8062abf3c610dd596ae8#2176dfbd464d807eb6e1cf908ec85bd9) |
+
+## 6. 배포 상태
+
+| 항목 | 상태 |
+|---|---|
+| PR | #706 squash-merge → main `7516298c` (CI 통과) |
+| 마이그레이션 | 없음(스키마 변경 없음) |
+| 스테이징 | ✅ 데이터 F1·F2 적용 + 코드 배포(2026-10-23). api healthy·부팅 로그, `kb-video-check --tenant 4` = 126건 문제 0, 보고 링크 302 |
+| 프로덕션 | ✅ `production` ff `c90cdb89..7516298c` → `deploy-self-hosted.sh --check`(누락 0) → 배포. api healthy·부팅 로그, `kb-video-check` = 영상 문서 0건(데이터 수정 불필요), 잘못된 서명 404 |
