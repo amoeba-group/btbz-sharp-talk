@@ -117,5 +117,19 @@
   "hotelAdded": "已添加酒店。",
   "hotelSynced": "已从 Go2Joy 同步。",
   "profileSaved": "已保存。",
-  "companySaveFailed": "保存失败。"
+  "companySaveFailed": "保存失败。",
+  "field_rightNowTonight": "现在 / 今晚",
+  "rightNowTonightText": "{{start}}–{{end}}时（过夜）",
+  "field_cancelBefore": "取消期限",
+  "cancelBeforeText": "预订时间前 {{n}} 小时",
+  "provinceRegions": {
+    "label": "地区表",
+    "none": "暂无省份",
+    "synced_line": "{{total}} 个省份 · {{at}} 更新（Go2Joy）",
+    "manual_line": "{{total}} 个省份 · 手动录入",
+    "sync": "更新地区表",
+    "syncing": "更新中…",
+    "synced": "地区表已更新：{{total}} 个省份 — 新增 {{added}} · 变更 {{changed}} · 保留 {{kept}}",
+    "syncFailed": "无法更新地区表"
+  }
 }

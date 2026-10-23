@@ -205,6 +205,11 @@ function InfoTab({ data }: { data: CompanyDetail }) {
               {hoursText(pi, t)}
               {pi.firstHours != null && <span className="ml-2 text-xs text-gray-500">{t('firstHours', { n: pi.firstHours })}</span>}
             </Row>
+            {pi.rightNowTonight && (
+              <Row label={t('field_rightNowTonight')}>
+                {t('rightNowTonightText', { start: pi.rightNowTonight.start, end: pi.rightNowTonight.end })}
+              </Row>
+            )}
             {pi.cancellation && (
               <Row label={t('field_cancellation')}>
                 {t('cancellationText', {
@@ -214,6 +219,9 @@ function InfoTab({ data }: { data: CompanyDetail }) {
                   after: pi.cancellation.afterBookingMinutes ?? '—',
                 })}
               </Row>
+            )}
+            {pi.cancelBeforeHours != null && (
+              <Row label={t('field_cancelBefore')}>{t('cancelBeforeText', { n: pi.cancelBeforeHours })}</Row>
             )}
           </dl>
         ) : (

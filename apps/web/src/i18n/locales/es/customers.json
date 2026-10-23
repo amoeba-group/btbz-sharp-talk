@@ -117,5 +117,19 @@
   "hotelAdded": "Hotel añadido.",
   "hotelSynced": "Sincronizado con Go2Joy.",
   "profileSaved": "Perfil guardado.",
-  "companySaveFailed": "No se pudo guardar."
+  "companySaveFailed": "No se pudo guardar.",
+  "field_rightNowTonight": "Ahora / esta noche",
+  "rightNowTonightText": "{{start}}–{{end}} h (noche)",
+  "field_cancelBefore": "Cancelar hasta",
+  "cancelBeforeText": "Hasta {{n}} h antes de la hora reservada",
+  "provinceRegions": {
+    "label": "Mapa de regiones",
+    "none": "Sin provincias",
+    "synced_line": "{{total}} provincias · actualizado {{at}} (Go2Joy)",
+    "manual_line": "{{total}} provincias · introducido manualmente",
+    "sync": "Actualizar mapa de regiones",
+    "syncing": "Actualizando…",
+    "synced": "Mapa de regiones actualizado: {{total}} provincias — {{added}} nuevas · {{changed}} cambiadas · {{kept}} conservadas",
+    "syncFailed": "No se pudo actualizar el mapa de regiones"
+  }
 }

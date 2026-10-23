@@ -6,6 +6,7 @@ import { Customer } from '../customer/entity/customer.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { ProductCache } from '../product/entity/product-cache.entity';
 import { User } from '../user/entity/user.entity';
+import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { Go2joyModule } from '../go2joy/go2joy.module';
 import { AuditModule } from '../audit/audit.module';
 import { CompanyService } from './company.service';
@@ -18,7 +19,7 @@ import { CompanyController } from './company.controller';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Company, CompanyContact, Customer, Conversation, ProductCache, User]),
+    TypeOrmModule.forFeature([Company, CompanyContact, Customer, Conversation, ProductCache, User, TenantAiConfig]),
     Go2joyModule,
     AuditModule,
   ],

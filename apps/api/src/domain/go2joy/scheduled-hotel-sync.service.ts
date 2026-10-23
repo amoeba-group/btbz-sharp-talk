@@ -1,12 +1,14 @@
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { HotelSyncService } from './hotel-sync.service';
+import { ProvinceRegionSyncService } from './province-region-sync.service';
 import { envNumber } from '../../global/util/env-number.util';
 import { isCliContext } from '../../global/util/cli-context.util';
 
 /**
  * Daily refresh of every hotel company from the Go2Joy Partner API (PLN-261023
- * D4). Runs for tenants that saved Partner credentials and nobody else, so it is
- * on by default; GO2JOY_HOTEL_SYNC_INTERVAL_MIN=0 turns it off.
+ * D4) and of the province → region map (H1-a). Runs for tenants that saved
+ * Partner credentials and nobody else, so it is on by default;
+ * GO2JOY_HOTEL_SYNC_INTERVAL_MIN=0 turns it off.
  */
 @Injectable()
 export class ScheduledHotelSyncService implements OnModuleInit, OnModuleDestroy {
@@ -14,7 +16,10 @@ export class ScheduledHotelSyncService implements OnModuleInit, OnModuleDestroy 
   private timer: NodeJS.Timeout | null = null;
   private running = false;
 
-  constructor(private readonly hotelSync: HotelSyncService) {}
+  constructor(
+    private readonly hotelSync: HotelSyncService,
+    private readonly provinceSync: ProvinceRegionSyncService,
+  ) {}
 
   onModuleInit(): void {
     if (isCliContext()) return;
@@ -35,6 +40,9 @@ export class ScheduledHotelSyncService implements OnModuleInit, OnModuleDestroy 
     if (this.running) return;
     this.running = true;
     try {
+      // Regions first: a hotel synced next reads the fresh map.
+      const provinces = await this.provinceSync.syncAll();
+      if (provinces.tenants) this.logger.log(`Go2Joy province sync: ${provinces.tenants} tenant(s), ${provinces.failed} failed`);
       const { hotels, failed } = await this.hotelSync.syncAll();
       if (hotels) this.logger.log(`Go2Joy hotel sync: ${hotels} hotel(s), ${failed} failed`);
     } catch (e) {

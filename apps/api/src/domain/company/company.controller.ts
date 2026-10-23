@@ -5,6 +5,7 @@ import { buildPagination, normalizePage } from '@sharptalk/common';
 import { CompanyService } from './company.service';
 import { AddHotelRequest, ListCompaniesQuery, UpdateCompanyProfileRequest } from './dto/request/company.request';
 import { HotelSyncService, parseHotelSn } from '../go2joy/hotel-sync.service';
+import { ProvinceRegionSyncService } from '../go2joy/province-region-sync.service';
 import { AuditService } from '../audit/audit.service';
 import { Paginated } from '../../global/interceptor/transform.interceptor';
 import { RequireCapability, RequireMenu } from '../../global/decorator/auth.decorator';
@@ -24,6 +25,7 @@ export class CompanyController {
     private readonly companyService: CompanyService,
     private readonly hotelSync: HotelSyncService,
     private readonly audit: AuditService,
+    private readonly provinceSync: ProvinceRegionSyncService,
   ) {}
 
   @Get()
@@ -34,6 +36,35 @@ export class CompanyController {
     const { page, size } = normalizePage(query.page, query.size);
     const { items, total } = await this.companyService.list(tenantId, page, size, { q: query.q, region: query.region });
     return new Paginated(items, buildPagination(page, size, total));
+  }
+
+  // The province-regions routes are declared before ':id' so the literal
+  // segment is not read as a company id.
+
+  /** How many provinces the routing map has and where it came from (PLN-261023 H1-a). */
+  @Get('province-regions')
+  @RequireCapability(CAPABILITY.CUSTOMER_MANAGE)
+  @ApiOperation({ summary: 'Province → region map status (count, source, last sync)' })
+  provinceRegions(@CurrentUser() user: Principal) {
+    return this.provinceSync.status(this.tenantId(user));
+  }
+
+  /** Refresh the province → region map from the Go2Joy Province Feed now. */
+  @Post('province-regions/sync')
+  @RequireCapability(CAPABILITY.CUSTOMER_MANAGE)
+  @ApiOperation({ summary: 'Sync the province → region map from the Go2Joy Partner API' })
+  async syncProvinceRegions(@CurrentUser() user: Principal) {
+    const tenantId = this.tenantId(user);
+    const result = await this.provinceSync.syncTenant(tenantId);
+    await this.audit.write({
+      tenantId,
+      actorType: 'user',
+      actorId: this.userId(user),
+      action: 'go2joy.province_regions_synced',
+      target: `tenant:${tenantId}`,
+      metadata: { total: result.total, added: result.added, changed: result.changed, kept: result.kept },
+    });
+    return result;
   }
 
   @Get(':id')

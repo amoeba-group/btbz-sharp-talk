@@ -62,6 +62,30 @@ describe('storedIdentityAttributes (PLN-261022 stage 1)', () => {
     expect(r.mismatch).toBe('south');
   });
 
+  it('reads a province name in the region field as the province (PLN-261023 H1-b)', () => {
+    // What HA UAT sends: region and province both "Hồ Chí Minh".
+    const both = storedIdentityAttributes({ hotel_id: '4118', province: 'Hồ Chí Minh', region: 'Hồ Chí Minh' }, map);
+    expect(both.attributes).toEqual({ hotel_id: '4118', province: 'Hồ Chí Minh', region: 'south' });
+    expect(both.regionSource).toBe('province_in_region');
+    expect(both.mismatch).toBeUndefined();
+    // Region only, any case / decomposed / underscored: the province is filled with the map's spelling.
+    for (const region of ['hồ_chí_minh', 'HỒ CHÍ MINH', 'Hồ Chí Minh'.normalize('NFD')]) {
+      const r = storedIdentityAttributes({ region }, map);
+      expect(r.attributes).toEqual({ province: 'Hồ Chí Minh', region: 'south' });
+    }
+  });
+
+  it('leaves real regions and unknown values alone', () => {
+    expect(storedIdentityAttributes({ region: 'south' }, map).attributes).toEqual({ region: 'south' });
+    expect(storedIdentityAttributes({ region: 'region_10' }, { region_10: 'north' }).attributes).toEqual({ region: 'region_10' });
+    // Not a region, not a province the map knows: kept as folded, signed source.
+    const r = storedIdentityAttributes({ region: 'Cần Thơ' }, map);
+    expect(r.attributes).toEqual({ region: 'cần_thơ' });
+    expect(r.regionSource).toBe('signed');
+    // No map: nothing to compare against.
+    expect(storedIdentityAttributes({ region: 'Hồ Chí Minh' }, null).attributes).toEqual({ region: 'hồ_chí_minh' });
+  });
+
   it('no map / unmapped province / no attributes', () => {
     expect(storedIdentityAttributes({ province: 'Cần Thơ' }, map)).toEqual({ attributes: { province: 'Cần Thơ' }, regionSource: 'none' });
     expect(storedIdentityAttributes({ province: 'Hồ Chí Minh' }, null).regionSource).toBe('none');

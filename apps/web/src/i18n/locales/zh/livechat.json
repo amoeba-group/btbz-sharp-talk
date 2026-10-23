@@ -455,7 +455,8 @@
       "hourly": "钟点",
       "overnight": "过夜",
       "daily": "全天"
-    }
+    },
+    "cancelBefore": "取消：预订前 {{n}} 小时"
   },
   "search": {
     "inLabel": "搜索范围",

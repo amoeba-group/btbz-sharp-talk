@@ -76,6 +76,22 @@ interface HoursWindow {
   end: number | null;
 }
 
+/** The routing province → region map (PLN-261023 H1-a). source null = entered by SQL. */
+export interface ProvinceRegionStatus {
+  total: number;
+  syncedAt: string | null;
+  source: string | null;
+  regions: Record<string, number>;
+}
+
+export interface ProvinceRegionSyncResult {
+  total: number;
+  added: number;
+  changed: number;
+  kept: number;
+  syncedAt: string;
+}
+
 /** Go2Joy Partner API values — read-only (PLN-261023). */
 export interface CompanyPartnerInfo {
   name: string | null;
@@ -89,6 +105,9 @@ export interface CompanyPartnerInfo {
     dailyMinutes: number | null;
     afterBookingMinutes: number | null;
   } | null;
+  /** Absent on hotels synced before PLN-261023 H2. */
+  cancelBeforeHours?: number | null;
+  rightNowTonight?: { start: number; end: number } | null;
 }
 
 export interface RoomAttributes {
@@ -102,6 +121,7 @@ export interface RoomAttributes {
   bedType: number | null;
   square: number | null;
   facilities: Array<{ vi: string | null; en: string | null }>;
+  views?: Array<{ vi: string | null; en: string | null }>;
   images: string[];
   memo: string | null;
   roomCount: number | null;
@@ -178,6 +198,8 @@ export const customersService = {
   /** Add a Go2Joy hotel by number — confirmed + filled from the Partner API (PLN-261023). */
   addHotel: (hotelSn: number) => apiPost<CompanyDetail>('/companies', { hotel_sn: hotelSn }),
   syncCompany: (id: string) => apiPost<CompanyDetail>(`/companies/${id}/sync`),
+  provinceRegions: () => apiGet<ProvinceRegionStatus>('/companies/province-regions'),
+  syncProvinceRegions: () => apiPost<ProvinceRegionSyncResult>('/companies/province-regions/sync'),
   updateCompanyProfile: (id: string, body: CompanyProfileUpdate) =>
     apiPatch<CompanyDetail>(`/companies/${id}/profile`, body),
   /** Unmasked contact details for one customer. Audited server-side. */

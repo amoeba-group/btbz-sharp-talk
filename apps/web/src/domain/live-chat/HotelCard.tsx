@@ -49,6 +49,8 @@ export function HotelCard({ hotel }: { hotel: ConversationHotel }) {
       }).filter((x): x is string => !!x)
     : [];
 
+  const cancelBefore = hotel.partnerInfo?.cancelBeforeHours;
+
   const rooms = hotel.rooms.slice(0, MAX_ROOMS).map((r) => {
     const price = roomPrice(r);
     return price != null ? `${r.title} ${compactPrice(price, r.currency)}` : r.title;
@@ -90,6 +92,9 @@ export function HotelCard({ hotel }: { hotel: ConversationHotel }) {
           </p>
         )}
         {hours.length > 0 && <p className="text-xs text-gray-600">{hours.join(' · ')}</p>}
+        {cancelBefore != null && (
+          <p className="text-xs text-gray-600">{t('hotelCard.cancelBefore', { n: cancelBefore })}</p>
+        )}
         {showRooms && (
           <p className="text-xs text-gray-600">
             {[t('hotelCard.sellingRooms', { count: hotel.sellingRooms }), ...rooms].join(' · ')}

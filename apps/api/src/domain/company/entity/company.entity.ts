@@ -33,6 +33,10 @@ export interface CompanyPartnerInfo {
     dailyMinutes: number | null;
     afterBookingMinutes: number | null;
   } | null;
+  /** Hours before the booked time a booking can still be cancelled (Hotel Info `cancelBeforeHours`, PLN-261023 H2). Absent on rows synced before. */
+  cancelBeforeHours?: number | null;
+  /** Hours an overnight booker may pick "right now" or "tonight" (`startRightNowTonight`/`endRightNowTonight`). */
+  rightNowTonight?: { start: number; end: number } | null;
 }
 
 /**

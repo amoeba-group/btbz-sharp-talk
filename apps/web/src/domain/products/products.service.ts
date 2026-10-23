@@ -48,6 +48,8 @@ export interface RoomTypeAttributes {
   bedType: string | null;
   square: number | string | null;
   facilities: { vi?: string | null; en?: string | null }[] | null;
+  /** Absent on rooms synced before PLN-261023 H3. */
+  views?: { vi?: string | null; en?: string | null }[] | null;
   images: string[] | null;
   memo: string | null;
   roomCount: number | null;

@@ -83,6 +83,7 @@
       "flashSale": "Oferta flash"
     },
     "facilities": "Servicios",
-    "memo": "Nota"
+    "memo": "Nota",
+    "views": "Vistas"
   }
 }

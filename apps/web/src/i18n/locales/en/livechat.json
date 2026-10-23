@@ -455,7 +455,8 @@
       "hourly": "Hourly",
       "overnight": "Overnight",
       "daily": "Daily"
-    }
+    },
+    "cancelBefore": "Cancel: up to {{n}}h before the booked time"
   },
   "search": {
     "inLabel": "Search in",

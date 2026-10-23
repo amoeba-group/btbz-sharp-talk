@@ -455,7 +455,8 @@
       "hourly": "Theo giờ",
       "overnight": "Qua đêm",
       "daily": "Theo ngày"
-    }
+    },
+    "cancelBefore": "Hủy: trước giờ đặt {{n}} giờ"
   },
   "search": {
     "inLabel": "Tìm trong",

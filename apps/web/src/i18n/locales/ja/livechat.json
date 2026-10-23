@@ -455,7 +455,8 @@
       "hourly": "時間利用",
       "overnight": "宿泊(夜間)",
       "daily": "1日"
-    }
+    },
+    "cancelBefore": "キャンセル：予約の{{n}}時間前まで"
   },
   "search": {
     "inLabel": "検索対象",

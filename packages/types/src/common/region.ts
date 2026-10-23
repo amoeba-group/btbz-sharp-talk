@@ -39,6 +39,16 @@ export function isRegionCode(value: unknown): value is RegionCode {
 }
 
 /**
+ * A value that names a region at all: a catalogued code, or `region_{n}` — a
+ * Go2Joy region number the Partner API documents no name for (PLN-261023 D1).
+ * Anything else in a region field is not a region (HA has sent province
+ * names there).
+ */
+export function isRegionValue(value: unknown): boolean {
+  return isRegionCode(value) || /^region_\d+$/.test(String(value));
+}
+
+/**
  * Comparison key for a province name: NFC (Vietnamese tone marks arrive both
  * composed and decomposed), whitespace collapsed, lower-case. Used for both
  * the stored scope and the session value, so "Hồ Chí Minh" in either form and

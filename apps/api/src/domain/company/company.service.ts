@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Company } from './entity/company.entity';
@@ -7,6 +7,8 @@ import { Customer } from '../customer/entity/customer.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { PRODUCT_STATUS, ProductCache } from '../product/entity/product-cache.entity';
 import { User } from '../user/entity/user.entity';
+import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
+import { regionForProvince } from '../embed/identity-attributes';
 import { CompanyMapper } from './company.mapper';
 import type {
   CompanyDetailResponse,
@@ -53,7 +55,24 @@ export class CompanyService {
     @InjectRepository(Conversation) private readonly convRepo: Repository<Conversation>,
     @InjectRepository(ProductCache) private readonly productRepo: Repository<ProductCache>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
+    @Optional() @InjectRepository(TenantAiConfig) private readonly aiConfigRepo?: Repository<TenantAiConfig>,
   ) {}
+
+  /**
+   * A company with a province but no region takes the region the tenant's
+   * province map gives it (PLN-261023 H1-c). Never throws — a missing map
+   * leaves the region empty, as before.
+   */
+  private async fillRegion(company: Company): Promise<void> {
+    if (company.region || !company.province || !this.aiConfigRepo) return;
+    try {
+      const config = await this.aiConfigRepo.findOne({ where: { tenantId: company.tenantId } });
+      const region = regionForProvince(company.province, config?.handoffConfig?.provinceRegions);
+      if (region) company.region = region;
+    } catch (err) {
+      this.logger.warn(`company region not filled (tenant ${company.tenantId}): ${(err as Error).message}`);
+    }
+  }
 
   /** The company of a Go2Joy hotel, or null (tenant-scoped). */
   findHotel(tenantId: number, hotelSn: number): Promise<Company | null> {
@@ -137,6 +156,7 @@ export class CompanyService {
       }
     };
     (['name', 'code', 'phone', 'province', 'district', 'address'] as const).forEach(column);
+    if (changed.includes('province') && !company.region) await this.fillRegion(company);
     const profile: CompanyProfile = { ...(company.profile ?? {}) };
     const map: Array<[keyof UpdateCompanyProfileRequest, keyof CompanyProfile, 'text' | 'bool']> = [
       ['group_name', 'groupName', 'text'],
@@ -185,6 +205,7 @@ export class CompanyService {
     if (attrs?.hotel_name) company.name = attrs.hotel_name;
     if (attrs?.province) company.province = attrs.province;
     if (attrs?.region) company.region = attrs.region;
+    await this.fillRegion(company);
     company.lastSeenAt = new Date();
     try {
       return await this.companyRepo.save(company);
