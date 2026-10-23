@@ -40,7 +40,7 @@ export interface RoutingCondition {
 
 /** Fixed option sets for the enum fields; `language` comes from the tenant's offered languages. */
 export const ROUTING_CONDITION_ENUM_VALUES: Readonly<Partial<Record<RoutingConditionField, readonly string[]>>> = {
-  identity_level: ['guest', 'verified'],
+  identity_level: ['guest', 'verified', 'claimed'],
   customer_tier: ['guest', 'subscriber', 'regular'],
   customer_type: ['b2c', 'b2b_contact'],
 };

@@ -11,15 +11,18 @@ import { RedisService } from '../../infrastructure/cache/redis.service';
 import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import {
+  claimedIdentityAttributes,
   IdentityAttributes,
   identitySigningString,
   normalizeIdentityAttributes,
   storedIdentityAttributes,
 } from './identity-attributes';
+import { unsignedIdentifyAllowed } from './unsigned-identify';
 import { TenantAiConfig } from '../ai-engine/entity/tenant-ai-config.entity';
 import { Conversation } from '../chat/entity/conversation.entity';
 import { CompanyService } from '../company/company.service';
 import type { Company } from '../company/entity/company.entity';
+import { AuditService } from '../audit/audit.service';
 
 /** What the customer's own server signs, and what the SDK forwards. */
 export interface IdentifyInput {
@@ -64,6 +67,8 @@ export class EmbedService {
     // B2B account registration + attaching an already-open thread (PLN-261022 stage 2).
     @Optional() private readonly companies?: CompanyService,
     @Optional() @InjectRepository(Conversation) private readonly convRepo?: Repository<Conversation>,
+    // Host sign-ins on the agent work log (PLN-261022 P6).
+    @Optional() private readonly audit?: AuditService,
   ) {}
 
   /** New secret, stored encrypted. Returned in full exactly once, to the caller. */
@@ -90,7 +95,8 @@ export class EmbedService {
    * Throws E5048 on any failure — including "no secret configured", because the
    * caller cannot tell the difference and should not be able to probe it. The
    * widget stays usable as a guest either way: identity gates order history, not
-   * the ability to ask a question.
+   * the ability to ask a question. The one exception is a tenant on the
+   * unsigned list, whose failed call is kept as 'claimed' (see claimIdentity).
    */
   async identify(input: IdentifyInput): Promise<Session> {
     const session = await this.sessionRepo.findOne({
@@ -100,19 +106,31 @@ export class EmbedService {
       throw new BusinessException(ERROR_CODE.SESSION_NOT_FOUND, HttpStatus.NOT_FOUND);
     }
 
+    // Who this session was before the call — a sign-in is logged only when it changes.
+    const signedInBefore = signInKey(session);
     const tenant = await this.tenantRepo.findOne({ where: { id: Number(session.tenantId) } });
     const secret = tenant?.embedSecret;
-    if (!secret) {
-      this.logger.warn(`identify rejected — no embed secret (tenant ${session.tenantId})`);
-      throw new BusinessException(ERROR_CODE.EMBED_IDENTITY_INVALID, HttpStatus.UNAUTHORIZED);
-    }
-
     const attributes = normalizeIdentityAttributes(input.attributes);
-    const expected = EmbedService.sign(secret, input.userId, attributes);
-    if (!safeEquals(expected, input.hash)) {
-      this.logger.warn(
-        `identify rejected — signature mismatch (tenant ${session.tenantId}, user ${maskId(input.userId)})`,
-      );
+    if (!secret || !safeEquals(EmbedService.sign(secret, input.userId, attributes), input.hash)) {
+      // A tenant whose host cannot sign yet may hand us the identity unsigned
+      // (PLN-261022 unsigned, staging only) — kept as 'claimed', never as a
+      // customer. A verified session is never downgraded by an unsigned call.
+      if (unsignedIdentifyAllowed(Number(session.tenantId))) {
+        if (session.identityLevel !== SESSION_IDENTITY.VERIFIED) {
+          const claimed = await this.claimIdentity(session, input, attributes);
+          await this.recordSignIn(claimed, signedInBefore);
+          return claimed;
+        }
+        this.logger.warn(
+          `identify rejected — unsigned call on a verified session (tenant ${session.tenantId}, user ${maskId(input.userId)})`,
+        );
+      } else if (!secret) {
+        this.logger.warn(`identify rejected — no embed secret (tenant ${session.tenantId})`);
+      } else {
+        this.logger.warn(
+          `identify rejected — signature mismatch (tenant ${session.tenantId}, user ${maskId(input.userId)})`,
+        );
+      }
       throw new BusinessException(ERROR_CODE.EMBED_IDENTITY_INVALID, HttpStatus.UNAUTHORIZED);
     }
 
@@ -157,6 +175,62 @@ export class EmbedService {
         `${attributes ? `, attrs ${Object.keys(attributes).sort().join(',')}, region ${stored.regionSource}` : ''}` +
         `${consentFromHost ? `, consent via host terms v${saved.consentVersion}` : ''}` +
         `${company ? `, company ${company.id}` : ''})`,
+    );
+    await this.recordSignIn(saved, signedInBefore);
+    return saved;
+  }
+
+  /**
+   * One work-log row when a session's host user is established or changes
+   * (PLN-261022 P6) — not on every page load, which re-identifies the same
+   * user. The row names the SESSION; the person's name is resolved from it when
+   * the log is read, so no name, email or user id is written to the audit
+   * trail. Never fails the identify.
+   */
+  private async recordSignIn(session: Session, before: string | null): Promise<void> {
+    const after = signInKey(session);
+    if (!this.audit || !after || after === before) return;
+    try {
+      await this.audit.write({
+        tenantId: session.tenantId != null ? Number(session.tenantId) : null,
+        actorType: 'host',
+        actorId: Number(session.id),
+        action: 'host.user_signed_in',
+        target: `session:${session.id}`,
+        metadata: {
+          level: session.identityLevel,
+          hotelId: session.identityAttributes?.hotel_id ?? null,
+          region: session.identityAttributes?.region ?? null,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(`host sign-in not logged (session ${session.id}): ${(err as Error).message}`);
+    }
+  }
+
+  /**
+   * An identity the host could not sign yet (PLN-261022 unsigned): kept on the
+   * SESSION as 'claimed' so agents see who is asking and routing can use the
+   * hotel's region — and nothing more. No customer, no company, no consent, no
+   * thread: customer-bound features key off `customerId`, and an unsigned id
+   * must not open another user's data. Stored in the same normalised form as
+   * a signed identify, so region matching behaves the same.
+   */
+  private async claimIdentity(
+    session: Session,
+    input: IdentifyInput,
+    attributes: IdentityAttributes | null,
+  ): Promise<Session> {
+    const tenantId = Number(session.tenantId);
+    const stored = storedIdentityAttributes(attributes, await this.provinceRegions(tenantId, attributes));
+    session.identityLevel = SESSION_IDENTITY.CLAIMED;
+    // Replaced, never merged — same rule as a signed identify.
+    session.identityAttributes = claimedIdentityAttributes(input.userId, input.name, stored.attributes);
+    const saved = await this.sessionRepo.save(session);
+    await this.redis.del(sessionCacheKey(input.sessionToken));
+    this.logger.warn(
+      `identify claimed — unsigned (tenant ${tenantId}, user ${maskId(input.userId)}` +
+        `${attributes ? `, attrs ${Object.keys(attributes).sort().join(',')}, region ${stored.regionSource}` : ''})`,
     );
     return saved;
   }
@@ -277,6 +351,18 @@ function safeEquals(a: string, b: string): boolean {
   const right = Buffer.from(String(b ?? ''), 'utf8');
   if (left.length !== right.length) return false;
   return timingSafeEqual(left, right);
+}
+
+/**
+ * Who a session's host user is, for "did the sign-in change?": the verified
+ * customer, or the user id a claimed identify gave. Null for a guest.
+ */
+function signInKey(session: Session): string | null {
+  if (session.identityLevel === SESSION_IDENTITY.VERIFIED && session.customerId != null) {
+    return `verified:${session.customerId}`;
+  }
+  const claimed = session.identityLevel === SESSION_IDENTITY.CLAIMED ? session.identityAttributes?.user_id : null;
+  return claimed ? `claimed:${claimed}` : null;
 }
 
 /** Never log a full external user id — it is the customer's own identifier. */

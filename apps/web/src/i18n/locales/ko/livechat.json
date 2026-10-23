@@ -408,7 +408,9 @@
       "manager": "관리자",
       "reception": "리셉션"
     },
-    "signed": "호스트 앱이 서명한 정보"
+    "signed": "호스트 앱이 서명한 정보",
+    "unverified": "미검증",
+    "unverifiedHint": "호스트 앱이 서명하지 않은 정보 — 표시와 배정에만 사용"
   },
   "rating": {
     "action": "답변 평가",

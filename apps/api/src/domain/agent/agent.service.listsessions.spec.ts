@@ -154,6 +154,17 @@ describe('toSessionResponse', () => {
     expect(res.lastMessageAt).toBeNull();
     expect(res.lastMessagePreview).toBeNull();
   });
+
+  it('marks host facts as unverified on a claimed session and carries who the host says it is (PLN-261022)', () => {
+    const conv = { id: 1, status: 'waiting', escalated: 0, createdAt: new Date() } as Conversation;
+    const attrs = { hotel_id: '1721', region: 'south', user_id: 'ha:8818', name: 'G2J SUPPORT' };
+    const claimed = toSessionResponse(conv, null, undefined, null, undefined, undefined, attrs, 'claimed');
+    expect(claimed.identity).toMatchObject({ hotelId: '1721', region: 'south', userId: 'ha:8818', name: 'G*J S*****T', verified: false });
+    // A signed session — or a caller that does not know the level — stays verified.
+    expect(toSessionResponse(conv, null, undefined, null, undefined, undefined, { hotel_id: '1' }, 'verified').identity?.verified).toBe(true);
+    expect(toSessionResponse(conv, null, undefined, null, undefined, undefined, { hotel_id: '1' }).identity?.verified).toBe(true);
+    expect(toSessionResponse(conv, null).identity).toBeNull();
+  });
 });
 
 /**

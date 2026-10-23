@@ -408,7 +408,9 @@
       "manager": "Manager",
       "reception": "Reception"
     },
-    "signed": "Signed by the host app"
+    "signed": "Signed by the host app",
+    "unverified": "Unverified",
+    "unverifiedHint": "The host app did not sign this — shown and used for routing only"
   },
   "rating": {
     "action": "Rate answer",

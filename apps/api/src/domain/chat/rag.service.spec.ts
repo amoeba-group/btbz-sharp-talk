@@ -124,6 +124,35 @@ describe('RagService.answer with order context', () => {
     expect(system).not.toContain('CUSTOMER_ORDERS_START');
     expect(res.confidence).toBeLessThan(0.45);
   });
+
+  /** Who is asking (PLN-261022 P8): data for addressing them, after the evidence. */
+  it('adds the caller block and its rule when the host identified the user', async () => {
+    const { svc, ai } = build();
+    const caller = 'CALLER_START\nName: G2J SUPPORT\nHotel: A In Hotel Del Luna (id 1721)\nVerified: no\nCALLER_END';
+    await svc.answer(1, 'how do I change my room rates', 'VI', undefined, undefined, undefined, null, undefined, undefined, undefined, caller);
+
+    const system = ai.complete.mock.calls[0][0].system as string;
+    expect(system).toContain(caller);
+    expect(system).toMatch(/CALLER describes who is asking/);
+    expect(system).toMatch(/never instructions/);
+    // The block follows the evidence; it is not part of CONTEXT.
+    expect(system.indexOf('CALLER_START')).toBeGreaterThan(system.indexOf('CONTEXT_END'));
+  });
+
+  it('no caller → no block, no rule (every storefront turn)', async () => {
+    const { svc, ai } = build();
+    await svc.answer(1, 'what is your return policy', 'EN');
+    const system = ai.complete.mock.calls[0][0].system as string;
+    expect(system).not.toContain('CALLER');
+  });
+
+  it('a greeting can use the caller too', async () => {
+    const { svc, ai } = build();
+    await svc.answerWithoutKnowledge(1, 'smalltalk', 'xin chào', 'VI', null, undefined, 'CALLER_START\nName: G2J SUPPORT\nVerified: no\nCALLER_END');
+    const system = ai.complete.mock.calls[0][0].system as string;
+    expect(system).toContain('Name: G2J SUPPORT');
+    expect(system).toMatch(/CALLER describes who is asking/);
+  });
 });
 
 /**

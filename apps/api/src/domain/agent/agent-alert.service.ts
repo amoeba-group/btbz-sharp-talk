@@ -152,14 +152,15 @@ export class AgentAlertService implements OnModuleInit {
     try {
       const session = await this.sessionRepo.findOne({
         where: { id: alert.sessionId },
-        select: { id: true, identityAttributes: true },
+        select: { id: true, identityAttributes: true, identityLevel: true },
       });
       const a = session?.identityAttributes;
       if (!a) return null;
       const hotel = a.hotel_name || a.hotel_id;
-      return [hotel && `Hotel: ${hotel}`, a.region && `Region: ${a.region}`, a.role && `Role: ${a.role}`]
-        .filter(Boolean)
-        .join(' · ') || null;
+      const facts = [hotel && `Hotel: ${hotel}`, a.region && `Region: ${a.region}`, a.role && `Role: ${a.role}`].filter(Boolean);
+      // Unsigned host (PLN-261022): say so, the facts are the host's word only.
+      if (facts.length && session?.identityLevel === 'claimed') facts.push('Unverified');
+      return facts.join(' · ') || null;
     } catch {
       return null;
     }

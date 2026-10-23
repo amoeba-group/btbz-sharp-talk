@@ -187,7 +187,7 @@
       "customer": {
         "title": "Customer",
         "add": "+ Add condition",
-        "hint": "Session and customer facts the rule also requires. Hotel, province and role match only when the host signed them in. Empty = any.",
+        "hint": "Session and customer facts the rule also requires. Hotel, province and role come from the host app's sign-in — signed, or unverified while the host cannot sign yet. Empty = any.",
         "opIn": "is one of",
         "opContains": "contains",
         "textPh": "Comma-separated values",
@@ -207,7 +207,8 @@
         "value": {
           "identity_level": {
             "guest": "Guest",
-            "verified": "Verified"
+            "verified": "Verified",
+            "claimed": "Unverified (unsigned)"
           },
           "customer_tier": {
             "guest": "Guest",

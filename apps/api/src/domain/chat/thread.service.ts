@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, LessThan, Not, Repository } from 'typeorm';
+import { In, IsNull, LessThan, Not, Raw, Repository } from 'typeorm';
 import { SENDER_TYPE } from '@sharptalk/types';
 import { Conversation } from './entity/conversation.entity';
 import { Message } from './entity/message.entity';
@@ -9,11 +9,18 @@ import { User } from '../user/entity/user.entity';
 import { Session } from '../session/entity/session.entity';
 import { AiConfigService } from '../ai-engine/ai-config.service';
 import { buildHistory } from './conversation-history.util';
+import { claimedUserId } from '../embed/unsigned-identify';
 
-/** Whose thread a conversation belongs to: a company (B2B) or a customer. */
+/**
+ * Whose thread a conversation belongs to: a company (B2B), a customer, or —
+ * for a host that cannot sign yet — the user id it CLAIMED (PLN-261022 P7).
+ * A claimed thread is its own: no customer, no company, and it never sees a
+ * verified conversation.
+ */
 export interface ThreadAccount {
   companyId: number | null;
   customerId: number | null;
+  claimedUserId?: string;
 }
 
 export interface ThreadSettings {
@@ -59,13 +66,21 @@ export class ThreadService {
     @InjectRepository(Tenant) private readonly tenantRepo: Repository<Tenant>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     private readonly aiConfig: AiConfigService,
+    // Last + optional: specs build the service positionally. Resolves a claimed
+    // user id to its sessions (PLN-261022 P7).
+    @Optional() @InjectRepository(Session) private readonly sessionRepo?: Repository<Session>,
   ) {}
 
   /** The account a session's conversations belong to; null for a guest. */
-  static accountOf(session: Pick<Session, 'customerId' | 'companyId'>): ThreadAccount | null {
+  static accountOf(
+    session: Pick<Session, 'customerId' | 'companyId'> & Partial<Pick<Session, 'identityLevel' | 'identityAttributes'>>,
+  ): ThreadAccount | null {
     const companyId = session.companyId != null ? Number(session.companyId) : null;
     const customerId = session.customerId != null ? Number(session.customerId) : null;
-    if (companyId == null && customerId == null) return null;
+    if (companyId == null && customerId == null) {
+      const claimed = claimedUserId(session);
+      return claimed ? { companyId: null, customerId: null, claimedUserId: claimed } : null;
+    }
     return { companyId, customerId };
   }
 
@@ -93,10 +108,36 @@ export class ThreadService {
 
   /** The account thread's newest conversation older than `beforeId` (or newest overall). */
   async previousOf(tenantId: number, account: ThreadAccount, beforeId?: number | null): Promise<Conversation | null> {
+    const before = beforeId != null ? { id: LessThan(beforeId) } : {};
+    if (account.claimedUserId) {
+      const where = await this.claimedWhere(tenantId, account.claimedUserId);
+      return where ? this.convRepo.findOne({ where: { ...where, ...before }, order: { id: 'DESC' } }) : null;
+    }
     return this.convRepo.findOne({
-      where: { ...ThreadService.scopeWhere(tenantId, account), ...(beforeId != null ? { id: LessThan(beforeId) } : {}) },
+      where: { ...ThreadService.scopeWhere(tenantId, account), ...before },
       order: { id: 'DESC' },
     });
+  }
+
+  /**
+   * "This claimed user's conversations": the tenant's CLAIMED sessions that
+   * carry the same `user_id`, and only their rows with no customer — so a
+   * claimed thread never reaches a verified conversation. Null = none yet.
+   */
+  private async claimedWhere(tenantId: number, userId: string) {
+    if (!this.sessionRepo) return null;
+    const sessions = await this.sessionRepo.find({
+      where: {
+        tenantId,
+        identityLevel: 'claimed',
+        identityAttributes: Raw((col) => `JSON_UNQUOTE(JSON_EXTRACT(${col}, '$.user_id')) = :claimedUserId`, {
+          claimedUserId: userId,
+        }),
+      },
+      select: ['id'],
+    });
+    if (!sessions.length) return null;
+    return { tenantId, customerId: IsNull(), sessionId: In(sessions.map((s) => Number(s.id))) };
   }
 
   /**
@@ -132,6 +173,7 @@ export class ThreadService {
     const tenantId = Number(session.tenantId);
     const account = ThreadService.accountOf(session);
     if (!account) return { conversations: [], hasMore: false, colleagueCount: 0 };
+    if (account.claimedUserId) return this.claimedPage(tenantId, account.claimedUserId, beforeId, limit);
     const { scope } = await this.settings(tenantId);
     const own = account.customerId;
     const visibleWhere =
@@ -147,14 +189,7 @@ export class ThreadService {
       account.companyId != null && scope === 'self' && own != null
         ? await this.convRepo.count({ where: { tenantId, companyId: account.companyId, customerId: Not(own), ...before } })
         : 0;
-    const messages = page.length
-      ? await this.msgRepo.find({ where: { conversationId: In(page.map((c) => Number(c.id))) }, order: { id: 'ASC' } })
-      : [];
-    const byConv = new Map<string, Message[]>();
-    for (const m of messages) {
-      const key = String(m.conversationId);
-      byConv.set(key, [...(byConv.get(key) ?? []), m]);
-    }
+    const byConv = await this.messagesOf(page);
     return {
       conversations: page.map((c) => ({
         conversation: c,
@@ -164,6 +199,37 @@ export class ThreadService {
       hasMore: rows.length > limit,
       colleagueCount,
     };
+  }
+
+  /** A claimed user's own earlier conversations (D7ⓐ: self only, no colleagues). */
+  private async claimedPage(tenantId: number, userId: string, beforeId: number | null, limit: number): Promise<ThreadPage> {
+    const where = await this.claimedWhere(tenantId, userId);
+    if (!where) return { conversations: [], hasMore: false, colleagueCount: 0 };
+    const before = beforeId != null ? { id: LessThan(beforeId) } : {};
+    const rows = await this.convRepo.find({ where: { ...where, ...before }, order: { id: 'DESC' }, take: limit + 1 });
+    const page = rows.slice(0, limit);
+    const byConv = await this.messagesOf(page);
+    return {
+      conversations: page.map((c) => ({
+        conversation: c,
+        messages: (byConv.get(String(c.id)) ?? []).slice(-WIDGET_MESSAGES_PER_CONVERSATION),
+        own: true,
+      })),
+      hasMore: rows.length > limit,
+      colleagueCount: 0,
+    };
+  }
+
+  private async messagesOf(page: Conversation[]): Promise<Map<string, Message[]>> {
+    const messages = page.length
+      ? await this.msgRepo.find({ where: { conversationId: In(page.map((c) => Number(c.id))) }, order: { id: 'ASC' } })
+      : [];
+    const byConv = new Map<string, Message[]>();
+    for (const m of messages) {
+      const key = String(m.conversationId);
+      byConv.set(key, [...(byConv.get(key) ?? []), m]);
+    }
+    return byConv;
   }
 
   /**

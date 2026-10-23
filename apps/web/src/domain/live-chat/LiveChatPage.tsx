@@ -701,6 +701,7 @@ export function LiveChatPage() {
                       alias={s.alias}
                       fallback={
                         s.customerName ||
+                        s.identity?.name ||
                         s.customerEmail ||
                         t('sessionLabel', { id: s.id.slice(0, 6) })
                       }
@@ -817,7 +818,7 @@ export function LiveChatPage() {
                   <SessionAlias
                     conversationId={selected}
                     alias={convo?.alias}
-                    fallback={convo?.customer?.name ?? t('conversation')}
+                    fallback={convo?.customer?.name || convo?.identity?.name || t('conversation')}
                     sessionLabel={t('sessionLabel', { id: selected.slice(0, 6) })}
                   />
                   <StatusBadge

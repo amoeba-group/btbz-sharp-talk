@@ -56,6 +56,28 @@ describe('SessionMapper.toResponse', () => {
     expect(SessionMapper.toResponse(session({ customerId: 4, identityLevel: 'verified' }), notice).threadAvailable).toBe(false);
   });
 
+  it('a claimed (unsigned host) session shows its name but opens nothing (PLN-261022 unsigned)', () => {
+    const on = { ...notice, threadContinuity: true };
+    const res = SessionMapper.toResponse(session({ identityLevel: 'claimed' }), on, 'G2J SUPPORT');
+    expect(res.customerName).toBe('G2J SUPPORT');
+    expect(res.authenticated).toBe(false);
+    expect(res.threadAvailable).toBe(false);
+  });
+
+  it('a claimed user of an unsigned-host tenant gets its own earlier conversations (P7)', () => {
+    const on = { ...notice, threadContinuity: true };
+    const claimed = session({ tenantId: 4, identityLevel: 'claimed', identityAttributes: { user_id: 'ha:8818' } });
+    process.env.EMBED_UNSIGNED_IDENTIFY_TENANT_IDS = '4';
+    try {
+      expect(SessionMapper.toResponse(claimed, on).threadAvailable).toBe(true);
+      expect(SessionMapper.toResponse(claimed, notice).threadAvailable).toBe(false); // continuity off
+      expect(SessionMapper.toResponse(claimed, on).authenticated).toBe(false); // still no customer
+    } finally {
+      delete process.env.EMBED_UNSIGNED_IDENTIFY_TENANT_IDS;
+    }
+    expect(SessionMapper.toResponse(claimed, on).threadAvailable).toBe(false); // tenant off the list
+  });
+
   it('defaults customerName to null (guest, or profile not resolved yet)', () => {
     expect(SessionMapper.toResponse(session(), notice).customerName).toBeNull();
     // Authenticated but the Shopify name backfill has not landed yet.

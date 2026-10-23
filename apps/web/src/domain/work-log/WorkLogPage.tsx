@@ -9,7 +9,7 @@ import { Pagination } from '@/components/Pagination';
 import { FormRow, Input, Select } from '@/components/Field';
 import { useUsers } from '@/domain/users/users.hooks';
 import { useWorkLog } from './work-log.hooks';
-import { AGENT_ACTIONS } from './work-log.service';
+import { AGENT_ACTIONS, HOST_ACTIONS } from './work-log.service';
 import type { WorkLogEntry } from './work-log.service';
 
 const PAGE_SIZE = 20;
@@ -59,7 +59,22 @@ export function WorkLogPage() {
 
   const columns: Column<WorkLogEntry>[] = [
     { key: 'createdAt', header: t('time'), render: (r) => fmtTime(r.createdAt) },
-    { key: 'actor', header: t('agent'), render: (r) => r.actorName ?? (r.actorId ? `#${r.actorId}` : '—') },
+    {
+      key: 'actor',
+      header: t('agent'),
+      render: (r) =>
+        r.actorType === 'host' ? (
+          // A Hotel Admin user (PLN-261022 P6): the name comes from the session it
+          // signed in on; a claimed (unsigned) sign-in says so.
+          <span className="flex flex-wrap items-center gap-1">
+            <span>{r.actorName ?? t('hostUser')}</span>
+            <Badge tone="gray">{t('hostBadge')}</Badge>
+            {r.metadata?.level === 'claimed' && <Badge tone="warning">{t('unverified')}</Badge>}
+          </span>
+        ) : (
+          r.actorName ?? (r.actorId ? `#${r.actorId}` : '—')
+        ),
+    },
     {
       key: 'action',
       header: t('action'),
@@ -105,7 +120,7 @@ export function WorkLogPage() {
           <FormRow label={t('action')}>
             <Select value={action} onChange={(e) => reset(setAction)(e.target.value)}>
               <option value="">{t('allActions')}</option>
-              {AGENT_ACTIONS.map((a) => (
+              {[...AGENT_ACTIONS, ...HOST_ACTIONS].map((a) => (
                 <option key={a} value={a}>
                   {t(`actions.${a}`, { defaultValue: a })}
                 </option>

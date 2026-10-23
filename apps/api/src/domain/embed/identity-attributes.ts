@@ -88,6 +88,31 @@ export function storedIdentityAttributes(
   return { attributes: out, regionSource: 'none' };
 }
 
+/**
+ * What a CLAIMED (unsigned) identify keeps on the session (PLN-261022 unsigned):
+ * the stored attributes plus who the host says the user is — `user_id` and the
+ * display `name`. Those two are not routing fields; nothing that routes or
+ * registers a company reads them. Email and phone are deliberately absent:
+ * the customers table encrypts them, this JSON is plaintext.
+ */
+export function claimedIdentityAttributes(
+  userId: string,
+  name: string | null | undefined,
+  attributes: IdentityAttributes | null,
+): Record<string, string> {
+  const out: Record<string, string> = { ...(attributes ?? {}) };
+  const id = claimedText(userId);
+  if (id) out.user_id = id;
+  const display = claimedText(name);
+  if (display) out.name = display;
+  return out;
+}
+
+function claimedText(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return value.normalize('NFC').replace(/[\r\n]+/g, ' ').trim().slice(0, IDENTITY_ATTRIBUTE_MAX_LENGTH);
+}
+
 function mappedRegion(province: string | undefined, map: Record<string, string> | null | undefined): string | undefined {
   const key = provinceKey(province);
   if (!key || !map) return undefined;

@@ -51,6 +51,8 @@ import {
   retrievalQuery,
 } from './conversation-history.util';
 import { footerFor, footerVariants, stripFooters } from '../ai-engine/answer-footer.util';
+import { unsignedIdentifyAllowed } from '../embed/unsigned-identify';
+import { callerContext } from './caller-context.util';
 
 const ESCALATION_CONFIDENCE = 0.45;
 
@@ -292,7 +294,10 @@ export class ChatService {
     // the AI's previous-conversation excerpt start from it.
     const account = session ? ThreadService.accountOf(session) : null;
     const tenantId = session?.tenantId != null ? Number(session.tenantId) : null;
-    const prev = account && tenantId != null && this.threads ? await this.threads.previousOf(tenantId, account) : null;
+    // A claimed account (unsigned host, PLN-261022 P7) links only while its
+    // tenant is still allowed to send unsigned identities.
+    const linkable = !!account && (!account.claimedUserId || unsignedIdentifyAllowed(tenantId));
+    const prev = linkable && tenantId != null && this.threads ? await this.threads.previousOf(tenantId, account!) : null;
     return this.convRepo.save(
       this.convRepo.create({
         sessionId,
@@ -681,6 +686,9 @@ export class ChatService {
     const footerCfg = (await this.rag.footerConfig?.(tenantId)) ?? null;
     const variants = footerVariants(footerCfg);
     const history = await this.conversationHistory(conversation.id, userTurn.id, variants);
+    // Who is asking, from the host app's identify (PLN-261022 P8): both answering
+    // paths address them and read "my hotel"; absent for everyone else.
+    const caller = await this.callerFor(session);
 
     // Intent + scope check (FN-015): order data requires authentication first.
     const intent = await this.rag.classifyIntent(
@@ -798,6 +806,7 @@ export class ChatService {
         session.language,
         session.aiAgentId ?? null,
         history,
+        caller,
       );
       // No reply could be written — the engine is down (PLN-261007 D4). A
       // person answers instead of the stub's canned line.
@@ -943,6 +952,7 @@ export class ChatService {
           // Kept out of retrievalQuery on purpose: an old topic must not steer
           // the search for the new question (PR #597 lesson).
           conversation.prevConversationId != null ? await this.threads?.previousExcerpt(tenantId, conversation) : undefined,
+          caller,
         );
 
     // Mandatory moderation gate (FR-069).
@@ -1043,9 +1053,11 @@ export class ChatService {
     });
     if (reused) {
       void this.answerReuse?.recordHit(reused.reuseId);
-    } else if (!contextual) {
+    } else if (!contextual && !caller) {
       // A freshly generated, delivered answer becomes a reuse candidate (the
       // service applies the D-C1 filters: cited + confident, no order context).
+      // Not one written for a known caller (P8): it may name their hotel, and
+      // the store replays answers to other people.
       void this.answerReuse?.recordAiAnswer({
         tenantId,
         lang: session.language,
@@ -1260,6 +1272,22 @@ export class ChatService {
    * when some rule actually asks for the tier — most tenants never will, and
    * the handoff path should not pay a query for a condition nobody wrote.
    */
+  /**
+   * The CALLER block for a session a host app identified (PLN-261022 P8): name,
+   * hotel, region, role, verified or not. Undefined for guests and for
+   * storefront customers without host facts. Never throws — the turn is
+   * answered without it rather than not at all.
+   */
+  private async callerFor(session: Session): Promise<string | undefined> {
+    if (!session.identityAttributes) return undefined;
+    try {
+      return callerContext(session, await this.sessionService.customerDisplayName(session));
+    } catch (err) {
+      this.logger.warn(`caller context unavailable (session ${session.id}): ${(err as Error).message}`);
+      return undefined;
+    }
+  }
+
   private async routingContext(
     tenantId: number,
     session: Session,

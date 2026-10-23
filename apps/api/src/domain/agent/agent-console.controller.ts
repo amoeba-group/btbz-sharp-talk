@@ -377,6 +377,7 @@ export class AgentConsoleController {
           aiAgentId,
           aiAgentName,
           identityAttributes,
+          identityLevel,
         }) =>
           toSessionResponse(
             conversation,
@@ -386,6 +387,7 @@ export class AgentConsoleController {
             { mode: autoReplyMode, effective: autoReplyEffective },
             { id: aiAgentId, name: aiAgentName },
             identityAttributes,
+            identityLevel,
           ),
       ),
       buildPagination(page, size, total),
@@ -572,7 +574,7 @@ export class AgentConsoleController {
     );
     const customer = await this.agentService.customerContext(id, tenantId);
     const conversation = await this.agentService.findConversation(id, tenantId);
-    const { identityAttributes, ...sessionState } = await this.agentService.sessionStateFor(
+    const { identityAttributes, identityLevel, ...sessionState } = await this.agentService.sessionStateFor(
       id,
       conversation.sessionId,
       tenantId,
@@ -591,7 +593,7 @@ export class AgentConsoleController {
         : null,
       sessionId: String(conversation.sessionId),
       ...sessionState,
-      identity: toIdentityResponse(identityAttributes),
+      identity: toIdentityResponse(identityAttributes, identityLevel),
       // B2B company of the thread (PLN-261022 stage 2) — header badge + "earlier
       // conversations at this hotel". Null for consumers and guests.
       company:

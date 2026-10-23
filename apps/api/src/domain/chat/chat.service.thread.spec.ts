@@ -59,6 +59,27 @@ describe('ChatService — account threads', () => {
     );
   });
 
+  it('a claimed user (unsigned host, P7) links its own previous conversation, still with no customer', async () => {
+    process.env.EMBED_UNSIGNED_IDENTIFY_TENANT_IDS = '4';
+    try {
+      const { svc, save, threads } = build({ previous: { id: '41' } });
+      const claimed = { id: 5, tenantId: 4, customerId: null, companyId: null, identityLevel: 'claimed', identityAttributes: { user_id: 'ha:8818' } };
+      await svc.getOrCreateConversation(5, claimed as unknown as Session);
+      expect(threads.previousOf).toHaveBeenCalledWith(4, { companyId: null, customerId: null, claimedUserId: 'ha:8818' });
+      expect(save).toHaveBeenCalledWith(expect.objectContaining({ customerId: null, companyId: null, prevConversationId: 41 }));
+    } finally {
+      delete process.env.EMBED_UNSIGNED_IDENTIFY_TENANT_IDS;
+    }
+  });
+
+  it('a claimed user is not linked once its tenant leaves the unsigned list', async () => {
+    const { svc, save, threads } = build({ previous: { id: '41' } });
+    const claimed = { id: 5, tenantId: 4, customerId: null, companyId: null, identityLevel: 'claimed', identityAttributes: { user_id: 'ha:8818' } };
+    await svc.getOrCreateConversation(5, claimed as unknown as Session);
+    expect(threads.previousOf).not.toHaveBeenCalled();
+    expect(save).toHaveBeenCalledWith(expect.objectContaining({ prevConversationId: null }));
+  });
+
   it('a guest conversation has no account and no link', async () => {
     const { svc, save, threads } = build({});
     await svc.getOrCreateConversation(5, { id: 5, tenantId: 4, customerId: null, companyId: null } as unknown as Session);

@@ -325,3 +325,183 @@ describe('EmbedService.identify — company contact', () => {
     expect(session.companyId).toBeNull();
   });
 });
+
+/**
+ * Unsigned host (PLN-261022 unsigned). A tenant on the allow-list may identify
+ * a user before its server can sign: the call is kept as 'claimed' — facts on
+ * the session for agents and routing, and nothing a customer would own.
+ */
+describe('EmbedService.identify — unsigned host, claimed', () => {
+  const ENV = 'EMBED_UNSIGNED_IDENTIFY_TENANT_IDS';
+  const ATTRS = { hotel_id: '1721', hotel_name: 'A In Hotel Del Luna', province: 'Hồ Chí Minh', region: 'South', role: 'Lễ tân' };
+  const pending = () => ({ id: 5, sessionToken: 'tok', tenantId: 1, customerId: null, identityLevel: 'guest', consentState: 'pending', consentVersion: null });
+
+  const harness = (opts: { secret?: string | null; session?: Record<string, unknown> } = {}) => {
+    const h = build({ secret: opts.secret, session: opts.session ?? pending(), tenant: { consentSource: 'host_terms' } });
+    const companies = { upsertFromIdentity: jest.fn(async () => ({ id: '3' })), linkContact: jest.fn(async () => undefined) };
+    const convRepo = { update: jest.fn(async () => ({ affected: 1 })) };
+    const aiConfigRepo = { findOne: jest.fn(async () => ({ handoffConfig: { provinceRegions: { 'Đà Nẵng': 'south_center' } } })) };
+    const customerRepo = (h.service as any).customerRepo;
+    customerRepo.update = jest.fn(async () => ({ affected: 1 }));
+    const audit = { write: jest.fn(async () => ({})) };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const svc = new EmbedService(
+      (h.service as any).tenantRepo,
+      customerRepo,
+      (h.service as any).sessionRepo,
+      (h.service as any).redis,
+      aiConfigRepo as any,
+      companies as any,
+      convRepo as any,
+      audit as any,
+    );
+    return { svc, h, companies, convRepo, audit };
+  };
+
+  afterEach(() => {
+    delete process.env[ENV];
+  });
+
+  it('keeps an unsigned identify as claimed: normalised facts + who, on the session only', async () => {
+    process.env[ENV] = '1';
+    const { svc, h, companies, convRepo } = harness();
+    const s = await svc.identify({ sessionToken: 'tok', userId: 'ha:8818', hash: 'testing', name: 'G2J SUPPORT', attributes: ATTRS });
+
+    expect(s.identityLevel).toBe('claimed');
+    expect(s.identityAttributes).toEqual({
+      hotel_id: '1721',
+      hotel_name: 'A In Hotel Del Luna',
+      province: 'Hồ Chí Minh',
+      region: 'south',
+      role: 'Lễ tân',
+      user_id: 'ha:8818',
+      name: 'G2J SUPPORT',
+    });
+    // Nothing a customer would own: no customer, no company, no thread, no consent.
+    expect(s.customerId).toBeNull();
+    expect(h.customers).toHaveLength(0);
+    expect(companies.upsertFromIdentity).not.toHaveBeenCalled();
+    expect(convRepo.update).not.toHaveBeenCalled();
+    expect(s.consentState).toBe('pending');
+    expect(h.redis.del).toHaveBeenCalled();
+  });
+
+  it('claims when the tenant has no secret at all', async () => {
+    process.env[ENV] = '1';
+    const { svc } = harness({ secret: null });
+    const s = await svc.identify({ sessionToken: 'tok', userId: 'ha:8818', hash: 'testing' });
+    expect(s.identityLevel).toBe('claimed');
+    expect(s.identityAttributes).toEqual({ user_id: 'ha:8818' });
+  });
+
+  it('never stores email or phone for a claimed identity', async () => {
+    process.env[ENV] = '1';
+    const { svc, h } = harness();
+    const s = await svc.identify({ sessionToken: 'tok', userId: 'ha:8818', hash: 'x', email: 'a@x.vn', phone: '0123', name: 'A' });
+    expect(JSON.stringify(s.identityAttributes)).not.toMatch(/a@x\.vn|0123/);
+    expect(h.customers).toHaveLength(0);
+  });
+
+  it('fills the region from the province map, like a signed identify', async () => {
+    process.env[ENV] = '1';
+    const { svc } = harness();
+    const s = await svc.identify({ sessionToken: 'tok', userId: 'ha:1', hash: 'x', attributes: { province: 'Đà Nẵng' } });
+    expect(s.identityAttributes).toMatchObject({ province: 'Đà Nẵng', region: 'south_center' });
+  });
+
+  it('never downgrades a verified session', async () => {
+    process.env[ENV] = '1';
+    const verified = { ...pending(), identityLevel: 'verified', customerId: 100, identityAttributes: { hotel_id: '9' } };
+    const { svc } = harness({ session: verified });
+    await expect(
+      svc.identify({ sessionToken: 'tok', userId: 'ha:8818', hash: 'testing', attributes: ATTRS }),
+    ).rejects.toMatchObject({ errorCode: ERROR_CODE.EMBED_IDENTITY_INVALID.code });
+    expect(verified).toMatchObject({ identityLevel: 'verified', customerId: 100, identityAttributes: { hotel_id: '9' } });
+  });
+
+  it('rejects as before for a tenant that is not on the list', async () => {
+    process.env[ENV] = '2, 3';
+    const session = pending();
+    const { svc } = harness({ session });
+    await expect(
+      svc.identify({ sessionToken: 'tok', userId: 'ha:8818', hash: 'testing', attributes: ATTRS }),
+    ).rejects.toMatchObject({ errorCode: ERROR_CODE.EMBED_IDENTITY_INVALID.code });
+    expect(session.identityLevel).toBe('guest');
+  });
+
+  it('rejects as before when the list is unset', async () => {
+    const { svc } = harness();
+    await expect(svc.identify({ sessionToken: 'tok', userId: 'ha:8818', hash: 'testing' })).rejects.toMatchObject({
+      errorCode: ERROR_CODE.EMBED_IDENTITY_INVALID.code,
+    });
+  });
+
+  it('a correct signature later promotes the claimed session to verified', async () => {
+    process.env[ENV] = ' 4 , 1 ';
+    const { svc, h } = harness();
+    await svc.identify({ sessionToken: 'tok', userId: 'ha:8818', hash: 'testing', name: 'G2J SUPPORT', attributes: ATTRS });
+    const signed = { hotel_id: '1721', region: 'south' };
+    const s = await svc.identify({
+      sessionToken: 'tok',
+      userId: 'ha:8818',
+      hash: EmbedService.sign(SECRET, 'ha:8818', signed),
+      name: 'G2J SUPPORT',
+      attributes: signed,
+    });
+    expect(s.identityLevel).toBe('verified');
+    expect(s.customerId).toBe(100);
+    expect(h.customers[0]).toMatchObject({ externalCustomerId: 'ha:8818', name: 'G2J SUPPORT' });
+    // Replaced by the signed facts — the unverified who-keys are gone.
+    expect(s.identityAttributes).toEqual(signed);
+    expect(s.consentState).toBe('granted');
+  });
+
+  /** Host sign-ins on the agent work log (PLN-261022 P6). */
+  describe('work log', () => {
+    it('logs one sign-in when the session gets its user — not again on every page load', async () => {
+      process.env[ENV] = '1';
+      const { svc, audit } = harness();
+      for (let i = 0; i < 3; i++) {
+        await svc.identify({ sessionToken: 'tok', userId: 'ha:8818', hash: 'testing', name: 'G2J SUPPORT', email: 'a@x.vn', attributes: ATTRS });
+      }
+      expect(audit.write).toHaveBeenCalledTimes(1);
+      expect(audit.write).toHaveBeenCalledWith({
+        tenantId: 1,
+        actorType: 'host',
+        actorId: 5,
+        action: 'host.user_signed_in',
+        target: 'session:5',
+        metadata: { level: 'claimed', hotelId: '1721', region: 'south' },
+      });
+      // No name, email or user id in the audit trail.
+      expect(JSON.stringify(audit.write.mock.calls)).not.toMatch(/G2J SUPPORT|a@x\.vn|ha:8818/);
+    });
+
+    it('logs again when another user signs in on the session, and when a signature arrives', async () => {
+      process.env[ENV] = '1';
+      const { svc, audit } = harness();
+      await svc.identify({ sessionToken: 'tok', userId: 'ha:1', hash: 'x' });
+      await svc.identify({ sessionToken: 'tok', userId: 'ha:2', hash: 'x' });
+      await svc.identify({ sessionToken: 'tok', userId: 'ha:2', hash: EmbedService.sign(SECRET, 'ha:2') });
+      await svc.identify({ sessionToken: 'tok', userId: 'ha:2', hash: EmbedService.sign(SECRET, 'ha:2') });
+      expect(audit.write.mock.calls.map((c) => (c as unknown as [{ metadata: { level: string } }])[0].metadata.level)).toEqual([
+        'claimed',
+        'claimed',
+        'verified',
+      ]);
+    });
+
+    it('a work-log failure never fails the identify', async () => {
+      process.env[ENV] = '1';
+      const { svc, audit } = harness();
+      audit.write.mockRejectedValueOnce(new Error('db down'));
+      await expect(svc.identify({ sessionToken: 'tok', userId: 'ha:1', hash: 'x' })).resolves.toMatchObject({ identityLevel: 'claimed' });
+    });
+
+    it('a rejected identify logs nothing', async () => {
+      const { svc, audit } = harness();
+      await expect(svc.identify({ sessionToken: 'tok', userId: 'ha:1', hash: 'x' })).rejects.toBeTruthy();
+      expect(audit.write).not.toHaveBeenCalled();
+    });
+  });
+});

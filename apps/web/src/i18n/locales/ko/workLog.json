@@ -19,6 +19,10 @@
     "agent.customer_created": "고객 생성",
     "agent.conversation_ended": "대화 종료",
     "agent.conversation_viewed": "대화 열람(PII)",
-    "agent.transcript_viewed": "대화 원문 열람(PII)"
-  }
+    "agent.transcript_viewed": "대화 원문 열람(PII)",
+    "host.user_signed_in": "HA 사용자 로그인"
+  },
+  "hostBadge": "HA",
+  "hostUser": "HA 사용자",
+  "unverified": "미검증"
 }

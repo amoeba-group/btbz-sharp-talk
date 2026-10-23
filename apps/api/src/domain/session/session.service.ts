@@ -254,7 +254,12 @@ export class SessionService {
    * session's tenant, so a session can never surface another store's shopper.
    */
   async customerDisplayName(session: Session): Promise<string | null> {
-    if (session.customerId == null || session.tenantId == null) return null;
+    if (session.customerId == null || session.tenantId == null) {
+      // A 'claimed' identity (unsigned host, PLN-261022) has a name but no customer.
+      return session.identityLevel === SESSION_IDENTITY.CLAIMED
+        ? session.identityAttributes?.name?.trim() || null
+        : null;
+    }
     const customer = await this.customerRepo.findOne({
       where: { id: session.customerId, tenantId: session.tenantId },
       select: ['id', 'name'],

@@ -174,7 +174,10 @@ export function normalizeWidgetTabs(input: unknown): WidgetTab[] | null {
 
 // Session identity assurance. VERIFIED is minted only via the Shopify App Proxy
 // (Shopify-signed customer identity); GUEST covers order-number+email lookup.
-export const SESSION_IDENTITY = { GUEST: 'guest', VERIFIED: 'verified' } as const;
+// CLAIMED is an embed identify the host could not sign yet, accepted only for
+// tenants on the EMBED_UNSIGNED_IDENTIFY_TENANT_IDS list (PLN-261022 unsigned):
+// display and routing facts on the session, never a customer.
+export const SESSION_IDENTITY = { GUEST: 'guest', VERIFIED: 'verified', CLAIMED: 'claimed' } as const;
 export type SessionIdentity = (typeof SESSION_IDENTITY)[keyof typeof SESSION_IDENTITY];
 
 // The language set moved to ./language.ts, which carries labels, timezone

@@ -419,6 +419,44 @@ describe('SessionService.requireCustomer', () => {
       status: 401,
     });
   });
+
+  it('keeps a claimed (unsigned host) session out of customer data — it has no customer', async () => {
+    // PLN-261022 unsigned: the host said who this is but could not prove it.
+    const { svc } = build({ sessionToken: 't', customerId: null, identityLevel: 'claimed', identityAttributes: { user_id: 'ha:1' } });
+    await expect(svc.requireCustomerId('t')).rejects.toMatchObject({ status: 401 });
+  });
+});
+
+describe('SessionService.customerDisplayName', () => {
+  function build(customer: unknown = null) {
+    const customerRepo = { findOne: jest.fn().mockResolvedValue(customer) };
+    const svc = new SessionService(
+      {} as never,
+      {} as never,
+      customerRepo as never,
+      { publish: jest.fn() } as never,
+      { available: () => false, get: jest.fn(), set: jest.fn(), del: jest.fn() } as never,
+    );
+    return { svc, customerRepo };
+  }
+
+  it('uses the bound customer name', async () => {
+    const { svc } = build({ id: 4, name: ' Lan ' });
+    await expect(svc.customerDisplayName({ tenantId: 1, customerId: 4 } as Session)).resolves.toBe('Lan');
+  });
+
+  it('falls back to the claimed name when an unsigned host identified the session (PLN-261022)', async () => {
+    const { svc, customerRepo } = build();
+    const s = { tenantId: 1, customerId: null, identityLevel: 'claimed', identityAttributes: { user_id: 'ha:8818', name: 'G2J SUPPORT' } };
+    await expect(svc.customerDisplayName(s as unknown as Session)).resolves.toBe('G2J SUPPORT');
+    expect(customerRepo.findOne).not.toHaveBeenCalled();
+  });
+
+  it('has no name for a guest, even if attributes are present', async () => {
+    const { svc } = build();
+    const s = { tenantId: 1, customerId: null, identityLevel: 'guest', identityAttributes: { name: 'x' } };
+    await expect(svc.customerDisplayName(s as unknown as Session)).resolves.toBeNull();
+  });
 });
 
 describe('SessionService.resolveAiAgentId (PLN-260820)', () => {

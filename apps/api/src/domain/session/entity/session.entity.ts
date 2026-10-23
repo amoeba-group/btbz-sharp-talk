@@ -74,8 +74,11 @@ export class Session {
   // Shopify App Proxy (Shopify-signed customer identity); 'guest' covers the
   // order-number+email lookup. DSAR export/erasure require 'verified' (SEC-C3) —
   // weak guest identity must not unlock full-account access or deletion.
+  // 'claimed' = an embed identify the host could not sign yet, on a tenant the
+  // EMBED_UNSIGNED_IDENTIFY_TENANT_IDS list allows (PLN-261022 unsigned): facts
+  // on the session only, never a customer.
   @Column({ name: 'identity_level', type: 'varchar', length: 16, default: 'guest' })
-  identityLevel: string; // guest | verified
+  identityLevel: string; // guest | verified | claimed
 
   /**
    * Operator-set display name for this session (PLN-260812). Wins over the
@@ -88,8 +91,10 @@ export class Session {
 
   /**
    * Facts the host app SIGNED about this user (PLN-261015 D2): hotel_id,
-   * hotel_name, region, province, role. Written only by a verified identify;
-   * drives handoff routing by region. NULL = guest or unsigned.
+   * hotel_name, region, province, role. Written by a verified identify;
+   * drives handoff routing by region. A 'claimed' session (unsigned host,
+   * PLN-261022) holds the same keys unverified, plus `user_id` and `name`.
+   * NULL = guest.
    */
   @Column({ name: 'identity_attributes', type: 'json', nullable: true })
   identityAttributes: Record<string, string> | null;

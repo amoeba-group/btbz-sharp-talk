@@ -15,6 +15,7 @@ function harness(opts: {
   waiting?: number[];
   reAlert?: { afterMinutes?: number; escalateToUserIds?: number[] } | null;
   emails?: Record<number, string>;
+  identityLevel?: string;
 }) {
   const rows = opts.alerts.map((a, i) => ({ id: i + 1, status: 'new', remindedAt: null, tenantId: 4, ...a })) as AgentAlert[];
   const mails: Array<{ to: string; subject: string; text: string }> = [];
@@ -38,7 +39,7 @@ function harness(opts: {
     ),
   };
   const sessionRepo = {
-    findOne: jest.fn(async () => ({ id: 1, identityAttributes: { hotel_name: 'Joy Hotel', region: 'north' } })),
+    findOne: jest.fn(async () => ({ id: 1, identityLevel: opts.identityLevel ?? 'verified', identityAttributes: { hotel_name: 'Joy Hotel', region: 'north' } })),
   };
   const config = { get: jest.fn((k: string) => ({ ALERT_EMAIL_TO: 'ops@go2joy.vn', APP_PUBLIC_URL: 'https://sharptalk.go2joy.vn/' } as Record<string, string>)[k]) };
   const mailer = { send: jest.fn(async (m: { to: string; subject: string; text: string }) => { mails.push(m); return true; }) };
@@ -74,6 +75,14 @@ describe('AgentAlertService.notifyRows — personal mail', () => {
     expect(h.mails.map((m) => m.to)).toEqual(['an@go2joy.vn', 'binh@go2joy.vn']);
     expect(h.mails[0].text).toContain('Hotel: Joy Hotel · Region: north');
     expect(h.mails[0].text).toContain('https://sharptalk.go2joy.vn/live-chat?c=900');
+  });
+
+  it('says the hotel and region are unverified when the host did not sign them (PLN-261022)', async () => {
+    const h = harness({ alerts: [], emails: { 11: 'an@go2joy.vn' }, identityLevel: 'claimed' });
+    await h.alerts.notifyRows([
+      { id: 1, tenantId: 4, conversationId: 900, sessionId: 1, reason: 'low_confidence', preview: 'x', targetUserId: 11 },
+    ] as AgentAlert[]);
+    expect(h.mails[0].text).toContain('Hotel: Joy Hotel · Region: north · Unverified');
   });
 
   it('a broadcast row keeps the ops mailbox; an unreadable agent address falls back to it once', async () => {
