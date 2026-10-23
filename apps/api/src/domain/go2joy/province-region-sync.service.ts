@@ -6,7 +6,7 @@ import { BusinessException } from '../../global/exception/business.exception';
 import { ERROR_CODE } from '../../global/constant/error-code.constant';
 import { partnerCall } from './partner-client';
 import { HotelSyncService } from './hotel-sync.service';
-import { PartnerProvince, mergeProvinceRegions } from './province-region.mapper';
+import { PartnerProvince, mergeProvinceIndex, mergeProvinceRegions } from './province-region.mapper';
 
 export const PROVINCE_REGIONS_SOURCE = 'go2joy_partner';
 
@@ -15,6 +15,8 @@ export interface ProvinceRegionSyncResult {
   added: number;
   changed: number;
   kept: number;
+  /** Province numbers in the index after the sync (spec v1.4). */
+  indexed: number;
   syncedAt: string;
 }
 
@@ -24,13 +26,17 @@ export interface ProvinceRegionStatus {
   /** 'go2joy_partner' once synced; null = entered by SQL only. */
   source: string | null;
   regions: Record<string, number>;
+  /** Province numbers the HA can sign as `province_sn` (spec v1.4). */
+  indexed: number;
 }
 
 /**
  * The tenant's province → region map from the Partner API Province Feed
- * (PLN-261023 H1-a). Only `handoff_config.provinceRegions*` is written — every
- * other handoff setting stays as it is. An empty or failed feed writes
- * nothing, so a broken connection never empties the map.
+ * (PLN-261023 H1-a) and the province-number index the HA signs against (spec
+ * v1.4, PLN-261024). Only `handoff_config.provinceRegions*` and
+ * `provinceIndex` are written — every other handoff setting stays as it is.
+ * An empty or failed feed writes nothing, so a broken connection never
+ * empties the map.
  */
 @Injectable()
 export class ProvinceRegionSyncService {
@@ -51,6 +57,7 @@ export class ProvinceRegionSyncService {
       syncedAt: handoff?.provinceRegionsSyncedAt ?? null,
       source: handoff?.provinceRegionsSource ?? null,
       regions,
+      indexed: Object.keys(handoff?.provinceIndex ?? {}).length,
     };
   }
 
@@ -77,10 +84,12 @@ export class ProvinceRegionSyncService {
       this.logger.warn(`province feed empty (tenant ${tenantId}) — map left unchanged`);
       throw new BusinessException(ERROR_CODE.PARTNER_REQUEST_FAILED, HttpStatus.BAD_GATEWAY);
     }
+    const index = mergeProvinceIndex(row.handoffConfig?.provinceIndex, feed);
     const syncedAt = new Date().toISOString();
     row.handoffConfig = {
       ...(row.handoffConfig ?? {}),
       provinceRegions: merged.map,
+      provinceIndex: index.index,
       provinceRegionsSyncedAt: syncedAt,
       provinceRegionsSource: PROVINCE_REGIONS_SOURCE,
     };
@@ -88,7 +97,14 @@ export class ProvinceRegionSyncService {
     this.logger.log(
       `province regions synced (tenant ${tenantId}): ${merged.total} from Go2Joy, ${merged.added} new, ${merged.changed} changed, ${merged.kept} kept`,
     );
-    return { total: merged.total + merged.kept, added: merged.added, changed: merged.changed, kept: merged.kept, syncedAt };
+    return {
+      total: merged.total + merged.kept,
+      added: merged.added,
+      changed: merged.changed,
+      kept: merged.kept,
+      indexed: Object.keys(index.index).length,
+      syncedAt,
+    };
   }
 
   /** Daily sweep: every tenant with Partner credentials. Never throws. */

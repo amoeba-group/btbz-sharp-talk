@@ -43,12 +43,17 @@ describe('ProvinceRegionSyncService', () => {
     const { svc, aiConfigRepo, row } = harness();
     const r = await svc.syncTenant(4);
     expect(call).toHaveBeenCalledWith(expect.anything(), 'api/v2/datafeed/getProvinceFeed', {});
-    expect(r).toMatchObject({ total: 4, added: 2, changed: 0, kept: 1 });
+    expect(r).toMatchObject({ total: 4, added: 2, changed: 0, kept: 1, indexed: 3 });
     expect(aiConfigRepo.save).toHaveBeenCalledTimes(1);
     const saved = (row as any).handoffConfig;
     expect(saved.assigneeUserIds).toEqual([28]);
     expect(saved.provinceRegions).toEqual({ Custom: 'central', 'Hồ Chí Minh': 'south', 'Hà Nội': 'north', Makati: 'region_10' });
     expect(saved.provinceRegionsSource).toBe('go2joy_partner');
+    expect(saved.provinceIndex).toEqual({
+      '1': { name: 'Hồ Chí Minh', region: 'south' },
+      '2': { name: 'Hà Nội', region: 'north' },
+      '70': { name: 'Makati', region: 'region_10' },
+    });
     expect(typeof saved.provinceRegionsSyncedAt).toBe('string');
   });
 
@@ -77,7 +82,7 @@ describe('ProvinceRegionSyncService', () => {
 
   it('status counts provinces per region; the daily sweep never throws', async () => {
     const { svc } = harness();
-    await expect(svc.status(4)).resolves.toEqual({ total: 2, syncedAt: null, source: null, regions: { south: 1, central: 1 } });
+    await expect(svc.status(4)).resolves.toEqual({ total: 2, syncedAt: null, source: null, regions: { south: 1, central: 1 }, indexed: 0 });
     call.mockRejectedValue(new Error('down'));
     await expect(svc.syncAll()).resolves.toEqual({ tenants: 2, failed: 2 });
   });

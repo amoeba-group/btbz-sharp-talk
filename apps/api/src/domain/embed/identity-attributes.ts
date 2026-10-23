@@ -10,7 +10,7 @@ import { canonicalRegion, isRegionValue, provinceKey } from '@sharptalk/types';
  * a handoff goes to (D3). So they are accepted ONLY when signed, and only from a
  * fixed list; anything else is dropped rather than stored.
  */
-export const IDENTITY_ATTRIBUTE_KEYS = ['hotel_id', 'hotel_name', 'region', 'province', 'role'] as const;
+export const IDENTITY_ATTRIBUTE_KEYS = ['hotel_id', 'hotel_name', 'region', 'province', 'province_sn', 'role'] as const;
 export type IdentityAttributeKey = (typeof IDENTITY_ATTRIBUTE_KEYS)[number];
 export type IdentityAttributes = Partial<Record<IdentityAttributeKey, string>>;
 
@@ -28,6 +28,9 @@ export function normalizeIdentityAttributes(raw: unknown): IdentityAttributes | 
     if (typeof value !== 'string' && typeof value !== 'number') continue;
     const text = String(value).trim();
     if (!text || text.length > IDENTITY_ATTRIBUTE_MAX_LENGTH || /[\r\n]/.test(text)) continue;
+    // Go2Joy provinceSn (spec v1.4): a number or nothing. Dropped, it is left
+    // out of the signing string, so a malformed one shows up as a 401.
+    if (key === 'province_sn' && !/^\d{1,10}$/.test(text)) continue;
     out[key] = text;
   }
   return Object.keys(out).length ? out : null;
@@ -52,7 +55,10 @@ export function identitySigningString(userId: string, attributes: IdentityAttrib
 }
 
 /** What `storedIdentityAttributes` decided about the region, for the identify log. */
-export type RegionSource = 'signed' | 'map' | 'province_in_region' | 'none';
+export type RegionSource = 'signed' | 'map' | 'province_in_region' | 'province_sn' | 'none';
+
+/** Go2Joy provinceSn → the province's name and region code (Province Feed, PLN-261024 D1). */
+export type ProvinceIndex = Record<string, { name: string; region: string | null }>;
 
 /**
  * The attributes as they are STORED and routed on (PLN-261022 stage 1). Runs
@@ -64,16 +70,33 @@ export type RegionSource = 'signed' | 'map' | 'province_in_region' | 'none';
  *  - no region but a province: the tenant's province → region map fills it
  *  - both present but the map disagrees: the signed region stands (the host
  *    knows its own hotel); `mismatch` carries the mapped value for a warning
+ *  - spec v1.4: a `province_sn` the index knows sets `province` (name) and
+ *    `region` from Go2Joy's own table and wins over v1.3 values sent beside it
+ *    (`snMismatch` says what was sent); an unknown number falls through to the
+ *    rules above
  */
 export function storedIdentityAttributes(
   attributes: IdentityAttributes | null,
   provinceRegions?: Record<string, string> | null,
-): { attributes: IdentityAttributes | null; regionSource: RegionSource; mismatch?: string } {
+  provinceIndex?: ProvinceIndex | null,
+): { attributes: IdentityAttributes | null; regionSource: RegionSource; mismatch?: string; snMismatch?: string } {
   if (!attributes) return { attributes: null, regionSource: 'none' };
   const out: IdentityAttributes = {};
   for (const key of Object.keys(attributes) as IdentityAttributeKey[]) {
     const value = attributes[key];
     if (value) out[key] = value.normalize('NFC');
+  }
+  const bySn = out.province_sn ? provinceIndex?.[out.province_sn] : undefined;
+  if (bySn?.name) {
+    const name = bySn.name.normalize('NFC');
+    const region = canonicalRegion(bySn.region ?? '');
+    const sent: string[] = [];
+    if (out.province && provinceKey(out.province) !== provinceKey(name)) sent.push(`province '${out.province}'`);
+    if (out.region && canonicalRegion(out.region) !== region) sent.push(`region '${out.region}'`);
+    out.province = name;
+    if (region) out.region = region;
+    else delete out.region;
+    return { attributes: out, regionSource: 'province_sn', ...(sent.length ? { snMismatch: sent.join(', ') } : {}) };
   }
   if (out.region) {
     out.region = canonicalRegion(out.region);

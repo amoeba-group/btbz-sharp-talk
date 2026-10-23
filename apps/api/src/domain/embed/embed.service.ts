@@ -15,6 +15,7 @@ import {
   IdentityAttributes,
   identitySigningString,
   normalizeIdentityAttributes,
+  ProvinceIndex,
   storedIdentityAttributes,
 } from './identity-attributes';
 import { unsignedIdentifyAllowed } from './unsigned-identify';
@@ -156,7 +157,9 @@ export class EmbedService {
     // Replaced, never merged: a re-identify for a different hotel must not keep
     // the previous hotel's region. Stored form (PLN-261022): NFC, canonical
     // region, region filled from the province map — AFTER the signature check.
-    const stored = storedIdentityAttributes(attributes, await this.provinceRegions(Number(session.tenantId), attributes));
+    const maps = await this.provinceMaps(Number(session.tenantId), attributes);
+    const stored = storedIdentityAttributes(attributes, maps?.provinceRegions, maps?.provinceIndex);
+    this.warnProvinceSn(Number(session.tenantId), attributes, stored);
     if (stored.mismatch) {
       this.logger.warn(
         `identify region '${stored.attributes?.region}' differs from the province map ('${stored.mismatch}') — signed value kept (tenant ${session.tenantId})`,
@@ -230,7 +233,9 @@ export class EmbedService {
     tenant: Tenant | null,
   ): Promise<Session> {
     const tenantId = Number(session.tenantId);
-    const stored = storedIdentityAttributes(attributes, await this.provinceRegions(tenantId, attributes));
+    const maps = await this.provinceMaps(tenantId, attributes);
+    const stored = storedIdentityAttributes(attributes, maps?.provinceRegions, maps?.provinceIndex);
+    this.warnProvinceSn(tenantId, attributes, stored);
     session.identityLevel = SESSION_IDENTITY.CLAIMED;
     // Replaced, never merged — same rule as a signed identify.
     session.identityAttributes = claimedIdentityAttributes(input.userId, input.name, stored.attributes);
@@ -350,21 +355,43 @@ export class EmbedService {
   }
 
   /**
-   * The tenant's province → region map; only read when a province arrived, or
-   * a region that is not one (a province name, PLN-261023 H1-b). Never throws.
+   * The tenant's province maps (name → region, Go2Joy number → name + region);
+   * only read when a province, a province number (spec v1.4) or a region that
+   * is not one (a province name, PLN-261023 H1-b) arrived. Never throws.
    */
-  private async provinceRegions(
+  private async provinceMaps(
     tenantId: number,
     attributes: IdentityAttributes | null,
-  ): Promise<Record<string, string> | null> {
+  ): Promise<{ provinceRegions: Record<string, string> | null; provinceIndex: ProvinceIndex | null } | null> {
     const regionIsProvince = !!attributes?.region && !isRegionValue(canonicalRegion(attributes.region));
-    if ((!attributes?.province && !regionIsProvince) || !this.aiConfigRepo) return null;
+    if ((!attributes?.province && !attributes?.province_sn && !regionIsProvince) || !this.aiConfigRepo) return null;
     try {
       const config = await this.aiConfigRepo.findOne({ where: { tenantId } });
-      return config?.handoffConfig?.provinceRegions ?? null;
+      return {
+        provinceRegions: config?.handoffConfig?.provinceRegions ?? null,
+        provinceIndex: config?.handoffConfig?.provinceIndex ?? null,
+      };
     } catch (err) {
       this.logger.warn(`province map unavailable (tenant ${tenantId}): ${(err as Error).message}`);
       return null;
+    }
+  }
+
+  /** Spec v1.4 diagnostics: a province number the index lacks, or v1.3 values that disagree with it. */
+  private warnProvinceSn(
+    tenantId: number,
+    attributes: IdentityAttributes | null,
+    stored: { regionSource: string; snMismatch?: string },
+  ): void {
+    if (!attributes?.province_sn) return;
+    if (stored.regionSource !== 'province_sn') {
+      this.logger.warn(
+        `identify province_sn '${attributes.province_sn}' not in the province index — region ${stored.regionSource} (tenant ${tenantId})`,
+      );
+    } else if (stored.snMismatch) {
+      this.logger.warn(
+        `identify province_sn '${attributes.province_sn}' differs from the sent ${stored.snMismatch} — province_sn used (tenant ${tenantId})`,
+      );
     }
   }
 

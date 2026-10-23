@@ -84,3 +84,26 @@ export function mergeProvinceRegions(
   for (const [name, region] of fromFeed.values()) map[name] = region;
   return { map, added, changed, kept, total: fromFeed.size };
 }
+
+/**
+ * Province Feed → provinceSn index (HA identify spec v1.4, PLN-261024): the
+ * HA signs Go2Joy's province number and SharpTalk reads the name and region
+ * from here. The feed's numbers replace the same numbers in `current`;
+ * numbers it no longer lists are kept. Rows without a number or a name are
+ * skipped; a row without a region keeps its name with region null.
+ */
+export function mergeProvinceIndex(
+  current: Record<string, { name: string; region: string | null }> | null | undefined,
+  feed: PartnerProvince[],
+): { index: Record<string, { name: string; region: string | null }>; total: number } {
+  const index: Record<string, { name: string; region: string | null }> = { ...(current ?? {}) };
+  let total = 0;
+  for (const p of feed) {
+    const sn = Number(p?.sn);
+    const name = typeof p?.name === 'string' ? p.name.normalize('NFC').replace(/\s+/g, ' ').trim() : '';
+    if (!Number.isInteger(sn) || sn <= 0 || !name) continue;
+    index[String(sn)] = { name, region: partnerRegionCode(p?.region) };
+    total += 1;
+  }
+  return { index, total };
+}
