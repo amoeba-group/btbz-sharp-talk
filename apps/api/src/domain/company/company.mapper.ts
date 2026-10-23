@@ -1,4 +1,3 @@
-import { maskName } from '../../global/util/pii-display.util';
 import type { Company } from './entity/company.entity';
 import type { CompanyContact } from './entity/company-contact.entity';
 import type { Conversation } from '../chat/entity/conversation.entity';
@@ -33,16 +32,12 @@ export class CompanyMapper {
     return { customerId: String(link.customerId), name, role: link.role, lastSeenAt: iso(link.lastSeenAt) };
   }
 
-  /**
-   * `masked` = shown inside a live conversation (the "earlier conversations at
-   * this hotel" panel); the customers screen lists names in the clear (2026-10-23).
-   */
-  static toConversation(c: Conversation, customerName: string | null, masked = false): CompanyConversationResponse {
+  static toConversation(c: Conversation, customerName: string | null): CompanyConversationResponse {
     return {
       id: String(c.id),
       status: c.status,
       customerId: c.customerId != null ? String(c.customerId) : null,
-      customerName: masked ? maskName(customerName) : customerName,
+      customerName,
       agentId: c.agentId != null ? String(c.agentId) : null,
       createdAt: iso(c.createdAt) ?? '',
       endedAt: iso(c.endedAt),

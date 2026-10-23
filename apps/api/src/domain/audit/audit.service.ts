@@ -7,7 +7,6 @@ import { AdminUser } from '../auth/entity/admin-user.entity';
 import { Session } from '../session/entity/session.entity';
 import { Customer } from '../customer/entity/customer.entity';
 import { getRequestContext } from '../../global/middleware/request-context.middleware';
-import { maskName } from '../../global/util/pii-display.util';
 
 export type AuditResult = 'success' | 'denied' | 'error';
 
@@ -165,9 +164,9 @@ export class AuditService {
       const name =
         (s.customerId != null ? customerName.get(Number(s.customerId)) : null) ||
         (s.identityLevel === 'claimed' ? s.identityAttributes?.name?.trim() : null);
-      // A host user is a customer, not staff: masked like customer names on the console.
-      const masked = maskName(name);
-      if (masked) names.set(`host:${s.id}`, masked);
+      // A host user is a customer, not staff — shown by name like every
+      // customer name on the console (2026-10-23).
+      if (name) names.set(`host:${s.id}`, name);
     }
   }
 }

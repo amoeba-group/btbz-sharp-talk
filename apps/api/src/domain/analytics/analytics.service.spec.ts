@@ -158,14 +158,13 @@ describe('AnalyticsService — conversation history', () => {
     expect(clauses.some((c) => c.includes('messages qm'))).toBe(true);
   });
 
-  it('resolves customer (masked) and agent names in the list', async () => {
+  it('resolves customer and agent names in the list', async () => {
     const svc = build();
     const { items } = await svc.searchConversations(1, { page: 1, size: 20 });
     expect(items[0].agentName).toBe('Lee Sangdam');
     expect(items[0].messageCount).toBe(3);
-    // Masked, never the raw decrypted name.
-    expect(items[0].customerName).not.toBe('Jane Doe');
-    expect(items[0].customerName).toBeTruthy();
+    // In the clear on the console (2026-10-23).
+    expect(items[0].customerName).toBe('Jane Doe');
   });
 
   it('returns the transcript with AI grounding attached', async () => {

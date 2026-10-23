@@ -1,6 +1,6 @@
 import { Customer } from './entity/customer.entity';
 import { CustomerResponse } from './dto/response/customer.response';
-import { maskEmail, maskName, maskPhone } from '../../global/util/pii-display.util';
+import { maskEmail, maskPhone } from '../../global/util/pii-display.util';
 
 /** Aggregated order stats per customer (from orders_cache). */
 export interface CustomerOrderStats {
@@ -18,8 +18,9 @@ export interface CustomerOrderStats {
  * it. Masking at the edge of the API is what keeps plaintext off the wire, out
  * of the browser's memory and network tab, and out of any screen capture.
  *
- * `reveal: true` comes from the audited reveal route (single record, phone
- * included) and from the list (name + e-mail, no phone — 2026-10-23).
+ * Names are never masked (2026-10-23: the console is an operator's work
+ * screen); e-mail and phone are. `reveal: true` comes from the audited reveal
+ * route (single record, phone included) and from the list (e-mail, no phone).
  */
 export class CustomerMapper {
   static toCustomer(
@@ -33,7 +34,7 @@ export class CustomerMapper {
       tenantId: c.tenantId,
       shopifyCustomerId: c.shopifyCustomerId,
       email: reveal ? c.email : maskEmail(c.email),
-      name: reveal ? c.name : maskName(c.name),
+      name: c.name,
       phone: reveal ? c.phone : maskPhone(c.phone),
       masked: !reveal,
       tier: c.tier,
@@ -70,6 +71,6 @@ export class CustomerMapper {
 
   /** Write responses echo back only what the caller was allowed to change. */
   static toCustomerSummary(c: Customer): Pick<CustomerResponse, 'id' | 'name' | 'tier' | 'masked'> {
-    return { id: c.id, name: maskName(c.name), tier: c.tier, masked: true };
+    return { id: c.id, name: c.name, tier: c.tier, masked: true };
   }
 }
