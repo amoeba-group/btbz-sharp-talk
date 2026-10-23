@@ -520,6 +520,7 @@ export function WidgetBehaviorCard() {
     aiSenderName: data?.aiSenderName ?? {},
     agentSenderName: data?.agentSenderName ?? {},
     launcherTeaser: data?.launcherTeaser ?? {},
+    disclosureLine: data?.disclosureLine ?? {},
   };
   const copy = copyDraft ?? storedCopy;
   const setCopyText = (field: WidgetCopyBag, text: string) =>
@@ -681,6 +682,8 @@ export function WidgetBehaviorCard() {
           <span className="text-gray-500">{t('widgetBehavior.defaultCopy')}</span>{' '}
           {(WIDGET_COPY_DEFAULTS.launcherTeaser as Record<string, string>)[copyLang] ?? WIDGET_COPY_DEFAULTS.launcherTeaser.EN}
         </p>
+        {/* PLN-261023-Widget-Disclosure-Line-Copy: the AI notice line; [brackets] = terms link. */}
+        {copyLine('disclosureLine', 160)}
 
         <Button
           onClick={() =>

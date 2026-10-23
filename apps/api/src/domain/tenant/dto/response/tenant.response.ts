@@ -119,6 +119,7 @@ export interface WidgetSettingsResponse {
   aiSenderName: Record<string, string>;
   agentSenderName: Record<string, string>;
   launcherTeaser: Record<string, string>;
+  disclosureLine: Record<string, string>;
   /** Fallback used when displayName is unset (the tenant's name). */
   displayNameFallback: string | null;
 }

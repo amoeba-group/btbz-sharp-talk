@@ -25,6 +25,8 @@ export interface TenantWidgetCopy {
   aiSenderName?: Record<string, string>;
   agentSenderName?: Record<string, string>;
   launcherTeaser?: Record<string, string>;
+  /** AI disclosure line (PLN-261023-Widget-Disclosure-Line-Copy); `[…]` = terms link. */
+  disclosureLine?: Record<string, string>;
 }
 
 /** tenants — a tenant = a Shopify shop (FR-051). */

@@ -27,7 +27,7 @@ import { ContactCard } from './ContactCard';
 import { AffiliateCard } from './AffiliateCard';
 import { InlineOrdersAnswer } from './InlineOrderCard';
 import { replyChips } from './reply-chips';
-import { pickCopy, welcomeGreeting } from '../../lib/copy';
+import { pickCopy, splitDisclosure, welcomeGreeting } from '../../lib/copy';
 
 type Inline = 'auth' | 'contact' | 'affiliate' | 'contactEmail' | 'orders' | null;
 
@@ -109,6 +109,26 @@ export function ChatTab() {
   // privacy choices — consent withdrawal, CCPA opt-out, my data — stay one tap
   // away from the disclosure line instead of vanishing with the button.
   const privacyLinkInline = !useWidgetStore((s) => s.headerControls.settings);
+  // The tenant's own disclosure wording (PLN-261023-Widget-Disclosure-Line-Copy),
+  // in either placement (D4). `[…]` is the terms link (D2); with no link URL the
+  // brackets just drop and the words stay plain text.
+  const tenantDisclosure = pickCopy(widgetCopy?.disclosureLine, language);
+  const disclosureParts = tenantDisclosure ? splitDisclosure(tenantDisclosure) : null;
+  const renderTenantDisclosure = (linkClass: string) =>
+    disclosureParts && (
+      <>
+        {disclosureParts.before}
+        {disclosureParts.link &&
+          (disclosureLink ? (
+            <a href={disclosureLink} target="_blank" rel="noopener noreferrer" className={linkClass}>
+              {disclosureParts.link}
+            </a>
+          ) : (
+            disclosureParts.link
+          ))}
+        {disclosureParts.after}
+      </>
+    );
   // The default text comes from the shared registry rather than this app's
   // i18n bundle, so the console shows the very string a shopper would see
   // (PLN-260903 S2). Same wording as before — one source instead of two.
@@ -358,7 +378,10 @@ export function ChatTab() {
       {!disclosureBottom && (
       <div className="st-disclosure flex items-center gap-1.5 border-b border-gray-100 bg-gray-50 px-3 py-1.5 text-[11px] text-gray-500">
         <Sparkles className="h-3 w-3 flex-shrink-0 text-primary-400" />
-        <span className="min-w-0 flex-1">{t('chat.aiDisclosure', { region: t(`regions.${aiRegion}`, { defaultValue: aiRegion }) })}</span>
+        <span className="min-w-0 flex-1">
+          {renderTenantDisclosure('underline underline-offset-2 hover:text-gray-600') ??
+            t('chat.aiDisclosure', { region: t(`regions.${aiRegion}`, { defaultValue: aiRegion }) })}
+        </span>
         {privacyLinkInline && (
           <button
             type="button"
@@ -675,8 +698,10 @@ export function ChatTab() {
       {disclosureBottom && (
         <div className="st-disclosure flex items-center justify-center gap-2 px-3 pb-2 text-center text-[10px] leading-snug text-gray-400">
           <span>
-            {t('chat.aiDisclosureShort', { region: t(`regions.${aiRegion}`, { defaultValue: aiRegion }) })}
-            {disclosureLink && (
+            {renderTenantDisclosure('underline underline-offset-2 hover:text-gray-600') ??
+              t('chat.aiDisclosureShort', { region: t(`regions.${aiRegion}`, { defaultValue: aiRegion }) })}
+            {/* The bracketed words already link to the terms; don't link them twice. */}
+            {disclosureLink && !disclosureParts?.link && (
               <>
                 {' · '}
                 <a

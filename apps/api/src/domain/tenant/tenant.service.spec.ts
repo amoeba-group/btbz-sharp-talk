@@ -149,6 +149,24 @@ describe('TenantService.updatePrivacyNotice', () => {
       });
       expect(cleared.widgetCopy).toBeNull();
     });
+
+    it('PLN-261023 disclosure line: per language, trimmed, cleared like the other bags', async () => {
+      const saved = await svc.updateWidgetSettings(1, 7, {
+        login_mode: 'redirect',
+        disclosure_line_en: ' Created by AI; apply [terms of service] ',
+        disclosure_line_vi: 'Được tạo bởi AI, áp dụng [điều khoản dịch vụ]',
+      });
+      expect(saved.widgetCopy?.disclosureLine).toEqual({
+        EN: 'Created by AI; apply [terms of service]',
+        VI: 'Được tạo bởi AI, áp dụng [điều khoản dịch vụ]',
+      });
+      const cleared = await svc.updateWidgetSettings(1, 7, {
+        login_mode: 'redirect',
+        disclosure_line_en: '',
+        disclosure_line_vi: null,
+      });
+      expect(cleared.widgetCopy).toBeNull();
+    });
   });
 
   /**

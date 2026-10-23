@@ -112,7 +112,9 @@
     "csatMode": "满意度卡片",
     "csatModeRating": "仅评分（默认）— 五个表情，一次点击",
     "csatModeSurvey": "问卷 — 是否解决 + 评分 + 不满意原因",
-    "csatModeHint": "对话结束时显示。问卷先问“问题解决了吗？”（计入解决率），评分 1–2 时询问原因。"
+    "csatModeHint": "对话结束时显示。问卷先问“问题解决了吗？”（计入解决率），评分 1–2 时询问原因。",
+    "disclosureLine": "AI 提示语",
+    "disclosureLineHint": "聊天上方/下方的 AI 提示行。[方括号] 内的文字会链接到服务条款（隐私声明 → 条款 URL）。留空则使用默认提示语。"
   },
   "shopify": {
     "title": "Shopify 连接",

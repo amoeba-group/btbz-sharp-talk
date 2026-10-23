@@ -56,6 +56,12 @@ export interface WidgetCopy {
   aiSenderName?: WidgetCopyText;
   agentSenderName?: WidgetCopyText;
   launcherTeaser?: WidgetCopyText;
+  /**
+   * The AI disclosure line (PLN-261023-Widget-Disclosure-Line-Copy). Empty →
+   * the built-in wording. `[…]` marks the part that links to the terms; without
+   * brackets the usual " · terms of service" link follows the text.
+   */
+  disclosureLine?: WidgetCopyText;
 }
 
 export interface SessionResponse {

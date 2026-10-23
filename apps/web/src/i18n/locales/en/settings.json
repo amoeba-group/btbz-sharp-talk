@@ -112,7 +112,9 @@
     "csatMode": "Satisfaction card",
     "csatModeRating": "Rating only (default) — five faces, one tap",
     "csatModeSurvey": "Survey — resolved? + rating + reason when unhappy",
-    "csatModeHint": "Shown when a chat ends. The survey adds \"was it resolved?\" (which feeds the resolution rate) and asks why for ratings of 1–2."
+    "csatModeHint": "Shown when a chat ends. The survey adds \"was it resolved?\" (which feeds the resolution rate) and asks why for ratings of 1–2.",
+    "disclosureLine": "AI disclosure line",
+    "disclosureLineHint": "The AI notice line above or below the chat. Words in [brackets] link to your terms of service (Privacy notice → Terms URL). Empty = the built-in line, e.g. \"AI-generated replies · processed in the United States\"."
   },
   "shopify": {
     "title": "Shopify connection",
