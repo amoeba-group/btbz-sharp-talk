@@ -146,6 +146,7 @@ export class SessionService {
     agentCode?: string,
     landingPath?: string,
     accessKey?: string,
+    languageChosen = false,
   ): Promise<Session> {
     if (token) {
       const existing = await this.sessionRepo.findOne({ where: { sessionToken: token } });
@@ -171,6 +172,7 @@ export class SessionService {
         // started in Korean before the tenant narrowed its list fix themselves
         // here, without a data migration.
         await this.realignLanguage(existing, locale);
+        if (languageChosen) await this.adoptChosenLanguage(existing, locale);
         return existing;
       }
     }
@@ -184,7 +186,11 @@ export class SessionService {
         tenantId: tenant.id,
         // Pinned once here — the session keeps its agent for its whole life.
         aiAgentId: await this.resolveAiAgentId(tenant.id, agentCode),
-        language: this.resolveLanguage(locale, tenant.timezone, tenant.defaultLanguage, tenant.widgetLanguages),
+        language:
+          (languageChosen ? chosenLanguage(locale, tenant.widgetLanguages) : null) ??
+          this.resolveLanguage(locale, tenant.timezone, tenant.defaultLanguage, tenant.widgetLanguages),
+        // A chosen language is held like a manual pick (PLN-261023).
+        languageLocked: languageChosen && chosenLanguage(locale, tenant.widgetLanguages) ? 1 : 0,
         // Impression analytics (PLN-260920). Normalized server-side; a bad value
         // becomes NULL rather than failing the call that mounts the widget.
         landingPath: normalizeLandingPath(landingPath),
@@ -793,6 +799,21 @@ export class SessionService {
   }
 
   /**
+   * A resumed session follows a language the host or visitor chose (PLN-261023)
+   * — the same effect as the widget's own switcher, without a second call.
+   */
+  private async adoptChosenLanguage(session: Session, locale?: string): Promise<void> {
+    if (session.tenantId == null) return;
+    const tenant = await this.tenantRepo.findOne({ where: { id: session.tenantId } });
+    const next = chosenLanguage(locale, tenant?.widgetLanguages ?? null);
+    if (!next || (next === session.language && session.languageLocked)) return;
+    session.language = next;
+    session.languageLocked = 1;
+    await this.sessionRepo.update({ id: session.id }, { language: next, languageLocked: 1 });
+    await this.redis.del(sessionCacheKey(session.sessionToken));
+  }
+
+  /**
    * Bring an existing session back inside the tenant's offered languages
    * (PLN-261019 D6). A session already in an offered language is left alone —
    * including its lock. One that is not loses its lock as well: a hand-picked
@@ -812,4 +833,14 @@ export class SessionService {
     await this.sessionRepo.update({ id: session.id }, { language: next, languageLocked: 0 });
     await this.redis.del(sessionCacheKey(session.sessionToken));
   }
+}
+
+/**
+ * The session language for a locale the host or visitor CHOSE (PLN-261023):
+ * taken as is — English too — when the tenant offers it; null otherwise, so the
+ * caller falls back to the usual detection.
+ */
+function chosenLanguage(locale: string | undefined, offered: readonly string[] | null | undefined): string | null {
+  const lang = sessionLanguageForLocale(locale);
+  return lang && isOfferedLanguage(lang, offered ?? null) ? lang : null;
 }

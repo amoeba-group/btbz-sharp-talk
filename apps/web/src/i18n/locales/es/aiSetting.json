@@ -425,7 +425,7 @@
     "displayNameHint": "Se muestra a los compradores en el widget. Vacío = nombre de la tienda.",
     "greeting": "Primer mensaje",
     "greetingPlaceholder": "¡Hola! Soy Livy, ¿en qué te ayudo?",
-    "greetingHint": "Primera burbuja de las sesiones con este agente. Idioma vacío = mensaje común de la tienda."
+    "greetingHint": "Primera burbuja de las sesiones con este agente. Idioma vacío = mensaje común de la tienda. {name} = nombre del usuario con sesión (p. ej. \"Hola {name}, …\")."
   },
   "agentScope": {
     "button": "Agentes",

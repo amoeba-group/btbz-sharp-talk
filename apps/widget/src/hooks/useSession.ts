@@ -10,6 +10,7 @@ import i18n, {
   LANG_STORAGE_KEY,
   SUPPORTED_LANGUAGES,
   cacheOfferedLanguages,
+  hostLocale,
 } from '../i18n/i18n';
 
 /**
@@ -19,8 +20,12 @@ import i18n, {
  */
 const IDENTITY_WAIT_MS = 5000;
 
-/** True when the user has manually picked a language (persisted to localStorage). */
+/**
+ * True when the language is a choice rather than a guess: the host page set it
+ * (PLN-261023) or the user picked one manually (persisted to localStorage).
+ */
 function hasManualLanguageOverride(): boolean {
+  if (hostLocale()) return true;
   try {
     return !!localStorage.getItem(LANG_STORAGE_KEY);
   } catch {
@@ -276,6 +281,10 @@ export function useEnsureSession() {
       // server normalizes it and drops the query string.
       getLandingPath(),
       getAccessKey(),
+      // A chosen language holds the session to it — otherwise the server read
+      // 'en' as "no preference" and opened a go2joy session in Vietnamese
+      // under an English UI, so the chips came back Vietnamese (PLN-261023 ③).
+      hasManualLanguageOverride(),
     )
       .then((res) => {
         if (cancelled) return;

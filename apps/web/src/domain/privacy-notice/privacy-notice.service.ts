@@ -12,6 +12,8 @@ export interface PrivacyNoticeSettings {
   privacyProfile: string | null;
   /** widget | host_terms — where consent comes from (PLN-261015 D9). */
   consentSource: 'widget' | 'host_terms';
+  /** signed | claimed — whether an unsigned host sign-in also counts (PLN-261023). */
+  hostTermsTrust?: 'signed' | 'claimed';
   /** Terms link for the widget's disclosure line (PLN-261019); null → privacy URL. */
   termsUrl?: string | null;
   /** What is in force right now — what the placeholders below belong to. */
@@ -28,6 +30,7 @@ export interface UpdatePrivacyNoticeBody {
   consent_notice_version?: string;
   privacy_profile?: string | null;
   consent_source?: 'widget' | 'host_terms';
+  host_terms_trust?: 'signed' | 'claimed';
   terms_url?: string | null;
   privacy_notice_copy?: Record<string, NoticeLines> | null;
   /**

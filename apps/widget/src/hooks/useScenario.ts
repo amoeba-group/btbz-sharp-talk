@@ -15,10 +15,13 @@ import type { ScenarioButton } from '../lib/types';
 export function useScenario(sessionToken: string | null): ScenarioButton[] {
   const { t } = useTranslation();
   const commerceEnabled = useWidgetStore((s) => s.commerceEnabled);
+  const language = useWidgetStore((s) => s.language);
 
   const { data, isError } = useQuery({
-    queryKey: ['scenario', sessionToken],
-    queryFn: () => getScenario(sessionToken!),
+    // Keyed by the display language: a switch used to keep the chips of the
+    // language they were first fetched in (EN greeting, VI chips — PLN-261023).
+    queryKey: ['scenario', sessionToken, language],
+    queryFn: () => getScenario(sessionToken!, language),
     enabled: !!sessionToken,
     retry: false,
     // 60s (was 5min): an operator scoping buttons expects the open widget to

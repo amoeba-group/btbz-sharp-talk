@@ -433,7 +433,7 @@ export class AiConfigService {
    * `agentIds` list shows only for those agents; an empty list means every
    * agent. A NULL pin resolves to the tenant's default agent for matching.
    */
-  async getScenarioForSession(sessionToken: string): Promise<ScenarioConfigResponse> {
+  async getScenarioForSession(sessionToken: string, displayLanguage?: string): Promise<ScenarioConfigResponse> {
     // Belt to the controller's SessionToken guard: an empty/undefined token
     // must never reach findOne — TypeORM drops an undefined predicate and
     // returns an arbitrary session (cross-tenant config leak, FIX-260825).
@@ -448,7 +448,10 @@ export class AiConfigService {
     // The wire contract is one string per button: resolving here keeps every
     // widget build — including ones already cached in a shopper's browser —
     // working unchanged with per-language labels.
-    const lang = languageBySession(session.language)?.session ?? null;
+    // Labels follow the language the widget is showing (PLN-261023): the
+    // session row may still hold the previous one while a switch is in flight.
+    // Display text only — an unknown code falls back to the session language.
+    const lang = (languageBySession(displayLanguage) ?? languageBySession(session.language))?.session ?? null;
     const scoped = buttons
       .filter((b) => b.enabled)
       // The button's own question resolves the same way its label does, so the

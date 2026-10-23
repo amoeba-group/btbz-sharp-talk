@@ -425,7 +425,7 @@
     "displayNameHint": "Hiển thị cho khách trong widget. Bỏ trống = tên cửa hàng.",
     "greeting": "Tin nhắn phản hồi đầu tiên",
     "greetingPlaceholder": "Xin chào! Mình là Livy, mình giúp gì được?",
-    "greetingHint": "Bong bóng đầu tiên của phiên gắn agent này. Ngôn ngữ bỏ trống = tin nhắn chung của cửa hàng."
+    "greetingHint": "Bong bóng đầu tiên của phiên gắn agent này. Ngôn ngữ bỏ trống = tin nhắn chung của cửa hàng. {name} = tên người dùng đã đăng nhập (vd. \"Chào {name}, …\")."
   },
   "agentScope": {
     "button": "Agent",

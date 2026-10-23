@@ -60,6 +60,37 @@ describe('SessionService offered languages (PLN-261019)', () => {
     });
   });
 
+  describe('a chosen language (PLN-261023 — host page or visitor pick)', () => {
+    it('opens a new session in English when English was chosen, and locks it', async () => {
+      const { svc } = build(GO2JOY);
+      const s = await svc.ensure(undefined, 'en', 'https://www.go2joy.vn', undefined, undefined, undefined, undefined, true);
+      expect(s.language).toBe('EN');
+      expect(s.languageLocked).toBe(1);
+    });
+
+    it('without the flag English is still "no preference" → tenant default', async () => {
+      const { svc } = build(GO2JOY);
+      const s = await svc.ensure(undefined, 'en', 'https://www.go2joy.vn');
+      expect(s.language).toBe('VI');
+      expect(s.languageLocked).toBe(0);
+    });
+
+    it('a chosen language the tenant does not offer falls back to detection', async () => {
+      const { svc } = build(GO2JOY);
+      const s = await svc.ensure(undefined, 'ko', 'https://www.go2joy.vn', undefined, undefined, undefined, undefined, true);
+      expect(s.language).toBe('EN');
+      expect(s.languageLocked).toBe(0);
+    });
+
+    it('moves a resumed session to the chosen language', async () => {
+      const existing = { id: 1, tenantId: 4, sessionToken: 't', language: 'VI', languageLocked: 0 };
+      const { svc, sessionRepo } = build(GO2JOY, { ...existing });
+      const s = await svc.ensure('t', 'en', undefined, undefined, undefined, undefined, undefined, true);
+      expect(s.language).toBe('EN');
+      expect(sessionRepo.update).toHaveBeenCalledWith({ id: 1 }, { language: 'EN', languageLocked: 1 });
+    });
+  });
+
   describe('hand pick (D3)', () => {
     const session = { id: 1, tenantId: 4, sessionToken: 't', language: 'EN', languageLocked: 0 };
 

@@ -28,6 +28,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/Button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ChannelBadge, CHANNEL_FILTERS, RECEIVE_ONLY_CHANNELS } from './ChannelBadge';
+import { sessionTitle } from './session-title';
 import { SessionAlias } from './SessionAlias';
 import { IdentityBadges } from './IdentityBadges';
 import { CompanyThreadButton } from './CompanyThreadButton';
@@ -748,8 +749,9 @@ export function LiveChatPage() {
                       conversationId={s.id}
                       alias={s.alias}
                       fallback={
-                        s.customerName ||
-                        s.identity?.name ||
+                        // "customer / company" (PLN-261023): the registered
+                        // customer and hotel, else what the host claimed.
+                        sessionTitle(s.customerName || s.identity?.name, s.companyName || s.identity?.hotelName) ||
                         s.customerEmail ||
                         t('sessionLabel', { id: s.id.slice(0, 6) })
                       }
@@ -866,7 +868,12 @@ export function LiveChatPage() {
                   <SessionAlias
                     conversationId={selected}
                     alias={convo?.alias}
-                    fallback={convo?.customer?.name || convo?.identity?.name || t('conversation')}
+                    fallback={
+                      sessionTitle(
+                        convo?.customer?.name || convo?.identity?.name,
+                        convo?.company?.name || convo?.identity?.hotelName,
+                      ) || t('conversation')
+                    }
                     sessionLabel={t('sessionLabel', { id: selected.slice(0, 6) })}
                   />
                   <StatusBadge

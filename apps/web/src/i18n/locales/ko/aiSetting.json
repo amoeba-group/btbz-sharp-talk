@@ -425,7 +425,7 @@
     "displayNameHint": "위젯 헤더에 고객에게 표시됩니다. 비우면 상점 표시명을 사용합니다.",
     "greeting": "첫 응답 메시지",
     "greetingPlaceholder": "안녕하세요! Livy예요. 무엇을 도와드릴까요?",
-    "greetingHint": "이 에이전트가 배정된 세션의 첫 말풍선입니다. 비운 언어는 상점 공통 첫 메시지를 사용합니다."
+    "greetingHint": "이 에이전트가 배정된 세션의 첫 말풍선입니다. 비운 언어는 상점 공통 첫 메시지를 사용합니다. {name} = 로그인 사용자 이름(예: \"Dear {name}, …\")."
   },
   "agentScope": {
     "button": "에이전트",

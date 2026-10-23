@@ -518,6 +518,10 @@
       encodeURIComponent(s0) +
       '&locale=' +
       encodeURIComponent(l0) +
+      // The page CHOSE this language (config / init), as opposed to the
+      // document-lang / 'en' guess above — the widget then holds the session to
+      // it instead of letting the tenant default win (PLN-261023 ③).
+      (cfg.locale ? '&host_locale=1' : '') +
       (a0 ? '&agent=' + encodeURIComponent(a0) : '') +
       (g0 ? '&ga4=' + encodeURIComponent(g0) : '') +
       (reopenTab ? '&reopen=' + encodeURIComponent(reopenTab) : '') +

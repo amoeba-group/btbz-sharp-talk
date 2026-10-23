@@ -85,6 +85,7 @@ export class TenantMapper {
       consentNoticeVersion: t.consentNoticeVersion,
       privacyProfile: t.privacyProfile ?? null,
       consentSource: t.consentSource === 'host_terms' ? 'host_terms' : 'widget',
+      hostTermsTrust: t.hostTermsTrust === 'claimed' ? 'claimed' : 'signed',
       termsUrl: t.termsUrl ?? null,
       effectiveProfile,
       privacyNoticeCopy: (t.privacyNoticeCopy ?? null) as Record<string, Record<string, string>> | null,

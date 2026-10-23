@@ -425,7 +425,7 @@
     "displayNameHint": "Shown to shoppers in the widget header. Blank = store display name.",
     "greeting": "First response message",
     "greetingPlaceholder": "Hi! I'm Livy — how can I help?",
-    "greetingHint": "First bubble for sessions on this agent. Blank language = store-wide first message."
+    "greetingHint": "First bubble for sessions on this agent. Blank language = store-wide first message. {name} = the signed-in user's name (e.g. \"Dear {name}, …\")."
   },
   "agentScope": {
     "button": "Agents",

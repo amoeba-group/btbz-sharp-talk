@@ -84,12 +84,32 @@ export function cacheOfferedLanguages(codes: readonly string[]): void {
 }
 
 /**
- * Language to open in: manual pick, else browser, else English — each only
- * if the tenant offers it (cached list; everything when unknown).
+ * The language the embedding page chose in its config (`?locale=` with
+ * `host_locale=1`, PLN-261023), or null when the loader only guessed it.
+ * Go2Joy HA passes the user's HA language here.
+ */
+export function hostLocale(): SupportedLanguage | null {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('host_locale') !== '1') return null;
+    const code = (params.get('locale') || '').toLowerCase().split('-')[0];
+    return (SUPPORTED_LANGUAGES as readonly string[]).includes(code) ? (code as SupportedLanguage) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Language to open in: the host page's choice, else manual pick, else browser,
+ * else English — each only if the tenant offers it (cached list; everything
+ * when unknown). The host outranks a stored pick: its language switch reloads
+ * the page with the new choice, which must win over a pick from another visit.
  */
 export function initialLanguage(): SupportedLanguage {
   const offered = cachedOfferedLanguages();
   const offers = (code: string) => !offered || offered.includes(code);
+  const host = hostLocale();
+  if (host && offers(host)) return host;
   try {
     const stored = localStorage.getItem(LANG_STORAGE_KEY);
     if (stored && SUPPORTED_LANGUAGES.includes(stored) && offers(stored)) {
