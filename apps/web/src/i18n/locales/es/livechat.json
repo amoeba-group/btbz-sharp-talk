@@ -436,14 +436,18 @@
   },
   "company": {
     "badge": "Empresa",
-    "earlier": "{{count}} conversación(es) anteriores de esta empresa",
-    "earlierTitle": "Conversaciones anteriores de esta empresa",
+    "earlier": "{{count}} conversación(es) anteriores de este cliente",
+    "earlierTitle": "Conversaciones anteriores de este cliente",
     "status": {
       "ai_active": "IA",
       "waiting": "En espera",
       "agent": "Con agente",
       "ended": "Finalizada"
-    }
+    },
+    "mergeSelected": "Unificar seleccionadas ({{count}})",
+    "selectForMerge": "Seleccionar la conversación #{{id}} para unificar",
+    "open": "Abrir",
+    "autoJoin": "Añadir automáticamente las nuevas sesiones de este cliente"
   },
   "hotelCard": {
     "title": "Hotel",
@@ -494,7 +498,8 @@
     "matchedBy": {
       "customer": "Misma cuenta",
       "email": "Mismo correo",
-      "claimed": "Inicio de sesión del host"
+      "claimed": "Inicio de sesión del host",
+      "company": "Misma empresa"
     },
     "inProgress": "En curso",
     "lastAt": "Última {{when}}",

@@ -76,6 +76,11 @@ function harness() {
     { id: 104, tenantId: T, customerId: 20, alias: null }, // someone else
     { id: 105, tenantId: T, customerId: null, alias: null }, // guest
     { id: 106, tenantId: 9, customerId: 10, alias: null }, // other tenant
+    // Hotel (company 4): staff A claimed (customer 30 on the conversation), staff B verified on the session.
+    { id: 201, tenantId: T, customerId: null, companyId: null, alias: null },
+    { id: 202, tenantId: T, customerId: 31, companyId: 4, alias: null },
+    { id: 203, tenantId: T, customerId: null, companyId: null, alias: null }, // later staff, not yet in any room
+    { id: 204, tenantId: T, customerId: 40, companyId: 5, alias: null }, // another hotel
   ]);
   const convs = repo([
     { id: 501, tenantId: T, sessionId: 101, customerId: 10, channel: 'widget', status: 'ended', createdAt: new Date('2026-10-01') },
@@ -85,20 +90,27 @@ function harness() {
     { id: 505, tenantId: T, sessionId: 105, customerId: null, channel: 'widget', status: 'ai_active', createdAt: new Date('2026-10-21') },
     { id: 506, tenantId: 9, sessionId: 106, customerId: 10, channel: 'widget', status: 'ended', createdAt: new Date('2026-10-21') },
     { id: 507, tenantId: T, sessionId: 101, customerId: 10, channel: 'widget', status: 'agent', createdAt: new Date('2026-10-22') },
+    { id: 601, tenantId: T, sessionId: 201, customerId: 30, companyId: 4, channel: 'widget', status: 'ai_active', createdAt: new Date('2026-10-23') },
+    { id: 602, tenantId: T, sessionId: 202, customerId: 31, companyId: 4, channel: 'widget', status: 'ended', createdAt: new Date('2026-10-22') },
+    { id: 603, tenantId: T, sessionId: 203, customerId: 32, companyId: 4, channel: 'widget', status: 'ai_active', createdAt: new Date('2026-10-23') },
+    { id: 604, tenantId: T, sessionId: 204, customerId: 40, companyId: 5, channel: 'widget', status: 'ended', createdAt: new Date('2026-10-21') },
   ]);
   (convs as any).createQueryBuilder = () => {
     let ids: unknown[] = [];
     let tenant: unknown;
+    let col = 'customerId';
     const qb: any = {
       select: () => qb,
-      where: (_sql: string, p: Row) => ((ids = p.ids), (tenant = p.tenantId), qb),
+      where: (sql: string, p: Row) => (
+        (ids = p.ids), (tenant = p.tenantId), (col = sql.includes('company_id') ? 'companyId' : 'customerId'), qb
+      ),
       orderBy: () => qb,
       limit: () => qb,
       getRawMany: async () =>
         [
           ...new Set(
             convs.rows
-              .filter((c) => String(c.tenantId) === String(tenant) && ids.map(String).includes(String(c.customerId)))
+              .filter((c) => String(c.tenantId) === String(tenant) && ids.map(String).includes(String(c[col])))
               .map((c) => c.sessionId),
           ),
         ].map((sessionId) => ({ sessionId: String(sessionId) })),
@@ -225,6 +237,41 @@ describe('MergedRoomService (PLN-261023)', () => {
     h.rooms.rows.push({ id: '900', tenantId: T, customerId: 20, autoJoin: 1, createdBy: 1 });
     h.members.rows.push({ id: '901', tenantId: T, roomId: '900', sessionId: '104', state: 'member', addedBy: 1 });
     await expect(h.svc.merge(T, 7, 507, [104], true)).rejects.toMatchObject({ errorCode: 'E5106' });
+  });
+
+  it('B2B: the same hotel is the same customer — other staff are candidates, another hotel is not (F1)', async () => {
+    const h = harness();
+    const res = await h.svc.candidates(601, T);
+    const by = new Map(res.sessions.map((s) => [s.sessionId, s]));
+    expect([...by.keys()].sort()).toEqual([201, 202, 203]);
+    expect(by.get(201)).toMatchObject({ current: true });
+    expect(by.get(202)).toMatchObject({ matchedBy: 'company', unverified: false });
+    expect(by.get(203)).toMatchObject({ matchedBy: 'company', unverified: true });
+  });
+
+  it('B2B: a room merged from a hotel thread is keyed on the company and auto-joins its later staff (F2)', async () => {
+    const h = harness();
+    // Session 203 is the "later" staff: keep it out at first.
+    const room = await h.svc.merge(T, 7, 601, [202], true);
+    expect(h.rooms.rows[0]).toMatchObject({ customerId: 30, companyId: 4 });
+    expect(room.companyId).toBe(4);
+    await h.svc.autoJoin(T, 203);
+    expect(h.members.rows.find((m) => m.sessionId === 203)).toMatchObject({ state: 'member', addedBy: null });
+    await h.svc.autoJoin(T, 204); // another hotel
+    expect(h.members.rows.some((m) => m.sessionId === 204)).toBe(false);
+  });
+
+  it('B2B: another hotel’s session cannot be merged (E5106)', async () => {
+    const h = harness();
+    await expect(h.svc.merge(T, 7, 601, [204], true)).rejects.toMatchObject({ errorCode: 'E5106' });
+  });
+
+  it('DSAR: a company room survives the erasure of a person and only forgets them', async () => {
+    const h = harness();
+    await h.svc.merge(T, 7, 601, [202], true);
+    await h.svc.eraseCustomer(T, 30);
+    expect(h.rooms.rows[0]).toMatchObject({ customerId: null, companyId: 4 });
+    expect(h.members.rows.length).toBe(2);
   });
 
   it('DSAR erasure removes rooms keyed on the customer', async () => {

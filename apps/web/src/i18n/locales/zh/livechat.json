@@ -436,14 +436,18 @@
   },
   "company": {
     "badge": "企业",
-    "earlier": "该企业之前的 {{count}} 个对话",
-    "earlierTitle": "该企业之前的对话",
+    "earlier": "该客户之前的 {{count}} 个对话",
+    "earlierTitle": "该客户之前的对话",
     "status": {
       "ai_active": "AI",
       "waiting": "等待中",
       "agent": "人工处理中",
       "ended": "已结束"
-    }
+    },
+    "mergeSelected": "合并所选对话 ({{count}})",
+    "selectForMerge": "选择对话 #{{id}} 进行合并",
+    "open": "打开",
+    "autoJoin": "自动加入该客户的新会话"
   },
   "hotelCard": {
     "title": "酒店",
@@ -494,7 +498,8 @@
     "matchedBy": {
       "customer": "同一账户",
       "email": "同一邮箱",
-      "claimed": "宿主应用登录"
+      "claimed": "宿主应用登录",
+      "company": "同一企业"
     },
     "inProgress": "进行中",
     "lastAt": "最近 {{when}}",

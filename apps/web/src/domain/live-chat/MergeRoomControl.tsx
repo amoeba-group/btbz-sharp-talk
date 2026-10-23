@@ -50,7 +50,7 @@ export function MergeRoomControl({
 
   const when = (iso: string) =>
     new Date(iso).toLocaleString(i18n.language, { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const matchLabel = (how: 'customer' | 'email' | 'claimed') => t(`merge.matchedBy.${how}`);
+  const matchLabel = (how: 'customer' | 'email' | 'claimed' | 'company') => t(`merge.matchedBy.${how}`);
 
   if (!room && !addable.length) return null;
 

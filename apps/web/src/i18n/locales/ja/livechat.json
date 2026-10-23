@@ -436,14 +436,18 @@
   },
   "company": {
     "badge": "法人",
-    "earlier": "この法人の以前の会話 {{count}} 件",
-    "earlierTitle": "この法人の以前の会話",
+    "earlier": "この顧客の以前の会話 {{count}} 件",
+    "earlierTitle": "この顧客の以前の会話",
     "status": {
       "ai_active": "AI対応",
       "waiting": "待機中",
       "agent": "対応中",
       "ended": "終了"
-    }
+    },
+    "mergeSelected": "選択した会話を統合 ({{count}})",
+    "selectForMerge": "会話 #{{id}} を統合対象に選択",
+    "open": "開く",
+    "autoJoin": "この顧客の新しいセッションを自動で追加"
   },
   "hotelCard": {
     "title": "ホテル",
@@ -494,7 +498,8 @@
     "matchedBy": {
       "customer": "同じアカウント",
       "email": "同じメール",
-      "claimed": "ホストログイン"
+      "claimed": "ホストログイン",
+      "company": "同じ法人"
     },
     "inProgress": "進行中",
     "lastAt": "最終 {{when}}",

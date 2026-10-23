@@ -1,7 +1,7 @@
 # PLN-261023 라이브챗 — 기업 이전 대화 모달에서 통합 · 문구 "이 고객"
 
 - REQ: `docs/analysis/REQ-261023-LiveChat-Merge-Company-Conversations.md`
-- 상태: **승인 대기**
+- 상태: **승인됨** (2026-10-23, 권장안 F1~F4)
 
 ## 1. 결정 사항 (권장 ★)
 

@@ -436,14 +436,18 @@
   },
   "company": {
     "badge": "기업",
-    "earlier": "이 기업(호텔)의 이전 대화 {{count}}건",
-    "earlierTitle": "이 기업(호텔)의 이전 대화",
+    "earlier": "이 고객의 이전 대화 {{count}}건",
+    "earlierTitle": "이 고객의 이전 대화",
     "status": {
       "ai_active": "AI 응대",
       "waiting": "대기",
       "agent": "상담 중",
       "ended": "종료"
-    }
+    },
+    "mergeSelected": "선택한 대화 통합 ({{count}})",
+    "selectForMerge": "대화 #{{id}} 통합 선택",
+    "open": "열기",
+    "autoJoin": "이후 이 고객의 새 세션 자동 추가"
   },
   "hotelCard": {
     "title": "호텔",
@@ -494,7 +498,8 @@
     "matchedBy": {
       "customer": "같은 계정",
       "email": "같은 이메일",
-      "claimed": "호스트 로그인"
+      "claimed": "호스트 로그인",
+      "company": "같은 기업"
     },
     "inProgress": "진행 중",
     "lastAt": "마지막 {{when}}",

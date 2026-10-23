@@ -21,7 +21,7 @@ const OPEN_STATUSES: string[] = [
 const CANDIDATE_LIMIT = 50;
 
 /** How a candidate session matched the conversation's customer (D1). */
-export type MergeMatch = 'customer' | 'email' | 'claimed';
+export type MergeMatch = 'customer' | 'email' | 'claimed' | 'company';
 
 export interface MergedSessionView {
   sessionId: number;
@@ -38,7 +38,8 @@ export interface MergedSessionView {
 
 export interface MergedRoomView {
   id: number;
-  customerId: number;
+  customerId: number | null;
+  companyId: number | null;
   autoJoin: boolean;
   sessions: MergedSessionView[];
 }
@@ -65,11 +66,16 @@ export interface MergeCandidateView {
 
 interface Identity {
   /** The customer a new room is keyed on: the session's, else its conversations' newest. */
-  anchor: number;
+  anchor: number | null;
   /** Rows on the session and its conversations — matched "by account". */
   own: number[];
   /** Customer rows that count as the same person: the anchor's + same-email rows (D1). */
   customerIds: number[];
+  /**
+   * B2B company of the session or its conversations — for a business the
+   * hotel IS the customer, so its other staff's sessions match (F1).
+   */
+  companyIds: number[];
 }
 
 /**
@@ -79,7 +85,9 @@ interface Identity {
  * Same person = a confirmed identity (D1): the same customer row on the
  * session or on one of its conversations (a claimed host sign-in is filed on
  * the conversation only — PLN-261023 S4), or another customer row with the
- * same email (blind index). A guest has no identity and is never merged.
+ * same email (blind index). For a business, the same B2B company (hotel) as
+ * well — its other staff are the same customer (PLN-261023-LiveChat-Merge-
+ * Company-Conversations F1). A guest has no identity and is never merged.
  *
  * The room only changes what the console SHOWS together; every send, status,
  * assignment and stat stays per conversation.
@@ -99,30 +107,49 @@ export class MergedRoomService {
 
   // ---- identity ----
 
-  /** The customer rows a session belongs to, or null for a guest. */
+  /** The customer rows and companies a session belongs to, or null for a guest. */
   private async identityOf(tenantId: number, sessionId: number): Promise<Identity | null> {
-    const own = await this.ownCustomerIds(tenantId, sessionId);
-    if (!own.length) return null;
-    const unique = [...new Set(own)];
-    return { anchor: own[0], own: unique, customerIds: await this.withSameEmail(tenantId, unique) };
-  }
-
-  /** Customer rows on the session, then on its conversations newest first (not the same-email ones). */
-  private async ownCustomerIds(tenantId: number, sessionId: number): Promise<number[]> {
     const session = await this.sessionRepo.findOne({
       where: { id: sessionId, tenantId },
-      select: { id: true, customerId: true },
+      select: { id: true, customerId: true, companyId: true },
     });
-    if (!session) return [];
+    if (!session) return null;
     const filed = await this.convRepo.find({
-      where: { tenantId, sessionId, customerId: Not(IsNull()) },
-      select: { id: true, customerId: true },
+      where: [
+        { tenantId, sessionId, customerId: Not(IsNull()) },
+        { tenantId, sessionId, companyId: Not(IsNull()) },
+      ],
+      select: { id: true, customerId: true, companyId: true },
       order: { id: 'DESC' },
     });
-    return [
+    // Session first, then its conversations newest first — the anchor is the head.
+    const own = [
       ...(session.customerId != null ? [Number(session.customerId)] : []),
-      ...filed.map((c) => Number(c.customerId)),
+      ...filed.filter((c) => c.customerId != null).map((c) => Number(c.customerId)),
     ];
+    const companies = [
+      ...(session.companyId != null ? [Number(session.companyId)] : []),
+      ...filed.filter((c) => c.companyId != null).map((c) => Number(c.companyId)),
+    ];
+    if (!own.length && !companies.length) return null;
+    const unique = [...new Set(own)];
+    return {
+      anchor: own[0] ?? null,
+      own: unique,
+      customerIds: unique.length ? await this.withSameEmail(tenantId, unique) : [],
+      companyIds: [...new Set(companies)],
+    };
+  }
+
+  /** Rooms keyed on any of the identity's customers or companies (OR), oldest first. */
+  private async roomsFor(tenantId: number, identity: Identity, autoJoinOnly = false): Promise<MergedRoom[]> {
+    const extra = autoJoinOnly ? { autoJoin: 1 } : {};
+    const where = [
+      ...(identity.customerIds.length ? [{ tenantId, customerId: In(identity.customerIds), ...extra }] : []),
+      ...(identity.companyIds.length ? [{ tenantId, companyId: In(identity.companyIds), ...extra }] : []),
+    ];
+    if (!where.length) return [];
+    return this.roomRepo.find({ where, order: { id: 'ASC' } });
   }
 
   /** The given customer rows plus every other row with the same email. */
@@ -148,6 +175,33 @@ export class MergedRoomService {
     emailOnly: Set<number>,
   ): Promise<Map<number, MergeMatch>> {
     const out = new Map<number, MergeMatch>();
+    if (identity.customerIds.length) await this.sessionsOfCustomers(tenantId, identity, emailOnly, out);
+    if (identity.companyIds.length) {
+      const byCompany = await this.sessionRepo.find({
+        where: { tenantId, companyId: In(identity.companyIds) },
+        select: { id: true },
+        order: { id: 'DESC' },
+        take: CANDIDATE_LIMIT,
+      });
+      for (const s of byCompany) if (!out.has(Number(s.id))) out.set(Number(s.id), 'company');
+      const filedUnder = await this.convRepo
+        .createQueryBuilder('c')
+        .select('DISTINCT c.session_id', 'sessionId')
+        .where('c.tenant_id = :tenantId AND c.company_id IN (:...ids)', { tenantId, ids: identity.companyIds })
+        .orderBy('c.session_id', 'DESC')
+        .limit(CANDIDATE_LIMIT)
+        .getRawMany<{ sessionId: string }>();
+      for (const r of filedUnder) if (!out.has(Number(r.sessionId))) out.set(Number(r.sessionId), 'company');
+    }
+    return out;
+  }
+
+  private async sessionsOfCustomers(
+    tenantId: number,
+    identity: Identity,
+    emailOnly: Set<number>,
+    out: Map<number, MergeMatch>,
+  ): Promise<void> {
     const bySession = await this.sessionRepo.find({
       where: { tenantId, customerId: In(identity.customerIds) },
       select: { id: true, customerId: true },
@@ -166,7 +220,6 @@ export class MergedRoomService {
       const sid = Number(r.sessionId);
       if (!out.has(sid)) out.set(sid, 'claimed');
     }
-    return out;
   }
 
   // ---- reads ----
@@ -277,7 +330,13 @@ export class MergedRoomService {
       });
     }
     views.sort((a, b) => b.conversationId - a.conversationId);
-    return { id: Number(room.id), customerId: Number(room.customerId), autoJoin: room.autoJoin === 1, sessions: views };
+    return {
+      id: Number(room.id),
+      customerId: room.customerId != null ? Number(room.customerId) : null,
+      companyId: room.companyId != null ? Number(room.companyId) : null,
+      autoJoin: room.autoJoin === 1,
+      sessions: views,
+    };
   }
 
   private async latestConversations(tenantId: number, sessionIds: number[]): Promise<Map<number, Conversation>> {
@@ -318,7 +377,7 @@ export class MergedRoomService {
     const latest = await this.latestConversations(tenantId, ids);
     const sessions = await this.sessionRepo.find({
       where: { tenantId, id: In(ids) },
-      select: { id: true, alias: true, customerId: true },
+      select: { id: true, alias: true, customerId: true, companyId: true },
     });
     const sessionById = new Map(sessions.map((s) => [Number(s.id), s]));
 
@@ -337,7 +396,11 @@ export class MergedRoomService {
         lastAt: c.createdAt,
         open: OPEN_STATUSES.includes(c.status),
         matchedBy: how,
-        unverified: how === 'claimed' && sessionById.get(sid)?.customerId == null,
+        // Only an unsigned host claim ties it in: no customer or company on the session itself.
+        unverified:
+          (how === 'claimed' || how === 'company') &&
+          sessionById.get(sid)?.customerId == null &&
+          sessionById.get(sid)?.companyId == null,
         current: sid === sessionId,
         inRoom: inThisRoom && place!.state === MERGED_SESSION_STATE.MEMBER,
         excluded: inThisRoom && place!.state === MERGED_SESSION_STATE.EXCLUDED,
@@ -380,17 +443,42 @@ export class MergedRoomService {
 
     const identity = (await this.identityOf(tenantId, sessionId))!;
     let room = current ? await this.roomRepo.findOne({ where: { id: current.id, tenantId } }) : null;
-    room ??= await this.roomRepo.findOne({ where: { tenantId, customerId: In(identity.customerIds) }, order: { id: 'ASC' } });
+    room ??= (await this.roomsFor(tenantId, identity))[0] ?? null;
+    const company = identity.companyIds[0] ?? null;
     const created = !room;
     let changed = created;
     if (!room) {
       room = await this.roomRepo.save(
-        this.roomRepo.create({ tenantId, customerId: identity.anchor, autoJoin: autoJoin ? 1 : 0, createdBy: userId }),
+        this.roomRepo.create({
+          tenantId,
+          customerId: identity.anchor,
+          companyId: company,
+          autoJoin: autoJoin ? 1 : 0,
+          createdBy: userId,
+        }),
       );
-    } else if ((room.autoJoin === 1) !== autoJoin) {
-      room.autoJoin = autoJoin ? 1 : 0;
-      room = await this.roomRepo.save(room);
-      changed = true;
+    } else {
+      // A room merged for a person picks up their company when merged again from
+      // a business thread (F3) — unless another room is already that company's.
+      if (room.companyId == null && company != null) {
+        const taken = await this.roomRepo.findOne({ where: { tenantId, companyId: company }, select: { id: true } });
+        if (!taken) {
+          room.companyId = company;
+          changed = true;
+        }
+      }
+      if (room.customerId == null && identity.anchor != null) {
+        const taken = await this.roomRepo.findOne({ where: { tenantId, customerId: identity.anchor }, select: { id: true } });
+        if (!taken) {
+          room.customerId = identity.anchor;
+          changed = true;
+        }
+      }
+      if ((room.autoJoin === 1) !== autoJoin) {
+        room.autoJoin = autoJoin ? 1 : 0;
+        changed = true;
+      }
+      if (changed) room = await this.roomRepo.save(room);
     }
     const roomId = Number(room.id);
 
@@ -484,7 +572,7 @@ export class MergedRoomService {
       actorId: userId,
       action: 'merged_room.dissolved',
       target: `merged_room:${id}`,
-      metadata: { customerId: Number(room.customerId), reason },
+      metadata: { customerId: room.customerId, companyId: room.companyId, reason },
     });
   }
 
@@ -504,10 +592,7 @@ export class MergedRoomService {
       if (placed) return;
       const identity = await this.identityOf(tenantId, sessionId);
       if (!identity) return;
-      const room = await this.roomRepo.findOne({
-        where: { tenantId, customerId: In(identity.customerIds), autoJoin: 1 },
-        order: { id: 'ASC' },
-      });
+      const room = (await this.roomsFor(tenantId, identity, true))[0];
       if (!room) return;
       await this.memberRepo.save(
         this.memberRepo.create({
@@ -533,13 +618,19 @@ export class MergedRoomService {
     }
   }
 
-  /** DSAR erasure: rooms keyed on the erased customer go with it. */
+  /**
+   * DSAR erasure: a room keyed only on the erased person goes with them; a
+   * company's room stays (a company is not a data subject) and just forgets
+   * the person.
+   */
   async eraseCustomer(tenantId: number, customerId: number): Promise<void> {
-    const rooms = await this.roomRepo.find({ where: { tenantId, customerId }, select: { id: true } });
-    if (!rooms.length) return;
-    const ids = rooms.map((r) => Number(r.id));
-    await this.memberRepo.delete({ tenantId, roomId: In(ids) });
-    await this.roomRepo.delete({ tenantId, id: In(ids) });
+    const rooms = await this.roomRepo.find({ where: { tenantId, customerId } });
+    const personal = rooms.filter((r) => r.companyId == null).map((r) => Number(r.id));
+    const company = rooms.filter((r) => r.companyId != null).map((r) => Number(r.id));
+    if (company.length) await this.roomRepo.update({ tenantId, id: In(company) }, { customerId: null });
+    if (!personal.length) return;
+    await this.memberRepo.delete({ tenantId, roomId: In(personal) });
+    await this.roomRepo.delete({ tenantId, id: In(personal) });
   }
 }
 
