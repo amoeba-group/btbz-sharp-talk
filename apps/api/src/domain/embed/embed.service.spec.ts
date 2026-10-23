@@ -230,7 +230,10 @@ describe('EmbedService.rotateSecret', () => {
 /** Stored form (PLN-261022 stage 1): verified on the raw values, saved normalised. */
 describe('EmbedService.identify — region normalisation', () => {
   const config = {
-    handoffConfig: { provinceRegions: { 'Hồ Chí Minh': 'south', 'Đà Nẵng': 'south_center' } },
+    handoffConfig: {
+      provinceRegions: { 'Hồ Chí Minh': 'south', 'Đà Nẵng': 'south_center' },
+      provinceIndex: { '1': { name: 'Hồ Chí Minh', region: 'south' } },
+    },
   };
   const withMap = () => {
     const h = build();
@@ -265,6 +268,14 @@ describe('EmbedService.identify — region normalisation', () => {
     const attrs = { hotel_id: '1', region: 'north' };
     await svc.identify({ sessionToken: 'tok', userId: USER, hash: EmbedService.sign(SECRET, USER, attrs), attributes: attrs });
     expect(aiConfigRepo.findOne).not.toHaveBeenCalled();
+  });
+
+  it('spec v1.4: verifies province_sn as signed, then stores the name and region from the index', async () => {
+    const { svc, aiConfigRepo } = withMap();
+    const attrs = { hotel_id: '4118', hotel_name: 'Lá Hotel Quận 10', province_sn: '1', role: 'RECEPTIONIST' };
+    const session = await svc.identify({ sessionToken: 'tok', userId: USER, hash: EmbedService.sign(SECRET, USER, attrs), attributes: attrs });
+    expect(aiConfigRepo.findOne).toHaveBeenCalled();
+    expect(session.identityAttributes).toEqual({ ...attrs, province: 'Hồ Chí Minh', region: 'south' });
   });
 
   it('reads a province name sent as the region (PLN-261023 H1-b)', async () => {

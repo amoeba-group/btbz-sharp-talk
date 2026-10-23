@@ -1,4 +1,4 @@
-import { mergeProvinceRegions, partnerRegionCode } from './province-region.mapper';
+import { mergeProvinceIndex, mergeProvinceRegions, partnerRegionCode } from './province-region.mapper';
 
 /** Province Feed values from staging-partner, 2026-10-23 (PLN-261023 H1-a). */
 describe('province-region.mapper', () => {
@@ -32,5 +32,22 @@ describe('province-region.mapper', () => {
   it('an empty feed reports total 0 (the caller then writes nothing)', () => {
     expect(mergeProvinceRegions({ 'Hà Nội': 'north' }, []).total).toBe(0);
     expect(mergeProvinceRegions(null, []).map).toEqual({});
+  });
+
+  it('indexes province numbers (spec v1.4): feed numbers replace, others stay, bad rows skipped', () => {
+    const r = mergeProvinceIndex({ '1': { name: 'Old', region: 'north' }, '99': { name: 'Kept', region: 'south' } }, [
+      { sn: 1, name: 'Hồ Chí Minh'.normalize('NFD'), region: 1 },
+      { sn: 70, name: 'Makati', region: 10 },
+      { sn: 71, name: 'No region', region: null },
+      { sn: 0, name: 'Zero', region: 1 },
+      { sn: 72, name: ' ', region: 1 },
+    ]);
+    expect(r.index).toEqual({
+      '1': { name: 'Hồ Chí Minh', region: 'south' },
+      '70': { name: 'Makati', region: 'region_10' },
+      '71': { name: 'No region', region: null },
+      '99': { name: 'Kept', region: 'south' },
+    });
+    expect(r.total).toBe(3);
   });
 });

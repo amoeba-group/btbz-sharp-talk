@@ -122,6 +122,13 @@ export interface HandoffConfig {
    * Go2Joy: its province table — the Partner API Province Feed, refreshed daily (PLN-261023 H1-a).
    */
   provinceRegions?: Record<string, string>;
+  /**
+   * Go2Joy provinceSn → { name, region code } (HA identify spec v1.4,
+   * PLN-261024): the HA signs `province_sn` and SharpTalk derives the province
+   * name and region from here. Filled by the same Province Feed sync, or from
+   * the feed snapshot script where there is no Partner credential yet.
+   */
+  provinceIndex?: Record<string, { name: string; region: string | null }>;
   /** When `provinceRegions` last came from the Partner API Province Feed (ISO; PLN-261023 H1-a). */
   provinceRegionsSyncedAt?: string;
   /** 'go2joy_partner' once the feed has filled the map; absent = entered by SQL. */
